@@ -65,7 +65,7 @@ export async function snapshot(gardenId: string, who: Who) {
 
 export async function setPresence(gardenId: string, playerId: string, p: Doc) {
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null)
-  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: p.s === 0 || p.s === 1 ? p.s : null }
+  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: seatOf(p.s) }
   await db.betweenPresence.upsert({
     where: { gardenId_playerId: { gardenId, playerId } },
     create: { gardenId, playerId, data: asJson(data) },
@@ -122,6 +122,8 @@ async function put(tx: Prisma.TransactionClient, gardenId: string, t: Target, d:
   }
 }
 
+/** A seat in presence: the hollow's two cushions (0, 1), the hearth's cushion, or one set down on a floor spot (hollow.js seatsNow). */
+const seatOf = (s: unknown) => (s === 0 || s === 1 ? s : typeof s === 'string' && /^(hearth|spot:[a-z0-9-]{1,24})$/.test(s) ? s : null)
 /** One write from the page, checked against the rules and applied in a transaction so two people's tending merges. */
 export async function write(gardenId: string, who: Who, t: Target, op: Op, data: Doc | null) {
   return db.$transaction(async tx => {

@@ -25,6 +25,30 @@ const HOLLOW_SEATS = [                               // teal for whoever started
 ];
 export let SEATS = HOLLOW_SEATS;                     // the nook has none: a cushion there is earned and set on a spot
 export const TABLE = { x: 0, z: 1.3, r: 0.5 };
+/* Where anyone sits (Wendell, 2026-10-24: "When asked to sit down the player should walk to a cushion and actually sit instead
+   of having a card modal open up"): one list for every shell, so the hollow's two cushions, the hearth's own worn cushion and
+   any cushion set down on a floor spot are walked to and sat on the same way. garden.js reads seatsNow(spots) each time.
+   A seat: id (0 and 1 are the hollow's own two, so presence keeps sending them as numbers), x, z, yaw (facing), floor (the y
+   it stands on) and top (the y of its top, what the hips rest on). */
+export const CUSHION_TOP = 0.25;                     // a cushion's top over what it stands on (the box is 0.26 high, centred at 0.12)
+export const MAT_TOP = 0.155;                        // the hearth's worn cushion: the same shape, flatter
+const HEARTH_SEAT_D = { nook: 1.55, hollow: 1.85 };  // from the hearth's middle out over its hearthstone, towards the room
+export function hearthSeat() {
+  const r = Math.hypot(HEARTH.x, HEARTH.z) || 1, d = HEARTH_SEAT_D[LAY.shell] || 1.6;
+  const x = HEARTH.x - HEARTH.x / r * d, z = HEARTH.z - HEARTH.z / r * d, floor = groundY(x, z);
+  return { id: "hearth", x, z, yaw: Math.atan2(HEARTH.x - x, HEARTH.z - z), floor, top: floor + MAT_TOP, hearth: true };
+}
+export function seatsNow(spots) {
+  const out = [];
+  if (LAY.shell === "hollow") HOLLOW_SEATS.forEach((s, i) => out.push({ id: i, x: s.x, z: s.z, yaw: s.yaw, floor: DAIS_Y, top: DAIS_Y + CUSHION_TOP, hue: s.hue }));
+  out.push(hearthSeat());
+  // a cushion set down on a floor spot: in the nook it faces the hearth, in a room the middle
+  for (const h of Object.values(spots || {})) if (h.item === "cushion" && h.takes === "floor") {
+    const fx = LAY.shell === "nook" ? HEARTH.x : 0, fz = LAY.shell === "nook" ? HEARTH.z : 0;
+    out.push({ id: "spot:" + h.id, spot: h.id, x: h.pos.x, z: h.pos.z, yaw: Math.atan2(fx - h.pos.x, fz - h.pos.z), floor: h.pos.y, top: h.pos.y + CUSHION_TOP });
+  }
+  return out;
+}
 export let HEARTH = { x: 3.9, z: 3.1 };
 const NOOK_HEARTH = { x: -Math.sin(0.85) * 3.15, z: -Math.cos(0.85) * 3.15 }; // back left, as in Still A
 const SHELF = { x: 5.0, z: 0.4 };
@@ -496,6 +520,10 @@ export function buildHollow(scene, opts = {}) {
     const p = cg.attributes.position; // round the box into a cushion
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const k = 1 - (Math.abs(x * 2) ** 4 + Math.abs(z * 2) ** 4) * 0.35; p.setY(i, y * Math.max(0.25, k)); const s = 1 - Math.abs(y) * 0.12; p.setX(i, x * s); p.setZ(i, z * s); }
     cg.computeVertexNormals();
+    { // the hearth's own cushion, always there: worn flat and faded from sitting by the fire (seatsNow's "hearth" seat)
+      const hs = hearthSeat(), m = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: quilt("#8a5a3a"), color: 0xd9c2a6, roughness: 0.95 }));
+      m.scale.set(0.95, 0.16, 0.82); m.position.set(hs.x, hs.floor + 0.075, hs.z); m.rotation.y = hs.yaw; m.name = "hearth-cushion"; root.add(m);
+    }
     if (!nook) {
     SEATS.forEach((s, i) => {
       const m = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: quilt(i ? "#7d3466" : "#2f7f78"), roughness: 0.85 }));

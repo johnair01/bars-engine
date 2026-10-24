@@ -12,3 +12,6 @@ export const FADE = { walk: 0.25, idle: 0.4, sit: 0.3 };
 export const SIT = [["hipL", -1.5, -0.35, -0.65], ["hipR", -1.5, 0.35, 0.65], ["kneeL", 2.45, 0, 0], ["kneeR", 2.45, 0, 0], ["spine", 0.12, 0, 0], ["neck", 0.18, 0, 0],
   ["shoulderL", -0.75, 0, -0.25], ["shoulderR", -0.75, 0, 0.25], ["elbowL", -0.9, 0, 0], ["elbowR", -0.9, 0, 0]];
 export const SIT_DROP = 0.84;
+/* On a seat (a cushion, the hearth's cushion): the hip joints rest this far over its top (metres), as the caves' seatAvatar
+   rests them (#434), so the figure sits on the cushion rather than sinking into it. SIT_DROP stays for a caller with no seat. */
+export const SEAT_PAD = 0.1;
