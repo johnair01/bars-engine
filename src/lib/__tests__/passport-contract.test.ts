@@ -48,6 +48,11 @@ describe('passport contract', () => {
   it('folds an empty browser, and broken stores, into a valid passport', () => {
     expect(ok(guest.fold(null, null, 'guest-1', AT)).places_reached).toEqual([])
     ok(guest.fold({ v: 1, spirits: [{ id: 'x' }, null, { id: 'x' }] }, { v: 1, places: null, embers: [{ id: 'e' }] }, 'guest-1', AT))
+    expect(ok(guest.fold({ v: 1, spirits: [], vibeulons: -2 }, null, 'guest-1', AT)).vibeulons).toBe(0)
+  })
+
+  it('folds the vibeulons the WAVE room minted into the purse', () => {
+    expect(ok(guest.fold({ v: 1, spirits: [], vibeulons: 3 }, null, 'guest-1', AT)).vibeulons).toBe(3)
   })
 
   it('W1: a spirit woken as a guest is the same spirit after sign-in, and claiming twice changes nothing', () => {

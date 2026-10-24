@@ -34,6 +34,7 @@
 
   // fold(spiritsRecord, vesselRecord, guestId, at, handRecord) -> passport. Pure: the records are what the places stored, or null.
   // The hand is the one Chapter 1 dealt, laid down by the arrival page (arrive.js) as `calrunia.hand.v1`.
+  function purse(spirits) { var n = spirits && spirits.v === 1 ? Number(spirits.vibeulons) : 0; return n > 0 ? Math.floor(n) : 0; }
   function fold(spirits, vessel, guestId, at, handRec) {
     var reached = {};
     var list = spirits && spirits.v === 1 && Array.isArray(spirits.spirits) ? spirits.spirits.filter(function (r) { return r && r.id; }) : [];
@@ -61,7 +62,8 @@
       spirits: out,
       hand: hand,
       qi: ship ? countNum(ship.qi) : 0, // the ship's fuel is its own gauge, not the qi meter (cw-qi-meter-scales)
-      vibeulons: ship ? count(ship.vibeulons) : 0, // Chapter 1's A3 earns the first; the ship holds them (FIELD_OWNERS)
+      // Chapter 1's A3 earns the first and the ship holds them (FIELD_OWNERS); the WAVE room mints them into oag.spirits.v1 (gw-unkept-vibeulon)
+      vibeulons: (ship ? count(ship.vibeulons) : 0) + purse(spirits),
       embers: embers,
       places_reached: PLACES.filter(function (p) { return reached[p]; }),
       updated_at: at || new Date().toISOString(),
