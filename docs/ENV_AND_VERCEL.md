@@ -30,7 +30,7 @@ Next.js loads `.env.local` automatically. Then run `npm run dev` as usual.
 ## Vercel dashboard
 
 - **Where**: [Vercel Dashboard](https://vercel.com/dashboard) → your project → **Settings** → **Environment Variables**.
-- **What to set**: At minimum, `DATABASE_URL` (PostgreSQL connection string) and `OPENAI_API_KEY` if you use AI features. For BAR photo uploads and book PDFs: `BLOB_READ_WRITE_TOKEN` (from Vercel Blob store — create in Dashboard → Storage). Without it, uploads fail with FUNCTION_PAYLOAD_TOO_LARGE or fall back to local filesystem (which fails on Vercel). Set them for the environments you use (Production, Preview, and optionally Development if you use a separate dev database).
+- **What to set**: At minimum, `DATABASE_URL` (PostgreSQL connection string) and `OPENAI_API_KEY` if you use AI features. For BAR photo uploads and book PDFs: `BLOB_READ_WRITE_TOKEN` (from Vercel Blob store — create in Dashboard → Storage). Without it, the BAR photo upload route (`/api/assets/upload`) returns a 503 that names the token. Only the deprecated server actions in `src/actions/assets.ts` fall back to the local filesystem, which fails on Vercel. FUNCTION_PAYLOAD_TOO_LARGE comes from sending files through a server action, which is a separate cause. Set them for the environments you use (Production, Preview, and optionally Development if you use a separate dev database).
 
 ### Cert & site-signal feedback (CFB)
 

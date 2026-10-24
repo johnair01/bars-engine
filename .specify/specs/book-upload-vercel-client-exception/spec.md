@@ -53,7 +53,7 @@ Possible causes:
 
 1. Confirm `BLOB_READ_WRITE_TOKEN` is set in Vercel project env.
 2. Deploy; open `/admin/books` on bars-engine.vercel.app.
-3. Upload a PDF (< 4.5 MB for Hobby).
+3. Upload a PDF. Books now go from the browser straight to Blob with a 100 MB limit (`src/app/api/books/upload/route.ts`), so the 4.5 MB request-body limit on Hobby no longer applies to this path.
 4. Confirm no client-side exception; book appears in list.
 
 ## Reference

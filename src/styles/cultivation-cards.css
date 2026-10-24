@@ -377,6 +377,44 @@
   }
 }
 
+/* ─── Ceremony (Register 7): completion glow and gem pulse ─────────────────────────
+   Used by CompletionGlow.tsx, ReturnWitnessCard.tsx and BuildReceiptSummary.tsx, which were referencing these
+   classes before any stylesheet defined them (found in the 2026-10-20 asset doc audit).
+   The glow flashes once, then settles to the satisfied-altitude glow. Colour comes from --element-glow and size from
+   --glow-radius (altitudeCssVars('satisfied')); no hardcoded colour here. The gem takes --element-gem. ───────── */
+
+.ceremony-completion-glow {
+  box-shadow: 0 0 var(--glow-radius, 24px) 2px var(--element-glow, color-mix(in srgb, currentColor 40%, transparent));
+  animation: ceremony-flash 900ms ease-out 1;
+}
+
+@keyframes ceremony-flash {
+  0%   { box-shadow: 0 0 0 0 var(--element-glow, color-mix(in srgb, currentColor 40%, transparent)); }
+  40%  { box-shadow: 0 0 calc(var(--glow-radius, 24px) * 2) 6px var(--element-glow, color-mix(in srgb, currentColor 40%, transparent)); }
+  100% { box-shadow: 0 0 var(--glow-radius, 24px) 2px var(--element-glow, color-mix(in srgb, currentColor 40%, transparent)); }
+}
+
+.ceremony-gem-pulse {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--element-gem, currentColor);
+  animation: ceremony-gem-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ceremony-gem-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.75; }
+  50%      { transform: scale(1.35); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ceremony-completion-glow,
+  .ceremony-gem-pulse {
+    animation: none !important;
+  }
+}
+
 /* ─── BSCW: Seed Capture Whiteboard ──────────────────────────────────────────── */
 
 @keyframes barsCompostPulse {
