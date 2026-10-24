@@ -2343,9 +2343,11 @@
     // work after a # (#go=home&grown=7). &grown=N first keeps one summoned spirit at N sittings and brings it home with you, so its
     // next sitting is seen (7: a creature that becomes an ally). &hidden=N brings the first charge in with a hidden part already on
     // it, at polarity N (signal "preview"), so it comes in to "Something hides it" and its shadow spirit's gate is a few taps away.
+    // &tour=0 marks the walkthrough done first, since a preview's fresh browser would otherwise start it.
     var skip = null; try { skip = new URLSearchParams(window.location.search + "&" + String(location.hash || "").replace(/^#/, "")); } catch (e) {}
     var skipGo = skip && skip.get("go"), skipAt = (skip && skip.get("at")) || "my heart";
     var gn = skip && /^\d+$/.test(skip.get("grown") || "") ? +skip.get("grown") : null, hd = skip && /^\d+$/.test(skip.get("hidden") || "") ? +skip.get("hidden") : 0;
+    if (skip && skip.get("tour") === "0") keepTutorial(ROOM_LESSONS.concat(CAVE_LESSONS).map(function (l) { return l.id; })); // &tour=0: a look link skips the walkthrough
     if (skipGo === "elder" || skipGo === "home") {
       var sp = null;
       if (gn !== null && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: gn }, "a preview link"); } catch (e) { sp = null; }
