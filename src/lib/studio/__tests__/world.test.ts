@@ -50,6 +50,14 @@ describe('the deck as a place', () => {
     expect(w.islands.find(i => i.state === 'here')!.stage).toBe('Pre-Production')
   })
 
+  it('keeps a ship\'s log of the last week, newest first, in plain words', () => {
+    const log = worldOf(deck()).log
+    expect(log[0]).toBe('Today, the crew raised scaffolding on studio lot.')
+    expect(log).toContain('4 days ago, a light came on in work dbt.')
+    expect(log.some(l => l.includes('corpus') || l.includes('perceptual'))).toBe(false) // older than a week
+    expect(log.every(l => !/[`#\[]/.test(l))).toBe(true)
+  })
+
   it('serves a game page with no list or panel markup', () => {
     const html = studioPage(deck())
     expect(html).toContain('phaser@3.80.1')
