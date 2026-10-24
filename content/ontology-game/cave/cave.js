@@ -1602,13 +1602,80 @@
       var ci = J.findIndex(function (r) { return r[0] === "spine.003"; }), chest = chans.some(function (c) { return c.ch.joint === ci && c.ch.path === "r"; }) ? bones[ci] : null;
       d.walker = { mesh: m, mat: mat, bones: bones, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
         tq: new THREE.Quaternion(), tq2: new THREE.Quaternion(), tv: new THREE.Vector3(), tv2: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion(), ws: new THREE.Vector3() };
+      d.walker.seat = seatRigOf(THREE, J, bones, chans);
+    });
+  }
+  // Sitting, worn (Wendell, 21 October 2026: "When one sits down they don't actually sit down"). The sit poses used to bend the
+  // stand-in's joints, which hide under the worn walker, so the figure on screen stood on while its hidden stand-in sat. The
+  // walker now sits itself: the hips come down to the seat and each leg and arm bone is aimed along a direction in the body's
+  // own frame (+z ahead, +x its left), worked from the rest pose so the bones' rolls don't matter. Two ways to sit: on the
+  // room's cushion, feet on the floor (shins straight down, the thighs reaching from the hips to the knees), and on the
+  // cave floor, legs crossed in front.
+  var SEAT_AIM = ["thigh", "shin", "foot", "upper_arm", "forearm"];
+  function seatRigOf(THREE, J, bones, chans) {
+    var idx = {}, Wr = [], P = [];
+    J.forEach(function (r, i) {
+      idx[r[0]] = i; var q = new THREE.Quaternion().fromArray(r[3]), t = new THREE.Vector3().fromArray(r[2]);
+      if (r[1] < 0) { Wr.push(q); P.push(t); } else { Wr.push(Wr[r[1]].clone().multiply(q)); P.push(t.applyQuaternion(Wr[r[1]]).add(P[r[1]])); }
+    });
+    if (idx["thigh.L"] == null || idx["shin.L"] == null) return null;
+    var root = J.findIndex(function (r) { return r[1] < 0; }), moved = chans.some(function (c) { return c.ch.joint === root && c.ch.path !== "r"; });
+    var legs = {}; ["L", "R"].forEach(function (k) { SEAT_AIM.forEach(function (n) { var i = idx[n + "." + k]; if (i != null) legs[n + "." + k] = i; }); });
+    return { idx: legs, Wr: Wr, P: P, J: J, bones: bones, root: root, rootRest: bones[root].position.clone(), rootMoved: moved,
+      hip: P[idx["thigh.L"]].y, thigh: P[idx["thigh.L"]].distanceTo(P[idx["shin.L"]]), shin: P[idx["shin.L"]].y,
+      up: new THREE.Vector3(0, 1, 0), v: new THREE.Vector3(), q: new THREE.Quaternion(), q2: new THREE.Quaternion(), W: {} };
+  }
+  // Where the worn walker's hips, knees and ankles are in the world, for the tests: null with the stand-in alone.
+  function walkerJoints(av) {
+    var w = av && av.userData.walker, S = w && w.seat; if (!S) return null;
+    av.updateMatrixWorld(true);
+    function at(n) { var i = S.J.findIndex(function (r) { return r[0] === n; }), v = new w.tv.constructor(); S.bones[i].getWorldPosition(v); return [v.x, v.y, v.z]; }
+    return { hip: at("thigh.L"), knee: at("shin.L"), ankle: at("foot.L"), toe: at("toe.L"), head: at("spine.006"), sat: av.userData.seat ? av.userData.seat.k : 0 };
+  }
+  // The pose at k (0 standing, 1 sat), the hips' height hipY in the body's own units, cross for the floor. avatar.userData.seat
+  // gives it as { k, hip: the hips' height in the world, cross }.
+  function seatWalker(w, k, hipY, cross) {
+    var S = w.seat; if (!S || k <= 0) return;
+    var drop = Math.max(0, S.hip - hipY) * k, h = S.hip - drop, rb = S.bones[S.root];
+    if (!S.rootMoved) rb.position.copy(S.rootRest);
+    rb.position.y -= drop;
+    var aims = {};
+    ["L", "R"].forEach(function (side) {
+      var sx = side === "L" ? 1 : -1, dz;
+      if (cross) { // the knees out to the sides and a little down, the shins crossed in front, the feet resting on their outer edges
+        aims["thigh." + side] = [0.72 * sx, -0.2, 0.66]; aims["shin." + side] = [-0.93 * sx, -0.1, side === "L" ? 0.18 : 0.3];
+        aims["foot." + side] = [-0.5 * sx, -0.25, 0.8];
+        aims["upper_arm." + side] = [0.3 * sx, -0.9, 0.3]; aims["forearm." + side] = [0.25 * sx, -0.55, 0.8];
+      } else { // the knees forward at the shins' height, the shins down to the floor
+        var fall = clamp((h - S.shin) / S.thigh, -0.2, 1); dz = Math.sqrt(Math.max(0, 1 - fall * fall));
+        aims["thigh." + side] = [0.06 * sx, -fall, dz]; aims["shin." + side] = [0, -1, 0.08];
+        aims["upper_arm." + side] = [0.18 * sx, -0.85, 0.45]; aims["forearm." + side] = [0.05 * sx, -0.35, 0.95];
+      }
+    });
+    // each aimed bone, parent first: its world turn is the rest turn carried round onto its aim, put back into its parent's frame
+    var W = S.W; for (var key in W) delete W[key];
+    S.J.forEach(function (r, i) {
+      var p = r[1], name = r[0], aim = aims[name], b = S.bones[i];
+      var pw = p < 0 ? null : W[p] || null; // a parent turned this frame, or at rest
+      if (!aim && !pw) return;
+      var want;
+      if (aim) {
+        S.v.set(aim[0], aim[1], aim[2]).normalize();
+        var from = S.up.clone().applyQuaternion(S.Wr[i]);
+        want = S.q.setFromUnitVectors(from, S.v).multiply(S.Wr[i]).clone();
+      } else want = pw.clone().multiply(S.q2.copy(b.quaternion)); // carried along by its parent
+      W[i] = want;
+      if (!aim) return;
+      var parentW = pw || (p < 0 ? new w.tq.constructor() : S.Wr[p]);
+      var local = parentW.clone().invert().multiply(want);
+      b.quaternion.slerp(local, k);
     });
   }
   // One frame of the walker. Its speed over the ground (measured from where the figure was) picks the blend of walk and run
   // and the rate the shared stride phase turns at; the stride is blended from the rest pose by the walk's weight g, with
   // the stand-in's opacity and glow, and its breath when standing.
   function poseWalker(d, dt, g, b) {
-    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null;
+    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null, py = p ? p.y : 0;
     var v = 0;
     if (p && w.at && dt > 0) v = Math.min(30, Math.hypot(p.x - w.at.x, p.z - w.at.z) / dt);
     if (p) w.at = (w.at || p.clone()).copy(p);
@@ -1632,6 +1699,7 @@
         c.bone.position.copy(c.idle).lerp(w.tv, g);
       }
     }
+    if (d.seat && p) seatWalker(w, d.seat.k, (d.seat.hip - py) / (w.mesh.getWorldScale(w.ws).y || 1), d.seat.cross);
     if (w.chest) w.chest.quaternion.multiply(w.q1.setFromAxisAngle(w.ax, -0.04 * (b - 0.5) * (1 - g)));
     w.mat.opacity = d.mat.opacity; w.mat.emissiveIntensity = d.mat.emissiveIntensity * 0.6;
   }
@@ -3723,7 +3791,7 @@
       modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", "standing"); closeModal();
       var from = S.g.position.clone(), nm = S.name.trim() || S.gen;
       tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); if (branch === "stood" && !S.spirit) S.come = ease(k); }, function () {
-        scene.remove(S.g); dropLight(S.g); sit = null; modal.removeAttribute("data-cave-sit-step");
+        scene.remove(S.g); dropLight(S.g); sit = null; avatar.userData.seat = null; modal.removeAttribute("data-cave-sit-step");
         var o = { name: nm, element: S.element, lighter: branch === "goes" };
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
@@ -3743,7 +3811,8 @@
       var S = sit; if (!S || route !== S.route) return;
       var a = at(route, Math.min(route.len || 1e9, wk.s + 2.4 + 9 * S.come));
       S.g.position.set(a.x, a.y - h * 0.92 + 0.15 + 0.05 * Math.sin(nowMs / 700), a.z);
-      avatar.position.y -= 0.32 * S.k;
+      if (avatar.userData.walker) avatar.userData.seat = S.k > 0 ? { k: S.k, hip: avatar.position.y + 0.25, cross: true } : null; // legs crossed on the floor
+      else avatar.position.y -= 0.32 * S.k;
       var hex = sitHex(S), body = S.g.userData.body, col = S.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
       body.material.color.copy(col); body.material.emissive.copy(col);
       var grow = S.allowed ? 1 + S.allow.grow / 10 : 1; S.g.scale.setScalar(S.g.scale.x + (grow - S.g.scale.x) * Math.min(1, dt * 2));
@@ -4846,6 +4915,7 @@
     api.camAt = function () { return camera.position.toArray(); }; // tests: where the camera is this frame
     api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
+    api.worn = function () { return walkerJoints(avatar); };
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k,
       around: sit.around.map(function (o) { return { name: o.name, d: Math.hypot(o.g.position.x - avatar.position.x, o.g.position.z - avatar.position.z), y: o.g.position.y - avatar.position.y }; }) } : null; };
     api.carried = function () { return carried.length; };
@@ -6228,8 +6298,10 @@
           if (tg.sit && Math.abs(angleDiff(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z))) < 0.15) fig.sit = Math.min(1, fig.sit + dt * 1.6);
         }
         avatar.position.set(fig.x, 0, fig.z); avatar.rotation.y = fig.yaw;
+        var sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
+        avatar.userData.seat = sk > 0 ? { k: sk, hip: SEAT_TOP + 0.1, cross: false } : null; // the worn walker sits on the cushion
         poseAvatar(avatar, fig.clk, moving, dt, br.b, 0.7, R.calm);
-        var J = avatar.userData.J, sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
+        var J = avatar.userData.J;
         if (sk > 0) {
           ["L", "R"].forEach(function (n) {
             J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - sk) - 1.45 * sk; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - sk) + 1.45 * sk;
@@ -6359,7 +6431,7 @@
         },
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
-        walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
+        walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, worn: walkerJoints(avatar), seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         // the elder spirit (slice 5): its form, whether its card shows, and where it is on screen for a test to tap it
