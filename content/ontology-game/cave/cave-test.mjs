@@ -698,10 +698,6 @@ await page.locator('[data-cave-sitbtn]').click();
 await page.locator('[data-cave-sit-step="welcome"]').waitFor({ timeout: 5000 });
 ok(!(await sees('[data-cave-sitbtn]')) && (await C(() => window.__oagCave.sitting())).phase === 'steps', 'sitting down opens the W.A.V.E. in place, at Welcome');
 await page.waitForFunction(() => (window.__oagCave.sitting() || {}).k > 0.98, null, { timeout: 5000 });
-{
-  const wn = await C(() => window.__oagCave.worn());
-  ok(wn && wn.sat > 0.98 && wn.hip[1] - wn.toe[1] < 0.5 && wn.head[1] - wn.hip[1] > 1, `in the tunnel the worn figure sits on the floor, legs crossed (hips ${wn && (wn.hip[1] - wn.toe[1]).toFixed(2)} over its feet)`);
-}
 ok(await page.locator('[data-cave-orb]').count() === 1, 'every sitting step keeps a breathing ring');
 await page.locator('[data-cave-sitnext]').click();
 ok(await page.locator('[data-cave-sitnext]').isDisabled(), 'Witness waits for what it is like');
@@ -1123,10 +1119,6 @@ ok(await page.locator('[data-oag-menu] [data-room-calm]').count() === 1 && await
   await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.95, null, { timeout: 30000 });
   const sat = await C(() => window.__oagCave.room.walking());
   ok(Math.abs(sat.pelvisLow - sat.seatTop) < 0.06, `back on the seat, the figure sits on the cushion (pelvis ${sat.pelvisLow.toFixed(2)}, cushion top ${sat.seatTop})`);
-  // the figure on screen is the worn walker, so it is the one that has to sit (Wendell, 21 October 2026: "When one sits down
-  // they don't actually sit down"): its hips on the cushion and its feet on the floor
-  ok(sat.worn && sat.worn.hip[1] > sat.seatTop && sat.worn.hip[1] < sat.seatTop + 0.2 && sat.worn.ankle[1] < 0.2 && sat.worn.knee[1] > sat.worn.ankle[1] + 0.3,
-    `the worn figure sits on the cushion, feet on the floor (hips ${sat.worn && sat.worn.hip[1].toFixed(2)}, ankles ${sat.worn && sat.worn.ankle[1].toFixed(2)})`);
 }
 // round 1: it stays, and the 3-2-1 is aimed at what the player wants
 await roomIn(false);

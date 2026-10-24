@@ -1101,7 +1101,7 @@
     var g = d.g, target = Math.max(0.2, Math.min(0.62, Math.asin(Math.min(0.9, stepLen / 2 / LEG_WORLD))));
     d.amp += (target - d.amp) * Math.min(1, dt * 6);
     var A = d.amp, sL = Math.sin(ph), sR = Math.sin(ph + Math.PI);
-    J.hipL.rotation.x = -A * sL * g; J.hipR.rotation.x = -A * sR * g;
+    J.hipL.rotation.x = -A * sL * g; J.hipR.rotation.x = -A * sR * g; J.hipL.rotation.z = J.hipR.rotation.z = 0; // a sitting may have turned them out
     J.kneeL.rotation.x = g * (0.12 + 0.95 * Math.max(0, Math.cos(ph))); J.kneeR.rotation.x = g * (0.12 + 0.95 * Math.max(0, Math.cos(ph + Math.PI)));
     J.ankleL.rotation.x = -(J.hipL.rotation.x + J.kneeL.rotation.x) * 0.8; J.ankleR.rotation.x = -(J.hipR.rotation.x + J.kneeR.rotation.x) * 0.8;
     var B = A * 0.85, b = still ? 0.5 : breath;
@@ -1600,75 +1600,8 @@
         if (dd < bestD) { bestD = dd; off = f; }
       }
       var ci = J.findIndex(function (r) { return r[0] === "spine.003"; }), chest = chans.some(function (c) { return c.ch.joint === ci && c.ch.path === "r"; }) ? bones[ci] : null;
-      d.walker = { mesh: m, mat: mat, bones: bones, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
+      d.walker = { T3: THREE, mesh: m, mat: mat, bones: bones, rows: J, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
         tq: new THREE.Quaternion(), tq2: new THREE.Quaternion(), tv: new THREE.Vector3(), tv2: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion(), ws: new THREE.Vector3() };
-      d.walker.seat = seatRigOf(THREE, J, bones, chans);
-    });
-  }
-  // Sitting, worn (Wendell, 21 October 2026: "When one sits down they don't actually sit down"). The sit poses used to bend the
-  // stand-in's joints, which hide under the worn walker, so the figure on screen stood on while its hidden stand-in sat. The
-  // walker now sits itself: the hips come down to the seat and each leg and arm bone is aimed along a direction in the body's
-  // own frame (+z ahead, +x its left), worked from the rest pose so the bones' rolls don't matter. Two ways to sit: on the
-  // room's cushion, feet on the floor (shins straight down, the thighs reaching from the hips to the knees), and on the
-  // cave floor, legs crossed in front.
-  var SEAT_AIM = ["thigh", "shin", "foot", "upper_arm", "forearm"];
-  function seatRigOf(THREE, J, bones, chans) {
-    var idx = {}, Wr = [], P = [];
-    J.forEach(function (r, i) {
-      idx[r[0]] = i; var q = new THREE.Quaternion().fromArray(r[3]), t = new THREE.Vector3().fromArray(r[2]);
-      if (r[1] < 0) { Wr.push(q); P.push(t); } else { Wr.push(Wr[r[1]].clone().multiply(q)); P.push(t.applyQuaternion(Wr[r[1]]).add(P[r[1]])); }
-    });
-    if (idx["thigh.L"] == null || idx["shin.L"] == null) return null;
-    var root = J.findIndex(function (r) { return r[1] < 0; }), moved = chans.some(function (c) { return c.ch.joint === root && c.ch.path !== "r"; });
-    var legs = {}; ["L", "R"].forEach(function (k) { SEAT_AIM.forEach(function (n) { var i = idx[n + "." + k]; if (i != null) legs[n + "." + k] = i; }); });
-    return { idx: legs, Wr: Wr, P: P, J: J, bones: bones, root: root, rootRest: bones[root].position.clone(), rootMoved: moved,
-      hip: P[idx["thigh.L"]].y, thigh: P[idx["thigh.L"]].distanceTo(P[idx["shin.L"]]), shin: P[idx["shin.L"]].y,
-      up: new THREE.Vector3(0, 1, 0), v: new THREE.Vector3(), q: new THREE.Quaternion(), q2: new THREE.Quaternion(), W: {} };
-  }
-  // Where the worn walker's hips, knees and ankles are in the world, for the tests: null with the stand-in alone.
-  function walkerJoints(av) {
-    var w = av && av.userData.walker, S = w && w.seat; if (!S) return null;
-    av.updateMatrixWorld(true);
-    function at(n) { var i = S.J.findIndex(function (r) { return r[0] === n; }), v = new w.tv.constructor(); S.bones[i].getWorldPosition(v); return [v.x, v.y, v.z]; }
-    return { hip: at("thigh.L"), knee: at("shin.L"), ankle: at("foot.L"), toe: at("toe.L"), head: at("spine.006"), sat: av.userData.seat ? av.userData.seat.k : 0 };
-  }
-  // The pose at k (0 standing, 1 sat), the hips' height hipY in the body's own units, cross for the floor. avatar.userData.seat
-  // gives it as { k, hip: the hips' height in the world, cross }.
-  function seatWalker(w, k, hipY, cross) {
-    var S = w.seat; if (!S || k <= 0) return;
-    var drop = Math.max(0, S.hip - hipY) * k, h = S.hip - drop, rb = S.bones[S.root];
-    if (!S.rootMoved) rb.position.copy(S.rootRest);
-    rb.position.y -= drop;
-    var aims = {};
-    ["L", "R"].forEach(function (side) {
-      var sx = side === "L" ? 1 : -1, dz;
-      if (cross) { // the knees out to the sides and a little down, the shins crossed in front, the feet resting on their outer edges
-        aims["thigh." + side] = [0.72 * sx, -0.2, 0.66]; aims["shin." + side] = [-0.93 * sx, -0.1, side === "L" ? 0.18 : 0.3];
-        aims["foot." + side] = [-0.5 * sx, -0.25, 0.8];
-        aims["upper_arm." + side] = [0.3 * sx, -0.9, 0.3]; aims["forearm." + side] = [0.25 * sx, -0.55, 0.8];
-      } else { // the knees forward at the shins' height, the shins down to the floor
-        var fall = clamp((h - S.shin) / S.thigh, -0.2, 1); dz = Math.sqrt(Math.max(0, 1 - fall * fall));
-        aims["thigh." + side] = [0.06 * sx, -fall, dz]; aims["shin." + side] = [0, -1, 0.08];
-        aims["upper_arm." + side] = [0.18 * sx, -0.85, 0.45]; aims["forearm." + side] = [0.05 * sx, -0.35, 0.95];
-      }
-    });
-    // each aimed bone, parent first: its world turn is the rest turn carried round onto its aim, put back into its parent's frame
-    var W = S.W; for (var key in W) delete W[key];
-    S.J.forEach(function (r, i) {
-      var p = r[1], name = r[0], aim = aims[name], b = S.bones[i];
-      var pw = p < 0 ? null : W[p] || null; // a parent turned this frame, or at rest
-      if (!aim && !pw) return;
-      var want;
-      if (aim) {
-        S.v.set(aim[0], aim[1], aim[2]).normalize();
-        var from = S.up.clone().applyQuaternion(S.Wr[i]);
-        want = S.q.setFromUnitVectors(from, S.v).multiply(S.Wr[i]).clone();
-      } else want = pw.clone().multiply(S.q2.copy(b.quaternion)); // carried along by its parent
-      W[i] = want;
-      if (!aim) return;
-      var parentW = pw || (p < 0 ? new w.tq.constructor() : S.Wr[p]);
-      var local = parentW.clone().invert().multiply(want);
-      b.quaternion.slerp(local, k);
     });
   }
   // One frame of the walker. Its speed over the ground (measured from where the figure was) picks the blend of walk and run
@@ -1699,9 +1632,103 @@
         c.bone.position.copy(c.idle).lerp(w.tv, g);
       }
     }
-    if (d.seat && p) seatWalker(w, d.seat.k, (d.seat.hip - py) / (w.mesh.getWorldScale(w.ws).y || 1), d.seat.cross);
     if (w.chest) w.chest.quaternion.multiply(w.q1.setFromAxisAngle(w.ax, -0.04 * (b - 0.5) * (1 - g)));
     w.mat.opacity = d.mat.opacity; w.mat.emissiveIntensity = d.mat.emissiveIntensity * 0.6;
+  }
+  // Sitting down (Wendell, 24 October 2026: "Instead of sitting the characters legs are just going through the ground"): the
+  // figure used to be lowered whole, so its legs went down through the floor. This poses it seated instead, k from 0 (as the
+  // walk or the idle left it) to 1 (seated), its hips lowered to the seat and its feet kept on the floor. On the floor (the
+  // cave, the Big Mind cave) it sits cross-legged with its hands on its knees; o.seat lifts the hips onto a cushion (the WAVE
+  // room). Each leg and arm is a two-bone reach (thigh and shin to the ankle, upper arm and forearm to the hand on the knee),
+  // bent about its own hinge so the knee and elbow do not twist. One pose for every place that sits, layered on the walker.
+  // o.seat: the hip joint's height above the floor, in the body's metres (0.2 on the floor).
+  var SEAT_FLOOR = 0.2, SEAT_PAD = 0.1; // SEAT_PAD: how far the hip joints sit above what the figure sits on
+  function seatAvatar(av, k, o) {
+    var d = av.userData, J = d.J, seat = o && o.seat != null ? o.seat : SEAT_FLOOR;
+    k = Math.max(0, Math.min(1, k)); if (k <= 0) return;
+    // the stand-in (shown only until the worn body has loaded): hips down, thighs forward, knees folded
+    var raised = seat > SEAT_FLOOR + 0.05, hy = raised ? 0.6 : 0.24;
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1;
+      J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - k) - 1.45 * k; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - k) + (raised ? 1.45 : 2.4) * k;
+      J["hip" + n].rotation.z = J["hip" + n].rotation.z * (1 - k) + (raised ? 0 : 0.7 * sgn) * k;
+      J["ankle" + n].rotation.x *= 1 - k; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - k) - 0.35 * k; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - k) - 0.5 * k;
+    });
+    J.hips.position.y = J.hips.position.y * (1 - k) + hy * k;
+    if (d.walker) seatWalker(d.walker, k, seat);
+  }
+  function seatWalker(w, k, seat) {
+    var T = w.seatAt && w.seatAt.seat === seat ? w.seatAt : (w.seatAt = seatTargets(w, seat));
+    // a bone the walk's keys do not set this frame starts from its rest turn, so the pose never builds up frame on frame
+    for (var i = 0; i < T.q.length; i++) if (T.q[i]) { if (!T.driven[i]) w.bones[i].quaternion.copy(T.lq[i]); w.bones[i].quaternion.slerp(T.q[i], k); }
+    if (!T.drivenAt) w.bones[T.root].position.copy(T.lp[T.root]);
+    w.bones[T.root].position.lerp(T.rootAt, k);
+  }
+  // The seated pose's bone turns, worked out once per seat height from the body's rest pose.
+  function seatTargets(w, seat) {
+    var rows = w.rows, V = w.T3.Vector3, Q = w.T3.Quaternion, M = new w.T3.Matrix4();
+    var idx = {}; rows.forEach(function (r, i) { idx[r[0]] = i; });
+    var lq = rows.map(function (r) { return new Q().fromArray(r[3]); }), lp = rows.map(function (r) { return new V().fromArray(r[2]); });
+    var root = rows.findIndex(function (r) { return r[1] < 0; });
+    // the rest pose in the body's own space, in order (a parent always comes before its children in the rig's rows)
+    var rq = [], rp = [];
+    rows.forEach(function (r, i) { if (r[1] < 0) { rq[i] = lq[i].clone(); rp[i] = lp[i].clone(); } else { rq[i] = rq[r[1]].clone().multiply(lq[i]); rp[i] = lp[i].clone().applyQuaternion(rq[r[1]]).add(rp[r[1]]); } });
+    var drop = rp[root].y - seat, nq = rq.map(function (q) { return q.clone(); }), np = rp.map(function (p) { return new V(p.x, p.y - drop, p.z); });
+    var out = rows.map(function () { return null; });
+    function basis(dir, side) { var x = side.clone().sub(dir.clone().multiplyScalar(side.dot(dir))).normalize(), z = new V().crossVectors(dir, x); return M.makeBasis(dir, x, z).clone(); }
+    // turn bone a (and its chain down to bone b) so a points from its joint along dir with its hinge on side
+    function aim(a, dir, side, restSide) {
+      var restDir = rp[childOf(a)].clone().sub(rp[a]).normalize();
+      var R = basis(dir, side).multiply(basis(restDir, restSide).transpose());
+      nq[a] = new Q().setFromRotationMatrix(R).multiply(rq[a]);
+    }
+    function childOf(a) { // the next joint down the limb, past any twist bone
+      var c = a; do { c = rows.findIndex(function (r) { return r[1] === c; }); } while (c >= 0 && /\.00\d$/.test(rows[c][0]) && rows[c][0].replace(/\.00\d$/, "") === rows[a][0]);
+      return c;
+    }
+    function len(a) { return rp[childOf(a)].distanceTo(rp[a]); }
+    function invert(q) { return q.clone().conjugate(); } // three r128 has no Quaternion.invert on every build
+    // two bones from joint a reaching target t, the middle joint pushed towards pole; returns the middle joint's place
+    function reach(a, t, pole) {
+      var b = childOf(a), L1 = len(a), L2 = len(b), h = np[a], dv = t.clone().sub(h), dist = Math.min(dv.length(), (L1 + L2) * 0.999), u = dv.normalize();
+      var x = (L1 * L1 - L2 * L2 + dist * dist) / (2 * dist), y = Math.sqrt(Math.max(0, L1 * L1 - x * x));
+      var pv = pole.clone().sub(u.clone().multiplyScalar(pole.dot(u))).normalize();
+      return h.clone().add(u.clone().multiplyScalar(x)).add(pv.multiplyScalar(y));
+    }
+    function limb(top, target, pole, restSide) {
+      var mid = childOf(top), end = childOf(mid), m = reach(top, target, pole);
+      var d1 = m.clone().sub(np[top]).normalize(), d2 = target.clone().sub(m).normalize(), side = new V().crossVectors(d1, d2);
+      if (side.lengthSq() < 1e-6) side.copy(restSide); side.normalize(); if (side.dot(restSide) < 0) side.negate();
+      aim(top, d1, side, restSide); aim(mid, d2, side, restSide);
+      np[mid] = m; np[end] = target.clone();
+      return { mid: mid, end: end };
+    }
+    var H = rp[root].y; // the rest hip height, in metres: the targets below are fractions of the body's own size
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1, th = idx["thigh." + n];
+      // cross-legged: the knee out and forward, the ankle tucked in front under the other knee, the left shin in front
+      var ankle = new V(-sgn * 0.13 * H, 0.08 * H, (i ? 0.2 : 0.32) * H), pole = new V(sgn * 0.9, 0.25, 0.5).normalize();
+      if (seat > SEAT_FLOOR + 0.05) { ankle.set(sgn * 0.12 * H, 0.07 * H, 0.55 * H); pole.set(sgn * 0.3, 0.2, 1).normalize(); } // on a cushion the feet come down in front
+      var L = limb(th, ankle, pole, new V(1, 0, 0));
+      var ft = L.end, toe = idx["toe." + n];
+      var fdir = new V(-sgn * 0.75, -0.25, 0.6).normalize(); if (seat > SEAT_FLOOR + 0.05) fdir.set(0, -0.35, 1).normalize();
+      // the foot keeps its own rest roll: aim its long axis and let its sole face the floor's way
+      var restF = rp[toe].clone().sub(rp[ft]).normalize(), R = new Q().setFromUnitVectors(restF, fdir);
+      nq[ft] = R.multiply(rq[ft]);
+    });
+    // the arms: hands resting on the thighs near the knees, the elbows a little out and back
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1, ua = idx["upper_arm." + n], kn = idx["shin." + n];
+      var hand = np[kn].clone().lerp(np[idx["thigh." + n]], 0.3).add(new V(0, 0.07 * H, 0)), pole = new V(sgn * 0.6, -0.1, -1).normalize();
+      limb(ua, hand, pole, new V(-1, 0, 0));
+    });
+    // back to each bone's own turn under its parent, for the bones the pose moves
+    var moved = {}; ["thigh", "shin", "foot", "upper_arm", "forearm"].forEach(function (b) { moved[idx[b + ".L"]] = moved[idx[b + ".R"]] = true; });
+    // twist bones under a moved bone keep their rest turn under it, so each bone's place is worked out down the chain
+    rows.forEach(function (r, i) { if (r[1] >= 0 && !moved[i]) nq[i] = nq[r[1]].clone().multiply(lq[i]); });
+    rows.forEach(function (r, i) { if (moved[i] && r[1] >= 0) out[i] = invert(nq[r[1]]).multiply(nq[i]); });
+    var driven = {}, drivenAt = false; w.chans.forEach(function (c) { if (c.ch.path === "r") driven[c.ch.joint] = true; else if (c.ch.joint === root) drivenAt = true; });
+    return { seat: seat, q: out, lq: lq, lp: lp, driven: driven, drivenAt: drivenAt, root: root, rootAt: new V(lp[root].x, lp[root].y - drop, lp[root].z) };
   }
   // Where a worn body's pose stands now, for tests and the viewer: its stance, the eased numbers and the Integrate frame.
   function bodyPose(g) {
@@ -2353,6 +2380,16 @@
       if (gn !== null && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: gn }, "a preview link"); } catch (e) { sp = null; }
       load().then(function (A) { return homeBase(A, home, { where: skipAt, near: skipGo === "elder" ? "elder" : null, spirit: sp, hidden: Math.min(10, hd) }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
     } else if (skipGo === "cave") dive(skipAt, home);
+    else if (skipGo === "bigmind") goOn({ at: "bigmind", where: "" });
+    // ?go=bigmind&sit=1 goes in and sits the figure down as soon as the hall lets it (a look at the seated pose)
+    if (skip && skip.get("sit") && skipGo === "bigmind") {
+      var sitTries = 0, sitPoll = setInterval(function () {
+        var e = document.querySelector("[data-bm-enter]"), b = document.querySelector("[data-bm-sitbtn]");
+        if (e && e.offsetParent) e.click();
+        else if (b && b.style.display !== "none" && !b.disabled && b.offsetParent) { clearInterval(sitPoll); b.click(); }
+        else if (++sitTries > 120) clearInterval(sitPoll);
+      }, 250);
+    }
   }
   // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
   function continueTo() {
@@ -3800,7 +3837,7 @@
       modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", "standing"); closeModal();
       var from = S.g.position.clone(), nm = S.name.trim() || S.gen;
       tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); if (branch === "stood" && !S.spirit) S.come = ease(k); }, function () {
-        scene.remove(S.g); dropLight(S.g); sit = null; avatar.userData.seat = null; modal.removeAttribute("data-cave-sit-step");
+        scene.remove(S.g); dropLight(S.g); sit = null; modal.removeAttribute("data-cave-sit-step");
         var o = { name: nm, element: S.element, lighter: branch === "goes" };
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
@@ -3815,13 +3852,12 @@
         unstashPage(S.back);
       });
     }
-    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure lowers to sit.
+    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure sits down.
     function sitFrame(dt, nowMs, route, wk, h) {
       var S = sit; if (!S || route !== S.route) return;
       var a = at(route, Math.min(route.len || 1e9, wk.s + 2.4 + 9 * S.come));
       S.g.position.set(a.x, a.y - h * 0.92 + 0.15 + 0.05 * Math.sin(nowMs / 700), a.z);
-      if (avatar.userData.walker) avatar.userData.seat = S.k > 0 ? { k: S.k, hip: avatar.position.y + 0.25, cross: true } : null; // legs crossed on the floor
-      else avatar.position.y -= 0.32 * S.k;
+      seatAvatar(avatar, S.k); // sat on the tunnel floor, cross-legged
       var hex = sitHex(S), body = S.g.userData.body, col = S.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
       body.material.color.copy(col); body.material.emissive.copy(col);
       var grow = S.allowed ? 1 + S.allow.grow / 10 : 1; S.g.scale.setScalar(S.g.scale.x + (grow - S.g.scale.x) * Math.min(1, dt * 2));
@@ -4924,7 +4960,6 @@
     api.camAt = function () { return camera.position.toArray(); }; // tests: where the camera is this frame
     api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
-    api.worn = function () { return walkerJoints(avatar); };
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k,
       around: sit.around.map(function (o) { return { name: o.name, d: Math.hypot(o.g.position.x - avatar.position.x, o.g.position.z - avatar.position.z), y: o.g.position.y - avatar.position.y }; }) } : null; };
     api.carried = function () { return carried.length; };
@@ -6481,15 +6516,9 @@
         }
         avatar.position.set(fig.x, 0, fig.z); avatar.rotation.y = fig.yaw;
         var sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
-        avatar.userData.seat = sk > 0 ? { k: sk, hip: SEAT_TOP + 0.1, cross: false } : null; // the worn walker sits on the cushion
         poseAvatar(avatar, fig.clk, moving, dt, br.b, 0.7, R.calm);
-        var J = avatar.userData.J;
         if (sk > 0) {
-          ["L", "R"].forEach(function (n) {
-            J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - sk) - 1.45 * sk; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - sk) + 1.45 * sk;
-            J["ankle" + n].rotation.x *= 1 - sk; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - sk) - 0.35 * sk; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - sk) - 0.5 * sk;
-          });
-          J.hips.position.y = J.hips.position.y * (1 - sk) + 0.6 * sk;
+          seatAvatar(avatar, sk, { seat: SEAT_TOP / (FIG_K * AVATAR_H / BODY_FRAME_H) + SEAT_PAD }); // on the cushion, its hip joints just above its top
           avatar.position.z = fig.z - Math.cos(fig.yaw) * 0.25 * FIG_K * sk; avatar.position.x = fig.x - Math.sin(fig.yaw) * 0.25 * FIG_K * sk; // hips back over the seat
         }
         loosenAvatar(avatar, 0, br.b);
@@ -6622,7 +6651,7 @@
         },
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
-        walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, worn: walkerJoints(avatar), seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
+        walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
         // where a charge's form (or its shade's) is on screen, how opaque it is drawn, and whether it is clear of the card
         seen: function (which) {
@@ -6669,7 +6698,7 @@
     el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
     makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
     buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
-    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, integrateBody: integrateBody, bodyPose: bodyPose, BODY_STANCES: BODY_STANCES, dressCave: dressCave, DAEMONS: DAEMONS,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, seatAvatar: seatAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, integrateBody: integrateBody, bodyPose: bodyPose, BODY_STANCES: BODY_STANCES, dressCave: dressCave, DAEMONS: DAEMONS,
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
