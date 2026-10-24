@@ -1,6 +1,7 @@
 /* The studio boat, Lantern deck (art direction https://claude.ai/artifact/85chXzRvLpPj7dumm6hi5z, still A).
  * A Phaser 3 side view you walk left and right across. Every house is a strand of the work, and how it looks is how
  * the strand is doing. Data arrives as window.BOAT (src/lib/studio/world.ts); nothing here is a list or a panel.
+ * Spirits come from the spirit generator's pixel renders (sprites/spirits.png: 18 bases across, the five elements down).
  * Params: ?skip=1 starts awake, ?intro=1 forces the wake-up, ?strand=<name> walks to that house, ?sky=dawn|day|dusk|night. */
 (function () {
   'use strict'
@@ -9,6 +10,12 @@
   const FLOOR = [640, 440] // lower deck, upper gallery
   const INK = '#3b2a3f'
   const SPEED = 280
+  const ELEMENTS = ['earth', 'wood', 'fire', 'water', 'metal'] // rows of sprites/spirits.png
+  const BASES = 18
+  const BELLS = 3 // only the freshest waiting houses hang a bell; the rest keep a letter on the door
+  const nameHash = s => { let h = 7; for (const ch of s) h = (h * 131 + ch.charCodeAt(0)) >>> 0; return h }
+  /** A strand's own spirit: a stable base and element, so it is the same creature every visit. */
+  const spiritOf = strand => { const n = nameHash(strand); return (n % ELEMENTS.length) * BASES + (Math.floor(n / 5) % BASES) }
 
   // ---------- small helpers ----------
   const store = {
@@ -120,7 +127,7 @@
       c.fillStyle = '#fff7e6'; ink(c, 2); rr(c, -14, -10, 28, 20, 2); c.fill(); c.stroke()
       c.beginPath(); c.moveTo(-14, -10); c.lineTo(0, 2); c.lineTo(14, -10); c.stroke()
       c.fillStyle = '#d0453a'; c.beginPath(); c.arc(0, 2, 4, 0, 7); c.fill(); c.restore()
-      ink(c, 3); c.beginPath(); c.moveTo(x0 + w - 6, top + 12); c.lineTo(x0 + w + 12, top + 12); c.stroke() // bell bracket
+      if (h.belled) { ink(c, 3); c.beginPath(); c.moveTo(x0 + w - 6, top + 12); c.lineTo(x0 + w + 12, top + 12); c.stroke() } // bell bracket
     }
     if (h.look === 'scaffold') {
       ink(c, 3); c.strokeStyle = '#8a5a32'
@@ -165,8 +172,6 @@
     // door
     ink(c); c.fillStyle = '#7a4a32'; c.beginPath(); c.moveTo(214, base - 2); c.lineTo(214, 112); c.arc(234, 112, 20, Math.PI, 0); c.lineTo(254, base - 2); c.closePath(); c.fill(); c.stroke()
     c.fillStyle = '#f3d48a'; c.beginPath(); c.arc(246, 156, 3, 0, 7); c.fill()
-    // the ship's log on the sill
-    c.fillStyle = '#6b3d2e'; ink(c, 2); c.fillRect(60, 150, 34, 9); c.strokeRect(60, 150, 34, 9)
   }
 
   function drawEverdoor(c) {
@@ -197,6 +202,29 @@
     ink(c, 3); c.fillStyle = '#a8784a'; c.fillRect(24, top - 2, w - 140, 12); c.strokeRect(24, top - 2, w - 140, 12)
   }
 
+  /** The crew wear the player's walk frames in their own coat colour: purple cloth is turned to a new hue, skin,
+   * sash and boots stay as they are. */
+  const STRIDE = ['player_t0', 'player_t0_26', 'player_t0_52', 'player_t0_78']
+  const COATS = [18, 140, 185, 45, 330] // hues: rust, green, teal, mustard, rose
+  function recolor(scene, src, key, hue) {
+    const img = scene.textures.get(src).getSourceImage(), t = scene.textures.createCanvas(key, img.width, img.height), c = t.getContext()
+    c.drawImage(img, 0, 0)
+    const d = c.getImageData(0, 0, img.width, img.height), p = d.data
+    for (let i = 0; i < p.length; i += 4) {
+      if (!p[i + 3]) continue
+      const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, ch = mx - mn
+      if (ch < 0.12) continue
+      let h = mx === r ? ((g - b) / ch) % 6 : mx === g ? (b - r) / ch + 2 : (r - g) / ch + 4
+      h = (h * 60 + 360) % 360
+      if (h < 215 || h > 300) continue
+      const s = ch / (1 - Math.abs(2 * l - 1)), L = Math.min(0.8, l * 1.35)
+      const C = (1 - Math.abs(2 * L - 1)) * Math.min(1, s), X = C * (1 - Math.abs(((hue / 60) % 2) - 1)), m = L - C / 2
+      const [rr, gg, bb] = hue < 60 ? [C, X, 0] : hue < 120 ? [X, C, 0] : hue < 180 ? [0, C, X] : hue < 240 ? [0, X, C] : hue < 300 ? [X, 0, C] : [C, 0, X]
+      p[i] = (rr + m) * 255; p[i + 1] = (gg + m) * 255; p[i + 2] = (bb + m) * 255
+    }
+    c.putImageData(d, 0, 0); t.refresh()
+  }
+
   function makeTex(scene, key, w, h, fn) {
     const t = scene.textures.createCanvas(key, w, h)
     fn(t.getContext(), w, h); t.refresh()
@@ -210,11 +238,12 @@
       const s = '/studio/sprites/'
       for (const k of ['fox', 'fox_side', 'tortoise_side', 'crew_side', 'player_t0', 'player_t0_26', 'player_t0_52', 'player_t0_78', 'player_side', 'player_back'])
         this.load.image(k, s + k + '.png')
+      this.load.spritesheet('spirits', s + 'spirits.png', { frameWidth: 64, frameHeight: 64 })
     }
 
     create() {
-      const S = this
       this.houses = []; this.bells = []
+      this.textures.get('spirits').setFilter(Phaser.Textures.FilterMode.NEAREST)
       // sky, anchored to the camera sideways and to the world up and down
       makeTex(this, 'sky', 4, 512, (c, w, h) => {
         const g = c.createLinearGradient(0, 0, 0, h)
@@ -238,10 +267,43 @@
         c.fillStyle = '#f7ecd0'; c.beginPath(); c.arc(40, 40, 26, 0, 7); c.fill()
         c.globalCompositeOperation = 'destination-out'; c.beginPath(); c.arc(52, 32, 24, 0, 7); c.fill()
       })
-      makeTex(this, 'island', 360, 120, c => {
-        c.fillStyle = 'rgba(70,60,110,0.85)'; c.beginPath(); c.moveTo(0, 120); c.quadraticCurveTo(60, 40, 140, 50)
-        c.quadraticCurveTo(200, 0, 260, 50); c.quadraticCurveTo(330, 60, 360, 120); c.closePath(); c.fill()
-        c.fillStyle = 'rgba(70,60,110,0.9)'; c.fillRect(200, 18, 6, 30); c.beginPath(); c.moveTo(196, 22); c.lineTo(203, 6); c.lineTo(210, 22); c.fill()
+      // an island is a far mountain with a nearer shoulder and a lighthouse, tall enough to rise over the roofs
+      makeTex(this, 'island', 520, 360, c => {
+        c.fillStyle = '#8a76a6'; c.beginPath(); c.moveTo(0, 360); c.quadraticCurveTo(90, 250, 170, 170); c.quadraticCurveTo(230, 30, 290, 24)
+        c.quadraticCurveTo(340, 40, 380, 150); c.quadraticCurveTo(450, 250, 520, 360); c.closePath(); c.fill()
+        c.fillStyle = '#6b4f7a'; c.beginPath(); c.moveTo(40, 360); c.quadraticCurveTo(120, 220, 210, 214); c.quadraticCurveTo(300, 210, 340, 250)
+        c.quadraticCurveTo(420, 290, 480, 360); c.closePath(); c.fill()
+        for (const [tx, ty] of [[150, 236], [180, 222], [250, 214]]) { c.beginPath(); c.moveTo(tx - 12, ty + 8); c.lineTo(tx, ty - 26); c.lineTo(tx + 12, ty + 8); c.fill() }
+        c.fillRect(300, 186, 12, 40); c.beginPath(); c.moveTo(296, 190); c.lineTo(306, 168); c.lineTo(316, 190); c.fill()
+        c.fillStyle = '#ffe6a8'; c.fillRect(302, 192, 8, 8)
+        c.fillStyle = 'rgba(255,240,230,0.18)'; c.fillRect(0, 330, 520, 30) // haze where it meets the sea
+      })
+      // asleep in the hammock: a quilt over a sleeper, a nightcap and a closed eye; after waking, just the quilt
+      const quilt = (c, w, head) => {
+        const mid = w / 2
+        ink(c, 3); c.fillStyle = '#d9c3a0'
+        c.beginPath(); c.moveTo(6, 8); c.quadraticCurveTo(mid, 76, w - 6, 8); c.lineTo(w - 20, 22); c.quadraticCurveTo(mid, 66, 20, 22); c.closePath(); c.fill(); c.stroke()
+        const cols = ['#c86a5a', '#e9c45a', '#7aa38a', '#6a8fd0', '#d98fb0']
+        c.save(); c.beginPath(); c.moveTo(head ? 54 : 30, 30); c.quadraticCurveTo(mid, head ? 18 : 40, w - 26, 26); c.quadraticCurveTo(mid, 82, head ? 54 : 30, 30); c.clip()
+        for (let i = 0; i < 12; i++) { c.fillStyle = cols[i % cols.length]; c.fillRect(20 + i * (w - 40) / 12, 0, (w - 40) / 12 + 1, 90) }
+        c.restore()
+        ink(c, 3); c.beginPath(); c.moveTo(head ? 54 : 30, 30); c.quadraticCurveTo(mid, head ? 18 : 40, w - 26, 26); c.quadraticCurveTo(mid, 82, head ? 54 : 30, 30); c.stroke()
+        if (!head) return
+        c.fillStyle = '#f0c49a'; c.beginPath(); c.arc(40, 30, 15, 0, 7); c.fill(); c.stroke()
+        c.lineWidth = 2; c.beginPath(); c.arc(36, 31, 5, 0.2, Math.PI - 0.2); c.stroke()
+        c.fillStyle = '#6a8fd0'; ink(c, 2.5); c.beginPath(); c.moveTo(26, 24); c.quadraticCurveTo(34, 6, 54, 14); c.lineTo(66, 30); c.quadraticCurveTo(50, 18, 26, 24); c.fill(); c.stroke()
+        c.fillStyle = '#fff6e6'; c.beginPath(); c.arc(68, 32, 5, 0, 7); c.fill(); c.stroke()
+      }
+      const hw = W.mastX - 10 - (W.wheelhouseX + 156)
+      makeTex(this, 'sleeper', hw, 90, (c, w) => quilt(c, w, true))
+      makeTex(this, 'quilt', hw, 90, (c, w) => quilt(c, w, false))
+      // the ship's log open on a lectern by the wheelhouse door
+      makeTex(this, 'lectern', 70, 110, c => {
+        ink(c, 3); c.fillStyle = '#8a5a32'; c.fillRect(30, 40, 10, 66); c.strokeRect(30, 40, 10, 66); c.fillRect(16, 100, 38, 8); c.strokeRect(16, 100, 38, 8)
+        c.fillStyle = '#6b3d2e'; c.beginPath(); c.moveTo(4, 40); c.lineTo(66, 28); c.lineTo(66, 40); c.lineTo(4, 52); c.closePath(); c.fill(); c.stroke()
+        c.fillStyle = '#fbf1dc'; c.beginPath(); c.moveTo(8, 34); c.lineTo(35, 20); c.lineTo(62, 26); c.lineTo(62, 32); c.lineTo(35, 28); c.lineTo(8, 42); c.closePath(); c.fill(); c.stroke()
+        c.strokeStyle = 'rgba(120,90,60,0.6)'; c.lineWidth = 1
+        for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(13, 37 - i * 3); c.lineTo(31, 28 - i * 3); c.moveTo(39, 26 + i * 0); c.stroke() }
       })
       makeTex(this, 'hull', W.width + 60, 200, (c, w) => drawHull(c, w))
       makeTex(this, 'wheelhouse', 300, 204, c => drawWheelhouse(c))
@@ -278,13 +340,14 @@
       const span = W.width * 0.35 + 1800
       this.islands = W.islands.map((g, i) => {
         const im = this.add.image(200 + i * span / 7, 604, 'island').setOrigin(0.5, 1).setScrollFactor(0.35, 1).setDepth(-90)
-          .setScale(g.state === 'here' ? 2.3 : 1.4 + 0.12 * i).setAlpha(g.state === 'ahead' ? 0.55 : 1)
+          .setScale(g.state === 'here' ? 1.5 : 1.05 + 0.04 * i).setAlpha(g.state === 'ahead' ? 0.6 : 1)
         if (g.state === 'here') { im.setTint(0xb9a3e6); this.here = im }
         if (g.state === 'passed') im.setTint(0x9fd3a4)
         return im
       })
       if (this.here) {
-        const beam = this.add.image(this.here.x + 32, this.here.y - 250, 'dot').setScrollFactor(0.35, 1).setScale(2.2).setDepth(-89)
+        const sc = this.here.scaleX
+        const beam = this.add.image(this.here.x + 46 * sc, this.here.y - 164 * sc, 'dot').setScrollFactor(0.35, 1).setScale(3.2).setDepth(-89).setBlendMode(Phaser.BlendModes.ADD)
         this.tweens.add({ targets: beam, alpha: 0.25, duration: 1400, yoyo: true, repeat: -1 })
         this.here.setScale(this.here.scaleX * (1 + 0.05 * Math.min(10, store.get('closer', 0))))
       }
@@ -332,7 +395,7 @@
       sag(W.mastX, 60, W.width - 60, 560, 120); sag(W.mastX, 60, 60, 580, 120)
       for (let x = g0; x < g1 - 1; x += 330) sag(x, FLOOR[1] - 30, Math.min(g1, x + 330), FLOOR[1] - 30, 30)
       for (const [x, y] of lamp) {
-        const b = add(this.add.image(x, y, 'dot').setScale(0.7).setAlpha(0.5 + 0.5 * SKY.lamp))
+        const b = add(this.add.image(x, y, 'dot').setScale(0.7).setAlpha(0.5 + 0.5 * SKY.lamp).setBlendMode(Phaser.BlendModes.ADD))
         this.tweens.add({ targets: b, alpha: 0.35, duration: 700 + rand() * 1800, yoyo: true, repeat: -1, delay: rand() * 1500 })
       }
       // the Everdoor at the stern, the wheelhouse midship
@@ -346,10 +409,17 @@
       this.hammock = add(this.add.graphics()).lineStyle(3, 0x3b2a3f).fillStyle(0xd9c3a0)
       this.hammock.beginPath(); this.hammock.moveTo(hx0, 560); this.hammock.lineTo(hx0 + 14, 586)
       this.hammock.lineTo((hx0 + hx1) / 2, 606); this.hammock.lineTo(hx1 - 14, 586); this.hammock.lineTo(hx1, 560)
-      this.hammock.strokePath(); this.hammock.fillTriangle(hx0 + 14, 586, (hx0 + hx1) / 2, 606, hx1 - 14, 586)
+      this.hammock.strokePath()
+      this.sleeper = add(this.add.image(hx0, 556, 'quilt').setOrigin(0, 0))
+      this.lecternX = W.wheelhouseX - 112
+      add(this.add.image(this.lecternX, FLOOR[0] + 2, 'lectern').setOrigin(0.5, 1))
+      this.logGlow = add(this.add.image(this.lecternX, FLOOR[0] - 78, 'dot').setScale(3).setAlpha(0.5).setBlendMode(Phaser.BlendModes.ADD))
+      this.tweens.add({ targets: this.logGlow, alpha: 0.2, duration: 1600, yoyo: true, repeat: -1 })
 
       // houses
-      for (const h of W.houses) {
+      const belled = new Set(W.houses.filter(h => h.look === 'bell').sort((a, b) => a.days - b.days).slice(0, BELLS).map(h => h.strand))
+      for (const h0 of W.houses) {
+        const h = { ...h0, belled: belled.has(h0.strand) }
         const key = 'h-' + h.strand, keyLit = key + '-lit'
         makeTex(this, key, 160, 234, c => drawHouse(c, h, h.look === 'lit'))
         if (h.look === 'bell') makeTex(this, keyLit, 160, 234, c => drawHouse(c, { ...h, look: 'lit' }, true))
@@ -359,14 +429,14 @@
         if (h.look === 'lit' || h.look === 'scaffold') {
           const lit = h.look === 'lit'
           if (lit && h.hue % 3 !== 1) add(this.add.particles(h.x + 39, y - 166, 'puff', { lifespan: 3200, speedY: { min: -22, max: -14 }, speedX: { min: 2, max: 10 }, scale: { start: 0.3, end: 1.4 }, alpha: { start: 0.45, end: 0 }, frequency: 600 }))
-          if (lit) add(this.add.image(h.x - 31, y - 106, 'dot').setScale(4).setAlpha(0.35 * SKY.lamp + 0.15))
+          if (lit) add(this.add.image(h.x - 31, y - 106, 'dot').setScale(5).setAlpha(0.35 * SKY.lamp + 0.15).setBlendMode(Phaser.BlendModes.ADD))
         }
         if (h.look === 'bell') {
-          rec.bell = add(this.add.image(h.x + 80, y - 106, 'bell').setOrigin(0.5, 0).setScale(0.8))
-          rec.glow = add(this.add.image(h.x + 29, y - 32, 'dot').setScale(2.6).setAlpha(0.6))
+          if (h.belled) rec.bell = add(this.add.image(h.x + 80, y - 106, 'bell').setOrigin(0.5, 0).setScale(0.8))
+          rec.glow = add(this.add.image(h.x + 29, y - 32, 'dot').setScale(2.6).setAlpha(0.6).setBlendMode(Phaser.BlendModes.ADD))
           this.tweens.add({ targets: rec.glow, alpha: 0.15, duration: 900, yoyo: true, repeat: -1 })
-          rec.spirit = add(this.add.image(h.x - 30, y + 2, 'fox').setOrigin(0.5, 1).setScale(0.5).setFlipX(true))
-          rec.spirit.setTint(Phaser.Display.Color.HSLToColor(((h.hue + 20) % 360) / 360, 0.35, 0.85).color)
+          rec.spirit = add(this.add.image(h.x - 34, y + 4, 'spirits', spiritOf(h.strand)).setOrigin(0.5, 1).setScale(1.45))
+          this.tweens.add({ targets: rec.spirit, scaleY: 1.5, duration: 1100 + (h.hue % 7) * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }) // breathing
           this.bells.push(rec)
           if (tended.has(h.strand)) this.tend(rec, true)
         }
@@ -380,29 +450,40 @@
       // a finished strand's spirit walks through the Everdoor
       this.doneQueue = [...W.done]
       if (this.doneQueue.length) this.time.addEvent({ delay: 9000, loop: true, startAt: 6000, callback: () => this.walkThrough() })
-      // crew: Opus staff wear gold
+      this.anims.create({ key: 'walk', frames: STRIDE.map(key => ({ key })), frameRate: 7, repeat: -1 })
+      COATS.forEach((hue, c) => {
+        STRIDE.forEach(k => recolor(this, k, `coat${c}-${k}`, hue))
+        this.anims.create({ key: 'walk' + c, frames: STRIDE.map(k => ({ key: `coat${c}-${k}` })), frameRate: 7, repeat: -1 })
+      })
+      // crew: Opus staff wear gold; each mate has their own coat, build and stride, and walks only while moving
       this.crew = W.crew.map((m, i) => {
         const home = this.houses.find(r => r.h.strand === m.home)
-        const x = home ? home.h.x : W.mastX + 80 + i * 40
-        const body = this.add.image(0, 0, 'crew_side').setOrigin(0.5, 1).setScale(0.42)
-        const hat = this.add.image(-6, -112, m.opus ? 'hat' : 'cap').setScale(0.62)
+        const x = (home ? home.h.x : W.mastX + 80) + (i % 2 ? 46 : -46)
+        const sc = 0.38 + (i % 4) * 0.025
+        const coat = i % COATS.length
+        const body = this.add.sprite(0, 0, `coat${coat}-player_t0`).setOrigin(0.5, 1).setScale(sc, sc * (1 - (i % 3) * 0.04))
+        body.anims.timeScale = 0.42 + (i % 3) * 0.06
+        const hat = this.add.image(-6, -sc * 255, m.opus ? 'hat' : 'cap').setScale(0.62)
         if (!m.opus) hat.setTint(Phaser.Display.Color.HSLToColor(((i * 47) % 360) / 360, 0.5, 0.6).color)
-        const crate = this.add.image(-14, -132, 'crate').setVisible(false)
+        const crate = this.add.image(-14, -sc * 300, 'crate').setVisible(false)
         const ct = add(this.add.container(x, FLOOR[0], [body, crate, hat]))
-        const mate = { m, ct, crate, body, home: x, stack: W.mastX + 70 + (i % 3) * 30 }
-        this.time.delayedCall(800 + i * 1300, () => this.crewTrip(mate))
+        const mate = { m, ct, crate, body, hat, i, coat, home: x, stack: W.mastX + 70 + (i % 3) * 30, speed: 0.1 + (i % 3) * 0.015 }
+        this.time.delayedCall(1500 + i * 2600 + rand() * 1500, () => this.crewTrip(mate))
         return mate
       })
       // crates at the foot of the mast
       for (let i = 0; i < 5; i++) add(this.add.image(W.mastX + 50 + (i % 3) * 34, FLOOR[0] - 15 - Math.floor(i / 3) * 30, 'crate'))
       for (let i = 0; i < 6; i++) add(this.add.image(this.gallery[0] + 140 + i * 520, FLOOR[1] - 12, 'lantern'))
       // the player
-      this.anims.create({ key: 'walk', frames: ['player_t0', 'player_t0_26', 'player_t0_52', 'player_t0_78'].map(key => ({ key })), frameRate: 7, repeat: -1 })
       this.player = add(this.add.sprite(W.mastX - 80, FLOOR[0], 'player_side').setOrigin(0.5, 1).setScale(0.44))
       this.tier = 0; this.path = []; this.onArrive = null
       // the wake behind the stern
-      this.wake = this.add.tileSprite(-420, 690, 460, 40, 'wave').setOrigin(0, 0.5).setAlpha(0.9).setDepth(1)
-      this.add.particles(0, 0, 'dot', { x: { min: -400, max: W.width + 400 }, y: { min: 700, max: 900 }, lifespan: 5000, scale: { start: 0.4, end: 0.1 }, alpha: { start: 0, end: 0.8, ease: 'Sine.easeInOut' }, frequency: 260, speedY: -4 }).setDepth(2)
+      const WATER = 735
+      this.add.rectangle(-6000, WATER, W.width + 12000, 600, Phaser.Display.Color.HexStringToColor(SKY.seaTop).color).setOrigin(0, 0).setAlpha(0.92).setDepth(1).setSize(W.width + 12000, 4000)
+      this.add.tileSprite(-6000, WATER - 14, W.width + 12000, 40, 'wave').setOrigin(0, 0).setDepth(1).setAlpha(0.9)
+      this.add.rectangle(-30, WATER, W.width + 60, 5, 0xffffff).setOrigin(0, 0.5).setAlpha(0.35).setDepth(1) // foam at the waterline
+      this.wake = this.add.tileSprite(-420, WATER, 460, 40, 'wave').setOrigin(0, 0.5).setAlpha(0.9).setDepth(1)
+      this.add.particles(0, 0, 'dot', { x: { min: -400, max: W.width + 400 }, y: { min: 745, max: 900 }, lifespan: 5000, scale: { start: 0.4, end: 0.1 }, alpha: { start: 0, end: 0.8, ease: 'Sine.easeInOut' }, frequency: 260, speedY: -4 }).setDepth(2)
 
       // camera
       const cam = this.cameras.main
@@ -438,7 +519,10 @@
     // ---------- the first 60 seconds ----------
     intro() {
       const cam = this.cameras.main, P = this.player
-      P.setTexture('player_side').setAngle(-84).setPosition((W.wheelhouseX + 156 + W.mastX - 10) / 2 + 30, 606).setFlipX(false)
+      P.setVisible(false).setPosition(W.wheelhouseX + 156 + 40, 560)
+      this.sleeper.setTexture('sleeper')
+      this.zz = this.add.image(W.wheelhouseX + 156 + 60, 540, 'zz').setAlpha(0); this.ship.add(this.zz)
+      this.tweens.add({ targets: this.zz, alpha: { from: 0.9, to: 0 }, y: 500, duration: 2600, repeat: -1 })
       this.asleep = true
       cam.fadeIn(3500, 0, 0, 0)
       const bow = this.bells[0]
@@ -458,9 +542,15 @@
       const P = this.player
       this.asleep = false; this.hint(false)
       store.set('woke', today)
-      const stand = () => { P.setAngle(0).setY(FLOOR[0]).setX(W.mastX - 80); this.follow() }
+      this.sleeper.setTexture('quilt')
+      if (this.zz) { this.tweens.killTweensOf(this.zz); this.zz.destroy(); this.zz = null }
+      const stand = () => { P.setVisible(true).setY(FLOOR[0]).setX(W.mastX - 80); this.follow() }
       if (instant) { stand(); return }
-      this.tweens.add({ targets: P, angle: 0, y: FLOOR[0], x: W.mastX - 80, duration: 700, ease: 'Back.easeOut', onComplete: () => {
+      // out of the hammock: a hop up and down onto the deck
+      P.setVisible(true).setTexture('player_side').setFlipX(true)
+      this.tweens.add({ targets: P, y: 520, duration: 260, ease: 'Quad.easeOut', yoyo: false })
+      this.tweens.add({ targets: P, x: W.mastX - 80, duration: 700, delay: 120, ease: 'Sine.easeInOut' })
+      this.tweens.add({ targets: P, y: FLOOR[0], duration: 440, delay: 260, ease: 'Bounce.easeOut', onComplete: () => {
         this.follow()
         const bow = this.bells.find(b => !b.quiet)
         if (bow) this.walkTo(bow, () => this.knock(bow))
@@ -475,6 +565,7 @@
       const wx = p.worldX, wy = p.worldY - this.ship.y
       const hit = this.houses.find(r => Math.abs(wx - r.h.x) < 78 && wy < r.y + 6 && wy > r.y - 230)
       if (hit) return this.walkTo(hit, () => this.knock(hit))
+      if (Math.abs(wx - this.lecternX) < 40 && wy > FLOOR[0] - 120 && wy < FLOOR[0] + 10) return this.goto(this.lecternX + 40, 0, () => this.shipLog())
       if (Math.abs(wx - W.wheelhouseX) < 150 && wy > FLOOR[1] + 12 && wy < FLOOR[0]) return this.goto(W.wheelhouseX - 60, 0, () => this.chart())
       if (Math.abs(wx - W.everdoorX) < 70 && wy > FLOOR[0] - 240) return this.goto(W.everdoorX + 70, 0, () => this.say(this.player, 'The Everdoor. Strands that finish walk through here.'))
       const tier = wy < FLOOR[1] + 20 && wx > this.gallery[0] && wx < this.gallery[1] ? 1 : 0
@@ -553,9 +644,10 @@
       const el = this.letter, h = rec.h
       el.querySelector('.who').textContent = h.strand.replace(/-/g, ' ')
       el.querySelector('.body').textContent = h.line
-      el.classList.add('open'); this.letterOpen = true
+      const scrim = document.getElementById('scrim')
+      el.classList.add('open'); scrim.classList.add('open'); this.letterOpen = true
       const close = tend => {
-        el.classList.remove('open'); this.letterOpen = false
+        el.classList.remove('open'); scrim.classList.remove('open'); this.letterOpen = false
         el.querySelector('.seal.red').onclick = el.querySelector('.seal.blue').onclick = null
         if (tend) this.tend(rec, false)
       }
@@ -575,7 +667,7 @@
       tended.add(rec.h.strand); store.set('tended.' + today, [...tended])
       this.say(rec.spirit, 'Thank you.', 2000)
       const mate = this.crew[Math.floor(rand() * this.crew.length)]
-      if (mate) { mate.busy = true; this.tweens.killTweensOf(mate.ct); this.tweens.add({ targets: mate.ct, x: rec.h.x - 30, duration: Math.abs(mate.ct.x - rec.h.x) / 0.22, onComplete: () => { mate.busy = false; this.crewTrip(mate) } }) }
+      if (mate) { mate.busy = true; this.tweens.killTweensOf(mate.ct); this.walkMate(mate, rec.h.x - 30, Math.abs(mate.ct.x - rec.h.x) / 0.22, () => { mate.busy = false; this.crewTrip(mate) }) }
       this.tweens.add({ targets: this.sail, scaleX: 1.04, duration: 900, yoyo: true, hold: 2400, ease: 'Sine.easeOut' })
       store.set('closer', store.get('closer', 0) + 1)
       if (this.here) this.tweens.add({ targets: this.here, scale: this.here.scale * 1.05, duration: 2500 })
@@ -592,25 +684,53 @@
       })
     }
 
-    chart() {
-      const el = document.getElementById('chart')
-      el.classList.add('open'); this.letterOpen = true
-      el.onclick = () => { el.classList.remove('open'); this.letterOpen = false }
+    paper(id) {
+      const el = document.getElementById(id), scrim = document.getElementById('scrim')
+      el.classList.add('open'); scrim.classList.add('open'); this.letterOpen = true
+      el.onclick = scrim.onclick = () => { el.classList.remove('open'); scrim.classList.remove('open'); this.letterOpen = false }
     }
 
+    chart() { this.paper('chart') }
+
+    /** The ship's log: the week on board from the record, then what you tended on this phone today. */
+    shipLog() {
+      const mine = [...tended].map(s => 'Today, you tended ' + s.replace(/-/g, ' ') + '.')
+      const lines = [...mine, ...W.log]
+      if (!lines.length) lines.push('A quiet week. Nothing to write.')
+      document.querySelector('#log .body').innerHTML = lines.map(l => '<span>' + l.replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;') + '</span>').join('')
+      this.paper('log')
+    }
+
+    /** A mate fetches a crate from the stack by the mast and carries it home, then works there a while (hammering
+     * at a scaffold, or a stretch), so the walk cycle plays only while they move. */
     crewTrip(mate) {
       if (mate.busy) return
       const goOut = Math.abs(mate.ct.x - mate.home) < 10
       const to = goOut ? mate.stack : mate.home
       mate.crate.setVisible(!goOut)
-      mate.body.setFlipX(to > mate.ct.x)
       const d = Math.abs(to - mate.ct.x)
-      this.tweens.add({ targets: mate.ct, x: to, duration: d / 0.11 + 200, ease: 'Linear', onComplete: () => this.time.delayedCall(1200 + rand() * 2500, () => this.crewTrip(mate)) })
+      this.walkMate(mate, to, d / mate.speed + 200, () => {
+        if (!goOut) this.work(mate)
+        this.time.delayedCall((goOut ? 900 : 5000) + rand() * 5000, () => this.crewTrip(mate))
+      })
+    }
+
+    walkMate(mate, to, ms, then) {
+      mate.body.setFlipX(to > mate.ct.x); mate.body.play({ key: 'walk' + mate.coat, startFrame: mate.i % 4 }, true)
+      this.tweens.add({ targets: mate.ct, x: to, duration: ms, ease: 'Linear', onComplete: () => { mate.body.stop(); mate.body.setTexture(`coat${mate.coat}-player_t0`); if (then) then() } })
+    }
+
+    work(mate) {
+      const h = this.houses.find(r => r.h.strand === mate.m.home)
+      if (h && h.h.look === 'scaffold') { // hammer: lean in and tap, three times
+        mate.body.setFlipX(h.h.x > mate.ct.x)
+        this.tweens.add({ targets: mate.body, angle: { from: 0, to: mate.body.flipX ? 9 : -9 }, duration: 180, yoyo: true, repeat: 5, ease: 'Quad.easeIn' })
+      } else this.tweens.add({ targets: mate.body, scaleY: mate.body.scaleY * 1.04, duration: 700, yoyo: true, ease: 'Sine.easeInOut' }) // a stretch
     }
 
     walkThrough() {
       const strand = this.doneQueue[0]
-      const s = this.add.image(W.everdoorX + 160, FLOOR[0], 'fox').setOrigin(0.5, 1).setScale(0.5).setTint(0xf3ecff).setAlpha(0)
+      const s = this.add.image(W.everdoorX + 160, FLOOR[0], 'spirits', spiritOf(strand)).setOrigin(0.5, 1).setScale(1.45).setFlipX(true).setTint(0xf3ecff).setAlpha(0)
       this.ship.add(s)
       this.tweens.add({ targets: s, alpha: 0.9, duration: 600 })
       this.tweens.add({ targets: s, x: W.everdoorX, duration: 4200, delay: 400, onComplete: () => this.tweens.add({ targets: s, alpha: 0, scale: 0.3, y: FLOOR[0] - 40, duration: 900, onComplete: () => s.destroy() }) })
@@ -623,7 +743,6 @@
       this.ship.y = Math.sin(t / 1400) * 3
       this.waves.tilePositionX += dt * 0.02; this.wake.tilePositionX += dt * 0.12
             for (const c of this.clouds) { c.x += dt * 0.004; if (c.x > 4000) c.x = -300 }
-      for (const m of this.crew) m.body.y = Math.abs(Math.sin(t / 160 + m.home)) * -3
       if (this.asleep || this.letterOpen) return
       const k = this.keys, P = this.player
       const left = k.LEFT.isDown || k.A.isDown, right = k.RIGHT.isDown || k.D.isDown
@@ -648,8 +767,10 @@
   // ---------- in-world paper: the letter and the sea chart ----------
   const css = document.createElement('style')
   css.textContent = `
+  .scrim{position:fixed;inset:0;background:rgba(11,16,38,.5);opacity:0;pointer-events:none;transition:opacity .35s;z-index:9}
+  .scrim.open{opacity:1;pointer-events:auto}
   .paper{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) rotate(-1.5deg) scale(.85);opacity:0;pointer-events:none;
-    transition:opacity .35s,transform .45s cubic-bezier(.2,1.4,.4,1);width:min(86vw,440px);padding:28px 28px 22px;box-sizing:border-box;
+    transition:opacity .35s,transform .45s cubic-bezier(.2,1.4,.4,1);width:min(86vw,420px);padding:24px 26px 18px;box-sizing:border-box;
     background:#fbf1dc;background-image:repeating-linear-gradient(transparent 0 33px,rgba(120,90,60,.12) 33px 34px);
     border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 40px rgba(170,120,60,.25);color:#3b2a3f;
     font-family:Caveat,cursive;z-index:10}
@@ -658,10 +779,11 @@
   .paper .body{font-size:25px;line-height:34px;margin:0}
   .paper .sign{font-size:22px;text-align:right;margin:10px 0 18px}
   .seals{display:flex;justify-content:space-around}
-  .seal{width:76px;height:76px;border-radius:50%;border:0;cursor:pointer;font:700 17px Caveat,cursive;color:#fff6e6;
+  .seal{width:60px;height:60px;border-radius:50%;border:0;cursor:pointer;font:700 17px Caveat,cursive;color:#fff6e6;
     box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),0 4px 10px rgba(0,0,0,.3);transition:transform .15s}
   .seal:active{transform:scale(.9)} .seal.red{background:radial-gradient(circle at 40% 35%,#e0645a,#a3302a)}
   .seal.blue{background:radial-gradient(circle at 40% 35%,#6a8fd0,#34508a)}
+  #log .body span{display:block} #log{max-height:80vh;overflow:auto}
   #chart{width:min(92vw,560px)} #chart svg{width:100%;height:auto;display:block}
   #hint{position:fixed;left:50%;bottom:12%;transform:translateX(-50%);font:700 28px Caveat,cursive;color:#fff6e6;opacity:0;
     transition:opacity .8s;text-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none;z-index:9}
@@ -683,9 +805,12 @@
   <div id="chart" class="paper" role="dialog" aria-label="The sea chart"><p class="who">The way to Chapter 1</p>
     <svg viewBox="0 0 560 230"><polyline points="${route}" fill="none" stroke="#7a5a40" stroke-width="2.5" stroke-dasharray="6 7"/>${isles}</svg>
     <p class="sign">tap to roll it up</p></div>
+  <div id="log" class="paper" role="dialog" aria-label="The ship's log"><p class="who">The ship's log</p><p class="body"></p>
+    <p class="sign">tap to close the book</p></div>
+  <div id="scrim" class="scrim"></div>
   <div id="hint">tap to wake</div>`)
 
-  new Phaser.Game({
+  window.studioBoat = new Phaser.Game({
     type: Phaser.AUTO, parent: 'game', backgroundColor: '#000000',
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     render: { antialias: true, roundPixels: false }, scene: Boat,

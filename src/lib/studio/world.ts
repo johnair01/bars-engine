@@ -16,18 +16,22 @@ export type House = {
   /** What the letter says (bell), or the one line the spirit says when you knock. */
   line: string
   hue: number
+  /** Days since the strand was last touched. */
+  days: number
 }
 export type CrewMate = { id: string; opus: boolean; home: string }
 export type World = {
   width: number; houses: House[]; crew: CrewMate[]; wheelhouseX: number; mastX: number; everdoorX: number
   ladders: number[]; done: string[]; islands: { stage: string; state: string }[]; at: string
+  /** The ship's log in the wheelhouse: what happened on board lately, newest first, in plain words. */
+  log: string[]
 }
 
 export const HOUSE_W = 150
 const GAP = 14
 const STERN = 220 // the Everdoor and its steps
 const WHEELHOUSE_W = 300
-const MAST_W = 120
+const MAST_W = 300 // room for the hammock between the wheelhouse and the mast
 const BOW = 260
 
 /** A thread is building it when it moved within a day; otherwise moving strands just glow. */
@@ -58,7 +62,7 @@ export function worldOf(deck: Deck): World {
   const house = (p: Passenger): Omit<House, 'tier' | 'x'> => ({
     strand: p.strand, look: lookOf(p), glow: Math.round(p.glow * 100) / 100,
     vines: p.mood === 'resting' ? Math.min(1, Math.round((p.days / 21) * 100) / 100 + 0.2) : 0,
-    letters: p.loop?.ahead ?? 0, line: lineOf(p), hue: hueOf(p.strand),
+    letters: p.loop?.ahead ?? 0, line: lineOf(p), hue: hueOf(p.strand), days: p.days,
   })
   const by = (l: Look[]) => deck.passengers.filter(p => l.includes(lookOf(p)))
   const resting = by(['vines']).sort((a, b) => b.days - a.days || a.strand.localeCompare(b.strand))
@@ -91,5 +95,25 @@ export function worldOf(deck: Deck): World {
     })),
     done: by(['everdoor']).map(p => p.strand),
     islands: deck.gates.map(g => ({ stage: g.stage, state: g.state })),
+    log: logOf(deck),
   }
+}
+
+const ago = (d: number) => d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`
+const named = (s: string) => s.replace(/-/g, ' ')
+
+/** The ship's log: the last week on board, newest first, one line a strand, at most a dozen lines. */
+export function logOf(deck: Deck, max = 12): string[] {
+  return deck.passengers
+    .filter(p => p.days <= 7)
+    .sort((a, b) => a.days - b.days || a.strand.localeCompare(b.strand))
+    .slice(0, max)
+    .map(p => {
+      const when = ago(p.days), n = named(p.strand)
+      const what = {
+        everdoor: `${n} walked through the Everdoor`, bell: `${n} rang the bell for you`,
+        scaffold: `the crew raised scaffolding on ${n}`, lit: `a light came on in ${n}`, vines: `${n} lay down to rest`,
+      }[lookOf(p)]
+      return `${when[0].toUpperCase() + when.slice(1)}, ${what}.`
+    })
 }

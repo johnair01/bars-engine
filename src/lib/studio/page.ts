@@ -24,6 +24,6 @@ canvas{display:block;touch-action:none}
 <div id="game" aria-label="The studio boat at sea. Walk the deck; each house is one strand of the work."></div>
 <script>window.BOAT=${data};</script>
 <script src="${PHASER}"></script>
-<script src="/studio/boat.js?v=1"></script>
+<script src="/studio/boat.js?v=2"></script>
 </body></html>`
 }
