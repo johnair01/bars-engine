@@ -5,12 +5,13 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, SEATS, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
 import { createCreature } from "./creature.js";
+import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the baked J5 robe)
 import { createAmbient } from "./ambient.js";
 import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // round 4: caption mode
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
-import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
+import { BEATS, optionsOf, parseLook, lookText, randomLook, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
 import { STYLES as ROOM_STYLES, styleOf, applyStyle } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
@@ -260,38 +261,21 @@ function loadModel(name) {
   return templates[name];
 }
 
-/* A look on the player figure: player.glb is coloured by vertex, six colours read off the file (linear): skin, the robe,
-   its light under-layer, the trousers, the sash, and the shoes. A look sets the skin and the dyed cloth (main, light,
-   shade, trim) from look.js colorsOf; the shoes stay. The figure has no hair mesh, so hair colour waits for one. */
-const FIGURE_SLOTS = [[[0.69, 0.62, 0.53], "skin"], [[0.06, 0.05, 0.19], 0], [[0.81, 0.74, 0.56], 1], [[0.03, 0.03, 0.06], 2], [[0.48, 0.28, 0.05], 3], [[0.01, 0.01, 0.02], null]];
-function paintLook(mesh, colors) {
-  const src = mesh.geometry.attributes.color; if (!src) return;
-  const to = FIGURE_SLOTS.map(([, k]) => k === null ? null : new THREE.Color(k === "skin" ? colors.skin : colors.cloth[k]));
-  const geo = mesh.geometry.clone(), col = geo.attributes.color;
-  for (let i = 0; i < col.count; i++) {
-    const r = col.getX(i), g = col.getY(i), b = col.getZ(i);
-    let best = 0, bd = Infinity;
-    FIGURE_SLOTS.forEach(([c], k) => { const d = (c[0] - r) ** 2 + (c[1] - g) ** 2 + (c[2] - b) ** 2; if (d < bd) { bd = d; best = k; } });
-    if (to[best]) col.setXYZ(i, to[best].r, to[best].g, to[best].b);
-  }
-  col.needsUpdate = true; mesh.geometry = geo;
-}
-/* Build and shape (part 4): no new meshes. Build scales the figure's width; shape moves the shoulder and hip bones out
-   from the spine (shouldered: shoulders out; curved: hips out, shoulders in). [shoulders, hips] */
-const BUILD_W = { slender: 0.9, average: 1, broad: 1.1, round: 1.16 };
-const SHAPE_K = { b: [1.1, 1], c: [0.95, 1.08] };
-const bodyOpts = lk => { const l = lk ? parseLook(lk) : null; return { colors: lk ? colorsOf(lk) : null, build: l && l.build, shape: l && l.shape }; };
+/* A look on the player figure (part 4 fix, his note of 2026-10-24: "the clothes and robes aren't rendering"): every player
+   is the creator's figure, dressed by wardrobe.js: shape and build as bone scales, the cut (jacket, wrap dress, long coat)
+   on the baked robe, the dye, skin and hair. player.glb, a body with a tunic painted on, is no longer drawn. */
+const bodyOpts = lk => ({ look: lk ? parseLook(lk) : null });
 /* Bodies are cloned from one template each; their colour is set per owner on a copy of the robe. */
 async function makeBody(model, height, tint, tintAmt, opts) {
-  const t = await loadModel(model);
+  const dressed = model === "player";
+  const t = await loadModel(dressed ? "dusk/average-dusk" : model);
   const obj = skClone(t.scene);
   const size = t.box.getSize(new THREE.Vector3());
   const tall = model === "fox" || model === "tortoise" ? Math.max(size.x, size.z) : size.y;
   const k = height / Math.max(tall, 0.01);
   obj.scale.setScalar(k);
-  // a look's build widens or narrows the figure, the same height (part 4); its shape moves the shoulders and hips
-  const bw = opts && BUILD_W[opts.build] || 1;
-  if (bw !== 1) obj.scale.set(k * bw, k, k * (1 + (bw - 1) * 0.7));
+  const wardrobe = dressed ? dressFigure(obj, await loadParts(loadGltf)) : null;
+  if (wardrobe) wardrobe.set(opts && opts.look);
   obj.position.y = -t.box.min.y * k;
   const t0box = t.box.min.y;
   const holder = new THREE.Group(); holder.add(obj);
@@ -302,7 +286,6 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   obj.traverse(o => {
     if (o.isMesh) {
       o.frustumCulled = false;
-      if (opts && opts.colors) paintLook(o, opts.colors);
       if (tint != null) {
         const mats = Array.isArray(o.material) ? o.material : [o.material];
         const nm = mats.map(m => { const c = m.clone(); if (c.color && !/eye|glint|lid/i.test(m.name || "")) c.color.lerp(new THREE.Color(tint), tintAmt); return c; });
@@ -315,14 +298,13 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const acts = {};
   for (const n of ["Walk", "Idle"]) { const c = clip(n); if (c) acts[n] = mixer.clipAction(c); }
   if (acts.Idle) acts.Idle.play();
+  if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = true; }
   let walking = false;
   /* Poses made in code over the clip (the player model has a walk and nothing else): sitting cross-legged on a cushion,
      and a wave of the right hand. Bone axes were read off player.glb: hip X lifts the thigh forward, knee X folds the
      shin, shoulder Z raises the arm to the side. */
   const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "shoulderL", "shoulderR", "elbowL", "elbowR", "spine", "neck"]) { const b = obj.getObjectByName(n); if (b) bones[n] = { b, q: b.quaternion.clone() }; }
   const hipsY = bones.hips ? bones.hips.b.position.y : 0;
-  const sk = opts && SHAPE_K[opts.shape];
-  const restPos = {}; if (sk) for (const n of ["shoulderL", "shoulderR", "hipL", "hipR"]) if (bones[n]) restPos[n] = bones[n].b.position.clone();
   const qe = new THREE.Quaternion(), eu = new THREE.Euler();
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
   let sit = 0, waveT = -9, rest = 0;
@@ -330,6 +312,8 @@ async function makeBody(model, height, tint, tintAmt, opts) {
     holder, mixer, isPlayer: !!bones.hipL, scale: k,
     setWalking(w) {
       if (w === walking) return; walking = w;
+      // a dressed figure stands at the Walk's first frame, where the robe was baked, rather than fading to the bind pose
+      if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = !w; if (!w) acts.Walk.time = 0; return; }
       if (acts.Walk) { if (w) { acts.Walk.reset().fadeIn(0.2).play(); acts.Idle && acts.Idle.fadeOut(0.2); } else { acts.Walk.fadeOut(0.3); if (acts.Idle) acts.Idle.reset().fadeIn(0.3).play(); } }
     },
     wave(t) { waveT = t; },
@@ -350,12 +334,12 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         const w = Math.sin(Math.min(1, wv / 1.6) * Math.PI) * 1.4; const wt = Math.min(1, w);
         bend("shoulderR", 0, 0, 2.5, wt); bend("elbowR", 0, 0, Math.sin(wv * 14) * 0.6, wt);
       }
-      if (sk) for (const [n, p] of Object.entries(restPos)) bones[n].b.position.copy(p).multiplyScalar(n.startsWith("shoulder") ? sk[0] : sk[1]);
       if (!bones.hipL) { // a spirit settling down: low, still, breathing
         obj.scale.set(k * (1 + rest * 0.12), k * (1 - rest * 0.38), k * (1 + rest * 0.12));
         obj.position.y = -t0box * k * (1 - rest * 0.38);
         mixer.timeScale = 1 - rest * 0.85;
       }
+      if (wardrobe) wardrobe.dress(acts.Walk ? acts.Walk.time : 0);
     },
   };
 }
