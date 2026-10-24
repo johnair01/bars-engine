@@ -621,6 +621,16 @@ export function buildHollow(scene, opts = {}) {
   // the strengths the flicker moves around; a room style changes them (public/calrunia/room-styles.js applyStyle)
   const base = { hemi: 0.55, fire: 16, lantern: 7 };
   const fire = new THREE.PointLight(0xff8a3a, 16, 10, 1.5); fire.position.set(HEARTH.x * 0.82, 0.8, HEARTH.z * 0.82); root.add(fire);
+  /* The hearth can be out (Still C, the first minute: you wake to a cold hearth). `hearth.want` is 1 lit, 0 out; `hearth.k`
+     eases toward it, so the fire catches rather than snapping on. `hearth.ember` (0..1) is the one ember's glow in the cold
+     hearth, tapped to light it; it rides on the fire's own light, so no new light is added. */
+  const hearthFx = { want: 1, k: 1, ember: 0 };
+  const emberMat = new THREE.MeshStandardMaterial({ color: 0x3a1a0c, emissive: 0xff6a1a, emissiveIntensity: 0, roughness: 0.6 });
+  const emberMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 1), emberMat); emberMesh.position.set(0.05, 0.3, 0.16); emberMesh.scale.set(1.3, 0.75, 1); hearth.add(emberMesh);
+  emberMesh.userData.keep = true;
+  const haloTex = canvasTex(64, 64, (c, w, h) => { const g = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, "rgba(255,190,110,1)"); g.addColorStop(0.35, "rgba(255,120,40,.55)"); g.addColorStop(1, "rgba(255,90,20,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h); }, [1, 1]);
+  const emberHalo = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.75), new THREE.MeshBasicMaterial({ map: haloTex, color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  emberHalo.position.set(0.05, 0.3, 0.2); emberHalo.userData.keep = true; hearth.add(emberHalo);
 
   /* ---------- once a frame ---------- */
   const o3 = new THREE.Object3D(), seg = new THREE.Line3(), tmp = new THREE.Vector3();
@@ -631,15 +641,19 @@ export function buildHollow(scene, opts = {}) {
     }
     // fire flicker, and the light it throws
     const fl = 0.75 + Math.sin(t * 11.3) * 0.08 + Math.sin(t * 23.7) * 0.06 + Math.sin(t * 5.1) * 0.08;
-    fire.intensity = base.fire * fl * scale;
-    for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; f.m.scale.set(f.base.x * (1.1 - k * 0.2), f.base.y * k * 1.15, f.base.z); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
+    hearthFx.k += (hearthFx.want - hearthFx.k) * Math.min(1, dt * (hearthFx.want > hearthFx.k ? 0.9 : 3));
+    if (Math.abs(hearthFx.want - hearthFx.k) < 0.002) hearthFx.k = hearthFx.want;
+    const hk = hearthFx.k, eg = hearthFx.ember * (0.75 + 0.25 * Math.sin(t * 2.6)) * (1 - hk);
+    fire.intensity = base.fire * fl * scale * hk + base.fire * 0.09 * eg;
+    emberMat.emissiveIntensity = 0.25 + 2.6 * eg + hk * 0.8; emberHalo.material.opacity = 0.55 * eg; if (cam && eg > 0) emberHalo.lookAt(cam);
+    for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; const g = hk * (0.6 + 0.4 * hk); f.m.visible = g > 0.01; f.m.scale.set(f.base.x * (1.1 - k * 0.2) * Math.max(0.2, g), f.base.y * k * 1.15 * g, f.base.z * Math.max(0.2, g)); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
     for (const sp of spotList) if (sp.light) sp.light.intensity = base.lantern * 0.9 * scale * sp.glow * (0.93 + Math.sin(t * 7 + 1.3) * 0.04 + Math.sin(t * 17) * 0.03);
     for (const sp of spotList) if (sp.takes === "hang" && sp.item) { sp.slot.rotation.z = Math.sin(t * 0.7 + 2) * 0.03; sp.slot.rotation.x = Math.sin(t * 0.5 + 2) * 0.025; }
     for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = base.lantern * scale * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
     if (anim.water) anim.water.uniforms.uT.value = t;
     if (rain.visible) { const { seeds, pos, geo } = anim.rain; seeds.forEach((q, i) => { const y = 9 - ((t * q.sp / 20 + q.ph) % 1) * 24; pos.set([q.x, y, q.z, q.x - 0.04, y - 0.55, q.z], i * 6); }); geo.attributes.position.needsUpdate = true; }
     if (anim.crystalLight) { anim.crystalLight.intensity = 6 * (0.85 + Math.sin(t * 1.3) * 0.15); anim.crystalMat.emissiveIntensity = 1.2 + Math.sin(t * 1.3) * 0.25; }
-    hemi.intensity = base.hemi * (0.6 + 0.4 * scale);
+    hemi.intensity = base.hemi * (0.6 + 0.4 * scale) * (1 + (1 - hearthFx.k) * 1.1); // a cold hearth: the dusk through the window carries the room
     // vines sway
     if (anim.vines) {
       const { mesh, strands } = anim.vines; let k = 0;
@@ -697,7 +711,7 @@ export function buildHollow(scene, opts = {}) {
     ? { shell: "nook", portal: { x: Math.sin(1.35) * 2.9, z: -Math.cos(1.35) * 2.9, yaw: -1.35 }, spawn: [[1.55, 1.55], [-1.55, 1.55]], window: windowAt }
     : { shell: "hollow", portal: { x: 1.3, z: -1.15, yaw: -0.3 }, spawn: [[-0.8, 3.1], [0.8, 3.1]], window: windowAt };
   // what a room style sets (public/calrunia/room-styles.js applyStyle); values only. `spots` is what applyRoom sets.
-  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots };
+  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots, hearth: hearthFx };
   return { root, update, cushions, handles, layout };
 }
 

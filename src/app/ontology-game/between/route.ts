@@ -25,7 +25,7 @@ const PAGE = `<!doctype html>
 <meta name="theme-color" content="#1a1018">
 <title>The Between</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&family=Marcellus&display=swap">
 <link rel="stylesheet" href="/between/garden.css">
 <script type="importmap">
 { "imports": {

@@ -4,7 +4,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, SEATS, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
-import { applyRoom, ITEMS, ITEM_ORDER, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
+import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
+/* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
+import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
+import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
 import { createAmbient } from "./ambient.js";
 import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
@@ -372,6 +375,12 @@ function buildRoom(shell = "hollow") {
   hollow = buildHollow(scene, { lowPower: LOW_POWER, shell });
   builtShell = hollow.layout.shell; roomSig = ""; styleNow = null;
   relayout();
+  wake.group.clear(); wake.group.visible = false; wake.on = false; wake.k = 1; wake.group.scale.setScalar(1);
+  if (builtShell === "nook") { // where you wake in the first minute: front of the room, facing the doorway
+    const c = makeRoomItem("cushion"); wake.group.add(c); wake.group.position.set(0.35, 0, 1.45);
+    wake.yaw = Math.atan2(PORTAL_AT.x - 0.35, PORTAL_AT.z - 1.45); wake.group.rotation.y = wake.yaw;
+  }
+  if (shelf.group) { scene.remove(shelf.group); shelf.group = null; shelf.sig = ""; }
   roomReady = true;
 }
 /* What stands where depends on the shell: the hearth, the doorway, where you wake, and the mirror's default place. */
@@ -424,7 +433,7 @@ const mirror = new THREE.Group(); mirror.position.copy(BETWEEN_AT).setY(DAIS_Y);
   const wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
   const frame = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.045, 8, 40), wood); frame.scale.y = 1.55; frame.position.y = 1.0; mirror.add(frame);
   const glass = new THREE.Mesh(new THREE.CircleGeometry(0.4, 40), new THREE.MeshStandardMaterial({ color: 0xb8ccd8, metalness: 0.9, roughness: 0.12, emissive: 0x30404c, emissiveIntensity: 0.6 }));
-  glass.scale.y = 1.55; glass.position.set(0, 1.0, 0.005); mirror.add(glass);
+  glass.scale.y = 1.55; glass.position.set(0, 1.0, 0.005); mirror.add(glass); mirror.userData.glass = glass;
   const back = glass.clone(); back.material = wood; back.rotation.y = Math.PI; back.position.z = -0.005; mirror.add(back);
   for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.42, 6), wood); leg.position.set(sx * 0.16, 0.19, -0.06); leg.rotation.z = sx * 0.12; mirror.add(leg); }
 }
@@ -462,10 +471,9 @@ function roomNow() {
   return { shell: builtShell, style: (g && g.style) || null, placed: (g ? g.room && g.room.placed : localPlaced) || {} };
 }
 function myEarned() {
-  if (SATCHEL_ALL) return ITEM_ORDER.slice();
+  if (SATCHEL_ALL) return ITEM_ORDER.filter(id => !ITEMS[id].shelf);
   let spirits = []; const st = caveStore(); try { spirits = st ? st.all() : []; } catch {}
-  const home = { ...((list && list.home) || {}), ...myHome };
-  if (NOOK_SKIP && home.oriented == null) home.oriented = 1;
+  const home = minuteDoc({ ...((list && list.home) || {}), ...myHome });
   return earnedItems(earnedEvents({ home, rooms: (list && list.gardens) || [], spirits }));
 }
 const mySatchel = () => satchelOf(myEarned(), builtShell, roomNow().placed, me);
@@ -524,8 +532,9 @@ async function spotTap(sid) {
   if (!armed) return;
   const res = placeOn(builtShell, r.placed, sid, armed, me, now(), myEarned());
   if (!res.ok) { toast(res.why === "does-not-fit" ? "That goes on another kind of spot." : res.why === "taken" ? "Something stands there already." : "That is not in your satchel."); return; }
-  const nm = ITEMS[armed].name; armed = null;
+  const nm = ITEMS[armed].name, was = armed; armed = null;
   await writeRoom(res.patch, res.line);
+  if (was === "mirror" && inNook() && isHome(g) && !mstate().done.mirror) { satchelOpen = false; burst(h.pos.clone().setY(h.pos.y + 0.2), 0xffcf86); minuteAct("mirror"); refreshHud(); return; }
   burst(h.pos.clone().setY(h.pos.y + 0.2), 0xffcf86);
   toast(g && !isHome(g) ? `${nm} set down. ${nameOf(other(g), g)} sees it when they come in.` : `${nm} set down.`);
   if (!mySatchel().length) satchelOpen = false;
@@ -537,7 +546,8 @@ function spotNear(sid, g) {
   const whose = !e.owner || e.owner === me ? "Yours. " + it.line : `${esc(nameOf(e.owner, g))} set it down. Lifting it sends it back to their satchel.`;
   return `<div class="what"><b>${esc(it.name)}</b><span class="t">${whose}</span></div>${canArrange() ? `<div class="row"><button class="ghost" type="button" data-act="spotLift" data-id="${esc(sid)}">${!e.owner || e.owner === me ? "Put it back in the satchel" : "Send it back to them"}</button></div>` : ""}`;
 }
-const satchelBtn = () => `<button class="glassbtn" type="button" data-act="satOpen">Satchel${mySatchel().length ? `<span class="dot" title="Things to set down"></span>` : ""}</button>`;
+const satchelGlows = () => inNook() && garden && isHome(garden) && mySatchel().includes("mirror") && !mstate().done.mirror && (mclock.beat === "mirror" || mstate().skipped.mirror);
+const satchelBtn = () => `<button class="glassbtn${satchelGlows() ? " glow" : ""}" type="button" data-act="satOpen">Satchel${mySatchel().length ? `<span class="dot" title="Things to set down"></span>` : ""}</button>`;
 function setSatchel(on) { satchelOpen = !!on && canArrange(); armed = null; if (satchelOpen) { selected = null; placing = null; } refreshHud(); }
 /* The satchel's small icons, the still's own drawings. */
 const SAT_ICON = {
@@ -553,7 +563,7 @@ function renderSatchel() {
   if (!el) { el = document.createElement("div"); el.id = "satchel"; el.className = "satchel"; el.setAttribute("role", "toolbar"); el.setAttribute("aria-label", "Your satchel"); $("#tools").before(el); }
   const items = satchelOpen ? mySatchel() : [];
   if (armed && !items.includes(armed)) armed = null;
-  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>`;
+  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem${id === "mirror" && satchelGlows() ? " glow" : ""}" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>`;
   el.hidden = !satchelOpen;
   if (el._h !== h) { el.innerHTML = h; el._h = h; }
 }
@@ -582,6 +592,7 @@ const portalVeil = new THREE.MeshStandardMaterial({ color: 0x1a1420, emissive: 0
   const sill = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 0.3), wood); sill.position.y = 0.025; portal.add(sill);
 }
 const portalOpen = () => !!(portalTo && portalTo.open);
+const SHIMMER = new THREE.Color(1.0, 0.82, 0.55);
 function portalTick(t) {
   portal.visible = isHome(garden);
   if (!portal.visible) return;
@@ -589,7 +600,10 @@ function portalTick(t) {
     const st = styleOf(portalTo.style), c = st.sky.low;
     portalVeil.emissive.setRGB(c[0], c[1], c[2]); portalVeil.emissiveIntensity = 0.75 + Math.sin(t * 2.1) * 0.18 + (entering ? 0.6 : 0);
     portalVeil.opacity = 0.85;
-  } else { portalVeil.emissive.setRGB(0.25, 0.2, 0.32); portalVeil.emissiveIntensity = portalTo ? 0.12 : 0.05 + Math.sin(t * 0.7) * 0.03; portalVeil.opacity = 0.92; }
+  } else { portalVeil.emissive.setRGB(0.25, 0.2, 0.32); portalVeil.emissiveIntensity = portalTo ? 0.12 : (inNook() && !minuteOn() ? 0.16 : 0.05) + Math.sin(t * 0.7) * 0.03; portalVeil.opacity = 0.92; }
+  // the first minute's 1:00, and a yes to a scroll: the doorway shimmers open
+  const sh = shimmerT ? (performance.now() - shimmerT) / 1000 : 99;
+  if (sh < 4) { const k = Math.sin(Math.min(1, sh / 4) * Math.PI); portalVeil.emissive.lerp(SHIMMER, k * 0.7); portalVeil.emissiveIntensity += k * (0.35 + 0.15 * Math.sin(t * 9)); portalVeil.opacity = 0.92 - k * 0.2; }
   if (entering && (Math.hypot(meState.pos.x - PORTAL_AT.x, meState.pos.z - PORTAL_AT.z) < 0.75 || performance.now() - entering.t0 > 3800)) {
     const e = entering; entering = null;
     try { sessionStorage.setItem(THROUGH, e.id); } catch {}
@@ -604,7 +618,8 @@ function walkThrough(id, inv) {
   if (!isHome(garden)) { markSeen(); location.href = ROOM_URL(id); return; }
   const r = ((list && list.gardens) || []).find(x => x.id === id);
   if (!portalTo || portalTo.id !== id) portalTo = { id, invite: inv || null, open: true, name: r ? roomName(r) : null, style: r ? r.style : null };
-  if (!portalOpen()) { openSheet("orient"); return; }
+  // the first minute is the only orientation (br-orient-each-invite, his ruling of 2026-10-24): the doorway opens at its end
+  if (!portalOpen() || minuteOn()) { toast("The vines are still on the doorway. It opens at the end of your first minute here."); return; }
   closeSheet(); standUp(); selected = "portal";
   const front = new THREE.Vector3(Math.sin(portal.rotation.y), 0, Math.cos(portal.rotation.y));
   meState.target = PORTAL_AT.clone().add(front.multiplyScalar(0.15));
@@ -910,7 +925,7 @@ function ownerSeatNow(uid) {
   for (const p of peers.values()) if (p.uid === uid && p.sitting) return p.seat;
   return null;
 }
-function standUp() { meState.seatWant = null; if (meState.sitting) { meState.sitting = false; sendPresence(); } }
+function standUp() { meState.seatWant = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); } }
 const peers = new Map(); // peer -> { uid, body, pos, yaw, cur, walking }
 let myBodyHue = null, myBodyLook = null, myBodyBusy = false;
 /* Whose look: yours is the Look sheet's draft while it is open, else your homeroom's; the other person's is the one they
@@ -1015,7 +1030,7 @@ renderer.domElement.addEventListener("pointermove", e => {
     if (h) { carry.ok = walkable(h.x, h.z, 0.3); carry.t.group.position.set(h.x, groundY(h.x, h.z), h.z); carry.at = h; }
     return;
   }
-  if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.05, Math.min(1.1, camPitch + dy * 0.004)); }
+  if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.05, Math.min(1.1, camPitch + dy * 0.004)); if (directCam && directCam.key !== "gust") directCam = null; }
 });
 function endPointer(e) {
   const p = pointers.get(e.pointerId); pointers.delete(e.pointerId); if (pointers.size < 2) pinch0 = null;
@@ -1060,6 +1075,9 @@ function tapAt(cx, cy) {
     consider("spot:" + h.id, h.pos.clone().setY(h.pos.y + (h.takes === "hang" ? -0.42 : h.flat ? 0.25 : 0.15)), h.flat ? 0.6 : 0.42);
   }
   if (best && satchelOpen) { spotTap(best.key.slice(5)); return; }
+  // your shelf: the blank scroll, a scroll that arrived sealed, a keepsake
+  if (shelf.group && !satchelOpen) for (const tp of shelf.taps) consider("shelf:" + tp.key + ":" + (tp.i ?? 0), shelfTapPos(tp), 0.3);
+  if (best && best.key.startsWith("shelf:")) { const [, k, i] = best.key.split(":"); shelfTap(k, +i); return; }
   if (!inNook() || mirrorSpot) consider("between", BETWEEN_AT.clone().setY(DAIS_Y + 0.5), 0.7);
   if (inNook()) consider("window", hollow.layout.window, 1.0);
   if (portal.visible) consider("portal", PORTAL_AT.clone().setY(DAIS_Y + 0.95), 0.75);
@@ -1075,11 +1093,12 @@ function tapAt(cx, cy) {
     else { standUp(); const dir = meState.pos.clone().sub(best.pos).setY(0); if (dir.length() > 1.3) meState.target = pushOut(best.pos.clone().setY(0).add(dir.normalize().multiplyScalar(1.1))); }
     refreshHud(); return;
   }
+  if (best && inNook() && minuteTap(best.key)) return;
   if (best) {
     standUp();
     selected = best.key;
     if (best.key === "hearth" && hearthOpen()) openSheet("hearth");
-    if (best.key === "between" && isHome(view().g)) openSheet("look");
+    if (best.key === "between" && isHome(view().g)) openSheet(mstate().mirrorGlows ? "hope" : "look");
     if (best.key === "window") { if (isHome(view().g)) openSheet("style"); else toast("The light through the window changes from Style."); }
     if (best.key === "portal") { portalTo ? walkThrough(portalTo.id, portalTo.invite) : openSheet("rooms"); return; }
     const dir = meState.pos.clone().sub(best.pos).setY(0); const d = dir.length();
@@ -1089,6 +1108,7 @@ function tapAt(cx, cy) {
   const hit = new THREE.Vector3();
   // the floor: the dais is raised, so try its top first, then the flagstones
   const daisPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -DAIS_Y);
+  directCam = null;
   if (ray.ray.intersectPlane(daisPlane, hit) && Math.hypot(hit.x, hit.z) < 2.6) { meState.target = pushOut(hit.setY(0)); standUp(); selected = null; refreshHud(); return; }
   if (ray.ray.intersectPlane(floorPlane, hit)) { meState.target = pushOut(hit); standUp(); selected = null; refreshHud(); }
 }
@@ -1141,10 +1161,10 @@ function frame() {
     }
     meState.body.setWalking(walking);
     meState.body.holder.position.copy(meState.pos);
-    meState.body.holder.position.y = meState.sitting ? DAIS_Y + 0.17 : groundY(meState.pos.x, meState.pos.z);
+    meState.body.holder.position.y = meState.sitting ? DAIS_Y + 0.17 : wake.on ? 0.2 : groundY(meState.pos.x, meState.pos.z);
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
-    meState.body.pose(t, dt, meState.sitting, false);
+    meState.body.pose(t, dt, meState.sitting || wake.on, false);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
     meState.wasWalking = walking;
   }
@@ -1207,7 +1227,7 @@ function frame() {
     w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
-  stepBetween(t, dt); portalTick(t);
+  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t);
   { const on = sheetName === "checkin" && walk && walk.feel && walk.step >= 0;
     if (on) waveLight.color.setHex(elHex(walk.feel));
     const want = on ? (walk.step === 7 ? 4 : 2.4) * (0.75 + 0.25 * Math.sin(t * 1.25)) : 0;
@@ -1256,6 +1276,14 @@ function frame() {
     cp.lerp(new THREE.Vector3(meState.pos.x, fy, MIRROR_CAM_Z), me3);
     focus.lerp(new THREE.Vector3(meState.pos.x, fy, meState.pos.z), me3);
   }
+  // the minute's beats and a scroll's flight turn the view to what they are about (directView)
+  directK += ((directCam && inNook() && !mirrorOn && roomViewK < 0.5 ? 1 : 0) - directK) * Math.min(1, dt * 1.8);
+  if (directK > 0.001) {
+    const [dp, df] = directView(directCam ? directCam.key : "room", innerWidth < innerHeight), k = directK * directK * (3 - 2 * directK);
+    if (directCam) directCam.last = [dp, df];
+    cp.lerp(dp, k); focus.lerp(df, k);
+  }
+  if (directCam && directCam.key === "gust" && performance.now() - directCam.t0 > 4200) directCam = null;
   const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
@@ -1313,8 +1341,14 @@ function drawLabels(t) {
     const nm = isHome(g) ? "The mirror" : betweenName(V.items) || (g.phase === "spark" ? "The spark" : "The Between");
     placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(DAIS_Y + (isHome(g) ? 1.95 : g.phase === "spark" ? 1.0 : 1.45)));
   }
-  if (portal.visible) placeLabel(label("portal", portalTo ? (portalOpen() ? "To " + (portalTo.name || "the room") : "Shut: read the rules first") : "The doorway to your rooms", ""), PORTAL_AT.clone().setY(DAIS_Y + 2.25));
-  if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting ? DAIS_Y + 1.35 : groundY(meState.pos.x, meState.pos.z) + 1.95));
+  if (portal.visible) placeLabel(label("portal", minuteOn() ? "The doorway, grown over" : portalTo ? (portalOpen() ? "To " + (portalTo.name || "the room") : "Grown over") : "The doorway to your rooms", minuteOn() ? "dim" : ""), PORTAL_AT.clone().setY(DAIS_Y + 2.25));
+  if (inNook() && hollow && hollow.handles.hearth && hollow.handles.hearth.ember) placeLabel(label("ember", "An ember", ""), HEARTH_AT.clone().setY(1.05));
+  if (shelf.group && !satchelOpen) {
+    const sh = myShelf();
+    if (sh.sealed.length) placeLabel(label("shelfS", sh.sealed.length > 1 ? sh.sealed.length + " scrolls, sealed" : "A scroll from " + (sh.sealed[0].name || "someone"), ""), shelf.at.clone().add(new THREE.Vector3(-0.3, 0.42, 0)));
+    else if (sh.blank && !minuteOn()) placeLabel(label("shelfB", "A blank scroll", "dim"), shelf.at.clone().add(new THREE.Vector3(0.3, 0.4, 0)));
+  }
+  if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting || wake.on ? DAIS_Y + 1.35 : groundY(meState.pos.x, meState.pos.z) + 1.95));
   for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting ? DAIS_Y + 1.35 : groundY(p.pos.x, p.pos.z) + 1.95));
   for (const [k, w] of walkers) {
     if (!w.holder) continue;
@@ -1355,7 +1389,10 @@ function refreshHud() {
   const others = [...peers.values()].filter(p => p.uid !== me);
   if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
-  else if (isHome(g) && portalTo && !portalOpen()) hintText = `${portalTo.name ? portalTo.name + " invited you" : "You were invited"} to a room. The doorway by the mirror opens once you read the rules.`;
+  else if (isHome(g) && satchelOpen && minuteOn()) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap the mirror in your satchel, then a glowing spot on the floor.";
+  else if (minuteOn()) hintText = minuteHint();
+  else if (isHome(g) && mclock.beat === "open") hintText = portalTo ? `The doorway is open to ${portalTo.name || "the room"}. Walk through when you are ready. A blank scroll waits on your shelf.` : MINUTE_PROMPTS.open;
+  else if (isHome(g) && portalTo && !portalOpen()) hintText = `${portalTo.name ? portalTo.name + " invited you" : "You were invited"} to a room. The doorway opens at the end of your first minute here.`;
   else if (isHome(g) && portalTo) hintText = `The doorway by the mirror is open to ${portalTo.name || "the room"}. Walk through when you are ready.`;
   else if (isHome(g) && satchelOpen) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap an item in your satchel, then a glowing spot that fits it. Tap a placed item to put it back.";
   else if (isHome(g) && !mirrorSpot && mySatchel().includes("mirror")) hintText = "Your own room. Your mirror is in your satchel: set it on a spot to see yourself. Tap the window to change the light.";
@@ -1371,13 +1408,18 @@ function refreshHud() {
   // near
   const near = $("#near");
   const key = nearKey;
-  const html = key ? nearHtml(key, V, g) : "";
+  const html = key && !minuteOn() ? nearHtml(key, V, g) : "";
   near.hidden = !html || satchelOpen; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
 
   // tools
   const tools = [];
   if (storeDown) { if (inNook()) tools.push(satchelBtn()); }
   else if (!g) tools.push(`<button type="button" data-open="setup">Plant a spark here</button>`);
+  else if (isHome(g) && minuteOn()) {
+    // the first minute keeps the room bare: the satchel once the mirror is in it, and Later for a step you leave
+    if (mstate().mirrorGiven) tools.push(satchelBtn());
+    if (mclock.beat && mclock.laterReady && SKIPPABLE.includes(mclock.beat)) tools.push(`<button class="quiet" type="button" data-act="minuteLater">Later</button>`);
+  }
   else if (isHome(g)) {
     const invs = (list && list.gardens || []).reduce((n, r) => n + (r.invitations || []).length, 0);
     tools.push(`<button type="button" data-open="rooms">Rooms</button>`);
@@ -1411,7 +1453,7 @@ function refreshHud() {
   renderSatchel();
 
   // next: what the Between suggests now, one move per lane at most (br-next-moves-three-lanes)
-  const moves = storeDown || !g || g.phase === "closed" || (!isHome(g) && !isMember(g)) ? [] : nextMoves(g);
+  const moves = storeDown || !g || g.phase === "closed" || (!isHome(g) && !isMember(g)) || minuteOn() ? [] : nextMoves(g);
   const nx = $("#next");
   const nh = moves.length ? `<span class="eyebrow">Next</span>${moves.map((m, i) => `<button type="button" class="${i ? "nmore" : "nfirst"}" data-act="next" data-id="${esc(m.act)}"><span class="lane">${esc(LANE_NAMES[m.lane])}</span> <b>${esc(m.title)}</b>${i ? "" : `<span class="t">${esc(m.line)}</span>`}</button>`).join("")}` : "";
   nx.hidden = !nh || !!nearKey || !!placing || satchelOpen; if (nx._h !== nh) { nx.innerHTML = nh; nx._h = nh; }
@@ -1445,7 +1487,7 @@ function nearHtml(key, V, g) {
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
   if (key === "portal") {
     if (!portalTo) return `<div class="what"><b>The doorway</b><span class="t">Every room you share opens from here. Choose one under Rooms and walk through.</span></div><div class="row"><button type="button" data-open="rooms">Rooms</button></div>`;
-    if (!portalOpen()) return `<div class="what"><b>A doorway, shut</b><span class="t">${esc(portalTo.name ? portalTo.name + " invited you" : "Someone invited you")}. It opens once you have read how the Between works.</span></div><div class="row"><button type="button" data-open="orient">Read the rules</button></div>`;
+    if (!portalOpen()) return `<div class="what"><b>A doorway, grown over</b><span class="t">${esc(portalTo.name ? portalTo.name + " invited you" : "Someone invited you")}. The vines fall as you learn the room, in your first minute here.</span></div>`;
     return `<div class="what"><b>To ${esc(portalTo.name || "the room")}</b><span class="t">The doorway is open.</span></div><div class="row"><button type="button" data-act="through">Walk through</button></div>`;
   }
   if (key === "between" && isHome(g)) {
@@ -1679,10 +1721,12 @@ function openSheet(name, arg) {
   if (name === "invitations" || name === "rooms") refreshList();
   if (name === "spirit" || name === "checkin") fetchHome();
   if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
-  sheetName = name; sheetArg = arg; setMirror(name === "look"); renderSheet();
+  if (name === "invite" && g && !isHome(g) && isMember(g) && members(g).length >= 2 && arg !== "list") { openPaper("write", { room: gardenId }); return; } // a scroll, not a form (Still B)
+  if (name === "hope") caption(MINUTE_CAPTIONS.hope);
+  sheetName = name; sheetArg = arg; setMirror(name === "look" || name === "hope"); renderSheet();
 }
 function closeSheet() {
-  const wasLook = sheetName === "look";
+  const wasLook = sheetName === "look" || sheetName === "hope";
   sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud");
   if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
@@ -1740,7 +1784,7 @@ function renderSheet() {
       <p class="muted small">Your spark can walk beside the Between as your own spirit, or you can let it compost: what it carried is worked, and nothing of it is shown to them.</p>
       <div class="row"><button type="button" data-act="welcomeKeep">Keep it as my own spirit</button><button class="ghost" type="button" data-act="welcomeCompost">Let it compost</button>${close}</div></div>`; break; }
     case "rooms": h = roomsSheet() + close; break;
-    case "orient": if (!portalTo) { closeSheet(); return; } h = orientSheet() + close; break;
+    case "hope": if (!g || !isHome(g)) { closeSheet(); return; } h = hopeSheet(); break;
     case "look": if (!g || !isHome(g)) { closeSheet(); return; } h = lookSheet(); break;
     case "goals": h = goalsSheet() + close; break;
     case "checkin": if (!walk) walk = { feel: null, line: "", step: -1 }; h = checkinSheet(); break;
@@ -1758,34 +1802,29 @@ function renderSheet() {
   inner._h = h; inner.innerHTML = h;
   for (const [id, v] of Object.entries(keep)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; }
   // the mirror and the check-in keep the room in view: no scrim, a darker strip, the scene showing above it
-  const sh = $("#sheet"); sh.classList.toggle("mirror", sheetName === "look"); sh.classList.toggle("walk", sheetName === "checkin");
-  sh.classList.toggle("dark", ["look", "checkin", "spirits"].includes(sheetName));
-  sh.hidden = false; $("#scrim").hidden = sheetName === "look" || sheetName === "checkin";
+  const sh = $("#sheet"); sh.classList.toggle("mirror", sheetName === "look" || sheetName === "hope"); sh.classList.toggle("walk", sheetName === "checkin");
+  sh.classList.toggle("dark", ["look", "checkin", "spirits", "hope"].includes(sheetName));
+  sh.hidden = false; $("#scrim").hidden = sheetName === "look" || sheetName === "checkin" || sheetName === "hope";
   document.body.classList.toggle("quiethud", sheetName === "checkin"); // the room's own buttons step aside while you walk it
   if (sheetName !== "look") readIn(inner); // each choice in the mirror redraws the strip; its words stay put
   const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id] && sheetName !== "checkin") setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
-/* ---------- the orientation before an invitation's doorway opens (part 3, his ruling of 2026-10-23) ---------- */
-function orientSheet() {
-  return `<form class="stack" id="orientForm"><h2>Before you go in</h2>
-    <p>${esc(portalTo.name ? portalTo.name + " invited you" : "Someone invited you")} to a room you would share. In the room lives the Between: a creature made of what the two of you bring each other.</p>
-    <h3>The rules</h3>
-    <ul class="log"><li><b>Yes before anything changes.</b> What one of you brings waits for the other's yes. The room's look changes only when you both say yes.</li>
-      <li><b>You can leave at any time.</b> More, then "Need a silent exit?", closes the room. The other person sees only that it closed, never who left or why.</li>
-      <li><b>Nothing is scored.</b> No points, no counts, no comparing. What you tend is kept as it happened.</li>
-      <li><b>Your homeroom stays yours.</b> Your look, your hopes and your check-ins never leave it.</li></ul>
-    <label class="tick"><input type="checkbox" id="oRead"> I have read this</label>
-    <div class="row"><button type="submit" id="oOpen" disabled>Open the doorway</button></div></form>`;
+/* ---------- the mirror's one question, in the first minute (Still C 0:35): kept with the private goals (br-goals-private) ---------- */
+function hopeSheet() {
+  return `<form class="stack hope" id="hopeForm"><p class="small">You see yourself as you made yourself.</p>
+    <p class="hask"><label for="hText">${esc(HOPE_ASK)}</label></p><textarea id="hText" class="hand" maxlength="280" placeholder="In your words"></textarea>
+    <p class="small muted">Only you will ever see this.</p>
+    <div class="row"><button type="submit">Keep it</button><button class="quiet" type="button" data-act="hopeSkip">${mstate().skipped.hope ? "Not now" : "Skip it"}</button></div></form>`;
 }
-document.addEventListener("change", ev => { if (ev.target.id === "oRead") { const b = $("#oOpen"); if (b) b.disabled = !ev.target.checked; } });
 document.addEventListener("submit", ev => {
-  if (ev.target.id !== "orientForm") return;
-  ev.preventDefault();
-  if (!$("#oRead").checked || !portalTo) return;
-  portalTo.open = true; closeSheet(); burst(PORTAL_AT.clone(), 0xffe2a8);
-  selected = "portal"; refreshHud();
-  toast("The doorway is open. Walk through when you are ready.");
-});
+  if (ev.target.id !== "hopeForm") return;
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  const text = ($("#hText").value || "").trim().slice(0, 280);
+  if (!text) { toast("Write a few words, or skip it for now."); return; }
+  const at = now();
+  closeSheet();
+  minuteAct("hope", "done", { goals: { ["g" + hkey()]: { text, room: null, at } } });
+}, true);
 
 /* ---------- the homeroom's sheets, and the room's Style, Invite and Spellbook (rooms, part 2) ---------- */
 const roomName = r => r.personName || r.who || "someone";
@@ -1987,9 +2026,7 @@ function inviteSheet(g) {
       <div class="row">${navigator.share ? `<button type="button" data-act="joinShare">Send the link</button>` : ""}<button class="${navigator.share ? "ghost" : ""}" type="button" data-act="joinCopy">Copy the link</button></div>` : ""}
     ${!two && !join ? `<p class="muted">Only the person who planted the spark sends its link.</p>` : ""}
     ${two ? `<p class="small muted">Ask them to come and sit with you on the cushions. A yes opens the spells you cast together.</p>
-      <label for="sWhen">When<input id="sWhen" type="datetime-local"></label>
-      <label for="sNote">A note<input id="sNote" maxlength="280" placeholder="Optional"></label>
-      <div class="row"><button type="submit">Send the invitation</button></div>
+      <div class="row"><button type="button" data-act="writeScroll">Write a scroll</button></div>
       ${invs.length ? `<h3>Invitations here</h3><ul class="log">${invs.map(([id, x]) => `<li>${x.by === me ? "You asked them" : esc(nameOf(x.by, g)) + " asked you"} to sit${x.when ? ", " + fmt(x.when) : ""}${x.note ? `: <i>${esc(x.note)}</i>` : ""}.
         ${x.answer ? ` ${x.by === me ? esc(nameOf(o, g)) : "You"} ${ANSWER_TEXT[x.answer]}.` : x.by === me ? ` Waiting for their answer. <button class="quiet" type="button" data-act="invBack" data-id="${esc(id)}">Take it back</button>` : `<span class="row">${answerBtns(gardenId, id)}</span>`}</li>`).join("")}</ul>` : ""}` : ""}</form>`;
 }
@@ -2113,6 +2150,421 @@ async function takeCopy() {
   catch { toast("Saving did not work in this browser. Try again in another one."); }
 }
 
+/* ===================================================================================================
+   Room kit, part 2: the first minute (Still C) and the scroll (Still B), his yes to both stills, 2026-10-24.
+   The pure parts are public/calrunia/first-minute.js and scroll.js; this is how the room shows them.
+   =================================================================================================== */
+const MINUTE_FRESH = PREVIEW_HOST && KQ.get("minute") === "1";      // previews: the first minute from the start, written nowhere
+const SCROLL_PREVIEW = PREVIEW_HOST ? KQ.get("scroll") : null;       // previews: "arrived" (a sealed scroll waits) or "write"
+let rehearse = MINUTE_FRESH ? { minute: {} } : null;                 // the minute's own doc while a preview rehearses it
+/* The homeroom doc the minute reads: the real one, or the rehearsal's; a preview that skips ahead counts the minute as done. */
+function minuteDoc(base = myHome) {
+  const h = { ...(base || {}) };
+  if (rehearse) { h.minute = rehearse.minute || {}; h.oriented = rehearse.oriented ?? null; }
+  else if ((NOOK_SKIP || SCROLL_PREVIEW) && h.oriented == null) h.oriented = 1;
+  return h;
+}
+const mstate = () => minuteState(minuteDoc());
+/* The minute runs in your own nook until the last vine falls. */
+const minuteOn = () => !!(inNook() && garden && isHome(garden) && !storeDown && !mstate().oriented);
+const mclock = { t0: 0, resolvedAt: {}, shownAt: {}, started: false, opened: true, beat: null, laterReady: false };
+const captionMs = s => MINUTE_CAPTIONS[s] ? readMs(MINUTE_CAPTIONS[s].split(/\s+/).length) + 800 : 0;
+/* The beat that is up now: the minute's current step once its time has come, or null while the next one waits. */
+function minuteBeat() {
+  if (!mclock.started) return null;
+  const st = mstate();
+  if (st.step === "open") {
+    if (mclock.opened) return mclock.shownAt.open && now() - mclock.shownAt.open < 25000 ? "open" : null; // its words stay a while
+    return now() >= beatAt("open", { t0: mclock.t0, resolvedAt: mclock.resolvedAt, captionMs }) ? "open" : null;
+  }
+  return now() >= beatAt(st.step, { t0: mclock.t0, resolvedAt: mclock.resolvedAt, captionMs }) ? st.step : null;
+}
+/* Captions: the still's own lines, large and quiet, read in at the player's pace (Ari: never faster than reading). */
+const mcap = document.createElement("div"); mcap.id = "mcap"; mcap.className = "mcap"; mcap.hidden = true; mcap.setAttribute("aria-live", "polite"); document.body.appendChild(mcap);
+function caption(text) {
+  mcap.innerHTML = `<p>${esc(text)}</p>`; mcap.hidden = false; mcap.classList.remove("out"); readIn(mcap);
+  clearTimeout(caption.h); clearTimeout(caption.h2);
+  caption.h = setTimeout(() => { mcap.classList.add("out"); caption.h2 = setTimeout(() => { mcap.hidden = true; }, 900); }, Math.max(4200, readMs(text.split(/\s+/).length) * 1.6 + 3000));
+}
+/* A step done (or left for later): kept in the homeroom's private doc, or in the rehearsal's. */
+async function minuteAct(step, how = "done", extra = null) {
+  const st = mstate();
+  if (how === "done" && st.done[step]) return;
+  const at = now(), w = minuteWrite(step, how, at); if (!w) return;
+  if (mclock.started) mclock.resolvedAt[step] = at;
+  const data = extra ? merge(w, extra) : w;
+  if (rehearse) rehearse = merge(rehearse, w);
+  else { myHome = merge(myHome, data); homeOp(data).catch(() => toast("That did not save. Check your connection and try again.")); }
+  if (how === "done") {
+    if (step === "ember") { burst(HEARTH_AT.clone().setY(0.5), 0xffb060); caption(MINUTE_CAPTIONS.ember); }
+    if (step === "mirror") caption(MINUTE_CAPTIONS.mirror);
+    if (step === "hope") caption(MINUTE_CAPTIONS.hope);
+    if (step === "vine") { caption(MINUTE_CAPTIONS.vine); if (shelf.group) burst(shelf.at.clone().add(new THREE.Vector3(0.3, 0.1, 0)), 0xefe2c4); mclock.opened = !mclock.started; }
+  }
+  if (step === "vine") directCam = { key: "door", t0: performance.now() };
+  // a vine falls for the hearth and the mirror: the view turns to the doorway to see it go, then hands back
+  if (how === "done" && (step === "ember" || step === "mirror") && mclock.started && minuteOn()) setTimeout(() => { directCam = { key: "door", t0: performance.now() }; }, step === "ember" ? 1700 : 900);
+  syncShelf(); refreshHud();
+}
+/* The minute begins (or picks up where a reload left it): you wake on a cushion, the hearth out, the doorway grown over. */
+function minuteStart() {
+  if (!minuteOn() || mclock.started) return;
+  const st = mstate();
+  mclock.started = true; mclock.opened = false;
+  const fresh = st.step === "ember" && !st.skipped.ember;
+  mclock.t0 = now() - (fresh ? 0 : MINUTE_BEATS[st.step] * 1000);
+  for (const s of MINUTE_STEPS) if (s !== st.step && (st.done[s] || st.skipped[s])) mclock.resolvedAt[s] = mclock.t0 - 6e4;
+  if (hollow) hollow.handles.hearth.k = st.hearthLit ? 1 : 0;
+  vines.forEach((v, i) => { v.state = st.fallen[i] ? "gone" : "up"; v.group.visible = !st.fallen[i]; });
+  if (fresh) {
+    wake.group.visible = true; wake.on = true;
+    meState.pos.copy(wake.group.position); meState.yaw = wake.yaw; meState.target = null;
+    caption(MINUTE_CAPTIONS.wake);
+  }
+  directCam = { key: fresh ? "wake" : st.step === "vine" ? "door" : st.step === "ember" ? "hearth" : "room", t0: performance.now() };
+  refreshHud();
+}
+/* Once a frame: the hearth, the vines, the glows and the beat's own prompt. */
+function minuteTick(t, dt) {
+  if (!hollow) return;
+  const home = inNook() && garden && isHome(garden);
+  const st = home ? mstate() : null, beat = home ? minuteBeat() : null;
+  const hf = hollow.handles.hearth;
+  if (hf) { hf.want = !home || storeDown || st.hearthLit ? 1 : 0; hf.ember = home && !storeDown && st.emberGlows && (beat === "ember" || st.skipped.ember || !minuteOn()) ? 1 : 0; }
+  // the vines: up while the minute keeps them; a vine whose step is done falls, slowly
+  const vis = home && !storeDown;
+  vines.forEach((v, i) => {
+    const down = !vis || (st && st.fallen[i]);
+    if (!vis) { v.group.visible = false; return; }
+    if (down && v.state === "up") { v.state = "falling"; v.t0 = t + (mclock.started && minuteOn() ? 1.9 : 0); } // a beat for the camera to turn
+    if (!down && v.state !== "up") { v.state = "up"; v.group.position.copy(v.home); v.group.rotation.set(0, 0, 0); v.mat.opacity = 1; v.group.visible = true; }
+    if (v.state === "falling") {
+      const u = Math.max(0, Math.min(1, (t - v.t0) / 1.6));
+      v.group.position.set(v.home.x + Math.sin(u * 3) * 0.05, v.home.y - u * u * 1.9, v.home.z + u * 0.35); v.group.rotation.z = (i - 1) * u * 0.9 + u * 0.4; v.mat.opacity = 1 - u * u;
+      if (u >= 1) { v.state = "gone"; v.group.visible = false; }
+    } else if (v.state === "up") {
+      v.group.visible = true;
+      const glow = beat === "vine" && i === 2 ? 0.5 + 0.5 * Math.sin(t * 3.2) : 0;
+      v.mat.emissiveIntensity = 0.3 + glow * 1.4; v.group.rotation.z = Math.sin(t * 0.9 + i * 1.7) * 0.025;
+    }
+  });
+  // the mirror glows while its question waits (the hope beat, or after it was skipped)
+  const glass = mirror.userData.glass;
+  if (glass) { const g = home && st.mirrorGlows && (beat === "hope" || st.skipped.hope || !minuteOn()) ? 0.5 + 0.5 * Math.sin(t * 2.4) : 0; glass.material.emissiveIntensity = 0.6 + g * 1.4; glass.material.emissive.setHex(g ? 0x6a5a3a : 0x30404c); }
+  // the cushion you woke on: gone once the doorway opens
+  if (wake.group.visible && (!home || (st.oriented && mclock.opened))) { wake.k = Math.max(0, (wake.k ?? 1) - dt * 0.8); wake.group.scale.setScalar(Math.max(0.001, wake.k)); if (wake.k <= 0) { wake.group.visible = false; wake.on = false; } }
+  if (!mclock.started) return;
+  if (beat && beat !== mclock.beat) {
+    mclock.beat = beat; mclock.shownAt[beat] = now(); mclock.laterReady = false;
+    if (beat === "ember") directCam = { key: "hearth", t0: performance.now() };
+    if (beat === "mirror" || beat === "hope") directCam = { key: "room", t0: performance.now() };
+    if (beat === "vine") directCam = { key: "door", t0: performance.now() };
+    if (beat === "open") minuteOpen();
+    refreshHud();
+  } else if (!beat && mclock.beat) { mclock.beat = null; refreshHud(); }
+  if (beat && SKIPPABLE.includes(beat) && !mclock.laterReady && now() - mclock.shownAt[beat] > LATER_AFTER_MS + readMs((MINUTE_PROMPTS[beat] || "").split(/\s+/).length)) { mclock.laterReady = true; refreshHud(); }
+}
+/* 1:00 the doorway shimmers, open. An invitation's doorway (a guest's first minute is its orientation) opens with it. */
+function minuteOpen() {
+  mclock.opened = true; shimmerT = performance.now();
+  if (portalTo) portalTo.open = true;
+  burst(PORTAL_AT.clone().setY(1.0), 0xffe2a8);
+  directCam = { key: "door", t0: performance.now() };
+  refreshHud();
+}
+let shimmerT = 0;
+/* The cushion you wake on, a quilted travel one: it carries you through the minute and folds away when the doorway opens. */
+const wake = { group: new THREE.Group(), on: false, yaw: 0, k: 1 };
+wake.group.visible = false; scene.add(wake.group);
+/* The three vines grown over the doorway: thick stems from the lintel, leaves along them. */
+const vines = [];
+{
+  const leafShape = new THREE.Shape(); leafShape.moveTo(0, 0); leafShape.quadraticCurveTo(0.07, 0.05, 0, 0.17); leafShape.quadraticCurveTo(-0.07, 0.05, 0, 0);
+  const leafGeo = new THREE.ShapeGeometry(leafShape, 4);
+  for (let i = 0; i < 3; i++) {
+    const mat = new THREE.MeshStandardMaterial({ color: [0x6fae5a, 0x7cbb62, 0x64a352][i], emissive: 0x4f8f3a, emissiveIntensity: 0.3, roughness: 0.75, transparent: true, side: THREE.DoubleSide });
+    const g = new THREE.Group(), r = rng(hash("vine" + i)), x0 = (i - 1) * 0.3;
+    const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push(new THREE.Vector3(x0 + Math.sin(u * 5 + i * 2) * 0.09 + (r() - 0.5) * 0.04, 1.86 - u * 1.78, 0.06 + Math.sin(u * 3 + i) * 0.03)); }
+    const stem = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 28, 0.028 - i * 0.002, 6), mat); g.add(stem);
+    for (let k = 0; k < 26; k++) {
+      const p = pts[Math.min(8, 1 + Math.floor(r() * 8))].clone().lerp(pts[Math.min(8, 1 + Math.floor(r() * 8))], r());
+      const leaf = new THREE.Mesh(leafGeo, mat); leaf.position.copy(p); leaf.rotation.set(r() * 0.8 - 0.4, r() * Math.PI * 2, (r() < 0.5 ? -1 : 1) * (0.6 + r() * 0.9)); leaf.scale.setScalar(0.9 + r() * 0.8); g.add(leaf);
+    }
+    portal.add(g);
+    vines.push({ group: g, mat, home: g.position.clone(), state: "up", t0: 0 });
+  }
+}
+/* ---------- the shelf: the blank scroll, scrolls that arrived sealed, keepsakes ---------- */
+const shelf = { group: null, at: new THREE.Vector3(), face: 0, sig: "", taps: [], sealedSeen: null };
+function scrollMesh(kind, hue) {
+  const g = new THREE.Group(), s = kind === "keep" ? 0.5 : 0.68;
+  const paper = new THREE.MeshStandardMaterial({ color: 0xd9ccb0, roughness: 0.9, emissive: 0xefe2c4, emissiveIntensity: 0.22 }), rod = new THREE.MeshStandardMaterial({ color: 0x7a5236, roughness: 0.7 });
+  const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.34, 14), paper); roll.rotation.z = Math.PI / 2; roll.position.y = 0.05; g.add(roll);
+  for (const sx of [-1, 1]) { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.05, 8), rod); k.rotation.z = Math.PI / 2; k.position.set(sx * 0.19, 0.05, 0); g.add(k); }
+  if (kind === "sealed") {
+    const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.02, 16), new THREE.MeshStandardMaterial({ color: hue, emissive: hue, emissiveIntensity: 0.45, roughness: 0.4 }));
+    wax.rotation.x = Math.PI / 2; wax.position.set(0, 0.05, 0.055); g.add(wax);
+  } else if (kind === "keep") {
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.053, 0.053, 0.05, 14), new THREE.MeshStandardMaterial({ color: hue, roughness: 0.6 })); band.rotation.z = Math.PI / 2; band.position.y = 0.05; g.add(band);
+  } else {
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.006, 6, 18), new THREE.MeshStandardMaterial({ color: 0xc9a070, roughness: 0.8 })); tie.rotation.y = Math.PI / 2; tie.position.y = 0.05; g.add(tie);
+  }
+  g.scale.setScalar(s);
+  return g;
+}
+const SEAL_HUE = started => started ? 0x3f9e93 : 0x9a5a8e;   // the room's first hue for whoever started it, plum for who joined
+const KEEP_HUE = { later: 0xb0803c, no: 0x6c5a62 };
+function myShelf() {
+  const st = inNook() && garden && isHome(garden) ? mstate() : null;
+  const s = shelfScrolls((list && list.gardens) || []);
+  if (SCROLL_PREVIEW === "arrived" && !paperDone.has("preview|s0")) s.sealed.unshift(PREVIEW_SCROLL);
+  s.sealed = s.sealed.filter(x => !paperDone.has(x.room + "|" + x.id));
+  return { blank: !!(st && st.scrollGiven), sealed: s.sealed, keepsakes: s.keepsakes };
+}
+const PREVIEW_SCROLL = { room: "preview", id: "s0", name: "Ari", style: "dusk-hollow", started: true, when: null, note: "I saved you the plum cushion.", at: 1, preview: true };
+const paperDone = new Set(); // scrolls answered on this page, before the list catches up
+function syncShelf() {
+  const want = inNook() && hollow && garden && isHome(garden);
+  if (!want) { if (shelf.group) { scene.remove(shelf.group); shelf.group = null; shelf.sig = ""; } return; }
+  const sh = myShelf(), sig = JSON.stringify([sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
+  if (sig === shelf.sig && shelf.group) return;
+  // a sealed scroll that was not here a moment ago has just landed: a puff of leaves
+  const ids = new Set(sh.sealed.map(x => x.room + "|" + x.id));
+  const landed = shelf.sealedSeen && [...ids].some(id => !shelf.sealedSeen.has(id));
+  shelf.sealedSeen = ids; shelf.sig = sig;
+  if (shelf.group) scene.remove(shelf.group);
+  const sp = SHELLS.nook.spots.find(x => x.id === "shelf");
+  const g = new THREE.Group(); g.position.set(sp.at[0], sp.at[1], sp.at[2]); g.rotation.y = sp.face || 0; scene.add(g);
+  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = [];
+  const put = (m, x, y, z, ry, tap) => { m.position.set(x, y, z); m.rotation.y = ry; g.add(m); if (tap) shelf.taps.push({ ...tap, m }); };
+  if (sh.blank && paperBusy !== "blank") put(scrollMesh("blank"), 0.28, 0, 0.04, 0.12, { key: "blank" });
+  sh.sealed.slice(0, 3).forEach((x, i) => put(scrollMesh("sealed", SEAL_HUE(x.started)), -0.27, i * 0.055, 0.06 - i * 0.02, -0.1 + i * 0.15, { key: "sealed", i }));
+  sh.keepsakes.slice(0, 4).forEach((x, i) => put(scrollMesh("keep", KEEP_HUE[x.answer] || KEEP_HUE.no), -0.3 + i * 0.16, 0, -0.13, Math.PI / 2 + (i % 2 ? 0.15 : -0.1), { key: "keep", i }));
+  if (landed) burst(shelf.at.clone().add(new THREE.Vector3(-0.25, 0.1, 0.1)), 0x8fd08a);
+}
+function shelfTapPos(tp) { const v = new THREE.Vector3(); tp.m.getWorldPosition(v); v.y += 0.03; return v; }
+/* ---------- the paper: writing a scroll, breaking a seal, the three ribbons ---------- */
+let paper = null, paperBusy = null;
+const paperEl = document.createElement("div"); paperEl.id = "paper"; paperEl.className = "paper"; paperEl.hidden = true;
+paperEl.setAttribute("role", "dialog"); paperEl.setAttribute("aria-modal", "true"); paperEl.setAttribute("aria-label", "A scroll"); document.body.appendChild(paperEl);
+const roomById = id => ((list && list.gardens) || []).find(r => r.id === id) || null;
+function scrollTargets() {
+  const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed" && (r.person || r.phase === "spark"));
+  const out = rooms.map(r => ({ id: r.id, name: roomName(r), spark: r.phase === "spark", style: r.style, mine: !r.personStarted }));
+  if (!out.length && SCROLL_PREVIEW) out.push({ id: "preview", name: "Ari", spark: false, style: "dusk-hollow", mine: true, preview: true });
+  return out;
+}
+function openPaper(mode, arg) {
+  closeSheet(); setSatchel(false);
+  if (mode === "write") {
+    const ts = scrollTargets(), fixed = arg && arg.room;
+    paper = { mode, to: fixed || (ts.length === 1 ? ts[0].id : null), fixed: !!fixed, chip: "tonight", day: null, cal: false, line: "", open: false };
+    paperBusy = arg && arg.fromShelf ? "blank" : null;
+  } else paper = { mode, s: arg, open: mode === "keep" };
+  renderPaper();
+  syncShelf();
+  if (mode === "write") setTimeout(() => { if (paper && paper.mode === "write") { paper.open = true; renderPaper(); } }, 60);
+}
+function closePaper() { paper = null; paperBusy = null; paperEl.hidden = true; paperEl.innerHTML = ""; paperEl._h = ""; syncShelf(); refreshHud(); }
+function paperTarget() {
+  if (!paper || paper.mode !== "write") return null;
+  const g = view().g;
+  if (paper.fixed && g && !isHome(g)) return { id: gardenId, name: nameOf(other(g), g), spark: false, style: g.style, mine: g.startedBy === me };
+  return scrollTargets().find(t => t.id === paper.to) || null;
+}
+function renderPaper() {
+  if (!paper) return;
+  const P = paper, myName = names[me] || "you";
+  let inner = "", seal = "", hint = "", foot = "";
+  if (P.mode === "write") {
+    const ts = scrollTargets(), to = paperTarget(), cal = P.chip === "day" && P.cal;
+    const hue = cssHue(SEAL_HUE(to ? to.mine : true));
+    const toRow = P.fixed || ts.length <= 1 ? "" : `<div class="when" role="group" aria-label="To whom">${ts.map(t => `<button type="button" data-act="pTo" data-id="${esc(t.id)}" aria-pressed="${P.to === t.id}">${esc(t.name)}</button>`).join("")}</div>`;
+    const none = !ts.length && !P.fixed;
+    inner = `<div class="from">From ${esc(myName)}${to ? " · to " + esc(to.name) : ""}</div>${toRow}
+      ${none ? `<div class="pline">A scroll goes to someone who shares a room with you.</div><div class="small pnote">Plant a spark under Rooms and send its link. Once they join, a scroll can go to them.</div>` : `
+      <div class="pline">Come sit with me in the ${esc(styleOf(to ? to.style : null).name)}.</div>
+      <div class="when" role="group" aria-label="When">${WHEN_CHIPS.map(([k, l]) => `<button type="button" data-act="pWhen" data-id="${k}" aria-pressed="${P.chip === k}">${esc(k === "day" && P.day ? whenWords(whenFor("day", now(), P.day)).replace(/^on /, "") : l)}</button>`).join("")}</div>
+      ${cal ? calHtml(P) : ""}
+      <input id="pLine" class="hand" maxlength="${LINE_MAX}" autocomplete="off" placeholder="One line, in your hand" aria-label="One line, in your hand" value="${esc(P.line)}">`}`;
+    seal = none ? "" : `<button class="seal" type="button" data-act="pSeal" style="--seal:${hue}" aria-label="Press the seal to roll it up and send it"><span>${esc(markOf(myName))}</span></button>`;
+    hint = none ? "" : to && to.spark ? "Press the seal. It rolls up with this room's link, ready to send." : "Press the seal to roll it up and send it.";
+    foot = `<button class="quiet pclose" type="button" data-act="pClose">${none ? "Close" : "Put it back"}</button>`;
+  } else {
+    const s = P.s, hue = cssHue(SEAL_HUE(s.started));
+    inner = `<div class="from">From ${esc(s.name || "someone")}</div>
+      <div class="pline">Come sit with me in the ${esc(styleOf(s.style).name)}, ${esc(whenWords(s.when))}.</div>
+      ${s.note ? `<div class="hand">${esc(s.note)}</div>` : ""}
+      ${P.mode === "read" ? `<div class="ribbons" role="group" aria-label="Your answer">${RIBBONS.map(([k, l]) => `<button class="ribbon ${k}" type="button" data-act="pAnswer" data-id="${k}">${esc(l)}</button>`).join("")}</div>` : `<div class="small pnote">You answered ${s.answer === "later" ? "another time" : "no"}. It stays on your shelf.</div>`}`;
+    seal = P.mode === "read" && !P.answered ? `<button class="seal" type="button" data-act="pBreak" style="--seal:${hue}" aria-label="${P.open ? "The seal is broken" : "Break the seal to unroll it"}" ${P.open ? "disabled" : ""}><span>${esc(markOf(s.name))}</span></button>` : "";
+    hint = P.hint || (P.mode === "read" ? (P.open ? "Answer with a ribbon. No needs no reason." : "It arrived sealed. Tap the seal to unroll it.") : "");
+    foot = `<button class="quiet pclose" type="button" data-act="pClose">${P.mode === "read" && !P.answered ? "Leave it sealed for now" : "Put it back"}</button>`;
+  }
+  const h = `<div class="scroll${P.open ? " open" : ""}${P.leaving ? " leaving" : ""}"><div class="rod"></div><div class="psheet"><div class="pin">${inner}</div></div><div class="rod"></div>${seal}</div>
+    <p class="phint" aria-live="polite">${esc(hint)}</p>${foot}`;
+  if (paperEl._h === h) return;
+  const keep = $("#pLine", paperEl), had = keep && document.activeElement === keep;
+  if (keep) P.line = keep.value;
+  paperEl._h = h; paperEl.innerHTML = h; paperEl.hidden = false;
+  if (had) { const n = $("#pLine", paperEl); if (n) { n.focus({ preventScroll: true }); n.setSelectionRange(n.value.length, n.value.length); } }
+}
+const calHtml = P => {
+  const months = calendar(now(), 2), m = months[P.calMonth || 0];
+  const picked = P.day ? P.day.y + "-" + P.day.m + "-" + P.day.d : "";
+  return `<div class="cal" role="group" aria-label="Pick a day"><div class="calhead"><button type="button" class="calnav" data-act="pCalMonth" data-id="0" ${P.calMonth ? "" : "disabled"} aria-label="This month">‹</button><span>${esc(m.name)}</span><button type="button" class="calnav" data-act="pCalMonth" data-id="1" ${P.calMonth ? "disabled" : ""} aria-label="Next month">›</button></div>
+    <div class="calgrid">${["S", "M", "T", "W", "T", "F", "S"].map(d => `<span class="dow">${d}</span>`).join("")}${m.weeks.flat().map(c => c ? `<button type="button" class="day${c.today ? " today" : ""}" data-act="pDay" data-id="${c.y}-${c.m}-${c.d}" ${c.past ? "disabled" : ""} aria-pressed="${picked === c.y + "-" + c.m + "-" + c.d}">${c.d}</button>` : `<span></span>`).join("")}</div></div>`;
+};
+paperEl.addEventListener("input", e => { if (e.target.id === "pLine" && paper) paper.line = e.target.value; });
+paperEl.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "pLine") { e.preventDefault(); paperAct("pSeal"); } });
+paperEl.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b || !paperEl.contains(b)) return; e.stopPropagation(); paperAct(b.dataset.act, b.dataset.id); });
+async function paperAct(a, id) {
+  const P = paper; if (!P) return;
+  const ln = $("#pLine", paperEl); if (ln) P.line = ln.value;
+  if (a === "pClose") { closePaper(); return; }
+  if (a === "pTo") { P.to = id; renderPaper(); return; }
+  if (a === "pWhen") { P.chip = id; P.cal = id === "day" ? !P.cal || !P.day : false; renderPaper(); return; }
+  if (a === "pCalMonth") { P.calMonth = +id; renderPaper(); return; }
+  if (a === "pDay") { const [y, m, d] = id.split("-").map(Number); P.day = { y, m, d }; P.cal = false; renderPaper(); return; }
+  if (a === "pSeal") return sealScroll();
+  if (a === "pBreak") { P.open = true; renderPaper(); return; }
+  if (a === "pAnswer") return answerScroll(id);
+}
+/* Pressing the seal: it rolls up, and leaves through the doorway on a gust of leaves. */
+async function sealScroll() {
+  const P = paper, to = paperTarget(); if (!P || P.sending) return;
+  if (!to) { toast("Choose who it goes to first."); return; }
+  const when = whenFor(P.chip, now(), P.day);
+  if (P.chip === "day" && when == null) { P.cal = true; renderPaper(); toast("Pick a day on the paper first."); return; }
+  P.sending = true;
+  const inv = sealedInvitation(me, when, P.line), iid = "s" + hkey();
+  let sent = null;
+  try {
+    if (to.preview) sent = "preview";
+    else if (to.spark) sent = await sparkLink(to, inv.note);
+    else {
+      const data = { invitations: { [iid]: inv }, history: hist("sent you a scroll: come and sit"), lastTendedAt: now() };
+      if (to.id === gardenId) await op("garden/main", "update", data); else await api("/api/between/" + to.id + "/doc", { path: "garden/main", op: "update", data });
+      sent = "scroll";
+    }
+  } catch { P.sending = false; toast("That did not send. Check your connection and try again."); return; }
+  P.open = false; P.hint = ""; renderPaper();
+  setTimeout(() => { if (paper !== P) return; P.leaving = true; renderPaper(); }, 850);
+  setTimeout(() => {
+    if (paper === P) closePaper();
+    gust(inNook() && shelf.group ? shelf.at.clone().add(new THREE.Vector3(0.28, 0.08, 0.1)) : meState.pos.clone().setY(1.2));
+    toast(sent === "link" ? `The link is ready to send. ${to.name} signs in or makes an account, and the doorway opens for them.` : `Sealed and sent. It lands on ${to.name}'s shelf.`);
+    refreshList();
+  }, 1350);
+}
+/* A spark's person has no shelf yet: the scroll's line goes with the room's link, the way an invitation always has. */
+async function sparkLink(to, note) {
+  let token = to.id === gardenId ? myInvite : null;
+  if (!token) { const j = await api("/api/between/" + to.id + "/poll", {}); token = j.invite || null; }
+  if (!token) throw fail("unavailable", "no link");
+  const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(to.id) + "&invite=" + encodeURIComponent(token);
+  const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
+  let shared = false;
+  if (navigator.share) { try { await navigator.share({ title: "The Between", text }); shared = true; } catch {} }
+  if (!shared) { try { await navigator.clipboard.writeText(text); } catch {} }
+  return "link";
+}
+/* A ribbon: Yes opens the doorway between your rooms; Another time and No roll it back up, a keepsake on the shelf. */
+async function answerScroll(ans) {
+  const P = paper; if (!P || P.mode !== "read" || P.answered) return;
+  const o = answerOutcome(ans); if (!o.ok) return;
+  const s = P.s;
+  try {
+    if (!s.preview) {
+      const data = { invitations: { [s.id]: { answer: o.write, answeredAt: now() } } };
+      if (s.room === gardenId) await op("garden/main", "update", data); else await api("/api/between/" + s.room + "/doc", { path: "garden/main", op: "update", data });
+    }
+  } catch { toast("That did not save. Check your connection and try again."); return; }
+  P.answered = ans; P.hint = o.line; paperDone.add(s.room + "|" + s.id);
+  if (o.keepsake && !s.preview) { const r = roomById(s.room); if (r) { r.invitations = (r.invitations || []).filter(x => x.id !== s.id); r.keepsakes = [{ id: s.id, when: s.when, note: s.note, answer: ans, at: s.at }, ...(r.keepsakes || [])]; } paperDone.delete(s.room + "|" + s.id); }
+  if (o.rollUp) P.open = false;
+  renderPaper();
+  setTimeout(() => {
+    if (paper === P) closePaper();
+    if (o.doorway && inNook()) {
+      if (!s.preview) portalTo = { id: s.room, invite: null, open: true, name: s.name, style: s.style };
+      shimmerT = performance.now(); burst(PORTAL_AT.clone().setY(1.0), 0xffe2a8); directCam = { key: "door", t0: performance.now() };
+    }
+    refreshList(); refreshHud();
+  }, o.doorway ? 1500 : 1700);
+}
+/* The gust: the rolled scroll lifts off the shelf, crosses the room in a swirl of leaves and goes through the doorway. */
+const gusts = [];
+const gustLeafGeo = (() => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(0.05, 0.04, 0, 0.12); sh.quadraticCurveTo(-0.05, 0.04, 0, 0); return new THREE.ShapeGeometry(sh, 3); })();
+const gustLeafMats = [0x7fb38a, 0x9ac46a, 0xd8a050, 0x6aa553].map(c => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.35, roughness: 0.7, side: THREE.DoubleSide, transparent: true }));
+function gust(from) {
+  const t0 = performance.now() / 1000, to = PORTAL_AT.clone().setY(1.0), roll = scrollMesh("blank"); roll.scale.setScalar(0.7); scene.add(roll);
+  const mid = from.clone().lerp(to, 0.5).add(new THREE.Vector3(0, 0.9, 0.6)), curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+  const leaves = [];
+  for (let i = 0; i < (LOW_POWER ? 18 : 28); i++) { const m = new THREE.Mesh(gustLeafGeo, gustLeafMats[i % 4]); m.userData = { lag: Math.random() * 0.35, r: 0.15 + Math.random() * 0.35, ph: Math.random() * 6, sp: 4 + Math.random() * 5 }; scene.add(m); leaves.push(m); }
+  gusts.push({ t0, curve, roll, leaves, to });
+  if (inNook()) directCam = { key: "gust", t0: performance.now(), from: from.clone() };
+}
+function gustTick(t) {
+  for (let i = gusts.length - 1; i >= 0; i--) {
+    const G = gusts[i], u = (t - G.t0) / 2.4;
+    const e = u => Math.max(0, Math.min(1, u)), ease = x => x * x * (3 - 2 * x);
+    G.roll.position.copy(G.curve.getPoint(ease(e(u)))); G.roll.rotation.set(t * 3, t * 1.3, Math.sin(t * 4) * 0.4);
+    G.roll.scale.setScalar(0.7 * (u > 0.85 ? Math.max(0.01, (1 - u) / 0.15) : 1));
+    for (const m of G.leaves) {
+      const d = m.userData, v = ease(e(u * 1.15 - d.lag)), p = G.curve.getPoint(v), a = t * d.sp + d.ph;
+      m.position.set(p.x + Math.cos(a) * d.r, p.y + Math.sin(a * 1.3) * d.r * 0.7, p.z + Math.sin(a) * d.r);
+      m.rotation.set(a, a * 0.7, a * 1.3); m.material.opacity = v >= 1 ? 0 : Math.min(1, (u - d.lag) * 6);
+    }
+    if (u > 1.5) { scene.remove(G.roll); G.leaves.forEach(m => scene.remove(m)); gusts.splice(i, 1); burst(G.to, 0x8fd08a); }
+  }
+}
+/* The directed camera for the minute and the scroll: a beat turns the view to what it is about; a tap on the floor or a drag
+   hands the view back. */
+let directCam = null, directK = 0;
+function directView(key, tall) {
+  const P = new THREE.Vector3(), F = new THREE.Vector3();
+  const front = new THREE.Vector3(Math.sin(portal.rotation.y), 0, Math.cos(portal.rotation.y));
+  if (key === "hearth") { F.copy(HEARTH_AT).setY(0.55); const d = new THREE.Vector3(-HEARTH_AT.x, 0, -HEARTH_AT.z).normalize(); P.copy(F).addScaledVector(d, tall ? 3.0 : 2.6).setY(tall ? 1.85 : 1.6); P.x += 0.5; }
+  else if (key === "door") { F.copy(PORTAL_AT).setY(0.95); P.copy(F).addScaledVector(front, tall ? 3.35 : 3.0).setY(tall ? 1.75 : 1.55); }
+  else if (key === "wake") { // behind you on the cushion, the doorway grown over ahead
+    const c = wake.group.position, d = PORTAL_AT.clone().sub(c).setY(0).normalize();
+    P.copy(c).addScaledVector(d, tall ? -2.5 : -2.2).setY(tall ? 1.85 : 1.6); F.copy(c).addScaledVector(d, 1.6).setY(0.85);
+  }
+  else if (key === "shelf") { F.copy(shelf.at).setY(shelf.at.y + 0.05); P.copy(F).add(new THREE.Vector3(Math.sin(shelf.face) * (tall ? 1.55 : 1.4) + 0.25, tall ? 0.3 : 0.25, Math.cos(shelf.face) * (tall ? 1.55 : 1.4))); }
+  else if (key === "gust") { const k = Math.min(1, (performance.now() - directCam.t0) / 2600); F.copy(directCam.from).lerp(PORTAL_AT.clone().setY(1.0), k * k * (3 - 2 * k)); P.set(0.25, tall ? 2.2 : 2.0, tall ? 3.0 : 2.9); }
+  else { const v = tall ? ROOM_VIEW.phone : ROOM_VIEW.wide; P.copy(v[0]); F.copy(v[1]); }
+  return [P, F];
+}
+
+/* What a tap on the nook does while the minute (or a step left for later) waits: true when it was the minute's. */
+function minuteTap(key) {
+  if (!garden || !isHome(garden) || storeDown) return false;
+  const st = mstate(), beat = minuteBeat();
+  if (key === "hearth" && !st.hearthLit) {
+    if (st.emberGlows && (beat === "ember" || !minuteOn() || st.skipped.ember)) { standUp(); const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4))); minuteAct("ember"); }
+    return true;
+  }
+  if (key === "portal" && minuteOn()) {
+    if (st.step === "vine" && beat === "vine") { standUp(); burst(PORTAL_AT.clone().setY(1.0), 0x8fd08a); minuteAct("vine"); }
+    else toast("The vines fall as you learn the room.");
+    return true;
+  }
+  return false;
+}
+function minuteHint() {
+  const beat = mclock.beat, st = mstate();
+  if (!beat) return "";
+  if (beat === "hope" && !mirrorSpot) return "Your mirror is still in your satchel. Set it down to look into it, or leave it for later.";
+  return MINUTE_PROMPTS[beat] || "";
+}
+/* Your shelf, tapped: the blank scroll to write on, a sealed one to open, a keepsake to read again. */
+function shelfTap(kind, i) {
+  const sh = myShelf();
+  if (kind === "blank") { if (minuteOn()) { toast("Your first scroll. You can write it once the doorway opens."); return; } openPaper("write", { fromShelf: true }); return; }
+  if (kind === "sealed" && sh.sealed[i]) { openPaper("read", sh.sealed[i]); return; }
+  if (kind === "keep" && sh.keepsakes[i]) openPaper("keep", sh.keepsakes[i]);
+}
+
 /* ---------- sound: starts on the first tap, if it is on ---------- */
 const ambient = createAmbient();
 function soundLabel() { const b = $("#soundBtn"); if (!b) return; b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
@@ -2128,6 +2580,9 @@ document.addEventListener("click", async ev => {
   if (b.dataset.open) { openSheet(b.dataset.open, b.dataset.id); return; }
   const a = b.dataset.act, id = b.dataset.id;
   if (a === "satOpen") { setSatchel(true); return; }
+  if (a === "minuteLater") { if (mclock.beat && SKIPPABLE.includes(mclock.beat)) minuteAct(mclock.beat, "skip"); return; }
+  if (a === "hopeSkip") { closeSheet(); if (!mstate().skipped.hope) minuteAct("hope", "skip"); return; }
+  if (a === "writeScroll") { openPaper("write", { room: gardenId }); return; }
   if (a === "satClose") { setSatchel(false); return; }
   if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
   if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
@@ -2522,7 +2977,7 @@ function refresh() {
     if (g && g.phase !== "closed") { const s = satisfaction(V.items); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
     else look = { phase: "spark", state: "steadied", stale: true, sat: 2 };
     between.visible = !!g && !isHome(g);
-    syncRoom();
+    syncRoom(); syncShelf();
     mirror.visible = mirrorShown();
     syncThings(); syncWalkers();
     if (me && gardenLoaded) ensureMyBody().catch(() => {});
@@ -2610,7 +3065,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
     if (want && homeId && want !== homeId && through !== want && !skipHome) {
       const r = ((list && list.gardens) || []).find(x => x.id === want);
-      portalTo = { id: want, invite: r ? null : wantInvite, open: !!r, name: r ? roomName(r) : null, style: r ? r.style : null };
+      // his ruling on br-orient-each-invite (2026-10-24): once you have done the first minute, an invitation's doorway opens at once
+      portalTo = { id: want, invite: r ? null : wantInvite, open: inviteDoorway(minuteDoc((list && list.home) || {}), !!r) === "open", name: r ? roomName(r) : null, style: r ? r.style : null };
       if (!r) {
         // a room you are not in yet: ask it who is inviting, for the doorway's words; a refusal leaves the doorway nameless
         try { const j = await api("/api/between/" + want + "/poll", { invite: wantInvite }); const sb = j.garden && j.garden.startedBy; portalTo.name = (sb && j.names && j.names[sb]) || null; portalTo.style = (j.garden && j.garden.style) || null; } catch {}
@@ -2642,9 +3098,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   try { await roomP; } catch { return; }
   const wantShell = garden ? (isHome(garden) ? "nook" : "hollow") : storeDown && guessShell === "nook" ? "nook" : "hollow";
   if (wantShell !== builtShell) { loadStep("building the room"); buildRoom(wantShell); meState.placed = false; placeMe(); }
-  // the first minute in the homeroom gives the mirror and a blank scroll (rk-earned-only). Until Still C's first minute lands,
-  // arriving home is that minute, kept once in the home doc.
-  if (isHome(garden) && myHome.oriented == null && !NOOK_SKIP) { myHome.oriented = now(); homeOp({ oriented: myHome.oriented }).catch(() => {}); }
+  // the first minute gives the mirror and the blank scroll (rk-earned-only); it starts below, once the room shows
   $("#loading").hidden = true; $("#hud").hidden = false;
   if (!garden && !storeDown) openSheet("setup");
   refresh();
@@ -2652,8 +3106,11 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   const jump = q.get("sheet");
   if (garden && !isHome(garden)) fetchHome(); // your homeroom's spirits and embers, for Check in and Bring a spirit here
   if (SATCHEL_ALL && canArrange()) setSatchel(true);
-  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "orient", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
-  else if (portalTo && !portalTo.open) openSheet("orient");
+  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
+  // the first minute (Still C): a homeroom not yet oriented wakes into it; a guest's invitation doorway opens at its end
+  minuteStart();
+  syncShelf();
+  if (SCROLL_PREVIEW === "write" && inNook()) openPaper("write", { fromShelf: true });
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
   flush();
@@ -2661,4 +3118,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 })();
 window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
+  minute: () => ({ ...mstate(), beat: mclock.beat, laterReady: mclock.laterReady, started: mclock.started, hearth: hollow && hollow.handles.hearth ? { want: hollow.handles.hearth.want, k: hollow.handles.hearth.k, ember: hollow.handles.hearth.ember } : null, vines: vines.map(v => v.state), wake: wake.on }),
+  anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
+  shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
+  home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };

@@ -88,9 +88,14 @@ describe('room kit: earned through play, nothing bought', () => {
       rooms: [{ keptAgreement: true, person: null, lastSatTogether: null }, { keptAgreement: false, person: B, lastSatTogether: null }],
       spirits: [{ id: 'meet-12', born: { where: 'Big Mind' } }],
     })
-    expect(ev).toEqual({ keptAgreement: true, letGo: true, satWith: true, oriented: true, checkin: true })
-    expect(earnedItems(ev)).toEqual(['lantern', 'seed-pot', 'cushion', 'mirror', 'rug', 'scroll'])
-    expect(earnedItems(earnedEvents({ home: { oriented: 1 } }))).toEqual(['mirror', 'scroll'])
+    expect(ev).toEqual({ keptAgreement: true, letGo: true, satWith: true, mirror: true, oriented: true, checkin: true })
+    // the blank scroll lives on the shelf, not in the satchel (part 2, Still B)
+    expect(earnedItems(ev)).toEqual(['lantern', 'seed-pot', 'cushion', 'mirror', 'rug'])
+    expect(earnedItems(earnedEvents({ home: { oriented: 1 } }))).toEqual(['mirror'])
+    // the first minute gives the mirror at its beat, before the doorway opens (Still C)
+    expect(earnedItems(earnedEvents({ home: {} }))).toEqual([])
+    expect(earnedItems(earnedEvents({ home: { minute: { ember: 5 } } }))).toEqual(['mirror'])
+    expect(earnedItems(earnedEvents({ home: { minute: { skip: { ember: 5 } } } }))).toEqual(['mirror'])
     expect(earnedEvents({ spirits: [{ id: 'cave-3', born: { where: 'Cave of Lessons' } }] }).letGo).toBe(false)
   })
 })

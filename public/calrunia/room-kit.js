@@ -14,11 +14,12 @@
    the scene's own slots. A place that wants the kit lists its spots (see PORTABLE below) and hands applyRoom its handles.
    Positions are metres in the scene's frame: y up, the window and the valley toward -z. */
 import { applyStyle, DEFAULT_STYLE } from "./room-styles.js";
+import { minuteState } from "./first-minute.js";
 
 /** Kinds of spot, and so of item: a hook to hang from, a small place (a shelf, a stool), the floor. */
 export const TAKES = ["hang", "small", "floor"];
 
-/** @typedef {{ id: string, name: string, takes: string, make: string, glows?: boolean, earnedBy: string, line: string }} Item */
+/** @typedef {{ id: string, name: string, takes: string, make: string, glows?: boolean, shelf?: boolean, earnedBy: string, line: string }} Item */
 /** @typedef {{ item: string, owner: string | null, at: number | null, fixed?: boolean }} Placed */
 /** The items. `make` names the scene's maker; `earnedBy` names the event in earnedEvents that gives it.
  * @type {Record<string, Item>} */
@@ -26,8 +27,10 @@ export const ITEMS = {
   lantern: { id: "lantern", name: "Paper lantern", takes: "hang", make: "lantern", glows: true, earnedBy: "keptAgreement", line: "From your first kept agreement." },
   "seed-pot": { id: "seed-pot", name: "Spirit seed", takes: "small", make: "seedPot", earnedBy: "letGo", line: "From a spirit you let go." },
   cushion: { id: "cushion", name: "Plum cushion", takes: "floor", make: "cushion", earnedBy: "satWith", line: "From the first time someone sat with you." },
-  mirror: { id: "mirror", name: "Hope mirror", takes: "floor", make: "mirror", earnedBy: "oriented", line: "From your first minute here." },
-  scroll: { id: "scroll", name: "Blank scroll", takes: "small", make: "scroll", earnedBy: "oriented", line: "From your first minute here. Write an invitation on it." },
+  mirror: { id: "mirror", name: "Hope mirror", takes: "floor", make: "mirror", earnedBy: "mirror", line: "From your first minute here." },
+  /* The blank scroll lives on the shelf itself, not in the satchel (Still B: "you take a blank scroll from your shelf"), so it
+     never takes the shelf's one small spot from the seed pot. `shelf: true` keeps it out of the satchel. */
+  scroll: { id: "scroll", name: "Blank scroll", takes: "small", make: "scroll", earnedBy: "oriented", shelf: true, line: "From your first minute here. Write an invitation on it." },
   rug: { id: "rug", name: "Wave rug", takes: "floor", make: "rug", earnedBy: "checkin", line: "From your first check-in." },
 };
 /** The order a satchel shows them in: the still's order. */
@@ -157,8 +160,9 @@ export function liftFrom(shellOrId, placed, spotId, me) {
 }
 
 /**
- * What play has given you, from events that already exist: { keptAgreement, letGo, satWith, oriented, checkin }, each a boolean.
- *   home     the homeroom's private doc or its summary: { look, lastCheckin, oriented }
+ * What play has given you, from events that already exist: { keptAgreement, letGo, satWith, mirror, oriented, checkin }, each a
+ * boolean. `mirror` is the first minute's mirror beat (first-minute.js mirrorGiven); `oriented` its last vine.
+ *   home     the homeroom's private doc or its summary: { look, lastCheckin, oriented, minute }
  *   rooms    GET /api/between's room summaries: { keptAgreement, person, lastSatTogether }
  *   spirits  the cave spirit store's records (oag.spirits.v1): a spirit met and let go in Big Mind has an id "meet-…"
  */
@@ -169,14 +173,15 @@ export function earnedEvents({ home = {}, rooms = [], spirits = [] } = {}) {
     keptAgreement: rs.some(r => r && r.keptAgreement),
     letGo: ss.some(s => s && ((typeof s.id === "string" && s.id.startsWith("meet-")) || (s.born && s.born.where === "Big Mind"))),
     satWith: rs.some(r => r && (r.lastSatTogether != null || !!r.person)),
+    mirror: minuteState(h).mirrorGiven,
     oriented: h.oriented != null,
     checkin: h.lastCheckin != null,
   };
 }
-/** The items those events have earned, in the satchel's order. */
+/** The items those events have earned for the satchel, in its order. A shelf item (the blank scroll) is not carried. */
 export function earnedItems(ev) {
   const e = ev || {};
-  return ITEM_ORDER.filter(id => !!e[ITEMS[id].earnedBy]);
+  return ITEM_ORDER.filter(id => !ITEMS[id].shelf && !!e[ITEMS[id].earnedBy]);
 }
 
 /**
