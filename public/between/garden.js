@@ -558,6 +558,9 @@ const MIRROR_SKIP = PREVIEW_HOST && KQ.get("mirror") === "1";      // previews: 
 // ?cushion=<floor spot> sets a cushion down there first (with the store down, the only way to have one). E.g. ?nook=1&sit=hearth
 const WAKE_SKIP = PREVIEW_HOST && KQ.get("wake") === "1";        // previews: wake sat on the first minute's cushion (?nook=1&wake=1)
 const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOST ? KQ.get("cushion") : null;
+// previews: ?embers=demo puts four held embers in your pouch on this page only (never saved), so the seated hearth moment shows
+// with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
+const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
@@ -602,8 +605,9 @@ function spotRings(t) {
   if (!hollow) return;
   const pulse = 0.5 + 0.5 * Math.sin(t * 4.4);
   for (const h of Object.values(hollow.handles.spots)) {
-    const fits = !!armed && ITEMS[armed].takes === h.takes;
-    const vis = satchelOpen && !mirrorOn && !h.item && (!armed || fits);
+    const answers = !!hm && hm.step === "hang" && hm.hooks.includes(h); // the room answers the lantern: its free hooks glow
+    const fits = answers || (!!armed && ITEMS[armed].takes === h.takes);
+    const vis = answers || (satchelOpen && !mirrorOn && !h.item && (!armed || fits));
     h.ring.visible = vis;
     if (!vis) continue;
     h.ringMats[0].opacity = fits ? 0.3 + 0.65 * pulse : 0.55;
@@ -860,7 +864,7 @@ function syncThings() {
   const prevStatus = syncThings.prev || new Map(); const nextStatus = new Map();
   for (const [id, it] of V.items) {
     const lan = it.kind === "lantern";
-    nextStatus.set(id, lan ? "lantern:" + (it.element || "") + (lanternLit(it) ? "+lit" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z : "")
+    nextStatus.set(id, lan ? "lantern:" + (it.element || "") + (lanternLit(it) ? "+lit" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z + (it.pos.hang ? "@" + it.pos.hang : "") : "")
       : it.status + (it.pending ? "+p" : "") + (it.opened && it.opened[me] ? "+o" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z : "")
         + (it.moveAsk && it.moveAsk.pos ? ">" + it.moveAsk.pos.x + "," + it.moveAsk.pos.z : ""));
     const shownHere = lan ? true : it.kind === "agreement" ? it.status !== "composted" || now() - it.at < 864e5 * 30 : it.status === "offered";
@@ -875,9 +879,12 @@ function syncThings() {
     if (!t) {
       // a spot saved under the old dome may fall in a wall or the stream here: nudge it onto open ground
       const raw = it.pos || ringPos(id, it.kind === "agreement" ? 1.6 : 1.1);
-      const pos = walkable(raw.x, raw.z, 0.25) ? raw : pushOut(new THREE.Vector3(raw.x, 0, raw.z), 0.3);
+      // a lantern sent to a hook at the hearth hangs there, its foot away (the seated hearth moment, hmSend)
+      const hook = lan && raw.hang && hollow && hollow.handles.spots[raw.hang], hung = hook && hook.takes === "hang" && !hook.item ? hook : null;
+      const pos = hung || walkable(raw.x, raw.z, 0.25) ? raw : pushOut(new THREE.Vector3(raw.x, 0, raw.z), 0.3);
       const group = it.kind === "agreement" ? plantMesh(it, g) : lan ? lanternMesh(it, g) : orbMesh(it, g);
-      group.position.set(pos.x, groundY(pos.x, pos.z), pos.z);
+      if (hung) { group.position.copy(hung.pos).setY(hung.pos.y - 0.92); group.children[3].visible = false; group.userData.sway = true; }
+      else group.position.set(pos.x, groundY(pos.x, pos.z), pos.z);
       // an ask to move a shared agreement: a faint ring where it would go, until the other person answers
       if (it.moveAsk && it.moveAsk.pos) {
         const ring = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.4, 40), new THREE.MeshBasicMaterial({ color: hueOf(it.moveAsk.by, g), transparent: true, opacity: 0.9, depthWrite: false }));
@@ -895,6 +902,8 @@ function syncThings() {
   }
   for (const [id, t] of things) if (!want.has(id)) { gardenGroup.remove(t.group); things.delete(id); if (selected === "item:" + id) selected = null; }
   syncThings.prev = nextStatus;
+  // a hook with a hearth lantern on it lights as the room kit's own hung lantern does
+  if (hollow) for (const h of Object.values(hollow.handles.spots)) if (h.takes === "hang" && !h.item) h.glow = [...V.items.values()].some(it => it.kind === "lantern" && it.pos && it.pos.hang === h.id) ? 1 : 0;
   // fed lights orbiting the Between: one per offering said yes to, up to twelve
   let fed = 0; for (const it of V.items.values()) if (isFed(it)) fed++;
   fed = Math.min(fed, 12);
@@ -1057,6 +1066,7 @@ function standUp() {
   const wasHearth = sheetName === "hearth" && seatedAtHearth();
   meState.seatWant = null; meState.onSeated = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); }
   if (wasHearth) closeSheet(); // the hearth moment is had sitting; getting up ends it
+  if (hm) hmEnd();
 }
 const peers = new Map(); // peer -> { uid, body, pos, yaw, cur, walking }
 let myBodyHue = null, myBodyLook = null, myBodyBusy = false;
@@ -1150,13 +1160,14 @@ function carryStart(cx, cy) {
   ray.setFromCamera(new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1), camera);
   return ray.ray.distanceToPoint(t.pos.clone().setY(0.4)) < 0.6 ? { id, t, from: t.group.position.clone(), ok: true } : null;
 }
-renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); dragMoved = 0; if (pointers.size === 1) carry = carryStart(e.clientX, e.clientY); else if (carry) { carry.t.group.position.copy(carry.from); carry = null; } if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: camDist }; } renderer.domElement.setPointerCapture(e.pointerId); });
+renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY }); dragMoved = 0; if (hm && hm.held && pointers.size === 1) { const [m, d] = hmHit(e.clientX, e.clientY); if (m === hm.held && d < 44) hmPress(true); } if (pointers.size === 1) carry = carryStart(e.clientX, e.clientY); else if (carry) { carry.t.group.position.copy(carry.from); carry = null; } if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: camDist }; } renderer.domElement.setPointerCapture(e.pointerId); });
 renderer.domElement.addEventListener("pointermove", e => {
   const p = pointers.get(e.pointerId); if (!p) return;
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
   if (mirrorOn) { if (pointers.size === 1) mirrorTurn -= dx * 0.012; return; } // the screen is flipped: drag right turns your front to the right
+  if (hm && pointers.size === 1) { if (dragMoved > 6 && !hm.press) hm.turnV = Math.max(-1.6, Math.min(1.6, hm.turnV - dx * 0.02)); return; } // by the fire, a sideways drag turns the crescent
   if (carry) {
     const h = floorAt(e.clientX, e.clientY);
     if (h) { carry.ok = walkable(h.x, h.z, 0.3); carry.t.group.position.set(h.x, groundY(h.x, h.z), h.z); carry.at = h; }
@@ -1167,6 +1178,7 @@ renderer.domElement.addEventListener("pointermove", e => {
 function endPointer(e) {
   const p = pointers.get(e.pointerId); pointers.delete(e.pointerId); if (pointers.size < 2) pinch0 = null;
   const c = carry; carry = null;
+  if (hm && p && dragMoved > 40 && p.y0 - p.y > 70 && p.y0 - p.y > Math.abs(p.x - p.x0) * 1.5) { hmStand(); return; } // a swipe up stands you
   if (c && dragMoved > 6 && c.at) {
     if (c.ok) { c.t.pos.set(c.at.x, 0, c.at.z); moveItem(c.id, { x: +c.at.x.toFixed(2), z: +c.at.z.toFixed(2) }); }
     else { c.t.group.position.copy(c.from); toast("Somewhere on open ground."); }
@@ -1178,7 +1190,8 @@ function endPointer(e) {
 renderer.domElement.addEventListener("pointerup", endPointer);
 renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; if (carry) { carry.t.group.position.copy(carry.from); carry = null; } });
 renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
-addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
+// by the fire, left and right turn the crescent; elsewhere the arrows and WASD walk
+addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (hm && (k === "arrowleft" || k === "arrowright")) { hm.turnV += k === "arrowleft" ? 0.9 : -0.9; e.preventDefault(); return; } if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
 addEventListener("blur", () => meState.keys.clear());
 
@@ -1193,6 +1206,7 @@ function placeAt() {
 }
 function tapAt(cx, cy) {
   if (mirrorOn) return; // in the mirror a tap only chooses; the floor is behind you
+  if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   // things first: the nearest one whose sphere the ray passes through
@@ -1417,7 +1431,8 @@ function frameBody() {
     w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
-  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t);
+  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t); hmTick(t, dt);
+  for (const th of things.values()) { if (th.group.userData.sway) th.group.rotation.z = Math.sin(t * 0.7 + th.pos.x) * 0.03; } // a hung lantern sways a little
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
     const f = fly[i], u = Math.min(1, (t - f.t0) / 1.6);
@@ -1482,6 +1497,18 @@ function frameBody() {
     const sf = new THREE.Vector3(S.x + fx * 1.0, S.top + 0.4, S.z + fz * 1.0);
     clampCamera(sp, sf);
     const k = seatK * seatK * (3 - 2 * seatK); cp.lerp(sp, k); focus.lerp(sf, k);
+  }
+  /* The seated hearth moment: closer still, just beside your shoulder and low, the fire filling the upper half of the view; when
+     the room answers a lantern, the view lifts to take in its hooks. */
+  hmK += ((hm ? 1 : 0) - hmK) * Math.min(1, dt * 1.1);
+  if (hmK < 0.002 && !hm) hmK = 0;
+  if (hmK > 0 && seatViewAt) {
+    const F = hmFrame(seatViewAt), tall = innerWidth < innerHeight, up = hm && hm.L && (hm.step === "hang" || (hm.step === "send" && hm.L.hang) || (hm.step === "settled" && hm.L.hang));
+    hmUp += ((up ? 1 : 0) - hmUp) * Math.min(1, dt * 1.2);
+    const p = hmAt(F, tall ? -1.15 : -0.95, tall ? 0.62 : 0.7, tall ? 0.95 : 0.85), f = hmAt(F, 1.5, -0.18, tall ? 0.36 : 0.42);
+    if (hmUp > 0.001 && hm) { const hk = (hm.L.hang || hm.hooks[0]).pos, k2 = hmUp * hmUp * (3 - 2 * hmUp); p.lerp(hmAt(F, -1.9, 0.95, 1.05), k2); f.lerp(hk.clone().setY(hk.y - 1.0).lerp(hm.L.g.position, 0.3), k2); }
+    clampCamera(p, f);
+    const k = hmK * hmK * (3 - 2 * hmK); cp.lerp(p, k); focus.lerp(f, k);
   }
   const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
@@ -1811,7 +1838,12 @@ async function addItem(kind, text, sealed) {
 /* ---------- the hearth: embers in your own pouch, lanterns offered to the other ---------- */
 const pouchPath = () => "data/users/" + me + "/pouch";
 const hearthOpen = () => { const g = view().g; return !!(g && isMember(g) && !readOnly && g.phase !== "closed"); };
-function embers() { const p = overlay(pouchPath(), myPouch || {}) || {}; const e = p.embers && typeof p.embers === "object" ? p.embers : {}; return Object.entries(e).filter(([, x]) => x && typeof x === "object" && MOVES[x.move]); }
+const demoPouch = EMBER_DEMO ? { demo1: { move: "wood_fire", feel: "wood", glow: 2, state: "held", at: 1 }, demo2: { move: "water_transcend", feel: "water", glow: 5, state: "held", at: 2 },
+  demo3: { move: "earth_metal", feel: "earth", glow: null, state: "held", at: 3 }, demo4: { move: "fire_earth", feel: "fire", glow: 4, state: "held", at: 4 } } : {};
+function embers() { const p = overlay(pouchPath(), myPouch || {}) || {}; const e = p.embers && typeof p.embers === "object" ? p.embers : {}; return Object.entries({ ...e, ...demoPouch }).filter(([, x]) => x && typeof x === "object" && MOVES[x.move]); }
+/* A lantern made from a preview's demo ember (or where no lantern can be saved) lives on this page only, kept across polls. */
+const localItems = new Map();
+function localItem(id, d) { if (d) { localItems.set(id, d); items.set(id, d); } else { localItems.delete(id); items.delete(id); } refresh(); }
 const lanternLog = act => ({ [hkey()]: { act, by: me, at: now() } });
 let hd = {}; // the hearth sheet's choices while it is open
 function hearthSpot(id) { // in front of the hearth, toward the middle of the room
@@ -1824,15 +1856,16 @@ async function keepEmber() {
   const m = MOVES[hd.move]; if (!m) return;
   // Only the move, its feeling and the private glow: no words, and nothing of which charge it came from.
   await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null } } });
-  hd = {}; toast("An ember, in your pouch.");
+  hd = {}; if (hm) { closeSheet(); hmSync(); } else toast("An ember, in your pouch."); // by the fire, it rises out of the satchel instead
 }
 async function makeLantern(eid) {
-  const { g } = view(); const e = embers().find(([k]) => k === eid); if (!e || e[1].state !== "held") return;
+  const e = embers().find(([k]) => k === eid); if (!e || e[1].state !== "held") return null;
   const lid = "l" + hkey();
-  await op("items/" + lid, "set", { kind: "lantern", by: me, hue: cssHue(hueOf(me, g)), element: hd.showEl ? MOVES[e[1].move][1] : null, pos: hearthSpot(lid), yes: {}, status: "offered", at: now(), history: lanternLog("made") });
+  // the paper takes the ember's glow: its element's light if it was shown (hd.showEl), else the fire's plain amber
+  await op("items/" + lid, "set", { kind: "lantern", by: me, hue: cssHue(AMBER), element: hd.showEl ? MOVES[e[1].move][1] : null, pos: hearthSpot(lid), yes: {}, status: "offered", at: now(), history: lanternLog("made") });
   await op(pouchPath(), "update", { embers: { [eid]: { state: "lit", lantern: lid } } });
-  await touch(); hd = {}; closeSheet();
-  toast("Your lantern stands by the hearth, an offer to " + nameOf(other(g), g) + ".");
+  await touch(); hd = {};
+  return lid;
 }
 /* Moving things (ba-round4-comfort, Ari's note 2): what you made moves when you move it. A shared agreement moves only on
    the other person's yes, the way its other asks wait (rc-offer-received). The other person's own things stay where they set them. */
@@ -1846,6 +1879,7 @@ async function moveItem(id, pos) {
   placing = null;
   const { items: its, g } = view(); const it = its.get(id); const right = moveRight(it);
   if (!right) { refreshHud(); return; }
+  if (it.local) { localItem(id, { ...it, pos }); return; }
   if (right === "shared") {
     await op("items/" + id, "update", { moveAsk: { by: me, at: now(), pos }, history: hist("asked to move an agreement") });
     toast(`Asked. It moves when ${nameOf(other(g), g)} says yes.`);
@@ -1860,38 +1894,264 @@ async function moveAnswer(id, yes) {
   await touch();
 }
 async function unmakeLantern(id, compost) {
-  await op("items/" + id, "delete");
+  const lo = localItems.get(id);
+  if (lo) { localItem(id, null); for (const [k, x] of Object.entries(demoPouch)) if (x.lantern === id) demoPouch[k] = { ...x, state: "held", lantern: null }; }
+  else await op("items/" + id, "delete");
   const e = embers().find(([, x]) => x.lantern === id);
-  if (e) await op(pouchPath(), "update", { embers: { [e[0]]: { state: "held", lantern: null } } });
+  if (e && !lo) await op(pouchPath(), "update", { embers: { [e[0]]: { state: "held", lantern: null } } });
   toast(compost ? "The lantern went to ash and became soil. Its ember is back in your pouch." : "You took the lantern back. Its ember is in your pouch again.");
 }
-function hearthSheet(g, V) {
-  const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
-  const canLantern = g.phase === "between";
+/* "Something stirs": the one strip left by the fire. Choosing a move is a choice made after sitting, so the feel, move and glow
+   pickers open here, low and see-through over the room; a kept ember rises out of the satchel into the crescent. */
+function stirSheet(g, V) {
   const charges = [...V.items.entries()].filter(([, i]) => i.kind === "charge" && i.by === me);
   const pick = (act, id, on, inner, extra = "") => `<button type="button" data-act="${act}" data-id="${id}" aria-pressed="${on ? "true" : "false"}" class="${on ? "on" : ""}" ${extra}>${inner}</button>`;
-  const emberDot = (e, big) => `<span class="ember" style="--c:${cssHue(elHex(MOVES[e.move][1]))};--s:${big ? 10 + (e.glow || 3) * 3 : 14}px"></span>`;
-  const ch = hd.ember && held.find(([k]) => k === hd.ember);
-  return `<div class="stack"><h2>The hearth</h2>
-    <p class="muted">When something stirs you, sit with it. What's left is a little glowing ember you keep. At the hearth you can turn embers into things for your home together, or a present.</p>
-    ${held.length ? `<div class="stack"><h3>Your embers</h3><p class="small muted">Only you see these.</p>
-      <div class="choice">${held.map(([k, e]) => pick("hEmber", k, hd.ember === k, `${emberDot(e, true)}<b>${esc(MOVES[e.move][0])}</b>from ${esc(FEELS[MOVES[e.move][1]])}`)).join("")}</div>
-      ${ch ? (canLantern ? `<label class="row" style="font-weight:400"><input type="checkbox" id="hShowEl" style="width:auto" ${hd.showEl ? "checked" : ""}> Show its element on the lantern</label>
-        <p class="small muted">A lantern is an offer. It stands by the hearth until ${esc(nameOf(other(g), g))} welcomes it; it never shows what you felt or how strongly.</p>
-        <div class="row"><button type="button" data-act="hLantern" data-id="${ch[0]}">Make a lantern</button></div>`
-        : isHome(g) ? `<p class="small muted">Embers you keep here go with you. In a room you share, one can become a lantern for your home together.</p>`
-        : `<p class="small muted">Once ${esc(g.setup.who)} joins, an ember can become a lantern for your home together.</p>`) : ""}</div>` : ""}
-    <div class="stack"><h3>Work a charge</h3>
-      <label for="hCharge">What stirred you<select id="hCharge"><option value="">A feeling with no words</option>${charges.map(([k, i]) => `<option value="${k}" ${hd.charge === k ? "selected" : ""}>${esc(String(i.text || "").slice(0, 70))}</option>`).join("")}</select></label>
-      <span class="small"><b>What it felt like</b></span>
-      <div class="choice">${Object.entries(FEELS).map(([el, f]) => pick("hFeel", el, hd.feel === el, `<span class="ember" style="--c:${cssHue(elHex(el))};--s:12px"></span><b>${f[0].toUpperCase() + f.slice(1)}</b>${el}`)).join("")}</div>
-      ${hd.feel ? `<span class="small"><b>A move to work it with</b></span>
-      <div class="choice">${movesFrom(hd.feel).map(([id, m]) => pick("hMove", id, hd.move === id, `<b>${esc(m[0])}</b>${m[1] === m[2] ? "stays " + m[1] : m[1] + " into " + m[2]}`)).join("")}</div>` : ""}
-      ${hd.move ? `<span class="small"><b>How strong it felt</b> <span class="muted">(only you see this)</span></span>
-      <div class="row dots">${[1, 2, 3, 4, 5].map(n => pick("hGlow", n, hd.glow === n, `<span class="ember" style="--c:${cssHue(elHex(hd.feel))};--s:${8 + n * 3}px"></span>`, `aria-label="${n} of 5"`)).join("")}${pick("hGlow", 0, !hd.glow, "Skip")}</div>
-      <div class="row"><button type="button" data-act="hKeep">Keep the ember</button></div>` : ""}
-    </div>
+  return `<div class="stack"><h2>Something stirs</h2>
+    <label for="hCharge">What stirred you<select id="hCharge"><option value="">A feeling with no words</option>${charges.map(([k, i]) => `<option value="${k}" ${hd.charge === k ? "selected" : ""}>${esc(String(i.text || "").slice(0, 70))}</option>`).join("")}</select></label>
+    <span class="small"><b>What it felt like</b></span>
+    <div class="choice">${Object.entries(FEELS).map(([el, f]) => pick("hFeel", el, hd.feel === el, `<span class="ember" style="--c:${cssHue(elHex(el))};--s:12px"></span><b>${f[0].toUpperCase() + f.slice(1)}</b>${el}`)).join("")}</div>
+    ${hd.feel ? `<span class="small"><b>A move to work it with</b></span>
+    <div class="choice">${movesFrom(hd.feel).map(([id, m]) => pick("hMove", id, hd.move === id, `<b>${esc(m[0])}</b>${m[1] === m[2] ? "stays " + m[1] : m[1] + " into " + m[2]}`)).join("")}</div>` : ""}
+    ${hd.move ? `<span class="small"><b>How strong it felt</b> <span class="muted">(only you see this)</span></span>
+    <div class="row dots">${[1, 2, 3, 4, 5].map(n => pick("hGlow", n, hd.glow === n, `<span class="ember" style="--c:${cssHue(elHex(hd.feel))};--s:${8 + n * 3}px"></span>`, `aria-label="${n} of 5"`)).join("")}${pick("hGlow", 0, !hd.glow, "Skip")}</div>
+    <div class="row"><button type="button" data-act="hKeep">Keep the ember</button></div>` : ""}
     <p class="credit">${FIVE_CREDIT}</p></div>`;
+}
+/* ---------- the seated hearth moment, take A "Motes from the satchel" (Wendell's pick of the art page, 2026-10-24) ----------
+   No card. Sat by the fire, the camera comes down beside your shoulder and the room's sound thins to the crackle; the satchel at
+   your hip loosens and the pouch's held embers rise out of it one at a time, a thin trail of sparks behind each, into a loose
+   crescent between you and the fire. Every one glows the fire's amber; a brighter, larger one was felt more strongly, and that is
+   the only difference shown. Touch one and it comes down into your hands; hold it (breathe on it) and it shows its element's
+   light, let go early and it stays amber. In a shared room a paper lantern unfolds at your knee to take it, and the room's hooks
+   answer. Held to the crafting pass: private, no counts, no failure, no reward, colour only if you let it. */
+const AMBER = 0xff9436, HM_TRAIL = 14, HM_FIRST = "between.hearth.seen";
+const HM_LINES = { first: "When something stirs you, sit with it. What's left is a little glowing ember you keep.", colour: "It shows its colour only if you let it.", them: "For them, when they next come in.",
+  home: "Embers you keep here go with you. In a room you share, one can become a lantern for your home together." };
+let hm = null, hmGone = null, hmK = 0, hmUp = 0; // the moment while you sit by the fire; the one just ended, its embers sinking home
+const hmEl = document.createElement("div"); hmEl.id = "hm"; hmEl.className = "hm"; hmEl.hidden = true; hmEl.setAttribute("role", "group"); hmEl.setAttribute("aria-label", "By the fire"); document.body.appendChild(hmEl);
+const hmGroup = new THREE.Group(); scene.add(hmGroup);
+const hmGlowMat = (c, o) => new THREE.SpriteMaterial({ map: moteMat.map, color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false });
+const hmPouch = new THREE.Group(); hmPouch.visible = false; hmGroup.add(hmPouch);
+{
+  const leather = new THREE.MeshStandardMaterial({ color: 0x6b4428, roughness: 0.85 });
+  const bag = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 10), leather); bag.scale.set(1, 0.85, 0.7); hmPouch.add(bag);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.065, 0.06, 10, 1, true), leather); neck.position.y = 0.09; hmPouch.add(neck);
+  const cord = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.008, 6, 16), new THREE.MeshStandardMaterial({ color: 0xc9a070, roughness: 0.7 })); cord.rotation.x = Math.PI / 2; cord.position.y = 0.11; hmPouch.add(cord);
+  const glow = new THREE.Sprite(hmGlowMat(AMBER, 0)); glow.scale.setScalar(0.32); glow.position.y = 0.12; hmPouch.add(glow);
+  Object.assign(hmPouch.userData, { neck, cord, glow });
+}
+const isDemoEmber = eid => eid.startsWith("demo");
+const hmLanternsHere = () => { const g = view().g; return EMBER_DEMO || !!(g && !isHome(g) && g.phase === "between" && hearthOpen()); };
+const hmRealLantern = eid => !isDemoEmber(eid) && !storeDown && (() => { const g = view().g; return !!(g && !isHome(g) && g.phase === "between" && hearthOpen()); })();
+function hmFrame(S) {
+  if (!S) return null;
+  const f = new THREE.Vector3(Math.sin(S.yaw), 0, Math.cos(S.yaw)), r = new THREE.Vector3(-f.z, 0, f.x);
+  return { S, f, r, at: new THREE.Vector3(S.x, S.top, S.z) };
+}
+const hmAt = (F, fw, rt, up) => F.at.clone().addScaledVector(F.f, fw).addScaledVector(F.r, rt).setY(F.S.top + up);
+const hmPouchAt = F => hmAt(F, 0.05, 0.27, 0.06);
+const hmHands = F => hmAt(F, 0.5, 0.3, 0.58);
+const hmKnee = F => { const p = hmAt(F, 1.0, 0.5, 0); p.y = F.S.floor; return p; };
+const hmFree = () => !hollow ? [] : Object.values(hollow.handles.spots).filter(h => h.takes === "hang" && !h.item && ![...view().items.values()].some(it => it.kind === "lantern" && it.pos && it.pos.hang === h.id));
+function hmMote(eid, e) {
+  const gl = e.glow || 3, s = 0.016 + gl * 0.006, g = new THREE.Group();
+  const core = new THREE.Mesh(new THREE.SphereGeometry(s, 12, 10), new THREE.MeshBasicMaterial({ color: AMBER, fog: false, toneMapped: false }));
+  const halo = new THREE.Sprite(hmGlowMat(AMBER, 0.35 + gl * 0.1)); halo.material.blending = THREE.NormalBlending; // a soft glow that keeps its colour over the fire halo.scale.setScalar(s * 5 + gl * 0.025);
+  g.add(core, halo); g.visible = false;
+  const tg = new THREE.BufferGeometry(); tg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(HM_TRAIL * 3), 3));
+  const trail = new THREE.Points(tg, new THREE.PointsMaterial({ map: moteMat.map, color: AMBER, size: 0.022, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
+  trail.frustumCulled = false; trail.visible = false;
+  hmGroup.add(g, trail);
+  return { eid, e, g, core, halo, trail, hist: [], state: "wait", riseAt: 0, t0: 0, from: null, pos: new THREE.Vector3(), el: new THREE.Color(elHex(MOVES[e.move][1])), show: 0, shown: false, s };
+}
+function hmDrop(m) { hmGroup.remove(m.g, m.trail); m.core.geometry.dispose(); m.trail.geometry.dispose(); }
+/* The pouch's held embers, oldest first: a new one (kept from the strip) rises to join the crescent. */
+function hmSync() {
+  if (!hm) return;
+  const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (a[1].at || 0) - (b[1].at || 0)), ids = new Set(held.map(([k]) => k));
+  const t = performance.now() / 1000;
+  for (const [k, e] of held) if (!hm.motes.some(m => m.eid === k)) { const m = hmMote(k, e); m.riseAt = Math.max(hm.riseNext, t); hm.riseNext = m.riseAt + 0.8; hm.motes.push(m); }
+  for (const m of hm.motes) if (!ids.has(m.eid) && m.state !== "lantern" && m.state !== "lit") m.state = "sink";
+  hmHud();
+}
+function hmBegin() {
+  if (hm || !seatedAtHearth() || !(hearthOpen() || storeDown || EMBER_DEMO)) return;
+  if (sheetName) closeSheet();
+  if (hmGone) hmClear(hmGone);
+  const t = performance.now() / 1000;
+  hm = { t0: t, riseNext: t + 8, motes: [], held: null, turn: 0, turnV: 0, press: null, step: "motes", L: null, lid: null, said: {} };
+  hmSync(); document.body.classList.add("seatedmoment"); hmEl.hidden = false; ambient.hush(true); refreshHud();
+}
+function hmEnd() {
+  if (!hm) return;
+  const h = hm; hm = null; hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
+  if (h.L && (h.lid || !h.L.lit)) { hmGroup.remove(h.L.g); h.L = null; } // a lantern made is the room's now; one not lit folds away
+  for (const m of h.motes) if (m.state !== "lit") m.state = "sink";
+  const th = h.lid && things.get(h.lid); if (th) th.group.visible = true;
+  h.endT = performance.now() / 1000; hmGone = h;
+}
+function hmClear(h) { for (const m of h.motes) hmDrop(m); if (h.L) hmGroup.remove(h.L.g); hmPouch.visible = false; if (hmGone === h) hmGone = null; }
+function hmSay(key, text) { if (!hm || hm.said[key]) return; hm.said[key] = true; caption(text || HM_LINES[key]); }
+/* Touch: an ember comes down into your hands (the one there goes back to its place); the held one, touched again, goes back. */
+function hmHold(eid) {
+  if (!hm || hm.step !== "motes") return;
+  const m = hm.motes.find(x => x.eid === eid); if (!m || (m.state !== "slot" && m.state !== "held")) return;
+  if (m.state === "held") { m.state = "slot"; hm.held = null; hmHud(); return; }
+  for (const o of hm.motes) if (o.state === "held") o.state = "slot";
+  m.state = "held"; hm.held = m;
+  if (!hm.said.colour) setTimeout(() => hmSay("colour"), 900);
+  if (hmLanternsHere()) { if (!hm.L) hmUnfold(); }
+  else if (!hm.said.home) { const g = view().g; setTimeout(() => hmSay("home", g && !isHome(g) && g.phase === "spark" ? `Once ${g.setup.who} joins, an ember can become a lantern for your home together.` : HM_LINES.home), 7000); }
+  hmHud();
+}
+/* Breathe on it: a press held on the ember in your hands. Its words come back first, if it has any; a full breath shows its colour. */
+function hmPress(on) {
+  if (!hm) return;
+  if (on && hm.held && hm.step === "motes") { hm.press = { t0: performance.now() / 1000, k: 0 }; const w = hm.held.e.words; if (typeof w === "string" && w.trim()) caption(w); }
+  else if (!on) hm.press = null;
+}
+function hmUnfold() {
+  const F = hmFrame(seatViewAt); if (!F) return;
+  const g = paperLantern(AMBER, 0.3), body = g.children[0]; body.material = body.material.clone(); body.material.emissive.setHex(0x553420); body.material.color.setHex(0x6a5a4a); // dim paper, so the glow it takes is its colour
+  const at = hmKnee(F); g.position.copy(at); g.scale.set(1, 0.02, 1); g.rotation.y = F.S.yaw + Math.PI; hmGroup.add(g);
+  hm.L = { g, body, at, t0: performance.now() / 1000, lit: false, colour: new THREE.Color(AMBER), glow: 0, to: null, from: null, tt: 0 };
+  hmHud();
+}
+/* The ember goes to the lantern: the paper takes its glow (its colour if shown), the rest sink back into the satchel, and the
+   existing lantern data path makes it (makeLantern; a preview's demo ember makes a lantern on this page only). */
+async function hmLight() {
+  if (!hm || !hm.L || !hm.held || hm.L.lit) return;
+  const m = hm.held, L = hm.L; hm.held = null; m.state = "lantern"; m.t0 = performance.now() / 1000; m.from = m.pos.clone();
+  L.lit = true; L.colour.copy(m.shown ? m.el : new THREE.Color(AMBER)); hm.step = "lighting";
+  for (const o of hm.motes) if (o !== m && o.state !== "lit") o.state = "sink";
+  hd.showEl = m.shown;
+  let lid = null;
+  if (hmRealLantern(m.eid)) lid = await makeLantern(m.eid);
+  else {
+    lid = "local-" + hkey();
+    localItem(lid, { kind: "lantern", by: me, hue: cssHue(AMBER), element: m.shown ? MOVES[m.e.move][1] : null, pos: hearthSpot(lid), yes: {}, status: "offered", at: now(), local: true });
+    if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], state: "lit", lantern: lid };
+  }
+  hd = {};
+  if (!hm) return;
+  hm.lid = lid;
+  setTimeout(() => { if (!hm || !hm.L) return; hm.hooks = hmFree(); if (hm.hooks.length) { hm.step = "hang"; hmHud(); } else hmSend(null); }, 1700);
+}
+/* The room answers: a free hook glows; touched, the lantern drifts there, sways and settles. With no hook it stands by the hearth. */
+function hmSend(spot) {
+  if (!hm || !hm.L || !hm.lid) return;
+  const L = hm.L, id = hm.lid, it = view().items.get(id);
+  const to = spot ? spot.pos.clone().setY(spot.pos.y - 0.92) : (() => { const p = it && it.pos ? it.pos : hearthSpot(id); return new THREE.Vector3(p.x, groundY(p.x, p.z), p.z); })();
+  L.from = L.g.position.clone(); L.to = to; L.tt = performance.now() / 1000; L.hang = spot; hm.step = "send"; hmHud();
+  setTimeout(async () => {
+    if (spot) {
+      const pos = { x: +spot.pos.x.toFixed(2), z: +spot.pos.z.toFixed(2), hang: spot.id };
+      await moveItem(id, pos);
+    }
+    if (hm) { hm.step = "settled"; hmSay("them"); hmHud(); }
+  }, 2600);
+}
+/* What the moment answers to by touch, before the room's own taps: an ember, the lantern, a glowing hook; the floor stands you up. */
+function hmTap(cx, cy) {
+  if (!hm) return false;
+  ray.setFromCamera(new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1), camera);
+  if (hm.step === "hang") { let best = null, bd = 0.5; for (const h of hm.hooks) { const d = ray.ray.distanceToPoint(h.pos.clone().setY(h.pos.y - 0.42)); if (d < bd) { bd = d; best = h; } } if (best) { hmSend(best); return true; } }
+  if (hm.L && hm.held && ray.ray.distanceToPoint(hm.L.g.position.clone().setY(hm.L.g.position.y + 0.42)) < 0.35) { hmLight(); return true; }
+  const [best, bd] = hmHit(cx, cy);
+  if (best && bd < 44) {
+    if (best === hm.held && hm.press && performance.now() / 1000 - hm.press.t0 > 0.35) return true; // the end of a breath, not a touch
+    hmHold(best.eid); return true;
+  }
+  const hit = new THREE.Vector3();
+  if (bd > 90 && ray.ray.intersectPlane(floorPlane, hit) && hit.distanceTo(HEARTH_AT) > 0.9) { hmStand(); return true; }
+  return true; // the fire and the air hold still
+}
+/* The ember nearest a point on the screen, and how far it is in pixels (a fingertip, not a ray, decides). */
+function hmHit(cx, cy) {
+  let best = null, bd = Infinity;
+  for (const m of hm ? hm.motes : []) if ((m.state === "slot" || m.state === "held") && m.g.visible) { const p = m.pos.clone().project(camera), d = Math.hypot((p.x + 1) / 2 * innerWidth - cx, (1 - p.y) / 2 * innerHeight - cy); if (d < bd) { bd = d; best = m; } }
+  return [best, bd];
+}
+function hmStand() { const st = seatBy(meState.seatWant); standUp(); if (st) meState.target = pushOut(new THREE.Vector3(st.x - Math.sin(st.yaw) * 0.7, 0, st.z - Math.cos(st.yaw) * 0.7)); refreshHud(); }
+/* The words and buttons a screen reader or a keyboard reaches: each ember, breathing on the held one, the lantern, the hooks. */
+function hmHud() {
+  if (!hm) return;
+  const b = (act, id, label, cls = "sr") => `<button type="button" class="${cls}" data-act="${act}"${id ? ` data-id="${esc(id)}"` : ""}>${label}</button>`;
+  const ms = hm.motes.filter(m => m.state === "slot" || m.state === "held");
+  const h = `<div class="hmrow">${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
+    ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
+    ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
+    <button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
+  if (hmEl._h === h) return; hmEl._h = h; hmEl.innerHTML = h;
+}
+// breathing by keyboard or on the button: held down, as a press on the ember is
+hmEl.addEventListener("pointerdown", e => { if (e.target.closest('[data-act="hmBreathe"]')) hmPress(true); });
+hmEl.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && e.target.closest('[data-act="hmBreathe"]')) { e.preventDefault(); if (!e.repeat) hmPress(true); } });
+addEventListener("pointerup", () => { if (hm && hm.press) hmPress(false); });
+addEventListener("pointercancel", () => { if (hm && hm.press) hmPress(false); });
+addEventListener("keyup", e => { if (hm && hm.press && (e.key === " " || e.key === "Enter")) hmPress(false); });
+/* Once a frame: the satchel, the embers' flight, the crescent turning, the breath, the lantern. */
+function hmTick(t, dt) {
+  const h = hm || hmGone; if (!h) return;
+  const F = hmFrame(seatViewAt || seatBy(meState.seatWant)); if (!F) return;
+  const el = t - h.t0, P = hmPouchAt(F), ending = !hm;
+  if (!ending && el > 4 && !h.said.first) { if (EMBER_DEMO || !ls.get(HM_FIRST)) { ls.set(HM_FIRST, 1); hmSay("first"); } else h.said.first = true; } // first time only (a demo preview shows it each time)
+  // the satchel loosens a little before the first ember rises, and closes again once none is in flight
+  const open = h.motes.some(m => m.state === "rise" || m.state === "sink" || (m.state === "wait" && t > m.riseAt - 0.8));
+  hmPouch.visible = true; hmPouch.position.copy(P); hmPouch.rotation.y = F.S.yaw;
+  const u = hmPouch.userData; u.k = (u.k || 0) + ((open ? 1 : 0) - (u.k || 0)) * Math.min(1, dt * 3);
+  u.cord.scale.setScalar(1 + u.k * 0.5); u.neck.scale.set(1 + u.k * 0.45, 1, 1 + u.k * 0.45); u.glow.material.opacity = u.k * 0.55;
+  // the crescent: slots on a loose arc between you and the fire, turned by a sideways drag, slowly, like a mobile
+  h.turn += h.turnV * dt; h.turnV *= Math.pow(0.08, dt);
+  const live = h.motes.filter(m => m.state !== "sink" && m.state !== "lit" && m.state !== "lantern" && m.state !== "gone"), n = live.length, step = n > 1 ? Math.min(0.42, 2.1 / (n - 1)) : 0;
+  live.forEach((m, i) => { const a = (i - (n - 1) / 2) * step + 0.45 + h.turn, R = 0.92 + 0.07 * Math.sin(i * 2.3); m.slot = hmAt(F, Math.cos(a) * R, Math.sin(a) * R, 0.9 + 0.1 * Math.sin(i * 1.7) + Math.sin(t * 1.1 + i * 1.3) * 0.025); });
+  const hands = hmHands(F);
+  for (const m of h.motes) {
+    if (m.state === "wait") { if (!ending && t >= m.riseAt) { m.state = "rise"; m.t0 = t; m.pos.copy(P); m.g.visible = true; m.trail.visible = true; m.hist = []; } else continue; }
+    if (m.state === "rise") {
+      const k = Math.min(1, (t - m.t0) / 1.9), e = k * k * (3 - 2 * k), to = m.slot || P;
+      m.pos.lerpVectors(P, to, e); m.pos.y += Math.sin(k * Math.PI) * 0.22; m.pos.x += Math.sin(k * 9 + m.riseAt) * 0.015 * (1 - k);
+      if (k >= 1) m.state = "slot";
+    } else if (m.state === "slot") { if (m.slot) m.pos.lerp(m.slot, Math.min(1, dt * 3)); }
+    else if (m.state === "held") m.pos.lerp(hands.clone().setY(hands.y + Math.sin(t * 1.6) * 0.012), Math.min(1, dt * 3.5));
+    else if (m.state === "lantern" && h.L) {
+      const k = Math.min(1, (t - m.t0) / 1.2), to = h.L.g.position.clone().setY(h.L.g.position.y + 0.43);
+      m.pos.lerpVectors(m.from, to, k * k * (3 - 2 * k)); m.pos.y += Math.sin(k * Math.PI) * 0.15;
+      if (k >= 1) { m.state = "lit"; m.g.visible = false; m.trail.visible = false; }
+    } else if (m.state === "sink") {
+      if (!m.g.visible) { m.state = "gone"; continue; }
+      if (!m.from) { m.from = m.pos.clone(); m.t0 = t; }
+      const k = Math.min(1, (t - m.t0) / 1.3); m.pos.lerpVectors(m.from, P, k * k); m.g.scale.setScalar(1 - k * 0.7);
+      if (k >= 1) { m.state = "gone"; m.g.visible = false; m.trail.visible = false; }
+    }
+    // breath: a press held on the ember in your hands; a full one shows its element's light, a short one leaves it amber
+    if (m === h.held && h.press) { h.press.k = Math.min(1, (t - h.press.t0) / 2.2); if (h.press.k >= 1 && !m.shown) { m.shown = true; burst(m.pos.clone(), m.el.getHex()); } }
+    const want = m.shown ? 1 : m === h.held && h.press ? h.press.k * 0.35 : 0;
+    m.show += (want - m.show) * Math.min(1, dt * 2.5);
+    const c = new THREE.Color(AMBER).lerp(m.el, m.show), fl = 0.9 + Math.sin(t * 5.3 + m.riseAt * 3) * 0.06 + Math.sin(t * 13 + m.riseAt) * 0.04;
+    m.core.material.color.copy(c).lerp(new THREE.Color(0xffe0b0), 0.25 * (1 - m.show)); m.halo.material.color.copy(c); m.halo.scale.setScalar((m.s * 5 + (m.e.glow || 3) * 0.025) * fl * (m === h.held && h.press ? 1 + h.press.k * 0.25 : 1));
+    m.g.position.copy(m.pos);
+    // the trail: the last few places it passed, drawn as sparks; at rest they gather into its glow
+    m.hist.unshift(m.pos.clone()); if (m.hist.length > HM_TRAIL) m.hist.length = HM_TRAIL;
+    const arr = m.trail.geometry.attributes.position.array; for (let i = 0; i < HM_TRAIL; i++) { const q = m.hist[Math.min(i, m.hist.length - 1)]; arr[i * 3] = q.x; arr[i * 3 + 1] = q.y; arr[i * 3 + 2] = q.z; }
+    const v = m.hist.length > 1 ? m.hist[0].distanceTo(m.hist[1]) / Math.max(dt, 0.001) : 0; m.tv = (m.tv || 0) + (v - (m.tv || 0)) * Math.min(1, dt * 4);
+    m.trail.geometry.attributes.position.needsUpdate = true; m.trail.material.color.copy(c); m.trail.material.opacity = Math.min(0.7, m.tv * 1.5); // sparks only while it moves
+  }
+  // the lantern: it unfolds on the hearthstone at your knee, takes the ember's glow, then drifts where it was sent and sways
+  const th = hm && hm.lid && things.get(hm.lid); if (th) th.group.visible = false; // the moment carries its own until you stand
+  const L = h.L;
+  if (L) {
+    const k = Math.min(1, (t - L.t0) / 1.1); L.g.scale.set(1, Math.max(0.02, k * k * (3 - 2 * k)), 1);
+    L.glow += ((L.lit && h.motes.some(m => m.state === "lit") ? 1 : 0.15) - L.glow) * Math.min(1, dt * 1.5);
+    L.body.material.emissive.copy(new THREE.Color(0x553420).lerp(L.colour, L.glow)); L.body.material.emissiveIntensity = 0.35 + L.glow * 0.65;
+    if (L.to) {
+      const q = Math.min(1, (t - L.tt) / 2.4), e = q * q * (3 - 2 * q);
+      L.g.position.lerpVectors(L.from, L.to, e); L.g.position.y += Math.sin(q * Math.PI) * (L.hang ? 0.5 : 0.25);
+      L.g.children[3].visible = !L.hang || q < 0.5; // a hanging lantern needs no foot
+      L.g.rotation.z = L.hang && q >= 1 ? Math.sin(t * 1.4) * 0.12 * Math.exp(-(t - L.tt - 2.4) * 0.45) + Math.sin(t * 0.7) * 0.02 : 0;
+    }
+  }
+  if (ending && t - h.endT > 1.6) hmClear(h);
 }
 const ASK_TEXT = { revisit: "asked to revisit an agreement", broken: "named a break in an agreement", retire: "asked to retire an agreement", compost: "asked to compost an agreement" };
 const YES_TEXT = { revisit: "agreed to revisit it", broken: "owned the break; the agreement is up for revisit", retire: "agreed to retire it", compost: "agreed to compost it" };
@@ -1928,6 +2188,8 @@ function openSheet(name, arg) {
   if (name === "spirits" && !isHome(g)) name = "spirit";
   // the hearth moment is had sitting (Wendell, 2026-10-24): every way in (the card, the Hearth button) walks you to its cushion first
   if (name === "hearth" && !seatedAtHearth()) { sitAtHearth(); return; }
+  // sat by the fire, the moment is had in the room (no card); only "Something stirs" opens the pickers, in the low strip
+  if (name === "hearth" && arg !== "stir") { hmBegin(); return; }
   if (name === "hearth" && sheetName !== "hearth") hd = {};
   if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
   if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1 };
@@ -1940,7 +2202,7 @@ function openSheet(name, arg) {
 }
 function closeSheet() {
   const wasLook = sheetName === "look" || sheetName === "hope";
-  sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud", "seatedmoment");
+  sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud"); document.body.classList.toggle("seatedmoment", !!hm);
   if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
 }
@@ -1991,9 +2253,9 @@ function renderSheet() {
     case "hearth":
       if (!seatedAtHearth()) { closeSheet(); return; }
       // the store down (a preview with no store): the moment's words alone, since no ember can be kept
-      if (!g && storeDown) { h = `<div class="stack"><h2>The hearth</h2><p class="muted">When something stirs you, sit with it. What's left is a little glowing ember you keep.</p><p class="small muted">The store did not answer, so no ember can be kept here now.</p></div>` + seatedClose; break; }
+      if (!g && storeDown) { h = `<div class="stack"><h2>Something stirs</h2><p class="muted">When something stirs you, sit with it. What's left is a little glowing ember you keep.</p><p class="small muted">The store did not answer, so no ember can be kept here now.</p></div>` + seatedClose; break; }
       if (!g || !hearthOpen()) { closeSheet(); return; }
-      h = hearthSheet(g, V) + seatedClose; break;
+      h = stirSheet(g, V) + seatedClose; break;
     case "away": h = awaySheet(g, V) + close; break;
     case "menu": h = menuSheet(g, V); break;
     case "shot": h = shotSheet(); break;
@@ -2023,14 +2285,14 @@ function renderSheet() {
   for (const [id, v] of Object.entries(keep)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; }
   // the mirror and the check-in keep the room in view: no scrim, a darker strip, the scene showing above it
   const sh = $("#sheet"); sh.classList.toggle("mirror", sheetName === "look" || sheetName === "hope"); sh.classList.toggle("walk", sheetName === "checkin");
-  /* SEATED MOMENT HOOK (the next round's immersive hearth replaces this): sat at the hearth, the hearth sheet is a low,
-     see-through strip over the room with no scrim, so the fire and the seated figure stay in view (class "seated", garden.css). */
+  /* Sat at the hearth, the moment itself is in the room (hmBegin); "Something stirs" opens its pickers as a low, see-through
+     strip with no scrim, so the fire, the crescent and the seated figure stay in view (class "seated", garden.css). */
   const seated = sheetName === "hearth" && seatedAtHearth();
   sh.classList.toggle("seated", seated);
   sh.classList.toggle("dark", seated || ["look", "checkin", "spirits", "hope"].includes(sheetName));
   sh.hidden = false; $("#scrim").hidden = seated || sheetName === "look" || sheetName === "checkin" || sheetName === "hope";
   document.body.classList.toggle("quiethud", sheetName === "checkin");
-  document.body.classList.toggle("seatedmoment", seated); // the room's own buttons step aside; the strip carries Stand up // the room's own buttons step aside while you walk it
+  document.body.classList.toggle("seatedmoment", seated || !!hm); // the room's own buttons step aside; the strip carries Stand up // the room's own buttons step aside while you walk it
   if (sheetName !== "look") readIn(inner); // each choice in the mirror redraws the strip; its words stay put
   const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id] && sheetName !== "checkin") setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
@@ -2822,7 +3084,11 @@ document.addEventListener("click", async ev => {
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
-  if (a === "hEmber") { hd.ember = hd.ember === id ? null : id; renderSheet(); return; }
+  if (a === "hmHold") { hmHold(id); return; }
+  if (a === "hmLantern") { hmLight(); return; }
+  if (a === "hmHang") { const h = hm && hm.hooks && hm.hooks.find(x => x.id === id); if (h) hmSend(h); return; }
+  if (a === "hmStand") { hmStand(); return; }
+  if (a === "hmBreathe") return; // a press held on it, not a click (hmEl's own listeners)
   if (a === "move") { const it = view().items.get(id); const r = moveRight(it); if (!r) return; placing = { id, ask: r === "shared" }; selected = null; refreshHud(); toast(r === "shared" ? "Tap the floor where you would like it." : "Tap the floor where it should stand, or drag it."); return; }
   if (a.startsWith("pace:")) { setPace(a.slice(5)); if (gardenId && isMember(view().g)) { myPrivate.captions = getPace(); savePriv(); } renderSheet(); return; }
   if (a === "lanternCancel") { placing = null; refreshHud(); return; }
@@ -2848,7 +3114,6 @@ document.addEventListener("click", async ev => {
     else if (["propose", "withdraw", "agree", "pendingYes", "pendingNo", "pendingWithdraw", "receive", "decline", "open", "compostOwn"].includes(a)) await itemAct(id, a);
     else if (a === "notyet") await itemAct(id, "notyet", "");
     else if (a === "hKeep") await keepEmber();
-    else if (a === "hLantern") await makeLantern(id);
     else if (a === "lanternHere") { if (placing) await moveItem(placing.id, spotAhead(0.9)); }
     else if (a === "moveYes" || a === "moveNo") await moveAnswer(id, a === "moveYes");
     else if (a === "lanternBack" || a === "lanternCompost") await unmakeLantern(id, a === "lanternCompost");
@@ -3049,7 +3314,6 @@ document.addEventListener("change", ev => {
 });
 document.addEventListener("change", ev => {
   if (ev.target.id === "hCharge") hd.charge = ev.target.value; // a choice for the sitting only: the ember never records it
-  else if (ev.target.id === "hShowEl") hd.showEl = ev.target.checked;
 });
 addEventListener("keydown", e => { if (e.key === "Escape" && sheetName && (sheetName !== "setup" || garden)) closeSheet(); });
 
@@ -3212,7 +3476,7 @@ function refresh() {
     between.visible = !!g && !isHome(g);
     syncRoom(); syncShelf();
     mirror.visible = mirrorShown();
-    syncThings(); syncWalkers();
+    syncThings(); syncWalkers(); hmSync();
     if (me && gardenLoaded) ensureMyBody().catch(() => {});
     refreshHud();
     if (sheetName && !["offer", "agreement", "rewrite", "spirit", "setup"].includes(sheetName)) renderSheet();
@@ -3247,6 +3511,7 @@ function take(j) {
   for (const [name, map] of [["items", items], ["spirits", spirits], ["daemons", daemons], ["shown", shown]]) {
     map.clear(); for (const [id, d] of Object.entries(j[name] || {})) map.set(id, d);
   }
+  for (const [id, d] of localItems) items.set(id, d);
   Object.assign(names, j.names || {});
   myInvite = j.invite || null;
   myPouch = j.mine && j.mine.pouch && typeof j.mine.pouch === "object" ? j.mine.pouch : null;
@@ -3361,6 +3626,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
+  moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
+  hmHold, hmPress, hmLight, hmSend: id => hm && hm.hooks && hmSend(hm.hooks.find(h => h.id === id) || null), hmTap,
   minute: () => ({ ...mstate(), beat: mclock.beat, laterReady: mclock.laterReady, started: mclock.started, hearth: hollow && hollow.handles.hearth ? { want: hollow.handles.hearth.want, k: hollow.handles.hearth.k, ember: hollow.handles.hearth.ember } : null, vines: vines.map(v => v.state), wake: wake.on }),
   anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },

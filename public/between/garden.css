@@ -169,13 +169,25 @@ body.mirroring #labels, body.mirroring #hud { display: none !important; }
 .mstate { flex-basis: 100%; font-size: .76rem; color: #e2a85c; }
 .mbar button { padding: 8px 12px; min-height: 38px; }
 
-/* Sat at the hearth (Wendell, 2026-10-24): the hearth moment opens only once you are sat, as a low see-through strip with no
-   scrim, the fire and your seated figure showing through it. A stand-in: the art-direction pass designs the real moment. */
+/* Sat at the hearth (Wendell, 2026-10-24): "Something stirs", the one strip left in the seated moment, is low and see-through
+   with no scrim, the fire, the crescent and your seated figure showing through it. */
 .sheet.seated { max-height: 44vh; background: linear-gradient(to top, rgba(22,15,10,.86), rgba(22,15,10,.58) 70%, rgba(22,15,10,.18));
   -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px); box-shadow: none; border-radius: 0; padding-top: 22px; }
 .sheet.seated .choice button { background: rgba(255,240,220,.08); }
 .sheet.seated .row.close { justify-content: flex-end; }
 body.seatedmoment .hud .bottom { display: none; }
+/* The seated hearth moment, take A (garden.js hmBegin): no card. Its captions sit under the fire; the only words on screen
+   besides them are two quiet links low by the fire, and the embers, lantern and hooks are buttons a keyboard or reader reaches. */
+body.seatedmoment #labels, body.seatedmoment .hud .namecard { display: none; }
+body.seatedmoment .mcap { top: auto; bottom: calc(22vh + env(safe-area-inset-bottom, 0px)); }
+.hm { position: fixed; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 5; display: flex; justify-content: center; pointer-events: none; padding: 0 16px; }
+.hm[hidden] { display: none; }
+.hmrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; pointer-events: auto; }
+.hm .hmlink { background: none; border: 0; box-shadow: none; padding: 10px 6px; min-height: 44px; color: rgba(251,239,220,.62); font: italic 400 1rem/1.2 var(--display);
+  text-shadow: 0 1px 8px rgba(0,0,0,.8); letter-spacing: .01em; }
+.hm .hmlink:hover, .hm .hmlink:focus-visible { color: #fbefdc; }
+.hm .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; padding: 0; border: 0; }
+.hm .sr:focus-visible { position: static; width: auto; height: auto; clip: auto; clip-path: none; padding: 8px 12px; border-radius: 10px; background: rgba(22,15,10,.7); color: #fbefdc; border: 1px solid #ffcf86; }
 
 /* Part 4: the check-in, walked. The room stays in view, glowing in the feeling's colour. */
 .sheet.walk { max-height: 58vh; }
