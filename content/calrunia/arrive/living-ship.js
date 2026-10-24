@@ -479,7 +479,7 @@ function size() {
   camera.aspect = w / h; camera.fov = w < h ? 64 : 50; camera.updateProjectionMatrix();
 }
 addEventListener("resize", size); size();
-const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
+const camRay = new THREE.Raycaster(), tmpHead = new THREE.Vector3(), camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
 function aimCamera(dt, snap) {
   const P = player.group.position;
   if (focus === "den") {
@@ -491,6 +491,11 @@ function aimCamera(dt, snap) {
     wantPos.set(P.x + sy * d * Math.cos(view.pitch), P.y + 1.2 + d * Math.sin(view.pitch), P.z + cyw * d * Math.cos(view.pitch));
     wantLook.set(P.x - sy * 5, P.y + 1.6, P.z - cyw * 5);
   }
+  // keep the view clear: a tree, the den or a chamber between you and the camera pulls the camera in front of it
+  const head = focus ? wantLook : tmpHead.copy(P).add(new THREE.Vector3(0, 1.4, 0)), toCam = wantPos.clone().sub(head), far = toCam.length();
+  camRay.set(head, toCam.normalize()); camRay.far = far; camRay.camera = camera; // sprites (halos) need the camera to be hit-tested
+  const block = camRay.intersectObject(island, true).find((h) => h.object.isMesh && !h.object.isSprite && h.object.material.visible !== false && !walkMeshes.includes(h.object));
+  if (block) wantPos.copy(head).addScaledVector(toCam, Math.max(1.2, block.distance - 0.4));
   const k = snap ? 1 : damp(4, dt); camPos.lerp(wantPos, k); camLook.lerp(wantLook, k);
   camera.position.copy(camPos); camera.lookAt(camLook);
 }
