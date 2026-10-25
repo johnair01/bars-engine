@@ -5,7 +5,7 @@
  * 390 x 844); ?demo=1 plays round 9's own demo world instead of the board's; ?grid=run@3,dock@3&cols=2 draws a sheet. */
 import type { OrreryWorld } from './fleet'
 
-export const ALTITUDE_JS = '/studio/altitude.js?v=1'
+export const ALTITUDE_JS = '/studio/altitude.js?v=2'
 
 export function studioPage(world: OrreryWorld): string {
   const data = JSON.stringify(world).replace(/</g, '\\u003c')
