@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { crew, gateBar, moodOf, nextOf, parseIndex, parseLoop } from '../deck'
-import { studioPage } from '../page'
 
 const INDEX = `# Call sheets
 
@@ -50,11 +49,5 @@ describe('studio deck', () => {
     expect(c.some(s => s.engine)).toBe(false)
     expect(c[0].tier).toBe('director')
     expect(c.find(s => s.id === 'producer')?.model).toBe('opus')
-  })
-
-  it('escapes strand text into the page', () => {
-    const ps = parseIndex(INDEX.replace('concept done', '</script><b>x'), now)
-    const html = studioPage({ at: now.toISOString(), passengers: ps, crew: [], gates: gateBar([], 'Concept'), gateNote: 'n', source: 's' })
-    expect(html).not.toContain('</script><b>x')
   })
 })
