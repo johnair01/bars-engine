@@ -5,7 +5,7 @@
  * 390 x 844); ?demo=1 plays round 9's own demo world instead of the board's; ?grid=run@3,dock@3&cols=2 draws a sheet. */
 import type { OrreryWorld } from './fleet'
 
-export const ALTITUDE_JS = '/studio/altitude.js?v=2'
+export const ALTITUDE_JS = '/studio/altitude.js?v=3'
 
 export function studioPage(world: OrreryWorld): string {
   const data = JSON.stringify(world).replace(/</g, '\\u003c')
@@ -22,8 +22,8 @@ export function studioPage(world: OrreryWorld): string {
 <script src="${ALTITUDE_JS}"></script>
 <script>
 // The studio boat: the Clockwork Orrery's loop (run, dock, intake, launch), autoplaying, driven by window.FLEET.
-// URL: ?phase=run|dock|intake|launch opens at that phase (&t=seconds into it, &hold=1 freezes the frame),
-// &phone=1 lays it out at 390 x 844. Probe sheets: ?grid=run@3,dock@3&cols=2&gw=1600&gh=1000.
+// URL: ?phase=run|dock|intake|launch opens at that phase (&t=seconds into it, &hold=1 freezes the frame,
+// &auto=1 lets the ghost hand play the intake), &phone=1 lays it out at 390 x 844. Probe sheets: ?grid=run@3,dock@3&cols=2&gw=1600&gh=1000.
 ;(function () {
   const q = new URLSearchParams(location.search), A = window.AltR9, world = q.get('demo') === '1' ? null : window.FLEET
   const cv = document.getElementById('c'), g = cv.getContext('2d')
@@ -50,30 +50,50 @@ export function studioPage(world: OrreryWorld): string {
     document.title = 'done'; return
   }
   const isPhone = () => phone || W / H < 0.8
+  // The intake is played, not watched: the clock stops at each of the player's moves and waits for their tap (the
+  // store, then the star chart, then the store again to pay for the hull). &auto=1 plays round 9's ghost hand instead.
+  const auto = q.get('auto') === '1'
+  const waits = auto || hold ? [] : [['store', 1.8, 2.0]]
+    .concat(!world || world.spent ? [['chart', 3.3, 3.5]] : [])
+    .concat(!world || world.opens ? [['hull', 9.3, 9.4]] : [])
   let T = 0
   const p0 = q.get('phase')
   if (p0 && A.START[p0] !== undefined) T = A.START[p0] + Math.min(+(q.get('t') || 0), A.DUR[p0] - 0.01)
-  let taps = {}, noHand = false, last = performance.now(), lastIntake = -1
+  let taps = {}, done = {}, idle = 0, waitIdle = 0, last = performance.now(), lastIntake = -1
+  const waiting = (s) => s.phase === 'intake' ? waits.find(w => !done[w[0]] && s.t >= w[1] - 0.001) : undefined
   function draw() {
     const s = A.at(T)
-    if (s.phase !== 'intake' && lastIntake >= 0) { taps = {}; noHand = false; lastIntake = -1 }
+    if (s.phase !== 'intake' && lastIntake >= 0) { taps = {}; done = {}; lastIntake = -1 }
     if (s.phase === 'intake') lastIntake = s.t
+    const w = waiting(s)
     let veil = 0
     if (!hold) { if (s.phase === 'launch') veil = Math.max(0, (s.t - 5.3) / 0.7); if (s.phase === 'run') veil = Math.max(0, 1 - s.t / 0.7) }
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
-    A.frame(g, W, H, { phone: isPhone(), phase: s.phase, t: s.t, veil, taps, noHand, world })
+    A.frame(g, W, H, { phone: isPhone(), phase: s.phase, t: s.t, veil, taps, noHand: !auto, world, idle,
+                       hint: w ? { at: w[0], idle: waitIdle } : null })
   }
   function tick(now) {
     const dt = Math.min(0.1, (now - last) / 1000); last = now
-    if (!hold) T += dt
+    if (!hold) {
+      const s = A.at(T), w = waiting(s)
+      if (w) { T = A.START.intake + w[1]; idle += dt; waitIdle += dt } else T += dt
+    }
     draw(); if (!hold) requestAnimationFrame(tick)
   }
-  // a real tap: the seed store, then the star chart, during the intake
+  // a real tap moves the intake on: the seed store, then the star chart, then the store again for the hull
   cv.addEventListener('pointerdown', (e) => {
     const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, s = A.at(T), what = A.hit(x, y)
     if (s.phase !== 'intake') return
-    if (what === 'store' && s.t < 2.0) { T = A.START.intake + 2.0; taps.store = [x, y]; noHand = true }
-    else if (what === 'chart' && (!world || world.spent) && s.t >= 2.0 && s.t < 3.5) { T = A.START.intake + 3.5; taps.chart = [x, y]; noHand = true }
+    const w = waiting(s)
+    if (w) {
+      // the right place, or anywhere once the hand has shown where; a first miss calls the hand at once
+      const right = w[0] === 'chart' ? what === 'chart' : what === 'store'
+      if (!right && waitIdle < 2.2) { waitIdle = 2.2; return }
+      done[w[0]] = true; taps[w[0]] = [x, y]; T = A.START.intake + w[2]; waitIdle = 0
+    } else if (auto) {
+      if (what === 'store' && s.t < 2.0) { T = A.START.intake + 2.0; taps.store = [x, y] }
+      else if (what === 'chart' && (!world || world.spent) && s.t >= 2.0 && s.t < 3.5) { T = A.START.intake + 3.5; taps.chart = [x, y] }
+    }
     if (hold) draw()
   })
   addEventListener('resize', () => { size(); if (hold) draw() })

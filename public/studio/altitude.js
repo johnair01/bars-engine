@@ -13,7 +13,7 @@
 // New this round: every standing figure breathes and sways; crew 1.5x the r8 size, the master 15% taller; a soft shadow
 // under each figure.
 // Units: x along the ship (stern left), y toward the viewer (the cut face is the front), z up.
-// API: AltR9.frame(ctx, W, H, { phone, phase, t, veil, noHand, taps }) draws one frame; AltR9.state(phase, t);
+// API: AltR9.frame(ctx, W, H, { phone, phase, t, veil, noHand, taps, hint, idle }) draws one frame; AltR9.state(phase, t);
 // AltR9.hit(px, py) names what a tap at a screen point touches ('store' | 'chart' | null) for the last frame drawn.
 ;(function () {
   const TAU = Math.PI * 2
@@ -779,6 +779,15 @@
     const taps = opts.taps || {}
     ripple(taps.store ? taps.store[0] : st[0], taps.store ? taps.store[1] : st[1], (t - 2.0) / 0.9, sc)
     ripple(taps.chart ? taps.chart[0] : ch[0], taps.chart ? taps.chart[1] : ch[1], (t - 3.5) / 0.9, sc)
+    if (taps.hull) ripple(taps.hull[0], taps.hull[1], (t - 9.4) / 0.9, sc)
+    const hint = opts.hint
+    if (hint) { // the intake waits for the player: the thing to touch breathes, and the hand comes if they wait
+      const p = hint.at === 'chart' ? ch : st, beat = (hint.idle % 1.6) / 1.6
+      glow(p[0], p[1], (hint.at === 'chart' ? 70 : 52) * sc * (1 + 0.15 * Math.sin(hint.idle * 3.4)), '#fff1c8', 0.4 + 0.2 * Math.sin(hint.idle * 3.4))
+      g.strokeStyle = `rgba(255,246,220,${0.7 * (1 - beat)})`; g.lineWidth = 2.5 * sc; g.beginPath(); g.arc(p[0], p[1], (20 + 46 * beat) * sc, 0, TAU); g.stroke()
+      if (hint.idle > 2.2) handAt(p[0], p[1], sc, bump(beat, 0.1, 0.45))
+      return
+    }
     if (opts.noHand) return
     let p = null, press = 0
     if (t >= 0.8 && t < 1.8) { const f = ease((t - 0.8) / 1.0); p = [lerp(off[0], st[0], f), lerp(off[1], st[1], f)] }
@@ -809,6 +818,7 @@
     opts = opts || {}
     Wd = opts.world ? { ...DEMO, ...opts.world, landed: { ...DEMO.landed, ...(opts.world.landed || {}) } } : DEMO
     g = ctx; S = state(opts.phase || 'run', opts.t || 0); S.phone = !!opts.phone
+    S.time += opts.idle || 0 // seconds the player has kept the intake waiting: the ship and crew keep living meanwhile
     camera(W, H, S.phone)
     sky(W, H)
     harbour(W, H)
