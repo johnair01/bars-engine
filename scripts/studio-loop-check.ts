@@ -1,6 +1,6 @@
 /**
  * The studio boat's browser check (council #412): serves the page /board/studio returns (studioPage, the demo world, no
- * network or database) with public/studio/altitude.js, opens /board/studio?demo=1&auto=1 in Chromium, and waits until
+ * network or database) with public/studio/altitude.js, opens /board/studio?fleet=0&demo=1&auto=1 in Chromium, and waits until
  * one whole loop (run, dock, intake, launch) has played and the clock is back at run, with no page errors. Then it opens
  * the fleet (?fleet=1&demo=1), sails in to one ship and plays that ship's loop the same way.
  * The real route is not started: it sits behind the owner's sign-in and `next build` needs the deployment's env, so this
@@ -50,8 +50,8 @@ async function main() {
   try {
     const p = await browser.newPage({ viewport: { width: 1280, height: 800 } })
     p.on('pageerror', e => errors.push('orrery: ' + e.message))
-    await p.goto(`http://localhost:${port}/board/studio?demo=1&auto=1`)
-    await oneLoop(p, '/board/studio?demo=1&auto=1')
+    await p.goto(`http://localhost:${port}/board/studio?fleet=0&demo=1&auto=1`)
+    await oneLoop(p, '/board/studio?fleet=0&demo=1&auto=1')
     const f = await browser.newPage({ viewport: { width: 390, height: 844 } })
     f.on('pageerror', e => errors.push('fleet: ' + e.message))
     await f.goto(`http://localhost:${port}/board/studio?fleet=1&demo=1&auto=1`)

@@ -119,7 +119,7 @@ describe('studio fleet', () => {
     expect(html).toContain('window.FLEET=')
     expect(html).toContain('window.FLEET_DEMO=')
     expect(html).toContain('window.FLEET_DEFAULT=' + FLEET_DEFAULT)
-    expect(FLEET_DEFAULT).toBe(false) // the fleet stays behind ?fleet=1 until it is flipped on (council #412)
+    expect(FLEET_DEFAULT).toBe(true) // the fleet is the default view; ?fleet=0 opens the single-ship Orrery loop
     expect(html).not.toMatch(/<(ul|ol|table)\b/)
     expect(html).not.toContain('</script><script>alert')
   })
