@@ -14,7 +14,9 @@
 // under each figure.
 // Units: x along the ship (stern left), y toward the viewer (the cut face is the front), z up.
 // API: AltR9.frame(ctx, W, H, { phone, phase, t, veil, noHand, taps, hint, idle }) draws one frame; AltR9.state(phase, t);
-// AltR9.hit(px, py) names what a tap at a screen point touches ('store' | 'chart' | null) for the last frame drawn.
+// AltR9.hit(px, py) names what a tap at a screen point touches ('back' | 'store' | 'chart' | 'water' | null) for the last
+// frame drawn. Round 10: AltR9.frame(..., { ship }) runs the same loop for any one-room ship (a fleet.ts ShipWorld), and
+// AltR9.fleetFrame(ctx, W, H, { phone, t, fleet }) draws the six ships in convoy; fleetHit/fleetBox name a tapped ship.
 ;(function () {
   const TAU = Math.PI * 2
   // the six altitudes in faces.yaml order; amber (3) is never drawn this round
@@ -165,7 +167,8 @@
   function harbour(W, H) {
     const a = S.harbour
     if (a <= 0.01) return
-    const cx = W * ((S.phone ? 0.62 : 0.74) + S.harbourX), hy = H * (S.phone ? 0.72 : 0.4), u = Math.min(W / 1600, H / 1000) * (S.phone ? 1.6 : 1)
+    let cx = W * ((S.phone ? 0.62 : 0.74) + S.harbourX), hy = H * (S.phone ? 0.72 : 0.4), u = Math.min(W / 1600, H / 1000) * (S.phone ? 1.6 : 1)
+    if (S.hb) { cx = S.hb.cx; hy = S.hb.hy; u = S.hb.u } // the fleet sets its own harbour
     glow(cx, hy - 40 * u, Math.max(W, H) * 0.42, '#ffe8c6', 0.38 * a)
     glow(cx + 120 * u, hy - 10 * u, Math.max(W, H) * 0.2, '#fff4dc', 0.22 * a)
     g.save(); g.globalAlpha = a
@@ -272,8 +275,9 @@
       g.restore()
     })
   }
-  function tail(h) { // the wake: long water ribbons trailing aft, flowing while under way
-    const len = 6 + 12 * S.v, ph = S.D * 1.6
+  function tail(h, len) { // the wake: long water ribbons trailing aft, flowing while under way
+    len = len || S.wakeLen || 6 + 12 * S.v
+    const ph = S.D * 1.6
     g.save(); g.lineCap = 'round'
     for (let i = 0; i < 4; i++) {
       g.strokeStyle = rgba(i % 2 ? SK.lite : SK.glow, (0.12 + 0.18 * S.v) - i * 0.03); g.lineWidth = (0.35 - i * 0.05) * k
@@ -710,12 +714,11 @@
     const LX = RM.loom * m, FX = RM.foundry * m, CX = RM.chart * m
     { const p = P(SHIP.xc, 4.5, -SHIP.bot - 2.4); g.save(); g.translate(p[0], p[1]); g.scale(1, 0.18); glow(0, 0, lerp(SHIP.L, BIG.L, S.skin) * k * 1.1, '#0f2a3a', 0.35); g.restore() }
     if (S.skin > 0.01) { g.save(); g.globalAlpha = S.skin; bulwark(BIG, true); hullLower(BIG, { big: true }); g.restore() }
-    ghostSkin()
+    if (!S.fleet) ghostSkin()
     tail(S.skin > 0.5 ? BIG : SHIP)
     bulwark(SHIP)
     hullLower(SHIP, { under: 1 - S.skin, seamInner: S.skin })
-    skinLight()
-    gates()
+    if (!S.fleet) { skinLight(); gates() }
     ribbon([[-1.5 + LX, 8.5], [8, 8.5], [8.4, 6.6], [9.3, 4.1], [10.6, 4.6], [11, 6.8], [11.4, 8.5], [24.5 + CX, 8.5]], 0.02, 0.62)
     ribbon([[7.4, 8.5], [11.8, 8.5]], 0.02, 0.62)
     ribbon([[7.6, 8.5], [8.6, 7.6]], 0.02, 0.5)
@@ -737,7 +740,7 @@
     const sh = chartSecond(18.6 + CX); if (sh && sh.y >= 8) out.push(sh)
     out.sort((a, b) => (a.x * AX[1] + a.y * AY[1]) - (b.x * AX[1] + b.y * AY[1])).forEach((q) => crew(q.x, q.y, 0.02, q.o))
     flyingSeeds()
-    HIT.store = P(STORE[0], STORE[1], 0.4); HIT.chart = P(18.6 + CX + 2.3, 7.5, 1.4); HIT.k = k
+    if (!S.fleet) { HIT.store = P(STORE[0], STORE[1], 0.4); HIT.chart = P(18.6 + CX + 2.3, 7.5, 1.4); HIT.k = k }
   }
   // the ground the rooms leave in the larger hull: faint floors for the rooms this hull can still hold (r9 fix-next 7)
   function roomSlots(m) {
@@ -812,32 +815,550 @@
     const f = phone && S.phase === 'launch' && Wd.opens ? 1 : S.cam
     k = lerp(A[0], B[0], f); ox = lerp(A[1], B[1], f); oy = lerp(A[2], B[2], f)
     oy += Math.sin(S.time * 1.1) * 2.2 * (k / 45) // the ship rides the current
+    HIT.box = sbox(S.skin > 0.5 ? [[-7.6, 9, -1.5], [-6, -2.8, 3.6], [11.5, 9, -6.4], [31.4, -3, 7.2], [31.2, 9, -0.5]] : [[-3.6, 9, -1.5], [-1, 1, 4.4], [11.5, 9, -5.2], [26.8, -0.5, 5.6], [26.8, 9, -0.5]])
+  }
+
+  // ================= round 10: every ship's loop, and the fleet =================
+  // Face sets the form, element sets the skin (flow-ships/art-direction.md): the Gourd Star a gourd, the Ember Comet an
+  // S-curved dart, the Twin Lantern two hulls under one deck, the Jade Palace a mirrored lens, the Seed Archive a samara
+  // seed, the Orrery round 9's pod. Each skin stays a pale ice tinted by its element, so the hull is still the lightest
+  // large shape; the element shows in motion (vines, embers, rings of light, floating stones, motes), never an emblem.
+  const FACE_OF = { 'gourd-star': 'shaman', orrery: 'architect', 'ember-comet': 'challenger', 'twin-lantern': 'diplomat', 'jade-palace': 'regent', 'seed-archive': 'sage' }
+  const FORM = { shaman: 'gourd', architect: 'pods', challenger: 'comet', diplomat: 'twin', regent: 'lens', sage: 'seed' }
+  const SKIN = {
+    shaman: { nw: '#b4e6d2', old: '#5aa894', band: '#86c9b4', core: '#2c6a68', deck: '#d4f0e6', acc: '#e4fbf2', lite: '#cdf5e6' },
+    architect: { nw: SK.skinNew, old: SK.skinOld, band: '#5fb3c4', core: '#2f6f95', deck: SK.deck, acc: SK.acc, lite: SK.lite },
+    challenger: { nw: '#ecd6dc', old: '#b88594', band: '#d4a8b4', core: '#6a3e62', deck: '#f4e4e8', acc: '#fff1f4', lite: '#ffe2e8' },
+    diplomat: { nw: '#dce8f4', old: '#8fa8c6', band: '#b6cae2', core: '#4a6690', deck: '#eaf1f8', acc: '#ffffff', lite: '#f2f8ff' },
+    regent: { nw: '#dde6d0', old: '#97a888', band: '#bccaae', core: '#56684e', deck: '#ebf0e2', acc: '#f8fbf0', lite: '#f2f8e6' },
+    sage: { nw: '#ddd8f4', old: '#9d92d2', band: '#bfb6e8', core: '#544a94', deck: '#ebe8fa', acc: '#f8f6ff', lite: '#f0ecff' },
+  }
+  const wallOf = (sk) => mix(sk.old, '#ffffff', 0.55)
+  function bulb(u, c, r) { const d = (u - c) / r; return d * d >= 1 ? 0 : Math.sqrt(1 - d * d) }
+  function depthOf(form, u) {
+    if (form === 'gourd') return Math.max(bulb(u, 0.31, 0.31), 0.74 * bulb(u, 0.78, 0.22))
+    if (form === 'comet') return u < 0.7 ? Math.pow(Math.sin(Math.PI / 2 * u / 0.7), 1.6) : bulb(u, 0.7, 0.3)
+    if (form === 'lens') return Math.pow(Math.sin(Math.PI * u), 0.55)
+    if (form === 'twin') return Math.pow(Math.sin(Math.PI * u), 0.4)
+    if (form === 'seed') return Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(u, 1.5))), 0.7)
+    return Math.pow(Math.sin(Math.PI * u), 0.5)
+  }
+  function lowPts(h, inset) {
+    const out = [], L = h.L - inset, bot = Math.max(0.2, h.bot - inset)
+    for (let i = 0; i <= 64; i++) { const u = i / 64; out.push([h.xc + L * (2 * u - 1), -bot * depthOf(h.form, u)]) }
+    return out
+  }
+  // a hull class: one-room ships grow longer, deeper and wider aft with each class (boat-grid-growth-limits)
+  function geo(id, cls) {
+    const form = FORM[FACE_OF[id]]
+    if (form === 'pods') return { ...(cls <= 1 ? SHIP : BIG), form }
+    const c = Math.max(0, cls - 1)
+    return { id, form, cls, xc: 5.6, L: 8.2 + 1.9 * c, bot: (form === 'twin' ? 2.8 : 3.5) + 0.55 * c, y0: -1.1 * c, y1: 8, bw: 0.95 + 0.12 * c }
+  }
+  const RIM = {
+    gourd: { sh: 1.5, sb: 0.4, sc: 0.6, ph: 3.4, pb: 1.3, pc: 1.5 },
+    comet: { sh: 5.4, sb: 2.8, sc: 1.7, ph: 1.1, pb: 2.4, pc: 0.2 },
+    lens: { sh: 3.1, sb: 1.3, sc: 1.3, ph: 3.1, pb: 1.3, pc: 1.3 },
+    twin: { sh: 1.6, sb: 0.4, sc: 0.4, ph: 1.6, pb: 0.4, pc: 0.4 },
+    seed: { sh: 1.2, sb: 0.2, sc: 0.3, ph: 1.8, pb: 0.9, pc: 0.7 },
+  }
+  function rimPath(h, inset) {
+    const R = RIM[h.form], xl = h.xc - h.L + inset, xr = h.xc + h.L - inset, b = h.bw - inset * 0.5
+    const sx = xl - R.sb, sz = R.sh * b, px = xr + R.pb, pz = R.ph * b
+    g.beginPath(); g.moveTo(xl, 0)
+    g.bezierCurveTo(xl - R.sb * 0.5, sz * 0.4, sx - R.sc * 0.3, sz * 0.9, sx + R.sc * 0.4, sz)
+    g.bezierCurveTo(sx + R.sc * 1.2, sz * 1.05, sx + R.sc * 1.3, sz * 0.6, xl + 1.4, b * 1.1)
+    g.quadraticCurveTo(xl + 2.0, b, xl + 2.6, b)
+    g.lineTo(xr - 2.6, b)
+    g.quadraticCurveTo(xr - 2.0, b, xr - 1.4, b * 1.1)
+    g.bezierCurveTo(px - R.pc * 1.3, pz * 0.6, px - R.pc * 1.2, pz * 1.05, px - R.pc * 0.4, pz)
+    g.bezierCurveTo(px + R.pc * 0.3, pz * 0.9, xr + R.pb * 0.5, pz * 0.4, xr, 0)
+    g.closePath()
+  }
+  function rimG(h, sk) {
+    plane('y', h.y0, () => { rimPath(h, 0); g.fillStyle = mix(sk.nw, sk.acc, 0.45); g.fill() })
+    plane('y', h.y0 + 0.7, () => {
+      rimPath(h, 0); g.fillStyle = sk.nw; g.fill()
+      g.save(); rimPath(h, 0); g.clip(); g.translate(0, -0.45); rimPath(h, 0.35); g.fillStyle = sk.old; g.fill(); g.restore()
+    })
+  }
+  function stripsG(h, sk, ya, yb) {
+    const lo = lowPts(h, 0)
+    for (let i = 0; i < lo.length - 1; i++) {
+      const [x0, z0] = lo[i], [x1, z1] = lo[i + 1]
+      const nx = z1 - z0, nz = -(x1 - x0), d = (nx * 0.7 + nz * 0.53) / (Math.hypot(nx, nz) || 1)
+      if (d <= -0.05) continue
+      const c = mix(sk.core, sk.nw, 0.25 + 0.4 * Math.max(0, d))
+      poly([[x0, ya, z0], [x1, ya, z1], [x1, yb, z1], [x0, yb, z0]], c, c, 0.6)
+    }
+  }
+  function bandsG(h, sk, y) { // the cut face: every band an older hull, newest outside (boat-grid-nested-skins)
+    const f = (inset, col) => { path3(lowPts(h, inset).map(([x, z]) => [x, y, z])); g.fillStyle = col; g.fill() }
+    f(0, sk.nw); f(0.5, sk.old); f(0.95, sk.band); f(1.35, sk.core)
+    g.save(); path3(lowPts(h, 1.35).map(([x, z]) => [x, y, z])); g.clip(); flowCurves(h, y, -h.bot + 1.4, -0.3, sk.lite, 0.3, 3, h.xc + y, S.D * 0.4); g.restore()
+  }
+  function hullG(h, sk, o) {
+    o = o || {}
+    const ua = o.under === undefined ? 1 : o.under, xl = h.xc - h.L, xr = h.xc + h.L
+    const under = (ya, yb) => { if (ua > 0.01) { g.save(); g.globalAlpha *= ua; stripsG(h, sk, ya, yb); g.restore() } }
+    if (h.form === 'twin') { under(h.y0, h.y0 + 3.2); bandsG(h, sk, h.y0 + 3.2); under(h.y1 - 3.2, h.y1) } else under(h.y0, h.y1)
+    poly([[xl, h.y0, 0], [xr, h.y0, 0], [xr, h.y1, 0], [xl, h.y1, 0]], sk.deck, o.seam ? rgba('#ffffff', 0.5 * o.seam) : null, 2)
+    plane('z', 0, () => {
+      g.save(); g.globalAlpha *= 0.18; g.strokeStyle = '#ffffff'; g.lineWidth = 0.08
+      for (let i = 0; i < 5; i++) { g.beginPath(); for (let s = 0; s <= 40; s++) { const x = xl + 0.5 + (s / 40) * (xr - xl - 1), y = h.y0 + 0.7 + i * (h.y1 - h.y0 - 1.4) / 4 + Math.sin(s / 6 + i) * 0.25; s ? g.lineTo(x, y) : g.moveTo(x, y) } g.stroke() }
+      g.restore()
+    })
+    bandsG(h, sk, h.y1)
+    const a = P(xl, h.y1, 0), b = P(xr, h.y1, 0)
+    g.save(); g.strokeStyle = 'rgba(240,252,255,0.8)'; g.lineWidth = 2; g.shadowColor = rgba(sk.acc, 1); g.shadowBlur = 10
+    g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.restore()
+  }
+  // the next hull class waiting round the ship: one step brighter than round 9's (build-r9 review, fix next 6)
+  function ghostG(big, a) {
+    if (a <= 0.01) return
+    g.save(); g.globalAlpha = a
+    const xl = big.xc - big.L, xr = big.xc + big.L
+    poly([[xl, big.y0, 0], [xr, big.y0, 0], [xr, big.y1, 0], [xl, big.y1, 0]], 'rgba(200,240,255,0.06)', 'rgba(225,246,255,0.34)', 1)
+    plane('y', big.y0, () => { rimPath(big, 0); g.fillStyle = 'rgba(190,232,250,0.07)'; g.fill(); g.shadowColor = '#cff6ff'; g.shadowBlur = 12; g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 3 / k; g.stroke() })
+    plane('y', big.y1, () => {
+      const lo = lowPts(big, 0); g.beginPath(); lo.forEach(([x, z], i) => i ? g.lineTo(x, z) : g.moveTo(x, z)); g.closePath()
+      g.fillStyle = 'rgba(190,232,250,0.08)'; g.fill(); g.shadowColor = '#cff6ff'; g.shadowBlur = 14; g.strokeStyle = 'rgba(255,255,255,0.48)'; g.lineWidth = 3 / k; g.stroke()
+    })
+    g.restore()
+  }
+  function skinLightG(big) {
+    const p = S.skinLine
+    if (p <= 0 || (p >= 1 && S.skin >= 1)) return
+    const fade = 1 - ramp(S.phase === 'intake' ? S.t : 99, 11.2, 12.2)
+    if (fade <= 0) return
+    g.save(); g.globalAlpha = fade
+    const draw = () => { g.setLineDash([p * 70, 70]); g.strokeStyle = 'rgba(255,250,232,0.95)'; g.lineWidth = 5 / k; g.shadowColor = '#fff1c8'; g.shadowBlur = 18; g.lineCap = 'round'; g.stroke() }
+    plane('y', big.y0, () => { rimPath(big, 0); draw() })
+    plane('y', big.y1, () => { const lo = lowPts(big, 0); g.beginPath(); lo.forEach(([x, z], i) => i ? g.lineTo(x, z) : g.moveTo(x, z)); draw() })
+    g.restore()
+  }
+  // the element in motion, never an emblem
+  function elementFx(h, sk, face) {
+    const T = S.time, xl = h.xc - h.L, xr = h.xc + h.L
+    if (face === 'shaman') { // wood: vines hang from the deck lip and sway
+      g.save(); g.lineCap = 'round'
+      for (let i = 0; i < 6; i++) {
+        const u = (i + 0.5) / 6, x = xl + 1.2 + u * (2 * h.L - 2.4), len = 0.9 + hash(i * 3.3) * 1.4, sw = Math.sin(T * 1.1 + i * 1.9) * 0.22
+        const a = P(x, h.y1 + 0.02, -0.05), c = P(x + sw * 0.5, h.y1 + 0.02, -len * 0.5), b = P(x + sw, h.y1 + 0.02, -len)
+        g.strokeStyle = 'rgba(118,200,160,0.85)'; g.lineWidth = Math.max(1, 0.06 * k); g.beginPath(); g.moveTo(a[0], a[1]); g.quadraticCurveTo(c[0], c[1], b[0], b[1]); g.stroke()
+        for (let j = 1; j <= 3; j++) { const f = j / 3.4, q = [lerp(a[0], b[0], f) + sw * k * 0.3 * f, lerp(a[1], b[1], f)]; g.fillStyle = j % 2 ? '#9ee0bc' : '#7cc9a4'; g.beginPath(); g.ellipse(q[0] + (j % 2 ? 0.1 : -0.1) * k, q[1], 0.11 * k, 0.06 * k, j % 2 ? 0.6 : -0.6, 0, TAU); g.fill() }
+      }
+      g.restore()
+    }
+    if (face === 'challenger') { // fire: embers lift off the swept stern
+      const R = RIM.comet, sx = xl - R.sb + R.sc * 0.4, sz = R.sh * h.bw
+      for (let i = 0; i < 9; i++) {
+        const f = loopT(T * 0.28 + hash(i * 1.7), 1), p = P(sx + Math.sin(f * 6 + i) * 0.4 - f * 1.6, h.y0 + 0.5, sz * 0.75 + f * 3.4)
+        glow(p[0], p[1], 0.3 * k * (1 - f), '#ffb08a', 0.6 * (1 - f)); g.fillStyle = rgba('#ffe2c8', 0.9 * (1 - f)); g.beginPath(); g.arc(p[0], p[1], Math.max(0.6, 0.06 * k * (1 - f)), 0, TAU); g.fill()
+      }
+    }
+    if (face === 'diplomat') { // metal: bands of light slide along the polished hull
+      for (let i = 0; i < 2; i++) {
+        const f = loopT(T * 0.1 + i * 0.5, 1), u = 0.08 + f * 0.84, x = h.xc + h.L * (2 * u - 1), dz = h.bot * depthOf(h.form, u)
+        const a = P(x, h.y1 + 0.01, 0), b = P(x, h.y1 + 0.01, -dz), al = Math.sin(f * Math.PI)
+        g.save(); g.strokeStyle = rgba('#ffffff', 0.75 * al); g.lineWidth = Math.max(1.5, 0.14 * k); g.shadowColor = '#e8f4ff'; g.shadowBlur = 14; g.lineCap = 'round'
+        g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.restore()
+      }
+    }
+    if (face === 'regent') { // earth: stones float under the keel
+      for (let i = 0; i < 4; i++) {
+        const u = 0.2 + i * 0.2, x = h.xc + h.L * (2 * u - 1) * 0.9, z = -h.bot * depthOf(h.form, u) - 0.9 - 0.25 * Math.sin(T * 0.8 + i * 1.3), p = P(x, h.y1 - 1.6, z), r = (0.32 + hash(i) * 0.2) * k
+        g.fillStyle = mix(sk.old, '#ffffff', 0.15); g.beginPath(); g.ellipse(p[0], p[1], r, r * 0.62, 0.2, 0, TAU); g.fill()
+        g.fillStyle = rgba(sk.acc, 0.7); g.beginPath(); g.ellipse(p[0] - r * 0.15, p[1] - r * 0.25, r * 0.6, r * 0.25, 0.2, 0, TAU); g.fill()
+      }
+    }
+    if (face === 'sage') { // aether: slow motes drift round the ship
+      for (let i = 0; i < 12; i++) {
+        const x = xl + hash(i * 2.1) * 2 * h.L, y = h.y0 + hash(i * 7.3) * (h.y1 - h.y0), z = 0.8 + hash(i * 3.7) * 4.6 + Math.sin(T * 0.5 + i) * 0.4, p = P(x, y, z)
+        glow(p[0], p[1], 0.35 * k, '#e6dcff', 0.35 + 0.25 * Math.sin(T * 1.3 + i)); g.fillStyle = '#f6f2ff'; g.beginPath(); g.arc(p[0], p[1], Math.max(0.7, 0.04 * k), 0, TAU); g.fill()
+      }
+    }
+  }
+  function formBehind(h, sk) { // the Seed Archive's samara wing rises from the stern behind the deck
+    if (h.form !== 'seed') return
+    const xl = h.xc - h.L
+    plane('y', h.y0 + 0.3, () => {
+      const sw = Math.sin(S.time * 0.7) * 0.15
+      g.beginPath(); g.moveTo(xl + 0.8, 0); g.bezierCurveTo(xl - 0.6, 2.2, xl - 2.0 + sw, 4.4, xl - 3.4 + sw, 6.2)
+      g.bezierCurveTo(xl - 2.4 + sw, 6.4, xl - 0.2, 4.2, xl + 3.0, 0.3); g.closePath()
+      g.fillStyle = rgba(sk.nw, 0.55); g.fill(); g.strokeStyle = rgba(sk.acc, 0.8); g.lineWidth = 0.06; g.stroke()
+      g.strokeStyle = rgba(sk.old, 0.5); g.lineWidth = 0.04
+      for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(xl + 1.2 + i * 0.4, 0.2); g.quadraticCurveTo(xl - 0.6 + i * 0.2, 2.8 + i * 0.4, xl - 3.0 + sw + i * 0.3, 5.9 - i * 0.3); g.stroke() }
+    })
+  }
+  function formFront(h) { // the Twin Lantern's two lanterns stand at stern and prow
+    if (h.form !== 'twin') return
+    for (const x of [h.xc - h.L + 1.0, h.xc + h.L - 1.0]) {
+      const a = P(x, h.y1 - 0.4, 0), b = P(x, h.y1 - 0.4, 3.2)
+      g.strokeStyle = '#a9bdd6'; g.lineWidth = Math.max(1.2, 0.08 * k); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke()
+      lantern(x, h.y1 - 0.4, 2.0)
+    }
+  }
+
+  // ---------- the machines of the one-room ships ----------
+  const WOOD = ['#e8cba3', '#d1ad83', '#ad8762']
+  function bellM(cx, cy, z, fl) { // intake: the listening bell; soft rings drift in toward it
+    box(cx - 0.75, cy - 0.08, z, cx - 0.63, cy + 0.08, z + 2.1, ...WOOD)
+    box(cx + 0.63, cy - 0.08, z, cx + 0.75, cy + 0.08, z + 2.1, ...WOOD)
+    box(cx - 0.82, cy - 0.1, z + 2.0, cx + 0.82, cy + 0.1, z + 2.16, ...WOOD)
+    const p = P(cx, cy, z + 2.0), s = k, sw = Math.sin(S.time * 1.3) * 0.06 + fl * 0.2 * Math.sin(S.time * 14)
+    for (let i = 0; i < 3; i++) { const f = loopT(S.time * 0.35 + i / 3, 1), r = (1.7 - f * 1.3) * k; g.strokeStyle = rgba('#fff2cc', 0.4 * f); g.lineWidth = Math.max(1, 0.04 * k); g.beginPath(); g.ellipse(p[0], p[1] + 0.55 * s, r, r * 0.45, 0, 0, TAU); g.stroke() }
+    g.save(); g.translate(p[0], p[1]); g.rotate(sw)
+    const gr = g.createLinearGradient(-0.45 * s, 0, 0.45 * s, 0); gr.addColorStop(0, '#c99a5a'); gr.addColorStop(0.45, '#f6e2b0'); gr.addColorStop(1, '#b8884a')
+    g.fillStyle = gr; g.beginPath(); g.moveTo(-0.13 * s, 0.1 * s); g.quadraticCurveTo(-0.2 * s, 0.55 * s, -0.46 * s, 0.95 * s); g.lineTo(0.46 * s, 0.95 * s); g.quadraticCurveTo(0.2 * s, 0.55 * s, 0.13 * s, 0.1 * s); g.closePath(); g.fill()
+    g.fillStyle = '#8a6a3a'; g.beginPath(); g.arc(0, 1.0 * s, 0.08 * s, 0, TAU); g.fill()
+    g.restore()
+    if (fl > 0) glow3(cx, cy, z + 1.5, 1.4, SEED, 0.75 * fl)
+  }
+  function forgeM(cx, cy, z, fl) { // falsify: coals and an anvil; the strike shows the crack
+    cylinder(cx - 0.6, cy, z, z + 0.55, 0.45, '#5a3a48', '#7a5a68')
+    const fl2 = 0.8 + 0.2 * Math.sin(S.time * 5.1) * Math.sin(S.time * 1.7)
+    plane('z', z + 0.56, () => { const gr = g.createRadialGradient(cx - 0.6, cy, 0, cx - 0.6, cy, 0.4); gr.addColorStop(0, '#ffe8d0'); gr.addColorStop(0.6, '#ff8a5a'); gr.addColorStop(1, '#a8404a'); g.globalAlpha = fl2; g.fillStyle = gr; g.beginPath(); g.arc(cx - 0.6, cy, 0.38, 0, TAU); g.fill(); g.globalAlpha = 1 })
+    glow3(cx - 0.6, cy, z + 0.8, 1.3, '#ff8a70', 0.3 * fl2 + 0.35 * fl)
+    box(cx + 0.45, cy - 0.18, z, cx + 0.8, cy + 0.18, z + 0.45, '#b8bccb', '#8e93a8', '#71768c')
+    box(cx + 0.15, cy - 0.24, z + 0.45, cx + 1.1, cy + 0.24, z + 0.65, '#dde1ec', '#a4aac0', '#868ca4')
+    const hit = Math.max(0, Math.sin(S.time * 2.4)), p = P(cx + 0.6, cy, z + 0.66)
+    if (hit > 0.94) for (let i = 0; i < 5; i++) { const a = -1.2 - i * 0.35; g.fillStyle = '#ffe0b0'; g.beginPath(); g.arc(p[0] + Math.cos(a) * 0.4 * k, p[1] + Math.sin(a) * 0.3 * k, Math.max(0.8, 0.03 * k), 0, TAU); g.fill() }
+  }
+  function mirrorM(cx, cy, z, fl) { // verify: the still pool shows the build back to you
+    cylinder(cx, cy, z, z + 0.3, 0.95, '#eef5fb', '#a9bfd6')
+    plane('z', z + 0.31, () => {
+      const gr = g.createRadialGradient(cx - 0.2, cy - 0.2, 0, cx, cy, 0.8); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#9fd4ee')
+      g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, 0.78, 0, TAU); g.fill()
+      for (let i = 0; i < 2; i++) { const f = loopT(S.time * 0.3 + i * 0.5, 1); g.strokeStyle = rgba('#ffffff', 0.7 * (1 - f)); g.lineWidth = 0.03; g.beginPath(); g.arc(cx, cy, 0.76 * f, 0, TAU); g.stroke() }
+    })
+    glow3(cx, cy, z + 0.9, 1.5, '#e8f4ff', 0.35 + 0.4 * fl)
+  }
+  function cradleM(cx, cy, z, fl) { // ship: two arms hold the sealed vessel, ready to let go
+    box(cx - 0.8, cy - 0.3, z, cx + 0.8, cy + 0.3, z + 0.15, ...WOOD)
+    plane('y', cy, () => { g.strokeStyle = '#c9a06a'; g.lineWidth = 0.14; g.lineCap = 'round'; for (const d of [-1, 1]) { g.beginPath(); g.moveTo(cx + d * 0.72, z + 0.15); g.quadraticCurveTo(cx + d * 0.8, z + 1.1, cx + d * 0.28, z + 1.25); g.stroke() } })
+    const p = P(cx, cy, z + 1.3 + 0.04 * Math.sin(S.time * 1.6)), s = k
+    glow(p[0], p[1], 0.9 * s, '#ffe2a0', 0.4 + 0.4 * fl)
+    const gr = g.createRadialGradient(p[0] - 0.08 * s, p[1] - 0.08 * s, 0, p[0], p[1], 0.34 * s); gr.addColorStop(0, '#fffaf0'); gr.addColorStop(1, '#e6c48e')
+    g.fillStyle = gr; g.beginPath(); g.ellipse(p[0], p[1], 0.34 * s, 0.24 * s, 0, 0, TAU); g.fill()
+    g.fillStyle = '#8a3a4a'; g.beginPath(); g.arc(p[0] + 0.05 * s, p[1], 0.06 * s, 0, TAU); g.fill()
+  }
+  function storesM(cx, cy, z, fl) { // close: shelves of sealed jars
+    box(cx - 0.95, cy - 0.25, z, cx - 0.85, cy + 0.25, z + 1.6, ...WOOD)
+    box(cx + 0.85, cy - 0.25, z, cx + 0.95, cy + 0.25, z + 1.6, ...WOOD)
+    for (const zz of [z + 0.02, z + 0.8]) {
+      box(cx - 0.9, cy - 0.25, zz, cx + 0.9, cy + 0.25, zz + 0.07, ...WOOD)
+      for (let i = 0; i < 4; i++) cylinder(cx - 0.6 + i * 0.4, cy, zz + 0.07, zz + 0.45, 0.13, i % 2 ? '#8fd0d0' : '#fff1d8', '#e7d4b0')
+    }
+    glow3(cx, cy, z + 1.0, 1.3, '#fff1c8', 0.25 + 0.5 * fl)
+  }
+  const MACH = { intake: bellM, falsify: forgeM, verify: mirrorM, ship: cradleM, close: storesM }
+
+  // ---------- a one-room ship: the room, the Hearth and its store, one porter ----------
+  const R1 = { x0: 0.2, W: 6.8, front: 7, H: 3.9 }, STORE1 = [9.2, 6.6], REST1 = [8.0, 7.6], HEARTH1 = [9.9, 4.3]
+  const roomD = (rung) => Math.min(6.4, 3.6 + 0.6 * rung) // a higher rung covers more floor
+  function machineSpot(d) { return [R1.x0 + 3.6, R1.front - Math.min(d * 0.6, 3.0)] }
+  function rungs1(sw) { const r0 = sw.rooms[0].rung; return [r0, sw.spent ? sw.after.rungs[0] : r0] }
+  function porter1(sw) {
+    const t = S.t, ph = S.phase, spot = machineSpot(roomD(rungs1(sw)[0]))
+    let a = { x: REST1[0], y: REST1[1], mv: false, dx: -1, dy: 0 }, carry = null
+    if (ph === 'run' && Wd.landed.loom) {
+      a = kf(t, [[0, ...REST1], [1.4, ...REST1], [2.6, 4.2, 7.55], [3.1, 4.2, 7.55], [4.3, 8.7, 7.1], [4.7, 8.7, 7.1], [5.3, ...REST1]])
+      if (t > 3.0 && t < 4.4) carry = 'seed'
+    }
+    if (ph === 'intake' && Wd.spent) {
+      a = kf(t, [[0, ...REST1], [2.0, ...REST1], [2.6, 8.7, 7.1], [3.5, 8.7, 7.1], [5.4, 4.2, 7.55], [5.9, spot[0] + 0.9, R1.front - 0.5], [6.6, spot[0] + 0.9, R1.front - 0.5], [7.1, 4.2, 7.55], [9.4, ...REST1]])
+      if (t > 2.7 && t < 6.2) carry = 'seed'
+    }
+    return [{ x: a.x, y: a.y, o: { sash: RUNG[1], carry, walk: a.mv, face: a.mv ? faceOf(a) : -1, seed: 1.3 } }]
+  }
+  function room1(sw, sk, actors) {
+    const [r0, r1] = rungs1(sw), pm = clamp(S.chartD - 1), cm = S.chartMix
+    const d = lerp(roomD(r0), roomD(r1), pm), col = mix(RUNG[r0], RUNG[r1], cm), x0 = R1.x0, W = R1.W, front = R1.front
+    room({ x0, x1: x0 + W, d, front, H: R1.H, col, wall: wallOf(sk) }, (y0, ft) => {
+      floorPool(x0 + W * 0.5, front - d * 0.5, ft, 1.6 + d * 0.5, [x0, y0, W, d], 0.3)
+      const [mx, my] = machineSpot(d), T = S.time, mv = moving(), n = Math.min(3, r0), extra = r1 > r0 && n < 3 ? cm : 0
+      const M = MACH[sw.rooms[0].stage] || storesM
+      const items = [{ x: mx, y: my, f: () => M(mx, my, ft, S.flash.loom + S.flash.chart) }]
+      for (let i = 0; i < n + (extra > 0 ? 1 : 0); i++) {
+        const ax = x0 + 0.9 + i * 1.7, ay = front - 0.5 - (i % 2) * 0.55, bx = mx - 0.9 + i * 0.7, by = Math.min(front - 0.4, my + 0.75)
+        if (i < 3) route([[ax, ay], [(ax + bx) / 2, (ay + by) / 2 + 0.2], [bx, by]], ft, col)
+        const w = kf(loopT(T + i * 1.6, 4.6), [[0, ax, ay], [0.8, ax, ay], [2.0, bx, by], [2.8, bx, by], [4.0, ax, ay], [4.6, ax, ay]])
+        const alpha = i >= n ? extra : undefined
+        items.push({ x: w.x, y: w.y, f: () => crew(w.x, w.y, ft, { sash: col, master: i === 0 && r0 >= 4, walk: w.mv || mv, face: w.mv ? faceOf(w) : (i % 2 ? -1 : 1), seed: 0.7 + i * 1.9, alpha }) })
+      }
+      actors.filter((q) => q.x > x0 && q.x < x0 + W && q.y < front).forEach((q) => items.push({ x: q.x, y: q.y, f: () => crew(q.x, q.y, ft, q.o) }))
+      sortDraw(items)
+      lantern(x0 + W * 0.5, front - d * 0.5, 3.0)
+    })
+  }
+  function seeds1(sw, big) {
+    const out = [], t = S.t, [mx, my] = machineSpot(roomD(rungs1(sw)[0]))
+    const fly = (t0, from, to, t1, t2) => {
+      if (t < t0 || t > t2) return
+      if (t < t1) { const f = ease((t - t0) / (t1 - t0)); out.push([from[0], from[1], lerp(from[2], from[2] + 2.4, f), 1 - f * 0.3]) }
+      else { const f = ease((t - t1) / (t2 - t1)), z0 = from[2] + 2.4; out.push([lerp(from[0], to[0], f), lerp(from[1], to[1], f), lerp(z0, to[2], f) + Math.sin(f * Math.PI) * 0.6, 0.7]) }
+    }
+    if (S.phase === 'run' && Wd.landed.loom) {
+      fly(1.0, [mx, my, 2.0], [4.2, 7.55, 1.75], 1.9, 3.0)
+      if (t >= 4.3 && t <= 4.6) { const f = ease((t - 4.3) / 0.3); out.push([lerp(8.7, STORE1[0], f), lerp(7.1, STORE1[1], f), lerp(1.9, 0.55, f), 0.6]) }
+    }
+    if (S.phase === 'intake' && Wd.spent) {
+      if (t >= 2.0 && t <= 2.7) { const f = ease((t - 2.0) / 0.7); out.push([lerp(STORE1[0], 8.7, f), lerp(STORE1[1], 7.1, f), 0.6 + Math.sin(f * Math.PI) * 1.2 + f * 1.1, 0.9]) }
+      if (t >= 6.1 && t <= 6.4) { const f = ease((t - 6.1) / 0.3); out.push([lerp(mx + 0.9, mx, f), lerp(R1.front - 0.5, my, f), lerp(1.7, 1.0, f), 0.9]) }
+    }
+    if (S.phase === 'intake' && Wd.opens) for (let i = 0; i < Wd.cost; i++) {
+      const t0 = 9.4 + i * 0.25, t1 = t0 + 1.2
+      if (t >= t0 && t <= t1) { const f = ease((t - t0) / (t1 - t0)), tx = big.xc + (i % 2 ? 1 : -1) * (2.5 + 2 * i), ty = big.y0 + 0.4; out.push([lerp(STORE1[0], tx, f), lerp(STORE1[1], ty, f), lerp(0.6, 3.4, f) + Math.sin(f * Math.PI) * 1.4, 1 - f * 0.5]) }
+    }
+    out.forEach(([x, y, z, gl]) => seed(x, y, z, gl, 1.25))
+  }
+  function oneScene(sw, h, big, o) {
+    o = o || {}
+    const sk = SKIN[sw.face] || SKIN.architect
+    { const p = P(h.xc, 4.0, -h.bot - 2.2); g.save(); g.translate(p[0], p[1]); g.scale(1, 0.18); glow(0, 0, lerp(h.L, big.L, S.skin) * k * 1.1, '#0f2a3a', 0.35); g.restore() }
+    if (S.skin > 0.01) { g.save(); g.globalAlpha = S.skin; formBehind(big, sk); rimG(big, sk); hullG(big, sk); g.restore() }
+    if (o.ghost) ghostG(big, (1 - S.skin) * (o.ghostA || 1))
+    if (o.wake !== false) tail(S.skin > 0.5 ? big : h, o.wakeLen)
+    formBehind(h, sk)
+    rimG(h, sk)
+    hullG(h, sk, { under: 1 - S.skin, seam: S.skin })
+    elementFx(S.skin > 0.5 ? big : h, sk, sw.face)
+    if (o.ghost) skinLightG(big)
+    const xl = h.xc - h.L, xr = h.xc + h.L
+    ribbon([[xl + 0.6, 7.6], [xr - 0.6, 7.6]], 0.02, 0.6)
+    ribbon([[8.4, 7.6], [9.3, 5.6]], 0.02, 0.5)
+    if (S.move > 0.01) { // the ground the larger hull opens: a faint floor for the room it can hold next
+      path3([[11.2, big.y0 + 0.7, 0.02], [big.xc + big.L - 0.9, big.y0 + 0.7, 0.02], [big.xc + big.L - 0.9, 5.8, 0.02], [11.2, 5.8, 0.02]])
+      g.fillStyle = 'rgba(214,240,255,' + 0.07 * S.move + ')'; g.fill()
+      g.save(); g.setLineDash([0.22 * k, 0.18 * k]); g.strokeStyle = 'rgba(255,252,240,' + 0.42 * S.move + ')'; g.lineWidth = Math.max(1, 0.05 * k); g.stroke(); g.restore()
+    }
+    const actors = porter1(sw)
+    room1(sw, sk, actors)
+    hearth(HEARTH1[0], HEARTH1[1])
+    store(STORE1[0], STORE1[1])
+    const T = S.time * 0.55 // the qi current runs stern to bow along the walkway
+    for (let i = 0; i < 9; i++) { const x0 = xl + 0.8, span = xr - 0.8 - x0; bead(x0 + loopT(i * span / 9 + T, span), 7.6, 0.02, 0.1) }
+    actors.filter((q) => q.y >= R1.front).forEach((q) => crew(q.x, q.y, 0.02, q.o))
+    formFront(h)
+    seeds1(sw, big)
+    if (!S.fleet) { const [mx, my] = machineSpot(roomD(rungs1(sw)[0])); HIT.store = P(STORE1[0], STORE1[1], 0.4); HIT.chart = P(mx, my, 1.2); HIT.k = k }
+  }
+  function sbox(pts) {
+    let a = 1e9, b = -1e9, c = 1e9, d = -1e9
+    for (const [x, y, z] of pts) { const p = P(x, y, z); a = Math.min(a, p[0]); b = Math.max(b, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]) }
+    return [a, c, b, d]
+  }
+  const ptsOne = (q) => boxPts(q.id, q.cls).concat([[q.xc - q.L - 1.2, q.y1, -0.5]])
+  function camera1(W, H, phone, h, big, opens) {
+    let A, B
+    if (phone) { A = fit(ptsOne(h), 10, H * 0.28, W - 20, H * 0.5); B = fit(ptsOne(big), 6, H * 0.26, W - 12, H * 0.52) }
+    else { A = fit(ptsOne(h), 90, 100, W - 180, H - 190); B = fit(ptsOne(big), 60, 70, W - 120, H - 130) }
+    const f = phone && S.phase === 'launch' && opens ? 1 : S.cam
+    k = lerp(A[0], B[0], f); ox = lerp(A[1], B[1], f); oy = lerp(A[2], B[2], f)
+    oy += Math.sin(S.time * 1.1) * 2.2 * (k / 45)
+    HIT.box = sbox(ptsOne(S.skin > 0.5 ? big : h))
+  }
+  function oneFrame(W, H, opts) {
+    const sw = opts.ship
+    Wd = { landed: { loom: !!sw.rooms[0].landed, foundry: false, chart: false }, carried: sw.carried, spent: sw.spent, opens: sw.opens, cost: sw.cost }
+    S = state(opts.phase || 'run', opts.t || 0); S.phone = !!opts.phone; S.time += opts.idle || 0
+    // held by the fleet rule: the light runs round the waiting hull at the intake, and it stays shut
+    if (sw.held === 'fleet' && S.phase === 'intake') S.skinLine = clamp((S.t - 9.4) / 1.2)
+    const h = geo(sw.id, sw.hull), big = geo(sw.id, Math.min(GROWTH_MAX, sw.hull + 1))
+    camera1(W, H, S.phone, h, big, sw.opens)
+    sky(W, H); harbour(W, H)
+    oneScene(sw, h, big, { ghost: true })
+    if (S.harbour > 0.01) { g.save(); g.globalCompositeOperation = 'screen'; glow(W * ((S.phone ? 0.62 : 0.74) + S.harbourX), H * (S.phone ? 0.62 : 0.45), Math.max(W, H) * 0.55, '#ffdcb0', 0.2 * S.harbour); g.restore() }
+    tapLayer(W, H, opts)
+  }
+  const GROWTH_MAX = 6
+
+  // ---------- the fleet: six face ships in convoy on one qi current, racing the compost tide to the harbour ----------
+  const ORDER = ['gourd-star', 'orrery', 'ember-comet', 'twin-lantern', 'jade-palace', 'seed-archive']
+  const DOOR = { intake: ['gourd-star', 3.6, 7.6], spec: ['orrery', 3.5, 8.5], falsify: ['ember-comet', 3.6, 7.6], plan: ['orrery', 20.9, 8.5], build: ['orrery', 14.3, 8.5], verify: ['twin-lantern', 3.6, 7.6], ship: ['jade-palace', 3.6, 7.6], close: ['seed-archive', 3.6, 7.6] }
+  const PIPE = ['intake', 'spec', 'falsify', 'plan', 'build', 'verify', 'ship', 'close']
+  let FL = null // the last fleet layout: items with their screen boxes, for taps and the sail-in
+  function boxPts(id, cls) {
+    const h = geo(id, cls)
+    if (h.form === 'pods') return cls <= 1 ? [[-3.6, 9, -1.5], [-1, 1, 4.4], [11.5, 9, -5.2], [26.8, -0.5, 5.6], [26.8, 9, -0.5]] : [[-7.6, 9, -1.5], [-6, -2.8, 3.6], [11.5, 9, -6.4], [31.4, -3, 7.2], [31.2, 9, -0.5]]
+    const R = RIM[h.form], wing = h.form === 'seed' ? [[h.xc - h.L - 3.6, h.y0, 6.4]] : []
+    return wing.concat([[h.xc - h.L - R.sb - R.sc - 0.8, h.y0, R.sh * h.bw + 0.4], [h.xc + h.L + R.pb + 0.6, h.y1, 0], [h.xc - h.L, h.y0, 4.4], [h.xc + h.L, h.y0, Math.max(4.0, R.ph * h.bw)], [h.xc, h.y1, -h.bot - 0.3], [h.xc - h.L, h.y1, 0]])
+  }
+  function proj(pts) {
+    let a = 1e9, b = -1e9, c = 1e9, d = -1e9
+    for (const [x, y, z] of pts) { const sx = x * AX[0] + y * AY[0], sy = x * AX[1] + y * AY[1] - z; a = Math.min(a, sx); b = Math.max(b, sx); c = Math.min(c, sy); d = Math.max(d, sy) }
+    return { cx: (a + b) / 2, cy: (c + d) / 2, w: b - a, h: d - c }
+  }
+  const HEAD = [0.967, 0.252] // the heading on screen: along +x, stern left
+  function layout(fl, W, H, phone) {
+    const ships = ORDER.map((id) => fl.ships.find((s) => s.id === id)).filter(Boolean)
+    const items = ships.map((s) => ({ s, b: proj(boxPts(s.id, s.hull)), x: 0, y: 0 }))
+    const free = items.filter((i) => i.s.held !== 'fleet'), held = items.filter((i) => i.s.held === 'fleet')
+    const small = free.reduce((m, i) => (!m || i.s.hull < m.s.hull ? i : m), null)
+    // a ship held by the fleet rule rides in the smallest ship's wake, tucked in behind it on the current
+    let cur = 0, prev = null
+    const edge = { '-1': -1e9, 1: -1e9 }
+    free.forEach((it, n) => {
+      const behind = it === small ? held : [], lane = phone ? (behind.length ? 1 : n % 2 ? 1 : -1) : (n % 2 ? 1 : -1)
+      if (!phone) { // two lanes, staggered: each ship a little ahead of the last, never over one in its own lane
+        const hw = behind.reduce((s, h) => s + h.b.w * 0.98, 0)
+        it.x = Math.max(prev ? prev.x + prev.b.w * 0.1 + it.b.w * 0.1 : 0, edge[lane] + 0.8 + hw + it.b.w / 2)
+        it.y = lane * 8.6; edge[lane] = it.x + it.b.w / 2; prev = it
+      } else {
+        it.x = lane * 4.6; it.y = cur - it.b.h / 2; cur = it.y - it.b.h * 0.5
+      }
+      let back = it
+      behind.forEach((h) => { const dist = (back.b.w + h.b.w) / 2 * 0.98; h.x = back.x - dist * HEAD[0]; h.y = back.y - dist * HEAD[1]; back = h })
+      it.wakeTo = behind.length ? behind[behind.length - 1] : null
+    })
+    let a = 1e9, b = -1e9, c = 1e9, d = -1e9
+    items.forEach((i) => { a = Math.min(a, i.x - i.b.w / 2); b = Math.max(b, i.x + i.b.w / 2); c = Math.min(c, i.y - i.b.h / 2); d = Math.max(d, i.y + i.b.h / 2) })
+    const m = phone ? [10, H * 0.13, W - 10, H * 0.93] : [W * 0.09, H * 0.08, W * 0.9, H * 0.95]
+    const kk = Math.min((m[2] - m[0]) / (b - a), (m[3] - m[1]) / (d - c))
+    const OX = (m[0] + m[2]) / 2 - ((a + b) / 2) * kk, OY = (m[1] + m[3]) / 2 - ((c + d) / 2) * kk
+    items.forEach((i, n) => {
+      const sx = OX + i.x * kk, sy = OY + i.y * kk
+      i.ox = sx - i.b.cx * kk; i.oy = sy - i.b.cy * kk; i.sy = sy; i.n = ORDER.indexOf(i.s.id)
+      i.box = [sx - i.b.w / 2 * kk, sy - i.b.h / 2 * kk, sx + i.b.w / 2 * kk, sy + i.b.h / 2 * kk]
+    })
+    return { items, k: kk }
+  }
+  function tideFx(W, H, phone, t) { // the compost tide: neglect, a slow dark swell behind the convoy; seeds glow at its edge
+    g.save()
+    for (let i = 0; i < 9; i++) {
+      const f = i / 8, wob = Math.sin(t * 0.3 + i * 1.7)
+      const x = phone ? W * f : -W * 0.02 + wob * W * 0.012, y = phone ? H * 1.02 + wob * H * 0.008 : H * f
+      glow(x, y, (phone ? W * 0.32 : H * 0.2), i % 3 ? '#110e28' : '#1d2a2c', 0.85)
+    }
+    for (let i = 0; i < 4; i++) {
+      const f = (i + 0.5) / 4, wob = Math.sin(t * 0.4 + i * 2.3)
+      const x = phone ? W * f + wob * 6 : W * 0.06 + wob * 6, y = phone ? H * 0.955 + wob * 3 : H * f + wob * 8
+      glow(x, y, 18, SEED, 0.4 + 0.15 * Math.sin(t * 1.5 + i)); g.save(); g.translate(x, y); g.rotate(-0.5); g.fillStyle = '#fff3d6'; g.beginPath(); g.ellipse(0, 0, 2.6, 3.8, 0, 0, TAU); g.fill(); g.restore()
+    }
+    g.restore()
+  }
+  function smoothPts(pts) {
+    const out = []
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)]
+      for (let s = 0; s < 16; s++) {
+        const u = s / 16, u2 = u * u, u3 = u2 * u
+        out.push([0, 1].map((j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u3)))
+      }
+    }
+    out.push(pts[pts.length - 1]); return out
+  }
+  function currentFx(L, W, H, phone, t, hb) { // one current of qi through every room in pipeline order, on to the harbour
+    const pts = [phone ? [W * 0.3, H * 1.02] : [-10, H * 0.62]]
+    for (const st of PIPE) {
+      const [id, x, y] = DOOR[st], it = L.items.find((i) => i.s.id === id)
+      if (!it) continue
+      const h = geo(id, it.s.hull); k = L.k; ox = it.ox; oy = it.oy; pts.push(P(x, y, -h.bot * 0.9)) // under the keel: a current on the water, not a line between doors
+    }
+    pts.push([hb[0], hb[1]])
+    const sp = smoothPts(pts)
+    g.save(); g.lineCap = 'round'; g.lineJoin = 'round'
+    const path = () => { g.beginPath(); sp.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))) }
+    path(); g.strokeStyle = 'rgba(191,243,230,0.08)'; g.lineWidth = 2.6 * L.k; g.stroke()
+    path(); g.strokeStyle = 'rgba(255,244,214,0.12)'; g.lineWidth = 1.2 * L.k; g.stroke()
+    for (let i = -1; i <= 1; i++) { // three soft strands drifting, like the wake ribbons
+      g.save(); g.translate(0, i * 0.35 * L.k + Math.sin(t * 0.8 + i * 2) * 0.12 * L.k); path(); g.strokeStyle = rgba(i ? SK.lite : '#fbf1dc', i ? 0.16 : 0.26); g.lineWidth = (i ? 0.12 : 0.2) * L.k; g.stroke(); g.restore()
+    }
+    g.restore()
+    const seg = []; let len = 0
+    for (let i = 0; i < sp.length - 1; i++) { const l = Math.hypot(sp[i + 1][0] - sp[i][0], sp[i + 1][1] - sp[i][1]); seg.push(l); len += l }
+    for (let n = 0; n < 46; n++) {
+      let dd = loopT(n / 46 + t * 0.018, 1) * len, i = 0
+      while (i < seg.length - 1 && dd > seg[i]) { dd -= seg[i]; i++ }
+      const u = seg[i] ? dd / seg[i] : 0, x = lerp(sp[i][0], sp[i + 1][0], u), y = lerp(sp[i][1], sp[i + 1][1], u), r = 0.13 * L.k
+      glow(x, y, r * 3, '#cfeaff', 0.5); g.fillStyle = '#f6fbff'; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill()
+    }
+  }
+  function fleetFrame(ctx, W, H, opts) {
+    opts = opts || {}
+    g = ctx
+    const fl = opts.fleet, t = opts.t || 0, phone = !!opts.phone
+    S = { phase: 'run', t: 0, time: t, D: t * 0.7, v: 0.6, phone, fleet: true, harbour: 1, harbourX: 0 }
+    const L = layout(fl, W, H, phone)
+    FL = L
+    sky(W, H)
+    tideFx(W, H, phone, t)
+    const hb = phone ? [W * 0.72, H * 0.075] : [W * 0.985, H * 0.4]
+    S.hb = phone ? { cx: hb[0], hy: hb[1], u: W / 390 * 0.32 } : { cx: hb[0], hy: hb[1], u: Math.min(W / 1600, H / 1000) * 0.85 }
+    harbour(W, H)
+    currentFx(L, W, H, phone, t, hb)
+    const order = L.items.slice().sort((a, b) => a.sy - b.sy)
+    order.forEach((it) => {
+      const sw = it.s, held = sw.held === 'fleet', off = it.n * 2.3
+      k = L.k; ox = it.ox; oy = it.oy + Math.sin(t * 1.1 + it.n * 1.3) * 2 * (k / 45)
+      const wakeLen = it.wakeTo ? 4 + (it.b.w + it.wakeTo.b.w) * 0.75 : undefined
+      if (sw.id === 'orrery') {
+        const w = fl.orrery
+        Wd = { ...DEMO, ...w, landed: { ...DEMO.landed, ...(w.landed || {}) } }
+        S = state('run', loopT(t + off, 13)); S.fleet = true; S.phone = phone; S.time = t + off; S.D = t * 0.7; S.v = held ? 0.2 : 0.75
+        if (sw.hull >= 2) { S.skin = 1; S.move = 1 }
+        S.wakeLen = wakeLen
+        shipScene()
+      } else {
+        Wd = { landed: { loom: !!sw.rooms[0].landed, foundry: false, chart: false }, carried: sw.carried, spent: sw.spent, opens: sw.opens, cost: sw.cost }
+        S = state('run', loopT(t + off, 13)); S.fleet = true; S.phone = phone; S.time = t + off; S.D = t * 0.7; S.v = held ? 0.2 : 0.75
+        const h = geo(sw.id, sw.hull), big = geo(sw.id, Math.min(GROWTH_MAX, sw.hull + 1))
+        oneScene(sw, h, big, { ghost: held, ghostA: 1, wake: !held, wakeLen })
+      }
+    })
+    g.save(); g.globalCompositeOperation = 'screen'; glow(hb[0], hb[1] + (phone ? H * 0.05 : 0), Math.max(W, H) * 0.5, '#ffdcb0', 0.14); g.restore()
+  }
+  function fleetHit(px, py) {
+    if (!FL) return null
+    const order = FL.items.slice().sort((a, b) => b.sy - a.sy)
+    for (const it of order) { const b = it.box; if (px >= b[0] && px <= b[2] && py >= b[1] && py <= b[3]) return it.s.id }
+    return null
+  }
+  function fleetBox(id) { const it = FL && FL.items.find((i) => i.s.id === id); return it ? it.box.slice() : null }
+  // the way back out: a small glass with the fleet in it, no text
+  function backGlyph() {
+    const x = 34, y = 34, r = 19
+    glow(x, y, r * 2.2, '#fff1c8', 0.16)
+    g.fillStyle = 'rgba(36,32,90,0.5)'; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill()
+    g.strokeStyle = 'rgba(255,246,220,0.8)'; g.lineWidth = 1.6; g.stroke()
+    for (let i = 0; i < 6; i++) { const px = x - 11 + i * 4.4, py = y + 4 - Math.sin((i / 5) * Math.PI) * 7; g.fillStyle = i === 1 ? '#fff1c8' : '#d0f4ff'; g.beginPath(); g.ellipse(px, py, i === 1 ? 2.6 : 1.9, 1.3, 0.25, 0, TAU); g.fill() }
+    HIT.back = [x, y, r + 12]
   }
 
   function frame(ctx, W, H, opts) {
     opts = opts || {}
-    Wd = opts.world ? { ...DEMO, ...opts.world, landed: { ...DEMO.landed, ...(opts.world.landed || {}) } } : DEMO
-    g = ctx; S = state(opts.phase || 'run', opts.t || 0); S.phone = !!opts.phone
-    S.time += opts.idle || 0 // seconds the player has kept the intake waiting: the ship and crew keep living meanwhile
-    camera(W, H, S.phone)
-    sky(W, H)
-    harbour(W, H)
-    shipScene()
-    if (S.harbour > 0.01) { // harbour light on the ship: warm from one side, the sky stays cool on the other
-      g.save(); g.globalCompositeOperation = 'screen'; glow(W * ((S.phone ? 0.62 : 0.74) + S.harbourX), H * (S.phone ? 0.62 : 0.45), Math.max(W, H) * 0.55, '#ffdcb0', 0.2 * S.harbour); g.restore()
+    g = ctx; HIT.back = null
+    if (opts.ship && opts.ship.id !== 'orrery') oneFrame(W, H, opts) // round 10: any one-room ship runs the same loop
+    else {
+      Wd = opts.world ? { ...DEMO, ...opts.world, landed: { ...DEMO.landed, ...(opts.world.landed || {}) } } : DEMO
+      S = state(opts.phase || 'run', opts.t || 0); S.phone = !!opts.phone
+      S.time += opts.idle || 0 // seconds the player has kept the intake waiting: the ship and crew keep living meanwhile
+      camera(W, H, S.phone)
+      sky(W, H)
+      harbour(W, H)
+      shipScene()
+      if (S.harbour > 0.01) { // harbour light on the ship: warm from one side, the sky stays cool on the other
+        g.save(); g.globalCompositeOperation = 'screen'; glow(W * ((S.phone ? 0.62 : 0.74) + S.harbourX), H * (S.phone ? 0.62 : 0.45), Math.max(W, H) * 0.55, '#ffdcb0', 0.2 * S.harbour); g.restore()
+      }
+      tapLayer(W, H, opts)
     }
-    tapLayer(W, H, opts)
+    if (opts.back) backGlyph()
     if (opts.veil > 0) { g.fillStyle = `rgba(36,32,90,${clamp(opts.veil)})`; g.fillRect(0, 0, W, H) }
   }
+  // what a tap at a screen point touches: 'back' | 'store' | 'chart' (the room being deepened, on any ship) | 'water' | null
   function hit(px, py) {
+    if (HIT.back && Math.hypot(px - HIT.back[0], py - HIT.back[1]) < HIT.back[2]) return 'back'
     if (!HIT.store) return null
     const kk = HIT.k
     if (Math.hypot(px - HIT.store[0], py - HIT.store[1]) < Math.max(28, 1.0 * kk)) return 'store'
     if (Math.hypot(px - HIT.chart[0], py - HIT.chart[1]) < Math.max(40, 2.6 * kk)) return 'chart'
+    const b = HIT.box
+    if (b && (px < b[0] - 10 || px > b[2] + 10 || py < b[1] - 10 || py > b[3] + 10)) return 'water'
     return null
   }
   // the loop clock: global seconds -> phase and t
   function at(T) { T = loopT(T, LOOP); for (const p of PHASES.slice().reverse()) if (T >= START[p]) return { phase: p, t: T - START[p] } }
 
-  window.AltR9 = { frame, state, hit, at, PHASES, DUR, START, LOOP, RUNG }
+  window.AltR9 = { frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
 })()

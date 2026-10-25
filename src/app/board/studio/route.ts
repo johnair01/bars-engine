@@ -1,7 +1,7 @@
 /**
  * @route GET /board/studio
  * @entity SYSTEM
- * @description The studio game's boat: the Clockwork Orrery's run, dock, intake and launch loop, with learning seeds read from the board's ledger (read-only)
+ * @description The studio game's boat: the Clockwork Orrery's run, dock, intake and launch loop, and behind ?fleet=1 the six face ships in convoy with each ship's own loop; learning seeds read from the board's ledger (read-only)
  * @permissions owner (BOARD_OWNER_PLAYER_ID); others are sent to /login. Vercel preview deployments, already behind Vercel's own login, open without it
  * @agentDiscoverable false
  */

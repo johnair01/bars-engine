@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { GROWTH, SHIPS, intakeOf, orreryOf, pullTime, seedsOf, shareOf, stagesOf, type Pull, type Ship } from '../fleet'
-import { studioPage } from '../page'
+import { DEMO_SEEDS, DEMO_SHIPS, GROWTH, SHIPS, demoFleet, fleetOf, intakeOf, orreryOf, pullTime, seedsOf, shareOf, shipWorldOf, stagesOf, type Pull, type Ship } from '../fleet'
+import { FLEET_DEFAULT, studioPage } from '../page'
 
 const pull = (at: string, answers: Pull['answers'], steps: Pull['steps'] = []): Pull => ({ at, answers, steps })
 const orrery = () => SHIPS.find(s => s.id === 'orrery')!
@@ -64,11 +64,62 @@ describe('studio fleet', () => {
     expect(full.carried).toBe(GROWTH.storeCap - 3)
   })
 
+  it('builds any ship\'s world from the seeds of its own rooms', () => {
+    const seeds = { run: ['falsify', 'spec'] as const, earlier: [['falsify'], ['falsify', 'verify']], runEnds: 'x' }
+    const s = { ...seeds, run: [...seeds.run], earlier: seeds.earlier.map(r => [...r]) } as Parameters<typeof shipWorldOf>[1]
+    const ember = shipWorldOf('ember-comet', s)
+    expect(ember).toMatchObject({ id: 'ember-comet', face: 'challenger', hull: 1, landed: 1, carried: 2, spend: 'falsify', spent: true })
+    expect(ember.rooms).toEqual([{ stage: 'falsify', machine: 'forge', rung: 1, landed: true }])
+    expect(ember).toMatchObject({ opens: true, cost: 2, held: null, after: { hull: 2, rungs: [2] } })
+    const twin = shipWorldOf('twin-lantern', s)
+    expect(twin).toMatchObject({ landed: 0, carried: 1, spent: true, opens: false, held: 'seeds', after: { hull: 1, rungs: [2] } })
+    expect(shipWorldOf('jade-palace', s)).toMatchObject({ landed: 0, carried: 0, spend: null, spent: false, held: 'share' })
+    expect(() => shipWorldOf('nope', s)).toThrow()
+  })
+
+  it('agrees with the Orrery\'s own world', () => {
+    const s = { run: ['plan', 'spec'], earlier: [['spec', 'build', 'verify'], ['plan']], runEnds: 'x' } as Parameters<typeof shipWorldOf>[1]
+    const o = orreryOf(s), w = shipWorldOf('orrery', s)
+    expect(w).toMatchObject({ carried: o.carried, opens: o.opens, cost: o.cost, held: o.held, spend: 'plan' })
+    expect(w.rooms.map(r => r.landed)).toEqual([true, false, true])
+  })
+
+  it('runs every ship\'s intake against the whole fleet', () => {
+    const f = fleetOf({ run: ['intake', 'spec'], earlier: [], runEnds: '' }, SHIPS, new Date('2026-10-25T02:00:00Z'))
+    expect(f.ships.map(s => s.id)).toEqual(SHIPS.map(s => s.id))
+    expect(f.smallest).toBe(1)
+    expect(f.orrery).toEqual(orreryOf({ run: ['intake', 'spec'], earlier: [], runEnds: '' }, new Date('2026-10-25T02:00:00Z')))
+    expect(f.ships.find(s => s.id === 'gourd-star')).toMatchObject({ landed: 1, spent: true, held: 'seeds' })
+  })
+
+  it('holds a ship that would sail more than one class ahead of the smallest ship', () => {
+    const fleet: Ship[] = SHIPS.map(s => s.id === 'ember-comet' ? { ...s, hull: 2, rooms: [{ ...s.rooms[0], rung: 4 }] } : s)
+    const seeds = { run: ['falsify'], earlier: [['falsify'], ['falsify'], ['falsify']], runEnds: '' } as Parameters<typeof fleetOf>[0]
+    const f = fleetOf(seeds, fleet)
+    const ember = f.ships.find(s => s.id === 'ember-comet')!
+    expect(ember).toMatchObject({ hull: 2, spent: true, opens: false, held: 'fleet', after: { hull: 2, rungs: [5] } })
+    // the same seeds open the hull once the smallest ship has caught up
+    const caught = fleetOf(seeds, fleet.map(s => ({ ...s, hull: 2 })))
+    expect(caught.ships.find(s => s.id === 'ember-comet')).toMatchObject({ opens: true, held: null, after: { hull: 3 } })
+  })
+
+  it('plays a demo fleet with one ship held by the fleet rule', () => {
+    const d = demoFleet()
+    expect(d.ships.filter(s => s.held === 'fleet').map(s => s.id)).toEqual(['ember-comet'])
+    expect(d.orrery).toMatchObject({ landed: { loom: true, foundry: true, chart: true }, carried: 3, spent: true, opens: true, cost: 2 })
+    expect(d.ships.find(s => s.id === 'twin-lantern')).toMatchObject({ opens: true })
+    expect(DEMO_SHIPS.find(s => s.id === 'gourd-star')!.hull).toBe(1)
+    expect(DEMO_SEEDS.run).toContain('falsify')
+  })
+
   it('serves a game page with no list or panel markup, and escapes the world', () => {
-    const w = orreryOf({ run: ['spec'], earlier: [], runEnds: '</script><script>alert(1)' })
+    const w = fleetOf({ run: ['spec'], earlier: [], runEnds: '</script><script>alert(1)' })
     const html = studioPage(w)
     expect(html).toContain('/studio/altitude.js')
     expect(html).toContain('window.FLEET=')
+    expect(html).toContain('window.FLEET_DEMO=')
+    expect(html).toContain('window.FLEET_DEFAULT=' + FLEET_DEFAULT)
+    expect(FLEET_DEFAULT).toBe(false) // the fleet stays behind ?fleet=1 until it is flipped on (council #412)
     expect(html).not.toMatch(/<(ul|ol|table)\b/)
     expect(html).not.toContain('</script><script>alert')
   })
