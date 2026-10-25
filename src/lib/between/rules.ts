@@ -133,7 +133,9 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
  * The ember holds no words, and where its charge came from is not recorded, so an unoffered charge makes the same ember
  * as an offered one. Its glow (the charge's intensity, or none) is private: it never reaches a shared row
  * (cc-pouch-private, cc-intensity-look). A lantern made from it is a shared item and an offer: only its maker moves, takes
- * back or composts it, and the other person can only add their own yes (cc-lantern-offer). */
+ * back or composts it, and the other person can only add their own yes (cc-lantern-offer).
+ * A focus sit at the hearth that runs its length raises the ember it was sat with one state, dissatisfied to satisfied
+ * (`risen`, council pass integral-octalysis2, io-focus-sit-is-care); a sit left early writes nothing. */
 
 export const ELEMENTS = ['wood', 'fire', 'earth', 'metal', 'water'] as const
 type Element = (typeof ELEMENTS)[number]
@@ -146,7 +148,7 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -165,6 +167,7 @@ export function pouchWrite(pouch: Doc): Verdict {
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
     if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
+    if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
   }
   return yes
 }

@@ -12,6 +12,7 @@ import { createCreature } from "./creature.js";
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
+import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
 import { figureWrap, figureProbe, lightFigure } from "./figure-light.js";
@@ -1431,7 +1432,7 @@ function frameBody() {
     w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
-  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t); hmTick(t, dt);
+  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t); hmTick(t, dt); fsBurn(dt);
   for (const th of things.values()) { if (th.group.userData.sway) th.group.rotation.z = Math.sin(t * 0.7 + th.pos.x) * 0.03; } // a hung lantern sways a little
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
@@ -1506,6 +1507,7 @@ function frameBody() {
     const F = hmFrame(seatViewAt), tall = innerWidth < innerHeight, up = hm && hm.L && (hm.step === "hang" || (hm.step === "send" && hm.L.hang) || (hm.step === "settled" && hm.L.hang));
     hmUp += ((up ? 1 : 0) - hmUp) * Math.min(1, dt * 1.2);
     const p = hmAt(F, tall ? -1.15 : -0.95, tall ? 0.62 : 0.7, tall ? 0.95 : 0.85), f = hmAt(F, 1.5, -0.18, tall ? 0.36 : 0.42);
+    if (fsK > 0.001) { const k3 = fsK * fsK * (3 - 2 * fsK); p.lerp(hmAt(F, tall ? -0.85 : -0.75, tall ? 0.42 : 0.48, tall ? 0.62 : 0.55), k3); f.lerp(hmAt(F, 1.6, -0.08, 0.28), k3); } // the sit: lower, behind the shoulder
     if (hmUp > 0.001 && hm) { const hk = (hm.L.hang || hm.hooks[0]).pos, k2 = hmUp * hmUp * (3 - 2 * hmUp); p.lerp(hmAt(F, -1.9, 0.95, 1.05), k2); f.lerp(hk.clone().setY(hk.y - 1.0).lerp(hm.L.g.position, 0.3), k2); }
     clampCamera(p, f);
     const k = hmK * hmK * (3 - 2 * hmK); cp.lerp(p, k); focus.lerp(f, k);
@@ -1984,7 +1986,7 @@ function hmBegin() {
 }
 function hmEnd() {
   if (!hm) return;
-  const h = hm; hm = null; hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
+  const h = hm; fsEnd(h); hm = null; hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
   if (h.L && (h.lid || !h.L.lit)) { hmGroup.remove(h.L.g); h.L = null; } // a lantern made is the room's now; one not lit folds away
   for (const m of h.motes) if (m.state !== "lit") m.state = "sink";
   const th = h.lid && things.get(h.lid); if (th) th.group.visible = true;
@@ -1995,7 +1997,8 @@ function hmSay(key, text) { if (!hm || hm.said[key]) return; hm.said[key] = true
 /* Touch: an ember comes down into your hands (the one there goes back to its place); the held one, touched again, goes back. */
 function hmHold(eid) {
   if (!hm || hm.step !== "motes") return;
-  const m = hm.motes.find(x => x.eid === eid); if (!m || (m.state !== "slot" && m.state !== "held")) return;
+  const m = hm.motes.find(x => x.eid === eid); if (!m || (m.state !== "slot" && m.state !== "held" && m.state !== "lip")) return;
+  if (hm.fs) { fsChoose(m); return; } // choosing what to sit with: it goes to the hearth's lip, not your hands
   if (m.state === "held") { m.state = "slot"; hm.held = null; hmHud(); return; }
   for (const o of hm.motes) if (o.state === "held") o.state = "slot";
   m.state = "held"; hm.held = m;
@@ -2054,6 +2057,7 @@ function hmSend(spot) {
 /* What the moment answers to by touch, before the room's own taps: an ember, the lantern, a glowing hook; the floor stands you up. */
 function hmTap(cx, cy) {
   if (!hm) return false;
+  if (fsTap(cx, cy)) return true;
   ray.setFromCamera(new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1), camera);
   if (hm.step === "hang") { let best = null, bd = 0.5; for (const h of hm.hooks) { const d = ray.ray.distanceToPoint(h.pos.clone().setY(h.pos.y - 0.42)); if (d < bd) { bd = d; best = h; } } if (best) { hmSend(best); return true; } }
   if (hm.L && hm.held && ray.ray.distanceToPoint(hm.L.g.position.clone().setY(hm.L.g.position.y + 0.42)) < 0.35) { hmLight(); return true; }
@@ -2069,7 +2073,7 @@ function hmTap(cx, cy) {
 /* The ember nearest a point on the screen, and how far it is in pixels (a fingertip, not a ray, decides). */
 function hmHit(cx, cy) {
   let best = null, bd = Infinity;
-  for (const m of hm ? hm.motes : []) if ((m.state === "slot" || m.state === "held") && m.g.visible) { const p = m.pos.clone().project(camera), d = Math.hypot((p.x + 1) / 2 * innerWidth - cx, (1 - p.y) / 2 * innerHeight - cy); if (d < bd) { bd = d; best = m; } }
+  for (const m of hm ? hm.motes : []) if ((m.state === "slot" || m.state === "held" || (m.state === "lip" && hm.fs && hm.fs.step === "choose")) && m.g.visible) { const p = m.pos.clone().project(camera), d = Math.hypot((p.x + 1) / 2 * innerWidth - cx, (1 - p.y) / 2 * innerHeight - cy); if (d < bd) { bd = d; best = m; } }
   return [best, bd];
 }
 function hmStand() { const st = seatBy(meState.seatWant); standUp(); if (st) meState.target = pushOut(new THREE.Vector3(st.x - Math.sin(st.yaw) * 0.7, 0, st.z - Math.cos(st.yaw) * 0.7)); refreshHud(); }
@@ -2077,8 +2081,14 @@ function hmStand() { const st = seatBy(meState.seatWant); standUp(); if (st) meS
 function hmHud() {
   if (!hm) return;
   const b = (act, id, label, cls = "sr") => `<button type="button" class="${cls}" data-act="${act}"${id ? ` data-id="${esc(id)}"` : ""}>${label}</button>`;
-  const ms = hm.motes.filter(m => m.state === "slot" || m.state === "held");
-  const h = `<div class="hmrow">${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
+  const ms = hm.motes.filter(m => m.state === "slot" || m.state === "held" || m.state === "lip"), fs = hm.fs;
+  if (fs && fs.step !== "choose") { // the sit: nothing on the screen but the way up; back early, the fire asks
+    const h = fs.step === "banked" ? `<div class="hmrow"><button type="button" class="hmlink" data-act="hmStand">Stand up</button><button type="button" class="hmlink" data-act="fsStay">Stay by the fire</button></div>`
+      : `<div class="hmrow">${b("hmStand", "", "Stand up")}</div>`;
+    if (hmEl._h !== h) { hmEl._h = h; hmEl.innerHTML = h; } return;
+  }
+  const lay = hm.step === "motes" && !(fs && fs.sticks >= 3) ? b("fsLay", "", fs ? "Lay another stick on the fire" : "Lay a stick on the fire") : "";
+  const h = `<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
     ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
     ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
     <button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
@@ -2103,7 +2113,7 @@ function hmTick(t, dt) {
   u.cord.scale.setScalar(1 + u.k * 0.5); u.neck.scale.set(1 + u.k * 0.45, 1, 1 + u.k * 0.45); u.glow.material.opacity = u.k * 0.55;
   // the crescent: slots on a loose arc between you and the fire, turned by a sideways drag, slowly, like a mobile
   h.turn += h.turnV * dt; h.turnV *= Math.pow(0.08, dt);
-  const live = h.motes.filter(m => m.state !== "sink" && m.state !== "lit" && m.state !== "lantern" && m.state !== "gone"), n = live.length, step = n > 1 ? Math.min(0.42, 2.1 / (n - 1)) : 0;
+  const live = h.motes.filter(m => m.state !== "sink" && m.state !== "lit" && m.state !== "lantern" && m.state !== "gone" && m.state !== "lip"), n = live.length, step = n > 1 ? Math.min(0.42, 2.1 / (n - 1)) : 0;
   live.forEach((m, i) => { const a = (i - (n - 1) / 2) * step + 0.45 + h.turn, R = 0.92 + 0.07 * Math.sin(i * 2.3); m.slot = hmAt(F, Math.cos(a) * R, Math.sin(a) * R, 0.9 + 0.1 * Math.sin(i * 1.7) + Math.sin(t * 1.1 + i * 1.3) * 0.025); });
   const hands = hmHands(F);
   for (const m of h.motes) {
@@ -2113,6 +2123,7 @@ function hmTick(t, dt) {
       m.pos.lerpVectors(P, to, e); m.pos.y += Math.sin(k * Math.PI) * 0.22; m.pos.x += Math.sin(k * 9 + m.riseAt) * 0.015 * (1 - k);
       if (k >= 1) m.state = "slot";
     } else if (m.state === "slot") { if (m.slot) m.pos.lerp(m.slot, Math.min(1, dt * 3)); }
+    else if (m.state === "lip") m.pos.lerp(fsLipAt(F).setY(fsLipAt(F).y + Math.sin(t * 0.8) * 0.006), Math.min(1, dt * 2.2));
     else if (m.state === "held") m.pos.lerp(hands.clone().setY(hands.y + Math.sin(t * 1.6) * 0.012), Math.min(1, dt * 3.5));
     else if (m.state === "lantern" && h.L) {
       const k = Math.min(1, (t - m.t0) / 1.2), to = h.L.g.position.clone().setY(h.L.g.position.y + 0.43);
@@ -2128,7 +2139,10 @@ function hmTick(t, dt) {
     if (m === h.held && h.press) { h.press.k = Math.min(1, (t - h.press.t0) / 2.2); if (h.press.k >= 1 && !m.shown) { m.shown = true; burst(m.pos.clone(), m.el.getHex()); } }
     const want = m.shown ? 1 : m === h.held && h.press ? h.press.k * 0.35 : 0;
     m.show += (want - m.show) * Math.min(1, dt * 2.5);
-    const c = new THREE.Color(AMBER).lerp(m.el, m.show), fl = 0.9 + Math.sin(t * 5.3 + m.riseAt * 3) * 0.06 + Math.sin(t * 13 + m.riseAt) * 0.04;
+    const c = new THREE.Color(AMBER).lerp(m.el, m.show);
+    if (m.e.risen && !m.show) c.lerp(new THREE.Color(FS_SAT), 0.45); // risen once at the fire: a warmer gold
+    if (m.state === "lip" && h.fs && h.fs.step !== "choose") c.set(FS_DIS).lerp(new THREE.Color(FS_SAT), emberWarmth(h.fs, Date.now(), FS_MIN, !!m.e.risen)); // sat with: dissatisfied toward satisfied
+    const fl = 0.9 + Math.sin(t * 5.3 + m.riseAt * 3) * 0.06 + Math.sin(t * 13 + m.riseAt) * 0.04;
     m.core.material.color.copy(c).lerp(new THREE.Color(0xffe0b0), 0.25 * (1 - m.show)); m.halo.material.color.copy(c); m.halo.scale.setScalar((m.s * 5 + (m.e.glow || 3) * 0.025) * fl * (m === h.held && h.press ? 1 + h.press.k * 0.25 : 1));
     m.g.position.copy(m.pos);
     // the trail: the last few places it passed, drawn as sparks; at rest they gather into its glow
@@ -2151,8 +2165,157 @@ function hmTick(t, dt) {
       L.g.rotation.z = L.hang && q >= 1 ? Math.sin(t * 1.4) * 0.12 * Math.exp(-(t - L.tt - 2.4) * 0.45) + Math.sin(t * 0.7) * 0.02 : 0;
     }
   }
+  fsTick(t, dt, h, F);
   if (ending && t - h.endT > 1.6) hmClear(h);
 }
+/* ---------- the focus sit (council pass integral-octalysis2; his yes on io-focus-sit-look-1, 2026-10-25) ----------
+   Inside the seated hearth moment. A small stack of split wood waits at your knee: lay one, two or three sticks on the fire
+   and that is the length of the sit (focus.js), with no timer shown. Touch one of your embers and it drifts to rest on the
+   hearth's lip, or touch none and sit with the fire alone. Once you stop laying and choosing, the sit settles in: the other
+   embers go home to the satchel, the view comes low behind your shoulder, the room's light drops to the fire, and the
+   hearth spirit tends the fire in small acts while you are away (Focus Friend's body double). Back early, the fire has
+   banked to coals and asks "Stand up?"; stay and it carries on, stand and the ember goes back as it was, nothing written.
+   A sit run its length raises the ember one state (risen, rules.ts), a mote drops into the satchel, and the room's light
+   stays a little higher (qi as weather). Not built yet: the vibeulon count, care for a hearth spirit with its own record,
+   the spirit's story fragments. */
+const FS_FAST = PREVIEW_HOST && KQ.get("focus") === "fast"; // previews: ?focus=fast, a minute of the sit passes in a second
+const FS_MIN = FS_FAST ? 1000 : MINUTE_MS, FS_DIS = 0x7a68b0, FS_SAT = 0xffc860, FS_FIRST = "between.focus.seen";
+let fsRoom = 1, fsK = 0; // the room's light after a sit (qi as weather); the low sit view, eased in
+const fsStack = new THREE.Group(); fsStack.visible = false; hmGroup.add(fsStack);
+const fsLaid = new THREE.Group(); hmGroup.add(fsLaid); // sticks laid on the fire this sit
+const fsSpirit = new THREE.Group(); fsSpirit.visible = false; hmGroup.add(fsSpirit);
+const fsBark = new THREE.MeshStandardMaterial({ color: 0x8a5a36, roughness: 0.9 }), fsGrain = new THREE.MeshStandardMaterial({ color: 0xe6b98a, roughness: 0.8, emissive: 0x3a1c08, emissiveIntensity: 0.25 });
+function fsLogGeo(r, len) { // a split log: a wedge of the round, bark on the curve, pale grain on the ends and the split faces' edges
+  const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.absarc(0, 0, r, -0.95, 0.95, false); sh.lineTo(0, 0);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: len, bevelEnabled: false, curveSegments: 6 }); g.translate(-r * 0.45, 0, -len / 2); return g;
+}
+const FS_LOGS = [[-0.085, 0.055, 0.3, 0.09, 0.46], [0.085, 0.055, -0.2, 0.085, 0.44], [0, 0.15, 1.6, 0.08, 0.42]]; // side, up, turn, radius, length; the top one is laid first
+const fsLogs = FS_LOGS.map(([x, y, rz, r, len]) => { const m = new THREE.Mesh(fsLogGeo(r, len), [fsGrain, fsBark]); m.position.set(x, y, 0); m.rotation.set(0, 0.12 * Math.sign(x || 1), rz); fsStack.add(m); return m; });
+const fsStackLight = new THREE.PointLight(0xffb070, 0, 1.6, 1.6); fsStack.add(fsStackLight); fsStackLight.position.set(0, 0.45, 0.35); // soft, from the fire's side
+{
+  const glow = new THREE.Sprite(hmGlowMat(0xffb060, 0)); glow.scale.setScalar(1.0); fsSpirit.add(glow);
+  const eyes = [-0.05, 0.05].map(x => { const e = new THREE.Sprite(hmGlowMat(0xfff0c8, 0)); e.scale.setScalar(0.06); e.position.set(x, 0.04, 0.12); fsSpirit.add(e); return e; });
+  Object.assign(fsSpirit.userData, { glow, eyes, k: 0 });
+}
+const fsSparks = [];
+function fsPuff(pos, color, n = 10) {
+  const g = new THREE.BufferGeometry(), a = new Float32Array(n * 3), v = [];
+  for (let i = 0; i < n; i++) { a.set([pos.x, pos.y, pos.z], i * 3); v.push(new THREE.Vector3((Math.random() - 0.5) * 0.5, 0.5 + Math.random() * 0.7, (Math.random() - 0.5) * 0.5)); }
+  g.setAttribute("position", new THREE.BufferAttribute(a, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ map: moteMat.map, color, size: 0.05, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
+  p.frustumCulled = false; hmGroup.add(p); fsSparks.push({ p, v, t0: performance.now() / 1000 });
+}
+const fsFireAt = (F, i) => HEARTH_AT.clone().addScaledVector(F.f, -0.15 + i * 0.05).addScaledVector(F.r, (i - 1) * 0.12).setY(0.3 + i * 0.04);
+const fsLipAt = F => HEARTH_AT.clone().addScaledVector(F.f, -0.62).addScaledVector(F.r, -0.3).setY(F.S.floor + 0.2);
+const fsStackAt = F => { const p = hmAt(F, 0.42, 0.58, 0); p.y = F.S.floor; return p; };
+const fsHere = () => !!hm && hm.step === "motes";
+/* Lay the top stick of the stack on the fire: the sit's length goes up a step. The first stick starts the choosing. */
+function fsLay() {
+  if (!fsHere()) return;
+  const F = hmFrame(seatViewAt); if (!F) return;
+  if (!hm.fs) hm.fs = { step: "choose", sticks: 0, eid: null, quiet: 0, t0: 0, act: 0, flies: [] };
+  const fs = hm.fs; if (fs.step !== "choose" || fs.sticks >= FS_LOGS.length) return;
+  const log = fsLogs[FS_LOGS.length - 1 - fs.sticks]; fs.sticks++;
+  const from = log.getWorldPosition(new THREE.Vector3()), stick = new THREE.Mesh(log.geometry, [fsGrain, fsBark]);
+  stick.position.copy(from); stick.rotation.y = F.S.yaw; fsLaid.add(stick); log.visible = false;
+  fs.flies.push({ m: stick, from, to: fsFireAt(F, fs.sticks - 1), t0: performance.now() / 1000, yaw: F.S.yaw + (fs.sticks - 2) * 0.9 });
+  fs.quiet = performance.now();
+  if (hm.held) fsChoose(hm.held); // an ember already in your hands is the one you sit with
+  if (!ls.get(FS_FIRST) || EMBER_DEMO) { ls.set(FS_FIRST, 1); setTimeout(() => hmSay("focus", "Sit with it. The fire does the work while you are away."), 900); }
+  hmHud();
+}
+/* While choosing, touching an ember sends it to rest on the hearth's lip (touched again, it comes back to the others). */
+function fsChoose(m) {
+  const fs = hm && hm.fs; if (!fs || fs.step !== "choose") return;
+  if (m.state === "lip") { m.state = "slot"; fs.eid = null; }
+  else { for (const o of hm.motes) if (o.state === "lip" || o.state === "held") o.state = "slot"; m.state = "lip"; fs.eid = m.eid; hm.held = null; hm.press = null; }
+  fs.quiet = performance.now(); hmHud();
+}
+/* The sit settles in: the others go home, the view comes low, the room's light drops to the fire. */
+function fsSettle() {
+  const fs = hm.fs; fs.step = "sit"; fs.t0 = Date.now(); fs.act = performance.now() / 1000 + (FS_FAST ? 2 : 20);
+  for (const m of hm.motes) if (m.state !== "lip" && m.state !== "lit" && m.state !== "gone") m.state = "sink";
+  if (hm.L && !hm.L.lit) { hmGroup.remove(hm.L.g); hm.L = null; }
+  if (hollow) hollow.handles.hearth.room = 0.42;
+  hmHud();
+}
+/* Back early: the fire has banked to coals, and asks. */
+function fsBank() {
+  const fs = hm && hm.fs; if (!fs || fs.step !== "sit") return;
+  if (focusOnReturn(fs, Date.now(), FS_MIN) === "done") { fsDone(); return; }
+  fs.step = "banked"; if (hollow) hollow.handles.hearth.bank = 1;
+  caption("Stand up?"); hmHud();
+}
+function fsStay() { const fs = hm && hm.fs; if (!fs || fs.step !== "banked") return; fs.step = "sit"; if (hollow) hollow.handles.hearth.bank = 0; hmHud(); }
+/* The sit ran its length: the ember rises one state and comes home, a mote drops into the satchel, the room is a little lighter. */
+async function fsDone() {
+  const fs = hm && hm.fs; if (!fs || (fs.step !== "sit" && fs.step !== "banked")) return;
+  fs.step = "done"; fs.doneT = performance.now() / 1000; fsRoom = 1.12;
+  if (hollow) { hollow.handles.hearth.bank = 0; hollow.handles.hearth.room = fsRoom; }
+  const m = fs.eid && hm.motes.find(x => x.eid === fs.eid), F = hmFrame(seatViewAt);
+  if (F) fsPuff(m ? m.pos.clone() : HEARTH_AT.clone().setY(0.5), FS_SAT, 16);
+  fs.mote = { t0: performance.now() / 1000, from: (m ? m.pos : HEARTH_AT.clone().setY(0.5)).clone(), g: new THREE.Sprite(hmGlowMat(FS_SAT, 0.9)) }; fs.mote.g.scale.setScalar(0.09); hmGroup.add(fs.mote.g);
+  hmSay("done", m ? "It warmed while you were away." : "The fire kept you company.");
+  if (m && !m.e.risen) {
+    m.e = { ...m.e, risen: true };
+    if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], risen: true };
+    else if (!storeDown) await op(pouchPath(), "update", { embers: { [m.eid]: { risen: true } } });
+  }
+  setTimeout(() => { if (!hm || hm.fs !== fs) return; // then everything comes back: the risen one first, out of the satchel
+    for (const o of hm.motes) if (o.state === "lip") o.state = "sink";
+    setTimeout(() => { if (!hm || hm.fs !== fs) return; for (const o of hm.motes.filter(x => x.state === "gone")) hmDrop(o); hm.motes = hm.motes.filter(x => x.state !== "gone"); hm.riseNext = performance.now() / 1000 + 0.6; hmSync(); fsAgain(); }, 1600);
+  }, 2600);
+  hmHud();
+}
+/* After a sit, the stack waits again (the fire takes what was laid, slowly). */
+function fsAgain() { if (!hm) return; hm.fs = null; for (const l of fsLogs) l.visible = true; hmHud(); }
+/* Getting up: whatever the sit had reached, nothing is written but a rise already made. */
+function fsEnd(h) {
+  if (h.fs && h.fs.mote) hmGroup.remove(h.fs.mote.g);
+  h.fs = null; for (const l of fsLogs) l.visible = true; fsStack.visible = false;
+  if (hollow) { hollow.handles.hearth.bank = 0; hollow.handles.hearth.room = fsRoom; }
+}
+/* Touch during the moment: the stack lays a stick; during the sit any touch is coming back (the fire banks). */
+function fsTap(cx, cy) {
+  const fs = hm.fs;
+  if (fs && fs.step === "sit") { fsBank(); return true; }
+  if (fs && (fs.step === "banked" || fs.step === "done")) return true; // its buttons answer, the room holds still
+  if (!fsHere() || !fsStack.visible || (fs && fs.sticks >= FS_LOGS.length)) return false;
+  const p = fsStack.getWorldPosition(new THREE.Vector3()).setY(fsStack.position.y + 0.12).project(camera);
+  return Math.hypot((p.x + 1) / 2 * innerWidth - cx, (1 - p.y) / 2 * innerHeight - cy) < 56 ? (fsLay(), true) : false;
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && hm && hm.fs && hm.fs.step === "sit") fsBank(); });
+/* Once a frame, inside the moment's own: the stack, sticks in flight, the settling, the spirit's small acts, the clock. */
+function fsTick(t, dt, h, F) {
+  const fs = h.fs, live = !!hm && h === hm;
+  fsStack.visible = live && hm.step === "motes" && !(fs && fs.step !== "choose" && fs.step !== "done");
+  if (fsStack.visible) { fsStack.position.copy(fsStackAt(F)); fsStack.rotation.y = F.S.yaw; fsStackLight.intensity = 0.35 + 0.1 * Math.sin(t * 2.3); }
+  const sitting = !!fs && (fs.step === "sit" || fs.step === "banked");
+  fsK += ((sitting ? 1 : 0) - fsK) * Math.min(1, dt * 0.6);
+  for (const s of fsSparks.slice()) { const el = t - s.t0, a = s.p.geometry.attributes.position; for (let i = 0; i < s.v.length; i++) { a.array[i * 3] += s.v[i].x * dt; a.array[i * 3 + 1] += (s.v[i].y - el * 0.6) * dt; a.array[i * 3 + 2] += s.v[i].z * dt; } a.needsUpdate = true; s.p.material.opacity = Math.max(0, 0.9 - el * 0.6); if (el > 1.6) { hmGroup.remove(s.p); s.p.geometry.dispose(); fsSparks.splice(fsSparks.indexOf(s), 1); } }
+  // the spirit: a warm presence at the fire with two small eyes, there while you sit
+  const sp = fsSpirit.userData; sp.k += ((sitting && live ? 1 : 0) - sp.k) * Math.min(1, dt * 0.8);
+  fsSpirit.visible = sp.k > 0.01; fsSpirit.position.copy(HEARTH_AT).addScaledVector(F.f, -0.2).setY(0.72 + Math.sin(t * 0.9) * 0.02);
+  sp.glow.material.opacity = 0.22 * sp.k * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
+  fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink; // its eyes on you
+  if (!fs) return;
+  // sticks in flight: an arc from the stack onto the fire, a puff of sparks as each lands
+  for (const fl of fs.flies) { const k = Math.min(1, (t - fl.t0) / 1.1), e = k * k * (3 - 2 * k); fl.m.position.lerpVectors(fl.from, fl.to, e); fl.m.position.y += Math.sin(k * Math.PI) * 0.45; fl.m.rotation.y = F.S.yaw + (fl.yaw - F.S.yaw) * e; if (k >= 1 && !fl.landed) { fl.landed = true; fsPuff(fl.to, 0xffb050, 12); } }
+  if (fs.step === "choose" && performance.now() - fs.quiet > FOCUS_SETTLE_MS && fs.flies.every(f => f.landed)) fsSettle();
+  if (fs.step === "sit") {
+    if (focusProgress(fs, Date.now(), FS_MIN).done) fsDone();
+    else if (t > fs.act) { // the spirit tends the fire: a stick turned, or a coal raked in with a breath of sparks
+      fs.act = t + (FS_FAST ? 3 : 18 + Math.random() * 20);
+      const st = fs.flies[Math.floor(Math.random() * fs.flies.length)];
+      if (st && Math.random() < 0.55) st.turn = { t0: t, by: (Math.random() - 0.5) * 0.9, from: st.m.rotation.y }; else fsPuff(HEARTH_AT.clone().addScaledVector(F.f, -0.35).setY(0.22), 0xff9a40, 8);
+    }
+  }
+  for (const fl of fs.flies) if (fl.turn) { const k = Math.min(1, (t - fl.turn.t0) / 1.4); fl.m.rotation.y = fl.turn.from + fl.turn.by * k * k * (3 - 2 * k); fl.m.rotation.x = Math.sin(k * Math.PI) * 0.15; if (k >= 1) fl.turn = null; }
+  // the mote of a finished sit: from the ember down into the satchel
+  if (fs.mote) { const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6); if (k > 0) { const e = k * k; fs.mote.g.position.lerpVectors(fs.mote.from, hmPouchAt(F).setY(hmPouchAt(F).y + 0.1), e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.3; } else fs.mote.g.position.copy(fs.mote.from); if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; } }
+}
+/* The laid sticks burn down slowly once nobody is laying: they sink into the fire and go. */
+function fsBurn(dt) { for (const s of fsLaid.children.slice()) { if (hm && hm.fs && hm.fs.flies.some(f => f.m === s)) continue; s.scale.multiplyScalar(Math.pow(0.9, dt)); s.position.y -= dt * 0.004; if (s.scale.x < 0.35) fsLaid.remove(s); } }
 const ASK_TEXT = { revisit: "asked to revisit an agreement", broken: "named a break in an agreement", retire: "asked to retire an agreement", compost: "asked to compost an agreement" };
 const YES_TEXT = { revisit: "agreed to revisit it", broken: "owned the break; the agreement is up for revisit", retire: "agreed to retire it", compost: "agreed to compost it" };
 async function itemAct(id, act, payload) {
@@ -3088,6 +3251,8 @@ document.addEventListener("click", async ev => {
   if (a === "hmLantern") { hmLight(); return; }
   if (a === "hmHang") { const h = hm && hm.hooks && hm.hooks.find(x => x.id === id); if (h) hmSend(h); return; }
   if (a === "hmStand") { hmStand(); return; }
+  if (a === "fsLay") { fsLay(); return; }
+  if (a === "fsStay") { fsStay(); return; }
   if (a === "hmBreathe") return; // a press held on it, not a click (hmEl's own listeners)
   if (a === "move") { const it = view().items.get(id); const r = moveRight(it); if (!r) return; placing = { id, ask: r === "shared" }; selected = null; refreshHud(); toast(r === "shared" ? "Tap the floor where you would like it." : "Tap the floor where it should stand, or drag it."); return; }
   if (a.startsWith("pace:")) { setPace(a.slice(5)); if (gardenId && isMember(view().g)) { myPrivate.captions = getPace(); savePriv(); } renderSheet(); return; }

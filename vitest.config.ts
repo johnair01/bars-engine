@@ -92,6 +92,7 @@ export default defineConfig({
       'src/lib/between/__tests__/scroll.test.ts',
       'src/lib/between/__tests__/stance.test.ts',
       'src/lib/between/__tests__/hearth-moment.test.ts',
+      'src/lib/between/__tests__/focus-sit.test.ts',
     ],
   },
   resolve: {
