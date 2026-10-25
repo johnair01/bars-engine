@@ -127,19 +127,73 @@ export type OrreryWorld = {
   run: Stage[]; runEnds: string; at: string
 }
 
-export function orreryOf(seeds: Seeds, now = new Date()): OrreryWorld {
-  const ship = SHIPS.find(s => s.id === 'orrery')!
+/** How many seeds a ship brings to its intake: one for each of its rooms whose work landed this run, and what earlier
+ * runs left in its store, capped at the store's size after this run's seeds. */
+export function storeOf(ship: Ship, seeds: Seeds): { landed: number; carried: number } {
   const mine = new Set(ship.rooms.map(r => r.stage))
-  const landedN = seeds.run.filter(s => mine.has(s)).length
+  const landed = seeds.run.filter(s => mine.has(s)).length
   const before = seeds.earlier.reduce((n, run) => n + run.filter(s => mine.has(s)).length, 0)
-  const carried = Math.max(0, Math.min(GROWTH.storeCap - landedN, before))
-  const i = intakeOf(ship, SHIPS, carried + landedN)
+  return { landed, carried: Math.max(0, Math.min(GROWTH.storeCap - landed, before)) }
+}
+
+export function orreryOf(seeds: Seeds, now = new Date(), fleet: Ship[] = SHIPS): OrreryWorld {
+  const ship = fleet.find(s => s.id === 'orrery')!
+  const { landed: landedN, carried } = storeOf(ship, seeds)
+  const i = intakeOf(ship, fleet, carried + landedN)
   return {
     landed: { loom: seeds.run.includes('spec'), foundry: seeds.run.includes('build'), chart: seeds.run.includes('plan') },
     carried, spent: i.spend === 'plan', opens: i.opens, cost: i.cost, held: i.held, run: seeds.run, runEnds: seeds.runEnds,
     at: now.toISOString(),
   }
 }
+
+/** What one ship's loop shows, for any ship: its rooms at their rungs and whether each one's work landed this run, its
+ * store, and what its intake does when run against the whole fleet (so the fleet rule can hold it). */
+export type ShipWorld = {
+  id: string; name: string; face: string; hull: number
+  rooms: { stage: Stage; machine: string; rung: number; landed: boolean }[]
+  carried: number; landed: number
+  spend: Stage | null; spent: boolean; opens: boolean; cost: number; held: Intake['held']
+  /** The ship after its intake: its hull class and each room's rung, in room order. */
+  after: { hull: number; rungs: number[] }
+}
+
+export function shipWorldOf(id: string, seeds: Seeds, fleet: Ship[] = SHIPS): ShipWorld {
+  const ship = fleet.find(s => s.id === id)
+  if (!ship) throw new Error(`no ship ${id}`)
+  const { landed, carried } = storeOf(ship, seeds)
+  const i = intakeOf(ship, fleet, carried + landed)
+  return {
+    id: ship.id, name: ship.name, face: ship.face, hull: ship.hull,
+    rooms: ship.rooms.map(r => ({ stage: r.stage, machine: r.machine, rung: r.rung, landed: seeds.run.includes(r.stage) })),
+    carried, landed, spend: i.spend, spent: i.spend !== null, opens: i.opens, cost: i.cost, held: i.held,
+    after: { hull: i.ship.hull, rungs: i.ship.rooms.map(r => r.rung) },
+  }
+}
+
+/** The whole fleet's world: every ship's intake run against the fleet as it stood before the intake, so a ship more
+ * than one class ahead of the smallest ship is held (GROWTH.aheadOfFleet). The Orrery's own loop keeps its world. */
+export type FleetWorld = { ships: ShipWorld[]; orrery: OrreryWorld; smallest: number; run: Stage[]; runEnds: string; at: string }
+
+export function fleetOf(seeds: Seeds, fleet: Ship[] = SHIPS, now = new Date()): FleetWorld {
+  return {
+    ships: fleet.map(s => shipWorldOf(s.id, seeds, fleet)),
+    orrery: orreryOf(seeds, now, fleet),
+    smallest: Math.min(...fleet.map(s => s.hull)),
+    run: seeds.run, runEnds: seeds.runEnds, at: now.toISOString(),
+  }
+}
+
+/** The fleet's demo (?demo=1): round 9's Orrery world, and the Ember Comet a class up from an earlier intake, so its
+ * next hull is held by the fleet rule while the Gourd Star is still at the first class. Never read as his data. */
+export const DEMO_SHIPS: Ship[] = SHIPS.map(s => s.id === 'ember-comet'
+  ? { ...s, hull: 2, rooms: s.rooms.map(r => ({ ...r, rung: 4 })) } : s)
+export const DEMO_SEEDS: Seeds = {
+  run: ['build', 'close', 'falsify', 'intake', 'plan', 'spec', 'verify'],
+  earlier: [['build', 'falsify', 'plan', 'spec', 'verify'], ['falsify', 'verify'], ['falsify']],
+  runEnds: '',
+}
+export function demoFleet(now = new Date()): FleetWorld { return fleetOf(DEMO_SEEDS, DEMO_SHIPS, now) }
 
 async function text(url: string): Promise<string | null> {
   try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.text() : null } catch { return null }
@@ -151,10 +205,10 @@ export function pullTime(name: string): string | null {
   return m ? `${m[1]}T${m[2]}:${m[3]}:${m[4]}Z` : null
 }
 
-let cache: { world: OrreryWorld; at: number } | null = null
+let cache: { world: FleetWorld; at: number } | null = null
 
-/** The Orrery's world as main has it now, cached five minutes like the boards. Null when the ledger can't be read. */
-export async function loadFleet(now = new Date()): Promise<OrreryWorld | null> {
+/** The fleet's world as main has it now, cached five minutes like the boards. Null when the ledger can't be read. */
+export async function loadFleet(now = new Date()): Promise<FleetWorld | null> {
   if (cache && now.getTime() - cache.at < 5 * 60_000) return cache.world
   const list = await text(LEDGER_API)
   if (!list) return cache?.world ?? null
@@ -170,7 +224,7 @@ export async function loadFleet(now = new Date()): Promise<OrreryWorld | null> {
   const done = await text(RAW + 'council/needs-work-done.json')
   let builds: string[] = []
   try { builds = Object.values((done ? JSON.parse(done) : {}).done ?? {}).map(d => (d as { at?: string }).at ?? '').filter(Boolean) } catch { /* none */ }
-  const world = orreryOf(seedsOf(pulls, builds), now)
+  const world = fleetOf(seedsOf(pulls, builds), SHIPS, now)
   cache = { world, at: now.getTime() }
   return world
 }
