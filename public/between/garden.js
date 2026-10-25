@@ -2206,8 +2206,8 @@ function fsPuff(pos, color, n = 10) {
   p.frustumCulled = false; hmGroup.add(p); fsSparks.push({ p, v, t0: performance.now() / 1000 });
 }
 const fsFireAt = (F, i) => HEARTH_AT.clone().addScaledVector(F.f, -0.15 + i * 0.05).addScaledVector(F.r, (i - 1) * 0.12).setY(0.3 + i * 0.04);
-const fsLipAt = F => HEARTH_AT.clone().addScaledVector(F.f, -0.62).addScaledVector(F.r, -0.3).setY(F.S.floor + 0.2);
-const fsStackAt = F => { const p = hmAt(F, 0.42, 0.58, 0); p.y = F.S.floor; return p; };
+const fsLipAt = F => HEARTH_AT.clone().addScaledVector(F.f, -0.62).addScaledVector(F.r, 0.3).setY(F.S.floor + 0.2); // the side the seated figure does not cover
+const fsStackAt = F => { const p = hmAt(F, 0.85, 0.58, 0); p.y = F.S.floor; return p; }; // far enough out that a wide screen does not cut it at the bottom edge
 const fsHere = () => !!hm && hm.step === "motes";
 /* Lay the top stick of the stack on the fire: the sit's length goes up a step. The first stick starts the choosing. */
 function fsLay() {
@@ -2246,7 +2246,7 @@ function fsBank() {
   fs.step = "banked"; if (hollow) hollow.handles.hearth.bank = 1;
   caption("Stand up?"); hmHud();
 }
-function fsStay() { const fs = hm && hm.fs; if (!fs || fs.step !== "banked") return; fs.step = "sit"; if (hollow) hollow.handles.hearth.bank = 0; hmHud(); }
+function fsStay() { const fs = hm && hm.fs; if (!fs || fs.step !== "banked") return; fs.step = "sit"; if (hollow) hollow.handles.hearth.bank = 0; captionOut(); hmHud(); }
 /* The sit ran its length: the ember rises one state and comes home, a mote drops into the satchel, the room is a little lighter. */
 async function fsDone() {
   const fs = hm && hm.fs; if (!fs || (fs.step !== "sit" && fs.step !== "banked")) return;
@@ -2312,7 +2312,7 @@ function fsTick(t, dt, h, F) {
   }
   for (const fl of fs.flies) if (fl.turn) { const k = Math.min(1, (t - fl.turn.t0) / 1.4); fl.m.rotation.y = fl.turn.from + fl.turn.by * k * k * (3 - 2 * k); fl.m.rotation.x = Math.sin(k * Math.PI) * 0.15; if (k >= 1) fl.turn = null; }
   // the mote of a finished sit: from the ember down into the satchel
-  if (fs.mote) { const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6); if (k > 0) { const e = k * k; fs.mote.g.position.lerpVectors(fs.mote.from, hmPouchAt(F).setY(hmPouchAt(F).y + 0.1), e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.3; } else fs.mote.g.position.copy(fs.mote.from); if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; } }
+  if (fs.mote) { const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6); if (k > 0) { const e = k * k; fs.mote.g.position.lerpVectors(fs.mote.from, hmPouchAt(F).setY(hmPouchAt(F).y + 0.1), e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.1; fs.mote.g.scale.setScalar(0.09 * (1 - 0.75 * e)); } else fs.mote.g.position.copy(fs.mote.from); if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; } }
 }
 /* The laid sticks burn down slowly once nobody is laying: they sink into the fire and go. */
 function fsBurn(dt) { for (const s of fsLaid.children.slice()) { if (hm && hm.fs && hm.fs.flies.some(f => f.m === s)) continue; s.scale.multiplyScalar(Math.pow(0.9, dt)); s.position.y -= dt * 0.004; if (s.scale.x < 0.35) fsLaid.remove(s); } }
@@ -2837,6 +2837,7 @@ function caption(text) {
   clearTimeout(caption.h); clearTimeout(caption.h2);
   caption.h = setTimeout(() => { mcap.classList.add("out"); caption.h2 = setTimeout(() => { mcap.hidden = true; }, 900); }, Math.max(4200, readMs(text.split(/\s+/).length) * 1.6 + 3000));
 }
+function captionOut() { clearTimeout(caption.h); clearTimeout(caption.h2); mcap.classList.add("out"); caption.h2 = setTimeout(() => { mcap.hidden = true; }, 900); }
 /* A step done (or left for later): kept in the homeroom's private doc, or in the rehearsal's. */
 async function minuteAct(step, how = "done", extra = null) {
   const st = mstate();
