@@ -60,19 +60,19 @@
   "source": "round19/donkey-neutral/glb/fire-hologram.glb"
  },
  "shellback-creature": {
-  "bytes": 203040,
-  "tris": 12974,
-  "source_bytes": 1535496,
-  "simplify": "--ratio 0.1 --error 0.01",
+  "bytes": 198892,
+  "tris": 12007,
+  "source_bytes": 2388932,
+  "simplify": "--ratio 0.035 --error 0.03",
   "source": "fire-creature-tortoise-rig.glb",
   "rig": "rig.py --base tortoise --stage creature",
   "joints": 19
  },
  "shellback-ally": {
-  "bytes": 179472,
-  "tris": 11431,
-  "source_bytes": 1534180,
-  "simplify": "--ratio 0.1 --error 0.01",
+  "bytes": 204784,
+  "tris": 13047,
+  "source_bytes": 2588536,
+  "simplify": "--ratio 0.035 --error 0.03",
   "source": "fire-ascended-tortoise-rig.glb",
   "rig": "rig.py --base tortoise --stage ascended",
   "joints": 17

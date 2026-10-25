@@ -37,6 +37,9 @@ STAGES = ["core", "hologram"]
 LATE = {"shellback": {"creature": "creature", "ally": "ascended"}}
 RIGGED = {"shellback": "tortoise"}  # family -> rig.py --base, for the late forms baked with their frame
 SIMPLIFY = ["--ratio", "0.1", "--error", "0.01"]
+# the finalized Shellback (round 3's lids, round 7's snout, round 12's states) is about twice the triangles of round 1's, so a
+# late form that overflows its budget at SIMPLIFY is simplified again at each of these in turn (25 October 2026)
+SIMPLIFY_MORE = [["--ratio", "0.07", "--error", "0.015"], ["--ratio", "0.05", "--error", "0.02"], ["--ratio", "0.035", "--error", "0.03"]]
 ELEMENT = "fire"  # the shapes are read from one element; the colours are the cave's
 # family file -> the base folder under the spirit page's output, its first base with GLBs. The Holdfast (the Controller's,
 # rounds 15 and 16) has no GLBs yet, so the Controller wears the Shellback's plain forms, as the Damaged Self and the
@@ -168,7 +171,7 @@ def bake(src, out, late=False, row=None):
             for col in kcol: c += bytes(round(x * 255) for x in srgb(col)) + b"\xff"
             cv = put(bytes(c), 34962)
             accs.append({"bufferView": cv, "componentType": 5121, "normalized": True, "count": len(kcol), "type": "VEC4"}); attrs["COLOR_0"] = len(accs) - 1
-        if kskin and m.get("name", "").split(".")[0] in ("eyewhite", "iris", "pupil", "glint"):  # spirit-rig-look-01: eyes off the face
+        if kskin and m.get("name", "").split(".")[0] in ("eye", "eyewhite", "iris", "pupil", "glint", "lid"):  # spirit-rig-look-01: eyes off the face; the lids close over them
             assert {rig["joints"][a][0] for a, _, _ in kskin} == {"head"}, (src, m.get("name"), "the eyes must ride the head")
         if kskin:  # joint a, joint b, a's weight of 255, 0 (bake_daemons.py's _SKIN, its band byte unused)
             sv = put(b"".join(struct.pack("<4B", a, b, w, 0) for a, b, w in kskin), 34962); views[sv]["byteStride"] = 4
@@ -284,11 +287,11 @@ def clip_of(j, bin_, rig, name):
     return [(k, path, [x - f0 for x in f], v) for k, path, f, v in out]
 
 
-def simplified(src, tmp):
+def simplified(src, tmp, how=SIMPLIFY):
     import subprocess
     cli = ["npx", "--yes", "@gltf-transform/cli@4"]
     subprocess.run(cli + ["weld", src, tmp + ".w.glb"], check=True, capture_output=True)
-    subprocess.run(cli + ["simplify", tmp + ".w.glb", tmp] + SIMPLIFY, check=True, capture_output=True)
+    subprocess.run(cli + ["simplify", tmp + ".w.glb", tmp] + how, check=True, capture_output=True)
     os.remove(tmp + ".w.glb")
     return tmp
 
@@ -310,10 +313,13 @@ def main(root, dest, rigs=None):
             if rigs:  # rig.py's output for this stage: the same body with its frame, Walk and Idle
                 rsrc = os.path.join(rigs, "%s-%s-%s-rig.glb" % (ELEMENT, page, RIGGED[fam]))
                 row = json.load(open(rsrc[:-4] + ".json")); src = rsrc
-            tmp = simplified(src, out + ".s.glb")
-            size, tris, _ = bake(tmp, out, late=True, row=row); was = os.path.getsize(src); os.remove(tmp)
-            assert size <= (RIGGED_BUDGET_BYTES if row else LATE_BUDGET_BYTES), (out, size)
-            report["%s-%s" % (fam, st)] = {"bytes": size, "tris": tris, "source_bytes": was, "simplify": " ".join(SIMPLIFY),
+            budget = RIGGED_BUDGET_BYTES if row else LATE_BUDGET_BYTES
+            for how in [SIMPLIFY] + SIMPLIFY_MORE:
+                tmp = simplified(src, out + ".s.glb", how)
+                size, tris, _ = bake(tmp, out, late=True, row=row); was = os.path.getsize(src); os.remove(tmp)
+                if size <= budget: break
+            assert size <= budget, (out, size)
+            report["%s-%s" % (fam, st)] = {"bytes": size, "tris": tris, "source_bytes": was, "simplify": " ".join(how),
                                            "source": os.path.relpath(src, rigs) if row else "%s/%s-%s.glb" % (SOURCES[fam], ELEMENT, page)}
             if row: report["%s-%s" % (fam, st)].update(rig="rig.py --base %s --stage %s" % (RIGGED[fam], page), joints=row["bones"])
             print("%-16s %6d bytes (from %7d), %5d triangles%s" % (fam + "-" + st, size, was, tris, ", rigged" if row else ""))
