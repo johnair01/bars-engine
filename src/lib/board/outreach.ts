@@ -86,3 +86,18 @@ export async function gmailSend(l: Letter, fetcher: typeof fetch = fetch): Promi
     return { ok: false, unknown: true, error: `gmail send broke mid-way (${e instanceof Error ? e.message : 'network'})` }
   }
 }
+
+/** The contact fields a sent letter moves, the same as the board's ltSentPatch and six-faces-council's
+ *  board/email_pipeline.py sent_patch: Identified to Pitched, Pitched to Followed up, last touch today (Pacific, his
+ *  day), next touch in five days, and a notes line, so the Outreach tab tracks the send. */
+export const NEXT_TOUCH_DAYS = 5
+export function sentPatch(c: Record<string, unknown>, via: string, at: Date = new Date()) {
+  const day = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  const today = day(at), next = day(new Date(at.getTime() + NEXT_TOUCH_DAYS * 864e5))
+  const was = typeof c.status === 'string' && c.status ? c.status : 'Identified'
+  const status = was === 'Identified' ? 'Pitched' : was === 'Pitched' || was === 'Followed up' ? 'Followed up' : was
+  const d = (c.draft ?? {}) as { subject?: unknown }
+  const line = `${today}: Sent "${typeof d.subject === 'string' && d.subject ? d.subject : 'email'}" from ${via}, next touch ${next}.`
+  const notes = typeof c.notes === 'string' && c.notes ? `${line}\n${c.notes}` : line
+  return { status, lastTouch: today, nextTouch: next, flag: '', notes }
+}
