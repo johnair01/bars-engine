@@ -19,6 +19,14 @@ describe('studio fleet', () => {
     expect(stagesOf(p)).toEqual(['spec', 'falsify', 'plan', 'intake', 'verify', 'falsify'])
   })
 
+  it('sends a yes on a step to ship and a deprecated step to close', () => {
+    const p = pull('2026-10-25T01:00:00Z', {}, [
+      { what: 'note', note: 'Yes, ship it' }, { what: 'note', note: 'yes' }, { what: 'note', note: 'yesterday it broke' },
+      { what: 'deprecated' }, { what: 'ticked', note: 'yes' }, { what: 'back to AI' },
+    ])
+    expect(stagesOf(p)).toEqual(['ship', 'ship', 'falsify', 'close', 'verify', 'falsify'])
+  })
+
   it('lands one seed a room a run, and counts earlier runs apart', () => {
     const s = seedsOf([
       pull('2026-10-25T01:00:00Z', { a: { kind: 'position', status: 'stands' }, b: { kind: 'position', status: 'stands' } }),

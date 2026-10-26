@@ -17,6 +17,7 @@
 // AltR9.hit(px, py) names what a tap at a screen point touches ('back' | 'store' | 'chart' | 'water' | null) for the last
 // frame drawn. Round 10: AltR9.frame(..., { ship }) runs the same loop for any one-room ship (a fleet.ts ShipWorld), and
 // AltR9.fleetFrame(ctx, W, H, { phone, t, fleet }) draws the six ships in convoy; fleetHit/fleetBox name a tapped ship.
+// The Shaman's loop (?shaman=1): AltR9.shamanFrame draws the Gourd Star's eight rooms; see its section for the API.
 ;(function () {
   const TAU = Math.PI * 2
   // the six altitudes in faces.yaml order; amber (3) is never drawn this round
@@ -519,7 +520,7 @@
   // ---------- crew: robed figures; the sash is the altitude ----------
   // o: sash, master, carry ('spool'|'bead'|'tool'|'seed'), walk, face, seed (idle phase), alpha
   function crew(x, y, z, o) {
-    const p = P(x, y, z), s = (k / CREW) * (o.master ? 1.15 : 1)
+    const p = P(x, y, z), s = (k / CREW) * (o.master ? 1.15 : 1) * (o.tall || 1)
     const T = S.time, ph = o.seed || 0
     g.save(); g.translate(p[0], p[1]); g.scale(s, s)
     if (o.alpha !== undefined) g.globalAlpha *= o.alpha
@@ -535,6 +536,7 @@
       g.beginPath(); g.moveTo(-2, -2 - bob); g.lineTo(-2 + a, 0.8); g.moveTo(2, -2 - bob); g.lineTo(2 - a, 0.8); g.stroke()
     }
     g.translate(0, -bob); g.rotate(rot); g.scale((o.face || 1), sy)
+    if (o.kneel) { g.rotate(0.3 * o.kneel); g.scale(1, 1 - 0.2 * o.kneel) } // the Shaman bends to the room's verb
     const body = new Path2D(); body.moveTo(-7, -1); body.bezierCurveTo(-6.5, -10, -4.5, -17, 0, -19); body.bezierCurveTo(4.5, -17, 6.5, -10, 7, -1); body.quadraticCurveTo(0, 1.5, -7, -1)
     const gr = g.createLinearGradient(-7, 0, 7, 0); gr.addColorStop(0, '#fffaf0'); gr.addColorStop(1, '#d9dcf0')
     g.fillStyle = gr; g.fill(body); g.strokeStyle = 'rgba(40,40,90,0.35)'; g.lineWidth = 0.9; g.stroke(body)
@@ -1360,5 +1362,324 @@
   // the loop clock: global seconds -> phase and t
   function at(T) { T = loopT(T, LOOP); for (const p of PHASES.slice().reverse()) if (T >= START[p]) return { phase: p, t: T - START[p] } }
 
-  window.AltR9 = { frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
+  // ================= the Shaman's loop, loop 1 (/board/studio?shaman=1) =================
+  // Ported from studio-tycoon/shaman-loop-r1/shaman-scene.part.js, with his steers of 2026-10-26: the eight stages are
+  // eight small rooms off a ring round the Hearth (each its own floor, a low curved back wall of an older skin, a
+  // doorway open toward the Hearth), all unlocked. A room whose work waits on the board is charged: the brightest,
+  // most alive thing in the scene. A room whose work landed this run is warm and sends up its seed. The spoke of light
+  // from the Hearth to a room is blocked (a fallen stone under vines) until that room's work lands. Embers sit where a
+  // move was given. Nothing here is text, a number or a panel; the page's cards are the only words.
+  // API: AltR9.shamanFrame(ctx, W, H, opts) with opts { phone, t, runT, rooms (ShamanWorld rooms), focus, shaman:
+  // { a, out, kneel }, verb: { stage, f }, embers: [{ id, stage, bright }], hint: { stage, idle } };
+  // AltR9.shamanHit(px, py) -> { ember: id } | { room: stage } | null; AltR9.shamanBox(stage) -> [x0, y0, x1, y1];
+  // AltR9.shamanPoint(stage) -> the screen point a card hangs from.
+  const RING = { cx: 4.9, cy: 4.0, rx: 5.0, ry: 3.75, st: 0.74, walk: 0.46 }
+  const ROOM8 = { rx: 1.06, ry: 0.9, H: 0.95, door: 1.05, sc: 0.74 }
+  const STAGES8 = ['intake', 'spec', 'falsify', 'plan', 'build', 'verify', 'ship', 'close']
+  const ANG8 = (i) => Math.PI * 0.55 + (i / 8) * TAU
+  function ringAt(i, r) { const a = ANG8(i); return [RING.cx + Math.cos(a) * r * RING.rx, RING.cy + Math.sin(a) * r * RING.ry] }
+  const SHM = { rooms: {}, embers: [], k: 40, last: null, face: 1 }
+  const QUIET = '#8f7fe0', MAG = '#ff4fb0', GOLD = '#ffc94a', CREW8 = 0.66 // figures scaled to the rooms
+  function dimMix(c, lit) { return lit ? c : mix(c, QUIET, 0.3) } // quiet, never grey: a cool lavender wash
+  function scaled(cx, cy, z, sc, fn) { // draw fn about (cx, cy, z) at sc of the scene's scale
+    const k0 = k, ox0 = ox, oy0 = oy, q = P(cx, cy, z)
+    k = k0 * sc; const q2 = P(cx, cy, z); ox += q[0] - q2[0]; oy += q[1] - q2[1]
+    try { fn() } finally { k = k0; ox = ox0; oy = oy0 }
+  }
+  function cordM(cx, cy, z, lit) { // spec: a frame of hanging cords; a knot is tied for each position he lets stand
+    box(cx - 0.62, cy - 0.06, z, cx - 0.52, cy + 0.06, z + 1.7, ...WOOD.map((c) => dimMix(c, lit)))
+    box(cx + 0.52, cy - 0.06, z, cx + 0.62, cy + 0.06, z + 1.7, ...WOOD.map((c) => dimMix(c, lit)))
+    box(cx - 0.68, cy - 0.08, z + 1.62, cx + 0.68, cy + 0.08, z + 1.76, ...WOOD.map((c) => dimMix(c, lit)))
+    plane('y', cy, () => {
+      for (let i = 0; i < 6; i++) {
+        const x = cx - 0.4 + i * 0.16, sw = Math.sin(S.time * 1.2 + i) * 0.03
+        g.strokeStyle = dimMix(i % 2 ? '#e7c8a0' : '#b4e6d2', lit); g.lineWidth = 0.035
+        g.beginPath(); g.moveTo(x, z + 1.62); g.quadraticCurveTo(x + sw, z + 1.0, x + sw * 2, z + 0.35); g.stroke()
+        for (let j = 0; j < 1 + (i % 3); j++) { g.fillStyle = dimMix('#d8509f', lit); g.beginPath(); g.arc(x + sw, z + 1.3 - j * 0.28, 0.045, 0, TAU); g.fill() }
+      }
+    })
+    if (lit) glow3(cx, cy, z + 1.0, 1.2, '#fff1c8', 0.3)
+  }
+  function smokeM(cx, cy, z, lit) { // falsify: a smoke bowl; the smoke bends where the claim is not true
+    cylinder(cx, cy, z, z + 0.32, 0.42, dimMix('#6f5a50', lit), dimMix('#9a8070', lit))
+    plane('z', z + 0.33, () => { g.fillStyle = lit ? '#ffb08a' : '#c3a4ee'; g.beginPath(); g.arc(cx, cy, 0.3, 0, TAU); g.fill() })
+    const base = P(cx, cy, z + 0.4)
+    g.save(); g.lineCap = 'round'
+    for (let i = 0; i < 3; i++) {
+      g.strokeStyle = `rgba(236,242,250,${lit ? 0.55 - i * 0.12 : 0.3})`; g.lineWidth = Math.max(1, (0.12 - i * 0.025) * k)
+      g.beginPath(); g.moveTo(base[0], base[1])
+      const T = S.time * 0.6 + i
+      g.bezierCurveTo(base[0] + Math.sin(T) * 0.3 * k, base[1] - 0.8 * k, base[0] - 0.4 * k + i * 0.2 * k, base[1] - 1.3 * k, base[0] + (lit ? 0.7 : 0.1) * k, base[1] - (2.0 + i * 0.3) * k)
+      g.stroke()
+    }
+    g.restore()
+    if (lit) glow3(cx, cy, z + 0.6, 1.1, '#ff9a7a', 0.35)
+  }
+  function drumM(cx, cy, z, lit) { // plan: the drum; a pick of his sets the beat the ship sails to
+    cylinder(cx, cy, z, z + 0.62, 0.48, dimMix('#f3e2c0', lit), dimMix('#b9875a', lit))
+    plane('z', z + 0.63, () => {
+      g.strokeStyle = dimMix('#d8509f', lit); g.lineWidth = 0.04; g.beginPath(); g.arc(cx, cy, 0.3, 0, TAU); g.stroke()
+      if (lit) { const f = loopT(S.time * 0.8, 1); g.strokeStyle = `rgba(255,250,235,${0.7 * (1 - f)})`; g.lineWidth = 0.03; g.beginPath(); g.arc(cx, cy, 0.48 + f * 0.9, 0, TAU); g.stroke() }
+    })
+    if (lit) glow3(cx, cy, z + 0.8, 1.1, '#fff1c8', 0.3)
+  }
+  function carveM(cx, cy, z, lit) { // build: a low bench and a gourd vessel half shaped from the wood
+    box(cx - 0.6, cy - 0.28, z, cx + 0.6, cy + 0.28, z + 0.4, ...WOOD.map((c) => dimMix(c, lit)))
+    const p = P(cx + 0.05, cy, z + 0.4), s = k
+    g.fillStyle = dimMix('#9ee0bc', lit)
+    g.beginPath(); g.ellipse(p[0], p[1] - 0.28 * s, 0.26 * s, 0.28 * s, 0, 0, TAU); g.fill()
+    g.beginPath(); g.ellipse(p[0], p[1] - 0.68 * s, 0.15 * s, 0.17 * s, 0, 0, TAU); g.fill()
+    g.fillStyle = dimMix('#f6e6c8', lit); for (let i = 0; i < 4; i++) { const j = Math.sin(S.time * 2 + i) * 0.03 * s; g.beginPath(); g.ellipse(p[0] - 0.4 * s + i * 0.1 * s, p[1] + 0.05 * s + j, 0.05 * s, 0.02 * s, 0.4, 0, TAU); g.fill() }
+  }
+  function boatM(cx, cy, z, lit) { // ship: a leaf boat with a small light, set on a channel that runs out to the current
+    plane('z', z + 0.01, () => { g.fillStyle = lit ? 'rgba(170,225,240,0.6)' : 'rgba(160,150,235,0.45)'; g.beginPath(); g.ellipse(cx, cy, 0.7, 0.42, 0.5, 0, TAU); g.fill() })
+    const p = P(cx, cy, z + 0.12 + 0.03 * Math.sin(S.time * 1.4)), s = k * 1.5
+    g.fillStyle = dimMix('#7cc9a4', lit); g.beginPath(); g.moveTo(p[0] - 0.42 * s, p[1] - 0.04 * s); g.quadraticCurveTo(p[0], p[1] + 0.22 * s, p[0] + 0.42 * s, p[1] - 0.12 * s); g.quadraticCurveTo(p[0], p[1] - 0.02 * s, p[0] - 0.42 * s, p[1] - 0.04 * s); g.fill()
+    if (lit) { glow(p[0], p[1] - 0.2 * s, 0.5 * s, '#ffe2a0', 0.7) }
+    g.fillStyle = lit ? '#fff6dc' : '#d6c8f6'; g.beginPath(); g.arc(p[0], p[1] - 0.16 * s, 0.07 * s, 0, TAU); g.fill()
+  }
+  function soilM(cx, cy, z, lit) { // close: a planting bed; a spent strand is laid down here and its seed goes in
+    cylinder(cx, cy, z, z + 0.22, 0.55, dimMix('#7a5c40', lit), dimMix('#d6b88a', lit))
+    for (let i = 0; i < 3; i++) {
+      const a = i * 2.1, x = cx + Math.cos(a) * 0.25, y = cy + Math.sin(a) * 0.25, b = P(x, y, z + 0.22), t = P(x, y, z + 0.6 + i * 0.1 + 0.03 * Math.sin(S.time * 1.5 + i))
+      g.strokeStyle = dimMix('#7cc9a4', lit); g.lineWidth = Math.max(1, 0.04 * k); g.beginPath(); g.moveTo(b[0], b[1]); g.lineTo(t[0], t[1]); g.stroke()
+      g.fillStyle = dimMix('#9ee0bc', lit); g.beginPath(); g.ellipse(t[0] + 0.06 * k, t[1], 0.08 * k, 0.04 * k, -0.5, 0, TAU); g.fill()
+    }
+  }
+  const MACH8 = { intake: (x, y, z, l, fl) => bellM(x, y, z, fl || (l ? 0.4 : 0)), spec: cordM, falsify: smokeM, plan: drumM, build: carveM,
+    verify: (x, y, z, l, fl) => mirrorM(x, y, z, fl || (l ? 0.2 : 0)), ship: boatM, close: soilM }
+  const modeOf = (r) => (r && r.waiting && r.waiting.length ? 'charged' : r && r.landed ? 'lit' : 'quiet')
+  function roomPts(x, y, z, n, a0, a1) { const out = []; for (let i = 0; i <= n; i++) { const t = a0 + (a1 - a0) * i / n; out.push([x + Math.cos(t) * ROOM8.rx, y + Math.sin(t) * ROOM8.ry, z]) } return out }
+  // one room: its floor, its low curved back wall (an older skin, worn at the foot, magenta lintel), its machine
+  function room8(i, st, mode, sk, focus, fl) {
+    const [x, y] = ringAt(i, RING.st), a = ANG8(i), out = Math.atan2(Math.sin(a) * RING.ry, Math.cos(a) * RING.rx)
+    const T = S.time, pulse = 0.5 + 0.5 * Math.sin(T * 3.2 + i), dc = x * AX[1] + y * AY[1]
+    // the floor: a low dais of its own
+    const top = roomPts(x, y, 0.3, 32, 0, TAU), foot = roomPts(x, y, 0.18, 32, 0, TAU)
+    const side = mode === 'charged' ? mix('#c2367f', '#7a2a58', 0.3) : mode === 'lit' ? '#d9b98c' : '#8f80cf'
+    for (let j = 0; j < 32; j++) if ((top[j][0] + top[j + 1][0]) / 2 * AX[1] + (top[j][1] + top[j + 1][1]) / 2 * AY[1] > dc) poly([foot[j], foot[j + 1], top[j + 1], top[j]], side, side, 0.6)
+    poly(top, mode === 'charged' ? mix('#ff8cc8', '#ffd36a', 0.5 * pulse) : mode === 'lit' ? '#fbecd0' : '#ddd3f6', null)
+    plane('z', 0.31, () => {
+      g.save(); g.translate(x, y); g.scale(1, ROOM8.ry / ROOM8.rx)
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, ROOM8.rx)
+      if (mode === 'charged') { gr.addColorStop(0, rgba('#fff3c0', 0.95)); gr.addColorStop(0.35, rgba(GOLD, 0.9)); gr.addColorStop(0.75, rgba(MAG, 0.75 + 0.25 * pulse)); gr.addColorStop(1, rgba('#e0308f', 0.9)) }
+      else if (mode === 'lit') { gr.addColorStop(0, 'rgba(255,226,160,0.95)'); gr.addColorStop(1, 'rgba(255,226,160,0)') }
+      else { gr.addColorStop(0, 'rgba(178,160,245,0.55)'); gr.addColorStop(1, 'rgba(178,160,245,0)') }
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, ROOM8.rx, 0, TAU); g.fill(); g.restore()
+    })
+    // the wall: everything but the doorway, which opens toward the Hearth
+    const n = 16, w0 = out + Math.PI + ROOM8.door, w1 = out + Math.PI + TAU - ROOM8.door, Hh = ROOM8.H
+    const seg = []
+    for (let j = 0; j < n; j++) {
+      const t0 = w0 + (w1 - w0) * j / n, t1 = w0 + (w1 - w0) * (j + 1) / n
+      const p0 = [x + Math.cos(t0) * ROOM8.rx, y + Math.sin(t0) * ROOM8.ry], p1 = [x + Math.cos(t1) * ROOM8.rx, y + Math.sin(t1) * ROOM8.ry]
+      seg.push({ p0, p1, front: ((p0[0] + p1[0]) / 2) * AX[1] + ((p0[1] + p1[1]) / 2) * AY[1] > dc + 0.05, shade: 0.2 + 0.35 * Math.max(0, Math.cos(t0 - Math.PI * 1.6)) })
+    }
+    const lintel = mode === 'charged' ? mix(RUNG[1], GOLD, 0.25 + 0.5 * pulse) : mode === 'lit' ? mix(RUNG[1], '#ffd9a0', 0.25) : mix(RUNG[1], QUIET, 0.25)
+    const wallSeg = (s) => {
+      let wc = mix(mix(sk.old, sk.band, 0.5), mode === 'quiet' ? '#c9bdf4' : '#ffffff', 0.18 + s.shade * 0.5)
+      if (mode === 'charged') wc = mix(wc, '#ff6fbf', 0.35 + 0.15 * pulse)
+      poly([[s.p0[0], s.p0[1], 0.3], [s.p1[0], s.p1[1], 0.3], [s.p1[0], s.p1[1], Hh], [s.p0[0], s.p0[1], Hh]], wc, wc, 0.6)
+      const wo = mix(sk.old, '#ffffff', 0.08 + s.shade * 0.35)
+      poly([[s.p0[0], s.p0[1], 0.3], [s.p1[0], s.p1[1], 0.3], [s.p1[0], s.p1[1], 0.48], [s.p0[0], s.p0[1], 0.48]], wo, wo, 0.6)
+      poly([[s.p0[0], s.p0[1], Hh], [s.p1[0], s.p1[1], Hh], [s.p1[0], s.p1[1], Hh + 0.1], [s.p0[0], s.p0[1], Hh + 0.1]], lintel, lintel, 0.6)
+    }
+    seg.filter((s) => !s.front).forEach(wallSeg)
+    // the machine, a little toward the back wall; a charged room's runs harder
+    const [mx, my] = ringAt(i, RING.st + 0.05), t0 = S.time
+    if (mode === 'charged') S.time = t0 * 2.2 + i
+    scaled(mx, my, 0.3, ROOM8.sc, () => MACH8[st](mx, my, 0.3, mode !== 'quiet', fl || (mode === 'charged' ? 0.6 : 0)))
+    S.time = t0
+    g.save(); g.globalAlpha *= 0.42; seg.filter((s) => s.front).forEach(wallSeg); g.restore()
+    if (mode === 'lit') glow3(x, y, 1.0, 1.4, '#ffe6b8', 0.2)
+    return { x, y }
+  }
+  // the blocked part of a spoke: a fallen stone under a tangle of vine, until that room's work lands
+  function blockage(i) {
+    const [x, y] = ringAt(i, 0.6), a = ANG8(i), T = S.time
+    cylinder(x + 0.2, y - 0.08, 0.18, 0.95, 0.62, '#b48a64', '#7c5a42')
+    cylinder(x - 0.42, y + 0.2, 0.18, 0.7, 0.42, '#c0966e', '#86624a')
+    cylinder(x - 0.05, y + 0.32, 0.18, 0.5, 0.3, '#a8805c', '#74543c')
+    const c = P(x, y, 0.55)
+    g.save(); g.lineCap = 'round'
+    for (let j = 0; j < 4; j++) {
+      const ph = j * 1.7 + i, sw = Math.sin(T * 0.9 + ph) * 0.06 * k, r = (0.7 + 0.12 * j) * k
+      g.strokeStyle = j % 2 ? '#3fa46c' : '#2f8a5c'; g.lineWidth = Math.max(2.4, 0.12 * k)
+      g.beginPath(); g.moveTo(c[0] - r, c[1] + 0.1 * k)
+      g.bezierCurveTo(c[0] - r * 0.4, c[1] - r * 0.9 + sw, c[0] + r * 0.5, c[1] - r * 0.7 - sw, c[0] + r, c[1] + 0.12 * k)
+      g.stroke()
+      for (let q = 0; q < 3; q++) { const f = (q + 1) / 4, lx = lerp(c[0] - r, c[0] + r, f), ly = c[1] - Math.sin(f * Math.PI) * r * 0.75 + sw * 0.5; g.fillStyle = q % 2 ? '#9ee0bc' : '#6cc394'; g.beginPath(); g.ellipse(lx, ly, 0.2 * k, 0.1 * k, (q % 2 ? 0.6 : -0.6) + Math.cos(a), 0, TAU); g.fill() }
+    }
+    g.restore()
+  }
+  // a charged room: a pulsing aura in magenta and gold, a ring running out across its floor, sparks rising
+  function charge(i, focus) {
+    const [x, y] = ringAt(i, RING.st), T = S.time, pulse = 0.5 + 0.5 * Math.sin(T * (focus ? 3.6 : 2.6) + i), amp = focus ? 1.15 : 0.8
+    g.save(); g.globalCompositeOperation = 'lighter'
+    glow3(x, y, 0.9, (1.7 + 0.4 * pulse) * amp, MAG, (0.13 + 0.09 * pulse) * amp)
+    glow3(x, y, 1.2, 0.9 * amp, GOLD, (0.12 + 0.1 * pulse) * amp)
+    g.restore()
+    plane('z', 0.33, () => {
+      for (let j = 0; j < 2; j++) {
+        const f = loopT(T * 0.7 + j * 0.5 + i * 0.13, 1)
+        g.strokeStyle = rgba(j ? MAG : GOLD, 0.85 * (1 - f)); g.lineWidth = 0.05
+        g.beginPath(); g.ellipse(x, y, ROOM8.rx * (0.35 + 0.8 * f), ROOM8.ry * (0.35 + 0.8 * f), 0, 0, TAU); g.stroke()
+      }
+    })
+    for (let j = 0; j < (focus ? 16 : 11); j++) {
+      const h1 = hash(i * 31 + j), f = loopT(T * (0.3 + 0.25 * h1) + h1, 1)
+      const mx = x + (hash(j * 7 + i) - 0.5) * ROOM8.rx * 1.5 + Math.sin(T * 2 + j) * 0.06, my = y + (hash(j * 13 + i) - 0.5) * ROOM8.ry * 1.5
+      const p = P(mx, my, 0.4 + f * 3.0), col = j % 2 ? '#ff7cc8' : '#ffdc78', a = Math.sin(f * Math.PI)
+      glow(p[0], p[1], 0.24 * k, col, 0.65 * a)
+      g.fillStyle = rgba('#fffaf0', 0.9 * a); g.beginPath(); g.arc(p[0], p[1], Math.max(1.1, 0.045 * k), 0, TAU); g.fill()
+    }
+  }
+  function ember8(x, y, bright) {
+    const p = P(x, y, 0.42), T = S.time, fl = 0.85 + 0.15 * Math.sin(T * 6.3 + x * 3) * Math.sin(T * 2.1 + y)
+    if (bright) {
+      glow(p[0], p[1], 0.75 * k, '#ffe2a0', 0.55 * fl); glow(p[0], p[1], 0.32 * k, '#fff6dc', 0.85)
+      g.strokeStyle = 'rgba(255,240,200,0.7)'; g.lineWidth = Math.max(1, 0.03 * k)
+      for (let j = 0; j < 6; j++) { const a = j / 6 * TAU + T * 0.4; g.beginPath(); g.moveTo(p[0] + Math.cos(a) * 0.2 * k, p[1] + Math.sin(a) * 0.12 * k); g.lineTo(p[0] + Math.cos(a) * 0.38 * k, p[1] + Math.sin(a) * 0.23 * k); g.stroke() }
+      g.fillStyle = '#fffaf0'; g.beginPath(); g.ellipse(p[0], p[1], 0.13 * k, 0.1 * k, 0, 0, TAU); g.fill()
+    } else {
+      glow(p[0], p[1], 0.9 * k, '#ff9a4a', 0.6 * fl)
+      const pu = (T * 0.8 + x) % 1; g.strokeStyle = `rgba(255,150,80,${0.8 * (1 - pu)})`; g.lineWidth = Math.max(1.5, 0.05 * k); g.beginPath(); g.ellipse(p[0], p[1], (0.25 + 0.4 * pu) * k, (0.17 + 0.28 * pu) * k, 0, 0, TAU); g.stroke()
+      g.fillStyle = '#ffb35a'; g.beginPath(); g.ellipse(p[0], p[1], Math.max(8, 0.2 * k), Math.max(6.4, 0.16 * k), 0, 0, TAU); g.fill()
+      g.strokeStyle = '#fff0c8'; g.lineWidth = Math.max(1.5, 0.04 * k); g.stroke()
+      g.fillStyle = '#fff0c8'; g.beginPath(); g.arc(p[0], p[1] - 0.01 * k, Math.max(3, 0.07 * k), 0, TAU); g.fill()
+    }
+  }
+  function verbFx(i, st, f) { // the body does the verb: the machine answers with rings and a burst of light
+    const [mx, my] = ringAt(i, RING.st + 0.05), top = P(mx, my, st === 'spec' || st === 'intake' ? 1.4 : 0.8), b = bump(f, 0, 1)
+    glow(top[0], top[1], 1.6 * k * (0.6 + b), '#fff1c8', 0.55 * b)
+    for (let j = 0; j < 3; j++) {
+      const q = clamp(f * 1.4 - j * 0.2); if (q <= 0 || q >= 1) continue
+      g.strokeStyle = rgba(j % 2 ? MAG : '#fff1c8', 0.8 * (1 - q)); g.lineWidth = Math.max(1, 0.06 * k * (1 - q))
+      g.beginPath(); g.ellipse(top[0], top[1], (0.3 + 1.5 * q) * k, (0.15 + 0.75 * q) * k, 0, 0, TAU); g.stroke()
+    }
+  }
+  function shamanScene(opts) {
+    const sk = SKIN.shaman, h = geo('gourd-star', 1), T = S.time, runT = opts.runT == null ? 99 : opts.runT
+    const R = {}; (opts.rooms || []).forEach((r) => { R[r.stage] = r })
+    const landed = (st) => !!(R[st] && R[st].landed)
+    { const p = P(h.xc, 4.0, -h.bot - 2.2); g.save(); g.translate(p[0], p[1]); g.scale(1, 0.18); glow(0, 0, h.L * k * 1.1, '#0f2a3a', 0.35); g.restore() }
+    { const p = P(h.xc + 2, 7, -h.bot - 1.2); g.save(); g.translate(p[0], p[1]); g.scale(1, 0.22); glow(0, 0, h.L * k * 0.9, '#ffc27a', 0.38); g.restore() }
+    tail(h); rimG(h, sk); hullG(h, sk, { under: 1 }); elementFx(h, sk, 'shaman')
+    // the chamber's deck: one round floor the rooms stand off
+    { const n = 48, ring = (z) => Array.from({ length: n }, (_, i) => [RING.cx + Math.cos(i / n * TAU) * RING.rx, RING.cy + Math.sin(i / n * TAU) * RING.ry, z]), a = ring(0), b = ring(0.18), side = mix(RUNG[1], '#3a2440', 0.2)
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; poly([a[i], a[j], b[j], b[i]], side, side, 0.5) }
+      poly(b, FLOOR, null) }
+    plane('z', 0.19, () => {
+      g.save(); g.translate(RING.cx, RING.cy); g.scale(1, RING.ry / RING.rx); const gr = g.createRadialGradient(0, 0, 0, 0, 0, RING.rx * 0.7); gr.addColorStop(0, 'rgba(255,230,180,0.85)'); gr.addColorStop(1, 'rgba(255,226,190,0)')
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, RING.rx, 0, TAU); g.fill(); g.restore()
+    })
+    const loop = Array.from({ length: 40 }, (_, i) => { const a = (i / 40) * TAU; return [RING.cx + Math.cos(a) * RING.walk * RING.rx, RING.cy + Math.sin(a) * RING.walk * RING.ry] })
+    route(loop, 0.18, RUNG[1], true)
+    // spokes from the Hearth: open and lit to a room whose work landed, cool and blocked to the others
+    plane('z', 0.2, () => {
+      STAGES8.forEach((st, i) => {
+        const [x0, y0] = ringAt(i, 0.22), [x, y] = ringAt(i, RING.st - 0.2), lit = landed(st)
+        const gr = g.createLinearGradient(x0, y0, x, y)
+        if (lit) { gr.addColorStop(0, 'rgba(255,236,170,0.5)'); gr.addColorStop(1, 'rgba(255,214,120,0.95)') }
+        else { gr.addColorStop(0, 'rgba(160,130,240,0.6)'); gr.addColorStop(0.62, 'rgba(160,130,240,0.5)'); gr.addColorStop(0.7, 'rgba(160,130,240,0.08)'); gr.addColorStop(1, 'rgba(160,130,240,0.08)') }
+        g.strokeStyle = gr; g.lineWidth = lit ? 0.3 : 0.24; g.lineCap = 'round'; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x, y); g.stroke()
+        if (lit) { const f = loopT(T * 0.45 + i * 0.17, 1); g.fillStyle = `rgba(255,248,225,${0.9 * Math.sin(f * Math.PI)})`; g.beginPath(); g.arc(lerp(x0, x, f), lerp(y0, y, f), 0.07, 0, TAU); g.fill() }
+      })
+    })
+    const items = [], verb = opts.verb
+    SHM.rooms = {}
+    STAGES8.forEach((st, i) => {
+      const [x, y] = ringAt(i, RING.st), mode = modeOf(R[st])
+      items.push({ x, y, f: () => {
+        const vf = verb && verb.stage === st ? 0.5 + 0.5 * bump(verb.f, 0, 1) : 0
+        room8(i, st, mode, sk, opts.focus === st, vf)
+        const pts = roomPts(x, y, 0.18, 12, 0, TAU).concat(roomPts(x, y, 1.9, 12, 0, TAU))
+        SHM.rooms[st] = { box: sbox(pts), c: P(x, y, 0.8), top: P(x, y, 2.0) }
+      } })
+      if (!landed(st)) { const [bx, by] = ringAt(i, 0.6); items.push({ x: bx, y: by, f: () => blockage(i) }) }
+    })
+    items.push({ x: RING.cx, y: RING.cy, f: () => { hearth(RING.cx, RING.cy) } })
+    for (let i = 0; i < 2; i++) {
+      const w = alongLoop(loop, loopT(T * 0.035 + 0.62 + i * 0.37, 1))
+      items.push({ x: w.x, y: w.y, f: () => crew(w.x, w.y, 0.18, { sash: RUNG[1], walk: true, face: faceOf(w), seed: i * 2.1, tall: CREW8 }) })
+    }
+    // the porter gathers the run's seeds and walks them out to the store in the small bulb
+    const nLit = STAGES8.filter(landed).length, pc = nLit ? clamp((runT - 7.2) / 3.8) : 0
+    const px = lerp(RING.cx + RING.rx * 0.8, 11.4, pc), py = lerp(RING.cy + RING.ry * 0.55, 5.9, pc)
+    items.push({ x: px, y: py, f: () => crew(px, py, pc > 0.2 ? 0.02 : 0.18, { sash: RUNG[1], walk: pc > 0 && pc < 1, face: 1, carry: nLit && pc < 1 ? 'seed' : null, seed: 4, tall: CREW8 }) })
+    sortDraw(items)
+    STAGES8.forEach((st, i) => { if (modeOf(R[st]) === 'charged') charge(i, opts.focus === st) })
+    glow3(RING.cx, RING.cy, 0.5, 3.0, '#ffd9a0', 0.4)
+    lantern(RING.cx, RING.cy, 3.3)
+    S.storeN = runT > 11 ? Math.min(7, nLit) : 0; S.storeGlow = nLit ? bump(runT, 10.8, 11.8) : 0
+    store(12.0, 5.2)
+    // the seeds: one from each room whose work landed, rising in pipeline order as the run begins
+    let order = 0
+    STAGES8.forEach((st, i) => {
+      if (!landed(st)) return
+      const t0 = 1 + order++ * 0.7, f = ease((runT - t0) / 1.1); if (f <= 0) return
+      const [x, y] = ringAt(i, RING.st), z = 1.0 + f * (0.9 + ((i * 0.37) % 1) * 1.4), a = P(x, y, 1.0), b = P(x, y, z)
+      const lg = g.createLinearGradient(a[0], a[1], b[0], b[1]); lg.addColorStop(0, 'rgba(255,241,200,0)'); lg.addColorStop(1, 'rgba(255,241,200,0.6)')
+      g.strokeStyle = lg; g.lineWidth = Math.max(1, 0.05 * k); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); seed(x, y, z, 0.8, 1.3)
+    })
+    // the Shaman: the master, a head taller, magenta sash; walks the ring and steps in at a room's door
+    const sh = opts.shaman || { a: 6.5, out: 0 }
+    const ra = ringAt(sh.a, RING.walk), rd = ringAt(sh.a, RING.st - 0.17), sx = lerp(ra[0], rd[0], sh.out || 0), sy = lerp(ra[1], rd[1], sh.out || 0)
+    const sp = P(sx, sy, 0.18), moved = SHM.last ? sp[0] - SHM.last[0] : 0
+    if (Math.abs(moved) > 0.3) SHM.face = moved < 0 ? -1 : 1
+    else if (sh.out > 0.5) { const m = P(...ringAt(Math.round(sh.a), RING.st + 0.05), 0); SHM.face = m[0] < sp[0] ? -1 : 1 }
+    SHM.last = sp
+    if (verb) { const vi = STAGES8.indexOf(verb.stage); if (vi >= 0) verbFx(vi, verb.stage, verb.f) }
+    glow3(sx, sy, 0.8, 1.3, '#ffd6ec', 0.3)
+    crew(sx, sy, 0.18 + 0.12 * clamp(sh.out || 0), { sash: RUNG[1], master: true, tall: CREW8 * 1.12, walk: !!sh.walk, face: SHM.face, seed: 1.1, kneel: sh.kneel || 0 })
+    // embers: where a move was given; brighter once the board pull has recorded it on main
+    SHM.embers = []
+    const per = {}
+    ;(opts.embers || []).forEach((e) => {
+      const i = STAGES8.indexOf(e.stage); if (i < 0) return
+      const n = per[e.stage] = (per[e.stage] || 0) + 1, a = ANG8(i), tx = -Math.sin(a), ty = Math.cos(a)
+      const [ex0, ey0] = ringAt(i, RING.st - 0.1), off = (n - 1) * 0.34 * (n % 2 ? 1 : -1) + 0.38
+      const ex = ex0 + tx * off, ey = ey0 + ty * off * 0.75
+      ember8(ex, ey, !!e.bright)
+      const p = P(ex, ey, 0.42); SHM.embers.push({ id: e.id, x: p[0], y: p[1], r: Math.max(20, 0.5 * k) })
+    })
+    // the hint: the room the clock waits on breathes, and a hand comes if no tap does
+    const hint = opts.hint
+    if (hint && SHM.rooms[hint.stage]) {
+      const p = SHM.rooms[hint.stage].c, sc = S.phone ? 0.7 : 1.05, beat = (hint.idle % 1.6) / 1.6
+      g.strokeStyle = `rgba(255,236,200,${0.75 * (1 - beat)})`; g.lineWidth = 2.5 * sc; g.beginPath(); g.arc(p[0], p[1], (20 + 46 * beat) * sc, 0, TAU); g.stroke()
+      if (hint.idle > 2.2) handAt(p[0] + 26 * sc, p[1] + 34 * sc, sc, bump(beat, 0.1, 0.45))
+    }
+    const xl = h.xc - h.L, xr = h.xc + h.L
+    ribbon([[xl + 0.6, 7.6], [xr - 0.6, 7.6]], 0.02, 0.6)
+    for (let i = 0; i < 9; i++) { const x0 = xl + 0.8, span = xr - 0.8 - x0; bead(x0 + loopT(i * span / 9 + T * 0.55, span), 7.6, 0.02, 0.1) }
+  }
+  function shamanFrame(ctx, W, H, opts) {
+    opts = opts || {}
+    g = ctx; Wd = DEMO
+    S = state('run', 4); S.time = opts.t || 0; S.phone = !!opts.phone; S.v = opts.v == null ? 0.5 : opts.v
+    const h = geo('gourd-star', 1)
+    if (S.phone) fit([[-0.3, 4, 0], [10.1, 4, 0], [4.9, 0.1, 2.4], [4.9, 7.9, 0], [12.5, 5.2, 0], [1.2, 1.2, 2.2], [8.6, 6.8, 0]], 8, H * 0.1, W - 16, H * 0.56)
+    else fit([[-1.6, -0.3, 2.6], [13.2, 8.2, 0], [4.9, 8.2, -2.2], [13.2, -0.3, 2.6], [-1.6, 8.2, 0]], 70, 50, W - 140, H - 100)
+    oy += Math.sin(S.time * 1.1) * 2.2 * (k / 45)
+    SHM.k = k
+    sky(W, H)
+    shamanScene(opts)
+    g.save(); g.globalCompositeOperation = 'screen'; glow(W * 0.32, H * 0.48, Math.max(W, H) * 0.35, '#ffd9b8', 0.12); g.restore()
+  }
+  function shamanHit(px, py) {
+    for (const e of SHM.embers) if (Math.hypot(px - e.x, py - e.y) < e.r) return { ember: e.id }
+    let best = null, bd = 1e9
+    for (const st of STAGES8) {
+      const r = SHM.rooms[st]; if (!r) continue
+      const b = r.box; if (px < b[0] || px > b[2] || py < b[1] || py > b[3]) continue
+      const d = Math.hypot(px - r.c[0], py - r.c[1]); if (d < bd) { bd = d; best = st }
+    }
+    return best ? { room: best } : null
+  }
+  function shamanBox(st) { const r = SHM.rooms[st]; return r ? r.box.slice() : null }
+  function shamanPoint(st) { const r = SHM.rooms[st]; return r ? [r.top[0], Math.min(r.top[1], r.box[1])] : null }
+  function shamanEmbers() { return SHM.embers.map((e) => ({ id: e.id, x: e.x, y: e.y })) }
+
+  window.AltR9 = { shamanFrame, shamanHit, shamanBox, shamanPoint, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
 })()

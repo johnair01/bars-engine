@@ -43,18 +43,25 @@ export const GROWTH = {
 
 /** One board answer, as board/pull.py records it in council/ledger/<date>-pull-<time>.json. */
 export type Answer = { kind?: string; status?: string; choice?: string }
-export type Pull = { at: string; answers: Record<string, Answer>; steps: { what?: string }[] }
+export type Pull = { at: string; answers: Record<string, Answer>; steps: { id?: string; at?: string; what?: string; note?: string }[] }
 
 /** Which room an answer of his is the landed work of. A position he lets stand is a spec that held (loom); a pick is a
  * course set (star chart); a look ticked is a verify (mirror pool); an overrule or a look sent back is a falsify
- * (forge); a note on a question is a new ask in his words (bell). Builds (foundry) come from needs-work items done. */
+ * (forge); a note on a question is a new ask in his words (bell). Builds (foundry) come from needs-work items done.
+ * The Shaman's loop adds two (position shaman-loop-ship-close-data): his "yes" note on a step is a release (ship), and
+ * a step laid down as deprecated is a close. */
 export function stagesOf(p: Pull): Stage[] {
   const out: Stage[] = []
   for (const a of Object.values(p.answers ?? {})) {
     if (a.kind === 'position') out.push(a.status === 'overrule' ? 'falsify' : 'spec')
     else if (a.kind === 'question') out.push(a.choice === 'note' ? 'intake' : 'plan')
   }
-  for (const s of p.steps ?? []) out.push(s.what === 'ticked' ? 'verify' : 'falsify')
+  for (const s of p.steps ?? []) {
+    if (s.what === 'ticked') out.push('verify')
+    else if (s.what === 'deprecated') out.push('close')
+    else if (/^\s*yes\b/i.test(s.note ?? '')) out.push('ship')
+    else out.push('falsify')
+  }
   return out
 }
 
