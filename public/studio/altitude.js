@@ -1546,10 +1546,10 @@
   // so it never reads as the room-end stone
   function ashStones(i) {
     const [x, y] = ringAt(i, 0.34)
-    cylinder(x + 0.12, y - 0.05, 0.18, 0.62, 0.36, '#a6a4ac', '#76747e')
-    cylinder(x - 0.26, y + 0.12, 0.18, 0.46, 0.26, '#b4b2b8', '#84828c')
-    cylinder(x - 0.02, y + 0.22, 0.18, 0.34, 0.17, '#9a98a2', '#6c6a74')
-    plane('z', 0.19, () => { g.fillStyle = 'rgba(120,118,128,0.35)'; g.beginPath(); g.ellipse(x - 0.05, y + 0.08, 0.62, 0.42, 0, 0, TAU); g.fill() })
+    plane('z', 0.19, () => { g.fillStyle = 'rgba(92,90,100,0.6)'; g.beginPath(); g.ellipse(x - 0.05, y + 0.08, 0.72, 0.5, 0, 0, TAU); g.fill() })
+    cylinder(x + 0.12, y - 0.05, 0.18, 0.66, 0.38, '#8c8a94', '#5e5c66')
+    cylinder(x - 0.28, y + 0.12, 0.18, 0.5, 0.28, '#9c9aa2', '#6a6872')
+    cylinder(x - 0.02, y + 0.26, 0.18, 0.36, 0.19, '#82808a', '#56545e')
   }
   // the Hearth as the roots leave it: lit is loop 1's Hearth; cold is grey stone and grey coals, no flame; kindling is a
   // small flame in the coals, brighter once the board pull has his go ahead on main
@@ -1588,9 +1588,9 @@
   function hearthEmber(cx, cy) {
     const p = P(cx, cy, 0.78), T = S.time, pulse = 0.5 + 0.5 * Math.sin(T * 4.2)
     g.save(); g.globalCompositeOperation = 'lighter'
-    glow(p[0], p[1], (2.2 + 0.5 * pulse) * k, MAG, 0.26 + 0.12 * pulse)
-    glow(p[0], p[1], 1.2 * k, GOLD, 0.4 + 0.2 * pulse)
-    glow(p[0], p[1], 0.5 * k, '#fff6dc', 0.9)
+    glow(p[0], p[1], (1.1 + 0.25 * pulse) * k, MAG, 0.3 + 0.12 * pulse) // tight, so the grey coals round it still read cold
+    glow(p[0], p[1], 0.7 * k, GOLD, 0.5 + 0.2 * pulse)
+    glow(p[0], p[1], 0.35 * k, '#fff6dc', 0.95)
     g.restore()
     for (let j = 0; j < 2; j++) { const f = loopT(T * 0.8 + j * 0.5, 1); g.strokeStyle = rgba(j ? MAG : GOLD, 0.9 * (1 - f)); g.lineWidth = Math.max(1.5, 0.05 * k); g.beginPath(); g.ellipse(p[0], p[1], (0.25 + 1.1 * f) * k, (0.14 + 0.6 * f) * k, 0, 0, TAU); g.stroke() }
     g.fillStyle = '#ffd36a'; g.beginPath(); g.ellipse(p[0], p[1], Math.max(9, 0.22 * k), Math.max(7, 0.17 * k), 0, 0, TAU); g.fill()
