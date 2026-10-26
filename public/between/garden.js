@@ -3,14 +3,14 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
-import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, SEATS, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
+import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
 import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 /* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
-import { stance, clipWeights, FADE, SIT, SIT_DROP } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
+import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -399,9 +399,9 @@ async function makeBody(model, height, tint, tintAmt, opts) {
      shin, shoulder Z raises the arm to the side. */
   const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "shoulderL", "shoulderR", "elbowL", "elbowR", "spine", "neck"]) { const b = obj.getObjectByName(n); if (b) bones[n] = { b, q: b.quaternion.clone() }; }
   const hipsY = bones.hips ? bones.hips.b.position.y : 0;
-  const qe = new THREE.Quaternion(), eu = new THREE.Euler();
+  const qe = new THREE.Quaternion(), eu = new THREE.Euler(), sv = new THREE.Vector3();
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
-  let sit = 0, waveT = -9, rest = 0;
+  let sit = 0, waveT = -9, rest = 0, lastSeatAt = null;
   return {
     holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: !!wardrobe,
     stance: () => cur,
@@ -414,7 +414,8 @@ async function makeBody(model, height, tint, tintAmt, opts) {
     },
     wave(t) { waveT = t; },
     /* After mixer.update: sitting (0..1 eases in), waving for 1.6 s, and for animals a curled-up rest (0..1). */
-    pose(t, dt, wantSit, wantRest) {
+    pose(t, dt, wantSit, wantRest, seatAt) {
+      if (seatAt != null) lastSeatAt = seatAt; else if (!wantSit && sit > 0.01) seatAt = lastSeatAt; // getting up eases off the same seat
       sit += ((wantSit ? 1 : 0) - sit) * Math.min(1, dt * 5);
       rest += ((wantRest ? 1 : 0) - rest) * Math.min(1, dt * 3);
       if (managed) {
@@ -427,7 +428,17 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         const w = sit;
         if (acts.Walk && wantSit && !managed) acts.Walk.weight = 0;
         for (const [n, x, y, z] of SIT) bend(n, x, y, z, w);   // stance.js, so the robe tools pose the same sit
-        bones.hips.b.position.y = hipsY - SIT_DROP * w;
+        // a seated breath (about one every 4.5 s): the chest lifts and settles, the head stays level, so a sitting is alive, not held
+        if (bones.spine && bones.neck) { const br = Math.sin(t * 1.4) * 0.03 * w; qe.setFromEuler(eu.set(-br, 0, 0, "XYZ")); bones.spine.b.quaternion.multiply(qe); qe.setFromEuler(eu.set(br, 0, 0, "XYZ")); bones.neck.b.quaternion.multiply(qe); }
+        bones.hips.b.position.y = hipsY;
+        if (seatAt != null) {
+          /* Sat on what is under it (Wendell, 2026-10-24, the figure sunk into the plum cushion): the hip joints come to rest
+             SEAT_PAD over the seat's top (seatAt, metres over the holder), as the caves' seatAvatar does (#434), instead of
+             dropping by a fixed amount whatever the seat. Measured each frame, so any build or height lands on the cushion. */
+          holder.updateMatrixWorld(true);
+          const hw = bones.hips.b.getWorldPosition(sv).y - holder.position.y, sy = bones.hips.b.parent.getWorldScale(sv).y || 1;
+          bones.hips.b.position.y = hipsY - (hw - (seatAt + SEAT_PAD)) / sy * w;
+        } else bones.hips.b.position.y = hipsY - SIT_DROP * w;
       } else if (bones.hips) bones.hips.b.position.y = hipsY;
       if (acts.Walk && !wantSit && acts.Walk.weight === 0 && !managed) acts.Walk.weight = 1;
       const wv = t - waveT;
@@ -543,6 +554,10 @@ const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
 const MIRROR_SKIP = PREVIEW_HOST && KQ.get("mirror") === "1";      // previews: open standing at the mirror (the Look)
+// previews: ?sit=hearth walks you to the hearth's seat and sits you (the hearth moment opens once sat); ?sit=<seat id> any seat.
+// ?cushion=<floor spot> sets a cushion down there first (with the store down, the only way to have one). E.g. ?nook=1&sit=hearth
+const WAKE_SKIP = PREVIEW_HOST && KQ.get("wake") === "1";        // previews: wake sat on the first minute's cushion (?nook=1&wake=1)
+const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOST ? KQ.get("cushion") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
@@ -654,6 +669,7 @@ function renderSatchel() {
 }
 const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
 let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+let seatK = 0, seatViewAt = null; // the low view of you sat on the hearth's cushion (or one you set down), eased in
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
 function setMirror(on) {
   if (on === mirrorOn) return;
@@ -1004,14 +1020,44 @@ function mySeat() {
   return isMember(g) ? 1 : -1;
 }
 function seatOf(uid) { const g = view().g; if (!g || !g.members || !g.members[uid]) return -1; return g.startedBy === uid ? 0 : 1; }
-const seatPos = i => new THREE.Vector3(SEATS[i].x, 0, SEATS[i].z);
+/* Every seat in the room, from one list (hollow.js seatsNow): the hollow's two cushions (ids 0 and 1), the hearth's own cushion
+   ("hearth") and any cushion set on a floor spot ("spot:<id>"). A seat id read back from a key ("seat:<id>") is a number for
+   the hollow's two. You walk to a seat and sit on it; the hearth moment opens once you are sat by the fire. */
+/* The first minute's cushion, where you wake in your homeroom (Still C), is a seat in the same list ("wake"), so the wake sits
+   you the same way (Wendell, 2026-10-24, "The character spawns looks very weird"); it is there while the wake is on. */
+const seatsHere = () => !hollow ? [] : seatsNow(hollow.handles.spots).concat(wake.on ? [{ id: "wake", wake: true, x: wake.group.position.x, z: wake.group.position.z, yaw: wake.yaw, floor: 0, top: CUSHION_TOP }] : []);
+const seatBy = id => id == null ? null : seatsHere().find(s => s.id === id) || null;
+const seatId = k => /^\d+$/.test(k) ? +k : k;
+const seatPos = id => { const s = seatBy(id); return s ? new THREE.Vector3(s.x, 0, s.z) : meState.pos.clone().setY(0); };
+// whose seat: the hollow's two are each one person's; the hearth's and a set-down cushion are anyone's, and in your homeroom all are yours
+const canSitOn = id => typeof id !== "number" || inNook() || id === mySeat();
+/* The hearth's seat: a cushion you set down in the nook, the one nearest the fire, else the hearth's own cushion. */
+function hearthSeatId() {
+  const all = seatsHere(), sp = inNook() ? all.filter(s => s.spot) : [];
+  sp.sort((a, b) => Math.hypot(a.x - HEARTH.x, a.z - HEARTH.z) - Math.hypot(b.x - HEARTH.x, b.z - HEARTH.z));
+  return sp.length ? sp[0].id : "hearth";
+}
+/* Walk to a seat and sit; `then` runs once you are sat (the hearth moment). */
+function sitOn(id, then = null) {
+  if (!seatBy(id)) return;
+  if (meState.sitting && meState.seatWant === id) { if (then) then(); return; }
+  standUp(); if (sheetName) closeSheet();
+  meState.seatWant = id; meState.target = seatPos(id); meState.onSeated = then; directCam = null;
+  selected = "seat:" + id; refreshHud();
+}
+function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
+const seatedAtHearth = () => { const s = meState.sitting && seatBy(meState.seatWant); return !!s && (s.hearth || (!!s.spot && inNook() && s.id === hearthSeatId())); };
 const othersHere = () => [...peers.values()].filter(p => p.uid !== me);
 function ownerSeatNow(uid) {
   if (uid === me) return meState.sitting ? meState.seatWant : null;
   for (const p of peers.values()) if (p.uid === uid && p.sitting) return p.seat;
   return null;
 }
-function standUp() { meState.seatWant = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); } }
+function standUp() {
+  const wasHearth = sheetName === "hearth" && seatedAtHearth();
+  meState.seatWant = null; meState.onSeated = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); }
+  if (wasHearth) closeSheet(); // the hearth moment is had sitting; getting up ends it
+}
 const peers = new Map(); // peer -> { uid, body, pos, yaw, cur, walking }
 let myBodyHue = null, myBodyLook = null, myBodyBusy = false;
 /* Whose look: yours is the Look sheet's draft while it is open, else your homeroom's; the other person's is the one they
@@ -1072,8 +1118,8 @@ function onPeers(list) {
     const clamp = v => Math.max(-WALK_R, Math.min(WALK_R, v));
     const goal = pr.w && typeof pr.tx === "number" ? [pr.tx, pr.tz] : [pr.x, pr.z];
     e.tx = clamp(goal[0]); e.tz = clamp(goal[1]); e.th = +pr.h || 0;
-    e.seat = pr.s === 0 || pr.s === 1 ? pr.s : null;
-    if (e.seat != null) { e.tx = SEATS[e.seat].x; e.tz = SEATS[e.seat].z; }
+    e.seat = pr.s != null && seatBy(pr.s) ? pr.s : null;
+    if (e.seat != null) { const st = seatBy(e.seat); e.tx = st.x; e.tz = st.z; }
     if (Math.hypot(pr.x - e.pos.x, pr.z - e.pos.z) > 4) e.pos.set(pr.x, 0, pr.z); // too far behind to walk: catch up
     if (pr.wave && pr.wave !== e.wave) { if (!fresh && now() - pr.wave < 15000) { burst(new THREE.Vector3(pr.x, groundY(pr.x, pr.z), pr.z), 0xffe2b0); waves.push({ peer: uid, t0: performance.now() / 1000 }); if (e.body) e.body.wave(performance.now() / 1000); } e.wave = pr.wave; }
     ensurePeerBody(e);
@@ -1158,6 +1204,7 @@ function tapAt(cx, cy) {
     // holding an item, only the free spots that fit it answer; holding nothing, the placed items do
     if (satchelOpen && armed ? h.item || ITEMS[armed].takes !== h.takes : !h.item) continue;
     if (h.item === "mirror" && inNook() && !satchelOpen) continue; // the mirror answers as the mirror
+    if (h.item === "cushion" && h.takes === "floor" && !satchelOpen) continue; // a set-down cushion answers as a seat
     consider("spot:" + h.id, h.pos.clone().setY(h.pos.y + (h.takes === "hang" ? -0.42 : h.flat ? 0.25 : 0.15)), h.flat ? 0.6 : 0.42);
   }
   if (best && satchelOpen) { spotTap(best.key.slice(5)); return; }
@@ -1168,14 +1215,14 @@ function tapAt(cx, cy) {
   if (inNook()) consider("window", hollow.layout.window, 1.0);
   if (portal.visible) consider("portal", PORTAL_AT.clone().setY(DAIS_Y + 0.95), 0.75);
   consider("hearth", HEARTH_AT.clone().setY(0.9), 1.0);
-  SEATS.forEach((st, i) => consider("seat:" + i, seatPos(i).setY(DAIS_Y + 0.15), 0.45));
+  for (const st of seatsHere()) consider("seat:" + st.id, new THREE.Vector3(st.x, st.top - 0.1, st.z), 0.45);
   for (const [id, t] of things) consider("item:" + id, t.pos.clone().setY(0.4), 0.5);
   for (const [k, w] of walkers) if (w.holder) consider("w:" + k, w.holder.position.clone().setY(w.type === "spirit" ? 0.4 : 0.9), 0.6);
   for (const [k, p] of peers) consider("p:" + k, p.pos.clone().setY(groundY(p.pos.x, p.pos.z) + 0.9), 0.5);
   if (best && best.key.startsWith("seat:")) {
     selected = best.key;
-    const i = +best.key.slice(5);
-    if (i === mySeat()) { meState.seatWant = i; meState.target = seatPos(i); } // walk to your cushion and sit
+    const i = seatId(best.key.slice(5));
+    if (canSitOn(i)) { sitOn(i, seatBy(i) && seatBy(i).hearth ? () => { if (hearthOpen() || storeDown) openSheet("hearth"); } : null); } // walk to the cushion and sit
     else { standUp(); const dir = meState.pos.clone().sub(best.pos).setY(0); if (dir.length() > 1.3) meState.target = pushOut(best.pos.clone().setY(0).add(dir.normalize().multiplyScalar(1.1))); }
     refreshHud(); return;
   }
@@ -1183,7 +1230,7 @@ function tapAt(cx, cy) {
   if (best) {
     standUp();
     selected = best.key;
-    if (best.key === "hearth" && hearthOpen()) openSheet("hearth");
+    // the hearth: walk up to it; its card's "Sit at the hearth" takes you to its cushion (no sheet over the room)
     if (best.key === "between" && isHome(view().g)) openSheet(mstate().mirrorGlows ? "hope" : "look");
     if (best.key === "window") { if (isHome(view().g)) openSheet("style"); else toast("The light through the window changes from Style."); }
     if (best.key === "portal") { portalTo ? walkThrough(portalTo.id, portalTo.invite) : openSheet("rooms"); return; }
@@ -1279,10 +1326,17 @@ function frameBody() {
       move = meState.target.clone().sub(meState.pos).setY(0);
       if (move.length() < 0.08) { meState.target = null; move.set(0, 0, 0); }
     }
+    if (meState.sitting && meState.keys.size) standUp(); // moving gets you up
     const walking = move.lengthSq() > 1e-6;
-    // reached your cushion: sit, facing the Between
-    if (meState.seatWant != null && !walking && !meState.sitting && meState.pos.distanceTo(seatPos(meState.seatWant)) < 0.15) { meState.sitting = true; sendPresence(); }
-    if (meState.sitting) { const sp = seatPos(meState.seatWant); meState.pos.copy(sp); let d = SEATS[meState.seatWant].yaw - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 6); }
+    // reached the seat: sit, facing the way it faces (the Between, or the fire); a seat that went (a cushion lifted) gets you up
+    const seatNow = seatBy(meState.seatWant);
+    if (meState.seatWant != null && !seatNow) standUp();
+    else if (meState.seatWant != null && !walking && !meState.sitting && meState.pos.distanceTo(seatPos(meState.seatWant)) < 0.15) {
+      meState.sitting = true; meState.sitT = t; sendPresence(); refreshHud();
+    }
+    if (meState.sitting && seatNow) { meState.pos.set(seatNow.x, 0, seatNow.z); let d = seatNow.yaw - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 6); }
+    // once turned and settled on the seat (the sit eases in over about a second), what was waiting for it opens: the hearth moment
+    if (meState.sitting && meState.onSeated && t - meState.sitT > 1.1) { const f = meState.onSeated; meState.onSeated = null; f(); }
     if (walking) {
       const step = Math.min(move.length(), 2.3 * dt);
       move.normalize();
@@ -1292,10 +1346,13 @@ function frameBody() {
     }
     meState.body.setWalking(walking);
     meState.body.holder.position.copy(meState.pos);
-    meState.body.holder.position.y = meState.sitting ? DAIS_Y + 0.17 : wake.on ? 0.2 : groundY(meState.pos.x, meState.pos.z);
+    // sat: the holder stands on the seat's floor and the pose rests the hips on its top (seatAt); the first minute's cushion too
+    const myFloor = meState.sitting && seatNow ? seatNow.floor : groundY(meState.pos.x, meState.pos.z);
+    const mySeatAt = meState.sitting && seatNow ? seatNow.top - seatNow.floor : null;
+    meState.body.holder.position.y = myFloor;
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
-    meState.body.pose(t, dt, meState.sitting || wake.on, false);
+    meState.body.pose(t, dt, meState.sitting, false, mySeatAt);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
     meState.wasWalking = walking;
   }
@@ -1305,16 +1362,17 @@ function frameBody() {
     const gx = p.tx - p.pos.x, gz = p.tz - p.pos.z, gd = Math.hypot(gx, gz);
     p.walking = gd > 0.08;
     if (p.walking) { const step = Math.min(gd, 2.3 * dt); p.pos.x += gx / gd * step; p.pos.z += gz / gd * step; }
-    const want = p.walking ? Math.atan2(gx, gz) : p.seat != null ? SEATS[p.seat].yaw : p.th;
+    const pst = seatBy(p.seat);
+    const want = p.walking ? Math.atan2(gx, gz) : pst ? pst.yaw : p.th;
     let d = want - p.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); p.yaw += d * Math.min(1, dt * 8);
-    p.sitting = p.seat != null && !p.walking;
-    if (p.sitting) { const want2 = SEATS[p.seat].yaw; let d2 = want2 - p.yaw; d2 = Math.atan2(Math.sin(d2), Math.cos(d2)); p.yaw += d2 * Math.min(1, dt * 6); }
+    p.sitting = !!pst && !p.walking;
+    if (p.sitting) { const want2 = pst.yaw; let d2 = want2 - p.yaw; d2 = Math.atan2(Math.sin(d2), Math.cos(d2)); p.yaw += d2 * Math.min(1, dt * 6); }
     p.body.setWalking(p.walking);
     p.body.holder.position.copy(p.pos);
-    p.body.holder.position.y = p.sitting ? DAIS_Y + 0.17 : groundY(p.pos.x, p.pos.z);
+    p.body.holder.position.y = p.sitting ? pst.floor : groundY(p.pos.x, p.pos.z);
     p.body.holder.rotation.y = p.yaw + FACE;
     p.body.mixer.update(dt);
-    p.body.pose(t, dt, p.sitting, false);
+    p.body.pose(t, dt, p.sitting, false, p.sitting ? pst.top - pst.floor : null);
   }
   // walkers
   const ws = [...walkers.values()].filter(w => w.ready);
@@ -1323,11 +1381,12 @@ function frameBody() {
     w.sniff = sniff || null;
     // a spirit whose owner sits down comes and curls up beside their cushion
     const os = w.type === "spirit" ? ownerSeatNow(w.doc.owner) : null;
-    if (os != null) { const sp = SEATS[os]; p = new THREE.Vector2(sp.x + Math.sign(sp.x) * 0.8, sp.z + 0.35); moving = false; }
+    const osp = os != null ? seatBy(os) : null;
+    if (osp) { p = new THREE.Vector2(osp.x + (Math.sign(osp.x) || 1) * 0.8, osp.z + 0.35); moving = false; }
     if (!w.cur) w.cur = p.clone();
     const gap = p.clone().sub(w.cur), gl = gap.length();
     if (gl > 0.02) { const step = Math.min(gl, 1.8 * dt); w.cur.add(gap.multiplyScalar(step / gl)); if (gl > 0.08) { moving = true; w.dirOverride = gap.clone(); } else w.dirOverride = null; } else w.dirOverride = null;
-    w.rest = os != null && gl < 0.1;
+    w.rest = !!osp && gl < 0.1;
     w.holder.position.set(w.cur.x, groundY(w.cur.x, w.cur.y), w.cur.y);
     w.moving = moving;
   }
@@ -1379,7 +1438,7 @@ function frameBody() {
   }
   togetherK += ((tog ? 1 : 0) - togetherK) * Math.min(1, dt * 1.6);
   // frame you and the Between together when you are near it, so both fill a phone screen
-  const meFocus = meState.pos.clone().setY((meState.sitting ? DAIS_Y + 0.75 : groundY(meState.pos.x, meState.pos.z) + 1.0));
+  const meFocus = meState.pos.clone().setY((meState.sitting ? (seatBy(meState.seatWant) || { top: DAIS_Y + 0.25 }).top + 0.5 : groundY(meState.pos.x, meState.pos.z) + 1.0));
   const toB = Math.hypot(meState.pos.x - BETWEEN_AT.x, meState.pos.z - BETWEEN_AT.z);
   if (toB < 5) meFocus.lerp(BETWEEN_AT.clone().setY(DAIS_Y + 0.6), 0.4 * (1 - toB / 5) + 0.1);
   const focus = meFocus.lerp(new THREE.Vector3(0, DAIS_Y + 0.6, -0.4), togetherK);
@@ -1410,6 +1469,20 @@ function frameBody() {
     cp.lerp(dp, k); focus.lerp(df, k);
   }
   if (directCam && directCam.key === "gust" && performance.now() - directCam.t0 > 4200) directCam = null;
+  /* Sat on the hearth's cushion or one you set down (Wendell, 2026-10-24): the camera eases down low, behind you and a little to
+     the side, looking past you at what the seat faces (the fire), so the sitting is seen before anything opens over it. */
+  const sst = meState.sitting && !mirrorOn ? seatBy(meState.seatWant) : null;
+  const lowView = !!sst && typeof sst.id !== "number" && !sst.wake; // the first minute's wake keeps the minute's own views
+  if (lowView) seatViewAt = sst;
+  seatK += ((lowView ? 1 : 0) - seatK) * Math.min(1, dt * 1.4);
+  if (seatK < 0.002 && !lowView) seatK = 0;
+  if (seatK > 0 && seatViewAt) {
+    const S = seatViewAt, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), tall = innerWidth < innerHeight, back = tall ? 2.0 : 1.6, side = tall ? 0.45 : 0.6;
+    const sp = new THREE.Vector3(S.x - fx * back - fz * side, S.top + (tall ? 0.95 : 0.8), S.z - fz * back + fx * side);
+    const sf = new THREE.Vector3(S.x + fx * 1.0, S.top + 0.4, S.z + fz * 1.0);
+    clampCamera(sp, sf);
+    const k = seatK * seatK * (3 - 2 * seatK); cp.lerp(sp, k); focus.lerp(sf, k);
+  }
   const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
@@ -1441,7 +1514,7 @@ function nearest() {
   if (!inNook() || mirrorSpot) c("between", BETWEEN_AT);
   if (portal.visible) c("portal", PORTAL_AT);
   c("hearth", HEARTH_AT);
-  SEATS.forEach((st, i) => { if (!(meState.sitting && meState.seatWant === i)) c("seat:" + i, seatPos(i)); });
+  for (const st of seatsHere()) if (!st.hearth && !(meState.sitting && meState.seatWant === st.id)) c("seat:" + st.id, seatPos(st.id)); // the hearth's own cushion answers as the hearth
   if (meState.sitting) return "seat:" + meState.seatWant;
   for (const [id, t] of things) c("item:" + id, t.pos);
   for (const [k, w] of walkers) if (w.holder) c("w:" + k, w.holder.position);
@@ -1452,7 +1525,7 @@ function posOf(key) {
   if (key === "between") return BETWEEN_AT;
   if (key === "portal") return PORTAL_AT;
   if (key === "hearth") return HEARTH_AT;
-  if (key.startsWith("seat:")) return seatPos(+key.slice(5));
+  if (key.startsWith("seat:")) return seatPos(seatId(key.slice(5)));
   if (key === "window") return hollow && hollow.layout.window.clone().setY(0);
   if (key.startsWith("spot:")) { const h = hollow && hollow.handles.spots[key.slice(5)]; return h && h.pos.clone().setY(0); }
   if (key.startsWith("item:")) { const t = things.get(key.slice(5)); return t && t.pos; }
@@ -1475,8 +1548,8 @@ function drawLabels(t) {
     if (sh.sealed.length) placeLabel(label("shelfS", sh.sealed.length > 1 ? sh.sealed.length + " scrolls, sealed" : "A scroll from " + (sh.sealed[0].name || "someone"), ""), shelf.at.clone().add(new THREE.Vector3(-0.3, 0.42, 0)));
     else if (sh.blank && !minuteOn()) placeLabel(label("shelfB", "A blank scroll", "dim"), shelf.at.clone().add(new THREE.Vector3(0.3, 0.4, 0)));
   }
-  if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting || wake.on ? DAIS_Y + 1.35 : groundY(meState.pos.x, meState.pos.z) + 1.95));
-  for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting ? DAIS_Y + 1.35 : groundY(p.pos.x, p.pos.z) + 1.95));
+  if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting && seatBy(meState.seatWant) ? seatBy(meState.seatWant).top + 0.85 : groundY(meState.pos.x, meState.pos.z) + 1.95));
+  for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting && seatBy(p.seat) ? seatBy(p.seat).top + 0.85 : groundY(p.pos.x, p.pos.z) + 1.95));
   for (const [k, w] of walkers) {
     if (!w.holder) continue;
     const d = w.doc;
@@ -1607,9 +1680,19 @@ function moveActs(id, it, g) {
   const r = moveRight(it);
   return r ? `<button class="ghost" type="button" data-act="move" data-id="${id}">${r === "shared" ? "Ask to move it" : "Move it"}</button>` : "";
 }
+/* The card of the hearth's cushion, or of one you set down: anyone's to sit on (a store-down preview shows it too). */
+function freeSeatCard(i) {
+  const st = seatBy(i); if (!st) return "";
+  const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : "A cushion";
+  if (!here) return `<div class="what"><b>${name}</b><span class="t">${st.hearth ? "Worn flat from sitting by the fire." : "Set down here for sitting."}</span></div><div class="row"><button type="button" data-act="${st.hearth ? "sitHearth" : "sit"}">Sit here</button></div>`;
+  return `<div class="what"><b>${name}</b><span class="t">${fire ? "Sitting by the fire." : "Sitting."}</span></div><div class="row">${fire && (hearthOpen() || storeDown) && sheetName !== "hearth" ? `<button type="button" data-act="sitHearth">Sit with what stirs you</button>` : ""}<button class="glassbtn" type="button" data-act="stand">Stand up</button></div>`;
+}
 function nearHtml(key, V, g) {
   if (key && key.startsWith("spot:")) return spotNear(key.slice(5), g);
   if (key === "window" && g && isHome(g)) return `<div class="what"><b>The window</b><span class="t">${esc(styleOf(g.style).name)}: ${esc(styleOf(g.style).line)}</span></div><div class="row"><button type="button" data-open="style">Change the light</button></div>`;
+  if (!g && !storeDown) return "";
+  if (key === "hearth") return `<div class="what"><b>The hearth</b><span class="t">When something stirs you, sit with it. What's left is a little glowing ember you keep.</span></div><div class="row"><button type="button" data-act="sitHearth">Sit at the hearth</button></div>`;
+  if (key && key.startsWith("seat:") && typeof seatId(key.slice(5)) !== "number") return freeSeatCard(seatId(key.slice(5)));
   if (!g) return "";
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
   if (key === "portal") {
@@ -1633,9 +1716,10 @@ function nearHtml(key, V, g) {
     else if (!isMember(g) && members(g).length < 2) acts = g.joinRequest && g.joinRequest.uid === me ? `<span class="small">You asked to join. It changes once they say yes.</span>` : `<button type="button" data-act="join">Ask to join</button>`;
     return `<div class="what">${txt}</div>${acts ? `<div class="row">${acts}</div>` : ""}`;
   }
-  if (key === "hearth") return `<div class="what"><b>The hearth</b><span class="t">When something stirs you, sit with it. What's left is a little glowing ember you keep.</span></div>${canTend ? `<div class="row"><button type="button" data-open="hearth">Sit at the hearth</button></div>` : ""}`;
   if (key.startsWith("seat:")) {
-    const i = +key.slice(5), mine = i === mySeat();
+    const i = seatId(key.slice(5)), st = seatBy(i);
+    if (!st) return "";
+    const mine = i === mySeat();
     const hue = i ? "plum" : "teal";
     if (mine) return meState.sitting
       ? `<div class="what"><b>Your cushion</b><span class="t">${bothSitting() ? "Sitting together. Stay as long as you like." : othersHere().length ? esc(nameOf(othersHere()[0].uid, g)) + " is here. Their cushion is the other one." : "Sitting with the Between. When the other person comes in, they find you here."}</span></div><div class="row"><button type="button" data-open="spellbook">Spellbook</button><button class="glassbtn" type="button" data-act="stand">Stand up</button>${othersHere().length ? `<button class="glassbtn" type="button" data-act="wave">Wave</button>` : ""}</div>`
@@ -1842,6 +1926,8 @@ function openSheet(name, arg) {
   // the mirror stands in the homeroom: from a room, the Look takes you home to it
   if (name === "look" && g && !isHome(g)) { markSeen(); location.href = ROOM_URL(null) + "?sheet=look"; return; }
   if (name === "spirits" && !isHome(g)) name = "spirit";
+  // the hearth moment is had sitting (Wendell, 2026-10-24): every way in (the card, the Hearth button) walks you to its cushion first
+  if (name === "hearth" && !seatedAtHearth()) { sitAtHearth(); return; }
   if (name === "hearth" && sheetName !== "hearth") hd = {};
   if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
   if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1 };
@@ -1854,7 +1940,7 @@ function openSheet(name, arg) {
 }
 function closeSheet() {
   const wasLook = sheetName === "look" || sheetName === "hope";
-  sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud");
+  sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud", "seatedmoment");
   if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
 }
@@ -1864,6 +1950,7 @@ function renderSheet() {
   if (!sheetName) return;
   const V = view(); const g = V.g;
   const close = `<button class="quiet close" type="button" data-close>Close</button>`;
+  const seatedClose = `<div class="row close"><button class="quiet" type="button" data-close>Close</button><button class="quiet" type="button" data-act="stand">Stand up</button></div>`;
   let h = "";
   const keep = {}; $("#sheetInner").querySelectorAll("textarea[id], input[id]").forEach(el => { if (el.type !== "checkbox") keep[el.id] = el.value; });
   switch (sheetName) {
@@ -1901,7 +1988,12 @@ function renderSheet() {
       <div class="choice">${Object.entries(DAEMONS).map(([k, [n, d]]) => `<button type="button" data-act="bringDaemon" data-id="${k}" ${mine.has(k) ? "disabled" : ""}><b>${n}</b>${mine.has(k) ? "here already" : esc(d)}</button>`).join("")}</div>
       ${close}</div>`; break; }
     case "pictures": h = picturesSheet(g, V) + close; break;
-    case "hearth": if (!g || !hearthOpen()) { closeSheet(); return; } h = hearthSheet(g, V) + close; break;
+    case "hearth":
+      if (!seatedAtHearth()) { closeSheet(); return; }
+      // the store down (a preview with no store): the moment's words alone, since no ember can be kept
+      if (!g && storeDown) { h = `<div class="stack"><h2>The hearth</h2><p class="muted">When something stirs you, sit with it. What's left is a little glowing ember you keep.</p><p class="small muted">The store did not answer, so no ember can be kept here now.</p></div>` + seatedClose; break; }
+      if (!g || !hearthOpen()) { closeSheet(); return; }
+      h = hearthSheet(g, V) + seatedClose; break;
     case "away": h = awaySheet(g, V) + close; break;
     case "menu": h = menuSheet(g, V); break;
     case "shot": h = shotSheet(); break;
@@ -1931,9 +2023,14 @@ function renderSheet() {
   for (const [id, v] of Object.entries(keep)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; }
   // the mirror and the check-in keep the room in view: no scrim, a darker strip, the scene showing above it
   const sh = $("#sheet"); sh.classList.toggle("mirror", sheetName === "look" || sheetName === "hope"); sh.classList.toggle("walk", sheetName === "checkin");
-  sh.classList.toggle("dark", ["look", "checkin", "spirits", "hope"].includes(sheetName));
-  sh.hidden = false; $("#scrim").hidden = sheetName === "look" || sheetName === "checkin" || sheetName === "hope";
-  document.body.classList.toggle("quiethud", sheetName === "checkin"); // the room's own buttons step aside while you walk it
+  /* SEATED MOMENT HOOK (the next round's immersive hearth replaces this): sat at the hearth, the hearth sheet is a low,
+     see-through strip over the room with no scrim, so the fire and the seated figure stay in view (class "seated", garden.css). */
+  const seated = sheetName === "hearth" && seatedAtHearth();
+  sh.classList.toggle("seated", seated);
+  sh.classList.toggle("dark", seated || ["look", "checkin", "spirits", "hope"].includes(sheetName));
+  sh.hidden = false; $("#scrim").hidden = seated || sheetName === "look" || sheetName === "checkin" || sheetName === "hope";
+  document.body.classList.toggle("quiethud", sheetName === "checkin");
+  document.body.classList.toggle("seatedmoment", seated); // the room's own buttons step aside; the strip carries Stand up // the room's own buttons step aside while you walk it
   if (sheetName !== "look") readIn(inner); // each choice in the mirror redraws the strip; its words stay put
   const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id] && sheetName !== "checkin") setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
@@ -2335,6 +2432,12 @@ async function minuteAct(step, how = "done", extra = null) {
   if (how === "done" && (step === "ember" || step === "mirror") && mclock.started && minuteOn()) setTimeout(() => { directCam = { key: "door", t0: performance.now() }; }, step === "ember" ? 1700 : 900);
   syncShelf(); refreshHud();
 }
+/* You wake sat on the first minute's cushion: the same seated pose as any seat (seatsHere's "wake"), up the moment you move. */
+function wakeOnCushion() {
+  wake.group.visible = true; wake.on = true;
+  meState.pos.copy(wake.group.position); meState.yaw = wake.yaw; meState.target = null;
+  meState.seatWant = "wake"; meState.sitting = true; meState.sitT = -9;
+}
 /* The minute begins (or picks up where a reload left it): you wake on a cushion, the hearth out, the doorway grown over. */
 function minuteStart() {
   if (!minuteOn() || mclock.started) return;
@@ -2346,8 +2449,7 @@ function minuteStart() {
   if (hollow) hollow.handles.hearth.k = st.hearthLit ? 1 : 0;
   vines.forEach((v, i) => { v.state = st.fallen[i] ? "gone" : "up"; v.group.visible = !st.fallen[i]; });
   if (fresh) {
-    wake.group.visible = true; wake.on = true;
-    meState.pos.copy(wake.group.position); meState.yaw = wake.yaw; meState.target = null;
+    wakeOnCushion();
     caption(MINUTE_CAPTIONS.wake);
   }
   directCam = { key: fresh ? "wake" : st.step === "vine" ? "door" : st.step === "ember" ? "hearth" : "room", t0: performance.now() };
@@ -2381,7 +2483,7 @@ function minuteTick(t, dt) {
   const glass = mirror.userData.glass;
   if (glass) { const g = home && st.mirrorGlows && (beat === "hope" || st.skipped.hope || !minuteOn()) ? 0.5 + 0.5 * Math.sin(t * 2.4) : 0; glass.material.emissiveIntensity = 0.6 + g * 1.4; glass.material.emissive.setHex(g ? 0x6a5a3a : 0x30404c); }
   // the cushion you woke on: gone once the doorway opens
-  if (wake.group.visible && (!home || (st.oriented && mclock.opened))) { wake.k = Math.max(0, (wake.k ?? 1) - dt * 0.8); wake.group.scale.setScalar(Math.max(0.001, wake.k)); if (wake.k <= 0) { wake.group.visible = false; wake.on = false; } }
+  if (wake.group.visible && (!home || (st.oriented && mclock.opened)) && !(WAKE_SKIP && meState.seatWant === "wake")) { if (meState.seatWant === "wake") standUp(); wake.k = Math.max(0, (wake.k ?? 1) - dt * 0.8); wake.group.scale.setScalar(Math.max(0.001, wake.k)); if (wake.k <= 0) { wake.group.visible = false; wake.on = false; } }
   if (!mclock.started) return;
   if (beat && beat !== mclock.beat) {
     mclock.beat = beat; mclock.shownAt[beat] = now(); mclock.laterReady = false;
@@ -2799,8 +2901,9 @@ document.addEventListener("click", async ev => {
       myWave = now(); pollSoon();
       toast("It noticed you.");
     }
-    else if (a === "sit") { const i = mySeat(); if (i >= 0) { meState.seatWant = i; meState.target = seatPos(i); } }
-    else if (a === "stand") { const i = meState.seatWant ?? 0; standUp(); meState.target = pushOut(seatPos(i).add(new THREE.Vector3(Math.sign(SEATS[i].x) * 0.4, 0, 1.0))); }
+    else if (a === "sit") { const i = selected && selected.startsWith("seat:") ? seatId(selected.slice(5)) : mySeat(); if (seatBy(i) && canSitOn(i)) sitOn(i); }
+    else if (a === "sitHearth") sitAtHearth();
+    else if (a === "stand") { const st = seatBy(meState.seatWant); standUp(); if (st) meState.target = pushOut(new THREE.Vector3(st.x - Math.sin(st.yaw) * 0.7 + (typeof st.id === "number" ? Math.sign(st.x) * 0.4 : 0), 0, st.z - Math.cos(st.yaw) * 0.7)); } // up, and a step back off the cushion
     else if (a === "wave") {
       burst(meState.pos.clone().setY(groundY(meState.pos.x, meState.pos.z)), hueOf(me, g));
       if (meState.body) meState.body.wave(performance.now() / 1000);
@@ -3241,6 +3344,10 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   if (SATCHEL_ALL && canArrange()) setSatchel(true);
   // ?mirror=1 (previews): open at the mirror, the Look sheet when there is a garden, the glass alone when the store is down
   if (MIRROR_SKIP && !jump) { if (garden) openSheet("look"); else setMirror(true); }
+  if (CUSHION_SKIP) { const res = placeOn(builtShell, roomNow().placed, CUSHION_SKIP, "cushion", me, now()); if (res.ok) writeRoom(res.patch, res.line).catch(() => {}); }
+  // ?wake=1 (previews, the homeroom): sat on the first minute's cushion as the minute wakes you, even with the store down
+  if (WAKE_SKIP && inNook() && !wake.on) wakeOnCushion();
+  if (SIT_SKIP) setTimeout(() => { if (SIT_SKIP === "hearth") sitAtHearth(); else sitOn(seatId(SIT_SKIP)); }, 600);
   if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   // the first minute (Still C): a homeroom not yet oriented wakes into it; a guest's invitation doorway opens at its end
   minuteStart();
@@ -3253,6 +3360,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 })();
 window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
+  seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   minute: () => ({ ...mstate(), beat: mclock.beat, laterReady: mclock.laterReady, started: mclock.started, hearth: hollow && hollow.handles.hearth ? { want: hollow.handles.hearth.want, k: hollow.handles.hearth.k, ember: hollow.handles.hearth.ember } : null, vines: vines.map(v => v.state), wake: wake.on }),
   anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
