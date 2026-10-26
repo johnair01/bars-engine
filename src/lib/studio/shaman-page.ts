@@ -106,42 +106,48 @@ canvas{display:block;margin:0 auto;touch-action:manipulation;cursor:pointer}
   const bmp = function (f, a, b) { return f < a || f > b ? 0 : Math.sin((f - a) / (b - a) * Math.PI) }
   const sm = function (x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x) }
   const lp = function (a, b, f) { return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] }
+  // each verb is its own silhouette with one held thing; a kneel drops the body by about 30%
+  const KNEEL = 0.9
   const VERBS = {
-    intake: { dur: 2.4, pose: function (f) { // raise the right arm, strike once at f 0.3, then stand perfectly still, listening
-      const up = sm(f / 0.2), down = sm((f - 0.26) / 0.06), back = sm((f - 0.36) / 0.12)
-      let R = lp(REST.R, [6, -31], up); R = lp(R, [11, -19], down); R = lp(R, REST.R, back)
-      return { armR: R, armL: REST.L, still: f > 0.3, tilt: 0.28 * sm((f - 0.36) / 0.1) } } },
-    spec: { dur: 1.8, pose: function (f) { // both hands up at the cord; they cross twice, tying
-      const c = Math.cos(f * Math.PI * 4), y = -25 + 1.5 * Math.sin(f * Math.PI * 8)
-      return { armR: [6 + 3 * c, y], armL: [6 - 3 * c, y - 1], lean: 0.06 } } },
-    falsify: { dur: 1.8, pose: function (f) { // lean in, crouch a little, hands cupped at the mouth, and breathe
+    intake: { dur: 2.4, pose: function (f) { // raise the striker, strike the bell once at f 0.3, then stand perfectly still, listening
+      const up = sm(f / 0.2), down = sm((f - 0.26) / 0.06), back = sm((f - 0.38) / 0.14)
+      let R = lp(REST.R, [6, -31], up); R = lp(R, [11, -18], down); R = lp(R, [7, -9], back)
+      const ang = f < 0.26 ? -1.9 + 0.5 * up : f < 0.38 ? -0.2 : -0.2 + 1.5 * back
+      return { armR: R, armL: [-4, -9], still: f > 0.3, tilt: 0.3 * sm((f - 0.38) / 0.1), prop: 'striker', propAng: ang } } },
+    spec: { dur: 1.8, pose: function (f) { // both hands up at the cord, a loop between them; the hands cross twice, tying
+      const c = Math.cos(f * Math.PI * 4)
+      return { armR: [7 + 3.5 * c, -27], armL: [7 - 3.5 * c, -28], lean: 0.05, prop: 'cord' } } },
+    falsify: { dur: 1.8, pose: function (f) { // bend in, crouch a little, hands cupped at the mouth, and breathe
       const br = bmp(f, 0.1, 0.6)
-      return { lean: 0.3, crouch: 0.25, armR: [6.5, -19.5 + br], armL: [5, -18.5 + br], bob: 0.6 * br } } },
-    plan: { dur: 1.8, pose: function (f) { // arms alternate striking down, three beats, a bob on each
-      const hit = function (bt) { return f < bt - 0.12 ? 0 : f < bt ? sm((f - bt + 0.12) / 0.12) : 1 - sm((f - bt) / 0.12) }
-      const up = function (h) { return [8, -24 + 13 * h] }
-      return { lean: 0.12, armR: up(Math.max(hit(0.2), hit(0.7))), armL: up(hit(0.45)),
+      return { bend: 0.4, crouch: 0.2, armR: [7, -20 + br], armL: [6.5, -20 + br], bob: 0.6 * br, prop: 'breath' } } },
+    plan: { dur: 1.8, pose: function (f) { // two drumsticks, the arms alternating up and down: three beats, a bob on each
+      const r = (Math.cos((f - 0.2) / 0.25 * Math.PI) + 1) / 2 // 1 = right stick down (beats at 0.2 and 0.7), 0 = left down (0.45)
+      const pos = function (d, side) { return [8 + side, -30 + 17 * d] }
+      return { armR: pos(r, 1), armL: pos(1 - r, -1), propAng: -1.2 + 1.5 * r, prop2Ang: -1.2 + 1.5 * (1 - r), prop: 'stick', prop2: 'stick',
                bob: -1.6 * (bmp(f, 0.17, 0.27) + bmp(f, 0.42, 0.52) + bmp(f, 0.67, 0.77)) } } },
-    build: { dur: 1.8, pose: function (f) { // sit low, the right arm strokes back and forth
-      return { crouch: 0.7, lean: 0.12, armR: [7 + 3.5 * Math.sin(f * Math.PI * 6), -10], armL: [6, -11] } } },
-    verify: { dur: 1.8, pose: function (f) { // lean far over, hands on knees
-      return { lean: 0.6, crouch: 0.25, armR: [4, -6], armL: [2, -6], still: true } } },
-    ship: { dur: 1.8, pose: function (f) { // kneel, both arms push forward and let go
+    build: { dur: 1.8, pose: function (f) { // seated low, both arms low and together, the knife stroking back and forth
+      const st = Math.sin(f * Math.PI * 6)
+      return { crouch: 0.85, lean: 0.08, armR: [9 + 2.5 * st, -8], armL: [8, -7.5], prop: 'knife', propAng: 0.25 + 0.2 * st } } },
+    verify: { dur: 1.8, pose: function () { // bent about 45 degrees over the pool, hands on knees
+      return { bend: 1.0, crouch: 0.15, armR: [6, -5.5], armL: [4, -5], still: true } } },
+    ship: { dur: 1.8, pose: function (f) { // kneel with the leaf boat in both hands, push it forward and let go
       const push = sm((f - 0.3) / 0.22), go = sm((f - 0.6) / 0.2)
-      return { crouch: 0.5, lean: 0.15 + 0.12 * push, armR: lp(lp([4, -14], [13, -11], push), [11, -6], go), armL: lp(lp([3, -13], [12, -10], push), [10, -5], go) } } },
-    close: { dur: 1.8, pose: function (f) { // kneel, the right hand presses down at f 0.5
-      const press = sm((f - 0.3) / 0.2) * (1 - sm((f - 0.7) / 0.2))
-      return { crouch: 0.5, lean: 0.25, armR: lp([6, -14], [9, -1.5], press), armL: [3, -7] } } },
+      return { crouch: KNEEL, bend: 0.15 + 0.15 * push, armR: lp(lp([6, -13], [13, -11], push), [11, -7], go), armL: lp(lp([5, -12], [12, -10], push), [10, -6], go),
+               prop: f < 0.58 ? 'leaf' : null } } },
+    close: { dur: 1.8, pose: function (f) { // kneel, the right hand presses a seed into the bed at f 0.5
+      const press = sm((f - 0.25) / 0.25) * (1 - sm((f - 0.72) / 0.2))
+      return { crouch: KNEEL, bend: 0.35, armR: lp([7, -15], [10, -3], press), armL: [3, -7], prop: f < 0.52 ? 'seed' : null } } },
     hearth: { dur: 2.0, pose: function (f) { // kneel at the coals, cup both hands over them, breathe once
       const br = bmp(f, 0.4, 0.85)
-      return { crouch: 0.55, lean: 0.3 + 0.08 * br, armR: [9, -9 + br], armL: [8, -8 + br], bob: 0.5 * br, still: true } } },
+      return { crouch: KNEEL, bend: 0.35 + 0.08 * br, armR: [10, -9 + br], armL: [9.5, -9 + br], bob: 0.5 * br, still: true, prop: 'cup' } } },
   }
   // the verb's pose at f, eased in and out of the rest pose
   function poseAt(stage, f) {
     const v = VERBS[stage]; if (!v) return null
     const p = v.pose(f), e = sm(f / 0.12) * sm((1 - f) / 0.12)
-    return { lean: (p.lean || 0) * e, crouch: (p.crouch || 0) * e, bob: (p.bob || 0) * e, tilt: (p.tilt || 0) * e, still: !!p.still,
-             armR: p.armR ? lp(REST.R, p.armR, e) : REST.R, armL: p.armL ? lp(REST.L, p.armL, e) : REST.L }
+    return { lean: (p.lean || 0) * e, bend: (p.bend || 0) * e, crouch: (p.crouch || 0) * e, bob: (p.bob || 0) * e, tilt: (p.tilt || 0) * e, still: !!p.still,
+             armR: p.armR ? lp(REST.R, p.armR, e) : REST.R, armL: p.armL ? lp(REST.L, p.armL, e) : REST.L,
+             prop: e > 0.4 ? p.prop || null : null, prop2: e > 0.4 ? p.prop2 || null : null, propAng: p.propAng || 0, prop2Ang: p.prop2Ang || 0 }
   }
   // ---- the loop: run (seeds rise, the porter carries them), then the clock waits while any room waits ----
   let phase = 'run', runT = 0, idle = 0, T = +(q.get('t') || 0)
@@ -174,7 +180,8 @@ canvas{display:block;margin:0 auto;touch-action:manipulation;cursor:pointer}
   function step(dt) {
     T += dt
     if (phase === 'run') { runT += dt; if (runT >= 12) settle() }
-    else if (phase === 'wait') idle += dt
+    if ((phase === 'wait' || phase === 'rest') && !view && sh.in > 0) { sh.walk = sh.in > 0.02; sh.in = Math.max(0, sh.in - dt / 0.7); if (!sh.in) sh.walk = false } // he steps back from the Hearth
+    if (phase === 'wait') idle += dt
     else if (phase === 'walk') {
       if (target === 'hearth') { // out of the room's door, then in off the ring to the Hearth
         sh.walk = true
@@ -210,6 +217,9 @@ canvas{display:block;margin:0 auto;touch-action:manipulation;cursor:pointer}
     const r = cv.getBoundingClientRect(), a = (stage && A.shamanAnchor(stage)) || { x: W / 2, y: H / 2, side: 'right' }
     const cw = card.offsetWidth, ch = card.offsetHeight
     let x = a.side === 'right' ? r.left + a.x + 18 : r.left + a.x - cw - 18, y = r.top + a.y - ch / 2
+    // the store and its porter stay in sight: a card that would cover them rises above them
+    const kp = A.shamanKeep && A.shamanKeep()
+    if (kp && x < r.left + kp[2] && x + cw > r.left + kp[0] && y + ch > r.top + kp[1] - 12 && y < r.top + kp[3]) y = r.top + kp[1] - ch - 16
     x = Math.max(12, Math.min(innerWidth - cw - 12, x)); y = Math.max(12, Math.min(innerHeight - ch - 12, y))
     card.style.left = x + 'px'; card.style.top = y + 'px'
   }
@@ -219,7 +229,7 @@ canvas{display:block;margin:0 auto;touch-action:manipulation;cursor:pointer}
     view = null
     if (quick || hold) { card.hidden = true; card.innerHTML = '' } else { card.classList.add('fold'); setTimeout(function () { if (!view) { card.hidden = true; card.innerHTML = '' } }, 360) }
     if (phase === 'card') settle()
-    if (hold) frame()
+    if (hold) { if (target === 'hearth') sh.in = 0; frame() }
   }
   const STATE = { lit: 'Its work landed this run, and its seed rose to the store.', quiet: 'Nothing waits here, and nothing landed this run.' }
   function openRoom(stage) {

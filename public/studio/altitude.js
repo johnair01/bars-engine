@@ -517,6 +517,36 @@
     bead(w.x, w.y, ft, 0.09)
   }
 
+  // the one thing a verb's hands hold, in figure-local units at hand h (the other hand o), pointing at angle a
+  function heldProp(kind, h, o, a) {
+    if (!h) return
+    g.save(); g.translate(h[0], h[1]); g.rotate(a); g.lineCap = 'round'
+    if (kind === 'striker' || kind === 'stick') { // the bell's striker; a drumstick
+      g.strokeStyle = '#7a5a3e'; g.lineWidth = kind === 'striker' ? 1.6 : 1.2; g.beginPath(); g.moveTo(-1, 0); g.lineTo(8, 0); g.stroke()
+      g.fillStyle = kind === 'striker' ? '#c99a5a' : '#fff1d8'; g.beginPath(); g.arc(8.5, 0, kind === 'striker' ? 2.3 : 1.6, 0, TAU); g.fill()
+      g.strokeStyle = 'rgba(60,40,30,0.5)'; g.lineWidth = 0.5; g.stroke()
+    } else if (kind === 'knife') { // the carving knife
+      g.strokeStyle = '#7a5a3e'; g.lineWidth = 1.8; g.beginPath(); g.moveTo(-1.5, 0); g.lineTo(2, 0); g.stroke()
+      g.fillStyle = '#e6edf5'; g.strokeStyle = '#5a6278'; g.lineWidth = 0.5; g.beginPath(); g.moveTo(2, -1); g.lineTo(8, -0.2); g.lineTo(2, 1); g.closePath(); g.fill(); g.stroke()
+    } else if (kind === 'seed') { // the seed he presses in
+      glow(0, 0, 6, SEED, 0.8); g.fillStyle = '#fff8e2'; g.strokeStyle = 'rgba(190,150,90,0.8)'; g.lineWidth = 0.5; g.beginPath(); g.ellipse(0, 0.5, 1.8, 2.6, 0, 0, TAU); g.fill(); g.stroke()
+    }
+    g.restore()
+    if (kind === 'cord' && o) { // the cord loop between his hands, with the knot he is tying
+      g.strokeStyle = '#d8509f'; g.lineWidth = 1.3; g.lineCap = 'round'; g.beginPath(); g.moveTo(h[0], h[1]); g.quadraticCurveTo((h[0] + o[0]) / 2, Math.max(h[1], o[1]) + 6, o[0], o[1]); g.stroke()
+      g.beginPath(); g.moveTo(h[0], h[1]); g.lineTo(h[0] + 1, h[1] - 7); g.moveTo(o[0], o[1]); g.lineTo(o[0] - 1, o[1] - 7); g.stroke()
+      g.fillStyle = '#ffd36a'; g.beginPath(); g.arc((h[0] + o[0]) / 2, Math.max(h[1], o[1]) + 3, 1.5, 0, TAU); g.fill()
+    } else if (kind === 'breath') { // cupped hands at the mouth, and the breath leaving them
+      g.fillStyle = SKIN_TONE; g.strokeStyle = 'rgba(120,80,60,0.5)'; g.lineWidth = 0.5; g.beginPath(); g.ellipse(h[0], h[1], 2.6, 1.8, 0, 0, TAU); g.fill(); g.stroke()
+      for (let j = 0; j < 3; j++) { g.fillStyle = `rgba(240,246,255,${0.85 - j * 0.22})`; g.beginPath(); g.arc(h[0] + 4 + j * 3.4, h[1] - 0.5 + j * 0.6, 1.3 + j * 0.6, 0, TAU); g.fill() }
+    } else if (kind === 'leaf' && o) { // the leaf boat held in both hands, its small light
+      const x = (h[0] + o[0]) / 2, y = (h[1] + o[1]) / 2 - 1
+      g.fillStyle = '#7cc9a4'; g.strokeStyle = '#3f8a66'; g.lineWidth = 0.5; g.beginPath(); g.moveTo(x - 6, y - 0.5); g.quadraticCurveTo(x, y + 3.5, x + 6, y - 1.5); g.quadraticCurveTo(x, y, x - 6, y - 0.5); g.fill(); g.stroke()
+      glow(x, y - 2.5, 5, '#ffe2a0', 0.8); g.fillStyle = '#fff6dc'; g.beginPath(); g.arc(x, y - 2.2, 1.1, 0, TAU); g.fill()
+    } else if (kind === 'cup') { // both hands cupped together over the coals
+      g.fillStyle = SKIN_TONE; g.strokeStyle = 'rgba(120,80,60,0.5)'; g.lineWidth = 0.5; g.beginPath(); g.ellipse(h[0], h[1], 3.2, 1.9, 0, 0, TAU); g.fill(); g.stroke()
+    }
+  }
   // ---------- crew: robed figures; the sash is the altitude ----------
   // o: sash, master, carry ('spool'|'bead'|'tool'|'seed'), walk, face, seed (idle phase), alpha
   function crew(x, y, z, o) {
@@ -542,11 +572,20 @@
     if (pose) { g.translate(0, -(pose.bob || 0)); if (pose.lean) g.rotate(pose.lean); if (pose.crouch) g.scale(1 + 0.12 * pose.crouch, 1 - 0.34 * pose.crouch) }
     const body = new Path2D(); body.moveTo(-7, -1); body.bezierCurveTo(-6.5, -10, -4.5, -17, 0, -19); body.bezierCurveTo(4.5, -17, 6.5, -10, 7, -1); body.quadraticCurveTo(0, 1.5, -7, -1)
     const gr = g.createLinearGradient(-7, 0, 7, 0); gr.addColorStop(0, '#fffaf0'); gr.addColorStop(1, '#d9dcf0')
-    g.fillStyle = gr; g.fill(body); g.strokeStyle = 'rgba(40,40,90,0.35)'; g.lineWidth = 0.9; g.stroke(body)
-    g.save(); g.clip(body); g.fillStyle = o.sash
-    g.beginPath(); g.moveTo(-8, -15); g.lineTo(-1, -20); g.lineTo(9, -6); g.lineTo(2, 0); g.closePath(); g.fill()
-    if (o.master) { g.fillRect(-8, -9.5, 16, 2.6) }
-    g.restore()
+    const robe = () => {
+      g.fillStyle = gr; g.fill(body); g.strokeStyle = 'rgba(40,40,90,0.35)'; g.lineWidth = 0.9; g.stroke(body)
+      g.save(); g.clip(body); g.fillStyle = o.sash
+      g.beginPath(); g.moveTo(-8, -15); g.lineTo(-1, -20); g.lineTo(9, -6); g.lineTo(2, 0); g.closePath(); g.fill()
+      if (o.master) { g.fillRect(-8, -9.5, 16, 2.6) }
+      g.restore()
+    }
+    const bend = (pose && pose.bend) || 0
+    if (bend) { // bent at the waist: the skirt stays, the torso, head and arms turn about the hip
+      g.save(); g.beginPath(); g.rect(-12, -8, 24, 12); g.clip(); robe(); g.restore()
+      g.translate(0, -7.5); g.rotate(bend); g.translate(0, 7.5)
+      g.fillStyle = '#fffaf0'; g.beginPath(); g.ellipse(0, -7.5, 6.4, 2.4, 0, 0, TAU); g.fill()
+      g.save(); g.beginPath(); g.rect(-14, -40, 28, 32.6); g.clip(); robe(); g.restore()
+    } else robe()
     const arm = (sx, h) => { // a sleeve in the robe colour from the shoulder to the hand, and the hand
       if (!h) return
       g.lineCap = 'round'; g.strokeStyle = 'rgba(40,40,90,0.35)'; g.lineWidth = 3.6
@@ -557,11 +596,14 @@
     if (pose) arm(-4, pose.armL)
     g.save(); if (pose && pose.tilt) { g.translate(0, -19); g.rotate(pose.tilt); g.translate(0, 19) }
     g.fillStyle = SKIN_TONE; g.beginPath(); g.arc(0, -22.5, 4.4, 0, TAU); g.fill()
-    if (o.master) { g.fillStyle = '#fff8ee'; g.beginPath(); g.ellipse(0, -25.5, 8.5, 2.4, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(40,40,90,0.3)'; g.stroke() }
+    if (o.master) { g.strokeStyle = 'rgba(120,80,60,0.5)'; g.lineWidth = 0.8; g.stroke() } // the head reads against a pale floor
+    if (o.master) { g.fillStyle = '#fff8ee'; g.beginPath(); g.ellipse(0, -25, 8, 2.2, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(40,40,90,0.22)'; g.lineWidth = 0.8; g.beginPath(); g.ellipse(0, -25, 8, 2.2, 0, 0.15, Math.PI - 0.15); g.stroke() } // the brim sits on the head; only its lower edge is lined
     g.fillStyle = o.master ? '#fff8ee' : '#f3ece0'; g.beginPath()
     g.moveTo(-5, -24); g.quadraticCurveTo(0, -27, 5, -24); g.lineTo(0, o.master ? -38 : -32); g.closePath(); g.fill(); g.strokeStyle = 'rgba(40,40,90,0.3)'; g.stroke()
     g.restore()
     if (pose) arm(4, pose.armR)
+    if (pose && pose.prop) heldProp(pose.prop, pose.armR, pose.armL, pose.propAng || 0)
+    if (pose && pose.prop2) heldProp(pose.prop2, pose.armL, pose.armR, pose.prop2Ang || 0)
     if (o.carry === 'spool') { g.fillStyle = o.carryCol || SK.skinOld; g.beginPath(); g.ellipse(6, -10, 3.4, 4.2, 0, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.fillRect(4.6, -10.6, 2.8, 1.2) }
     if (o.carry === 'bead') { glow(6, -11, 9, '#dff4ff', 0.8); g.fillStyle = '#f6fbff'; g.beginPath(); g.arc(6, -11, 3, 0, TAU); g.fill() }
     if (o.carry === 'tool') { const sw = Math.sin(T * 3 + ph) * 0.25; g.save(); g.translate(3, -6); g.rotate(sw); g.strokeStyle = '#7d6a80'; g.lineWidth = 1.8; g.beginPath(); g.moveTo(0, 0); g.lineTo(8, -10); g.stroke(); g.restore() }
@@ -1545,11 +1587,11 @@
   // the second blocked part, at the Hearth end of a spoke the cold Hearth holds: grey ash stones, smaller, no vines,
   // so it never reads as the room-end stone
   function ashStones(i) {
-    const [x, y] = ringAt(i, 0.34)
-    plane('z', 0.19, () => { g.fillStyle = 'rgba(92,90,100,0.6)'; g.beginPath(); g.ellipse(x - 0.05, y + 0.08, 0.72, 0.5, 0, 0, TAU); g.fill() })
-    cylinder(x + 0.12, y - 0.05, 0.18, 0.66, 0.38, '#8c8a94', '#5e5c66')
-    cylinder(x - 0.28, y + 0.12, 0.18, 0.5, 0.28, '#9c9aa2', '#6a6872')
-    cylinder(x - 0.02, y + 0.26, 0.18, 0.36, 0.19, '#82808a', '#56545e')
+    const [x, y] = ringAt(i, 0.38)
+    plane('z', 0.19, () => { g.fillStyle = 'rgba(92,90,100,0.6)'; g.beginPath(); g.ellipse(x - 0.05, y + 0.1, 1.05, 0.72, 0, 0, TAU); g.fill() })
+    cylinder(x + 0.18, y - 0.08, 0.18, 0.9, 0.57, '#8c8a94', '#5e5c66')
+    cylinder(x - 0.42, y + 0.18, 0.18, 0.66, 0.42, '#9c9aa2', '#6a6872')
+    cylinder(x - 0.03, y + 0.4, 0.18, 0.45, 0.28, '#82808a', '#56545e')
   }
   // the Hearth as the roots leave it: lit is loop 1's Hearth; cold is grey stone and grey coals, no flame; kindling is a
   // small flame in the coals, brighter once the board pull has his go ahead on main
@@ -1570,7 +1612,7 @@
       for (let j = 0; j < 4; j++) { const a = j * 1.7; glow(p[0] + Math.cos(a) * 0.15 * k, p[1] + Math.sin(a) * 0.08 * k, 0.14 * k, '#ffb35a', 0.6 * (b + breath)) }
     }
     if (st === 'kindling') { // a small flame in the coals
-      const s = k * (hs.bright ? 0.6 : 0.42), f = Math.sin(T * 4.3) * 0.07
+      const s = k * (hs.bright ? 0.6 : 0.42) * 1.3, f = Math.sin(T * 4.3) * 0.07
       g.save(); g.translate(p[0], p[1])
       const fg = g.createLinearGradient(0, 0, 0, -1.1 * s); fg.addColorStop(0, '#ff9a5a'); fg.addColorStop(0.5, '#ffd9a0'); fg.addColorStop(1, 'rgba(255,250,235,0)')
       g.fillStyle = fg; g.beginPath(); g.moveTo(-0.28 * s, 0); g.bezierCurveTo(-0.35 * s, -0.5 * s, (0.05 + f) * s, -0.6 * s, f * s, -(1.1 + f) * s); g.bezierCurveTo((0.25 + f) * s, -0.7 * s, 0.38 * s, -0.4 * s, 0.28 * s, 0); g.closePath(); g.fill()
@@ -1730,7 +1772,7 @@
         SHM.rooms[st] = { box: sbox(pts), c: P(x, y, 0.8), top: P(x, y, 2.0) }
       } })
       if (!landed(st)) { const [bx, by] = ringAt(i, 0.6); items.push({ x: bx, y: by, f: () => blockage(i) }) }
-      if (!warm && held.indexOf(st) >= 0) { const [bx, by] = ringAt(i, 0.34); items.push({ x: bx, y: by, f: () => ashStones(i) }) }
+      if (!warm && held.indexOf(st) >= 0) { const [bx, by] = ringAt(i, 0.38); items.push({ x: bx, y: by, f: () => ashStones(i) }) }
     })
     items.push({ x: RING.cx, y: RING.cy, f: () => { hearth8(RING.cx, RING.cy, hs) } })
     for (let i = 0; i < 2; i++) {
@@ -1745,31 +1787,33 @@
     // the Shaman: the master, a head taller, magenta sash; walks the ring, steps in at a room's door, or walks in off the
     // ring to the Hearth (sh.in)
     const sh = opts.shaman || { a: 6.5, out: 0 }
-    const ra = ringAt(sh.a, RING.walk), rd = ringAt(sh.a, RING.st - 0.17), rh = ringAt(sh.a, 0.3), sin = clamp(sh.in || 0)
+    const ra = ringAt(sh.a, RING.walk), rd = ringAt(sh.a, RING.st - 0.17), rh = ringAt(Math.round(sh.a) + 0.5, 0.3), sin = clamp(sh.in || 0)
     const sx = sin > 0 ? lerp(ra[0], rh[0], sin) : lerp(ra[0], rd[0], sh.out || 0), sy = sin > 0 ? lerp(ra[1], rh[1], sin) : lerp(ra[1], rd[1], sh.out || 0)
     const sp = P(sx, sy, 0.18), moved = SHM.last ? sp[0] - SHM.last[0] : 0
     if (Math.abs(moved) > 0.3) SHM.face = moved < 0 ? -1 : 1
     else if (sin > 0.5) { const m = P(RING.cx, RING.cy, 0); SHM.face = m[0] < sp[0] ? -1 : 1 }
     else if (sh.out > 0.5) { const m = P(...ringAt(Math.round(sh.a), RING.st + 0.05), 0); SHM.face = m[0] < sp[0] ? -1 : 1 }
-    SHM.last = sp
-    const shs = (k / CREW) * 1.15 * CREW8 * 1.12, mouth = [sp[0] + SHM.face * 5 * shs, sp[1] - (0.12 * clamp(sh.out || 0)) * k - 20 * shs]
+    SHM.last = sp; SHM.at = sp
+    const shs = (k / CREW) * 1.15 * CREW8 * 1.12 * (S.phone ? 1.5 : 1), mouth = [sp[0] + SHM.face * 5 * shs, sp[1] - (0.12 * clamp(sh.out || 0)) * k - 20 * shs]
     const shaman = () => {
       glow3(sx, sy, 0.8, 1.3, '#ffd6ec', 0.3)
-      crew(sx, sy, 0.18 + 0.12 * clamp(sh.out || 0), { sash: RUNG[1], master: true, tall: CREW8 * 1.12, walk: !!sh.walk, face: SHM.face, seed: 1.1, kneel: sh.kneel || 0, pose: sh.pose || null })
+      crew(sx, sy, 0.18 + 0.12 * clamp(sh.out || 0), { sash: RUNG[1], master: true, tall: CREW8 * 1.12 * (S.phone ? 1.5 : 1), walk: !!sh.walk, face: SHM.face, seed: 1.1, kneel: sh.kneel || 0, pose: sh.pose || null })
     }
-    if (sin > 0) items.push({ x: sx, y: sy, f: shaman }) // at the Hearth he stands among things, not over them
     // the porter gathers the run's seeds and walks them out to the store in the small bulb
     const nLit = STAGES8.filter(landed).length, pc = nLit ? clamp((runT - 7.2) / 3.8) : 0
     const px = lerp(RING.cx + RING.rx * 0.8, 11.4, pc), py = lerp(RING.cy + RING.ry * 0.55, 5.9, pc)
     items.push({ x: px, y: py, f: () => crew(px, py, pc > 0.2 ? 0.02 : 0.18, { sash: RUNG[1], walk: pc > 0 && pc < 1, face: 1, carry: nLit && pc < 1 ? 'seed' : null, seed: 4, tall: CREW8 }) })
     sortDraw(items)
+    if (cold) g.globalAlpha = 0.8 // a cold Hearth's ember stays the brightest thing: the charged rooms dim a fifth
     STAGES8.forEach((st, i) => { if (modeOf(R[st]) === 'charged') charge(i, opts.focus === st) })
+    g.globalAlpha = 1
     if (warm) { glow3(RING.cx, RING.cy, 0.5, 3.0, '#ffd9a0', 0.4); lantern(RING.cx, RING.cy, 3.3) }
     else if (!cold) glow3(RING.cx, RING.cy, 0.6, 1.6, '#ffb070', hs.bright ? 0.35 : 0.22)
     if (cold) hearthEmber(RING.cx, RING.cy)
     { const c = P(RING.cx, RING.cy, 0.5); SHM.hearth = warm ? null : { x: c[0], y: c[1], r: Math.max(30, 1.25 * k) }; SHM.centre = P(RING.cx, RING.cy, 0.3) }
     S.storeN = runT > 11 ? Math.min(7, nLit) : 0; S.storeGlow = nLit ? bump(runT, 10.8, 11.8) : 0
     store(12.0, 5.2)
+    SHM.keep = sbox([[11.4, 4.6, 0], [12.6, 5.8, 0], [12.0, 5.2, 0.6], [lerp(RING.cx + RING.rx * 0.8, 11.4, 1), lerp(RING.cy + RING.ry * 0.55, 5.9, 1), 1.6], [RING.cx + RING.rx * 0.8, RING.cy + RING.ry * 0.55, 1.6]])
     // the seeds: one from each room whose work landed, rising in pipeline order as the run begins
     let order = 0
     STAGES8.forEach((st, i) => {
@@ -1784,15 +1828,12 @@
       const c = P(RING.cx, RING.cy, 0.7), q = clamp((verb.f - 0.45) / 0.35)
       if (q > 0 && q < 1) { g.fillStyle = `rgba(255,236,214,${0.7 * Math.sin(q * Math.PI)})`; g.beginPath(); g.arc(lerp(mouth[0], c[0], q), lerp(mouth[1], c[1], q), (0.08 + 0.1 * q) * k, 0, TAU); g.fill() }
     }
-    if (sin <= 0) shaman()
+    shaman()
     // embers: where a move was given; brighter once the board pull has recorded it on main
     SHM.embers = []
     const per = {}
     ;(opts.embers || []).forEach((e) => {
-      if (e.stage === 'hearth') { // a move given at the Hearth rests beside it
-        const n = per.hearth = (per.hearth || 0) + 1, ex = RING.cx - 1.35 - (n - 1) * 0.36, ey = RING.cy + 0.7
-        ember8(ex, ey, !!e.bright); const p = P(ex, ey, 0.42); SHM.embers.push({ id: e.id, x: p[0], y: p[1], r: Math.max(20, 0.5 * k) }); return
-      }
+      if (e.stage === 'hearth') return // a move given at the Hearth is its kindling flame, not a second ember beside it
       const i = STAGES8.indexOf(e.stage); if (i < 0) return
       const n = per[e.stage] = (per[e.stage] || 0) + 1, a = ANG8(i), tx = -Math.sin(a), ty = Math.cos(a)
       const [ex0, ey0] = ringAt(i, RING.st - 0.1), off = (n - 1) * 0.34 * (n % 2 ? 1 : -1) + 0.38
@@ -1857,8 +1898,10 @@
     const right = r.c[0] >= SHM.centre[0]
     return { x: right ? x1 : x0, y: (r.box[1] + r.box[3]) / 2, side: right ? 'right' : 'left' }
   }
+  function shamanKeep() { return SHM.keep ? SHM.keep.slice() : null } // the store and its porter: no card covers them
+  function shamanAt() { return SHM.at ? SHM.at.slice() : null }
   function shamanHearth() { return SHM.hearth ? { x: SHM.hearth.x, y: SHM.hearth.y, r: SHM.hearth.r } : null }
   function shamanEmbers() { return SHM.embers.map((e) => ({ id: e.id, x: e.x, y: e.y })) }
 
-  window.AltR9 = { shamanFrame, shamanHit, shamanBox, shamanPoint, shamanAnchor, shamanHearth, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
+  window.AltR9 = { shamanFrame, shamanHit, shamanBox, shamanPoint, shamanAnchor, shamanHearth, shamanAt, shamanKeep, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
 })()
