@@ -1497,17 +1497,18 @@
   // the blocked part of a spoke: a fallen stone under a tangle of vine, until that room's work lands
   function blockage(i) {
     const [x, y] = ringAt(i, 0.6), a = ANG8(i), T = S.time
-    cylinder(x + 0.16, y - 0.06, 0.18, 0.62, 0.4, '#b48a64', '#7c5a42')
-    cylinder(x - 0.3, y + 0.16, 0.18, 0.44, 0.27, '#c0966e', '#86624a')
+    cylinder(x + 0.2, y - 0.08, 0.18, 0.95, 0.62, '#b48a64', '#7c5a42')
+    cylinder(x - 0.42, y + 0.2, 0.18, 0.7, 0.42, '#c0966e', '#86624a')
+    cylinder(x - 0.05, y + 0.32, 0.18, 0.5, 0.3, '#a8805c', '#74543c')
     const c = P(x, y, 0.55)
     g.save(); g.lineCap = 'round'
     for (let j = 0; j < 4; j++) {
-      const ph = j * 1.7 + i, sw = Math.sin(T * 0.9 + ph) * 0.05 * k, r = (0.45 + 0.08 * j) * k
-      g.strokeStyle = j % 2 ? '#3fa46c' : '#2f8a5c'; g.lineWidth = Math.max(1.6, 0.075 * k)
+      const ph = j * 1.7 + i, sw = Math.sin(T * 0.9 + ph) * 0.06 * k, r = (0.7 + 0.12 * j) * k
+      g.strokeStyle = j % 2 ? '#3fa46c' : '#2f8a5c'; g.lineWidth = Math.max(2.4, 0.12 * k)
       g.beginPath(); g.moveTo(c[0] - r, c[1] + 0.1 * k)
       g.bezierCurveTo(c[0] - r * 0.4, c[1] - r * 0.9 + sw, c[0] + r * 0.5, c[1] - r * 0.7 - sw, c[0] + r, c[1] + 0.12 * k)
       g.stroke()
-      for (let q = 0; q < 3; q++) { const f = (q + 1) / 4, lx = lerp(c[0] - r, c[0] + r, f), ly = c[1] - Math.sin(f * Math.PI) * r * 0.75 + sw * 0.5; g.fillStyle = q % 2 ? '#9ee0bc' : '#6cc394'; g.beginPath(); g.ellipse(lx, ly, 0.13 * k, 0.065 * k, (q % 2 ? 0.6 : -0.6) + Math.cos(a), 0, TAU); g.fill() }
+      for (let q = 0; q < 3; q++) { const f = (q + 1) / 4, lx = lerp(c[0] - r, c[0] + r, f), ly = c[1] - Math.sin(f * Math.PI) * r * 0.75 + sw * 0.5; g.fillStyle = q % 2 ? '#9ee0bc' : '#6cc394'; g.beginPath(); g.ellipse(lx, ly, 0.2 * k, 0.1 * k, (q % 2 ? 0.6 : -0.6) + Math.cos(a), 0, TAU); g.fill() }
     }
     g.restore()
   }
@@ -1515,8 +1516,8 @@
   function charge(i, focus) {
     const [x, y] = ringAt(i, RING.st), T = S.time, pulse = 0.5 + 0.5 * Math.sin(T * (focus ? 3.6 : 2.6) + i), amp = focus ? 1.15 : 0.8
     g.save(); g.globalCompositeOperation = 'lighter'
-    glow3(x, y, 0.9, (2.2 + 0.6 * pulse) * amp, MAG, (0.22 + 0.14 * pulse) * amp)
-    glow3(x, y, 1.2, 1.1 * amp, GOLD, (0.2 + 0.16 * pulse) * amp)
+    glow3(x, y, 0.9, (1.7 + 0.4 * pulse) * amp, MAG, (0.13 + 0.09 * pulse) * amp)
+    glow3(x, y, 1.2, 0.9 * amp, GOLD, (0.12 + 0.1 * pulse) * amp)
     g.restore()
     plane('z', 0.33, () => {
       for (let j = 0; j < 2; j++) {
@@ -1541,9 +1542,11 @@
       for (let j = 0; j < 6; j++) { const a = j / 6 * TAU + T * 0.4; g.beginPath(); g.moveTo(p[0] + Math.cos(a) * 0.2 * k, p[1] + Math.sin(a) * 0.12 * k); g.lineTo(p[0] + Math.cos(a) * 0.38 * k, p[1] + Math.sin(a) * 0.23 * k); g.stroke() }
       g.fillStyle = '#fffaf0'; g.beginPath(); g.ellipse(p[0], p[1], 0.13 * k, 0.1 * k, 0, 0, TAU); g.fill()
     } else {
-      glow(p[0], p[1], 0.48 * k, '#ff9a4a', 0.5 * fl)
-      g.fillStyle = '#ffb35a'; g.beginPath(); g.ellipse(p[0], p[1], 0.09 * k, 0.07 * k, 0, 0, TAU); g.fill()
-      g.fillStyle = '#fff0c8'; g.beginPath(); g.arc(p[0], p[1] - 0.01 * k, 0.035 * k, 0, TAU); g.fill()
+      glow(p[0], p[1], 0.9 * k, '#ff9a4a', 0.6 * fl)
+      const pu = (T * 0.8 + x) % 1; g.strokeStyle = `rgba(255,150,80,${0.8 * (1 - pu)})`; g.lineWidth = Math.max(1.5, 0.05 * k); g.beginPath(); g.ellipse(p[0], p[1], (0.25 + 0.4 * pu) * k, (0.17 + 0.28 * pu) * k, 0, 0, TAU); g.stroke()
+      g.fillStyle = '#ffb35a'; g.beginPath(); g.ellipse(p[0], p[1], Math.max(8, 0.2 * k), Math.max(6.4, 0.16 * k), 0, 0, TAU); g.fill()
+      g.strokeStyle = '#fff0c8'; g.lineWidth = Math.max(1.5, 0.04 * k); g.stroke()
+      g.fillStyle = '#fff0c8'; g.beginPath(); g.arc(p[0], p[1] - 0.01 * k, Math.max(3, 0.07 * k), 0, TAU); g.fill()
     }
   }
   function verbFx(i, st, f) { // the body does the verb: the machine answers with rings and a burst of light
@@ -1638,14 +1641,14 @@
       const [ex0, ey0] = ringAt(i, RING.st - 0.1), off = (n - 1) * 0.34 * (n % 2 ? 1 : -1) + 0.38
       const ex = ex0 + tx * off, ey = ey0 + ty * off * 0.75
       ember8(ex, ey, !!e.bright)
-      const p = P(ex, ey, 0.42); SHM.embers.push({ id: e.id, x: p[0], y: p[1], r: Math.max(16, 0.4 * k) })
+      const p = P(ex, ey, 0.42); SHM.embers.push({ id: e.id, x: p[0], y: p[1], r: Math.max(20, 0.5 * k) })
     })
     // the hint: the room the clock waits on breathes, and a hand comes if no tap does
     const hint = opts.hint
     if (hint && SHM.rooms[hint.stage]) {
       const p = SHM.rooms[hint.stage].c, sc = S.phone ? 0.7 : 1.05, beat = (hint.idle % 1.6) / 1.6
       g.strokeStyle = `rgba(255,236,200,${0.75 * (1 - beat)})`; g.lineWidth = 2.5 * sc; g.beginPath(); g.arc(p[0], p[1], (20 + 46 * beat) * sc, 0, TAU); g.stroke()
-      if (hint.idle > 2.2) handAt(p[0], p[1], sc, bump(beat, 0.1, 0.45))
+      if (hint.idle > 2.2) handAt(p[0] + 26 * sc, p[1] + 34 * sc, sc, bump(beat, 0.1, 0.45))
     }
     const xl = h.xc - h.L, xr = h.xc + h.L
     ribbon([[xl + 0.6, 7.6], [xr - 0.6, 7.6]], 0.02, 0.6)
@@ -1656,7 +1659,7 @@
     g = ctx; Wd = DEMO
     S = state('run', 4); S.time = opts.t || 0; S.phone = !!opts.phone; S.v = opts.v == null ? 0.5 : opts.v
     const h = geo('gourd-star', 1)
-    if (S.phone) fit([[-0.3, 4, 0], [10.1, 4, 0], [4.9, 0.1, 2.4], [4.9, 7.9, 0], [12.5, 5.2, 0], [1.2, 1.2, 2.2], [8.6, 6.8, 0]], 8, H * 0.17, W - 16, H * 0.44)
+    if (S.phone) fit([[-0.3, 4, 0], [10.1, 4, 0], [4.9, 0.1, 2.4], [4.9, 7.9, 0], [12.5, 5.2, 0], [1.2, 1.2, 2.2], [8.6, 6.8, 0]], 8, H * 0.1, W - 16, H * 0.56)
     else fit([[-1.6, -0.3, 2.6], [13.2, 8.2, 0], [4.9, 8.2, -2.2], [13.2, -0.3, 2.6], [-1.6, 8.2, 0]], 70, 50, W - 140, H - 100)
     oy += Math.sin(S.time * 1.1) * 2.2 * (k / 45)
     SHM.k = k
