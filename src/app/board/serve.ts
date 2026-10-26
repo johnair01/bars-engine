@@ -13,13 +13,21 @@ const PAGES: Record<string, string> = {
 }
 const caches = new Map<string, { html: string; at: number }>()
 
+/** A Vercel preview may serve the Council Board from a six-faces-council branch (`?page=<branch>`), so a pair of pull
+ * requests can be tried together before either merges. Production always serves main. */
+export function pageUrl(board: string, branch: string | null, env = process.env.VERCEL_ENV): string {
+  if (board !== 'council' || !branch || env === 'production' || !/^[A-Za-z0-9._-][A-Za-z0-9._/-]{0,99}$/.test(branch)
+      || branch.includes('..')) return PAGES[board]
+  return `https://raw.githubusercontent.com/wendell-britt/Six-faces-council/${branch}/board/council-board.html`
+}
+
 /** The page as main last built it: a row that lands on main is on the board within five minutes, no republish. */
-async function page(board: string): Promise<string | null> {
-  const hit = caches.get(board)
+async function page(board: string, url = PAGES[board]): Promise<string | null> {
+  const hit = caches.get(url)
   if (hit && Date.now() - hit.at < 5 * 60_000) return hit.html
   try {
-    const r = await fetch(PAGES[board], { cache: 'no-store' })
-    if (r.ok) { const raw = await r.text(), html = board === 'council' ? patchCouncilPage(raw) : raw; caches.set(board, { html, at: Date.now() }); return html }
+    const r = await fetch(url, { cache: 'no-store' })
+    if (r.ok) { const raw = await r.text(), html = board === 'council' ? patchCouncilPage(raw) : raw; caches.set(url, { html, at: Date.now() }); return html }
   } catch { /* keep the last good copy */ }
   return hit?.html ?? null
 }
@@ -35,8 +43,8 @@ export function wrap(html: string, board: string): string {
 
 export async function serveBoard(req: NextRequest, board: string): Promise<NextResponse> {
   if (!(await isBoardOwner()))
-    return NextResponse.redirect(new URL(`/login?returnTo=/board${board === 'nonprofit' ? '' : '/' + board}`, req.url))
-  const html = await page(board)
+    return NextResponse.redirect(new URL(`/login?returnTo=${encodeURIComponent(`/board${board === 'nonprofit' ? '' : '/' + board}${req.nextUrl?.search ?? ''}`)}`, req.url))
+  const html = await page(board, pageUrl(board, req.nextUrl?.searchParams.get('page') ?? null))
   if (!html) return new NextResponse('The board page could not be loaded from GitHub. Try again in a minute.', { status: 503 })
   return new NextResponse(wrap(html, board), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY',
