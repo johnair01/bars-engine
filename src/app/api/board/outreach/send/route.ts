@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isBoardOwner } from '@/lib/board/owner'
-import { approvalHash, gmailSend, serverRungs, type Letter, type Rung, type SendOutcome } from '@/lib/board/outreach'
+import { approvalHash, gmailSend, sentPatch, serverRungs, type Letter, type Rung, type SendOutcome } from '@/lib/board/outreach'
 import { sendEmail } from '@/lib/email/send'
 
 export const dynamic = 'force-dynamic'
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   const d = claim.c.draft as Draft
   if (out.ok) {
     const sent = { ...claim.c, draft: { ...d, status: 'sent', sentAt: now(), messageId: out.messageId,
-      threadId: out.threadId ?? null }, letterInHand: null }
+      threadId: out.threadId ?? null }, letterInHand: null, ...sentPatch(claim.c, rung === 'gmail-api' ? 'Gmail' : 'Resend') }
     await save(db, contactId, sent, `outreach send: sent via ${rung}`)
     return NextResponse.json({ ok: true, via: rung, doc: sent }, { headers: NO_STORE })
   }

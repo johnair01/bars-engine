@@ -63,6 +63,10 @@ describe('/api/board/outreach/send', () => {
       const sent = rows.latest as { draft: Record<string, unknown>; letterInHand: unknown }
       expect(sent.draft).toMatchObject({ status: 'sent', via: 'resend', messageId: 'rs_1' })
       expect(sent.letterInHand).toBeNull()
+      // The send moves the contact so the Outreach tab tracks it.
+      expect(sent).toMatchObject({ status: 'Pitched', flag: '' })
+      expect((sent as unknown as { nextTouch: string }).nextTouch).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect((sent as unknown as { notes: string }).notes).toContain('Sent "Hi" from Resend')
       expect(email.sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: ['someone@example.org'], subject: 'Hi',
         text: 'Hello there.\nWendell' }))
       // A second press finds it sent and sends nothing.
