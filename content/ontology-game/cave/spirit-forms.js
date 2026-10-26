@@ -163,24 +163,106 @@
     return files[key];
   }
   // bake_spirits.py's files: one node whose scale and translation undo the 16-bit positions, one primitive per material,
-  // each with its tone, opacity and glow in its extras
+  // each with its tone, opacity and glow in its extras. A rigged form (the creature's and ally's, from rig.py) keeps the glTF's
+  // y-up metres, carries each vertex's two joints in _SKIN (bake_daemons.py's layout) and its joints, Walk and Idle in the
+  // node's extras; it is read here into the page's units, as the unrigged forms are.
   function parseStage(buf) {
     var dv = new DataView(buf), jl = dv.getUint32(12, true);
     var j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bin = 20 + jl + 8, node = j.nodes[0], S = node.scale, T = node.translation;
-    return j.meshes[0].primitives.map(function (p) {
+    var R = node.extras && node.extras.joints ? node.extras : null, u = R ? R.unit : 1;
+    var parts = j.meshes[0].primitives.map(function (p) {
       var a = j.accessors[p.attributes.POSITION], v = j.bufferViews[a.bufferView], ia = j.accessors[p.indices], iv = j.bufferViews[ia.bufferView];
       var raw = new Int16Array(buf, bin + (v.byteOffset || 0), a.count * 4), pos = new Float32Array(a.count * 3);
-      for (var q = 0; q < a.count; q++) { // the page is z-up with x forward
+      for (var q = 0; q < a.count; q++) {
         var x = raw[q * 4] / 32767 * S[0] + T[0], y = raw[q * 4 + 1] / 32767 * S[1] + T[1], z = raw[q * 4 + 2] / 32767 * S[2] + T[2];
-        pos[q * 3] = x; pos[q * 3 + 1] = z - Y0; pos[q * 3 + 2] = -y;
+        if (R) { pos[q * 3] = x / u; pos[q * 3 + 1] = y / u - Y0; pos[q * 3 + 2] = z / u; continue; } // metres, y-up, to the page's units
+        pos[q * 3] = x; pos[q * 3 + 1] = z - Y0; pos[q * 3 + 2] = -y; // the page is z-up with x forward
       }
-      var o = (iv.byteOffset || 0) + bin, col = null;
+      var o = (iv.byteOffset || 0) + bin, col = null, si = null, sw = null;
       if (p.attributes.COLOR_0 != null) { // the creature's and ally's painted parts: sRGB bytes, four to a vertex
         var ca = j.accessors[p.attributes.COLOR_0], cv = j.bufferViews[ca.bufferView], cb = new Uint8Array(buf, bin + (cv.byteOffset || 0), ca.count * 4);
         col = new Float32Array(ca.count * 3); for (var c = 0; c < ca.count; c++) { col[c * 3] = cb[c * 4] / 255; col[c * 3 + 1] = cb[c * 4 + 1] / 255; col[c * 3 + 2] = cb[c * 4 + 2] / 255; }
       }
-      return { pos: pos, index: new Uint16Array(buf.slice(o, o + ia.count * 2)), col: col, look: p.extras || {} };
+      if (p.attributes._SKIN != null) { // joint a, joint b, a's share of 255
+        var sa = j.accessors[p.attributes._SKIN], svw = j.bufferViews[sa.bufferView], sb = new Uint8Array(buf, bin + (svw.byteOffset || 0), sa.count * 4);
+        si = new Uint16Array(sa.count * 4); sw = new Float32Array(sa.count * 4);
+        for (var k = 0; k < sa.count; k++) { si[k * 4] = sb[k * 4]; si[k * 4 + 1] = sb[k * 4 + 1]; sw[k * 4] = sb[k * 4 + 2] / 255; sw[k * 4 + 1] = 1 - sb[k * 4 + 2] / 255; }
+      }
+      return { pos: pos, index: new Uint16Array(buf.slice(o, o + ia.count * 2)), col: col, si: si, sw: sw, look: p.extras || {} };
     });
+    if (R) {
+      var view = function (i, C) { var bv = j.bufferViews[i]; return new C(buf.slice(bin + (bv.byteOffset || 0), bin + (bv.byteOffset || 0) + bv.byteLength)); };
+      var keysOf = function (I) { // straight-line keys at 24 a second; rotations, and the hips' shift in metres, as 16-bit fractions of one
+        var fr = view(I.frames, Uint16Array), va = view(I.values, Int16Array), f0 = 0, v0 = 0;
+        return { length: I.length, travel: I.travel == null ? null : I.travel / u, channels: I.channels.map(function (ch) {
+          var w = ch[1] === "r" ? 4 : 3, n = ch[2], c = { joint: ch[0], path: ch[1], frames: [], values: [] };
+          for (var q = 0; q < n; q++) { c.frames.push(fr[f0 + q]); var x = []; for (var e = 0; e < w; e++) x.push(va[v0 + q * w + e] / 32767 / (w === 3 ? u : 1)); c.values.push(x); }
+          f0 += n; v0 += n * w; return c; }) };
+      };
+      parts.rig = { joints: R.joints.map(function (r) { // the root's rest is in the file's space: to the page's units, on its heart
+        var t = [r[2][0] / u, r[2][1] / u - (r[1] < 0 ? Y0 : 0), r[2][2] / u]; return [r[0], r[1], t, r[3]]; }), walk: keysOf(R.walk), idle: keysOf(R.idle) };
+    }
+    return parts;
+  }
+  // the clip's value for one channel at frame f (cave.js keyAt)
+  function keyAt(ch, f, out, tmp) {
+    var F = ch.frames, V = ch.values, k = 0;
+    while (k < F.length - 1 && F[k + 1] <= f) k++;
+    var a = V[k], b = V[Math.min(k + 1, F.length - 1)], t = k + 1 < F.length && F[k + 1] > F[k] ? Math.min(1, Math.max(0, (f - F[k]) / (F[k + 1] - F[k]))) : 0;
+    if (ch.path === "r") { out.set(a[0], a[1], a[2], a[3]); out.slerp(tmp.set(b[0], b[1], b[2], b[3]), t).normalize(); }
+    else out.set(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
+    return out;
+  }
+  var THREE_ = null;
+  // The rig's bones from the baked rest (the bind pose), and per joint its rest and its Walk and Idle channels
+  function buildRig(THREE, R) {
+    var bones = R.joints.map(function (r) { var b = new THREE.Bone(); b.name = r[0]; b.position.fromArray(r[2]); b.quaternion.fromArray(r[3]); return b; });
+    R.joints.forEach(function (r, i) { if (r[1] >= 0) bones[r[1]].add(bones[i]); });
+    // the chain alone, before the skeleton is made, so its inverses are the rest pose (cave.js wearWalker)
+    R.joints.forEach(function (r, i) { if (r[1] < 0) bones[i].updateMatrixWorld(true); });
+    var by = {};
+    function chans(clip, key) { clip.channels.forEach(function (c) { var k = c.joint + c.path; (by[k] = by[k] || { bone: bones[c.joint], path: c.path, rest: c.path === "r" ? bones[c.joint].quaternion.clone() : bones[c.joint].position.clone() })[key] = c; }); }
+    chans(R.walk, "walk"); chans(R.idle, "idle");
+    var list = Object.keys(by).map(function (k) { return by[k]; });
+    THREE_ = THREE;
+    return { skeleton: new THREE.Skeleton(bones), roots: bones.filter(function (b, i) { return R.joints[i][1] < 0; }), chans: list, walk: R.walk, idle: R.idle,
+      q: new THREE.Quaternion(), q2: new THREE.Quaternion(), v: new THREE.Vector3(), v2: new THREE.Vector3(), tmp: new THREE.Quaternion() };
+  }
+  // The form's lowest point (page units, its own frame) at every key of the Walk and the Idle, read off the skinned parts once,
+  // so the cave keeps the feet on the floor as the clip lowers the hips (rig.py's Walk dips them about 2.5 cm below the rest).
+  function lowsOf(rig, g) {
+    var v = new THREE_.Vector3(), meshes = g.children.filter(function (m) { return m.isSkinnedMesh; }), lo0 = Infinity, hi0 = -Infinity, near = [];
+    meshes.forEach(function (m) { var a = m.geometry.attributes.position.array; for (var i = 1; i < a.length; i += 3) { lo0 = Math.min(lo0, a[i]); hi0 = Math.max(hi0, a[i]); } });
+    // only the vertices in the bottom quarter of the body at rest can be its lowest (the feet, the plastron, a hem)
+    meshes.forEach(function (m) { var a = m.geometry.attributes.position.array, ix = []; for (var i = 0; i < a.length / 3; i++) if (a[i * 3 + 1] < lo0 + 0.25 * (hi0 - lo0)) ix.push(i); near.push(ix); });
+    function low() {
+      g.updateMatrixWorld(true); var lo = Infinity;
+      meshes.forEach(function (m, k) { near[k].forEach(function (i) { m.boneTransform(i, v); if (v.y < lo) lo = v.y; }); });
+      return lo;
+    }
+    rig.lows = { walk: [], idle: [] };
+    for (var k = 0; k <= rig.walk.length; k++) { poseRig(rig, k / rig.walk.length, 0, 1); rig.lows.walk.push(low()); }
+    for (var q = 0; q <= rig.idle.length; q++) { poseRig(rig, 0, q / 24, 0); rig.lows.idle.push(low()); }
+    poseRig(rig, 0, 0, 0);
+  }
+  function lowAt(L, f) { var i = Math.floor(f), t = f - i; return L[i] + (L[Math.min(i + 1, L.length - 1)] - L[i]) * t; }
+  // One frame of a rigged form: the Walk at phase ph (0 to 1, one cycle) blended over the Idle at its time (seconds) by w,
+  // 0 standing to 1 walking. The cave's walkForm sets mesh.userData.walkPh and walkW; a form nobody walks breathes in its Idle.
+  function poseRig(rig, ph, idleS, w) {
+    var fw = ((ph % 1) + 1) % 1 * rig.walk.length, fi = ((idleS * 24) % rig.idle.length + rig.idle.length) % rig.idle.length;
+    if (rig.lows) rig.low = lowAt(rig.lows.idle, fi) * (1 - w) + lowAt(rig.lows.walk, fw) * w; // where the feet are now
+    for (var i = 0; i < rig.chans.length; i++) {
+      var c = rig.chans[i];
+      if (c.path === "r") {
+        var a = c.idle ? keyAt(c.idle, fi, rig.q, rig.tmp) : rig.q.copy(c.rest);
+        if (w > 0 && c.walk) a.slerp(keyAt(c.walk, fw, rig.q2, rig.tmp), w);
+        c.bone.quaternion.copy(a);
+      } else {
+        var b = c.idle ? keyAt(c.idle, fi, rig.v, null) : rig.v.copy(c.rest);
+        if (w > 0 && c.walk) b.lerp(keyAt(c.walk, fw, rig.v2, null), w);
+        c.bone.position.copy(b);
+      }
+    }
   }
   function toneHex(THREE, hex, look) { return look.white ? new THREE.Color(0xffffff) : new THREE.Color(hex).multiplyScalar(look.tone == null ? 1 : look.tone); }
   // a painted part (the creature's and ally's) keeps its own colour; only the light-made parts take the family's tint
@@ -201,7 +283,7 @@
   // puts the eyes on the viewer. The hologram and creature stand three quarters to the viewer; the ally faces them square.
   function turnOf(stage) { return stage === "core" ? 0 : -Math.PI / 2 + 0.7 + (stage === "ally" ? ALLY_TURN : 0); }
   function buildStage(THREE, parts, hex, stage) {
-    var g = new THREE.Group();
+    var g = new THREE.Group(), rig = parts.rig ? buildRig(THREE, parts.rig) : null;
     parts.forEach(function (P) {
       var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(P.pos, 3)); geo.setIndex(new THREE.BufferAttribute(P.index, 1));
       var L = P.look, mat;
@@ -213,10 +295,18 @@
           emissive: (L.rgb ? paint.clone() : new THREE.Color(0x3a3530)).multiplyScalar(L.glow >= 0.7 ? 1 : 0.35) });
       } else mat = new THREE.MeshBasicMaterial({ color: toneHex(THREE, hex, L), transparent: true, opacity: L.opacity == null ? 1 : L.opacity, depthWrite: false,
         side: THREE.DoubleSide, blending: L.glow >= 0.7 ? THREE.AdditiveBlending : THREE.NormalBlending });
-      var m = new THREE.Mesh(geo, mat); m.userData.look = L; m.frustumCulled = false; g.add(m);
+      var m;
+      if (rig && P.si) { // skinned to the form's one skeleton, whose bones ride the first part (so the form's children stay its parts)
+        geo.setAttribute("skinIndex", new THREE.BufferAttribute(P.si, 4)); geo.setAttribute("skinWeight", new THREE.BufferAttribute(P.sw, 4));
+        mat.skinning = true; m = new THREE.SkinnedMesh(geo, mat);
+        if (!g.children.length) rig.roots.forEach(function (b) { m.add(b); });
+        m.bind(rig.skeleton, new THREE.Matrix4()); // the rig sits in the form's own space, so the bind is the identity
+      } else m = new THREE.Mesh(geo, mat);
+      m.userData.look = L; m.frustumCulled = false; g.add(m);
       if (painted(L)) { m.userData.paint0 = mat.color.clone(); m.userData.toward = new THREE.Color(); }
     });
-    g.userData.stage = stage; g.scale.setScalar(SCALE);
+    if (rig) lowsOf(rig, g);
+    g.userData.stage = stage; g.userData.rig = rig; g.userData.walkPh = 0; g.userData.walkW = 0; g.scale.setScalar(SCALE);
     g.rotation.y = turnOf(stage);
     return g;
   }
@@ -244,9 +334,10 @@
       next.children[0].onBeforeRender = function () {
         var now = (typeof performance !== "undefined" ? performance : Date).now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
         if (!done) { var t = Math.min(1, (now - t0) / ms); step(t); done = t >= 1; }
+        if (next.userData.rig) poseRig(next.userData.rig, next.userData.walkPh, reducedMotion ? 0 : now / 1000, next.userData.walkW);
         if (reducedMotion) return;
         if (want === "core") { spin += dt * 0.6; next.rotation.y = spin; }
-        else next.position.y = 0.04 * Math.sin(now / 900);
+        else if (!next.userData.rig) next.position.y = 0.04 * Math.sin(now / 900); // a rigged body stands on its feet and breathes in its Idle
       };
       return root;
     });
@@ -263,5 +354,5 @@
   }
 
   window.__oagSpiritForms = { FAMILIES: FAMILIES, familyOf: familyOf, buildGas: buildGas, buildForm: buildForm, tintProxy: tintProxy, SHAPES: SHAPES,
-    STAGES: STAGES, AT: AT, stageOf: stageOf, turnOf: turnOf, drawnStage: drawnStage, fileOf: fileOf, loadStage: loadStage };
+    STAGES: STAGES, AT: AT, stageOf: stageOf, turnOf: turnOf, drawnStage: drawnStage, fileOf: fileOf, loadStage: loadStage, poseRig: poseRig };
 })();
