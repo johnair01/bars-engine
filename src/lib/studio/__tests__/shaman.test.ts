@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { STAGES8, demoShaman, focusOf, needsWorkStage, shamanWorldOf, type BoardData, type ShamanPull } from '../shaman'
+import { STAGES8, demoShaman, focusOf, hearthOf, needsWorkStage, pullColdOf, rootsOf, shamanWorldOf, type BoardData, type Row, type ShamanPull } from '../shaman'
+import type { Stage } from '../fleet'
 
 const now = new Date('2026-10-26T08:00:00Z')
 const board: BoardData = {
@@ -80,5 +81,83 @@ describe('the Shaman world', () => {
     expect(d.rooms.flatMap(r => r.waiting).filter(r => r.writable)).toHaveLength(1)
     expect(d.focus).toBe('ship')
     expect(focusOf(d.rooms)).toBe('ship')
+  })
+
+  it('the Hearth is lit with no root, and the world carries it', () => {
+    const w = shamanWorldOf({ board, pulls, doneKeys: [], builds: [], now })
+    expect(w.hearth).toEqual({ state: 'lit', root: null, queue: [] })
+    expect(hearthOf(rootsOf({ waiting: emptyWait() }))).toEqual({ state: 'lit', root: null, queue: [] })
+  })
+})
+
+function emptyWait(over: Partial<Record<Stage, Row[]>> = {}): Record<Stage, Row[]> {
+  return Object.fromEntries(STAGES8.map(st => [st, over[st] ?? []])) as Record<Stage, Row[]>
+}
+const r = (id: string): Row => ({ id, kind: 'question', title: id, writable: true })
+
+describe('the cold Hearth: root blockers', () => {
+  const waiting = emptyWait({ ship: [r('row-ship')], build: [r('row-build-1'), r('row-build-2')], plan: [r('row-plan')] })
+
+  it('store cold holds all eight rooms and is not writable', () => {
+    const [root] = rootsOf({ storeCold: { at: '2026-10-26T07:00:00Z', why: 'connect ECONNREFUSED' }, waiting })
+    expect(root).toMatchObject({ id: 'store-cold', source: 'store', writable: false, why: 'connect ECONNREFUSED', holds: STAGES8 })
+    expect(hearthOf([root]).state).toBe('cold')
+  })
+
+  it('pull cold reads the newest completed run, holds no room server side, and is not writable', () => {
+    expect(pullColdOf({ workflow_runs: [{ conclusion: 'failure', updated_at: '2026-10-26T06:00:00Z', html_url: 'https://x/run/1' }] }))
+      .toEqual({ at: '2026-10-26T06:00:00Z', url: 'https://x/run/1' })
+    expect(pullColdOf({ workflow_runs: [{ conclusion: 'success' }] })).toBeNull()
+    expect(pullColdOf(null)).toBeNull()
+    expect(pullColdOf({ workflow_runs: [] })).toBeNull()
+    const [root] = rootsOf({ pullCold: { at: '2026-10-26T06:00:00Z' }, waiting })
+    expect(root).toMatchObject({ id: 'pull-cold', source: 'pull', writable: false, holds: [] })
+  })
+
+  it('a blocking step holds the rooms its holds names, by row id or stage, or every room with work', () => {
+    const roots = rootsOf({ waiting, steps: {
+      'blk-named': { blocking: true, do: 'Fix it', why: 'because', at: '2026-10-26T05:00:00Z', holds: ['row-ship', 'close', 'nope'] },
+      'blk-all': { blocking: true, do: 'Fix all', at: '2026-10-26T04:00:00Z' },
+      'blk-done': { blocking: true, done: true }, 'blk-retired': { blocking: true, retired: true }, 'blk-dep': { blocking: true, deprecated: true },
+    } })
+    expect(roots.map(x => x.id)).toEqual(['blk-all', 'blk-named'])
+    expect(roots[0]).toMatchObject({ source: 'blocking', writable: true, holds: ['plan', 'build', 'ship'] })
+    expect(roots[1]).toMatchObject({ title: 'Fix it', why: 'because', holds: ['ship', 'close'] })
+  })
+
+  it('a fan-in step holds two or more open rows, and one open row is not a fan-in', () => {
+    const roots = rootsOf({ waiting, steps: {
+      'fan': { do: 'Unblock both', holds: ['row-build-1', 'row-ship', 'gone'] },
+      'one': { do: 'Only one', holds: ['row-plan', 'gone'] },
+      'shut': { do: 'Closed', done: true, holds: ['row-build-1', 'row-ship'] },
+    } })
+    expect(roots).toEqual([expect.objectContaining({ id: 'fan', source: 'fan-in', writable: true, holds: ['build', 'ship'] })])
+  })
+
+  it('orders store, pull, blocking, fan-in; the first open root wins and the rest are banked', () => {
+    const roots = rootsOf({ storeCold: { at: '2026-10-26T07:00:00Z', why: 'x' }, pullCold: { at: '2026-10-26T01:00:00Z' }, waiting, steps: {
+      'fan': { do: 'f', holds: ['row-build-1', 'row-ship'], at: '2026-10-25T00:00:00Z' }, 'blk': { blocking: true, do: 'b' } } })
+    expect(roots.map(x => x.source)).toEqual(['store', 'pull', 'blocking', 'fan-in'])
+    const h = hearthOf(roots)
+    expect(h.state).toBe('cold'); expect(h.root?.id).toBe('store-cold'); expect(h.queue.map(x => x.id)).toEqual(['pull-cold', 'blk', 'fan'])
+  })
+
+  it('a writable root he has said go ahead on (aiBack or the note) is kindling, not cold', () => {
+    const k1 = hearthOf(rootsOf({ waiting, steps: { blk: { blocking: true, do: 'b', aiBack: { text: 'go ahead', at: 'x' } } } }))
+    expect(k1.state).toBe('kindling'); expect(k1.root).toMatchObject({ id: 'blk', kindled: true })
+    const k2 = hearthOf(rootsOf({ waiting, steps: { blk: { blocking: true, do: 'b', note: 'go ahead' } } }))
+    expect(k2.state).toBe('kindling')
+    // an open root still wins over a kindled one
+    const k3 = hearthOf(rootsOf({ waiting, steps: { blk: { blocking: true, do: 'b', note: 'go ahead' }, fan: { do: 'f', holds: ['row-build-1', 'row-ship'] } } }))
+    expect(k3.state).toBe('cold'); expect(k3.root?.id).toBe('fan')
+  })
+
+  it('the world takes the store and pull roots; the demo goes cold with &hearth=cold', () => {
+    const w = shamanWorldOf({ board, pulls, doneKeys: [], builds: [], now, pullCold: { at: '2026-10-26T06:00:00Z' } })
+    expect(w.hearth.state).toBe('cold'); expect(w.hearth.root?.source).toBe('pull')
+    expect(demoShaman(now).hearth.state).toBe('lit')
+    const d = demoShaman(now, { hearth: 'cold' })
+    expect(d.hearth.state).toBe('cold')
+    expect(d.hearth.root).toMatchObject({ id: 'demo-store-restore', source: 'blocking', writable: true, holds: ['build', 'ship', 'close'] })
   })
 })

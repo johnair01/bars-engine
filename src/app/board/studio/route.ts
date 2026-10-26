@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isBoardOwner } from '@/lib/board/owner'
 import { loadFleet } from '@/lib/studio/fleet'
 import { studioPage } from '@/lib/studio/page'
-import { loadShaman, type StepDoc } from '@/lib/studio/shaman'
+import { loadShaman, type StepDoc, type StoreCold } from '@/lib/studio/shaman'
 import { shamanPage } from '@/lib/studio/shaman-page'
 
 export const dynamic = 'force-dynamic'
@@ -29,15 +29,19 @@ export async function GET(req: NextRequest) {
 
 const HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin' }
 
-/** The Shaman's loop. Look steps live only in the board store; with no database (local, CI) the still pool has none
- * waiting, and a store failure never breaks the page. */
+/** The Shaman's loop. Look and blocking steps live only in the board store; with no database (local, CI) the still pool
+ * has none waiting. A store failure never breaks the page: where a store is configured it goes cold and holds the
+ * Hearth, so he sees what failed and when. */
 async function shaman() {
-  let steps: Record<string, StepDoc> | null = null
+  let steps: Record<string, StepDoc> | null = null, storeCold: StoreCold | null = null
   try {
     const { latestDocs } = await import('@/lib/board/store')
     steps = ((await latestDocs('council')).steps ?? null) as Record<string, StepDoc> | null
-  } catch { steps = null }
-  const world = await loadShaman(steps)
+  } catch (e) {
+    steps = null
+    if (process.env.DATABASE_URL) storeCold = { at: new Date().toISOString(), why: e instanceof Error ? e.message.split('\n')[0].slice(0, 240) : String(e).slice(0, 240) }
+  }
+  const world = await loadShaman(steps, new Date(), storeCold)
   if (!world) return new NextResponse('The board ledger could not be loaded from GitHub. Try again in a minute.', { status: 503 })
   return new NextResponse(shamanPage(world), { headers: HEADERS })
 }
