@@ -7,6 +7,7 @@ printed. No Blender needed: the BVH is read here, the rig is read from the GLB's
 to the GLB's JSON and binary chunks, so the mesh, skin and the 'Walk' action stay byte for byte as they were.
 
   python3 tools/mocap/retarget_idle.py IN.glb TRIAL.bvh OUT.glb [--seconds 4] [--fps 30] [--blend 0.6] [--start S]
+  then python3 tools/mocap/plant_idle.py OUT.glb OUT.glb (feet planted, knees straighten; mirror round 4)
 
 Mocap: CMU Graphics Lab Motion Capture Database, http://mocap.cs.cmu.edu/ (the data used in this project was obtained
 from mocap.cs.cmu.edu; the database was created with funding from NSF EIA-0196217), Bruce Hahne's BVH conversion via
