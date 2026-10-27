@@ -103,6 +103,8 @@ const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
 const spiritFormsJs = readFileSync(path.join(srcDir, 'cave', 'spirit-forms.js'), 'utf8');
 // The one store for spirits kept between runs (oag.spirits.v1), read by both caves.
 const spiritStoreJs = readFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), 'utf8');
+// The inner vessel the WAVE room rides in (oag.vessel.v1), its parts, fuel and the places reached from it (cave/vessel.js).
+const vesselJs = readFileSync(path.join(srcDir, 'cave', 'vessel.js'), 'utf8');
 // Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
 const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
@@ -133,6 +135,7 @@ ${inline(spiritFormsJs)}
 </script>
 <script>
 ${inline(spiritStoreJs)}
+${inline(vesselJs)}
 </script>
 <script>
 ${inline(caveJs)}
@@ -176,6 +179,7 @@ ${inline(spiritFormsJs)}
 </script>
 <script>
 ${inline(spiritStoreJs)}
+${inline(vesselJs)}
 </script>
 <script>
 ${inline(caveJs)}
