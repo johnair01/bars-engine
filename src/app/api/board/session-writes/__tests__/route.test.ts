@@ -64,6 +64,12 @@ describe('/api/board/session-writes', () => {
     expect(JSON.stringify(body)).not.toContain('private')
   })
 
+  it('answers contents only for the ids asked', async () => {
+    store.latestDocs.mockResolvedValue({ contacts: { ari: { name: 'Ari' }, bo: { name: 'Bo' } }, steps: {} })
+    const body = await (await GET(req(null, 'secret', 'ids=contacts/ari,steps/none,other/x'))).json()
+    expect(body.docs).toEqual({ 'contacts/ari': { name: 'Ari' } })
+  })
+
   it('hashes the same canonical form as board/store_write.py', () => {
     // python3 -c 'import json;print(json.dumps({"b":[1,{"d":"é","c":None}],"a":True},sort_keys=True,separators=(",",":"),ensure_ascii=False))'
     expect(canonical({ b: [1, { d: 'é', c: null }], a: true })).toBe('{"a":true,"b":[1,{"c":null,"d":"é"}]}')
