@@ -41,12 +41,22 @@ export function wrap(html: string, board: string): string {
     + `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${shim}\n${html}`
 }
 
+/** Vercel refuses a buffered function response over 4.5 MB, and the Council Board page passed that on 2026-10-27 (its
+ * look stills ride inside it). A streamed body is not held to the cap, so the page goes out in 256 KB pieces. */
+export function streamed(html: string): ReadableStream<Uint8Array> {
+  const bytes = new TextEncoder().encode(html), PIECE = 256 * 1024
+  let at = 0
+  return new ReadableStream({
+    pull(c) { c.enqueue(bytes.subarray(at, at += PIECE)); if (at >= bytes.length) c.close() },
+  })
+}
+
 export async function serveBoard(req: NextRequest, board: string): Promise<NextResponse> {
   if (!(await isBoardOwner()))
     return NextResponse.redirect(new URL(`/login?returnTo=${encodeURIComponent(`/board${board === 'nonprofit' ? '' : '/' + board}${req.nextUrl?.search ?? ''}`)}`, req.url))
   const html = await page(board, pageUrl(board, req.nextUrl?.searchParams.get('page') ?? null))
   if (!html) return new NextResponse('The board page could not be loaded from GitHub. Try again in a minute.', { status: 503 })
-  return new NextResponse(wrap(html, board), {
+  return new NextResponse(streamed(wrap(html, board)), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY',
                'Referrer-Policy': 'same-origin' },
   })
