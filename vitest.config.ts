@@ -94,11 +94,8 @@ export default defineConfig({
       'src/lib/between/__tests__/stance.test.ts',
       'src/lib/between/__tests__/hearth-moment.test.ts',
       'src/lib/between/__tests__/focus-sit.test.ts',
-=======
       'src/app/api/board/outreach/send/__tests__/route.test.ts',
       'src/lib/board/__tests__/outreach.test.ts',
-==============
-==============      'src/app/api/board/outreach/send/__tests__/route.test.ts',      'src/lib/board/__tests__/outreach.test.ts',      'src/lib/studio/__tests__/deck.test.ts',
       'src/lib/studio/__tests__/fleet.test.ts',
       'src/lib/studio/__tests__/shaman.test.ts',    ],
   },
