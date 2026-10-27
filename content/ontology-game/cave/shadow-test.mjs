@@ -43,6 +43,13 @@ const ch = () => C(() => window.__oagCave.room.charge());
 const phase = () => C(() => window.__oagCave.room.state.phase);
 const run = () => C(() => window.__oagCave.room.run());
 const settle = () => page.waitForTimeout(700);
+// Calm is a switch in the Menu (PR 5): open the Menu when it is folded away, tap Calm, and fold the Menu again
+const calmOn = async () => {
+  const opened = !(await page.locator('[data-room-calm]').isVisible());
+  if (opened) await page.locator('[data-oag-menubtn]:visible').first().click();
+  await page.locator('[data-room-calm]').click();
+  if (opened && await page.locator('[data-room-calm]').isVisible()) await page.locator('[data-oag-menubtn]:visible').first().click();
+};
 // Answers the open daemon's question set (daemons/questions.js) to its end: a boss question gets the given pick, the rest words.
 const answerSet = async (boss) => {
   const seen = [];
@@ -62,7 +69,7 @@ const openRoom = async (o) => {
   await C(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors"]')); // the Arrival's lessons are cave-test's
   await C((opts) => { window.__left = null; window.__oagCave.openRoom(opts).then((r) => { window.__left = r; }); }, o || { from: 'body' });
   await page.locator('[data-room-welcome]').waitFor({ timeout: 30000 });
-  await page.locator('[data-room-calm]').click();
+  await calmOn();
   await C(() => window.__oagCave.room.speed(4));
 };
 const welcomeIn = async () => { await page.locator('[data-room-welcome]').click(); await page.waitForFunction(() => ['witness', 'shadow', 'flood'].includes(window.__oagCave.room.state.phase), null, { timeout: 30000 }); };
@@ -80,7 +87,7 @@ await openRoom();
 await welcomeIn();
 await settle();
 const clear = await ch();
-ok((await phase()) === 'witness' && clear.polarity === 0 && clear.veil === 0, 'a creature comes in clear: polarity 0, no veil');
+ok((await phase()) === 'witness' && clear.polarity === 0 && clear.veil < 0.25, 'a creature comes in clear: polarity 0, no shadow\'s veil (only the thin haze of a gas not yet defined): ' + clear.veil.toFixed(2));
 ok(await sees('[data-room-cant-feel]') && (await page.locator('[data-room-cant-feel]').textContent()) === "I know it's here, but I can't feel it", "Witness offers \"I know it's here, but I can't feel it\"");
 await page.locator('[data-room-cant-feel]').click();
 let c = await ch();
@@ -99,11 +106,12 @@ await page.locator('[data-room-pane]').click();
 await page.locator('[data-room-practice]').click();
 ok((await ch()).polarity === 3 && (await page.locator('[data-room-polarity-read]').textContent()).includes('Hidden 3 of 10, by forgetting'), 'each practice thins it by 3');
 await page.locator('[data-room-practice]').click();
-ok((await ch()).polarity === 0 && await sees('[data-room-unveiled]'), 'twice, and it is in plain sight');
+ok((await ch()).polarity === 0 && await sees('[data-room-unveiled]') && (await page.locator('[data-room-next]').count()) === 0, 'twice, and it is in plain sight; its shadow spirit is kept or let go before going on');
+await page.locator('[data-room-shade-keep="spirit"]').click();
 await page.locator('[data-room-next]').click();
 await settle();
 c = await ch();
-ok((await phase()) === 'witness' && c.veil === 0 && Math.abs(c.opacity - clear.opacity) < 0.05, 'back at Witness, unveiled: no veil, its body as it came in');
+ok((await phase()) === 'witness' && c.veil < 0.25 && Math.abs(c.opacity - clear.opacity) < 0.05, 'back at Witness, unveiled: no shadow\'s veil, its body as it came in');
 const r1 = (await run()).rounds[0];
 ok(r1.shadow && r1.shadow.kind === 'forgetting' && r1.shadow.start === 6 && r1.shadow.polarity === 0 && r1.shadow.practices === 2 && r1.shadow.signals.join() === 'aware', 'the run records the shadow: its kind, where it started, where it is, the practices and the signal');
 
@@ -127,7 +135,7 @@ const asks = await page.locator('[data-room-ask]').evaluateAll((bs) => bs.map((b
 ok((await phase()) === 'asks' && asks.join() === 'protector,controller,skeptic,fixer,emotional-body,victim,damaged-self,player', "asking what's in the way of it clearing offers the eight questions, one for each daemon and the Player");
 await settle();
 c = await ch();
-ok(c.shade && c.shade.visible && c.shade.color === 0x4a3a5c, 'a shadow spirit appears beside it: the same body, in the shadow\'s colour');
+ok(c.shade && c.shade.visible && c.shade.color === 0x4a3a5c && c.shade.drawn === 'gas', 'its shadow spirit stands beside it: a gas of its own, in the shadow\'s colour');
 await page.locator('[data-room-ask="player"]').click();
 ok((await page.locator('[data-room-ask-q]').textContent()).includes('hide and seek') && await page.locator('[data-room-ask-done]').isDisabled(), "the Player's question waits for what the shadow spirit says");
 ok((await page.locator('[data-room-ask-step]').textContent()) === 'What are you learning?', "picking the Player opens its own question set (daemons/questions.js), a question at a time");
@@ -139,13 +147,17 @@ c = await ch();
 ok(playerSteps.length === 5 && c.polarity === 3 && c.asks.length === 1 && c.asks[0].daemon === 'player' && c.asks[0].answers.length === 6 && c.asks[0].answer === 'it likes being found only by the right person' && (await page.locator('[data-room-ask="player"]').getAttribute('aria-pressed')) === 'true', 'an answered set thins the shadow by 3, once, and every answer is kept');
 await page.screenshot({ path: SHOTS + '/shadow-spirit.png' });
 await page.locator('[data-room-ask-leave]').click();
-await page.locator('[data-room-veiled]').click();
-ok((await phase()) === 'witness' && (await ch()).polarity === 3 && (await page.locator('[data-room-cant-feel]').textContent()) === 'Work with what hides it', 'the player can go on with it hidden; Witness keeps a way back to the practice');
+ok((await phase()) === 'unveil' && (await page.locator('[data-room-veiled]').count()) === 0, 'while its shadow spirit stands, there is no going on with it hidden (Wendell, 21 October 2026)');
+await page.locator('[data-room-practice-line]').fill('my fingertips');
+await page.locator('[data-room-practice]').click();
+await page.locator('[data-room-shade-keep="spirit"]').click();
+await page.locator('[data-room-next]').click();
+ok((await phase()) === 'witness' && (await ch()).polarity === 0, 'worked through, and kept as a spirit, the shadow spirit lets the W.A.V.E. go on');
 await page.locator('[data-room-next]').click();
 await page.locator('[data-room-name]').fill('the blank');
 await page.locator('[data-room-element="Sadness"]').click();
 await page.locator('[data-room-next]').click();
-ok((await phase()) === 'allow' && (await page.locator('[data-room-polarity]').getAttribute('data-room-polarity')) === '3' && (await page.locator('[data-room-polarity]').textContent()).includes('3 of 10, numbness'), 'Allow reads polarity beside size and brightness');
+ok((await phase()) === 'allow' && (await page.locator('[data-room-polarity]').getAttribute('data-room-polarity')) === '0' && (await page.locator('[data-room-polarity]').textContent()) === 'In plain sight', 'Allow reads polarity beside size and brightness');
 ok((await page.locator('input[data-room-polarity]').count()) === 0 && (await page.locator('[data-room-allow-slider]').count()) === 2, 'polarity is a reading, not a slider: only the shadow raises it');
 for (let i = 0; i < 4; i++) await page.locator('[data-room-next]').first().click();
 await page.locator('[data-room-goal]').fill('to feel my hands again');
@@ -159,9 +171,8 @@ await page.locator('[data-room-again="no"]').click();
 await page.locator('[data-room-leave]').click();
 await page.waitForFunction(() => window.__left, null, { timeout: 15000 });
 const left = await C(() => window.__left);
-ok(left.spirits.length === 2 && left.spirits[0].polarity === 3, 'it leaves as a spirit still veiled, carrying its polarity');
-ok(left.spirits[1].hex === 0x4a3a5c && left.spirits[1].shadow === 'numbness' && left.spirits[1].name === 'Numbness of the blank', 'its shadow spirit walks out beside it, a spirit in the shadow\'s colour');
-ok(left.spirits[1].element === null && !left.spirits[1].revealed, 'while its shadow stands, the shadow spirit has no element, so it cannot be dissolved yet');
+ok(left.spirits.length === 1 && left.spirits[0].hex === 0x4a3a5c && left.spirits[0].shadow === 'numbness' && left.spirits[0].name === 'Numbness of the blank' && left.spirits[0].polarity === 0, 'the charge let go is a vibeulon; its shadow spirit, kept, walks out with you in the shadow\'s colour');
+ok(left.spirits[0].element === null && !left.spirits[0].revealed, 'with no element named for it, the shadow spirit is not revealed, so it cannot be dissolved yet');
 
 // ---- the second signal: the charge would not come down -------------------------------------------------------------------
 await openRoom();
@@ -174,7 +185,7 @@ await C(() => { const t = window.__oagCave.room.state.active[0].t321; t.before =
 await page.locator('[data-room-move]').fill('write the first sentence');
 await page.locator('[data-room-move-done]').click();
 await page.locator('[data-room-kept]').waitFor({ timeout: 15000 });
-await page.locator('[data-room-next]').click();
+await page.locator('[data-room-keep="spirit"]').click();
 await page.locator('[data-room-checkin="stayed"]').click();
 ok(await sees('[data-room-not-down]') && (await page.locator('[data-room-not-down]').textContent()).includes('6 of 10 after, from 5 before'), 'a round whose charge did not come down says so at its end');
 await page.locator('[data-room-look-again]').click();
@@ -197,7 +208,7 @@ ok(rs[0].reading && rs[0].reading.before === 5 && rs[0].reading.after === 6 && r
 await page.goto('about:blank'); // a hash alone would not reload the page
 await page.goto(B + '/ontology-game/cave/#wave=board&charge=' + encodeURIComponent('Tap the Vein') + '&skips=2&ref=tap-the-vein--shadow&date=2026-10-14');
 await page.locator('[data-room="board"]').waitFor({ timeout: 30000 });
-await page.locator('[data-room-calm]').click(); await C(() => window.__oagCave.room.speed(4));
+await calmOn(); await C(() => window.__oagCave.room.speed(4));
 await page.locator('[data-room-heat-before="5"]').click();
 await welcomeIn();
 await witnessToFork('the dread', 'Fear');
@@ -248,7 +259,7 @@ await C(() => { const t = window.__oagCave.room.state.active[0].t321; t.before =
 await page.locator('[data-room-move]').fill('say it in one line');
 await page.locator('[data-room-move-done]').click();
 await page.locator('[data-room-kept]').waitFor({ timeout: 15000 });
-await page.locator('[data-room-next]').click();
+await page.locator('[data-room-keep="spirit"]').click();
 await page.locator('[data-room-checkin="stayed"]').click();
 ok((await page.locator('[data-room-not-down]').getAttribute('data-room-not-down')) === 'flood' && (await page.locator('[data-room-look-again]').textContent()) === 'Look again at what floods it', 'a charge stuck at 9 or more points the second signal at flooding, not hiding');
 const fr = (await run()).rounds[0];
@@ -275,6 +286,9 @@ ok((await ch()).polarity === 0 && await sees('[data-room-shade-reveal]') && (awa
 await page.locator('[data-room-shade-element="Anger"]').click();
 c = await ch();
 ok(c.shade.element === 'Anger' && (await run()).rounds[0].shadow.shadeElement === 'Anger', 'the player names its element, and the run keeps it');
+ok((await page.locator('[data-room-ask-leave]').count()) === 0 && await sees('[data-room-shade-keep="vibeulon"]'), 'and keeps it as a spirit or lets it become a vibeulon before going on');
+await page.locator('[data-room-shade-keep="spirit"]').click();
+ok((await run()).rounds[0].shadow.shadeKeep === 'spirit', 'the run keeps that choice too');
 await page.locator('[data-room-ask-leave]').click();
 await witnessToFork('the slip', 'Sadness');
 await page.locator('[data-room-goal]').fill('to remember it');
@@ -286,7 +300,7 @@ await page.locator('[data-room-checkin="left"]').click();
 await page.locator('[data-room-again="no"]').click();
 await page.locator('[data-room-leave]').click();
 await page.waitForFunction(() => window.__left, null, { timeout: 15000 });
-const shown = (await C(() => window.__left)).spirits[1];
+const shown = (await C(() => window.__left)).spirits.find((t) => t.shadow);
 ok(shown.element === 'Anger' && shown.revealed && shown.polarity === 0 && shown.hex === 0x954d43, 'it walks out revealed with its element, its colour halfway from the shadow\'s to Anger\'s, so it can be dissolved');
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
