@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/board/owner', () => ({ isBoardOwner: async () => true }))
 
-import { pageUrl, serveBoard } from '../serve'
+import { pageUrl, serveBoard, streamed } from '../serve'
 
 describe('serveBoard', () => {
   it('patches the Send bar on the council page only', async () => {
@@ -22,5 +22,12 @@ describe('serveBoard', () => {
     expect(pageUrl('council', '../../evil', 'preview')).toBe(main)
     expect(pageUrl('council', null, 'preview')).toBe(main)
     expect(pageUrl('nonprofit', 'claude/x-1', 'preview')).not.toContain('claude/x-1')
+  })
+})
+
+describe('streamed', () => {
+  it('sends a page over 4.5 MB, multi-byte text included, unchanged', async () => {
+    const html = '<p>é—</p>'.repeat(600_000)
+    expect(await new Response(streamed(html)).text()).toBe(html)
   })
 })

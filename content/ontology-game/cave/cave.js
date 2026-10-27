@@ -2372,15 +2372,20 @@
     // work after a # (#go=home&grown=7). &grown=N first keeps one summoned spirit at N sittings and brings it home with you, so its
     // next sitting is seen (7: a creature that becomes an ally). &hidden=N brings the first charge in with a hidden part already on
     // it, at polarity N (signal "preview"), so it comes in to "Something hides it" and its shadow spirit's gate is a few taps away.
-    // &tour=0 marks the walkthrough done first, since a preview's fresh browser would otherwise start it.
+    // &tour=0 marks the walkthrough done first, since a preview's fresh browser would otherwise start it. ?go=basin opens home
+    // base's basin (basin.js) straight away, and its mouth walks back to the room. &brow=N (0 to 3) first sets the brow's floor
+    // in oag.organs.v1 (source "a preview link"; 0 clears it), so a look at the basin or the room's haze starts at the state to test.
     var skip = null; try { skip = new URLSearchParams(window.location.search + "&" + String(location.hash || "").replace(/^#/, "")); } catch (e) {}
     var skipGo = skip && skip.get("go"), skipAt = (skip && skip.get("at")) || "my heart";
     var gn = skip && /^\d+$/.test(skip.get("grown") || "") ? +skip.get("grown") : null, hd = skip && /^\d+$/.test(skip.get("hidden") || "") ? +skip.get("hidden") : 0;
+    if (skip && /^[0-3]$/.test(skip.get("brow") || "") && window.__oagOrgans) window.__oagOrgans.store.preview("brow", +skip.get("brow"));
     if (skip && skip.get("tour") === "0") keepTutorial(ROOM_LESSONS.concat(CAVE_LESSONS).map(function (l) { return l.id; })); // &tour=0: a look link skips the walkthrough
     if (skipGo === "elder" || skipGo === "home") {
       var sp = null;
       if (gn !== null && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: gn }, "a preview link"); } catch (e) { sp = null; }
       load().then(function (A) { return homeBase(A, home, { where: skipAt, near: skipGo === "elder" ? "elder" : null, spirit: sp, hidden: Math.min(10, hd) }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+    } else if (skipGo === "basin" && window.__oagBasin) {
+      load().then(function (A) { window.__oagBasin.open({ back: function () { homeBase(A, home, { where: skipAt }); } }); }).catch(function (e) { notice("The basin could not open: " + e.message, true); });
     } else if (skipGo === "cave") dive(skipAt, home);
     else if (skipGo === "bigmind") goOn({ at: "bigmind", where: "" });
     // ?go=bigmind&sit=1 goes in and sits the figure down as soon as the hall lets it (a look at the seated pose)
@@ -2514,10 +2519,14 @@
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
     keepLast("room", o.where);
-    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, near: o.near, spirit: o.spirit || null, hidden: o.hidden || 0 }).then(function (r) {
+    var basin = !!(window.__oagBasin && window.__oagBasin.open);
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, basin: basin, near: o.near, spirit: o.spirit || null, hidden: o.hidden || 0 }).then(function (r) {
       if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
       else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { if (window.__oagVessel) window.__oagVessel.store.visited("bigmind"); homeBase(A, home, { where: o.where, near: o.near }); } });
+      // The basin (basin.js): the body map's inside as a place, walked into through its one mouth (mab-one-mouth); its own mouth
+      // walks back here. Leaving it keeps the room as the last place played.
+      else if (r && r.basin && basin) window.__oagBasin.open({ back: function () { homeBase(A, home, { where: o.where, near: o.near }); } });
       return r;
     });
   }
@@ -5312,12 +5321,13 @@
       // is the same kind of arch on the other side of the seat, marked with the seven daemons' colours in the order they are met.
       // The portal leads to the six game masters (the hall of the six). The player walks to either one; arriving opens its card.
       var EXITS = {};
-      function exitArch(id, ang, hex, glowHex, name) {
+      // dark: a mouth in the stone instead of a lit arch (the basin's): no frame, and the opening nearly black.
+      function exitArch(id, ang, hex, glowHex, name, dark) {
         var px = Math.sin(ang) * RR * 0.9, pz = Math.cos(ang) * RR * 0.9, pyaw = Math.atan2(-px, -pz);
-        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
+        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: dark ? 0.94 : 0.55, side: THREE.DoubleSide }));
         glow.position.set(px, 0.01, pz); glow.rotation.y = pyaw; scene.add(glow);
         var a2 = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: hex })); a2.scale.setScalar(DW / 2 + 0.1);
-        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2);
+        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2); a2.visible = !dark;
         var tag = labelSprite(THREE, name, "#" + new THREE.Color(hex).getHexString(), 2.6); tag.position.set(px * 0.9, DH + 0.45, pz * 0.9); scene.add(tag);
         var k = (RR - 2.2) / (RR * 0.9); // where the figure stands to go through: just in front of it
         EXITS[id] = { id: id, x: px, z: pz, yaw: pyaw, stand: { x: px * k, z: pz * k }, glow: glow, arch: a2 };
@@ -5332,6 +5342,13 @@
           dot.position.set(bm.x + Math.cos(bm.yaw) * lx + Math.sin(bm.yaw) * 0.12, ly, bm.z - Math.sin(bm.yaw) * lx + Math.cos(bm.yaw) * 0.12); scene.add(dot);
         });
       }
+      // The basin's mouth (basin.js): the body map's inside, a dark mouth in the stone on the side wall, clear of the portal, the
+      // Big Mind door and the charge's door. It has no card: walking into it goes in (mab-one-mouth: no menu, no button).
+      if (opts.basin) exitArch("basin", 1.9, 0x9aa8b8, 0x07060a, "The basin", true);
+      // The brow's floor in the one organ state (organs.js): once a sitting has reached it, the room's haze thins (the chamber's
+      // half of mao-first-organ-brow). Read when the room opens and again after a raise.
+      function browFloor() { try { var O = window.__oagOrgans; return O ? O.floorOf(O.store.get(), "brow") : 0; } catch (e) { return 0; } }
+      var hazeK = browFloor() >= 1 ? 0.6 : 1;
       var hemi = new THREE.HemisphereLight(0xfff4e0, 0x2a2420, 0.4); scene.add(hemi);
       var lamp = new THREE.PointLight(0xffe0b0, 1, 34); lamp.position.set(0, RH * 0.85, 1.4); scene.add(lamp);
       var doorLight = new THREE.PointLight(0xfff1d0, 0, 14); doorLight.position.set(0, 2, DZ + 1.2); scene.add(doorLight);
@@ -5573,7 +5590,14 @@
       function stepIndex(id) { for (var i = 0; i < ROOM_STEPS.length; i++) if (ROOM_STEPS[i].id === id) return i; return -1; }
       // Each step done defines the charge a little more (board gw-form-by-step); Not now gives no credit, and a step done twice
       // (after Step back) counts once.
-      function nextStep(noCredit) { var i = stepIndex(R.phase); if (noCredit !== true) ch.credit[R.phase] = true; go(ROOM_STEPS[i + 1].id); }
+      function nextStep(noCredit) { var i = stepIndex(R.phase); if (noCredit !== true) { ch.credit[R.phase] = true; reachOrgan(ch); } go(ROOM_STEPS[i + 1].id); }
+      // A Fear charge's sitting reaches the brow (organs.js, mao-first-organ-brow): witnessed, accepted, validated set its floor.
+      // The floor only rises, so a step done again changes nothing; any other channel is left for a later pass.
+      function reachOrgan(c) {
+        var O = window.__oagOrgans; if (!O || (c.element !== "Fear" && c.element !== "Metal")) return;
+        try { O.store.raise({ channel: "fear", floor: O.floorFromCredit(c.credit), source: "the WAVE room" }); } catch (e) { return; }
+        hazeK = browFloor() >= 1 ? 0.6 : 1;
+      }
       function words(st) { return st.wave != null ? WAVE[st.wave] : [st.id, st.title, st.words]; }
       function nm() { return ch.name || "It"; }
 
@@ -6061,7 +6085,7 @@
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
-          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(spiritOf).concat(shades.map(function (c) {
+          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", basin: portal === "basin", spirits: going.map(spiritOf).concat(shades.map(function (c) {
             return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.shadeElement || null, hex: c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !!c.shadeElement };
           })) });
         }, 520);
@@ -6366,6 +6390,8 @@
         portal: ["The six game masters", "A hall with a door for each of the six faces.", "Go through"],
       };
       function doorCard(id) {
+        // The basin's mouth is walked into, not opened from a card (mab-one-mouth): arriving in front of it goes in.
+        if (id === "basin") { if (!R.leftBy) { R.leftBy = "basin"; stopWalking(); leave("basin"); } return; }
         if (!doorBox) { doorBox = el("div", { class: "oagr-door", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
         learn("doors");
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
@@ -6558,7 +6584,7 @@
         lamp.color.lerp(tmpC.setHex(lg.light).lerp(new THREE.Color(0xffffff), 0.45), fe);
         hemi.intensity += (lg.hemi * 0.8 - hemi.intensity) * fe;
         scene.fog.color.lerp(tmpC.setHex(lg.fog), fe); scene.background.copy(scene.fog.color);
-        scene.fog.density += (0.03 * lg.fogK - scene.fog.density) * fe;
+        scene.fog.density += (0.03 * lg.fogK * hazeK - scene.fog.density) * fe; // hazeK: thinner once the brow is reached
         lamp.intensity = 0.9 + 0.35 * (1 - br.b);
         var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
         R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
@@ -6601,7 +6627,8 @@
         if (id === "look") return out.set(SLOTS[1].x, 2.2, SLOTS[1].z);
         if (id === "tap") return out.set(guide.tapAt.x, 0.35, guide.tapAt.z);
         if (id === "rug") return out.set(SEAT.x, 0.7, SEAT.z);
-        var ex = Object.keys(EXITS).map(function (k) { return EXITS[k]; }).sort(function (a, b) { return Math.hypot(a.x - fig.x, a.z - fig.z) - Math.hypot(b.x - fig.x, b.z - fig.z); })[0];
+        // the basin's mouth has no card to teach, so the light waits in the nearer of the other doorways
+        var ex = Object.keys(EXITS).filter(function (k) { return k !== "basin"; }).map(function (k) { return EXITS[k]; }).sort(function (a, b) { return Math.hypot(a.x - fig.x, a.z - fig.z) - Math.hypot(b.x - fig.x, b.z - fig.z); })[0];
         return out.set(ex.x * 0.85, 1.9, ex.z * 0.85); // in the nearer doorway
       }
       function teachStep(dt, now, sk) {
