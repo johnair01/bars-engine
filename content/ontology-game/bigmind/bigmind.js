@@ -2711,9 +2711,9 @@
       var face = (st.phase === "hall1" || st.phase === "hall2") && st.yaw != null ? st.yaw : K.yawFacing(a) + (st.turned || st.back ? Math.PI : 0); avatar.rotation.y = face;
       var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches, SI = st.sit;
       if (SI) {
-        avatar.position.y -= 0.75 * SI.k; avatar.scale.y = 1 - 0.3 * SI.k;
+        K.seatAvatar(avatar, SI.k); // sat on the floor, cross-legged (it used to sink whole, legs through the floor)
         drawCharge(SI, SI.whom === "voice", SI.texture || SI.element || SI.whom === "voice", dt, still);
-      } else avatar.scale.y = 1;
+      }
       if (wv && wv.B && wv.B.g.parent) { wv.B.g.visible = !SI; drawCharge(wv.B, false, wv.B.named, dt, still); } // a sitting from a block shows its own
       var ob = modal.querySelector("[data-bm-orb]");
       if (ob) {
@@ -2800,7 +2800,7 @@
       renderer.render(scene, camera);
     }
     var api = window.__oagBigMind; api.teach = function () { return teach.probe(); }; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
-    api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
+    api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.avatar = avatar; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
     api.newRun = function () { satThisRun = {}; }; // what a new visit does to the once-a-run count
     api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.mouth = { light: mouthLight, glow: mouthGlow, sound: function () { return snd; } }; api.walkInput = walkInput; api.keys = keys; api.stick = stick; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
     api.trust = function () { return st.trust; }; api.pending = function () { return st.pending; }; api.stance = function () { return stanceOf(st.trust, V.id, st); };

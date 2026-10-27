@@ -13,6 +13,8 @@ import { getResend, getEmailConfig } from './resend'
 
 export type SendEmailInput = {
   to: string | string[]
+  cc?: string[]
+  bcc?: string[]
   subject: string
   /** Provide one of `react` or `html` (react wins if both given). */
   react?: ReactElement
@@ -61,6 +63,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const base = {
     from: config.from,
     to: input.to,
+    ...(input.cc?.length ? { cc: input.cc } : {}),
+    ...(input.bcc?.length ? { bcc: input.bcc } : {}),
     subject: input.subject,
     replyTo: input.replyTo ?? config.replyTo ?? undefined,
     tags: input.tags,

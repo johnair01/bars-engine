@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { getSeedLibrary, getToday, listPlayerCampaigns } from '@/actions/tap-the-vein'
+import { getSeedLibrary, getToday, getUnchosen, listPlayerCampaigns } from '@/actions/tap-the-vein'
+import { UNCHOSEN_SAMPLE } from '@/lib/tap-the-vein/unchosen-sample'
 import type { ElementKey } from '@/lib/ui/card-tokens'
 import { loadNextLensDomain } from '@/lib/lenses/onboarding-data'
 import { TapTheVeinRunner } from './TapTheVeinRunner'
@@ -30,11 +31,17 @@ function normalizeElement(raw: string | null | undefined): ElementKey {
   return (VALID_ELEMENTS.has(v) ? v : 'earth') as ElementKey
 }
 
-export default async function TapTheVeinPage() {
+export default async function TapTheVeinPage({ searchParams }: { searchParams?: Promise<{ view?: string; sample?: string }> }) {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
-  const [today, campaignsRes, libraryRes] = await Promise.all([getToday(), listPlayerCampaigns(), getSeedLibrary()])
+  const [today, campaignsRes, libraryRes, unchosenRes, params] = await Promise.all([
+    getToday(),
+    listPlayerCampaigns(),
+    getSeedLibrary(),
+    getUnchosen(),
+    searchParams ?? Promise.resolve({} as { view?: string; sample?: string }),
+  ])
 
   if ('error' in today) {
     return (
@@ -64,6 +71,8 @@ export default async function TapTheVeinPage() {
       vibulons={vibulons}
       lensDomain={lensDomain}
       seeds={'error' in libraryRes ? [] : libraryRes.seeds}
+      unchosen={params.sample === '1' ? { ...UNCHOSEN_SAMPLE, sample: true } : 'error' in unchosenRes ? undefined : unchosenRes}
+      openUnchosen={params.view === 'unchosen'}
       campaigns={'error' in campaignsRes ? [] : campaignsRes.campaigns}
     />
   )

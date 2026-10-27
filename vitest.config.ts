@@ -76,6 +76,7 @@ export default defineConfig({
       'src/lib/cyoa-composer/__tests__/step-registry.test.ts',
       'src/lib/__tests__/vitest-include-registration.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
+      'src/lib/__tests__/passport-contract.test.ts',
       'src/app/api/board/saves/__tests__/route.test.ts',
       'src/app/api/board/saves/__tests__/seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
@@ -93,7 +94,12 @@ export default defineConfig({
       'src/lib/between/__tests__/stance.test.ts',
       'src/lib/between/__tests__/hearth-moment.test.ts',
       'src/lib/between/__tests__/focus-sit.test.ts',
-    ],
+=======
+      'src/app/api/board/outreach/send/__tests__/route.test.ts',
+      'src/lib/board/__tests__/outreach.test.ts',
+      'src/lib/studio/__tests__/deck.test.ts',
+      'src/lib/studio/__tests__/fleet.test.ts',
+      'src/lib/studio/__tests__/shaman.test.ts',    ],
   },
   resolve: {
     alias: {

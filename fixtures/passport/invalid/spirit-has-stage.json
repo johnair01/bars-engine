@@ -1,0 +1,38 @@
+{
+  "v": 1,
+  "player": {
+    "id": null,
+    "name": null,
+    "guest_id": "guest-mgx1a2b3c4"
+  },
+  "spirits": [
+    {
+      "id": "sp-ember-fox",
+      "name": "Ember Fox",
+      "element": "fire",
+      "family": "fox",
+      "sittings": 3,
+      "born": {
+        "where": "the Big Mind cave",
+        "at": "2026-10-19T18:02:00.000Z"
+      },
+      "lineage": [
+        {
+          "where": "the Big Mind cave",
+          "at": "2026-10-19T18:02:00.000Z"
+        }
+      ],
+      "loadout": true,
+      "care": null,
+      "stage": "creature"
+    }
+  ],
+  "hand": [],
+  "qi": 0,
+  "vibeulons": 0,
+  "embers": [],
+  "places_reached": [
+    "cave"
+  ],
+  "updated_at": "2026-10-21T02:00:00.000Z"
+}

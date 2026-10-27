@@ -1,7 +1,8 @@
 // One store for the spirits that outlast a run (Six-faces-council council/callsheets/spirits-in-caves.md, boards sic-one-store and
 // sic-loadout-three). Both caves read and write it: Big Mind records the spirit born from meeting a daemon, the Cave of Lessons
 // reads which of them walk with the player. It lives in this browser's localStorage only, as `oag.spirits.v1`:
-//   { v: 1, spirits: [{ id, name, element, family, sittings, born: { where, at }, lineage: [{ where, at }], loadout, home, brought }] }
+//   { v: 1, spirits: [{ id, name, element, family, sittings, born: { where, at }, lineage: [{ where, at }], loadout, home, brought }], vibeulons, minted: [{ n, where, at }] }
+// `vibeulons` is the purse: a count of condensed qi. A finished W.A.V.E. whose charge is not kept mints one (board gw-unkept-vibeulon).
 // A spirit's stage is never stored: spirit-forms.js stageOf(sittings) gives it. Up to three spirits are in the loadout, the ones that
 // walk with the player; the rest rest in the WAVE room (SPIRITS_SHOWN in cave.js is the same three).
 (function () {
@@ -21,8 +22,7 @@
   function get(id) { return copy(find(read(), id)); }
   function loadout() { return read().spirits.filter(function (r) { return r.loadout; }).slice(0, MAX_LOADOUT).map(copy); }
 
-  // Add a spirit, or bring an existing one up to date. Where it lives in the Between (`home`, `brought`, set by place) is
-  // never touched here, so a sitting in the caves does not call it back out of a homeroom. Sittings only go up (two caves may each have counted some), the first
+  // Add a spirit, or bring an existing one up to date. Sittings only go up (two caves may each have counted some), the first
   // birth place stays, and the loadout flag is the player's choice, so it is never set here. `where` records one sitting in the
   // lineage (board sic principle 11: what a spirit has lived through stays with it).
   function put(rec, where) {
@@ -43,6 +43,19 @@
     if (on && !r.loadout && s.spirits.filter(function (x) { return x.loadout; }).length >= MAX_LOADOUT) return false;
     r.loadout = !!on; return write(s);
   }
+  // The purse. mint(n, where) adds n and keeps a short record of where each came from; spend(n) takes n only if the purse holds them.
+  function vibeulons() { return read().vibeulons || 0; }
+  function mint(n, where) {
+    n = Math.max(0, Math.floor(n || 0)); if (!n) return vibeulons();
+    var s = read(); s.vibeulons = (s.vibeulons || 0) + n;
+    s.minted = (s.minted || []).concat([{ n: n, where: where || "the caves", at: now() }]).slice(-MAX_LINEAGE);
+    write(s); return s.vibeulons;
+  }
+  function spend(n) {
+    n = Math.max(0, Math.floor(n || 0)); var s = read();
+    if ((s.vibeulons || 0) < n) return false;
+    s.vibeulons = (s.vibeulons || 0) - n; return write(s);
+  }
   // Where a spirit is in the Between (Between rooms part 4): `home` is the id of its spirit in the player's homeroom (null
   // once it is no longer there), `brought` the room it is visiting from there (null when it is home). Only the keys given change.
   function place(id, where) {
@@ -53,5 +66,5 @@
   }
   function wipe() { try { localStorage.removeItem(KEY); } catch (e) { /* nothing to remove */ } }
 
-  window.__oagSpiritStore = { KEY: KEY, MAX_LOADOUT: MAX_LOADOUT, all: all, get: get, loadout: loadout, put: put, remove: remove, setLoadout: setLoadout, place: place, wipe: wipe };
+  window.__oagSpiritStore = { KEY: KEY, MAX_LOADOUT: MAX_LOADOUT, all: all, get: get, loadout: loadout, put: put, remove: remove, setLoadout: setLoadout, place: place, vibeulons: vibeulons, mint: mint, spend: spend, wipe: wipe };
 })();
