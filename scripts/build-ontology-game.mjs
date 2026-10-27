@@ -105,6 +105,10 @@ const spiritFormsJs = readFileSync(path.join(srcDir, 'cave', 'spirit-forms.js'),
 const spiritStoreJs = readFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), 'utf8');
 // The inner vessel the WAVE room rides in (oag.vessel.v1), its parts, fuel and the places reached from it (cave/vessel.js).
 const vesselJs = readFileSync(path.join(srcDir, 'cave', 'vessel.js'), 'utf8');
+// The one organ state (oag.organs.v1): which seat of the body map a sitting reached, read by the WAVE room and the basin (cave/organs.js).
+const organsJs = readFileSync(path.join(srcDir, 'cave', 'organs.js'), 'utf8');
+// The basin: the body map's inside as a walkable place, entered by its one mouth from the WAVE room (cave/basin.js).
+const basinJs = readFileSync(path.join(srcDir, 'cave', 'basin.js'), 'utf8');
 // Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
 const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
@@ -136,9 +140,13 @@ ${inline(spiritFormsJs)}
 <script>
 ${inline(spiritStoreJs)}
 ${inline(vesselJs)}
+${inline(organsJs)}
 </script>
 <script>
 ${inline(caveJs)}
+</script>
+<script>
+${inline(basinJs)}
 </script>
 <script>
 ${inline(walkRoomJs)}
