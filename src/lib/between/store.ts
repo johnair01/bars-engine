@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import { cookies } from 'next/headers'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
-import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge } from './rules'
+import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -147,10 +147,41 @@ export async function plant(playerId: string, data: Doc) {
   })
 }
 
+/**
+ * The rooms the player tends, newest first, each with what it waits on for the next-move lanes (rules.ts roomSummary),
+ * and the homeroom apart from them. One query per table, however many rooms.
+ */
 export async function gardensOf(playerId: string) {
   const rows = await db.betweenMember.findMany({ where: { playerId }, include: { garden: true }, orderBy: { joinedAt: 'desc' } })
-  return rows.map(r => {
+  const homeRow = rows.find(r => asDoc(r.garden.data).kind === 'home') ?? null
+  const rooms = rows.filter(r => r !== homeRow)
+  const ids = rooms.map(r => r.gardenId)
+  const since = new Date(Date.now() - HERE_MS)
+  const [items, others, presence, homeDoc] = await Promise.all([
+    db.betweenItem.findMany({ where: { gardenId: { in: ids } }, select: { gardenId: true, id: true, data: true } }),
+    db.betweenMember.findMany({ where: { gardenId: { in: ids }, playerId: { not: playerId } }, select: { playerId: true } }),
+    db.betweenPresence.findMany({ where: { gardenId: { in: ids }, playerId: { not: playerId }, updatedAt: { gte: since } }, select: { gardenId: true } }),
+    homeRow ? db.betweenPrivate.findUnique({ where: { gardenId_playerId_key: { gardenId: homeRow.gardenId, playerId, key: 'home' } } }) : null,
+  ])
+  const people = await db.player.findMany({ where: { id: { in: [...new Set(others.map(o => o.playerId))] } }, select: { id: true, name: true } })
+  const names = Object.fromEntries(people.map(p => [p.id, p.name]))
+  const here = new Set(presence.map(p => p.gardenId))
+  const gardens = rooms.map(r => {
     const d = asDoc(r.garden.data), s = asDoc(d.setup as Prisma.JsonValue)
-    return { id: r.gardenId, phase: d.phase ?? null, who: s.who ?? null, kind: s.kind ?? null, updatedAt: r.garden.updatedAt }
+    const its = items.filter(i => i.gardenId === r.gardenId).map(i => ({ id: i.id, data: asDoc(i.data) }))
+    const sum = roomSummary(playerId, r.gardenId, d, its, { names, hereNow: here.has(r.gardenId) })
+    return { ...sum, kind: s.kind ?? null, personName: sum.person ? names[sum.person] ?? null : null, updatedAt: r.garden.updatedAt }
   })
+  const h = homeDoc ? asDoc(homeDoc.data) : {}
+  const goals = Object.entries(asDoc(h.goals as Prisma.JsonValue)).filter(([, g]) => g && typeof g === 'object').map(([id, g]) => ({ id, ...(g as Doc) }))
+  const home = homeRow && { id: homeRow.gardenId, style: asDoc(homeRow.garden.data).style ?? null, look: h.look ?? null, lastCheckin: h.lastCheckin ?? null, oriented: h.oriented ?? null, goals }
+  return { home, gardens }
+}
+
+/** The player's homeroom, made on the first call (br-home-is-a-room). */
+export async function ensureHome(playerId: string) {
+  const found = await gardensOf(playerId)
+  if (found.home) return found
+  await plant(playerId, plantedHome(playerId))
+  return gardensOf(playerId)
 }

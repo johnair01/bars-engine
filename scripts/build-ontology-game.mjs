@@ -196,6 +196,8 @@ mkdirSync(path.join(outDir, 'big-mind'), { recursive: true });
 writeFileSync(path.join(outDir, 'big-mind', 'index.html'), bigMindHtml);
 mkdirSync(path.join(outDir, 'cave'), { recursive: true });
 writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
+// The Between reads the same store on the same origin (its homeroom calls spirits from the caves), so it is served as a file too.
+copyFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), path.join(outDir, 'cave', 'spirit-store.js'));
 copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
 copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 'spots.json'));
 // The stone tiles, baked by cave/bake_tiles.py and committed.

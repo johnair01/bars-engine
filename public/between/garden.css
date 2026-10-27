@@ -117,3 +117,151 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .loading { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--glass-muted); }
 .loading h1 { color: var(--glass-ink); font-size: 1.6rem; margin-bottom: 8px; }
 @media (max-width: 420px) { .hud button { padding: 8px 12px; font-size: .84rem; } }
+/* caption mode (round 4): words wait unseen, keeping their place, and come in a line at a time */
+.cw { opacity: 0; transition: opacity .35s ease; }
+.cw.on { opacity: 1; }
+[data-reading] { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .cw { transition: none; } }
+
+/* Rooms, part 2: the Next card, the homeroom's sheets, look swatches */
+.next { background: var(--glass); backdrop-filter: blur(6px); border-radius: 14px; padding: 8px 10px; display: grid; gap: 4px; max-width: 560px; }
+.next .eyebrow { font: 700 .66rem/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--glass-muted); }
+.next button { text-align: left; background: transparent; color: var(--glass-ink); border: 0; padding: 4px 2px; font-weight: 400; border-radius: 8px; min-height: 0; }
+.next button b { font-family: var(--display); }
+.next button .lane { font-size: .74rem; color: var(--glass-muted); }
+.next button .t { display: block; font-size: .82rem; color: var(--glass-muted); }
+.next button.nmore { font-size: .86rem; padding-top: 2px; }
+.sheet .roomrow { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); }
+.sheet .roomrow > div:first-child { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.sheet .roomrow > button { flex: none; }
+.sheet .roomrow .row { flex: none; }
+.sheet .dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.sheet .dots button { background: var(--soft); color: var(--ink); border-color: var(--line); font-weight: 400; border-radius: 999px; padding: 6px 12px; }
+.sheet i.sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+@media (max-width: 420px) { .sheet .roomrow { flex-direction: column; align-items: stretch; } }
+/* part 3: the orientation's tick */
+.sheet label.tick { display: flex; align-items: center; gap: 10px; }
+.sheet label.tick input { width: 22px; height: 22px; margin: 0; flex: none; }
+
+/* Part 4: the mirror. The screen is the glass: the picture flipped, an oval frame of the mirror's wood around it, the
+   choices in a short strip below; the room's labels and tools step aside while you look. */
+#mirrorFrame { display: none; position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); width: min(86vw, 46vh); height: 58vh;
+  transform: translateX(-50%); border-radius: 50%; pointer-events: none; z-index: 5; border: 12px solid #6a4a30;
+  box-shadow: 0 0 0 3px #3e2a1a, inset 0 0 0 3px #8a6a48, inset 0 0 70px rgba(184, 204, 216, .22), 0 0 0 100vmax rgba(14, 10, 8, .84);
+  background: linear-gradient(118deg, transparent 22%, rgba(255,255,255,.08) 30%, transparent 38%, transparent 58%, rgba(255,255,255,.05) 62%, transparent 67%); }
+body.mirroring #mirrorFrame { display: block; }
+body.mirroring #stage canvas { transform: scaleX(-1); }
+body.mirroring #labels, body.mirroring #hud { display: none !important; }
+.sheet.dark { --panel: #1f1711; --ink: #f3ece2; --muted: #bcae9b; --line: #4a3a2c; --soft: #31251b; background: #1f1711; color: var(--ink); }
+.sheet.mirror { max-height: 40vh; padding-top: 8px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 2px solid #6a4a30; }
+.sheet.mirror .inner { gap: 6px; }
+.mpanel { display: grid; gap: 6px; }
+.mtabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin: 0 -4px; }
+.mtabs::-webkit-scrollbar, .mchips::-webkit-scrollbar { display: none; }
+.mtabs button { flex: none; background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 4px 5px; min-height: 34px; font-size: .78rem; }
+.mtabs button.on { color: var(--ink); border-bottom-color: #e2a85c; }
+.mchips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 4px 2px 2px; }
+.mchip { flex: none; display: grid; justify-items: center; gap: 3px; width: 62px; background: transparent; border: 0; color: var(--ink); padding: 0; min-height: 0; font-weight: 400; font-size: .74rem; line-height: 1.15; text-align: center; }
+.mchip i { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); box-shadow: 0 0 0 2px rgba(255,255,255,.12); }
+.mchip.on i { box-shadow: 0 0 0 3px #e2a85c, 0 0 16px rgba(226, 168, 92, .55); }
+.mnote { font-size: .78rem; color: var(--muted); }
+.mbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mstate { flex-basis: 100%; font-size: .76rem; color: #e2a85c; }
+.mbar button { padding: 8px 12px; min-height: 38px; }
+
+/* Part 4: the check-in, walked. The room stays in view, glowing in the feeling's colour. */
+.sheet.walk { max-height: 58vh; }
+body.quiethud .hud .bottom { display: none; }
+.sheet .feels { display: flex; flex-wrap: wrap; gap: 8px; }
+.sheet .feels button { background: var(--soft); color: var(--ink); border-color: var(--line); font-weight: 400; display: inline-flex; align-items: center; gap: 2px; min-height: 48px; }
+.sheet .feels button.on { border-color: #e2a85c; box-shadow: inset 0 0 0 2px #e2a85c; }
+.wave h2 { color: var(--c); font-size: 1.5rem; }
+.wave .wline { font: 500 1.15rem/1.45 var(--display); }
+.wdots { display: flex; gap: 10px; padding: 4px 0; }
+.wdots i { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--c); }
+.wdots i.on { background: var(--c); }
+.wdots i.now { background: var(--c); box-shadow: 0 0 10px var(--c); transform: scale(1.3); }
+.emberbig { display: grid; place-items: center; padding: 6px 0; }
+.emberbig .ember { margin: 0; animation: emberBreath 4s ease-in-out infinite; }
+@keyframes emberBreath { 50% { transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .emberbig .ember { animation: none; } }
+/* spirits: each a small glowing orb in its element's colour */
+.spiritcard { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.spiritcard > div { display: grid; gap: 2px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.spiritcard > button { flex: none; }
+.spiritcard .orb { flex: none; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 38% 34%, #fff6e0 0 12%, var(--c) 55%, transparent 74%); box-shadow: 0 0 16px var(--c); }
+.tembers { display: inline-flex; gap: 2px; margin-left: 6px; vertical-align: middle; }
+.tembers .ember { margin: 0; }
+
+/* the satchel (room kit, Still A): a small tray of what you have earned. Tap one, then a glowing spot that fits it. */
+.satchel { background: var(--glass); backdrop-filter: blur(6px); border-radius: 14px; padding: 8px; max-width: 640px; }
+.satchel[hidden] { display: none; }
+.satrow { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; align-items: center; }
+.satrow::-webkit-scrollbar { display: none; }
+.hud .satitem { flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 12px 6px 8px; border-radius: 12px;
+  background: #2c1f2c; color: var(--glass-ink); border: 1px solid rgba(255,255,255,.16); font-size: .88rem; white-space: nowrap; }
+.satitem svg { width: 26px; height: 26px; flex: none; }
+.hud .satitem[aria-pressed="true"] { border-color: #ffcf86; box-shadow: 0 0 0 1px #ffcf86, 0 0 14px rgba(255,207,134,.4); }
+.satnone { color: var(--glass-muted); font-size: .84rem; padding: 0 6px; }
+.satrow .glassbtn { flex: none; margin-left: auto; }
+
+/* ---------- room kit, part 2: the first minute's captions and the scroll (homeroom kit, Stills B and C) ---------- */
+:root { --paper: #efe2c4; --paper-edge: #d6c19a; --paper-ink: #3a2618; --plum: #9a5a8e; --teal: #3f9e93;
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", cursive; --scroll-display: "Marcellus", Georgia, serif; }
+/* the minute's caption: the still's own line, large and quiet, over the room */
+.mcap { position: fixed; left: 50%; transform: translateX(-50%); top: calc(28vh + env(safe-area-inset-top, 0px)); z-index: 6;
+  width: min(560px, calc(100vw - 32px)); text-align: center; pointer-events: none; transition: opacity .9s ease; }
+.mcap p { font: italic 400 clamp(1.25rem, 5.4vw, 1.8rem)/1.3 var(--display); color: #fbefdc; text-shadow: 0 2px 14px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.7); }
+.mcap.out { opacity: 0; }
+.mcap .cw { opacity: 0; transition: opacity .5s; } .mcap .cw.on { opacity: 1; }
+/* what glows: the satchel while the mirror waits in it */
+.hud button.glassbtn.glow, .hud .satitem.glow { border-color: #ffcf86; box-shadow: 0 0 0 1px #ffcf86, 0 0 18px rgba(255,207,134,.55); animation: rkglow 2.2s ease-in-out infinite; }
+@keyframes rkglow { 50% { box-shadow: 0 0 0 1px #ffcf86, 0 0 4px rgba(255,207,134,.2); } }
+/* the scroll: rods, paper, the seal; it unrolls and rolls back up */
+.paper { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; align-content: center; gap: 14px;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: radial-gradient(120% 80% at 50% 30%, rgba(40,22,30,.82), rgba(10,6,10,.94)); overflow-y: auto; }
+.paper .scroll { width: min(420px, 100%); position: relative; filter: drop-shadow(0 14px 22px rgba(0,0,0,.55)); transition: transform .5s ease, opacity .5s ease; }
+.paper .scroll.leaving { transform: translateY(-40px) scale(.6) rotate(-8deg); opacity: 0; }
+.paper .rod { height: 22px; border-radius: 11px; background: linear-gradient(#8a5a36, #5a3620 60%, #3e2414); position: relative; z-index: 2; }
+.paper .rod::before, .paper .rod::after { content: ""; position: absolute; top: -4px; width: 18px; height: 30px; border-radius: 8px; background: linear-gradient(#c79a5a, #7a5230); }
+.paper .rod::before { left: -8px; } .paper .rod::after { right: -8px; }
+.paper .psheet { background: linear-gradient(90deg, rgba(120,80,40,.18), transparent 8%, transparent 92%, rgba(120,80,40,.18)), linear-gradient(var(--paper), #e6d4ae);
+  color: var(--paper-ink); margin: 0 10px; overflow: hidden; max-height: 0; transition: max-height .9s cubic-bezier(.3,.8,.3,1); }
+.paper .scroll.open .psheet { max-height: 640px; }
+.paper .pin { padding: 22px 22px 30px; display: grid; gap: 12px; font: 500 1.45rem/1.25 var(--hand); }
+.paper .from { font: 400 .9rem/1.3 var(--scroll-display); letter-spacing: .08em; text-transform: uppercase; color: #7a5a3a; }
+.paper .pnote { font: .9rem/1.4 var(--body); color: #6a4a32; }
+.paper .when { display: flex; flex-wrap: wrap; gap: 8px; }
+.paper .when button { font: 500 1.15rem/1.1 var(--hand); background: transparent; border: 1.5px dashed #a98a62; color: var(--paper-ink); border-radius: 999px; padding: 4px 12px; min-height: 36px; }
+.paper .when button[aria-pressed="true"] { border-style: solid; background: rgba(255,154,82,.22); border-color: #c06a2a; }
+.paper input.hand, .paper .hand { font: 500 1.45rem/1.25 var(--hand); color: #6a4a32; }
+.paper input.hand { background: transparent; border: 0; border-bottom: 1.5px dotted #a98a62; border-radius: 0; padding: 2px 0; width: 100%; outline: none; }
+.paper input.hand::placeholder { color: #a98a62; opacity: .8; }
+.paper input.hand:focus { border-bottom-style: solid; border-bottom-color: #c06a2a; }
+.paper .ribbons { display: flex; flex-wrap: wrap; gap: 10px; }
+.paper .ribbon { font: 400 .95rem var(--scroll-display); letter-spacing: .06em; color: #fff7ea; border: 0; border-radius: 0; min-height: 40px;
+  padding: 8px 18px 8px 14px; clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%); }
+.paper .ribbon.yes { background: var(--teal); } .paper .ribbon.later { background: #b0803c; } .paper .ribbon.no { background: #6c5a62; }
+.paper .seal { position: absolute; right: 26px; bottom: -26px; width: 64px; height: 64px; min-height: 0; padding: 0; border-radius: 50%; border: 0; z-index: 3;
+  background: radial-gradient(circle at 38% 32%, color-mix(in srgb, var(--seal, var(--plum)) 55%, #fff), var(--seal, var(--plum)) 55%, color-mix(in srgb, var(--seal, var(--plum)) 60%, #000));
+  color: #fbf0e6; font: 400 1.4rem var(--scroll-display); box-shadow: inset 0 -3px 6px rgba(0,0,0,.35), 0 4px 10px rgba(0,0,0,.35); }
+.paper .seal:disabled { opacity: 1; filter: saturate(.6) brightness(.85); }
+.paper .phint { font: .9rem/1.4 var(--body); color: #e8d8c4; text-align: center; min-height: 1.3em; margin-top: 18px; }
+.paper .pclose { background: transparent; color: #d8c8b4; border-color: rgba(255,255,255,.25); }
+/* the small calendar drawn on the paper */
+.paper .cal { border: 1.5px dashed #a98a62; border-radius: 10px; padding: 8px; font: 500 1.05rem/1 var(--hand); }
+.paper .calhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.paper .calnav { background: transparent; border: 0; color: var(--paper-ink); font: 700 1.3rem var(--hand); min-height: 32px; padding: 0 10px; }
+.paper .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.paper .calgrid .dow { color: #7a5a3a; font-size: .95rem; padding: 2px 0; }
+.paper .calgrid .day { background: transparent; border: 0; color: var(--paper-ink); font: 500 1.1rem/1 var(--hand); min-height: 34px; padding: 0; border-radius: 50%; }
+.paper .calgrid .day:disabled { color: #b8a284; opacity: 1; }
+.paper .calgrid .day.today { text-decoration: underline; }
+.paper .calgrid .day[aria-pressed="true"] { background: rgba(255,154,82,.3); box-shadow: 0 0 0 1.5px #c06a2a; }
+@media (prefers-reduced-motion: reduce) { .paper .psheet, .paper .scroll, .mcap { transition: none; } .hud button.glassbtn.glow, .hud .satitem.glow { animation: none; } }
+/* the mirror's one question: written by hand, kept with your goals */
+.sheet.mirror .hope textarea.hand { font: 500 1.35rem/1.2 var(--hand); min-height: 64px; }
+.sheet.mirror .hope .hask { font: 700 1rem/1.35 var(--display); display: block; }
+.sheet.mirror .hope .hask label { display: inline; }
+.sheet.mirror .hope textarea.hand { width: 100%; box-sizing: border-box; }
