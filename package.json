@@ -55,6 +55,8 @@
     "test:twine": "tsx scripts/smoke-test-twine.ts",
     "test:twine-quest": "tsx scripts/smoke-test-twine-quest.ts",
     "test:admin-validation": "tsx scripts/smoke-test-admin-validation.ts",
+    "test:basin": "node content/ontology-game/cave/organs-test.mjs",
+    "test:basin:browser": "node scripts/build-ontology-game.mjs && node content/ontology-game/cave/basin-test.mjs",
     "test:vessel": "node content/ontology-game/cave/vessel-test.mjs && node content/calrunia/arrive/ship-world-test.mjs",
     "test:quest-grammar": "tsx src/lib/quest-grammar/__tests__/compileQuest.test.ts && tsx src/lib/quest-grammar/__tests__/branchedPath.test.ts && tsx src/lib/quest-grammar/__tests__/resolveMoveForContext.test.ts",
     "test:move-aspect": "tsx src/lib/quest-grammar/__tests__/move-aspect.test.ts",
