@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "player": {
+    "id": null,
+    "name": null,
+    "guest_id": "guest-new"
+  },
+  "spirits": [],
+  "hand": [],
+  "qi": 0,
+  "vibeulons": 0,
+  "embers": [],
+  "places_reached": [],
+  "updated_at": "2026-10-21T02:00:00.000Z"
+}
