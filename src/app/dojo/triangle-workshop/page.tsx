@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
+import { TrianglePractice } from './triangle-practice'
 
 function safeReturnPath(value: string | undefined): string {
   return value === '/ontology-game/between' ? value : '/ontology-game/between'
@@ -25,12 +26,11 @@ export default async function TriangleWorkshopPage({
         <p className="mt-4 leading-7 text-zinc-300">
           A private practice room for making a disempowering triangle visible, finding the value worth keeping, and choosing one clean next move.
         </p>
-        <section className="mt-7 rounded-xl border border-zinc-700 bg-zinc-900/70 p-5">
-          <h2 className="text-lg font-medium text-teal-100">First practice</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-300">Name the three positions without making any one person the problem. Then look for what each position is trying to preserve.</p>
-          <p className="mt-4 text-xs text-zinc-500">Triangle mapping, 8th-Ray operations, and rehearsal are the next layer of this room.</p>
-        </section>
-        <Link href={returnPath} className="mt-7 inline-flex rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500">Return to Nook</Link>
+        <TrianglePractice />
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/dojo/triangle-workshop/prototype" className="inline-flex rounded-lg border border-teal-300/40 px-4 py-2 text-sm font-medium text-teal-100 transition hover:bg-teal-400/10">Explore constellation-wall prototype</Link>
+          <Link href={returnPath} className="inline-flex rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500">Return to Nook</Link>
+        </div>
       </div>
     </main>
   )
