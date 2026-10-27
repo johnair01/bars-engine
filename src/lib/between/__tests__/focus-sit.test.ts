@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error a plain browser module from public/, no types
 import { emberWarmth, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES } from '../../../../public/between/focus.js'
 
 // The focus sit at the hearth (council pass integral-octalysis2; his yes on io-focus-sit-look-1, 2026-10-25): the sticks you
