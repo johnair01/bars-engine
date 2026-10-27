@@ -1,0 +1,52 @@
+/* The Dojo's page: the HUD over the canvas. The room's own look is painted in
+   materials.js, not here. */
+:root {
+  --ink: #f3e3c9;
+  --amber: #f0a54a;
+  --teal: #2fa8ad;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #140d08; overflow: hidden; }
+body { font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif; color: var(--ink); }
+#app { position: fixed; inset: 0; }
+canvas { display: block; }
+
+#hud { position: fixed; inset: 0; pointer-events: none; }
+body.still #hud { display: none; }
+
+.title {
+  position: absolute; top: 22px; left: 26px;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .85);
+}
+.title h1 { margin: 0; font-size: 26px; letter-spacing: .14em; text-transform: uppercase; font-weight: 500; }
+.title p { margin: 6px 0 0; font-size: 13px; opacity: .72; letter-spacing: .06em; }
+
+.views {
+  position: absolute; bottom: 26px; left: 26px;
+  display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap;
+}
+.views button {
+  font: inherit; font-size: 13px; letter-spacing: .05em;
+  color: var(--ink); background: rgba(20, 13, 8, .55);
+  border: 1px solid rgba(243, 227, 201, .26);
+  border-radius: 999px; padding: 8px 16px; cursor: pointer;
+  backdrop-filter: blur(8px); transition: all .18s ease;
+}
+.views button:hover { border-color: var(--amber); color: #fff; }
+.views button.on { background: rgba(240, 165, 74, .18); border-color: var(--amber); }
+.views button.walk { margin-left: 6px; border-color: rgba(47, 168, 173, .5); }
+.views button.walk.on { background: rgba(47, 168, 173, .2); border-color: var(--teal); }
+
+.hint {
+  position: absolute; bottom: 30px; right: 26px;
+  font-size: 12px; letter-spacing: .08em; opacity: .5;
+}
+body.walking .hint { opacity: .78; }
+
+.crosshair {
+  position: absolute; left: 50%; top: 50%; width: 5px; height: 5px;
+  margin: -2.5px 0 0 -2.5px; border-radius: 50%;
+  background: rgba(243, 227, 201, .8);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .55); display: none;
+}
+body.walking .crosshair { display: block; }
