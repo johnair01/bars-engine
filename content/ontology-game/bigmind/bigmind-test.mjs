@@ -501,6 +501,16 @@ ok(await waitStep('sit-welcome'), 'in a hallway, sitting down goes straight to w
 const wide1 = await page.evaluate(() => window.__oagBigMind.openAt(window.__oagBigMind.state.s));
 ok(wide1 < wide0 - 0.1, 'the walls draw in around the sitting (' + wide0.toFixed(2) + ' to ' + wide1.toFixed(2) + ')');
 ok(await page.evaluate(() => window.__oagBigMind.sitting().k > 0.9), 'the figure sits');
+// Wendell, 24 October 2026: "Instead of sitting the characters legs are just going through the ground". Seated, the worn body
+// stays above the floor (no skinned point under it) and comes down to about half its standing height.
+const seated = await page.evaluate(() => {
+  const av = window.__oagBigMind.avatar, w = av.userData.walker, V = av.position.constructor; if (!w) return null;
+  av.updateMatrixWorld(true);
+  const m = w.mesh, pos = m.geometry.attributes.position, v = new V(); let low = 1e9, high = -1e9;
+  for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i); m.boneTransform(i, v); v.applyMatrix4(m.matrixWorld); low = Math.min(low, v.y); high = Math.max(high, v.y); }
+  const floor = av.position.y - 0.02; return { low: low - floor, top: high - floor };
+});
+ok(seated && seated.low > -0.05 && seated.top < 2.4, 'seated, the figure sits on the floor with nothing through it, about half its height: ' + JSON.stringify(seated));
 await page.click('[data-bm-sitnext]');
 ok(await waitStep('sit-witness') && await page.isDisabled('[data-bm-sitnext]'), 'Witness asks where it is and what it is like, from the room\'s steps');
 await page.click('[data-bm-sitplace="Belly"]'); await page.click('[data-bm-sittexture="tension"]');

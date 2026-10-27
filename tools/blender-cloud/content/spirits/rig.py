@@ -249,6 +249,19 @@ def skin_bones(name, bones):
     return None
 
 
+# Rigid pieces that always ride the head: the eyes. The ally's staff stands in front of its face, so before 24 October
+# 2026 the staff's reach (then 1.6 of the hand's radius, 0.36 m) also took the eyes, the heart core and the necklace's beads
+# onto the left hand, and they swung with the staff while the face turned (Wendell, spirit-rig-look-01: "The shellbacks face
+# moves but its eyes stay out and its unsettling"). The reach is now the staff's own width round the hand (0.13 m).
+# The lids (round 3's lidded eye) ride with the eyes they close over (25 October 2026): before, they went to the nearest
+# flesh, which could be the neck, and the lid would slide off the eye as the head turned.
+EYE_PARTS = ("eyeball", "eyewhite", "iris", "pupil", "glint", "lid_upper", "lid_lower")
+STAFF_REACH = 0.6
+# The aura rides the root (25 October 2026): its embers and the glowing pool on the ground. The finalized ally's robe brings
+# its legs' capsules near the floor, so by nearness the pool went onto a knee and tipped with every step.
+AURA_PARTS = ("ember", "stream", "drift")
+
+
 # ---- the walk and the idle ------------------------------------------------------------------------------------
 # A pose is {bone: (about X, about Y, about Z)} in radians, about the world's axes at the bone's head: X runs ahead,
 # so a turn about Y swings a leg ahead (negative) or back (positive), about X rolls, about Z turns.
@@ -502,7 +515,12 @@ def rig_scene(base, stage, scene=None):
             bone = "float"
         elif key in ("shell", "plastron"):
             bone = "chest" if kind == "quad" else "spine"
-        elif staff_at and math.hypot(c.x - staff_at[0], c.y - staff_at[1]) < 0.14 * f / 0.4 * 1.6:
+        elif key.startswith(AURA_PARTS) or (max(v.co.z for v in o.data.vertices) - min(v.co.z for v in o.data.vertices) < 0.01
+                                             and c.z < 0.03 * f / 0.4):
+            bone = "root"                                               # the aura and the pool on the ground
+        elif key in EYE_PARTS and "head" in J:
+            bone = "head"                                               # the eyes turn with the face, whatever lies near them
+        elif staff_at and math.hypot(c.x - staff_at[0], c.y - staff_at[1]) < 0.14 * f / 0.4 * STAFF_REACH:
             bone = "wristL"                                             # the staff and what it carries, in the left hand
         else:
             best, bd = None, gap
@@ -546,6 +564,25 @@ def rig_scene(base, stage, scene=None):
     if outside:
         notes.append("bones outside the body: " + ", ".join(outside))
 
+    # the face holds together: the flesh round the eyes and the snout (round 7 raised it by SNOUT_UP) follows the head
+    face = None
+    eyes = [o for o in rigid if o.name.split(".")[0] == "eyeball"]
+    if body is not None and eyes and "head" in J and body.vertex_groups.get("head") is not None:
+        gi = body.vertex_groups["head"].index
+        ec = [sum((v.co for v in o.data.vertices), Vector()) / len(o.data.vertices) for o in eyes]
+        er = max((v.co - ec[0]).length for v in eyes[0].data.vertices)
+        hw = []
+        for v in body.data.vertices:
+            if min((v.co - c).length for c in ec) < er * 1.6:                 # the skin the lids close over
+                hw.append(next((g.weight for g in v.groups if g.group == gi), 0.0))
+        snout = J["head"][1]
+        tip = [next((g.weight for g in v.groups if g.group == gi), 0.0) for v in body.data.vertices
+               if (v.co - snout).length < J["head"][2] * 1.2 and v.co.x > snout.x - J["head"][2] * 0.5]
+        face = {"round_eyes": {"verts": len(hw), "min_head": round(min(hw), 3) if hw else None},
+                "snout": {"verts": len(tip), "min_head": round(min(tip), 3) if tip else None}}
+        if (hw and min(hw) < 0.9) or (tip and min(tip) < 0.9):
+            notes.append("face flesh not on the head: " + json.dumps(face))
+
     rig.animation_data_create()
     for pb in rig.pose.bones:
         pb.rotation_mode = "QUATERNION"
@@ -558,7 +595,7 @@ def rig_scene(base, stage, scene=None):
     lo, hi = _world_bbox([o for o in meshes if placed.get(o.name) != "root"] or meshes)
     return {"base": base, "stage": stage, "kind": kind, "metres_per_unit": round(f, 4), "bones": len(J),
             "flesh": sorted(flesh), "rigid": len(rigid), "rigid_by_bone": dict(sorted(count.items())),
-            "size_m": [round(x, 3) for x in (hi - lo)], "steps": steps, "notes": notes}
+            "size_m": [round(x, 3) for x in (hi - lo)], "steps": steps, "face": face, "notes": notes}
 
 
 def export_glb(path):

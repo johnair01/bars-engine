@@ -13,6 +13,10 @@
  *   artifact's (board/store_write.py diff) without the contents leaving bars-engine
  * @permissions COUNCIL_MENU_TOKEN
  * @example GET /api/board/session-writes?collection=steps
+ *
+ * @description With ids=collection/docId,... the same GET also answers those documents' contents (up to 50), so a
+ *   session can merge a document that differs on both boards; without ids no contents leave
+ * @example GET /api/board/session-writes?ids=steps/feat-01,contacts/ari
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
@@ -40,7 +44,15 @@ export async function GET(req: NextRequest) {
   const hashes: Record<string, Record<string, string>> = {}
   for (const c of want ? [want] : [...SESSION_COLLECTIONS])
     hashes[c] = Object.fromEntries(Object.entries(docs[c] ?? {}).map(([id, d]) => [id, docHash(d)]))
-  return NextResponse.json({ board: 'council', hashes }, { headers: NO_STORE })
+  const ids = (req.nextUrl.searchParams.get('ids') ?? '').split(',').filter(Boolean).slice(0, MAX_DOCS / 2)
+  if (!ids.length) return NextResponse.json({ board: 'council', hashes }, { headers: NO_STORE })
+  const docsOut: Record<string, unknown> = {}
+  for (const k of ids) {
+    const [c, ...rest] = k.split('/')
+    const id = rest.join('/')
+    if (SESSION_COLLECTIONS.has(c) && id in (docs[c] ?? {})) docsOut[k] = docs[c][id]
+  }
+  return NextResponse.json({ board: 'council', hashes, docs: docsOut }, { headers: NO_STORE })
 }
 
 export async function POST(req: NextRequest) {
