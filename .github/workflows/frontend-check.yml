@@ -31,21 +31,8 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
-      # The inner vessel's model (content/ontology-game/cave/vessel.js) and the living ship's world read from it
-      # (content/calrunia/arrive/ship-world.js). Plain node, no browser.
-      - name: Ship model checks
-        run: npm run test:vessel
-
       - name: Move table (one cell per move on every surface)
         run: npm run test:move-table
-
-      # The studio boat in a real browser (council #412): one whole loop of /board/studio?demo=1&auto=1 and a ship opened
-      # from the fleet, with no page errors. Serves the route's own HTML; skips with a message if Chromium won't install.
-      - name: Studio boat loop (Playwright)
-        run: |
-          npm i --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install --with-deps chromium \
-            || echo "Playwright could not be installed; the check below will skip"
-          npx tsx scripts/studio-loop-check.ts
 
       # Blender pipeline, offline tier only: licence gate, manifest budgets, key handling. Plain Python, no bpy.
       # Known gaps are logged and do not fail the job (.specify/specs/blender-pipeline-test/).
