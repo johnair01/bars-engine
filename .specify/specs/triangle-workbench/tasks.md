@@ -4,7 +4,8 @@
 - [x] Define graph primitives, lifecycle, lock semantics, and bounded move set.
 - [x] Choose named, private constellations as the active canvas model.
 - [ ] Define constellation persistence schema.
-- [x] Add a non-persistent word harvest and player-owned charged/salient markers to the constellation prototype.
+- [x] Add a non-persistent word harvest, starter vocabulary, player-generated words, and quantitative player-owned charge markers to the constellation prototype.
+- [x] Add prototype charge propagation, positive-string extension, and pause-gated reversible 8th-Ray move.
 - [ ] Add held/settled-for-now states before persistent triangle construction.
 - [ ] Create data migration and private persistence layer.
 - [ ] Build the touch-first board plus accessible list view.
