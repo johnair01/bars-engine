@@ -19,6 +19,31 @@ Before a triangle is assembled, the player can use a **word harvest**: an unstru
 
 ## Product decisions
 
+### One dojo, two stances: orientation and live practice
+
+The dojo teaches the grammar of Thought Strings and also hosts a player's real work. These must be visibly distinct so a player never mistakes a tutorial demonstration for a change to their BAR, private constellation, spirit progression, or Between.
+
+| Stance | Purpose | Material | What can change | Exit |
+|---|---|---|---|---|
+| **Orientation: Learn the grammar** | Learn word harvest, charge, word-triangle, shared-word extension, positive continuation, bridge, projection, and return. | Authored, safe practice constellation; no personal BAR required. | Tutorial state only. No BAR provenance, ember, spirit, daemon, or Between effect. | Restart, leave, or begin live practice at any point. |
+| **Live practice: Work a real BAR** | Create or revise a private constellation in service of a real BAR/intention. | Player-created words and optional BAR context. | Only player-confirmed private constellation, BAR outcome, and later explicitly chosen craft ingredients. | Settle for now, return to BAR/Nook, or discard uncommitted draft. |
+
+- Orientation is replayable and never graded. It teaches through one small move at a time, not a worksheet that must be completed correctly.
+- The first live-practice screen is an **orientation moment**, not another tutorial: name an intention or choose a BAR, optionally choose a three-word platform, and decide whether to invite a spirit witness. All are optional except choosing where the work belongs (a BAR or private unlinked practice).
+- 8th-Ray and craft-affecting actions belong only to live practice, after a selected target and explicit pause/orientation confirmation.
+- The physical dojo communicates the stance: the wall carries a softly labeled demonstration constellation in Orientation; in Live practice it carries the active private constellation. The bowl/stools remain the same embodied focus place in both.
+- The player may copy a tutorial word into live harvest, but never carries tutorial charge, history, or outcomes as if they were personal data.
+
+### Source audit: why the split matters
+
+The following Mastering Alchemy playbooks were reviewed on 2026-10-27: **Session 12: The Triads**, **Session 16: Success Strings**, **Session 17: Eighth and Ninth Rays**, and **Session 18: A Beach in the Cube and the 8th Ray**.
+
+- They distinguish building familiarity with a geometry/tool from later using it for creation. Session 17 says the mechanics have been built and it is time to "drive" rather than continually inspect them; the product equivalent is orientation before live creation.
+- They frame learning as playful, curious, unhurried, and non-punitive. Orientation cannot score spiritual correctness, require disclosure, or gate access behind a perfect run.
+- They consistently place intention, present-time orientation, and a word platform before a creation exercise. Live practice needs a brief voluntary arrival ritual before a consequential operation.
+- They distinguish clearing/rearranging from creating/weaving a desired pattern. The workshop must preserve the sequence: observe/materialize → select a target → pause → choose an operation → optionally build/extend a positive continuation → return and integrate.
+- These are tradition-specific practice claims. The game may faithfully model their interaction grammar, but must describe effects as player-chosen reflective practice rather than assert that software has literally altered energy, matter, or another person.
+
 ### Two surfaces, one model
 
 - **Workbench** is a calm, pannable/zoomable 2D graph board. It is for breadth, comparison, and long strings of related triangles.
@@ -121,6 +146,9 @@ Every move creates a small, reversible history record: what changed, who made it
 
 ## Requirements
 
+- A player can enter a replayable orientation constellation that teaches construction grammar without mutating personal game state.
+- A player can explicitly enter live practice from a BAR, the Nook, or a private practice start; the UI makes the difference from Orientation unambiguous.
+- A player can leave either stance at any time without a failure state or forced completion.
 - A player can create and label words, word-triangles, and thought strings on a private workbench.
 - A player can harvest words before, during, and after triangle construction, then return later without losing incomplete material.
 - A player can add their own words and draw from an optional starter vocabulary before or after triangle construction.
