@@ -11,9 +11,11 @@
 
 1. Add `/dojo/triangle-workshop/loop-lab` with only local client state.
 2. Add a visible entry point from the dojo choice screen and a clean return path.
-3. Render the authored player-language wall using shared-word triangle conventions.
-4. Render two-axis reads and editable anchor decisions.
-5. Render the EA overlay only from `deriveSupportedElementalTriads`.
+3. Establish the practice-bay scene contract: constellation wall, floor triangle, anchor table, action loom, and Nook-return threshold.
+4. Integrate a first vertical wall asset, floor projection treatment, and action-table treatment; greybox quality is acceptable, detached dashboard presentation is not.
+5. Render the authored player-language wall using shared-word triangle conventions.
+6. Render two-axis reads and editable anchor decisions at the anchor table.
+7. Render the EA overlay only from `deriveSupportedElementalTriads`.
 
 ## Milestone 2 — Action proof
 
@@ -27,7 +29,8 @@
 1. Add pure unit tests for all four action forms and triad refusal cases.
 2. Add a component/integration test that asserts the Lab imports no dojo server action and issues no writes.
 3. Phone-test the complete happy path and all exit paths.
-4. Run three facilitated playtests; collect comprehension notes, not emotional disclosures.
+4. Verify that the complete loop is spatially legible as wall → floor → table → threshold, including a non-3D accessible path.
+5. Run three facilitated playtests; collect comprehension notes, not emotional disclosures.
 
 ## Definition of done
 

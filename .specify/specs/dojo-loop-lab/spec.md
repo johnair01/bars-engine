@@ -21,6 +21,50 @@ The live dojo now persists private work, supports 8th-Ray practice, and can crea
 
 The Lab is an authored scenario held entirely in client state. It must make no server action, database write, BAR mutation, ember creation, spirit change, daemon selection, or Between offer. A player can replay, abandon, or restart it freely.
 
+It is nevertheless a **place in the 3D world**, not a detached conceptual dashboard. The Lab is the first playable furnishing of the dojo: a spatial practice that extends the Nook → dojo portal work already underway. Its data is ephemeral; its embodied interaction is real product work.
+
+## 3D embodiment: the Loop Lab as a dojo practice bay
+
+The loop must be learned with the body as well as the eye. The room does not need the final Blender environment before the Lab can exist, but the Lab must establish the asset and interaction grammar that the eventual room inherits.
+
+### Minimum spatial slice
+
+Build a small **practice bay** within or immediately adjacent to the dojo rather than another full-screen dashboard:
+
+| Spatial asset | Player meaning | First implementation |
+|---|---|---|
+| **Constellation wall** | The wide field of player-language thought strings | A vertical luminous wall or slate with connected triangle glyphs; one branch may brighten at a time. |
+| **Floor triangle** | The one construction receiving present attention | Three low, clearly separated floor nodes joined by a quiet line-triangle. Projecting a wall triangle animates it here. |
+| **Anchor plinth / tuning table** | A deliberate choice to relate a player word to canonical EA grammar | Three physical slots or tokens: Metal, Water, Wood. A proposal appears as an unlit token; only a player placement/confirmation lights it. |
+| **Action loom / worktable** | Turning a selected movement frame into a bounded outward action | A small table holding the current lens, container, current-work phase, and resulting action card as tangible tiles—not a floating settings form. |
+| **Exit threshold** | The player remains free to stop, restart, or carry the idea into live practice | A visible door/path back to the Nook and an in-world restart gesture. |
+
+These assets should feel like one coherent workshop: warm dark wood/stone, teal and amber light, legible hand-scale objects, and no threat/success spectacle. The exact art direction belongs to the Blender pass; the contracts below must survive a placeholder implementation.
+
+### Spatial sequence
+
+1. **Arrive from the Nook:** the player enters the dojo and sees the practice bay already holding the authored constellation. A small invitation explains that this is a demonstration and nothing will be kept.
+2. **Approach the wall:** the player selects the `excitement → possibility → hope` cluster. The wall gives breadth; it never presents an inferred verdict.
+3. **Project to the floor:** selecting the cluster sends one triangle down a visible line of light to the three floor nodes. Only one triangle is physically active at once.
+4. **Bud the string:** at the shared `hope` node, the player reveals the `wonder → poignance → hope` continuation. The wall changes by local growth, not automatic global re-layout.
+5. **Work at the anchor table:** the player explicitly confirms, declines, or leaves the Metal/Water/Wood proposals. Each decision has a distinct physical state: unlit/proposed, placed/confirmed, or set aside/declined.
+6. **See the EA overlay appear:** after all three confirmations, the floor triangle and wall gain a restrained second layer of element-colored connective light. The three named canonical moves appear as three reachable cards/tokens; they are not narrated as a diagnosis.
+7. **Move to the action loom:** the player places/selects Career, small dojo gathering, and a current-work phase. The action form resolves into one practical object/card: e.g. a 45-minute pilot plan.
+8. **Choose an exit:** the player can set the card down, switch phase, restart the authored loop, return to the Nook, or intentionally hand off to live practice. No object crosses the threshold automatically.
+
+### Representation rules
+
+- The **wall** is for breadth and history; the **floor** is for one triangle at a time; the **table** is for transformation/action choices. Do not put all controls on any one surface.
+- Player-language nodes retain their own labels. EA states are an optional visual overlay with an explicit “confirmed by you” label.
+- Activation is visualized by liveliness/intensity (light, pulse, density), while orientation is visualized by texture/direction—not red = bad and green = good. Constricting, supportive, mixed, and unread must have distinguishable accessible labels and non-color cues.
+- The 8th-Ray interaction remains out of this first Lab loop. Do not represent it as a weapon, delete button, or compulsory cleansing effect.
+- The spatial interface must always have an accessible 2D/list equivalent; 3D enriches practice but must not gate it.
+- Phone testing may use a controlled camera and tap targets rather than free first-person locomotion. The same named assets and state transitions must later work in the full navigable Blender space.
+
+### Asset delivery rule
+
+Do not wait for a complete environmental render. Before the Lab’s action grammar is considered done, ship or integrate **one vertical constellation-wall asset, one floor-triangle projection treatment, and one action-loom/table treatment**—even if they are greybox-quality or stylized web equivalents. Each must have a stable semantic ID and interaction contract so Blender replacements do not rewrite game logic.
+
 ## Player promise
 
 The Lab says, in plain language:
@@ -227,6 +271,14 @@ It must not contain raw 3-2-1 material, player identity, BAR IDs, spirit IDs, da
 - The Lab visibly distinguishes player words, player reads, proposed/confirmed EA anchors, canonical EA moves, and action forms.
 - Each action card states a completion condition controlled by the player.
 
+### 3D world proof
+
+- The Lab is entered through the dojo/Nook world flow, or a temporary portal that preserves that spatial return path; it is not only reachable as a standalone dashboard route.
+- A player can complete the happy path by moving attention across wall → floor → anchor table → action loom → exit threshold.
+- The constellation wall, floor triangle, anchor table, and action loom each have distinct roles and named semantic IDs independent of their first art assets.
+- Projecting a selected triangle produces a visible spatial transition from wall to floor, and removing EA confirmation visibly removes only the optional overlay.
+- A phone player can tap every spatial object through a controlled camera; an accessible list path exposes the same choices.
+
 ### Privacy and non-effects
 
 - Instrumented test: visiting, completing, restarting, or abandoning the Lab makes zero calls to dojo server actions and zero database writes.
@@ -238,7 +290,7 @@ It must not contain raw 3-2-1 material, player identity, BAR IDs, spirit IDs, da
 
 - General-purpose EA anchor search or natural-language classification.
 - Persisting the two-axis word-read model in the current dojo schema.
-- A live BAR plant flow, spirits/daemons, ember feeding, Between effects, multiplayer, AI coaching, or Blender-room rendering.
+- A live BAR plant flow, spirits/daemons, ember feeding, Between effects, multiplayer, AI coaching, or the *final* Blender-room rendering. The Lab does require the minimum 3D practice-bay asset slice above; final environmental fidelity is not a reason to postpone embodiment.
 - Completing every lens/container/domain combination. The Lab proves one bounded Career + gathering slice first.
 
 ## Source anchors
