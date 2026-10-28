@@ -53,9 +53,7 @@ function testExtensionSharesTheWordObject() {
   assert.equal(c.words.length, 6, 'no new word objects for the anchor')
   assert.equal(ext.triangle.parentTriangleId, root.triangle.id)
   assert.equal(trianglesHolding(c, ids[1]).length, 2)
-  // grows outward: the anchor is corner 1 (lower right), so the new triangle sits to the lower right of its parent
-  assert.ok(ext.triangle.x > root.triangle.x && ext.triangle.y > root.triangle.y)
-  // branching from any word works, and nothing extends on its own
+  // geometry (shared line, far side, one triangle per side) is covered in lines.test.ts; nothing extends on its own
   assert.equal(c.triangles.length, 2)
 }
 

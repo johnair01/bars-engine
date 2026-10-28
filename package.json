@@ -130,7 +130,7 @@
     "test:ttv-history": "npx tsx src/lib/tap-the-vein/__tests__/vein-history.test.ts",
     "test:ttv-seed-library": "npx tsx src/lib/tap-the-vein/__tests__/seed-library.test.ts",
     "test:ttv-unchosen": "npx tsx src/lib/tap-the-vein/__tests__/unchosen.test.ts && npx tsx src/lib/tap-the-vein/__tests__/unchosen-read.test.ts",
-    "test:dojo-practice": "npx tsx src/lib/dojo-practice/__tests__/dojo-practice.test.ts && npx tsx src/lib/dojo-practice/__tests__/board-render.test.tsx",
+    "test:dojo-practice": "npx tsx src/lib/dojo-practice/__tests__/dojo-practice.test.ts && npx tsx src/lib/dojo-practice/__tests__/lines.test.ts && npx tsx src/lib/dojo-practice/__tests__/board-render.test.tsx",
     "test:between": "npx tsx src/lib/between/__tests__/rules.test.ts && npx tsx src/lib/between/__tests__/calrunia.test.ts",
     "test:vitest": "vitest run",
     "test:inner-garden-game": "node scripts/smoke-inner-garden-game.mjs",
