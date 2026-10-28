@@ -113,6 +113,8 @@ function testEmberTakesTheMovesElement() { // T1
   assert.equal(w(ember({ glow: null, feel: null })), true, 'glow and feeling may go unsaid')
   assert.equal(w(ember({ glow: 9 })), false)
   assert.equal(w(ember({ state: 'spent' })), false, 'an ember is never used up')
+  assert.equal(w(ember({ risen: true })), true, 'a focus sit run its length raises it one state')
+  assert.equal(w(ember({ risen: 2 })), false, 'it rises once, or not yet')
   assert.equal(mayWrite(member(B), g, pouch(A), 'update', { embers: { e1: ember() } }, null).ok, false, 'the other person\'s pouch')
 }
 
