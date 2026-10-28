@@ -204,7 +204,7 @@ The resolver receives explicit IDs and returns stable, authored forms in a stabl
 ## Next build order
 
 1. Run the unit fixture in a normal build environment and lock it as a CI check.
-2. Build the self-contained Dojo Loop Lab with authored scenario data and no persistence.
+2. Build the self-contained Dojo Loop Lab with authored scenario data and no persistence. The implementation-ready expansion lives in [`../dojo-loop-lab/spec.md`](../dojo-loop-lab/spec.md).
 3. Add the small `DojoActionGrammar` registry for the four gathering-phase forms.
 4. Add a BAR-preview contract and prove discard / settle / plant behavior.
 5. Replace the Lab scenario with live private practice only after its inputs, privacy, and action provenance are durable.
