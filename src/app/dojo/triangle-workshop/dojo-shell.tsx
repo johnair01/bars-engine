@@ -95,6 +95,9 @@ function Choose({ home, practices, onRoute, onResume }: { home: Home; practices:
             </li>
           ))}
         </ul>
+        <Link href="/dojo/triangle-workshop/loop-lab" className={`${tap} mt-3 flex w-full items-center rounded-xl border border-amber-100/30 bg-amber-950/20 p-4 text-left active:bg-amber-400/10`}>
+          <span><span className="block text-base font-medium text-white">Try the loop lab</span><span className="mt-1 block text-sm leading-6 text-zinc-400">A replayable, local-only practice bay for an authored Thought String → EA → action-card demonstration.</span></span>
+        </Link>
       </section>
       {practices.length > 0 && (
         <section aria-labelledby="open-h" className="rounded-2xl border border-zinc-700 bg-zinc-900/50 p-4">
