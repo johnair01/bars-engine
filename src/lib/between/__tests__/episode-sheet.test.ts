@@ -25,7 +25,7 @@ describe('episode sheet (port of council/tools/episode_sheet.py)', () => {
     charge.line = 'vibes'
     charge.q6.loudest = 'I am a teapot'
     const g = await read(charge)
-    expect(g.errors.length).toBe(2)
+    expect(g.errors?.length).toBe(2)
   })
 
   it('never invents drafted text: without the drafted block every free-text slot is a gap', async () => {
