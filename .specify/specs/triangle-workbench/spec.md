@@ -10,7 +10,7 @@ Make Triangle Workshop a place for sustained play with many related triangles, r
 2. **Arrange** — grow a thought string by adding triangles that share a word with an existing triangle; strings can branch from any shared word.
 3. **Select** — tap a triangle to focus it; the selected triangle becomes the candidate for the dojo.
 4. **Project** — send one focused word-triangle from the active thought string into the room.
-5. **Read charge** — mark words from **−3 (strongly charged)** through **0 (held)** to **+3 (strongly positive)**. A triangle's charge is the sum of its three word charges, so a shared word visibly affects every triangle that contains it.
+5. **Read charge** — mark each word's **activation** (0–3) and present orientation (**constricting, supportive, mixed, or unread**). A triangle can show these player-owned reads without claiming that intensity and goodness are the same thing.
 6. **Work** — make a bounded move on the selected triangle or word: name it, distinguish a value from a harmful form, shift a polarity, introduce a WOCGS / Emotional Alchemy move, or use an appropriately-scoped Mastering Alchemy preparation.
 7. **Return** — bring the edited triangle back to the workbench as the same object, with its history and status visible.
 8. **Settle** — leave it fluid for further play, archive it, or lock it in place as a current working insight. Locking is reversible.
@@ -82,11 +82,23 @@ Words are reusable: several word-triangles can reference the same word. Editing 
 
 ### Charge grammar
 
-- Every word has a player-owned integer charge from **−3 to +3**. This is a present-time self-report, not an objective diagnosis or a measure of another person.
-- Negative charge means the player currently experiences the word as contracted, resistant, or activating; positive charge means it feels generative or supportive. Zero is held / not currently charged.
-- A triangle's displayed charge is the sum of its word charges. This makes charge visible across the whole diagram while preserving the word as the editable unit.
-- A string can be extended only from a positively charged selected triangle. The player chooses the shared word and adds two positive words; the system never infers a solution.
-- An 8th-Ray action targets a player-selected negatively charged triangle only after explicit pause/orientation confirmation. M1 changes one chosen word by one charge step and records history. It is a playable representation of contemplative practice, not a claim that the product cleared an energy field.
+- Every word has a player-owned read with **activation** (0–3) and **orientation** (`constricting`, `supportive`, `mixed`, or `unread`). This is a present-time self-report, not an objective diagnosis or a measure of another person.
+- Activation and orientation must remain distinct: excitement can be high-activation and supportive; grief can be high-activation and mixed. The game never assigns either value from the word itself.
+- A triangle displays its three reads; it does not collapse them into a misleading summed moral score. Shared words visibly carry their player-owned read wherever they occur.
+- A string can be extended from any selected triangle. The player may optionally label an extension as a supportive continuation; the system never infers a solution from a positive score.
+- An 8th-Ray representation targets a player-selected constricting or mixed triangle only after explicit pause/orientation confirmation. M1 records a chosen operation and later player revision; it does not change a word's read automatically or claim that the product cleared an energy field.
+
+### Emotional Alchemy crosswalk
+
+Thought-string words and Emotional Alchemy primitives are related but never identical types of material.
+
+- A **word** is player language: it may be a concept, image, feeling, phrase, action, or question.
+- An **EA anchor** is a player-confirmed canonical state: channel, element, altitude, and move-table version. Proposed and declined anchors are visible only to the player and cannot drive mechanics.
+- An **EA teaching triangle** is deterministically derived only when the active constellation contains player-confirmed anchors for a same-altitude root, its Sheng successor, and that successor's Sheng successor. The root's Ke edge closes the triangle.
+- An **EA move** is an available named practice frame from the versioned move table, not an automatic instruction or interpretation.
+- A **BAR outcome** is player-authored. It may reference selected word IDs, confirmed anchor IDs, and selected move IDs, but never imports raw harvest, private notes, or charge history by default.
+
+The first falsification fixture is `elemental-triad-fixture.md`: Metal/satisfied → Water/satisfied → Wood/satisfied derives **Deepen Value**, **Renew Vitality**, and the Ke closing move **Activate Hope**. It exists as an authored lesson and test harness, not as a claim that “hope” is a sixth canonical emotion.
 
 ### Construction constraints
 
