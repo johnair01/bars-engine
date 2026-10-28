@@ -14,6 +14,8 @@ Make Triangle Workshop a place for sustained play with many related triangles, r
 6. **Return** — bring the edited triangle back to the workbench as the same object, with its history and status visible.
 7. **Settle** — leave it fluid for further play, archive it, or lock it in place as a current working insight. Locking is reversible.
 
+Before a triangle is assembled, the player can use a **word harvest**: an unstructured, revisitable group of words that arise around a charged pattern, resistance, question, or desired creation. A triangle is always a selected temporary slice of this wider material, never a claim that the whole pattern is only three things.
+
 ## Product decisions
 
 ### Two surfaces, one model
@@ -86,6 +88,14 @@ The **focus lens** is a full-screen, touch-first 2D view opened from the wall. I
 - **Revised:** changed in the room; returns to its board position with a small visible revision marker.
 - **Locked:** a deliberately held working map. It is read-only until explicitly unlocked; it is not “final truth.”
 
+### Word and string states
+
+- **Harvested:** noticed and held without requiring interpretation or action.
+- **Charged:** the player has marked a word as carrying energy/resistance; this is information, not an error state.
+- **Salient:** the player has marked a word as repeating, important, or worth revisiting.
+- **Held / revisitable:** an arrangement the player is keeping in view.
+- **Settled for now:** a player-chosen pause point; it may be reopened without loss of history.
+
 ### Moves
 
 M1 supports small authored moves; it does not infer, diagnose, or autonomously clear a player’s material.
@@ -103,11 +113,14 @@ Every move creates a small, reversible history record: what changed, who made it
 ## Requirements
 
 - A player can create and label words, word-triangles, and thought strings on a private workbench.
+- A player can harvest words before, during, and after triangle construction, then return later without losing incomplete material.
+- A player can mark a word as charged or salient without being required to explain its origin, project it, or change it.
 - The workbench accommodates branching thought strings without a fixed maximum triangle count.
 - A player can select exactly one word-triangle from an active thought string and project it to the dojo.
 - The projection room displays the selected three words and their triangle without claiming it is a fear-clearing configuration.
 - A move applied in the room updates the same word-triangle and returns it to the board without losing its place in the string.
 - A player can lock and unlock a triangle intentionally. Locking never prevents viewing or exports, and does not imply clinical resolution.
+- An operation is available only after the player intentionally selects a target and confirms a pause/orientation moment; the product never presents an operation as automatic clearing.
 - Board state is private by default, persisted per player, and exportable by the player before any future collaboration is introduced.
 - The UI supplies a gentle pause/orientation exit for emotionally activating material; it must not present the system as therapy or make metaphysical efficacy claims.
 - Phone interaction works with tap, drag, pinch/zoom alternatives, and a non-canvas accessible list view.
