@@ -1740,6 +1740,7 @@ function nearHtml(key, V, g) {
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
   if (key === "portal") {
     if (!portalOpen()) return `<div class="what"><b>A doorway, grown over</b><span class="t">The vines fall at the end of your first minute here.</span></div>`;
+    if (portalTo && !((list && list.gardens) || []).some(r => r.id === portalTo.id)) return `<div class="what"><b>The doorway</b><span class="t">${portalTo.name ? esc(portalTo.name) + " invited you to a room." : "You were invited to a room."}</span></div><div class="row"><button type="button" data-act="through">Walk through</button><button class="quiet" type="button" data-open="destinations">Other places</button></div>`;
     return `<div class="what"><b>The doorway</b><span class="t">A threshold to shared rooms and private practice.</span></div><div class="row"><button type="button" data-open="destinations">Choose a place</button></div>`;
   }
   if (key === "between" && isHome(g)) {
@@ -2514,8 +2515,14 @@ function destinationsSheet() {
   const sharedRows = shared.length
     ? shared.map(r => `<div class="roomrow"><div><b>${esc(roomName(r))}</b><span class="small muted">${r.phase === "spark" ? "A spark you are tending" : "Your shared Between"}</span></div><button type="button" data-act="goRoom" data-id="${esc(r.id)}">Enter</button></div>`).join("")
     : `<p class="small muted">No shared room is open yet. You can make one from Rooms.</p>`;
+  // the room an invite link names: she is not in it yet, so it is not among list.gardens, and the doorway must still
+  // offer it, first (an invite opened her nook but the doorway only listed her own rooms, 2026-10-28)
+  const invited = portalTo && !shared.some(r => r.id === portalTo.id)
+    ? `<div class="roomrow"><div><b>${portalTo.name ? esc(portalTo.name) + " invited you" : "The room you were invited to"}</b><span class="small muted">Walk through to join them there.</span></div><button type="button" data-act="through">Enter</button></div>`
+    : "";
   return `<div class="stack"><h2>The doorway</h2>
     <p class="muted">Choose where to go. You always return to your Nook.</p>
+    ${invited}
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
