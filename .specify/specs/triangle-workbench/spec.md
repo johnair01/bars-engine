@@ -10,9 +10,10 @@ Make Triangle Workshop a place for sustained play with many related triangles, r
 2. **Arrange** — grow a thought string by adding triangles that share a word with an existing triangle; strings can branch from any shared word.
 3. **Select** — tap a triangle to focus it; the selected triangle becomes the candidate for the dojo.
 4. **Project** — send one focused word-triangle from the active thought string into the room.
-5. **Work** — make a bounded move on the selected triangle or word: name it, distinguish a value from a harmful form, shift a polarity, introduce a WOCGS / Emotional Alchemy move, or use an appropriately-scoped Mastering Alchemy preparation.
-6. **Return** — bring the edited triangle back to the workbench as the same object, with its history and status visible.
-7. **Settle** — leave it fluid for further play, archive it, or lock it in place as a current working insight. Locking is reversible.
+5. **Read charge** — mark words from **−3 (strongly charged)** through **0 (held)** to **+3 (strongly positive)**. A triangle's charge is the sum of its three word charges, so a shared word visibly affects every triangle that contains it.
+6. **Work** — make a bounded move on the selected triangle or word: name it, distinguish a value from a harmful form, shift a polarity, introduce a WOCGS / Emotional Alchemy move, or use an appropriately-scoped Mastering Alchemy preparation.
+7. **Return** — bring the edited triangle back to the workbench as the same object, with its history and status visible.
+8. **Settle** — leave it fluid for further play, archive it, or lock it in place as a current working insight. Locking is reversible.
 
 Before a triangle is assembled, the player can use a **word harvest**: an unstructured, revisitable group of words that arise around a charged pattern, resistance, question, or desired creation. A triangle is always a selected temporary slice of this wider material, never a claim that the whole pattern is only three things.
 
@@ -53,6 +54,14 @@ The 3D wall is the spatial view of the active constellation, not a literal one-t
 | Cluster | A visual grouping / territory on the board | title, color, collapsed state |
 
 Words are reusable: several word-triangles can reference the same word. Editing its wording propagates intentionally; triangle-specific interpretations are stored as annotations, not copied words.
+
+### Charge grammar
+
+- Every word has a player-owned integer charge from **−3 to +3**. This is a present-time self-report, not an objective diagnosis or a measure of another person.
+- Negative charge means the player currently experiences the word as contracted, resistant, or activating; positive charge means it feels generative or supportive. Zero is held / not currently charged.
+- A triangle's displayed charge is the sum of its word charges. This makes charge visible across the whole diagram while preserving the word as the editable unit.
+- A string can be extended only from a positively charged selected triangle. The player chooses the shared word and adds two positive words; the system never infers a solution.
+- An 8th-Ray action targets a player-selected negatively charged triangle only after explicit pause/orientation confirmation. M1 changes one chosen word by one charge step and records history. It is a playable representation of contemplative practice, not a claim that the product cleared an energy field.
 
 ### Construction constraints
 
@@ -114,7 +123,10 @@ Every move creates a small, reversible history record: what changed, who made it
 
 - A player can create and label words, word-triangles, and thought strings on a private workbench.
 - A player can harvest words before, during, and after triangle construction, then return later without losing incomplete material.
-- A player can mark a word as charged or salient without being required to explain its origin, project it, or change it.
+- A player can add their own words and draw from an optional starter vocabulary before or after triangle construction.
+- A player can mark a word's charge and intensity (−3 through +3) without being required to explain its origin, project it, or change it.
+- A player can use an explicit, reversible 8th-Ray move on a negatively charged triangle only after an intentional pause/orientation moment; the changed word propagates through its shared thought string.
+- A player can extend a positively charged triangle into a new positive continuation through a shared word.
 - The workbench accommodates branching thought strings without a fixed maximum triangle count.
 - A player can select exactly one word-triangle from an active thought string and project it to the dojo.
 - The projection room displays the selected three words and their triangle without claiming it is a fear-clearing configuration.
