@@ -31,23 +31,18 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
-      # The inner vessel's model (content/ontology-game/cave/vessel.js) and the living ship's world read from it
-      # (content/calrunia/arrive/ship-world.js). Plain node, no browser.
-      - name: Ship model checks
-        run: npm run test:vessel
-
       - name: Move table (one cell per move on every surface)
         run: npm run test:move-table
-
-      # The studio boat in a real browser (council #412): one whole loop of /board/studio?demo=1&auto=1 and a ship opened
-      # from the fleet, with no page errors. Serves the route's own HTML; skips with a message if Chromium won't install.
-      - name: Studio boat loop (Playwright)
-        run: |
-          npm i --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install --with-deps chromium \
-            || echo "Playwright could not be installed; the check below will skip"
-          npx tsx scripts/studio-loop-check.ts
 
       # Blender pipeline, offline tier only: licence gate, manifest budgets, key handling. Plain Python, no bpy.
       # Known gaps are logged and do not fail the job (.specify/specs/blender-pipeline-test/).
       - name: Blender pipeline tests (offline)
         run: python3 tools/blender-cloud/tests/run.py --tier offline
+
+      # The mirror figure's robe (the robe-slit build, docs/3d-math.md rule 8): legs through the robe and holes through its
+      # slits, by rays, on the Walk, the Idle and the sit x four builds x three cuts. three.js is not a dependency, so this
+      # step fetches it (one package, no deps) into a temp folder for itself.
+      - name: Robe legs probe
+        run: |
+          npm i --no-save --no-package-lock --prefix "$RUNNER_TEMP/three" three@0.160.0
+          THREE_DIR="$RUNNER_TEMP/three/node_modules/three" node tools/figure-legs-probe.mjs

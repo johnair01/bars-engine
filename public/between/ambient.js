@@ -1,7 +1,7 @@
 /* The hollow's quiet sound: a crackling fire, running water and night insects, made in Web Audio (no sound files).
    Browsers only allow sound after a tap, so it starts on the first one; the mute choice is kept on this device. */
 export function createAmbient() {
-  let ctx = null, master = null, on = true;
+  let ctx = null, master = null, on = true, wg = null, hushed = false;
   try { on = localStorage.getItem("between.sound") !== "off"; } catch {}
 
   function noiseBuffer(c, seconds, brown) {
@@ -19,7 +19,7 @@ export function createAmbient() {
     // water: brown noise through a moving band-pass, with a slow swell
     const water = ctx.createBufferSource(); water.buffer = noiseBuffer(ctx, 4, true); water.loop = true;
     const wf = ctx.createBiquadFilter(); wf.type = "bandpass"; wf.frequency.value = 700; wf.Q.value = 0.6;
-    const wg = ctx.createGain(); wg.gain.value = 0.35;
+    wg = ctx.createGain(); wg.gain.value = hushed ? 0.08 : 0.35;
     const lfo = ctx.createOscillator(); lfo.frequency.value = 0.13; const lg = ctx.createGain(); lg.gain.value = 260; lfo.connect(lg); lg.connect(wf.frequency); lfo.start();
     water.connect(wf); wf.connect(wg); wg.connect(master); water.start();
 
@@ -41,6 +41,7 @@ export function createAmbient() {
     // crickets: short high chirps in little trains, now and then
     const chirp = () => {
       if (!ctx) return;
+      if (hushed) { setTimeout(chirp, 1500); return; }
       const t0 = ctx.currentTime, f0 = 4200 + Math.random() * 600, n = 2 + Math.floor(Math.random() * 3);
       const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; pan.connect(master); }
       for (let i = 0; i < n; i++) {
@@ -66,5 +67,7 @@ export function createAmbient() {
     toggle() { on = !on; try { localStorage.setItem("between.sound", on ? "on" : "off"); } catch {} if (on) start(); apply(); return on; },
     pause() { if (ctx && ctx.state === "running") ctx.suspend(); },
     resume() { if (ctx && on) ctx.resume(); },
+    /* Sat by the fire: the water and the insects thin away and the crackle carries the room. */
+    hush(h) { hushed = !!h; if (wg) wg.gain.linearRampToValueAtTime(hushed ? 0.08 : 0.35, ctx.currentTime + 2); },
   };
 }
