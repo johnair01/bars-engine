@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
 type Triangle = { id: string; words: [string, string, string]; x: number; y: number; branch?: boolean }
+type HarvestWord = { id: string; label: string; state: 'held' | 'charged' | 'salient' }
 
 const seed: Triangle[] = [
   { id: 't1', words: ['Well-being', 'Healthy', 'Clear mind'], x: 18, y: 54 },
@@ -11,6 +12,14 @@ const seed: Triangle[] = [
   { id: 't3', words: ['Fresh food', 'Abundant gardens', 'Enjoying'], x: 60, y: 48 },
   { id: 't4', words: ['Healthy', 'Uplifting music', 'Great friends'], x: 39, y: 73, branch: true },
   { id: 't5', words: ['Great friends', 'Dinner parties', 'Laughter'], x: 65, y: 76, branch: true },
+]
+
+const harvestSeed: HarvestWord[] = [
+  { id: 'h1', label: 'Hider', state: 'charged' },
+  { id: 'h2', label: 'Shy', state: 'held' },
+  { id: 'h3', label: 'Insecure', state: 'salient' },
+  { id: 'h4', label: 'Quiet', state: 'held' },
+  { id: 'h5', label: 'Embarrassed', state: 'charged' },
 ]
 
 function TriangleGlyph({ triangle, selected, onSelect }: { triangle: Triangle; selected: boolean; onSelect: () => void }) {
@@ -38,6 +47,9 @@ export function ConstellationPrototype() {
   const [projected, setProjected] = useState(false)
   const [lensOpen, setLensOpen] = useState(false)
   const [notice, setNotice] = useState('Tap a triangle on the wall.')
+  const [harvest, setHarvest] = useState(harvestSeed)
+  const [harvestSelection, setHarvestSelection] = useState<string[]>([])
+  const [newWord, setNewWord] = useState('')
   const selected = useMemo(() => triangles.find(({ id }) => id === selectedId) ?? triangles[0], [selectedId, triangles])
 
   function select(id: string) {
@@ -57,6 +69,41 @@ export function ConstellationPrototype() {
     setNotice(`${kind === 'continue' ? 'Continuation' : 'Branch'} grew from “${shared}.”`)
   }
 
+  function cycleHarvestState(id: string) {
+    setHarvest((current) => current.map((word) => {
+      if (word.id !== id) return word
+      const next = word.state === 'held' ? 'charged' : word.state === 'charged' ? 'salient' : 'held'
+      return { ...word, state: next }
+    }))
+  }
+
+  function selectHarvestWord(id: string) {
+    setHarvestSelection((current) => {
+      if (current.includes(id)) return current.filter((value) => value !== id)
+      if (current.length === 3) return [...current.slice(1), id]
+      return [...current, id]
+    })
+  }
+
+  function addHarvestWord() {
+    const label = newWord.trim()
+    if (!label) return
+    const word = { id: `h${Date.now()}`, label, state: 'held' as const }
+    setHarvest((current) => [...current, word])
+    setNewWord('')
+    setNotice(`“${label}” is held in the harvest. Nothing needs to happen to it yet.`)
+  }
+
+  function makeTriangleFromHarvest() {
+    if (harvestSelection.length !== 3) return
+    const words = harvestSelection.map((id) => harvest.find((word) => word.id === id)?.label ?? '') as [string, string, string]
+    const next = { id: `t${triangles.length + 1}`, words, x: 78, y: 60, branch: true }
+    setTriangles((current) => [...current, next])
+    setSelectedId(next.id)
+    setProjected(false)
+    setNotice('A temporary triangle was made from the harvest. The wider string remains open.')
+  }
+
   return (
     <main className="min-h-screen bg-[#081617] px-4 py-6 text-zinc-100 sm:px-7">
       <div className="mx-auto max-w-6xl">
@@ -68,6 +115,32 @@ export function ConstellationPrototype() {
           </div>
           <Link href="/dojo/triangle-workshop" className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-teal-300 hover:text-white">Back to threshold</Link>
         </header>
+
+        <section className="mt-6 rounded-2xl border border-teal-300/20 bg-zinc-950/65 p-5 shadow-xl">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-200">Word harvest</p>
+              <h2 className="mt-1 text-lg font-medium text-white">Start with what is here.</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">Words can be held without interpretation. Tap a word to select it; tap its state dot to cycle held → charged → keeps returning. Three selected words can become a temporary triangle.</p>
+            </div>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-400">{harvestSelection.length}/3 selected</div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {harvest.map((word) => {
+              const selectedWord = harvestSelection.includes(word.id)
+              const stateClass = word.state === 'charged' ? 'bg-rose-300' : word.state === 'salient' ? 'bg-amber-200' : 'bg-zinc-500'
+              return <div key={word.id} className={`flex overflow-hidden rounded-lg border ${selectedWord ? 'border-teal-300 bg-teal-400/10' : 'border-zinc-700 bg-zinc-900/70'}`}>
+                <button type="button" onClick={() => selectHarvestWord(word.id)} className="px-3 py-2 text-sm text-zinc-100">{word.label}</button>
+                <button type="button" aria-label={`Mark ${word.label}: currently ${word.state}`} title={`Currently ${word.state}; tap to change`} onClick={() => cycleHarvestState(word.id)} className="border-l border-zinc-700 px-2"><span className={`block h-2.5 w-2.5 rounded-full ${stateClass}`} /></button>
+              </div>
+            })}
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <input value={newWord} onChange={(event) => setNewWord(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') addHarvestWord() }} placeholder="Add a word when it comes…" className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-teal-400 focus:outline-none" />
+            <button type="button" onClick={addHarvestWord} className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-teal-300">Hold word</button>
+            <button type="button" disabled={harvestSelection.length !== 3} onClick={makeTriangleFromHarvest} className="rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-40">Make temporary triangle</button>
+          </div>
+        </section>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(17rem,.65fr)]">
           <section className="overflow-hidden rounded-2xl border border-amber-100/15 bg-[radial-gradient(ellipse_at_50%_30%,rgba(120,78,24,.26),rgba(8,22,23,.96)_72%)] shadow-2xl">
