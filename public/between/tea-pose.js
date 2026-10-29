@@ -20,16 +20,22 @@ export const KETTLE = {
 
 export const CUP = { r: 0.042, h: 0.07, spill: 0.22 };     // a cup tips this far before the tea runs over its lip
 
+/* Slow, as someone enjoying their tea moves (his look on tea-cup-look-2, 2026-10-29: "The arm should move slowly as if someone
+   is enjoying the tea"): the cup rises, rests at the lips, comes down, and then the figure savours it before the next sip. */
 export const TEA = {
-  reach: 1.2,        // the cup goes out to the spout
-  pour: 1.6,         // the stream runs
-  back: 0.7,         // the cup comes back over the lap
-  sip: 1.0,          // one sip, and the mouth closed after it
+  reach: 2.2,        // the cup goes out to the spout
+  pour: 2.6,         // the stream runs
+  back: 1.6,         // the cup comes back over the lap
+  sip: 5.4,          // one sip: up (SIP.up), at the lips (SIP.hold), down (SIP.down), then the savour
   sips: 2,
-  set: 0.8,          // the cup settles in the lap, and stays in the hand until you stand (tea-look-2)
+  set: 1.2,          // the cup settles in the lap, and stays in the hand until you stand (tea-look-2)
   streamFrom: 0.2,   // of the pour beat: the tea starts once the cup is under the spout
   streamTo: 0.85,
 };
+
+/* The sip beat's parts, as shares of TEA.sip; what is left after the cup comes down is the savour, when the head lifts and
+   the warmth shows (`savor` 0..1, peaking once the cup is back in the lap). */
+export const SIP = { up: 0.28, hold: 0.14, down: 0.26 };
 
 export const CUP_TILT = { pour: 0.3, sip: 0.7, rest: 0.0 };
 
@@ -60,7 +66,7 @@ const blend = (a, b, k) => ({ sx: mix(a.sx, b.sx, k), sy: mix(a.sy, b.sy, k), sz
 
 /* What the pour is doing at t seconds after the cup is taken up. `done` once it is held in the lap. */
 export function teaAt(t) {
-  const out = { phase: "done", tilt: CUP_TILT.rest, stream: 0, pour: 0, sip: 0, done: true, arm: ARM_ANGLES.lap };
+  const out = { phase: "done", tilt: CUP_TILT.rest, stream: 0, pour: 0, sip: 0, savor: 0, done: true, arm: ARM_ANGLES.lap };
   let at = Math.max(0, t || 0);
   if (at < TEA.reach) {
     const k = ease(clamp(at / TEA.reach));
@@ -81,11 +87,7 @@ export function teaAt(t) {
       arm: blend(ARM_ANGLES.pour, ARM_ANGLES.lap, k) };
   }
   at -= TEA.back;
-  if (at < TEA.sip * TEA.sips) {
-    const k = (at % TEA.sip) / TEA.sip, up = ease(clamp(k * 2)) * (1 - ease(clamp((k - 0.5) * 2)));
-    return { ...out, phase: "sip", done: false, tilt: mix(CUP_TILT.rest, CUP_TILT.sip, up), sip: Math.floor(at / TEA.sip) + 1,
-      arm: blend(ARM_ANGLES.lap, ARM_ANGLES.sip, up) };
-  }
+  if (at < TEA.sip * TEA.sips) return { ...out, ...sipBeat((at % TEA.sip) / TEA.sip), sip: Math.floor(at / TEA.sip) + 1 };
   at -= TEA.sip * TEA.sips;
   if (at < TEA.set) {
     const k = ease(clamp(at / TEA.set));
@@ -94,12 +96,19 @@ export function teaAt(t) {
   return out;
 }
 
+/* One sip at share k of its beat: the cup's lift to the mouth (`up` 0..1, held at the lips) and the savour after it. */
+function sipBeat(k) {
+  const a = SIP.up, b = a + SIP.hold, c = b + SIP.down;
+  const up = k < a ? ease(k / a) : k < b ? 1 : k < c ? 1 - ease((k - b) / SIP.down) : 0;
+  const s0 = b + SIP.down * 0.5, sv = clamp((k - s0) / (1 - s0)), savor = Math.sin(sv * Math.PI) ** 2;   // swells as the cup comes down, gone by the next
+  return { phase: "sip", done: false, tilt: mix(CUP_TILT.rest, CUP_TILT.sip, up), up, savor, arm: blend(ARM_ANGLES.lap, ARM_ANGLES.sip, up) };
+}
+
 /* One more sip from the cup held in the lap ("Take a sip"): the sip beat once, then held again. */
 export function sipAt(t) {
-  const at = Math.max(0, t || 0), out = { phase: "done", tilt: CUP_TILT.rest, stream: 0, pour: 0, sip: 0, done: true, arm: ARM_ANGLES.lap };
+  const at = Math.max(0, t || 0), out = { phase: "done", tilt: CUP_TILT.rest, stream: 0, pour: 0, sip: 0, savor: 0, done: true, arm: ARM_ANGLES.lap };
   if (at >= TEA.sip) return out;
-  const k = at / TEA.sip, up = ease(clamp(k * 2)) * (1 - ease(clamp((k - 0.5) * 2)));
-  return { ...out, phase: "sip", done: false, sip: 1, tilt: mix(CUP_TILT.rest, CUP_TILT.sip, up), arm: blend(ARM_ANGLES.lap, ARM_ANGLES.sip, up) };
+  return { ...out, ...sipBeat(at / TEA.sip), sip: 1 };
 }
 
 /* How far the right shoulder is from the spout against what the arm spans: the number the kettle's place is chosen by, and the

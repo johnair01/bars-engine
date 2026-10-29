@@ -7,10 +7,15 @@
    fire, from the moment the room is built, with the cup on its stone. bt-cup-is-the-figure: the cup is parented to the right
    wrist and marked noPaint, so the paint pass leaves it to the figure's own light (a cup lit by the room alone reads as a dark
    shape). Look tea-look-2 (his note 2026-10-29, "Cup isn't showing up in players hands"): the cup rides the hand, upright,
-   and stays held in the lap after the pour until you stand, when it goes back on the stone. */
-import { teaAt, sipAt, HAND, KETTLE, CUP, TOTAL } from "./tea-pose.js";
+   and stays held in the lap after the pour until you stand, when it goes back on the stone. His look on it (2026-10-29: "The arm
+   should move slowly as if someone is enjoying the tea. Maybe even a little effect of enlightenment and enjoyment"): the beats
+   are slow (tea-pose.js TEA), steam rises from a full cup, and after each sip the figure savours it: the head lifts, the chest
+   opens, a warm glow comes up round the head and a few motes of light drift up from the heart. */
+import { teaAt, sipAt, HAND, KETTLE, CUP, TOTAL, TEA } from "./tea-pose.js";
 
-const IRON = 0x332f2c, STONE = 0x6a645c, CLAY = 0xd8c8ae, AMBER = 0xd9a24a;
+const IRON = 0x332f2c, STONE = 0x6a645c, CLAY = 0xd8c8ae, AMBER = 0xd9a24a, GLOW = 0xffc874;
+const TEA_FULL = TEA.streamTo;   // of the pour beat: the cup counts as full once the stream stops
+const STEAM = { n: 4, rise: 0.22, life: 2.6 }, MOTES = 7;   // wisps over the cup (m, s); motes of the savour
 
 /* One room's kettle and cup. place(seat) moves the kettle to a seat; attach(body) puts the cup in that figure's hand. */
 export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
@@ -41,9 +46,23 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     new THREE.MeshBasicMaterial({ color: AMBER, transparent: true, opacity: 0.7, depthWrite: false }));
   stream.visible = false; scene.add(stream);
 
-  let seatNow = seat, attached = null, t0 = null, mode = "pour", held = false, stoneH = 0.04;
+  /* Steam off a full cup, and the savour's glow: soft sprites on one radial texture, additive so they read as light. */
+  const soft = (() => {
+    if (typeof document === "undefined") return null;
+    const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+    const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.4, "rgba(255,255,255,0.45)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const sprite = (color, opacity) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false })); m.userData.noPaint = true; m.visible = false; scene.add(m); return m; };
+  const steam = Array.from({ length: STEAM.n }, () => sprite(0xf2e8dc, 0));
+  const halo = sprite(GLOW, 0), motes = Array.from({ length: MOTES }, () => sprite(GLOW, 0));
+  const seed = Array.from({ length: MOTES }, (_, i) => ({ a: i * 2.39996, r: 0.05 + (i % 3) * 0.025, d: i / MOTES }));
+
+  const J = {};   // the held figure's bones, looked up once on attach
+  let frozen = null, lastT = null;   // frozen: a probe holds the beat at that many seconds in (freeze())
+  let seatNow = seat, attached = null, t0 = null, mode = "pour", held = false, stoneH = 0.04, full = false, glowK = 0;
   const a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), ws = new THREE.Vector3(), X = new THREE.Vector3(1, 0, 0);
-  const qp = new THREE.Quaternion(), qt = new THREE.Quaternion(), eu = new THREE.Euler();
+  const qp = new THREE.Quaternion(), qt = new THREE.Quaternion(), eu = new THREE.Euler(), hp = new THREE.Vector3(), cp = new THREE.Vector3();
 
   /* The kettle stands where the probe says a seated arm reaches: KETTLE.lip over the seat's top, and the stone makes up
      whatever the ground leaves of that height. */
@@ -75,11 +94,12 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     const wrist = o && o.getObjectByName("wristR"), bone = wrist || (o && o.getObjectByName("elbowR"));
     if (!bone) return false;
     attached = body3d; bone.add(cup);
+    for (const n of ["shoulderR", "elbowR", "neck", "spine", "head"]) J[n] = o.getObjectByName(n);
     cup.position.set(0, wrist ? HAND : 0.3, 0);
     cup.visible = true;
     return true;
   }
-  function detach() { attached = null; held = false; t0 = null; stream.visible = false; putDown(); }
+  function detach() { attached = null; held = false; t0 = null; full = false; glowK = 0; stream.visible = false; putDown(); for (const m of [...steam, halo, ...motes]) m.visible = false; }
 
   /* Upright in the figure's frame, tipped `tilt` about its left-right line, and sized in metres at the figure's scale,
      whatever the forearm's turn and the build's bone scales. */
@@ -95,15 +115,25 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
 
   /* Each frame after pose(), while the cup is in a hand: the arm turns for the beat (or the lap, once poured), the cup's
      tilt, and the stream while it pours. Returns the beat, or null with nothing in hand. */
+  let last = null;
   function tick(t) {
     if (!attached) return null;
     let s;
-    if (t0 != null) { s = (mode === "sip" ? sipAt : teaAt)(t - t0); if (s.done) { t0 = null; held = true; } }
+    const dt = lastT == null ? 0 : Math.min(0.1, Math.max(0, t - lastT)); lastT = t;
+    if (t0 != null) { s = (mode === "sip" ? sipAt : teaAt)(frozen != null ? frozen : t - t0); if (s.done) { t0 = null; held = true; } }
     else s = teaAt(TOTAL + 1);
-    const S = attached.holder.getObjectByName("shoulderR"), E = attached.holder.getObjectByName("elbowR");
+    const S = J.shoulderR, E = J.elbowR;
     if (S) S.quaternion.multiply(qt.setFromEuler(eu.set(s.arm.sx, s.arm.sy || 0, s.arm.sz, "XYZ")));   // after pose(), so it sits on the sit
     if (E) E.quaternion.multiply(qt.setFromEuler(eu.set(s.arm.ex, 0, 0, "XYZ")));
+    /* The savour: the head lifts and the chest opens a little (neck and spine X back, read off the rig). */
+    const sv = s.savor || 0, N = J.neck, Sp = J.spine;
+    if (sv > 0.001) {
+      if (N) N.quaternion.multiply(qt.setFromAxisAngle(X, -0.22 * sv));
+      if (Sp) Sp.quaternion.multiply(qt.setFromAxisAngle(X, -0.05 * sv));
+    }
     orient(s.tilt);
+    if (s.phase === "pour" ? s.pour > TEA_FULL : s.phase !== "reach") full = true;   // poured into once, it stays full
+    glow(t, sv, dt); last = { phase: s.phase, savor: sv, up: s.up || 0, pour: s.pour || 0, glow: glowK, full, steam: steam.map(m => [m.visible, +m.material.opacity.toFixed(2), m.position.toArray().map(x => +x.toFixed(2))])[0], halo: [halo.visible, +halo.material.opacity.toFixed(2)] };
     if (s.stream) {
       lipAt.getWorldPosition(a); cup.getWorldPosition(b);
       dir.subVectors(a, b); const len = dir.length();
@@ -115,6 +145,30 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     return s;
   }
 
+  /* Steam while the cup is full, the halo round the head and motes drifting up from the heart while the savour lasts. */
+  function glow(t, sv, dt) {
+    glowK += (sv - glowK) * Math.min(1, dt * 5);          // eased again, so a frame drop never pops it
+    cup.getWorldPosition(cp); const k = attached.scale || 1;
+    steam.forEach((m, i) => {
+      const ph = ((t / STEAM.life) + i / STEAM.n) % 1;
+      m.visible = full && !!soft;
+      m.position.set(cp.x + Math.sin(t * 0.9 + i * 1.7) * 0.012 * k, cp.y + (CUP.h * 0.5 + ph * STEAM.rise) * k, cp.z + Math.cos(t * 0.7 + i) * 0.012 * k);
+      m.scale.setScalar((0.04 + ph * 0.09) * k); m.material.opacity = 0.5 * Math.sin(ph * Math.PI);
+    });
+    const head = J.head, sp = J.spine;
+    const on = glowK > 0.01 && !!soft && head;
+    halo.visible = !!on; motes.forEach(m => { m.visible = !!on; });
+    if (!on) return;
+    head.getWorldPosition(hp); hp.y += 0.16 * k;
+    halo.position.copy(hp); halo.scale.setScalar((0.8 + 0.3 * glowK) * k); halo.material.opacity = 0.75 * glowK;
+    if (sp) sp.getWorldPosition(cp); else cp.copy(hp);
+    motes.forEach((m, i) => {
+      const q = seed[i], ph = (t * 0.18 + q.d) % 1;
+      m.position.set(cp.x + Math.cos(q.a + t * 0.4) * q.r * k, cp.y + (0.25 + ph * 0.6) * k, cp.z + Math.sin(q.a + t * 0.4) * q.r * k);
+      m.scale.setScalar(0.05 * k); m.material.opacity = glowK * Math.sin(ph * Math.PI);
+    });
+  }
+
   place(seat);
   return {
     group: g, cup, kettle: base,
@@ -123,6 +177,8 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     sip(t) { if (t0 != null || !held) return false; t0 = t; mode = "sip"; return true; },
     stop() { detach(); },
     running: () => t0 != null,
+    state: () => last,   // the beat drawn last frame, for the probes
+    freeze(sec) { frozen = sec; },   // probes only: hold the beat at sec seconds in (null lets it run)
     holding: () => !!attached,
     tick,
     total: TOTAL,
