@@ -6,8 +6,8 @@
    the map, one for each fantastic location that has been drawn (stills round 2026-10-28-ctw-locations-1). Walk up to a
    pane to read the place: its land and its three aspects, the brief the place generator builds from.
 
-   Previews only until his look (garden.js mounts it on ?ctw=): ?nook=1&ctw=1 stands the map in the nook; ?ctw=episode
-   also brings the sample charge and walks you to the stand with the episode unrolled; ?ctw=sheet opens the six questions.
+   It stands in every nook (garden.js mounts it; his yes on ctw-nook-look-1, 2026-10-29). Previews only: ?nook=1&ctw=episode
+   brings the sample charge and walks you to the stand with the episode unrolled; ?ctw=sheet opens the six questions.
    Nothing is saved: the charge lives on this page. A real player's charge never goes into the repo (ctw-pilot). */
 import * as THREE from "three";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
