@@ -127,6 +127,8 @@ const seatOf = (s: unknown) => (s === 0 || s === 1 ? s : typeof s === 'string' &
 /** One write from the page, checked against the rules and applied in a transaction so two people's tending merges. */
 export async function write(gardenId: string, who: Who, t: Target, op: Op, data: Doc | null) {
   return db.$transaction(async tx => {
+    // Two phones lifting at once: hold the garden's row so the second pick reads the first (shared-pick.ts, FR-004).
+    if (t.table === 'garden' && data && 'pick' in data) await tx.$queryRaw`SELECT id FROM between_gardens WHERE id = ${gardenId} FOR UPDATE`
     const g = await tx.betweenGarden.findUnique({ where: { id: gardenId } })
     if (!g) return { ok: false as const, status: 404, error: 'There is no garden here.' }
     const garden = asDoc(g.data)
