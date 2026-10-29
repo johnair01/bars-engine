@@ -29,7 +29,7 @@ for (let t = 0; t <= TOTAL + 1; t += STEP) {
 check('tilt', worstCarry <= CUP.spill, `carried no further than ${worstCarry.toFixed(3)} rad, the lip runs over at ${CUP.spill}`);
 check('stream', streamOutside === 0 && streamEarly === 0, `${streamOutside} samples running outside the pour beat, ${streamEarly} before the reach`);
 check('length', TOTAL <= LIMIT, `${TOTAL.toFixed(2)} s from taking the cup up to setting it down (the line is ${LIMIT})`);
-check('ends', teaAt(TOTAL + 0.01).done === true, 'the cup is back on the stone and the pour is over');
+check('ends', teaAt(TOTAL + 0.01).done === true, 'the pour is over and the cup is held in the lap');
 check('beats', phases.join(' > ') === 'reach > pour > back > sip > set > done', phases.join(' > '));
 check('clear', Math.hypot(KETTLE.lip.x, KETTLE.lip.z) >= 0.35, `the kettle stands ${Math.hypot(KETTLE.lip.x, KETTLE.lip.z).toFixed(3)} m out from the seat's middle`);
 

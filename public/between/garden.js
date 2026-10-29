@@ -13,6 +13,7 @@ import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure w
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
+import { NEAR as TEA_NEAR } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -1071,30 +1072,48 @@ function sitOn(id, then = null) {
   selected = "seat:" + id; refreshHud();
 }
 function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
-/* Tea by the fire (between-tea-1 slice 1, the solo cup). The kettle is drawn by the scene at the hearth's cushion, not placed
-   through the room kit (bt-tea-needs-a-spot); the cup is parented to the forearm of whoever is sat there (bt-cup-is-the-figure).
-   No qi, no shelf and no music yet: someone who has worked through nothing can sit down and pour. */
-let tea = null, teaT0 = null;
+/* Tea by the fire (between-tea-1 slice 1, the solo cup). The kettle is drawn by the scene at the hearth's seat, not placed
+   through the room kit (bt-tea-needs-a-spot), and stands there from the moment the room is up, with its cup on the stone; the cup
+   goes into the right hand of whoever is sat there (bt-cup-is-the-figure) and stays held in the lap until they stand.
+   "Pour a cup" is offered only to someone sat within NEAR of the kettle (tea-look-2, his note 2026-10-29: "the cup is offering
+   when they aren't near the teapot"). No qi, no shelf and no music yet: someone who has worked through nothing can sit and pour. */
+let tea = null, teaRoom = null, teaKey = "", teaWas = false;
 function teaNow() {
-  const s = seatsHere().find(st => st.hearth); if (!s) return null;
+  const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return null;
   if (!tea) tea = buildTea({ THREE, scene, seat: s, groundY });
-  else tea.place(s);
+  const key = `${s.id}:${s.x.toFixed(2)}:${s.z.toFixed(2)}:${s.yaw.toFixed(2)}:${s.top}`;
+  if ((teaRoom !== hollow || key !== teaKey) && !tea.holding()) { tea.place(s); teaRoom = hollow; teaKey = key; }
   return tea;
 }
+/* Sat, and the kettle within reach of the seat. */
+function teaNear() {
+  if (!meState.sitting || !tea) return false;
+  const s = seatBy(meState.seatWant); if (!s) return false;
+  const k = tea.kettle.position;
+  return Math.hypot(s.x - k.x, s.z - k.z) <= TEA_NEAR;
+}
+function teaBtn() {
+  if (!teaNear()) return "";
+  if (tea.running()) return "";
+  return tea.holding() ? `<button type="button" class="hmlink" data-act="teaSip">Take a sip</button>`
+    : `<button type="button" class="hmlink" data-act="teaPour">Pour a cup</button>`;
+}
 function teaPour() {
-  if (!meState.sitting || !seatedAtHearth()) return;
-  const m = teaNow(); if (!m || m.running()) return;
+  if (!teaNear()) return;
+  const m = tea; if (m.running() || m.holding()) return;
   if (!m.attach(meState.body)) return;
-  teaT0 = performance.now() / 1000;
-  m.pour(teaT0);
-  toast("A cup, by the fire.");
+  m.pour(performance.now() / 1000);
+  toast("A cup, by the fire."); hmHud();
 }
+function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
 function teaFrame(t) {
-  if (!tea || !tea.running()) return;
-  if (!meState.sitting || !seatedAtHearth()) { tea.stop(); return; }   // standing up takes the cup with it
+  if (hollow) teaNow();
+  if (!tea || !tea.holding()) return;
+  if (!meState.sitting || !teaNear()) { tea.stop(); teaWas = false; return; }   // standing up puts the cup back on the stone
   tea.tick(t);
+  const r = tea.running(); if (r !== teaWas) { teaWas = r; hmHud(); }
 }
-function teaStop() { if (tea) tea.stop(); teaT0 = null; }
+function teaStop() { if (tea) tea.stop(); teaWas = false; }
 const seatedAtHearth = () => { const s = meState.sitting && seatBy(meState.seatWant); return !!s && (s.hearth || (!!s.spot && inNook() && s.id === hearthSeatId())); };
 const othersHere = () => [...peers.values()].filter(p => p.uid !== me);
 function ownerSeatNow(uid) {
@@ -2132,7 +2151,7 @@ function hmHud() {
   const h = `<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
     ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
     ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
-    <button type="button" class="hmlink" data-act="teaPour">Pour a cup</button><button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
+    ${teaBtn()}<button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
   if (hmEl._h === h) return; hmEl._h = h; hmEl.innerHTML = h;
 }
 // breathing by keyboard or on the button: held down, as a press on the ember is
@@ -3313,6 +3332,7 @@ document.addEventListener("click", async ev => {
   if (a === "hmHang") { const h = hm && hm.hooks && hm.hooks.find(x => x.id === id); if (h) hmSend(h); return; }
   if (a === "hmStand") { hmStand(); return; }
   if (a === "teaPour") { teaPour(); return; }
+  if (a === "teaSip") { teaSip(); return; }
   if (a === "fsLay") { fsLay(); return; }
   if (a === "fsStay") { fsStay(); return; }
   if (a === "hmBreathe") return; // a press held on it, not a click (hmEl's own listeners)
@@ -3851,7 +3871,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { tea: () => tea, outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
