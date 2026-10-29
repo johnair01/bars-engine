@@ -1,0 +1,30 @@
+# Tasks: Triangle Workbench and Projection Room
+
+- [x] Define the workbench ↔ dojo projection contract.
+- [x] Define graph primitives, lifecycle, lock semantics, and bounded move set.
+- [x] Choose named, private constellations as the active canvas model.
+- [ ] Define constellation persistence schema.
+- [x] Add a non-persistent word harvest, starter vocabulary, player-generated words, and quantitative player-owned charge markers to the constellation prototype.
+- [x] Add prototype charge propagation, positive-string extension, and pause-gated reversible 8th-Ray move.
+- [x] Let the prototype extend a selected existing triangle from a player-chosen shared word plus exactly two harvested concepts.
+- [x] Audit the relevant Alchemy playbooks and define the orientation-versus-live-practice contract.
+- [x] Define and implement the deterministic Metal → Water → Wood / Activate Hope fixture, including confirmation and same-altitude guards.
+- [x] Preserve the end-to-end ontology and first demo contract in the Dojo Loop Library.
+- [ ] Build the non-persistent Dojo Loop Lab authored scenario: thought string → confirmed EA triangle → life lens / domain / personal-move selection → BAR preview.
+- [ ] Author the first deterministic gathering action grammar for Career + small dojo gathering across Skillful Organizing, Gathering Resources, Raise Awareness, and Direct Action.
+- [ ] Replace the prototype's scalar charge control with activation plus player-owned orientation.
+- [ ] Add a player-confirmed EA-anchor picker; proposed/declined anchors must never affect move availability.
+- [ ] Render derived EA teaching triangles as an optional lens over a thought string, never as a replacement for player-language triangles.
+- [x] Build a replayable authored orientation constellation with no BAR, spirit, daemon, ember, or Between mutations.
+- [x] Add explicit entry/return affordances between Orientation, Nook, BAR-linked live practice, and unlinked private live practice.
+- [x] Add the live-practice arrival moment: private BAR/intention selection, optional three-word platform, optional spirit witness, and clear discard/settle exits.
+- [x] Add held/settled-for-now states before persistent triangle construction.
+- [x] Create data migration and private persistence layer.
+- [ ] Build the touch-first board plus accessible list view.
+- [x] Build a non-persistent seeded constellation-wall prototype with selection, local continuation/branching, Focus Lens, and one floor projection.
+- [ ] Implement focus-region wall rules: nine active triangles, settled strand glyphs, branch buds, and one active floor projection.
+- [ ] Implement the focus lens for deliberate pan/zoom, search, repositioning, and accessible full-constellation navigation.
+- [ ] Build triangle projection and return loop on a stylized 2D dojo surface.
+- [ ] Add selected Emotional Alchemy/WOCGS move cards and history.
+- [ ] Add exports, reversible locks, and a player-facing privacy explanation.
+- [ ] Integrate the eventual Blender dojo asset.

@@ -31,7 +31,18 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
+      - name: Move table (one cell per move on every surface)
+        run: npm run test:move-table
+
       # Blender pipeline, offline tier only: licence gate, manifest budgets, key handling. Plain Python, no bpy.
       # Known gaps are logged and do not fail the job (.specify/specs/blender-pipeline-test/).
       - name: Blender pipeline tests (offline)
         run: python3 tools/blender-cloud/tests/run.py --tier offline
+
+      # The mirror figure's robe (the robe-slit build, docs/3d-math.md rule 8): legs through the robe and holes through its
+      # slits, by rays, on the Walk, the Idle and the sit x four builds x three cuts. three.js is not a dependency, so this
+      # step fetches it (one package, no deps) into a temp folder for itself.
+      - name: Robe legs probe
+        run: |
+          npm i --no-save --no-package-lock --prefix "$RUNNER_TEMP/three" three@0.160.0
+          THREE_DIR="$RUNNER_TEMP/three/node_modules/three" node tools/figure-legs-probe.mjs

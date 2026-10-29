@@ -273,5 +273,33 @@ def n5():
     return f"{secs:.0f} s, {peak:.2f} GB peak (record these; the kill line becomes twice them)"
 
 
+BVH_URL = "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/035/35_01.bvh"
+
+
+@test("RM1")
+def rm1():
+    """The rig + mocap step (rig_mocap/run.py): Average Dusk from character.py is rigged with Rigify, passes rig_check,
+    and walks a CMU clip (subject 35 trial 01, fetched, not stored: its licence forbids reselling it). MocapWalk is
+    one gait cycle looping in place (first key = last), the feet stay on the floor, and the head and torso are
+    levelled: cycle-mean head pitch and every spine bone's mean yaw within 2 degrees of rest."""
+    needs("raw.githubusercontent.com")
+    out = tmpdir("rm1")
+    bvh = out / "35_01.bvh"
+    bvh.write_bytes(urllib.request.urlopen(BVH_URL, timeout=60).read())
+    r = subprocess.run([BLENV, GAME / "cave/character.py", "--out", out / "char"], capture_output=True, text=True)
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {r.stderr[-300:]}")
+    r = subprocess.run([BLENV, TOOLS / "rig_mocap/run.py", out / "char/average-dusk.glb", bvh, out / "rm"],
+                       capture_output=True, text=True, timeout=1200)
+    check(r.returncode == 0, f"run.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    row = json.loads((out / "rm/rig_mocap.json").read_text())
+    check(row["keys"] == 28, f"{row['keys']} keys, want 28 (27 frames and the repeat)")
+    check(abs(row["lowest_ankle_m"] - 0.085) < 0.02, f"lowest ankle {row['lowest_ankle_m']} m, rest is 0.085")
+    m = row["mean_deg"]
+    check(abs(m["spine.006"][0]) < 2, f"head pitch {m['spine.006'][0]} deg")
+    bad = {n: v[2] for n, v in m.items() if abs(v[2]) > 2}
+    check(not bad, f"mean yaw off the walking direction: {bad}")
+    return f"28 keys, head pitch {m['spine.006'][0]} deg, ankle floor {row['lowest_ankle_m']} m"
+
+
 if __name__ == "__main__":
     main()

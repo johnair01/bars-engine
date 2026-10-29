@@ -800,3 +800,27 @@ charge spirits as a function of emergent perceptual shadow". The design is Six-f
   once the shadow has cleared to 0 with its spirit called up, the room asks which element the shadow spirit shows (the five,
   or "I can't tell yet"). Named, it walks out with that `element`, `revealed: true`, and a colour halfway from the shadow's
   to its element's, so dissolving can act on it. Until then its `element` stays null and it cannot be dissolved.
+
+**The daemon bodies, skinned (16 October 2026).** The callsheet's next step after the bodies went into the cave (#353): skin
+them and pose each Big Mind voice by its trust. `bake_daemons.py` now keeps the rig: per vertex its two joints, the first
+one's weight and its band in four bytes (character.py never uses more than two joints a vertex), and in the node's extras
+the 46 joints' rest (the bind pose, checked against the inverse bind matrices) and two ends, `honored` and `charged`, each
+joint's turn from the held shape. A body is 106 to 113 KB; the budget went from 96 to 128 KB for the rig and the let-go.
+
+Wendell's look at the first stances (16 October): "many of the daemons are too subtle in their changes ... They need to end
+not in a neutral pose but essentially in the honored version of their pose empowered and healthy versus resistant and
+charged. How would these voices relate to a healthy inner child", then "we need 'let go' stances for all the daemons".
+So `character.py` has `HONORED`, each movement completed in health, standing toward a child who is safe (the Protector a
+boundary with a hand on its heart, the Controller offering a hand, the Skeptic considering, the Fixer reaching down to help
+up, the Victim the storyteller with a performer's flourish, the Damaged Self's "bring it on", the Emotional Body's hands on
+its heart; the Victim and Damaged Self from his notes of 17 October), and `charged`, the held warp times 1.4. It writes both beside each figure (`X.stances.json`), and every daemon's
+Integrate action now ends in its honored form (`--warp X --integrate`).
+
+In `cave.js` the body is a `SkinnedMesh` that poses itself each time it is drawn from its group's `userData.stance`
+(`BODY_STANCES`): `open` runs from -1 (charged) through 0 (held) to 1 (honored), each joint turning on its own under its
+parent, then a turn, a lean, a nod, a tilt, a step and a reach, eased so a repair arrives slower than a hurt. Guarded and
+testing are charged, hurt fully charged and turned away, softening halfway to honored, trusting nearly honored, willing and
+repaired honored. A body with no stance holds its baked shape and breathes. `integrateBody(g)` plays the let-go; when it
+ends the body stands honored and moves by its stance again. Big Mind plays it when a 3-2-1 ends with the voice willing. `body_viewer.mjs` writes a one-file page
+of all eight in each stance with a Let go button. Rebake: `character.py --daemons --out X`, `character.py --warp D
+--integrate --out Y` for each daemon, then `bake_daemons.py X content/ontology-game/cave/daemons Y`.

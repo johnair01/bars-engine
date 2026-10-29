@@ -27,6 +27,7 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 
 | File | Job |
 |---|---|
+| `skill_run.py` | Runs a vendored blender-skills script (`.claude/skills/blender-*`, e.g. `blender-asset-qa/qa_check.py`) under the bpy package, on a `--glb` or `--blend`. |
 | `blenderkit_fetch.py` | Search, take the Nth free result, download one file type. CC0 by default. `--selftest` checks the whole API path. Writes a `.json` sidecar with name, author, licence. |
 | `prepare_asset.py` | Decode Draco or meshopt compression so `bpy` can import the GLB. |
 | `scene.py` | Import the asset, decimate to a triangle budget, cap textures, build the six-box figure with a 7-bone rig and a 48-frame walk, render, export, report. |
@@ -34,6 +35,7 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 | `from_picture.py` | Build a model from one front-view picture (lathe or inflate), score its outline against the picture, render it. |
 | `procgen.py` | Roots and mushrooms from numbers: forking roots, leaning mushrooms, clumps, mats and colonies. Pure Python. |
 | `detail.py` | The detail pass on the cave's grown pieces: each grown at its face budget (no decimation), cap rims kept sharp, a grey shade and baked shadow per vertex (`COLOR_0`). `--counts` needs no `bpy`. |
+| `rig_mocap/run.py` | Rig + mocap: rigs a `character.py` figure with Rigify (landmark table in `fitmeta.py`), binds it, makes the game skeleton, runs `rig_check`, and walks it with a CMU BVH (`retarget.py`: gait cycle found by pose matching, resampled to 24 fps, loops in place, head and torso levelled). Writes `mocap.blend` with action `MocapWalk`. `render.py` renders it, `check.py` reads it back. Test RM1 (network tier). The BVH is fetched, never stored: CMU lets you use the data but not resell it, even converted (mocap.cs.cmu.edu); credit "The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217." |
 | `content/ontology-game/cave/character.py` | The character creator (J4): a faceless figure from a theme, build and palette, rigged with the cave avatar's joints and walking with its walk cycle. `--all --sheet` makes the nine and their sheet. `WARP` bends the same figure into an NPC, one row per daemon, applied after the body is fused and before the weights (`--warp`, `--daemons`, `--one-number`). `--warp controller --integrate` adds a second action, Integrate: the held shape letting go into the Player's open stance (`INTEGRATE`). |
 
 ## The six problems, and what each became

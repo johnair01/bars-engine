@@ -12,7 +12,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { PrismaClient } from '@prisma/client'
-import { COLLECTIONS, RECORD_KINDS, validateSave } from '../src/lib/board/save'
+import { COLLECTIONS } from '../src/lib/board/save'
+import { importDocs, type ImportDoc } from '../src/lib/board/import'
 
 const args = process.argv.slice(2)
 const dir = args.find(a => !a.startsWith('--'))
@@ -22,27 +23,17 @@ if (!dir) { console.error('usage: board-import-artifact-store.ts <dir> [--board 
 
 async function main() {
   const db = new PrismaClient()
-  let added = 0, same = 0, refused = 0
+  const docs: ImportDoc[] = []
   for (const collection of COLLECTIONS) {
     const folder = path.join(dir!, collection)
     if (!fs.existsSync(folder)) continue
-    for (const f of fs.readdirSync(folder).filter(n => n.endsWith('.json')).sort()) {
-      const docId = f.slice(0, -5)
-      const data = JSON.parse(fs.readFileSync(path.join(folder, f), 'utf8'))
-      const v = validateSave({ board, collection, docId, data })
-      if (!v.ok) { refused++; console.warn(`refused ${collection}/${docId}: ${v.errors.join('; ')}`); continue }
-      const latest = await db.boardSave.findFirst({ where: { board, collection, docId }, orderBy: { receivedAt: 'desc' } })
-      if (latest && JSON.stringify(latest.data) === JSON.stringify(data)) { same++; continue }
-      console.log(`${dry ? 'would add' : 'add'} ${collection}/${docId}`)
-      if (!dry) await db.boardSave.create({ data: {
-        board, collection, docId, data, source: 'artifact-import',
-        recordedAt: RECORD_KINDS.has(collection) ? null : new Date(),
-        record: RECORD_KINDS.has(collection) ? null : 'board state; not recorded on main',
-      } })
-      added++
-    }
+    for (const f of fs.readdirSync(folder).filter(n => n.endsWith('.json')).sort())
+      docs.push({ collection, docId: f.slice(0, -5), data: JSON.parse(fs.readFileSync(path.join(folder, f), 'utf8')) })
   }
-  console.log(`${added} ${dry ? 'to add' : 'added'}, ${same} already here, ${refused} refused`)
+  const r = await importDocs(db, board, docs, dry)
+  r.refused.forEach(x => console.warn(`refused ${x}`))
+  r.added.forEach(x => console.log(`${dry ? 'would add' : 'add'} ${x}`))
+  console.log(`${r.added.length} ${dry ? 'to add' : 'added'}, ${r.same} already here, ${r.refused.length} refused`)
   await db.$disconnect()
 }
 main().catch(e => { console.error(e); process.exit(1) })

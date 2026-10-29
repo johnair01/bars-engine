@@ -17,6 +17,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/council/tools/context_size.py --hook"
+          }
+        ]
+      }
     ]
   }
 }

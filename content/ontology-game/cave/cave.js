@@ -64,7 +64,7 @@
   // Wendell, 2026-10-14, after walking the hall with the stick: "the walking is rather slow". 4 units a second was about one
   // body length (3.6) a second; 7 is about two, an ordinary game walk, with room above it for running. Free walking takes
   // quicker steps (STRIDE_K) so the feet keep up with the ground.
-  var WALK_SPEED = 7, STRIDE_K = 1.3;
+  var WALK_SPEED = 7, STRIDE_K = 1.3, RUN_K = 2.1; // Run walks at 2.1 times the pace (Big Mind's RUN_K)
   var STEPS_PER_S = 2.5;
   var MARK_AHEAD = 3.6;  // the marker floats this far ahead of the stand
   var MARK_Y = 2.0;      // and this high above the floor
@@ -151,6 +151,112 @@
     ["damaged-self", "The Damaged Self", "To take the damage. It is the Protector's last resort, because absorbing a hit is a form of protection.", 0x6a4a4a, "crack"],
     ["emotional-body", "The Emotional Body", "To receive the signal and process it into meaning. It is where Emotional Alchemy happens.", 0x3ab890, "orb"],
   ];
+  // ---- trust (sic-first-cave-sitting, 4d): Big Mind's three-part trust, ported (bigmind.js, board big-mind-trust1) ------------------
+  // Can you, will you, are you good. Can and will show as marks; goodness shows only in the daemon's own words. The tables, the
+  // marks and the stance rule are Big Mind's, unchanged. Here a daemon's record is kept for the run (state.trust, by daemon id);
+  // saves across visits wait for slice 4e. A move counts only when the 3-2-1's charge eases at the next reading (bmt-honest-moves).
+  function pips(n) { var s = ""; for (var i = 0; i < MARKS; i++) s += i < n ? "\u25cf" : "\u25cb"; return s; }
+  var MARKS = 3; // pips in a mark (a choice)
+  var KIND_LINES = {
+    can: { wait: "You waited with it when it held back.", hold: "You breathed a W.A.V.E. through beside it.", sit: "You sat with it.", pace: "You went slowly, as you said you would.", vouch: "Your spirits vouched for you." },
+    will: { "return": "You came back to your own place, as you promised.", visit: "You came back another day and asked again, as you promised." },
+    good: { share: "You showed it where you already share its picture of good.", honour: "You honoured its refusal.", intent: "You told it what you'd do for it." },
+  };
+  var BROKEN_LINES = { "will:return": "You said you'd come back to your own place, and left from its.", "good:push": "You pushed past its refusal." };
+  var OWN_LINES = { "will:return": "I said I'd come back to my own place, and I didn't. I'm sorry.", "good:push": "I pushed when you said no. That wasn't right." };
+  // What the return rite names as the move practised, from the honest moves seen this visit (bmt-return).
+  var PRACTISED = { wait: "waiting with a voice that held back", hold: "breathing a feeling through beside a voice", sit: "sitting with a voice without fixing it", pace: "going slowly when a voice needed it",
+    vouch: "letting the voices that trust you speak for you", "return": "keeping your word to a voice", visit: "coming back and asking again", share: "finding where you already agree with a part of you",
+    honour: "honouring a no", talk: "facing a part of you, talking with it and speaking as it", intent: "telling a part of you what you would do for it", repair: "owning it when you let a voice down" };
+  var TRUST = {
+    protector: { needs: { can: "wait", will: "return" }, picture: "good keeps us safe",
+      share: [["You keep us safe by watching. I keep us safe by going slowly."], ["I want the self safe too. That's why I came slowly."]],
+      read: { none: "I don't know yet what you're for.", seen: "You'd keep it safe too. I can see that now.", broken: "You pushed when I said no. That isn't how anyone keeps us safe." },
+      doubt: { can: "I don't know that you can wait when I say no.", will: "I don't know that you'll come back to your own place.", good: "I don't know yet whether you'd keep it safe." },
+      hint: { can: "That's something. But what I need to see is that you can wait when I hold back.", will: "Promises are easy. Come back to your own place when you say you will, and I'll believe it." },
+      vouch: "The Protector's spirit says you kept watch." },
+    controller: { needs: { can: "pace", will: "return" }, picture: "good meets the standard",
+      share: [["You hold the standard. I hold it too, one step at a time."], ["I want it done properly as well."]],
+      read: { none: "I haven't seen your standard yet.", seen: "You do things properly. I'll grant you that.", broken: "You rushed past a no. That isn't the standard." },
+      doubt: { can: "I don't know that you can take it one step at a time.", will: "I don't know that you'll do what you said.", good: "I don't know what your standard is." },
+      hint: { can: "Fine. But show me you can go one step at a time.", will: "Say what you'll do, then do it. Then we'll talk." },
+      vouch: "The Controller's spirit says you did it properly." },
+    skeptic: { needs: { can: "hold", will: "visit" }, picture: "good is honest about what is here",
+      share: [["You check what's true. I want to see what's true too, even when it's hard."], ["I won't pretend it's fine when it isn't."]],
+      read: { none: "I haven't seen any evidence about you yet.", seen: "You don't pretend. That's rare.", broken: "You pushed. That's what people do when they don't want to hear it." },
+      doubt: { can: "I don't believe you can actually stay with what's here.", will: "Everyone says they'll come back.", good: "I doubt you're honest about it yet." },
+      hint: { can: "Words. Show me you can stay with the feeling all the way through.", will: "I'll believe it when you come back and ask me again." },
+      vouch: "The Skeptic's spirit says the evidence held up." },
+    fixer: { needs: { can: "sit", will: "return" }, picture: "good doesn't leave what's broken",
+      share: [["You don't leave what's broken. I don't want to leave it either, so I'm staying with it."], ["I won't walk away from what hurts."]],
+      read: { none: "I don't know yet if you'd walk off and leave it.", seen: "You stay with what's broken. Without fixing it, even.", broken: "You pushed through. Something broke, and you left it." },
+      doubt: { can: "I don't know that you can sit with it without fixing it.", will: "I don't know that you'll come back and put it right.", good: "I don't know if you'd leave it broken." },
+      hint: { can: "Nice. But can you just sit with me, without fixing anything?", will: "Say you'll come back to your place, and then do it. That's a repair I'd trust." },
+      vouch: "The Fixer's spirit says you stayed with what was broken." },
+    "emotional-body": { needs: { can: "hold", will: "visit" }, picture: "good feels it all the way",
+      share: [["You feel it all the way. I'm learning to let it all the way in too."], ["I won't hurry it. I'd rather feel it."]],
+      read: { none: "I can't feel yet what you're about.", seen: "You let it all the way in. I felt that.", broken: "You pushed past me. It felt like being hushed again." },
+      doubt: { can: "I don't know that you can feel it all the way through.", will: "I don't know that you'll come back when it's moving again.", good: "I can't feel yet whether you mean it." },
+      hint: { can: "That helps. But I need to feel you stay with it all the way through.", will: "Come back when it's moving again, and ask me. Then I'll know." },
+      vouch: "The Emotional Body's spirit says you felt it all the way." },
+    victim: { needs: { can: "wait", will: "visit" }, picture: "good hears the whole story",
+      share: [["You want the whole story heard. I want to hear all of it."], ["I'm not going anywhere until you've said it."]],
+      read: { none: "I don't know yet if you'll stay for the whole of it.", seen: "You heard all of it. Nobody does that.", broken: "You pushed past me, like everyone does." },
+      doubt: { can: "I don't know that you'll stay to the end of it.", will: "Everyone says they'll come back.", good: "I don't know yet if you'd hear the whole story." },
+      hint: { can: "That's kind. But will you stay, when I say not yet?", will: "Come back another day and ask me again. Then I'll know you meant it." },
+      vouch: "The Victim's spirit says you heard the whole story." },
+    "damaged-self": { needs: { can: "pace", will: "return" }, picture: "good doesn't let someone else take the hit",
+      share: [["You won't let anyone else take the hit. I don't want you taking them all alone."], ["I'll take my share now. You don't have to take it all."]],
+      read: { none: "I don't know yet if you'd let me take it, like always.", seen: "You wouldn't let me take it all. I noticed.", broken: "You pushed. I took that one too." },
+      doubt: { can: "I don't know that you can go gently enough.", will: "I don't know that you'll come back to your own place.", good: "I don't know yet if you'd let me take the hit." },
+      hint: { can: "Thank you. But go slowly. That's what I need.", will: "Say you'll come back to your own place, and then come back." },
+      vouch: "The Damaged Self's spirit says you didn't let it take the hit alone." },
+  };
+  // The promises the player can make from the trust panel; the first is also the refusal path's first assurance.
+  var PROMISES = [["return", "I'll come back to my own place when we're done."], ["visit", "I'll come back another day and ask you again."]];
+  // Saved per voice as voices[id].trust (the Architect's shape, no words): seen [{dim, kind, at}], promises [{kind, made, kept}],
+  // broken and repaired [{dim, kind, at}], and ally (when its spirit became the player's ally).
+  function blankTrust() { return { seen: [], promises: [], broken: [], repaired: [] }; }
+  function trustOf(rec) { var t = (rec && rec.trust) || {}, b = blankTrust(); for (var k in b) b[k] = (t[k] || []).slice(); if (t.ally) b.ally = t.ally; return b; }
+  // Trust across visits (sic-first-cave-sitting, 4e): the same record, kept per daemon on this device in oag.cave.trust.v1, written as
+  // it changes so a promise or a fall is kept even if the player closes the page mid-chamber. A promise carries no block, only
+  // kind, made and kept. A "return" promise still open at the next visit is dropped: the player left from their own place, which
+  // breaks nothing (leaving from the voice's place has already marked it broken).
+  var TRUST_KEY = "oag.cave.trust.v1";
+  function readTrustStore() { try { var s = JSON.parse(localStorage.getItem(TRUST_KEY) || "null"); return s && s.v === 1 && s.voices ? s.voices : {}; } catch (e) { return {}; } }
+  function writeTrustStore(voices) { try { localStorage.setItem(TRUST_KEY, JSON.stringify({ v: 1, voices: voices })); } catch (e) { /* this browser would not save */ } }
+  function trustToStore(t) {
+    var o = { seen: t.seen, promises: t.promises.map(function (p) { return { kind: p.kind, made: p.made, kept: p.kept }; }), broken: t.broken, repaired: t.repaired };
+    if (t.ally) o.ally = t.ally; return o;
+  }
+  function trustFromStore(rec) {
+    var t = trustOf({ trust: rec }); t.promises = t.promises.filter(function (p) { return !(p.kind === "return" && p.kept == null); }); return t;
+  }
+  function hasHistory(t) { return !!(t.seen.length || t.promises.length || t.broken.length || t.repaired.length || t.ally); }
+  // A broken entry stands until a repair of the same dim and kind made after it.
+  function openBreaks(t) { return t.broken.filter(function (b) { return !t.repaired.some(function (r) { return r.dim === b.dim && r.kind === b.kind && r.at >= b.at; }); }); }
+  // A mark's pips: what the voice saw of the right answer (or spirits vouching, for can), less each fall not yet owned.
+  function markOf(t, vid, dim) {
+    var need = (TRUST[vid] || {}).needs || {};
+    var n = t.seen.filter(function (x) { return x.dim === dim && (x.kind === need[dim] || (dim === "can" && x.kind === "vouch")); }).length;
+    n -= openBreaks(t).filter(function (b) { return b.dim === dim; }).length;
+    return clamp(n, 0, MARKS);
+  }
+  function goodOf(t) { return openBreaks(t).some(function (b) { return b.dim === "good"; }) ? "broken" : t.seen.some(function (x) { return x.dim === "good"; }) ? "seen" : "none"; }
+  // It has seen all three: the second road past a voice (bmt-two-roads); its refusal still stays open.
+  function trusted(t, vid) { return markOf(t, vid, "can") > 0 && markOf(t, vid, "will") > 0 && goodOf(t) === "seen"; }
+  // How the voice stands toward the player, for the daemon bodies (the art thread's trust stances).
+  function stanceOf(t, vid, s) {
+    var open = openBreaks(t).length;
+    if (open) return "hurt";
+    if (s && s.letting) return "held"; // a let-go about to play starts from the held shape (bigmind.js letGoVoice)
+    if (s && (s.willing || s.letGone)) return "willing"; // a let-go leaves it willing (the cave's ready step follows)
+    if (trusted(t, vid)) return "trusting";
+    if (s && s.refusedNow) return "testing";
+    if (markOf(t, vid, "can") || markOf(t, vid, "will") || goodOf(t) === "seen") return "softening";
+    if (t.repaired.length) return "repaired";
+    return "guarded";
+  }
   // Game.jsx CHANNEL_JOBS (line 1176): how each channel does its job, shown at the pool.
   var CHANNEL_JOBS = {
     Anger: "Anger's job is to find obstacles to be overcome, or boundaries to be created or destroyed.",
@@ -224,6 +330,15 @@
     "damaged-self": "took the hit, which is the Damaged Self's job", "emotional-body": "felt it through for its meaning, which is the Emotional Body's job",
   };
   var MEET_OTHERS = [["ideas", "Your own ideas", "", 0x9a9aa8, ""], ["unknown", "Not sure", "", 0x6a6a74, ""]];
+  // The meeting spirit and the approach check-in, as Big Mind asks them (bigmind.js feelAsk and approach; board sic-first-cave-sitting).
+  // The movement words are plain body words, never a daemon; each belongs to one voice (dmt-body-blockers), and a movement that
+  // belongs to another voice marks the meeting spirit as merged, said without a name.
+  var MEET_FEEL = "How do you feel, meeting it?", NO_WORD = "No word yet";
+  var AP_MOVES = [["bracing", "Bracing"], ["gripping", "Gripping"], ["pulling-back", "Pulling back"], ["leaning-in", "Leaning in"], ["sinking", "Sinking"], ["curling-in", "Curling in"], ["flinging-open", "Flinging open"]];
+  var AP_MOVE_OF = { bracing: "protector", gripping: "controller", "pulling-back": "skeptic", "leaning-in": "fixer", sinking: "victim", "curling-in": "damaged-self", "flinging-open": "emotional-body" };
+  var AP_SENSES = [["constriction", "Tightness"], ["tension", "Tension"], ["strength", "Strength"], ["numbness", "Numbness"], ["free", "Moving freely"], ["other", "Something else"]];
+  var AP_VEILS = [["veiled", "Faint, or far away"], ["flooding", "Too much"], ["clear", "Clear"]];
+  var AP_STATES = [["settled", "It sits all right"], ["neither", "Neither"], ["wants", "It wants something"]];
   // An open line is heard for the same tells, with a plain word list (bigmind.js heard): a miss is cheap, and the player can
   // always say it doesn't sound like the daemon.
   function meetHeard(text, self) {
@@ -781,6 +896,13 @@
   // Looking with the thumb: how far a pixel of drag tilts, how far it can tilt (pushed up, then pulled down), how long the
   // thumb rests before the look eases back behind the figure (ms), and how close to the roof the camera may rise (choices).
   var LOOK = { pitchPerPx: 0.004, pitch: [-1.3, 0.6], settle: 600, roof: 1.75 };
+  // Touch on a phone (controls round 1, Six-faces-council council/callsheets/cave-controls.md; Wendell, 2026-10-21: "Ok the
+  // controls are pretty clunky still"). A touch that moves less than px and lifts within ms is a tap, anything else a drag
+  // (ctl-tap-rule). A thing that takes a tap answers within min px of it on screen, half again in still mode (ctl-generous-taps).
+  // A look turned by hand holds for hold seconds of walking before the camera eases back behind the figure, the camera
+  // follows at follow (it was 6), and pinch zooms its distance between zoom[0] and zoom[1] (ctl-gentle-camera). Still mode
+  // turns at still of the pace and moves the camera by itself not at all (ctl-still-mode).
+  var TOUCH = { px: 10, ms: 500, min: 48, hold: 2, follow: 3, zoom: [0.55, 1.5], still: 0.6 };
   // numbFog and numbFill (Wendell, 2026-10-13: "we need brighter light in the numbness"): the numb cave thins its fog to this
   // share so the circle round the figure isn't hazed out, its sky light is this share of the other caves', and the figure's
   // light burns this much brighter there. The circle is still one size, and steady along the whole walk.
@@ -924,7 +1046,7 @@
     for (i = 0; i <= n; i++) { a = (Math.PI / 2) * i / n; pts.push(new THREE.Vector2(Math.max(1e-4, Math.cos(a) * r), S / 2 + Math.sin(a) * r)); }
     return new THREE.LatheGeometry(pts, 8);
   }
-  function buildAvatar(THREE, texture) {
+  function buildAvatar(THREE, texture, walker) {
     var look = AVATAR_LOOK[texture] || AVATAR_LOOK.other;
     var mat = new THREE.MeshStandardMaterial({ color: look.color, roughness: 0.7, emissive: look.color, emissiveIntensity: 0.12, transparent: true });
     var mat2 = new THREE.MeshStandardMaterial({ color: new THREE.Color(look.color).multiplyScalar(0.6), roughness: 0.8, emissive: look.color, emissiveIntensity: 0.06, transparent: true });
@@ -956,6 +1078,7 @@
     });
     var o = new THREE.Group(); o.add(fit);                        // the outer group is what moves
     o.userData = { body: body, mat: mat, mat2: mat2, chest: chest, look: look, loose: -1, feet: 0, J: J, g: 0, amp: 0.3, stepIdx: 0 };
+    if (walker) o.userData.wearing = wearWalker(THREE, o); // the player's own figure (below); every other figure keeps the stand-in
     return o;
   }
   // loose runs from 0 (as the player brought it) to 1 (after the last step); it eases in a step at a time.
@@ -978,7 +1101,7 @@
     var g = d.g, target = Math.max(0.2, Math.min(0.62, Math.asin(Math.min(0.9, stepLen / 2 / LEG_WORLD))));
     d.amp += (target - d.amp) * Math.min(1, dt * 6);
     var A = d.amp, sL = Math.sin(ph), sR = Math.sin(ph + Math.PI);
-    J.hipL.rotation.x = -A * sL * g; J.hipR.rotation.x = -A * sR * g;
+    J.hipL.rotation.x = -A * sL * g; J.hipR.rotation.x = -A * sR * g; J.hipL.rotation.z = J.hipR.rotation.z = 0; // a sitting may have turned them out
     J.kneeL.rotation.x = g * (0.12 + 0.95 * Math.max(0, Math.cos(ph))); J.kneeR.rotation.x = g * (0.12 + 0.95 * Math.max(0, Math.cos(ph + Math.PI)));
     J.ankleL.rotation.x = -(J.hipL.rotation.x + J.kneeL.rotation.x) * 0.8; J.ankleR.rotation.x = -(J.hipR.rotation.x + J.kneeR.rotation.x) * 0.8;
     var B = A * 0.85, b = still ? 0.5 : breath;
@@ -996,12 +1119,14 @@
     // footfalls: step n lands at n / STEPS_PER_S seconds into the stretch
     var idx = Math.floor(clk * STEPS_PER_S + 1e-9);
     if (idx > d.stepIdx) d.stepIdx = idx;
+    if (d.walker) poseWalker(d, dt, g, b);
   }
-  // Bytes of geometry a group holds, counted once per geometry (the page test holds the avatar to about 50 KB).
+  // Bytes of geometry a group holds, counted once per geometry (the page test holds the avatar to about 50 KB). The worn
+  // walker is a downloaded body held to bake_daemons.py's phone budget instead, so it is left out here.
   function geometryBytes(root) {
     var seen = [], total = 0;
     root.traverse(function (m) {
-      var g = m.geometry; if (!g || seen.indexOf(g) >= 0) return; seen.push(g);
+      var g = m.geometry; if (!g || seen.indexOf(g) >= 0 || m.userData.walker) return; seen.push(g);
       Object.keys(g.attributes).forEach(function (k) { total += g.attributes[k].array.byteLength; });
       if (g.index) total += g.index.array.byteLength;
     });
@@ -1177,27 +1302,48 @@
 
   // The daemon bodies (Wendell, 16 October 2026, on the Big Mind centre: "build game-ready models for each daemon instead of
   // placeholders"). Each is a WARP figure from character.py holding its one of the six fundamental movements (bars-engine #328,
-  // council/daemons/GESTURES.md), baked for the phone by bake_daemons.py: 16-bit positions, 8-bit normals and a band per vertex
-  // (skin, tunic, trim, sash, trousers, shoes). A body is fetched the first time a scene asks for that daemon and shared after.
-  // Until it arrives, or if it never does, the daemon wears the rounded stand-in below, so nothing waits on the network.
+  // council/daemons/GESTURES.md), baked for the phone by bake_daemons.py: 16-bit positions, 8-bit normals, and per vertex its
+  // two joints, the first one's weight and its band (skin, tunic, trim, sash, trousers, shoes). The rig rides along (46 joints,
+  // the hands' included), so the body is skinned and holds its trust stance (bodyStance below). A body is fetched the first time
+  // a scene asks for that daemon and shared after. Until it arrives, or if it never does, the daemon wears the rounded stand-in
+  // below, so nothing waits on the network.
   var BODY_BANDS = ["skin", "tunic", "trim", "sash", "trousers", "shoes"], BODY_FRAME_H = 1.75, bodies = {};
   var BODY_IDS = ["protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body", "player"]; // baked; any other row keeps the stand-in
   function parseBody(THREE, buf) {
     var dv = new DataView(buf), jl = dv.getUint32(12, true);
     var j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bin = 20 + jl + 8;
-    var T = { 5123: Uint16Array, 5120: Int8Array, 5121: Uint8Array }, K = { SCALAR: 1, VEC3: 3 };
+    var T = { 5123: Uint16Array, 5120: Int8Array, 5121: Uint8Array }, K = { SCALAR: 1, VEC3: 3, VEC4: 4 };
     function acc(i) {
       var a = j.accessors[i], v = j.bufferViews[a.bufferView], C = T[a.componentType], n = K[a.type], st = (v.byteStride || n * C.BYTES_PER_ELEMENT) / C.BYTES_PER_ELEMENT;
       var raw = new C(buf, bin + (v.byteOffset || 0), v.byteLength / C.BYTES_PER_ELEMENT), out = new C(a.count * n);
       for (var q = 0; q < a.count; q++) for (var c = 0; c < n; c++) out[q * n + c] = raw[q * st + c]; // drop the stride's padding
       return out;
     }
-    var p = j.meshes[0].primitives[0], node = j.nodes[0], geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(acc(p.attributes.POSITION), 3, true));
+    function view(i, C) { var v = j.bufferViews[i]; return new C(buf.slice(bin + (v.byteOffset || 0), bin + (v.byteOffset || 0) + v.byteLength)); }
+    var p = j.meshes[0].primitives[0], node = j.nodes[0], rig = node.extras, geo = new THREE.BufferGeometry();
+    var qp = acc(p.attributes.POSITION), sk = acc(p.attributes._SKIN), n = qp.length / 3;
+    var pos = new Float32Array(n * 3), si = new Uint16Array(n * 4), sw = new Float32Array(n * 4), band = new Uint8Array(n);
+    for (var i = 0; i < n; i++) {
+      for (var c = 0; c < 3; c++) pos[i * 3 + c] = node.translation[c] + qp[i * 3 + c] / 65535 * node.scale[c]; // in the figure's metres, as the rig is
+      si[i * 4] = sk[i * 4]; si[i * 4 + 1] = sk[i * 4 + 1]; sw[i * 4] = sk[i * 4 + 2] / 255; sw[i * 4 + 1] = 1 - sk[i * 4 + 2] / 255; band[i] = sk[i * 4 + 3];
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     geo.setAttribute("normal", new THREE.BufferAttribute(acc(p.attributes.NORMAL), 3, true));
+    geo.setAttribute("skinIndex", new THREE.BufferAttribute(si, 4));
+    geo.setAttribute("skinWeight", new THREE.BufferAttribute(sw, 4));
     geo.setIndex(new THREE.BufferAttribute(acc(p.indices), 1));
-    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0.5, 0.5, 0.5), 0.9); // in the quantised box, which the node scales
-    return { geo: geo, band: acc(p.attributes._BAND), at: node.translation, span: node.scale };
+    geo.computeBoundingSphere();
+    // an action's keys: the Integrate action (character.py --integrate, bars-engine #351), or the player figure's mocap walk
+    // (bake_daemons.py --walker); straight-line keys at 24 a second
+    function keysOf(I) {
+      if (!I) return null;
+      var fr = view(I.frames, Uint16Array), va = view(I.values, Int16Array), f0 = 0, v0 = 0;
+      return { fps: I.fps, length: I.length, travel: I.travel, channels: I.channels.map(function (ch) {
+        var w = ch[1] === "r" ? 4 : 3, k = ch[2], o = { joint: ch[0], path: ch[1], frames: [], values: [] };
+        for (var q = 0; q < k; q++) { o.frames.push(fr[f0 + q]); var x = []; for (var c = 0; c < w; c++) x.push(va[v0 + q * w + c] / 32767); o.values.push(x); }
+        f0 += k; v0 += k * w; return o; }) };
+    }
+    return { geo: geo, band: band, joints: rig.joints, honored: rig.honored, charged: rig.charged, integrate: keysOf(rig.integrate), walk: keysOf(rig.walk), run: keysOf(rig.run) };
   }
   function bodyOf(THREE, id) {
     if (!bodies[id]) {
@@ -1218,18 +1364,380 @@
     for (var i = 0; i < n; i++) { var c = pal[BODY_BANDS[body.band[i]]] || base; col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
     return col;
   }
-  // Swap the stand-in's parts for the baked body, keeping the group, its material (opacity and glow already set on it stay)
-  // and anything a caller hung on it since (an aura, a carried orb).
+
+  // How a voice stands toward the player (bigmind.js STANCES, bars-engine #355). Each body moves between two ends of its own
+  // held movement (character.py HONORED and charged; Wendell, 16 October 2026: "They need to end not in a neutral pose but
+  // essentially in the honored version of their pose empowered and healthy versus resistant and charged"). open runs from -1,
+  // the movement charged and resisting, through 0, the baked held shape, to 1, the movement honored, as it stands for a healthy
+  // child. Then the figure's own turn (yaw, + to its left), its lean and the head's nod (+ forward and down), the head's tilt,
+  // a step (metres, + toward the player) and a reach of the right hand toward the way on. tau is how slowly it moves there
+  // (seconds). The shifts are large on purpose, so a change of trust reads at a glance (his note on the first look: "many of
+  // the daemons are too subtle in their changes"). A body with no stance holds its baked shape and breathes.
+  var BODY_STANCES = {
+    held: { open: 0, yaw: 0, lean: 0, head: 0, tilt: 0, step: 0, reach: 0, tau: 0.5 },
+    guarded: { open: -0.5, yaw: 0, lean: -0.12, head: 0, tilt: 0, step: -0.15, reach: 0, tau: 0.5 },       // square to the player, weight back, charged
+    testing: { open: -0.3, yaw: 0, lean: 0.06, head: -0.35, tilt: 0, step: 0.3, reach: 0, tau: 0.4 },      // chin up, a half step forward
+    softening: { open: 0.45, yaw: 0, lean: 0.04, head: 0.12, tilt: 0, step: 0, reach: 0, tau: 0.8 },       // halfway to its honored form
+    trusting: { open: 0.85, yaw: 0.25, lean: 0, head: 0, tilt: 0.06, step: 0, reach: 0, tau: 0.9 },        // nearly honored, turned a little open
+    willing: { open: 1, yaw: 0.9, lean: 0, head: 0, tilt: 0, step: 0, reach: 0.8, tau: 0.9 },              // honored, a half turn toward the wall, a hand toward the way on
+    hurt: { open: -1, yaw: -0.9, lean: 0.15, head: 0.3, tilt: 0, step: -0.25, reach: 0, tau: 0.25 },       // fully charged, a shoulder turned away
+    repaired: { open: 1, yaw: 0, lean: -0.03, head: -0.05, tilt: 0.15, step: 0, reach: 0, tau: 1.6 },      // honored and facing the player, arriving slowly
+  };
+  var STANCE_KEYS = ["open", "yaw", "lean", "head", "tilt", "step", "reach"];
+  // The player's settings from the title screen's gear (gd-title-as-game), kept in this browser only: sound on or off, and
+  // still (reduced motion) as the device asks unless the player sets it. reducedMotion follows them as they change.
+  var SETTINGS_KEY = "oag.settings.v1", TUTORIAL_KEY = "oag.tutorial.v1", LAST_KEY = "oag.last.v1";
+  function readSettings() {
+    var s = null; try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null"); } catch (e) {}
+    return s && s.v === 1 ? s : { v: 1, sound: true, still: null };
+  }
+  var settings = readSettings();
+  function deviceStill() { return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  function stillNow() { return settings.still == null ? deviceStill() : !!settings.still; }
+  var reducedMotion = stillNow();
+  function setSetting(k, v) {
+    settings[k] = v; reducedMotion = stillNow();
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  }
+  // Where the player last played, for the title's Continue: { v, at: "room" | "cave" | "bigmind", where (the body place) }.
+  function readLast() { try { var l = JSON.parse(localStorage.getItem(LAST_KEY) || "null"); return l && l.v === 1 && l.at ? l : null; } catch (e) { return null; } }
+  function keepLast(at, where) { try { localStorage.setItem(LAST_KEY, JSON.stringify({ v: 1, at: at, where: where || "" })); } catch (e) {} }
+  // The walkthrough (gd-skip-and-replay): the ids of the lessons done, kept as a list with no words. The title's
+  // "Show the walkthrough again" removes the key, and every lesson shows again.
+  function readTutorial() { try { var t = JSON.parse(localStorage.getItem(TUTORIAL_KEY) || "[]"); return Array.isArray(t) ? t : []; } catch (e) { return []; } }
+  function keepTutorial(done) { try { localStorage.setItem(TUTORIAL_KEY, JSON.stringify(done)); } catch (e) {} }
+  // One lesson learned: added to what is kept now, so a room and a cave open at once never undo each other's lessons.
+  function learnTutorial(id, done) {
+    var all = readTutorial(); (done || []).concat([id]).forEach(function (x) { if (all.indexOf(x) < 0) all.push(x); });
+    keepTutorial(all); return all;
+  }
+  // The rig for one worn body: bones from the baked rest (the bind pose), each joint's rest turn in the figure's space, and
+  // the order to pose them in, parents first.
+  function bodyRig(THREE, body) {
+    var J = body.joints, n = J.length, bones = [], kids = [], roots = [];
+    J.forEach(function (r) { var b = new THREE.Bone(); b.name = r[0]; b.position.fromArray(r[2]); b.quaternion.fromArray(r[3]); bones.push(b); kids.push([]); });
+    J.forEach(function (r, i) { if (r[1] < 0) roots.push(i); else { bones[r[1]].add(bones[i]); kids[r[1]].push(i); } });
+    roots.forEach(function (i) { bones[i].updateMatrixWorld(true); }); // the chain alone, so the inverses are the figure's own
+    var order = [], restW = [], restP = [];
+    (function walk(list) { list.forEach(function (i) { order.push(i); walk(kids[i]); }); })(roots);
+    order.forEach(function (i) {
+      var pi = J[i][1], q = new THREE.Quaternion().fromArray(J[i][3]), p = new THREE.Vector3().fromArray(J[i][2]);
+      if (pi >= 0) { q.premultiply(restW[pi]); p.applyQuaternion(restW[pi]).add(restP[pi]); }
+      restW[i] = q; restP[i] = p;
+    });
+    function find(nm) { for (var i = 0; i < n; i++) if (J[i][0] === nm) return i; return -1; }
+    function under(i) { var out = [i]; kids[i].forEach(function (k) { out = out.concat(under(k)); }); return out; }
+    var hips = find("hips"), feet = [find("ankleL"), find("ankleR")];
+    // each end as every joint's own turn under its parent, so a stance between them bends each joint on its own, as the
+    // Integrate action does, and a hand never swings through the wrist's world path
+    function locals(turns) {
+      var W = turns.map(function (q, i) { return new THREE.Quaternion().fromArray(q).multiply(restW[i]); });
+      return W.map(function (w, i) { var pi = J[i][1]; return pi < 0 ? w.clone() : W[pi].clone().invert().multiply(w); });
+    }
+    var rig = { bones: bones, roots: roots, order: order, parent: J.map(function (r) { return r[1]; }),
+      restLocal: J.map(function (r) { return [r[2], r[3]]; }), restW: restW, restP: restP,
+      restL: J.map(function (r) { return new THREE.Quaternion().fromArray(r[3]); }), honored: locals(body.honored), charged: locals(body.charged),
+      hips: hips, spine: find("spine"), head: find("neck"), arm: find("shoulderR"), feet: feet,
+      under: { spine: under(find("spine")), head: under(find("neck")), arm: under(find("shoulderR")), all: under(hips) },
+      ground: Math.min(restP[feet[0]].y, restP[feet[1]].y), skeleton: new THREE.Skeleton(bones),
+      W: bones.map(function () { return new THREE.Quaternion(); }), P: bones.map(function () { return new THREE.Vector3(); }),
+      cur: {}, t: 0, last: 0, integrate: body.integrate, playing: -1 };
+    STANCE_KEYS.forEach(function (k) { rig.cur[k] = 0; });
+    return rig;
+  }
+  var tq = null, tq2 = null, tv = null, AX = null, REACH = null;
+  function bodyTemps(THREE) {
+    if (tq) return;
+    tq = new THREE.Quaternion(); tq2 = new THREE.Quaternion(); tv = new THREE.Vector3();
+    AX = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+    REACH = new THREE.Vector3(-0.45, -0.2, 0.87).normalize(); // ahead, out to its right and a little down (it faces +z; its right is -x)
+  }
+  // Turn every bone in a list by q in the figure's space, about the first one's joint (it rides as a rigid piece).
+  function turnPart(rig, list, q) { for (var k = 0; k < list.length; k++) rig.W[list[k]].premultiply(q); }
+  function poseRig(THREE, rig, c, breath) {
+    var o = rig.order, J = rig.bones;
+    var end = c.open < 0 ? rig.charged : rig.honored, f = Math.min(1, Math.abs(c.open));
+    for (var k = 0; k < o.length; k++) {
+      var i = o[k], pi = rig.parent[i];
+      rig.W[i].copy(rig.restL[i]).slerp(end[i], f);
+      if (pi >= 0) rig.W[i].premultiply(rig.W[pi]);
+    }
+    if (c.lean + breath) turnPart(rig, rig.under.spine, tq.setFromAxisAngle(AX.x, c.lean + breath));
+    if (c.head || c.tilt) { tq.setFromAxisAngle(AX.x, c.head); tq2.setFromAxisAngle(AX.z, c.tilt); turnPart(rig, rig.under.head, tq.multiply(tq2)); }
+    if (c.reach > 0.001) { // the right arm swings to point toward the way on (a bone runs along its own +y)
+      tv.set(0, 1, 0).applyQuaternion(rig.W[rig.arm]);
+      tq.setFromUnitVectors(tv, REACH);
+      turnPart(rig, rig.under.arm, tq2.set(0, 0, 0, 1).slerp(tq, Math.min(1, c.reach)));
+    }
+    if (c.yaw) turnPart(rig, rig.under.all, tq.setFromAxisAngle(AX.y, c.yaw));
+    // each bone's own turn under its parent, and where its joint lands, so the lower foot can be set back on the ground
+    var low = Infinity;
+    for (k = 0; k < o.length; k++) {
+      i = o[k]; pi = rig.parent[i];
+      if (pi < 0) { J[i].quaternion.copy(rig.W[i]); rig.P[i].copy(rig.restP[i]); }
+      else { J[i].quaternion.copy(tq.copy(rig.W[pi]).invert()).multiply(rig.W[i]); rig.P[i].copy(J[i].position).applyQuaternion(rig.W[pi]).add(rig.P[pi]); }
+      if (i === rig.feet[0] || i === rig.feet[1]) low = Math.min(low, rig.P[i].y);
+    }
+    J[rig.hips].position.copy(rig.restP[rig.hips]);
+    J[rig.hips].position.y += rig.ground - low;
+    J[rig.hips].position.z += c.step;
+  }
+  // The Integrate action at frame f: the baked rest, then each keyed joint's own turn (and the hips' shift) at f.
+  function playRig(rig, f) {
+    var A = rig.integrate, J = rig.bones;
+    rig.order.forEach(function (i) { var r = J[i]; r.position.fromArray(rig.restLocal[i][0]); r.quaternion.fromArray(rig.restLocal[i][1]); });
+    A.channels.forEach(function (ch) {
+      var F = ch.frames, V = ch.values, k = 0;
+      while (k < F.length - 1 && F[k + 1] <= f) k++;
+      var a = V[k], b = V[Math.min(k + 1, F.length - 1)], u = k + 1 < F.length && F[k + 1] > F[k] ? Math.min(1, Math.max(0, (f - F[k]) / (F[k + 1] - F[k]))) : 0;
+      var bone = J[ch.joint];
+      if (ch.path === "r") { tq.set(a[0], a[1], a[2], a[3]); tq2.set(b[0], b[1], b[2], b[3]); bone.quaternion.copy(tq).slerp(tq2, u).normalize(); }
+      else bone.position.set(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u);
+    });
+  }
+  // One step of a worn body: ease toward its group's stance (userData.stance), breathe, or run the Integrate action.
+  function stepBody(THREE, g, rig, dt) {
+    bodyTemps(THREE); rig.t += dt;
+    if (rig.playing >= 0) {
+      rig.playing = Math.min(rig.integrate.length, rig.playing + dt * rig.integrate.fps); playRig(rig, rig.playing);
+      if (rig.playing < rig.integrate.length) return;
+      // let go: it stands honored (the action's end is open 1) and from here moves by its stance again
+      rig.playing = -1; STANCE_KEYS.forEach(function (k) { rig.cur[k] = k === "open" ? 1 : 0; }); g.userData.letGo = true;
+    }
+    var want = BODY_STANCES[g.userData.stance] || BODY_STANCES.held, e = reducedMotion ? 1 : 1 - Math.exp(-dt / want.tau);
+    STANCE_KEYS.forEach(function (k) { rig.cur[k] += (want[k] - rig.cur[k]) * e; });
+    poseRig(THREE, rig, rig.cur, reducedMotion ? 0 : 0.012 * Math.sin(rig.t * 1.5));
+  }
+  // Swap the stand-in's parts for the baked body, skinned to its rig, keeping the group, its material (opacity and glow already
+  // set on it stay) and anything a caller hung on it since (an aura, a carried orb). The body poses itself each time it is drawn.
   function wearBody(THREE, g, d, h, body) {
     var geo = body.geo.clone(); geo.setAttribute("color", new THREE.BufferAttribute(bodyColors(THREE, d, body), 3));
-    var mat = g.userData.mat; mat.color.setHex(0xffffff); mat.vertexColors = true; mat.needsUpdate = true;
+    var mat = g.userData.mat; mat.color.setHex(0xffffff); mat.vertexColors = true; mat.skinning = true; mat.needsUpdate = true;
     g.children.filter(function (c) { return c.userData.standIn; }).forEach(function (c) { g.remove(c); });
-    var k = 0.695 * h / BODY_FRAME_H, fit = new THREE.Group(), m = new THREE.Mesh(geo, mat);
-    m.position.set(body.at[0], body.at[1], body.at[2]); m.scale.set(body.span[0], body.span[1], body.span[2]);
+    var k = 0.695 * h / BODY_FRAME_H, fit = new THREE.Group(), m = new THREE.SkinnedMesh(geo, mat), rig = bodyRig(THREE, body);
+    rig.roots.forEach(function (i) { m.add(rig.bones[i]); });
+    m.bind(rig.skeleton, new THREE.Matrix4()); // the rig sits in the mesh's own space, so the bind is the identity
+    m.frustumCulled = false; // a stance can reach past the rest shape's bounds
+    m.onBeforeRender = function () {
+      var now = typeof performance !== "undefined" ? performance.now() : Date.now(), dt = rig.last ? Math.min(0.1, (now - rig.last) / 1000) : 0;
+      rig.last = now; stepBody(THREE, g, rig, dt); m.updateMatrixWorld(true); rig.skeleton.update();
+    };
     fit.scale.setScalar(k); fit.add(m); fit.userData.body = d[0]; g.add(fit);
     if (g.userData.orb) { // the Emotional Body's signal, smaller, at the open chest (its pulse and blaze still scale it)
       var ob = g.userData.orb; ob.geometry = new THREE.SphereGeometry(0.075 * k, 14, 10); ob.position.set(0, 1.3 * k, 0.17 * k); }
-    g.userData.body = d[0];
+    g.userData.body = d[0]; g.userData.rig = rig;
+    stepBody(THREE, g, rig, 1); // straight into its stance on the first frame
+  }
+  // Let a worn body go: its Integrate action (character.py INTEGRATE, every daemon since Wendell's "we need 'let go' stances
+  // for all the daemons", 16 October 2026) moves its held shape into its honored form. When the action ends the body stands
+  // honored and moves by its stance again, so a scene sets a stance that stays honored (repaired, willing) as it calls this.
+  // Big Mind plays it when a 3-2-1 ends with the voice willing (bigmind.js letGoVoice). Returns its length in seconds, or 0 when the body has none.
+  function integrateBody(g) {
+    var rig = g && g.userData.rig;
+    if (!rig || !rig.integrate) return 0;
+    rig.playing = 0; return rig.integrate.length / rig.integrate.fps;
+  }
+  // ---- the player's figure: Average Dusk walking a mocap clip ----------------------------------------------------------
+  // Wendell, 18 October 2026: "I want to pull the average dusk walker into the game". The figure is character.py's
+  // Average Dusk, rigged with Rigify by script and walking CMU mocap subject 35, trial 1 (bars-engine #378,
+  // tools/blender-cloud/rig_mocap), baked for the phone by bake_daemons.py --walker into player/walker.glb. "The data
+  // used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217."
+  // It is worn over the jointed stand-in once it loads: the stand-in's parts hide but its joints keep moving, so the gait
+  // checks, the footfalls and anything hung on the avatar still work, and with no network the stand-in simply stays.
+  // Wendell, 18 October 2026: "the figure should move to a standing position when they stop running and we need a running
+  // animation". The run is CMU subject 35, trial 18 (a jog), retargeted the same way as action MocapRun. Walk and run are
+  // blended by how fast the figure really goes, and the clips turn at the rate that keeps the feet on the ground (each
+  // clip's travel a loop, in the figure's metres, rides in the baked file). Stopped, the figure eases to its rest pose,
+  // standing upright with its arms at its sides, and breathes.
+  var walkerBody = null;
+  function walkerOf(THREE) {
+    if (!walkerBody) {
+      walkerBody = (typeof fetch === "function" ? fetch(BASE + "player/walker.glb") : Promise.reject(new Error("no fetch")))
+        .then(function (r) { if (!r.ok) throw new Error("walker.glb " + r.status); return r.arrayBuffer(); })
+        .then(function (b) { return parseBody(THREE, b); });
+      walkerBody.catch(function () {});
+    }
+    return walkerBody;
+  }
+  // the clip's value for one channel at frame f
+  var walkQ = null;
+  function keyAt(ch, f, out) {
+    var F = ch.frames, V = ch.values, k = 0;
+    while (k < F.length - 1 && F[k + 1] <= f) k++;
+    var a = V[k], b = V[Math.min(k + 1, F.length - 1)], u = k + 1 < F.length && F[k + 1] > F[k] ? Math.min(1, Math.max(0, (f - F[k]) / (F[k + 1] - F[k]))) : 0;
+    if (ch.path === "r") { out.set(a[0], a[1], a[2], a[3]); out.slerp((walkQ = walkQ || new out.constructor()).set(b[0], b[1], b[2], b[3]), u).normalize(); }
+    else out.set(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u);
+    return out;
+  }
+  function wearWalker(THREE, av) {
+    return walkerOf(THREE).then(function (body) {
+      var d = av.userData;
+      if (d.walker || !body.walk) return;
+      var J = body.joints, bones = J.map(function (r) { var b = new THREE.Bone(); b.name = r[0]; b.position.fromArray(r[2]); b.quaternion.fromArray(r[3]); return b; });
+      J.forEach(function (r, i) { if (r[1] >= 0) bones[r[1]].add(bones[i]); });
+      // the chain alone, before the skeleton is made, so its inverses are the rest pose (as bodyRig does); left at the
+      // identity, every vertex is carried off by its bones' whole rest turn and the figure blows up into shards
+      J.forEach(function (r, i) { if (r[1] < 0) bones[i].updateMatrixWorld(true); });
+      var geo = body.geo.clone(); geo.setAttribute("color", new THREE.BufferAttribute(bodyColors(THREE, [0, 0, 0, d.look.color], body), 3));
+      var mat = new THREE.MeshStandardMaterial({ vertexColors: true, skinning: true, roughness: 0.75, transparent: true, emissive: d.look.color, emissiveIntensity: 0.1 });
+      var m = new THREE.SkinnedMesh(geo, mat);
+      J.forEach(function (r, i) { if (r[1] < 0) m.add(bones[i]); });
+      m.bind(new THREE.Skeleton(bones), new THREE.Matrix4()); // the rig sits in the mesh's own space, so the bind is the identity
+      m.frustumCulled = false; m.scale.setScalar(DESIGN_H / BODY_FRAME_H); m.userData.walker = true;
+      d.body.traverse(function (o) { if (o.isMesh) o.visible = false; });
+      d.body.add(m);
+      // standing is the rest pose: upright, legs together, arms at the sides
+      var W = body.walk, Rn = body.run, chans = W.channels.map(function (ch) {
+        var r = J[ch.joint], run = Rn && Rn.channels.filter(function (k) { return k.joint === ch.joint && k.path === ch.path; })[0];
+        return { ch: ch, run: run || null, bone: bones[ch.joint], idle: ch.path === "r" ? new THREE.Quaternion().fromArray(r[3]) : new THREE.Vector3().fromArray(r[2]) };
+      });
+      // the run starts its loop at another point of the stride: the run frame whose legs match the walk's first frame, so
+      // the two blend in step
+      var legs = chans.filter(function (c) { return c.run && c.ch.path === "r" && /^(thigh|shin)\.[LR]$/.test(J[c.ch.joint][0]); });
+      var off = 0, bestD = Infinity, qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+      for (var f = 0; Rn && f < Rn.length; f++) {
+        var dd = 0; legs.forEach(function (c) { dd += keyAt(c.run, f, qa).angleTo(keyAt(c.ch, 0, qb)); });
+        if (dd < bestD) { bestD = dd; off = f; }
+      }
+      var ci = J.findIndex(function (r) { return r[0] === "spine.003"; }), chest = chans.some(function (c) { return c.ch.joint === ci && c.ch.path === "r"; }) ? bones[ci] : null;
+      d.walker = { T3: THREE, mesh: m, mat: mat, bones: bones, rows: J, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
+        tq: new THREE.Quaternion(), tq2: new THREE.Quaternion(), tv: new THREE.Vector3(), tv2: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion(), ws: new THREE.Vector3() };
+    });
+  }
+  // One frame of the walker. Its speed over the ground (measured from where the figure was) picks the blend of walk and run
+  // and the rate the shared stride phase turns at; the stride is blended from the rest pose by the walk's weight g, with
+  // the stand-in's opacity and glow, and its breath when standing.
+  function poseWalker(d, dt, g, b) {
+    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null, py = p ? p.y : 0;
+    var v = 0;
+    if (p && w.at && dt > 0) v = Math.min(30, Math.hypot(p.x - w.at.x, p.z - w.at.z) / dt);
+    if (p) w.at = (w.at || p.clone()).copy(p);
+    w.v += (v - w.v) * Math.min(1, dt * 8);
+    var ws = w.mesh.getWorldScale(w.ws).x || 1, tW = (W.travel || 1.45) * ws, tR = Rn ? (Rn.travel || 2.46) * ws : tW;
+    // natural speeds, world units a second: the walk about 2.7 in the cave, the run about 6.4
+    var vW = tW / (W.length / 24), vR = Rn ? tR / (Rn.length / 24) : vW;
+    var rt = Rn ? Math.max(0, Math.min(1, (w.v - 1.2 * vW) / Math.max(0.1, 0.8 * vR - 1.2 * vW))) : 0;
+    w.r += (rt - w.r) * Math.min(1, dt * 4);
+    var r = w.r;
+    if (g > 0.01) w.ph = (w.ph + dt * Math.max(w.v, 0.6 * vW) / (tW + (tR - tW) * r)) % 1;
+    var f = w.ph * W.length, fr = Rn ? ((w.ph * Rn.length + w.runOff) % Rn.length) : 0;
+    w.f = f;
+    for (var i = 0; i < w.chans.length; i++) {
+      var c = w.chans[i];
+      if (c.ch.path === "r") {
+        keyAt(c.ch, f, w.tq); if (c.run && r > 0) w.tq.slerp(keyAt(c.run, fr, w.tq2), r);
+        c.bone.quaternion.copy(c.idle).slerp(w.tq, g);
+      } else {
+        keyAt(c.ch, f, w.tv); if (c.run && r > 0) w.tv.lerp(keyAt(c.run, fr, w.tv2), r);
+        c.bone.position.copy(c.idle).lerp(w.tv, g);
+      }
+    }
+    if (w.chest) w.chest.quaternion.multiply(w.q1.setFromAxisAngle(w.ax, -0.04 * (b - 0.5) * (1 - g)));
+    w.mat.opacity = d.mat.opacity; w.mat.emissiveIntensity = d.mat.emissiveIntensity * 0.6;
+  }
+  // Sitting down (Wendell, 24 October 2026: "Instead of sitting the characters legs are just going through the ground"): the
+  // figure used to be lowered whole, so its legs went down through the floor. This poses it seated instead, k from 0 (as the
+  // walk or the idle left it) to 1 (seated), its hips lowered to the seat and its feet kept on the floor. On the floor (the
+  // cave, the Big Mind cave) it sits cross-legged with its hands on its knees; o.on lifts the whole seated pose onto what it
+  // sits on (the WAVE room's cushion), so it sits cross-legged on its top as it does on the floor. Each leg and arm is a
+  // two-bone reach (thigh and shin to the ankle, upper arm and forearm to the hand on the knee), bent about its own hinge so the knee and elbow do not twist. One pose for every place that sits, layered on the walker.
+  // o.on: the height of what it sits on, in the body's metres (0 on the floor). Wendell, 24 October 2026, the WAVE room: the
+  // cushion pose used to put the hips 0.1 over the top with the feet down on the floor in front, so the shins went through the
+  // cushion's front and the figure looked sunk in a drum. Now the floor's cross-legged pose is lifted onto the top whole.
+  var SEAT_FLOOR = 0.2; // the hip joints' height above what the figure sits on, in the body's metres
+  function seatAvatar(av, k, o) {
+    var d = av.userData, J = d.J, on = o && o.on ? o.on : 0;
+    k = Math.max(0, Math.min(1, k)); if (k <= 0) return;
+    // the stand-in (shown only until the worn body has loaded): hips down, knees out, cross-legged on what it sits on
+    var hy = 0.24 + on * DESIGN_H / BODY_FRAME_H;
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1;
+      J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - k) - 1.45 * k; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - k) + 2.4 * k;
+      J["hip" + n].rotation.z = J["hip" + n].rotation.z * (1 - k) + 0.7 * sgn * k;
+      J["ankle" + n].rotation.x *= 1 - k; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - k) - 0.35 * k; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - k) - 0.5 * k;
+    });
+    J.hips.position.y = J.hips.position.y * (1 - k) + hy * k;
+    if (d.walker) seatWalker(d.walker, k, on);
+  }
+  function seatWalker(w, k, on) {
+    var T = w.seatAt && w.seatAt.on === on ? w.seatAt : (w.seatAt = seatTargets(w, on));
+    // a bone the walk's keys do not set this frame starts from its rest turn, so the pose never builds up frame on frame
+    for (var i = 0; i < T.q.length; i++) if (T.q[i]) { if (!T.driven[i]) w.bones[i].quaternion.copy(T.lq[i]); w.bones[i].quaternion.slerp(T.q[i], k); }
+    if (!T.drivenAt) w.bones[T.root].position.copy(T.lp[T.root]);
+    w.bones[T.root].position.lerp(T.rootAt, k);
+  }
+  // The seated pose's bone turns, worked out once per height of what it sits on, from the body's rest pose.
+  function seatTargets(w, on) {
+    var seat = on + SEAT_FLOOR;
+    var rows = w.rows, V = w.T3.Vector3, Q = w.T3.Quaternion, M = new w.T3.Matrix4();
+    var idx = {}; rows.forEach(function (r, i) { idx[r[0]] = i; });
+    var lq = rows.map(function (r) { return new Q().fromArray(r[3]); }), lp = rows.map(function (r) { return new V().fromArray(r[2]); });
+    var root = rows.findIndex(function (r) { return r[1] < 0; });
+    // the rest pose in the body's own space, in order (a parent always comes before its children in the rig's rows)
+    var rq = [], rp = [];
+    rows.forEach(function (r, i) { if (r[1] < 0) { rq[i] = lq[i].clone(); rp[i] = lp[i].clone(); } else { rq[i] = rq[r[1]].clone().multiply(lq[i]); rp[i] = lp[i].clone().applyQuaternion(rq[r[1]]).add(rp[r[1]]); } });
+    var drop = rp[root].y - seat, nq = rq.map(function (q) { return q.clone(); }), np = rp.map(function (p) { return new V(p.x, p.y - drop, p.z); });
+    var out = rows.map(function () { return null; });
+    function basis(dir, side) { var x = side.clone().sub(dir.clone().multiplyScalar(side.dot(dir))).normalize(), z = new V().crossVectors(dir, x); return M.makeBasis(dir, x, z).clone(); }
+    // turn bone a (and its chain down to bone b) so a points from its joint along dir with its hinge on side
+    function aim(a, dir, side, restSide) {
+      var restDir = rp[childOf(a)].clone().sub(rp[a]).normalize();
+      var R = basis(dir, side).multiply(basis(restDir, restSide).transpose());
+      nq[a] = new Q().setFromRotationMatrix(R).multiply(rq[a]);
+    }
+    function childOf(a) { // the next joint down the limb, past any twist bone
+      var c = a; do { c = rows.findIndex(function (r) { return r[1] === c; }); } while (c >= 0 && /\.00\d$/.test(rows[c][0]) && rows[c][0].replace(/\.00\d$/, "") === rows[a][0]);
+      return c;
+    }
+    function len(a) { return rp[childOf(a)].distanceTo(rp[a]); }
+    function invert(q) { return q.clone().conjugate(); } // three r128 has no Quaternion.invert on every build
+    // two bones from joint a reaching target t, the middle joint pushed towards pole; returns the middle joint's place
+    function reach(a, t, pole) {
+      var b = childOf(a), L1 = len(a), L2 = len(b), h = np[a], dv = t.clone().sub(h), dist = Math.min(dv.length(), (L1 + L2) * 0.999), u = dv.normalize();
+      var x = (L1 * L1 - L2 * L2 + dist * dist) / (2 * dist), y = Math.sqrt(Math.max(0, L1 * L1 - x * x));
+      var pv = pole.clone().sub(u.clone().multiplyScalar(pole.dot(u))).normalize();
+      return h.clone().add(u.clone().multiplyScalar(x)).add(pv.multiplyScalar(y));
+    }
+    function limb(top, target, pole, restSide) {
+      var mid = childOf(top), end = childOf(mid), m = reach(top, target, pole);
+      var d1 = m.clone().sub(np[top]).normalize(), d2 = target.clone().sub(m).normalize(), side = new V().crossVectors(d1, d2);
+      if (side.lengthSq() < 1e-6) side.copy(restSide); side.normalize(); if (side.dot(restSide) < 0) side.negate();
+      aim(top, d1, side, restSide); aim(mid, d2, side, restSide);
+      np[mid] = m; np[end] = target.clone();
+      return { mid: mid, end: end };
+    }
+    var H = rp[root].y; // the rest hip height, in metres: the targets below are fractions of the body's own size
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1, th = idx["thigh." + n];
+      // cross-legged: the knee out and forward, the ankle tucked in front under the other knee, the left shin in front
+      var ankle = new V(-sgn * 0.13 * H, on + 0.08 * H, (i ? 0.2 : 0.32) * H), pole = new V(sgn * 0.9, 0.25, 0.5).normalize();
+      var L = limb(th, ankle, pole, new V(1, 0, 0));
+      var ft = L.end, toe = idx["toe." + n];
+      var fdir = new V(-sgn * 0.75, -0.25, 0.6).normalize();
+      // the foot keeps its own rest roll: aim its long axis and let its sole face the floor's way
+      var restF = rp[toe].clone().sub(rp[ft]).normalize(), R = new Q().setFromUnitVectors(restF, fdir);
+      nq[ft] = R.multiply(rq[ft]);
+    });
+    // the arms: hands resting on the thighs near the knees, the elbows a little out and back
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1, ua = idx["upper_arm." + n], kn = idx["shin." + n];
+      var hand = np[kn].clone().lerp(np[idx["thigh." + n]], 0.3).add(new V(0, 0.07 * H, 0)), pole = new V(sgn * 0.6, -0.1, -1).normalize();
+      limb(ua, hand, pole, new V(-1, 0, 0));
+    });
+    // back to each bone's own turn under its parent, for the bones the pose moves
+    var moved = {}; ["thigh", "shin", "foot", "upper_arm", "forearm"].forEach(function (b) { moved[idx[b + ".L"]] = moved[idx[b + ".R"]] = true; });
+    // twist bones under a moved bone keep their rest turn under it, so each bone's place is worked out down the chain
+    rows.forEach(function (r, i) { if (r[1] >= 0 && !moved[i]) nq[i] = nq[r[1]].clone().multiply(lq[i]); });
+    rows.forEach(function (r, i) { if (moved[i] && r[1] >= 0) out[i] = invert(nq[r[1]]).multiply(nq[i]); });
+    var driven = {}, drivenAt = false; w.chans.forEach(function (c) { if (c.ch.path === "r") driven[c.ch.joint] = true; else if (c.ch.joint === root) drivenAt = true; });
+    return { on: on, q: out, lq: lq, lp: lp, driven: driven, drivenAt: drivenAt, root: root, rootAt: new V(lp[root].x, lp[root].y - drop, lp[root].z) };
+  }
+  // Where a worn body's pose stands now, for tests and the viewer: its stance, the eased numbers and the Integrate frame.
+  function bodyPose(g) {
+    var rig = g && g.userData.rig;
+    if (!rig) return null;
+    var c = {}; STANCE_KEYS.forEach(function (k) { c[k] = rig.cur[k]; });
+    return { stance: g.userData.stance || "held", now: c, integrate: rig.playing, joints: rig.bones.length };
   }
 
   // The stand-in daemon: one body for all seven, no face, fused rounded shapes. It differs by colour, posture and what it
@@ -1299,6 +1807,134 @@
     }
     p.needsUpdate = true; u.sparks.geometry.setDrawRange(0, n);
   }
+  // The 0 to 10 sliders, drawn as a charge dial (gd-web-bits): a ring that fills from calm green toward a full red, a knob the
+  // thumb drags round it, and the reading in its middle. The range input stays inside it, unseen, so arrow keys, a screen
+  // reader and the test checks work it as before; a drag or a tap on the ring sets the input and sends its input event, and the
+  // dial redraws from that event, so the input is the one truth. o = { low, high (the end words), read (the reading's element,
+  // else one is made), text(v) (the reading's words), hue (false keeps one colour, for a dial that is not a charge) }.
+  var DIAL_A0 = Math.PI * 0.75, DIAL_SWEEP = Math.PI * 1.5, DIAL_R = 52, DIAL_C = 70, SVGNS = "http://www.w3.org/2000/svg";
+  function dialHex(f) { // calm to full: green, gold, coral
+    var a = [[106, 200, 160], [240, 200, 100], [226, 106, 78]], i = f < 0.5 ? 0 : 1, k = f < 0.5 ? f * 2 : (f - 0.5) * 2;
+    return "rgb(" + a[i].map(function (c, j) { return Math.round(c + (a[i + 1][j] - c) * k); }).join(",") + ")";
+  }
+  function dial(inp, o) {
+    o = o || {};
+    var lo = +inp.min || 0, hi = +inp.max || 10;
+    function sv(tag, a) { var e = document.createElementNS(SVGNS, tag); Object.keys(a).forEach(function (k) { e.setAttribute(k, a[k]); }); return e; }
+    function pt(f, r) { var a = DIAL_A0 + DIAL_SWEEP * f; return (DIAL_C + r * Math.cos(a)).toFixed(1) + " " + (DIAL_C + r * Math.sin(a)).toFixed(1); }
+    function arc(f) { return "M" + pt(0, DIAL_R) + " A" + DIAL_R + " " + DIAL_R + " 0 " + (DIAL_SWEEP * f > Math.PI ? 1 : 0) + " 1 " + pt(f, DIAL_R); }
+    var g = sv("svg", { viewBox: "0 0 140 128", class: "oagc-dial-ring", "aria-hidden": "true" });
+    g.appendChild(sv("path", { d: arc(1), class: "oagc-dial-track" }));
+    for (var t = 0; t <= hi - lo; t++) { var tf = t / (hi - lo), p0 = pt(tf, DIAL_R + 10).split(" "), p1 = pt(tf, DIAL_R + (t % 5 ? 13 : 16)).split(" "); g.appendChild(sv("line", { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], class: "oagc-dial-tick" })); }
+    var fill = sv("path", { class: "oagc-dial-fill" }), knob = sv("circle", { r: "9", class: "oagc-dial-knob" });
+    g.appendChild(fill); g.appendChild(knob);
+    var read = o.read || el("b", { class: "oagc-dial-num" });
+    var mid = el("div", { class: "oagc-dial-mid" }, [read]);
+    if (o.low != null) g.appendChild(sv("text", { x: "22", y: "126", class: "oagc-dial-end" })).textContent = o.low;
+    if (o.high != null) g.appendChild(sv("text", { x: "118", y: "126", class: "oagc-dial-end" })).textContent = o.high;
+    inp.classList.add("oagc-dial-input");
+    var box = el("div", { class: "oagc-dial" }, [g, mid, inp]);
+    function draw() {
+      var v = +inp.value, f = (v - lo) / (hi - lo), col = o.hue === false ? "#9cc4ff" : dialHex(f), c = pt(f, DIAL_R).split(" ");
+      fill.setAttribute("d", f > 0 ? arc(f) : "M" + pt(0, DIAL_R) + " L" + pt(0, DIAL_R)); fill.style.stroke = col;
+      knob.setAttribute("cx", c[0]); knob.setAttribute("cy", c[1]); knob.style.stroke = col;
+      if (!o.read || o.text) read.textContent = (o.text || String)(v);
+      box.setAttribute("data-dial-value", String(v));
+    }
+    function setFrom(ev) {
+      var r = g.getBoundingClientRect(), x = (ev.clientX - r.left) * 140 / r.width - DIAL_C, y = (ev.clientY - r.top) * 128 / r.height - DIAL_C;
+      var a = Math.atan2(y, x) - DIAL_A0; a = ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      if (a > DIAL_SWEEP) a = a - DIAL_SWEEP < 2 * Math.PI - a ? DIAL_SWEEP : 0; // the gap at the bottom snaps to the nearer end
+      var v = Math.round(lo + (hi - lo) * a / DIAL_SWEEP);
+      if (String(v) !== inp.value) { inp.value = String(v); inp.dispatchEvent(new Event("input", { bubbles: true })); inp.dispatchEvent(new Event("change", { bubbles: true })); }
+    }
+    var held = null;
+    box.addEventListener("pointerdown", function (ev) { held = ev.pointerId; try { box.setPointerCapture(held); } catch (e) { /* an old browser keeps the drag inside the dial */ } setFrom(ev); ev.preventDefault(); });
+    box.addEventListener("pointermove", function (ev) { if (held === ev.pointerId) setFrom(ev); });
+    function up(ev) { if (held === ev.pointerId) { held = null; try { inp.focus({ preventScroll: true }); } catch (e) { /* focus is a nicety */ } } }
+    box.addEventListener("pointerup", up); box.addEventListener("pointercancel", up);
+    inp.addEventListener("input", draw); inp.addEventListener("change", draw);
+    draw();
+    return box;
+  }
+  // A word to the player that used to be a browser alert box: a line at the foot of the screen, read out (role status, or
+  // role alert for a failure), gone by itself after a while or at a tap. One at a time; a new one replaces the last.
+  function notice(text, failed) {
+    var old = document.querySelector("[data-oag-notice]"); if (old) old.remove();
+    var n = el("div", { class: "oagc-notice" + (failed ? " failed" : ""), role: failed ? "alert" : "status", "data-oag-notice": failed ? "failed" : "" }, [el("span", { text: text }), el("button", { type: "button", "aria-label": "Close", text: "×", onclick: function () { n.remove(); } })]);
+    document.body.appendChild(n);
+    setTimeout(function () { n.remove(); }, failed ? 12000 : 6000);
+    return n;
+  }
+  // The Menu (Wendell, 19 October 2026: "the buttons are taking up too much space on the screen ... they are randomly placed and
+  // players are telling me they don't quite know what everything or anything means"): one button in the top-left corner gathers
+  // a scene's switches, each its glyph and its word with a line on what it does, and a key to what is on the screen. Out on the
+  // screen stay the stick and the one action the moment calls for (Sit down, a door's card). items: { btn, glyph, about } for a
+  // switch (the scene's own button, moved in, so its handler and its data attribute stay), { glyph, word, about } for the key.
+  function menu(parent, items) {
+    var open = el("button", { class: "oagc-menubtn", "data-oag-menubtn": "", "data-glyph": "☰", "aria-expanded": "false", "aria-haspopup": "true", text: "Menu" });
+    var panel = el("div", { class: "oagc-menu", "data-oag-menu": "", role: "menu" }); panel.hidden = true;
+    function shut() { panel.hidden = true; open.setAttribute("aria-expanded", "false"); }
+    open.addEventListener("click", function () { panel.hidden = !panel.hidden; open.setAttribute("aria-expanded", String(!panel.hidden)); });
+    items.forEach(function (it) {
+      if (it.btn) {
+        it.btn.setAttribute("data-glyph", it.glyph); it.btn.setAttribute("role", "menuitem");
+        it.btn.addEventListener("click", shut); // the switch does its work, and the menu folds away so the room is in view
+        panel.appendChild(el("div", { class: "oagc-menurow" }, [it.btn, el("small", { text: it.about })]));
+      } else panel.appendChild(el("div", { class: "oagc-menurow key" }, [el("b", { "data-glyph": it.glyph, text: it.word }), el("small", { text: it.about })]));
+    });
+    document.addEventListener("pointerdown", function (e) { if (!panel.hidden && !panel.contains(e.target) && !open.contains(e.target)) shut(); }, true);
+    parent.appendChild(open); parent.appendChild(panel);
+    // a lesson's glyph points at the switch, or at the Menu while the switch is folded inside it
+    return { button: open, panel: panel, shut: shut, at: function (b) { return panel.hidden && panel.contains(b) ? open : b; } };
+  }
+  // The input sheet (Wendell, 19 October 2026: "the input screens are too big and one can see the action underneath ... breaking
+  // the screens up so their data isn't one semitransparent block"): the page's modal is a solid sheet at the foot of the screen,
+  // no taller than half of it, and while it is open the scene is lifted into the top half (CSS). A page's questions become
+  // cards side by side, one in view, with Back and Next; each control (a field, a dial, a row of choices) ends its card, and the
+  // words before it ride with it. The page's own buttons (Go on, Step back, Look around) stay at the sheet's foot. Every card
+  // stays in the page, scrolled out of view, so a screen reader, the keyboard and the tests reach all of it.
+  var sheetAt = {};
+  // where a sheet is: a dot per card, the one in view filled; no numbers on screen (Big Mind's check-in prints none), and a
+  // screen reader hears "card 2 of 3"
+  function dots(n, at, len) { var t = ""; for (var i = 0; i < len; i++) t += i === at ? "●" : "○"; n.textContent = t; n.setAttribute("aria-label", "card " + (at + 1) + " of " + len); }
+  function isCtl(k) { return /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(k.tagName) || !!k.querySelector("input,textarea,select,button"); }
+  function isActs(k) { // a row of the page's own buttons: no field, and nothing to pick (a choice carries aria-pressed)
+    return (k.tagName === "BUTTON" || k.classList.contains("oagc-row")) && isCtl(k) && !k.querySelector("input,textarea,select,[aria-pressed]") && !k.hasAttribute("aria-pressed");
+  }
+  function sheet(box, title, kids, foot) {
+    kids = kids.filter(Boolean); foot = (foot || []).filter(Boolean);
+    var tail = []; while (kids.length && isActs(kids[kids.length - 1])) tail.unshift(kids.pop());
+    foot = tail.concat(foot);
+    var cards = [[]], shut = false;
+    kids.forEach(function (k) {
+      if (shut) { cards.push([]); shut = false; }
+      cards[cards.length - 1].push(k); if (isCtl(k)) shut = true;
+    });
+    if (cards.length > 1 && !cards[cards.length - 1].some(isCtl)) { var last = cards.pop(); cards[cards.length - 1] = cards[cards.length - 1].concat(last); } // words after the last question ride with it
+    if (title) box.appendChild(el("h2", { text: title }));
+    var key = title + "|" + cards.length, at = Math.min(sheetAt[key] || 0, cards.length - 1);
+    if (cards.length < 2) { cards[0].forEach(function (k) { box.appendChild(k); }); }
+    else {
+      var strip = el("div", { class: "oagc-cards", "data-oag-cards": String(cards.length) });
+      cards.forEach(function (c, i) { strip.appendChild(el("div", { class: "oagc-cardpage", "data-oag-card": String(i) }, c)); });
+      var back = el("button", { class: "alt", "data-oag-card-back": "", text: "‹ Back" }), next = el("button", { class: "alt", "data-oag-card-next": "", text: "Next ›" });
+      var where = el("span", { class: "oagc-cardnum", "data-oag-card-at": "" });
+      function show(i, smooth) {
+        at = clamp(i, 0, cards.length - 1); sheetAt = {}; sheetAt[key] = at;
+        dots(where, at, cards.length); back.disabled = at === 0; next.disabled = at === cards.length - 1;
+        strip.setAttribute("data-oag-card-shown", String(at));
+        var x = at * strip.clientWidth; if (Math.abs(strip.scrollLeft - x) > 2) strip.scrollTo({ left: x, behavior: smooth && !reducedMotion ? "smooth" : "auto" });
+      }
+      back.onclick = function () { show(at - 1, true); }; next.onclick = function () { show(at + 1, true); };
+      strip.addEventListener("scroll", function () { var w = strip.clientWidth; if (!w) return; var i = Math.round(strip.scrollLeft / w); if (i !== at) { at = i; sheetAt = {}; sheetAt[key] = at; dots(where, at, cards.length); back.disabled = at === 0; next.disabled = at === cards.length - 1; strip.setAttribute("data-oag-card-shown", String(at)); } }, { passive: true });
+      // a field or a choice reached by Tab or by a screen reader brings its card into view
+      strip.addEventListener("focusin", function (e) { var c = e.target.closest && e.target.closest("[data-oag-card]"); if (c) show(+c.getAttribute("data-oag-card")); });
+      box.appendChild(strip); box.appendChild(el("div", { class: "oagc-pager" }, [back, where, next]));
+      show(at); requestAnimationFrame(function () { show(at); });
+    }
+    if (foot.length) box.appendChild(el("div", { class: "oagc-sheetfoot" }, foot));
+  }
   // Allow (Wendell, 11 October 2026): "When you are allowing I want the creature to get a bit bigger. I want peopel to be able to
   // decide how large it is gets via slider and how bright it can get in its emotional color." a = { grow, bright }, each 0 to 10.
   // grow is how much larger it gets (0 its own size, 10 twice it); bright is the most it can glow, which the charge fills.
@@ -1308,9 +1944,9 @@
       ["bright", "How bright its colour can get", function (v) { return v + " of 10"; }]].map(function (q) {
       var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "aria-label": q[1] }); inp.setAttribute(attr, q[0]);
       inp.value = a[q[0]];
-      var out = el("span", { class: "oagc-read", text: q[2](a[q[0]]) }); out.setAttribute(attr + "-read", q[0]);
-      inp.addEventListener("input", function () { a[q[0]] = +inp.value; out.textContent = q[2](a[q[0]]); if (onChange) onChange(); });
-      return el("div", {}, [el("p", { class: "oagc-note", text: q[1] }), el("div", { class: "oagc-slide" }, [inp, out])]);
+      var out = el("span", { class: "oagc-read" }); out.setAttribute(attr + "-read", q[0]);
+      inp.addEventListener("input", function () { a[q[0]] = +inp.value; if (onChange) onChange(); });
+      return el("div", { class: "oagc-dialcol" }, [el("p", { class: "oagc-note", text: q[1] }), dial(inp, { read: out, text: q[2], low: "0", high: "10" })]);
     });
   }
   // How charged a creature is, 0 to 10, from its 3-2-1: the reading before while it is worked, the reading after once given.
@@ -1331,11 +1967,16 @@
   // the character until dismissed"). One look serves every cave: an orb in its element's colour, its aura, and its name above it.
   // followSpirits floats them toward spot(j), the j-th place in view; past SPIRITS_SHOWN they are hidden and only counted.
   var SPIRITS_SHOWN = 3;
-  function buildSpirit(THREE, name, hex) {
-    var g = new THREE.Group();
-    var orb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
+  var SPIRIT_STORE = window.__oagSpiritStore || null, spiritForms = window.__oagSpiritForms || null; // oag.spirits.v1 and the forms
+  function sittingStage(n) { return spiritForms && spiritForms.stageOf ? spiritForms.stageOf(n) : "gas"; }
+  // A spirit of a daemon's family (form.family, the daemon's id) wears the family's gas in place of the orb (cave/spirit-forms.js,
+  // board sic-family-cloud); form.from, a world point, streams its motes in from the daemon's body. Without a family it is the orb.
+  function buildSpirit(THREE, name, hex, form) {
+    var g = new THREE.Group(), SF = window.__oagSpiritForms, fam = form && form.family && SF ? SF.familyOf(form.family) : null;
+    var gas = fam ? (SF.buildForm || SF.buildGas)(THREE, fam, hex, { from: form.from, stage: form.stage, faceAt: form.faceAt }) : null;
+    var orb = gas ? SF.tintProxy(gas) : new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
     var au = buildAura(THREE, 0.7), label = labelSprite(THREE, name, "#fff1d0", 2.4); label.position.y = 0.95;
-    g.add(orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45 };
+    g.add(gas || orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45, form: gas ? gas.userData.form : null, unfold: gas ? gas.userData.unfold : null };
     return g;
   }
   function followSpirits(THREE, list, spot, dt, now, still) {
@@ -1408,7 +2049,10 @@
   ];
   // talk321(t, o, body): o = { name, damaged (the Damaged Self's check before Be it), redraw, focus, where (the staged
   // places' words, by step), aim (a line shown on every step, or none), before(body) (more for the first page, or none),
-  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask) }.
+  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask),
+  // beforeOne(go, stay) (asked before Be it opens: go() opens it, stay() goes on to the charge reading without it; the Big Mind
+  // cave asks the voice's permission here, board bmt-321-offer), cards(ph, voice) (lines the player can tap to send, for the
+  // phase and the voice speaking; a line in brackets is a gesture) }. The WAVE room and the cave pass neither.
   // Wendell, 12 October 2026, 23:11: "321s are optional and should have an option to skip". The sit-down and the WAVE room
   // pass skippable; the cave's 3-2-1 with a daemon in the way does not, since it is how the daemon steps aside.
   // The cave aims it at the daemon standing in the way; the WAVE room aims it at what the player wants right now.
@@ -1418,9 +2062,13 @@
     function slider(which) {
       var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-321-charge": which, "aria-label": "Charge, 0 to 10" });
       inp.value = t[which];
-      var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
-      inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
-      return el("div", { class: "oagc-slide" }, [inp, out]);
+      var out = el("span", { class: "oagc-read", "data-cave-321-read": which });
+      inp.addEventListener("input", function () { t[which] = +inp.value; if (o.onCharge) o.onCharge(); });
+      return dial(inp, { read: out, text: function (v) { return v + " of 10"; }, low: "calm", high: "full" });
+    }
+    function toOne() {
+      if (!o.beforeOne) { t.phase = 1; o.redraw(); return; }
+      o.beforeOne(function () { t.phase = 1; o.redraw(); }, function () { t.phase = "after"; o.redraw(); });
     }
     var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; o.redraw(); }, true);
     var skip = o.skippable ? btn("Skip the 3-2-1", { "data-cave-321-skip": "" }, function () { t.draft = ""; t.skipped = true; t.phase = "ask"; o.redraw(); }, true) : null;
@@ -1446,7 +2094,7 @@
       body.push(P(WHERE.check, { "data-cave-321-where": "" }));
       body.push(P("Being " + n + " goes to the deepest place. Do you want to go on, rest, or go back up?", { "data-cave-321-checkask": "" }));
       body.push(row([
-        btn("Continue", { "data-cave-321-check": "continue" }, function () { t.phase = 1; o.redraw(); }),
+        btn("Continue", { "data-cave-321-check": "continue" }, toOne),
         btn("Rest", { "data-cave-321-check": "rest" }, function () { t.paused = true; o.redraw(); }, true),
         btn("Go back up", { "data-cave-321-check": "up" }, function () { t.phase = 2; o.redraw(); }, true),
       ]));
@@ -1484,8 +2132,12 @@
       };
       ta.addEventListener("input", function () { t.draft = ta.value; });
       ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
+      var cards = o.cards ? o.cards(ph, voice) : [];
+      if (cards.length) body.push(el("div", { class: "oagc-row", "data-cave-321-cards": "" }, cards.map(function (c, ci) {
+        return btn(c, { "data-cave-321-card": String(ci) }, function () { ta.value = c; send(); }, true);
+      })));
       body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
-      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
+      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; if (ph === 2 && !o.damaged) return toOne(); t.phase = ph === 1 ? "after" : ph === 2 ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
     }
     return title;
   }
@@ -1495,7 +2147,11 @@
   function focusChat(modal) {
     var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
     if (l) l.scrollTop = l.scrollHeight;
-    if (i) modal.scrollTop = modal.scrollHeight;
+    if (i) { // to its end, then back up if that left the text box above the sheet's top or under its foot (PR 5's bottom sheet)
+      modal.scrollTop = modal.scrollHeight;
+      var a = modal.getBoundingClientRect(), b = i.getBoundingClientRect(), f = modal.querySelector(".oagc-sheetfoot"), fh = f ? f.getBoundingClientRect().height : 0;
+      if (b.top < a.top + 8) modal.scrollTop -= a.top + 8 - b.top; else if (b.bottom > a.bottom - fh - 8) modal.scrollTop += b.bottom - (a.bottom - fh - 8);
+    }
     if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
   }
 
@@ -1508,14 +2164,28 @@
     ".oagc{position:fixed;inset:0;z-index:900;background:#0e0e1a;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}" +
     ".oagc canvas{display:block;position:absolute;inset:0;width:100%;height:100%;touch-action:none}" +
     ".oagc-stage{position:absolute;inset:0;touch-action:none}" +
-    ".oagc-card{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));background:rgba(20,20,40,.96);border-top:1px solid rgba(255,255,255,.12);max-height:62vh;overflow-y:auto;touch-action:manipulation}" +
+    ".oagc-card{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));background:#0f0f22;border-top:1px solid rgba(255,255,255,.12);max-height:50vh;overflow-y:auto;touch-action:manipulation}" +
     // the pane: small, in the scene, above the figure's head with a tail pointing down at it
     ".oagc-pane{position:absolute;left:0;top:0;z-index:3;width:max-content;max-width:min(270px,calc(100vw - 24px));padding:.45rem .65rem .5rem;background:rgba(12,12,28,.8);border:1px solid rgba(255,241,176,.55);border-radius:12px;color:#f4f4fa;font-size:15px;line-height:1.3;will-change:transform;cursor:pointer;touch-action:manipulation}" +
     ".oagc-pane strong{display:block;color:#fff1b0;font-size:16px;margin-bottom:.15rem}.oagc-pane span{display:block}.oagc-pane small{display:block;margin-top:.3rem;color:#aab0c4;font-size:12px}" +
     ".oagc-pane:after{content:'';position:absolute;left:var(--tail,50%);bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:rgba(255,241,176,.55)}" +
-    // the modal: the pane grown large, near the top so the figure and the way ahead stay in sight below it
-    ".oagc-modal{position:absolute;left:12px;right:12px;top:58px;z-index:4;max-width:420px;margin:0 auto;max-height:calc(62vh - 58px);overflow-y:auto;padding:.8rem .9rem;background:rgba(12,12,28,.86);border:1px solid rgba(255,241,176,.5);border-radius:16px;opacity:0;transform:scale(.35);pointer-events:none;transition:opacity .22s,transform .25s;touch-action:manipulation}" +
+    // the modal: a solid sheet at the foot of the screen, half its height at most, the scene lifted above it (sheet(), below)
+    ".oagc-modal{position:absolute;left:0;right:0;bottom:0;z-index:6;max-width:520px;margin:0 auto;max-height:50vh;overflow-y:auto;padding:.75rem .9rem 0;background:#0f0f22;border:1px solid rgba(255,241,176,.45);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 28px rgba(0,0,0,.55);opacity:0;transform:translateY(100%);pointer-events:none;transition:opacity .22s,transform .25s;touch-action:manipulation}" +
     ".oagc-modal.open{opacity:1;transform:none;pointer-events:auto}" +
+    ".oagc canvas{transition:transform .35s ease}.oagc:has(.oagc-modal.open) canvas{transform:translateY(-25vh)}" +
+    ".oagc-cards{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}.oagc-cards::-webkit-scrollbar{display:none}" +
+    ".oagc-cardpage{flex:0 0 100%;min-width:0;scroll-snap-align:start;box-sizing:border-box;padding:0 .1rem}" +
+    ".oagc-pager{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.5rem}.oagc-pager button{min-height:40px;padding:0 .8rem}.oagc-pager button:disabled{opacity:.3}" +
+    ".oagc-cardnum{font-size:.85rem;letter-spacing:.3em;color:#aeb4cc}" +
+    ".oagc-sheetfoot{position:sticky;bottom:0;margin:.5rem -.9rem 0;padding:.4rem .9rem calc(.6rem + env(safe-area-inset-bottom));background:#0f0f22;border-top:1px solid rgba(255,255,255,.08)}.oagc-sheetfoot .oagc-row:first-child{margin-top:0}" +
+    ".oagc button.oagc-menubtn{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;z-index:7;min-height:44px;padding:0 .9rem;border-radius:22px;background:rgba(14,14,30,.82);border:1px solid rgba(255,241,176,.5);color:#fff1d0;font-weight:600}" +
+    ".oagc-menu{position:absolute;top:calc(62px + env(safe-area-inset-top));left:10px;z-index:7;width:min(300px,calc(100vw - 20px));max-height:calc(100vh - 90px);overflow-y:auto;padding:.4rem;border-radius:16px;background:#0f0f22;border:1px solid rgba(255,241,176,.45);box-shadow:0 8px 28px rgba(0,0,0,.55)}.oagc-menu[hidden]{display:none}" +
+    ".oagc-menurow{display:flex;flex-direction:column;align-items:stretch;padding:.3rem .35rem}.oagc-menurow small{color:#aeb4cc;font-size:13px;line-height:1.3;margin:.15rem .2rem 0 2.3rem}" +
+    ".oagc-menurow:has(> button[style*='display: none']),.oagc-menurow:has(> button[style*='display:none']){display:none}" +
+    ".oagc .oagc-menu .oagc-menurow > button{position:static!important;transform:none!important;inset:auto!important;width:100%;text-align:left;min-height:44px;border-radius:10px;background:rgba(30,30,56,.9);border:1px solid rgba(255,255,255,.22);color:#f4f4fa;font-weight:500}" +
+    ".oagc-menurow > button[aria-pressed=true]{border-color:rgba(255,241,176,.8)!important;background:rgba(70,60,30,.9)!important}" +
+    ".oagc-menurow.key{border-top:1px solid rgba(255,255,255,.08)}.oagc-menurow.key b{font-weight:600;color:#fff1d0;padding:.2rem .2rem 0}" +
+    ".oagc [data-glyph]::before{content:attr(data-glyph);display:inline-block;width:1.6em;text-align:center;margin-right:.5em;color:#fff1b0}" +
     ".oagc-modal h2{margin:0 0 .35rem;font-size:1.15rem;color:#fff1b0}.oagc-modal p{margin:.35rem 0;font-size:1rem;line-height:1.35}.oagc-modal .oagc-row{margin-top:.5rem}" +
     ".oagc-card h2{margin:0 0 .3rem;font-size:1rem;color:#fff}.oagc-card h3{margin:.55rem 0 0;font-size:.82rem;color:#aab;font-weight:600}.oagc-card p{margin:.3rem 0;font-size:.92rem}" +
     ".oagc-log{display:flex;flex-direction:column;gap:.4rem;max-height:22vh;overflow-y:auto;margin:.4rem 0;padding:.3rem;border-radius:8px;background:rgba(0,0,0,.25)}" +
@@ -1525,6 +2195,15 @@
     ".oagc-compose{display:flex;gap:.35rem;margin-top:.4rem}.oagc-compose input{flex:1;min-width:0;min-height:44px;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
     ".oagc-compose button{min-width:44px;padding:.5rem}" +
     ".oagc-slide{display:flex;align-items:center;gap:.6rem;margin:.4rem 0}.oagc-slide input{flex:1;min-height:44px}.oagc-read{white-space:nowrap;font-size:.9rem;color:#fff1b0}" +
+    ".oagc-dial{position:relative;width:min(180px,100%);margin:.3rem auto;touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none}.oagc-dial-ring{display:block;width:100%;height:auto;overflow:visible}" +
+    ".oagc-dial-track{fill:none;stroke:rgba(255,255,255,.14);stroke-width:12;stroke-linecap:round}.oagc-dial-fill{fill:none;stroke-width:12;stroke-linecap:round}" +
+    ".oagc-dial-tick{stroke:rgba(255,255,255,.35);stroke-width:1.5}.oagc-dial-knob{fill:#fff1d0;stroke-width:4}.oagc-dial-end{fill:#aab0c4;font-size:11px;text-anchor:middle}" +
+    ".oagc-dial-mid{position:absolute;left:0;right:0;top:44%;transform:translateY(-50%);text-align:center;pointer-events:none;font-size:1.05rem;color:#fff1b0;font-weight:600}.oagc-dial-mid .oagc-read{font-size:1.05rem}" +
+    ".oagc-dial-input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}" +
+    ".oagc-dial:focus-within{outline:2px solid #fff1b0;outline-offset:4px;border-radius:12px}" +
+    ".oagc-dialcol{display:inline-block;vertical-align:top;width:calc(50% - .4rem);margin-right:.4rem;text-align:center}" +
+    ".oagc-notice{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:2000;display:flex;align-items:center;gap:.5rem;max-width:min(92vw,420px);padding:.55rem .6rem .55rem .9rem;border-radius:12px;background:rgba(16,18,36,.94);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font:14px/1.35 -apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.45)}" +
+    ".oagc-notice.failed{border-color:rgba(226,106,78,.7)}.oagc-notice button{min-width:44px;min-height:44px;background:none;border:none;color:#fff1d0;font-size:1.3rem;cursor:pointer}" +
     ".oagc-note{font-size:.8rem!important;color:#aab0c4;margin:.4rem 0 0!important}" +
     ".oagc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:normal;pointer-events:none}" +
     ".oagc-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}" +
@@ -1533,13 +2212,32 @@
     ".oagc button.alt{background:rgba(20,20,40,.85);border:1px solid rgba(255,255,255,.3);color:#e0e0e0;font-weight:400}" +
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
-    ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
+    ".oagc button.oagc-calm{right:10px}.oagc button.oagr-ship{right:84px}.oagc button.oagc-ringbtn{left:10px}" +
+    // the walkthrough's glyph by the player's light and its "I know this", shared by the WAVE room and the caves
+    ".oagr-teach{position:absolute;z-index:5;display:none;flex-direction:column;align-items:center;gap:.35rem;color:#fff1b0;pointer-events:none;transform:translate(-50%,-100%);filter:drop-shadow(0 0 6px rgba(255,220,150,.8))}" +
+    ".oagr-teach .oagr-glyphs{display:flex;gap:.6rem;align-items:center;animation:oagr-pulse 1.6s ease-in-out infinite}.oagr-teach.still .oagr-glyphs,.oagr-teach.still .oagr-ring{animation:none}" +
+    ".oagr-teach .oagr-ring{transform-origin:24px 24px;animation:oagr-ripple 1.6s ease-out infinite}" +
+    ".oagc button.oagr-skip{position:absolute;left:50%;right:auto;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));z-index:5;min-height:40px;padding:0 1rem;font-size:14px;border-radius:20px;border-color:rgba(255,241,176,.55);background:rgba(12,12,28,.8);color:#f4f4fa}" +
+    "@media (pointer:coarse){.oagr-teach .oagr-keys{display:none}}.oagr-teach.below{transform:translate(-50%,0)}" +
+    ".oagr-teach[data-teach-off=left]:before,.oagr-teach[data-teach-off=right]:after{content:'';width:0;height:0;border:12px solid transparent;align-self:center}" +
+    ".oagr-teach[data-teach-off=left],.oagr-teach[data-teach-off=right]{flex-direction:row}" +
+    ".oagr-teach[data-teach-off=left]:before{border-right:14px solid currentColor;border-left:0}.oagr-teach[data-teach-off=right]:after{border-left:14px solid currentColor;border-right:0}" +
+    ".oagr-teach[data-room-teach-off=left]:before,.oagr-teach[data-room-teach-off=right]:after{content:'';width:0;height:0;border:12px solid transparent;align-self:center}" +
+    ".oagr-teach[data-room-teach-off]{flex-direction:column}.oagr-teach[data-room-teach-off=left]{flex-direction:row}.oagr-teach[data-room-teach-off=right]{flex-direction:row}" +
+    ".oagr-teach[data-room-teach-off=left]:before{border-right:14px solid currentColor;border-left:0}.oagr-teach[data-room-teach-off=right]:after{border-left:14px solid currentColor;border-right:0}" +
+    "@media (prefers-reduced-motion:reduce){.oagr-teach .oagr-glyphs,.oagr-teach .oagr-ring{animation:none}}" +
+    "@keyframes oagr-pulse{0%,100%{opacity:.75}50%{opacity:1}}@keyframes oagr-ripple{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.1);opacity:0}}" +
+    ".oagc button.oagc-self,.oagc button.oagc-run{position:absolute;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}.oagc button.oagc-self{left:10px;top:52px}" +
+    ".oagc button.oagc-run{left:calc(16px + env(safe-area-inset-left));bottom:calc(144px + env(safe-area-inset-bottom))}" +
+    ".oagc .oagc-selfbox{position:absolute;inset:0;z-index:9;background:rgba(8,8,18,.86);color:#e8e8f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}.oagc .oagc-selfbox h2{margin:0;font-weight:500}" +
     // the stick (left thumb) and a thing's prompt (right thumb), shared by the WAVE room and the caves
     ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
     ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
+    ".oagr-stick.oagr-afloat{background:rgba(20,20,40,.3);cursor:grabbing}.oagr-still .oagr-stick{width:150px;height:150px}.oagr-still .oagr-knob{width:60px;height:60px}" +
+    ".oagr button.oagr-talk{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:88px;height:88px;min-width:88px;padding:0;border-radius:50%;background:rgba(20,20,40,.82);border:2px solid rgba(255,241,176,.7);color:#fff1d0;font-size:1rem;font-weight:600;touch-action:manipulation}" +
     ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
-    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
+    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc:has(.oagc-modal.open) .oagc-sitbtn{bottom:auto;top:calc(50vh - 3.4rem)}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
     ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
     "background:radial-gradient(circle,rgba(255,241,176,.5),rgba(255,241,176,.14) 62%,rgba(255,241,176,0) 72%);border:1px solid rgba(255,241,176,.55);transform:scale(.55);will-change:transform}" +
     ".oagc button.oagc-spiritbtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
@@ -1547,8 +2245,33 @@
     ".oagc-spirits h2{font-size:1.1rem;color:#fff;margin:0 0 .3rem}.oagc-spirits p{margin:.3rem 0;font-size:.95rem}.oagc-spirits .oagc-you{color:#fff1d0}" +
     ".oagc-style{position:absolute;top:62px;right:10px;z-index:4;max-width:calc(100vw - 20px);min-height:44px;padding:0 .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.85);color:#f4f4fa;font-size:16px}" +
     ".oagc-ring{position:absolute;left:50%;bottom:14px;width:88px;height:88px;margin-left:-44px;border-radius:50%;border:3px solid rgba(255,241,176,.85);background:rgba(255,241,176,.12);display:flex;align-items:center;justify-content:center;text-align:center;font-size:.68rem;line-height:1.15;color:#fff1b0;z-index:2;touch-action:none}" +
+    ".oagc-meters{position:absolute;top:10px;right:10px;z-index:4;width:132px;pointer-events:none}.oagc-meter{display:flex;align-items:center;gap:.35rem;margin:0 0 4px;font-size:11px;color:#dfe6ff;text-shadow:0 1px 3px #000}.oagc-meter span{width:2.2em}" +
+    ".oagc-bar{position:relative;flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden}.oagc-bar s{display:block;height:100%;width:0;background:#e0704a;transition:width .3s}.oagc-meter[data-cave-meter=you] .oagc-bar s{background:#6fb7e8}.oagc-meter b{width:1.4em;text-align:right;font-weight:600;color:#fff1b0}" +
+    ".oagc-meter.eased .oagc-bar{animation:oagc-glow 1.6s ease-out}@keyframes oagc-glow{0%{box-shadow:0 0 0 #fff1b0}30%{box-shadow:0 0 10px #fff1b0}100%{box-shadow:0 0 0 #fff1b0}}" +
+    ".oagc-eased{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:3;color:#fff1d0;font-size:1.15rem;text-shadow:0 1px 4px #000;pointer-events:none;opacity:0;transition:opacity .4s;padding:0 1.2rem}.oagc-eased.on{opacity:1}.oagc-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
+    ".oagc-marks{margin-top:2px;font-size:11px;color:#dfe6ff;text-shadow:0 1px 3px #000}.oagc-marks b{color:#fff1b0;margin:0 .6em 0 .25em;letter-spacing:.1em;font-weight:600}.oagc-trustsaw{color:#fff1d0}" +
+    "@media (prefers-reduced-motion:reduce){.oagc-meter.eased .oagc-bar{animation-duration:.01s}}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
-    ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}";
+    ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}" +
+    // the title screen: the cave mouth in 3D behind, the name and the ways in over its lower part
+    ".oagc-title{position:fixed;inset:0;overflow:hidden;background:#07070f;color:#f4f4fa;font:16px/1.45 system-ui,-apple-system,sans-serif}" +
+    ".oagc-title-stage,.oagc-title-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}" +
+    ".oagc-title-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(7,7,15,.55),rgba(7,7,15,0) 30%,rgba(7,7,15,0) 52%,rgba(7,7,15,.92) 82%)}" +
+    ".oagc-title-name{position:absolute;left:16px;right:16px;top:calc(9vh + env(safe-area-inset-top));text-align:center;pointer-events:none}" +
+    ".oagc-title-name h1{margin:0;font:600 clamp(1.9rem,7vw,3.2rem)/1.1 Georgia,serif;color:#fff1d0;letter-spacing:.02em;text-shadow:0 2px 18px rgba(0,0,0,.8)}" +
+    ".oagc-title-name p{margin:.5rem 0 0;color:#d8dcef;text-shadow:0 1px 8px #000}" +
+    ".oagc-title-menu{position:absolute;left:16px;right:16px;bottom:calc(5vh + env(safe-area-inset-bottom));max-width:22rem;margin:0 auto;display:flex;flex-direction:column;gap:.6rem;align-items:stretch;text-align:center}" +
+    ".oagc-title-menu button{min-height:48px;border-radius:12px;font-size:1.05rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,241,176,.55);background:rgba(20,20,40,.82);color:#fff1d0}" +
+    ".oagc-title-menu button.main{background:#fff1d0;color:#16122a;border-color:#fff1d0}" +
+    ".oagc-title-menu button.link{min-height:44px;background:none;border:0;font-weight:400;font-size:.95rem;color:#c8d2ff;text-decoration:underline}" +
+    ".oagc-title-menu small{color:#aeb4cc;font-size:14px}" +
+    ".oagc-title button:focus-visible{outline:3px solid #9cc4ff;outline-offset:2px}" +
+    ".oagc .oagc-gear{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.7);color:#fff1d0;font-size:26px;line-height:1;padding:0;cursor:pointer}" +
+    ".oagc-settings{position:absolute;left:16px;right:16px;top:calc(70px + env(safe-area-inset-top));max-width:22rem;margin:0 auto;padding:1rem;border-radius:16px;background:rgba(12,12,28,.96);border:1px solid rgba(255,241,176,.5);z-index:2}" +
+    ".oagc-settings h2{margin:0 0 .6rem;font-size:1.15rem;color:#fff}" +
+    ".oagc-settings label{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:44px;font-size:1rem}" +
+    ".oagc-settings input{width:22px;height:22px}.oagc-settings small{display:block;color:#aeb4cc;font-size:14px;margin:-.2rem 0 .4rem}" +
+    ".oagc-settings button{min-height:44px;width:100%;margin-top:.5rem;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(30,30,56,.9);color:#f4f4fa;font-size:1rem;cursor:pointer}";
 
   // The page-wide guards (iOS long press and pinch): no context menu, no selection start, no gesture zoom. Typed text in an
   // input is left alone. Added once; the cave test dispatches these events and checks they were cancelled.
@@ -1565,26 +2288,210 @@
   function holdArea(node) {
     ["touchstart", "touchmove"].forEach(function (n) { node.addEventListener(n, function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false }); });
   }
+  // The floating stick (ctl-split-thumbs): a thumb that lands on the left half of the screen brings the walk stick under it,
+  // and the stick goes back to its corner when the thumb lifts. A mouse keeps the corner stick, and drags to look anywhere.
+  function floatStick(pad) {
+    return {
+      wants: function (e) {
+        var box = pad.offsetParent; if (!box || e.pointerType === "mouse" || pad.style.display === "none") return false;
+        var r = box.getBoundingClientRect(); return e.clientX - r.left < r.width / 2;
+      },
+      at: function (e) {
+        var r = pad.offsetParent.getBoundingClientRect(), w = pad.offsetWidth / 2;
+        pad.style.left = Math.round(e.clientX - r.left - w) + "px"; pad.style.top = Math.round(e.clientY - r.top - w) + "px"; pad.style.bottom = "auto";
+        pad.classList.add("oagr-afloat");
+      },
+      home: function () { pad.style.left = pad.style.top = pad.style.bottom = ""; pad.classList.remove("oagr-afloat"); },
+    };
+  }
+  // The ring on the floor where a tap sends the figure (ctl-generous-taps). It fades as the figure comes to it.
+  function tapRing(THREE) {
+    var m = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.46, 32), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.renderOrder = 3; m.visible = false; m.userData.k = 0;
+    m.userData.put = function (scene, x, y, z) { if (m.parent !== scene) scene.add(m); m.position.set(x, y + 0.04, z); m.visible = true; m.userData.k = 1; };
+    m.userData.step = function (dt, on) { var u = m.userData; u.k = on ? Math.min(1, u.k + dt * 4) : Math.max(0, u.k - dt * 2.5); m.material.opacity = 0.8 * u.k; m.visible = u.k > 0.01; };
+    return m;
+  }
+  // Within reach of a tap: the thing's own size on screen, but never less than TOUCH.min (more in still mode).
+  function tapReach(r) { return Math.max(r || 0, TOUCH.min * (reducedMotion ? 1.5 : 1)); }
 
+  // The title screen (gd-title-as-game): the cave mouth in 3D with the player's figure standing in it, its light at the chest,
+  // and the ways in: Continue (when there is a place to go back to), Begin (the WAVE room, where the walkthrough starts),
+  // straight into the cave, and the gear for sound, still motion and the walkthrough again. With no WebGL the words stay.
   function start() {
     if (!document.getElementById("oagc-css")) document.head.appendChild(el("style", { id: "oagc-css", text: CSS }));
     guardPage();
     var root = document.getElementById("cave-root") || document.body;
-    var home = el("div", { class: "oagc", "data-cave-home": "" }, [el("div", { class: "oagc-home" }, [
-      el("h1", { text: "The Cave of Lessons" }),
-      el("p", { text: "Your body is the world. Tap where the charge is, and go in." }),
-      el("button", { "data-cave-dive": "", text: "Find the place", onclick: function () {
-        window.OAGBody.pick().then(function (r) { if (r) dive(r.label, home); });
-      } }),
-      // The WAVE room on its own, from the body map (board wave-room-cave-link = both): tap where the charge is, and sit with it.
-      el("p", { text: "Or sit with it at home: a room with a door, where a charge is welcomed in, worked, and let go." }),
-      el("button", { class: "alt", "data-room-open": "", text: "Sit in the WAVE room", onclick: function () {
-        window.OAGBody.pick().then(function (r) {
-          if (r) load().then(function (A) { return homeBase(A, home, { where: r.label }); }).catch(function (e) { alert("The room could not open: " + e.message); });
-        });
-      } }),
+    var stage = el("div", { class: "oagc-title-stage", "aria-hidden": "true" });
+    function roomFrom(where) {
+      return load().then(function (A) { return homeBase(A, home, { where: where }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+    }
+    function pickThen(go) { window.OAGBody.pick().then(function (r) { if (r) go(r.label); }); }
+    var menuBox = el("div", { class: "oagc-title-menu" });
+    function drawMenu() {
+    var last = continueTo(), menu = [];
+    if (last) menu.push(el("button", { class: "main", "data-title-continue": last.at, text: "Continue", onclick: function () { goOn(last); } }),
+      el("small", { "data-title-continue-where": "", text: last.label }));
+    menu.push(
+      // Begin opens the WAVE room from the body map (board wave-room-cave-link = both): tap where the charge is, and sit with it.
+      el("button", { class: last ? "" : "main", "data-room-open": "", "data-title-begin": "", text: last ? "Begin again" : "Begin", onclick: function () { pickThen(roomFrom); } }),
+      el("button", { class: "link", "data-cave-dive": "", text: "Or tap the body and go straight into the cave", onclick: function () {
+        pickThen(function (label) { dive(label, home); });
+      } }));
+    menuBox.innerHTML = ""; menu.forEach(function (k) { menuBox.appendChild(k); });
+    }
+    drawMenu();
+    var panel = el("div", { class: "oagc-settings", "data-title-settings-panel": "", role: "dialog", "aria-label": "Settings", style: "display:none" });
+    function toggle(key, text, note, on, set) {
+      var box = el("input", { type: "checkbox", "data-setting": key, onchange: function () { set(box.checked); } }); box.checked = on;
+      return [el("label", {}, [el("span", { text: text }), box]), note ? el("small", { text: note }) : null];
+    }
+    function drawPanel() {
+      panel.innerHTML = "";
+      [el("h2", { text: "Settings" })]
+        .concat(toggle("sound", "Sound", "", settings.sound !== false, function (v) { setSetting("sound", v); }))
+        .concat(toggle("still", "Still motion", settings.still == null ? "Following your device's setting." : "", stillNow(), function (v) { setSetting("still", v); drawPanel(); }))
+        .concat([el("button", { "data-setting": "replay", text: "Show the walkthrough again", onclick: function (e) {
+          try { localStorage.removeItem(TUTORIAL_KEY); } catch (er) {}
+          e.target.textContent = "The walkthrough will show again";
+        } }), el("button", { "data-setting": "close", text: "Done", onclick: function () { panel.style.display = "none"; gear.focus(); } })])
+        .forEach(function (k) { if (k) panel.appendChild(k); });
+    }
+    var gear = el("button", { class: "oagc-gear", "data-title-settings": "", "aria-label": "Settings", text: "⚙", onclick: function () {
+      if (panel.style.display === "none") { drawPanel(); panel.style.display = ""; panel.querySelector("input").focus(); } else panel.style.display = "none";
+    } });
+    var home = el("div", { class: "oagc", "data-cave-home": "" }, [el("div", { class: "oagc-title", "data-title": "" }, [
+      stage, el("div", { class: "oagc-title-shade" }),
+      el("div", { class: "oagc-title-name" }, [el("h1", { text: "The Cave of Lessons" }), el("p", { text: "Your body is the world. Find where the charge is, and go in." })]),
+      menuBox, gear, panel,
     ])]);
     root.appendChild(home);
+    titleScene(stage, home, function () { drawMenu(); panel.style.display = "none"; });
+    // Skip-ahead for a preview link, so a look starts where the change is: ?go=elder opens home base (at the heart, or ?at=) with
+    // the figure by the elder spirit, ?go=home opens it as Begin does, and ?go=cave goes straight into the cave there. The same keys
+    // work after a # (#go=home&grown=7). &grown=N first keeps one summoned spirit at N sittings and brings it home with you, so its
+    // next sitting is seen (7: a creature that becomes an ally). &hidden=N brings the first charge in with a hidden part already on
+    // it, at polarity N (signal "preview"), so it comes in to "Something hides it" and its shadow spirit's gate is a few taps away.
+    // &tour=0 marks the walkthrough done first, since a preview's fresh browser would otherwise start it. ?go=basin opens home
+    // base's basin (basin.js) straight away, and its mouth walks back to the room. &brow=N (0 to 3) first sets the brow's floor
+    // in oag.organs.v1 (source "a preview link"; 0 clears it), so a look at the basin or the room's haze starts at the state to test.
+    var skip = null; try { skip = new URLSearchParams(window.location.search + "&" + String(location.hash || "").replace(/^#/, "")); } catch (e) {}
+    var skipGo = skip && skip.get("go"), skipAt = (skip && skip.get("at")) || "my heart";
+    var gn = skip && /^\d+$/.test(skip.get("grown") || "") ? +skip.get("grown") : null, hd = skip && /^\d+$/.test(skip.get("hidden") || "") ? +skip.get("hidden") : 0;
+    if (skip && /^[0-3]$/.test(skip.get("brow") || "") && window.__oagOrgans) window.__oagOrgans.store.preview("brow", +skip.get("brow"));
+    if (skip && skip.get("tour") === "0") keepTutorial(ROOM_LESSONS.concat(CAVE_LESSONS).map(function (l) { return l.id; })); // &tour=0: a look link skips the walkthrough
+    if (skipGo === "elder" || skipGo === "home") {
+      var sp = null;
+      if (gn !== null && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: gn }, "a preview link"); } catch (e) { sp = null; }
+      load().then(function (A) { return homeBase(A, home, { where: skipAt, near: skipGo === "elder" ? "elder" : null, spirit: sp, hidden: Math.min(10, hd) }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+    } else if (skipGo === "basin" && window.__oagBasin) {
+      load().then(function (A) { window.__oagBasin.open({ back: function () { homeBase(A, home, { where: skipAt }); } }); }).catch(function (e) { notice("The basin could not open: " + e.message, true); });
+    } else if (skipGo === "cave") dive(skipAt, home);
+    else if (skipGo === "bigmind") goOn({ at: "bigmind", where: "" });
+    // ?go=bigmind&sit=1 goes in and sits the figure down as soon as the hall lets it (a look at the seated pose)
+    if (skip && skip.get("sit") && skipGo === "bigmind") {
+      var sitTries = 0, sitPoll = setInterval(function () {
+        var e = document.querySelector("[data-bm-enter]"), b = document.querySelector("[data-bm-sitbtn]");
+        if (e && e.offsetParent) e.click();
+        else if (b && b.style.display !== "none" && !b.disabled && b.offsetParent) { clearInterval(sitPoll); b.click(); }
+        else if (++sitTries > 120) clearInterval(sitPoll);
+      }, 250);
+    }
+  }
+  // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
+  function continueTo() {
+    var l = readLast();
+    if (!l) {
+      var bm = window.__oagBigMind && window.__oagBigMind.readSave ? window.__oagBigMind.readSave() : null;
+      if (bm && (bm.chamber > 0 || Object.keys(bm.voices || {}).length)) l = { v: 1, at: "bigmind", where: "" };
+    }
+    if (!l || (l.at !== "bigmind" && !l.where)) return null;
+    l.label = l.at === "bigmind" ? "Back to the Big Mind cave" : l.at === "room" ? "Back to the WAVE room, with " + l.where : "Back into the cave at " + l.where;
+    return l;
+  }
+  function goOn(l) {
+    var home = document.querySelector("[data-cave-home]");
+    if (l.at === "cave") return dive(l.where, home);
+    load().then(function (A) {
+      if (l.at === "room") return homeBase(A, home, { where: l.where });
+      // Big Mind's own way out comes back here: to the room it was opened from, or to the title
+      keepLast("bigmind", l.where);
+      home.style.display = "none";
+      window.__oagBigMind.open({ spirits: [], back: function () { home.style.display = ""; if (l.where) homeBase(A, home, { where: l.where }); } });
+    }).catch(function (e) { notice("The cave could not open: " + e.message, true); });
+  }
+  // The title's scene: the kit's portal arch as the cave mouth, a tunnel going back into blue dark, spires and glowing caps,
+  // and the player's figure (Average Dusk, worn as in the cave) standing in the mouth, breathing, its light at the chest.
+  // It draws only while the title is showing; leaving it for the cave or the room lets its renderer go, and coming back makes
+  // a new one.
+  function titleScene(stage, home, onShow) {
+    var live = null, A = null, raf = 0, t0 = 0, noGL = false, was = true;
+    function shown() { return home.isConnected && home.style.display !== "none" && document.querySelectorAll(".oagc").length === 1; }
+    function build() {
+      var THREE = A.THREE, renderer;
+      try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { return null; }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      stage.appendChild(renderer.domElement);
+      var scene = new THREE.Scene(); scene.background = new THREE.Color(0x07070f); scene.fog = new THREE.FogExp2(0x07070f, 0.045);
+      var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 120);
+      var tall = false, G = {}; Object.keys(A.kit).forEach(function (k) { G[k] = geomOf(THREE, A.kit[k]); });
+      function stone(tile, hex, rep) {
+        var m = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.92 });
+        if (A.tiles[tile]) { m.map = A.tiles[tile].clone(); m.map.needsUpdate = true; m.map.repeat.set(rep, rep); }
+        return m;
+      }
+      function put(piece, mat, x, y, z, sx, sy, sz, ry) {
+        var m = new THREE.Mesh(G[piece], G[piece].attributes.color ? shaded(THREE, mat) : mat);
+        m.position.set(x, y, z); m.scale.set(sx, sy == null ? sx : sy, sz == null ? sx : sz); m.rotation.y = ry || 0; scene.add(m); return m;
+      }
+      var rock = stone("dry_stone", 0x6d6478, 3), wet = stone("wet_stone", 0x4b4a5e, 4), cap = new THREE.MeshStandardMaterial({ color: 0x9fd8ff, emissive: 0x5fb8ff, emissiveIntensity: 0.9, roughness: 0.5 });
+      var crys = new THREE.MeshStandardMaterial({ color: 0xffe6a8, emissive: 0xffc860, emissiveIntensity: 0.7, roughness: 0.3 });
+      // the mouth: the arch, thickened by stacking, and the tunnel behind it
+      for (var i = 0; i < 6; i++) put("portal_arch", rock, 0, 0, -0.6 - i * 0.35, 3.3 + i * 0.05, 3.3 + i * 0.03, 2);
+      put("path_tube", wet, 0, 0, -1.2, 3.4, 3.4, 14);
+      put("floor", wet, 0, 0.01, 16, 18, 1, 32);
+      [[-4.6, -0.4, 1.6], [4.8, -0.8, 1.9], [-6.2, 1.2, 1.2], [6.4, 0.6, 1.4], [-3.4, -3, 1], [3.6, -4, 0.9]].forEach(function (p, k) { put("stone_spire", rock, p[0], 0, p[1], p[2], p[2] * (2.6 - k * 0.15), p[2], k); });
+      [[-2.9, 1.2, 0.9], [3.1, 0.9, 0.7], [-3.6, -5, 0.6], [2.4, -7, 0.5]].forEach(function (p, k) { put("glow_cap", cap, p[0], 0, p[1], p[2], p[2], p[2], k * 1.3); });
+      put("crystal_cluster", crys, 3.9, 0, 1.7, 1.1); put("root_hang", rock, -1.2, 3.25, -0.6, 1.4, 1.2, 1.4);
+      scene.add(new THREE.HemisphereLight(0x8a90c8, 0x0c0a14, 0.35));
+      var deep = new THREE.PointLight(0x6f9cff, 2.2, 30, 2); deep.position.set(0, 2.2, -10); scene.add(deep);
+      var rim = new THREE.PointLight(0x9fd8ff, 0.8, 14, 2); rim.position.set(-3, 1.2, 1.6); scene.add(rim);
+      // the figure, the light at its chest and the warm pool that light makes on the floor
+      // hidden until Average Dusk is worn, so the stand-in never flashes; if the walker cannot load, the stand-in shows
+      var av = buildAvatar(THREE, "other", true), d = av.userData; av.position.set(0.15, 0, 0.6); av.rotation.y = -0.3; av.scale.setScalar(0.72); scene.add(av);
+      av.visible = false; Promise.resolve(d.wearing).then(function () { av.visible = true; }, function () { av.visible = true; });
+      var lantern = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff1d0 }));
+      lantern.position.set(0, 2.42, 0.42); av.add(lantern);
+      var warm = new THREE.PointLight(0xffd99a, 1.6, 9, 2); warm.position.set(0, 2.42, 1.2); av.add(warm);
+      function size() {
+        var w = stage.clientWidth || window.innerWidth, h = stage.clientHeight || window.innerHeight;
+        renderer.setSize(w, h, false); camera.aspect = w / h;
+        tall = w < h; camera.fov = tall ? 60 : 46; camera.updateProjectionMatrix(); // a phone held upright sees the whole mouth
+      }
+      window.addEventListener("resize", size); size();
+      return { renderer: renderer, scene: scene, camera: camera, d: d, tall: function () { return tall; }, lantern: lantern, warm: warm, size: size, dispose: function () {
+        window.removeEventListener("resize", size); renderer.dispose(); if (renderer.forceContextLoss) renderer.forceContextLoss(); renderer.domElement.remove();
+      } };
+    }
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      var on = shown();
+      if (on && !was) onShow(); // back from the cave or the room: Continue names the place just left
+      was = on;
+      if (!on) { if (live) { live.dispose(); live = null; } return; }
+      if (noGL) return;
+      if (!live) { live = build(); if (!live) { noGL = true; return; } t0 = now; }
+      var t = (now - t0) / 1000, still = reducedMotion, b = still ? 0.5 : 0.5 - 0.5 * Math.cos(t * 2 * Math.PI / BREATH_S);
+      if (live.d.walker) poseWalker(live.d, 0, 0, b);
+      var sway = still ? 0 : Math.sin(t * 0.12);
+      var far = live.tall() ? 12.5 : 9.2;
+      live.camera.position.set(1.2 * sway, 2.4 + (still ? 0 : 0.08 * Math.sin(t * 0.2)), far);
+      live.camera.lookAt(0, live.tall() ? 1.5 : 1.9, 0);
+      live.lantern.scale.setScalar(0.9 + 0.2 * b); live.warm.intensity = 1.3 + 0.6 * b;
+      live.renderer.render(live.scene, live.camera);
+    }
+    window.__oagTitle = { live: function () { return !!live; }, walker: function () { return !!(live && live.d.walker); } };
+    load().then(function (a) { A = a; raf = requestAnimationFrame(frame); }).catch(function () { /* the words and buttons stand alone */ });
   }
 
   var running = null;
@@ -1597,11 +2504,12 @@
       var spot = spotNamed(A, label);
       if (!spot) {
         // A typed place the figure does not name is not guessed at; the player is sent back to tap the figure.
-        alert("That place is not on the figure yet. Tap the figure to choose one.");
+        notice("That place is not on the figure yet. Tap the figure to choose one.");
         return;
       }
+      keepLast("cave", label);
       enter(A, spot, home);
-    }).catch(function (e) { alert("The cave could not open: " + e.message); });
+    }).catch(function (e) { notice("The cave could not open: " + e.message, true); });
   }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   // Home base (LEVELS.md): the WAVE room, opened from the body map, with a portal in its wall. Going through it opens the hall of
@@ -1610,9 +2518,15 @@
   // of that cave's mouth comes home to the room.
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
-    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
+    keepLast("room", o.where);
+    var basin = !!(window.__oagBasin && window.__oagBasin.open);
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, basin: basin, near: o.near, spirit: o.spirit || null, hidden: o.hidden || 0 }).then(function (r) {
+      if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
-      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
+      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { if (window.__oagVessel) window.__oagVessel.store.visited("bigmind"); homeBase(A, home, { where: o.where, near: o.near }); } });
+      // The basin (basin.js): the body map's inside as a place, walked into through its one mouth (mab-one-mouth); its own mouth
+      // walks back here. Leaving it keeps the room as the last place played.
+      else if (r && r.basin && basin) window.__oagBasin.open({ back: function () { homeBase(A, home, { where: o.where, near: o.near }); } });
       return r;
     });
   }
@@ -1650,7 +2564,7 @@
     // walk = { route, s, s0, D, t, target (a stop on the route), arrived, blk }. stack holds where each branch left from.
     // speed scales the walk clock (the test sets it above 1 to cross a stretch faster than one breath); it is 1 in play.
     var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false, modal: false, auto: null };
-    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3();
+    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3();
     // A spirit that follows the player carries a small light of its own (Wendell, 2026-10-13: "The avaiable lighting centers
     // around the character and any spirits that are following them"). The spirits back from the WAVE room carry one each.
     function carryLight(obj, hex) { var l = new THREE.PointLight(hex || 0xc8e0ff, 0.6, LAMP.reach * 0.5, LAMP.decay); scene.add(l); carried.push({ obj: obj, light: l }); return l; }
@@ -1702,7 +2616,6 @@
       if (show && !ring.parentNode) canvasBox.appendChild(ring); else if (!show && ring.parentNode) ring.remove();
       if (!show) br.ringHeld = false;
     }
-    canvasBox.appendChild(calmBtn); canvasBox.appendChild(ringBtn);
     // The branch's style: shown while walking a face's branch, set to that face at first; any face's look can dress it.
     var styleSel = el("select", { class: "oagc-style", "data-cave-branch-style": "", "aria-label": "This branch's style" });
     FACES.forEach(function (f) { styleSel.appendChild(el("option", { value: f[0], text: f[1] + " · " + FACE_LOOK[f[0]].vibe })); });
@@ -1744,38 +2657,71 @@
     // look eases back behind the figure only once the thumb has rested a moment (LOOK.settle).
     // The camera goes where the finger goes, as if it were the viewer's head (Wendell, 2026-10-13): a drag to the right
     // swings the camera to the figure's right, a drag up lifts it, a drag down lowers it. A positive yaw is the right.
-    var ray = new THREE.Raycaster(), drag = null, dom = renderer.domElement;
+    // Round 1 of the phone controls (TOUCH, above): each finger is followed on its own, so a thumb walking on the left and a
+    // thumb looking on the right never take each other's place (ctl-split-thumbs). A finger that lands on the left half brings
+    // the stick under it; one on the right looks; two on the right pinch the camera nearer or farther; the mouse wheel zooms too.
+    var ray = new THREE.Raycaster(), ptrs = {}, pinch = null, dom = renderer.domElement, floater = null, lastLook = 0, looked = 0, tapMark = tapRing(THREE);
+    state.zoom = 1; state.handHold = 0;
+    function lookers() { return Object.keys(ptrs).filter(function (k) { return !ptrs[k].walk; }).map(function (k) { return ptrs[k]; }); }
+    function spread(l) { return l.length < 2 ? 0 : Math.hypot(l[0].x - l[1].x, l[0].y - l[1].y); }
+    function lookBy(dx, dy) {
+      var k = reducedMotion ? TOUCH.still : 1;
+      lastLook = Date.now(); state.handHold = TOUCH.hold;
+      state.look.yaw = clamp(state.look.yaw + dx * 0.006 * k, -Math.PI, Math.PI);
+      state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx * k, LOOK.pitch[0], LOOK.pitch[1]);
+      looked += Math.abs(dx) + Math.abs(dy); if (looked > 60 && teach) teach.learn("look");
+    }
     holdArea(dom);
     dom.addEventListener("pointerdown", function (e) {
       try { dom.setPointerCapture(e.pointerId); } catch (x) {}
-      drag = { x: e.clientX, y: e.clientY, moved: 0, t: Date.now(), last: 0 }; state.held = true;
+      var p = ptrs[e.pointerId] = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: e.timeStamp, drag: false, walk: false }; // the event's own time: a busy frame does not stretch a tap
+      if (!floater && stickPad) floater = floatStick(stickPad);
+      // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+      var sp0 = stickId != null && ptrs[stickId]; if (sp0 && Math.hypot(sp0.x - sp0.x0, sp0.y - sp0.y0) < TOUCH.px) { sp0.walk = false; stickUp(); }
+      else if (stickId == null && floater && canWalk() && floater.wants(e)) { p.walk = true; stickId = e.pointerId; floater.at(e); stickAt(e); }
+      var l = lookers(); if (l.length === 2) { pinch = { d: spread(l), z: state.zoom }; l.forEach(function (q) { q.drag = true; }); }
+      state.held = true;
     });
     dom.addEventListener("pointermove", function (e) {
-      if (!drag) return;
-      var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
-      if (drag.moved > 12) {
-        drag.last = Date.now();
-        state.look.yaw = clamp(state.look.yaw + dx * 0.006, -Math.PI, Math.PI);
-        state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx, LOOK.pitch[0], LOOK.pitch[1]);
-      }
+      var p = ptrs[e.pointerId]; if (!p) return;
+      var dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      if (!p.drag && Math.hypot(p.x - p.x0, p.y - p.y0) >= TOUCH.px) { p.drag = true; dx = p.x - p.x0; dy = p.y - p.y0; } // no dead band: past the line, all of it counts
+      if (p.walk) { if (stickId === e.pointerId) stickAt(e); return; }
+      if (pinch) { var d = spread(lookers()); if (pinch.d > 0 && d > 0) state.zoom = clamp(pinch.z * pinch.d / d, TOUCH.zoom[0], TOUCH.zoom[1]); return; }
+      if (p.drag) lookBy(dx, dy);
     });
-    function lift() { state.held = false; drag = null; }
-    dom.addEventListener("pointercancel", lift);
+    function lift(e, up) {
+      var p = ptrs[e.pointerId]; delete ptrs[e.pointerId];
+      if (p && p.walk && stickId === e.pointerId) stickUp();
+      if (lookers().length < 2) pinch = null;
+      state.held = Object.keys(ptrs).length > 0;
+      return up && p && !p.drag && e.timeStamp - p.t < TOUCH.ms ? p : null;
+    }
+    dom.addEventListener("pointercancel", function (e) { lift(e, false); });
+    dom.addEventListener("wheel", function (e) { e.preventDefault(); state.zoom = clamp(state.zoom * Math.exp(e.deltaY * 0.0015), TOUCH.zoom[0], TOUCH.zoom[1]); }, { passive: false });
+    // The element answers a tap on it or near it (tapReach), so a near miss no longer walks the figure away from it.
+    function nearElement(x, y, r) {
+      var c = ctxOf(); if (!c || !c.elObj || !c.elObj.visible) return false;
+      var bx = new THREE.Box3().setFromObject(c.elObj); if (bx.isEmpty()) return false;
+      var sp = bx.getBoundingSphere(new THREE.Sphere()), m = sp.center.clone().project(camera);
+      if (m.z > 1) return false;
+      var e2 = sp.center.clone().addScaledVector(tmpV.setFromMatrixColumn(camera.matrixWorld, 0), sp.radius).project(camera);
+      var sx = r.left + (m.x + 1) / 2 * r.width, sy = r.top + (1 - m.y) / 2 * r.height, rad = Math.hypot((e2.x - m.x) / 2 * r.width, (e2.y - m.y) / 2 * r.height);
+      return Math.hypot(x - sx, y - sy) < tapReach(rad);
+    }
     dom.addEventListener("pointerup", function (e) {
-      var wasTap = drag && drag.moved < 8 && Date.now() - drag.t < 350; lift();
+      var wasTap = lift(e, true);
       if (!wasTap || !ch || busy) return;
-      var r = dom.getBoundingClientRect(), c = ctxOf();
+      var r = dom.getBoundingClientRect();
+      if (nearElement(e.clientX, e.clientY, r)) { touch(); return; }
       ray.setFromCamera({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, camera);
-      var kids = [];
-      if (c && c.elObj) c.elObj.traverse(function (m) { if (m.isMesh) kids.push(m); });
-      var hit = ray.intersectObjects(kids)[0];
-      if (hit && hit.object.userData.interact) { touch(); return; }
       // A click on the floor walks the figure there (Wendell, 14 October 2026: "we want to be able to have click to walk for when
       // we're testing on the computer"). It goes as the stick would, so walls, the shut way and the stops all behave the same.
+      // A ring on the floor marks where it is going.
       var wk = state.walk;
       if (wk && canWalk() && !state.auto) {
         var fy = avatar ? avatar.position.y : figureAt(wk).y, o = ray.ray.origin, dv = ray.ray.direction;
-        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; }
+        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) { wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; tapMark.userData.put(scene, wk.goTo.x, fy, wk.goTo.z); } }
       }
     });
 
@@ -1787,7 +2733,7 @@
       state.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden";
     }
     function closeModal() { state.modal = false; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); pane.style.visibility = ""; }
-    pane.addEventListener("click", function () { openModal(); });
+    pane.addEventListener("click", function () { if (teach) teach.learn("stone"); openModal(); });
     // fill puts a page up. The doorway's pages (dock true) are the bottom panel, as they were. Inside the cave the title and the
     // first paragraph are the pane, which follows the figure and stays readable the whole walk; the modal holds the whole page:
     // every paragraph and every choice. A page with choices opens the modal (a stop); a page without them keeps the pane.
@@ -1811,11 +2757,8 @@
       if (page.text) pane.appendChild(el("span", { text: page.text }));
       if (foot) pane.appendChild(el("small", { text: foot }));
       pane.style.display = "";
-      modal.appendChild(el("h2", { text: title }));
-      paras.forEach(function (p) { modal.appendChild(p); });
-      ctls.forEach(function (c) { modal.appendChild(c); });
-      if (ctls.length) { modal.appendChild(row([btn("Look around", { "data-cave-shrink": "" }, closeModal, true)])); openModal(); }
-      else { modal.appendChild(row([btn("Keep walking", { "data-cave-close": "" }, closeModal, true)])); closeModal(); }
+      sheet(modal, title, paras.concat(ctls), [row([ctls.length ? btn("Look around", { "data-cave-shrink": "" }, closeModal, true) : btn("Keep walking", { "data-cave-close": "" }, closeModal, true)])]);
+      if (ctls.length) openModal(); else closeModal();
     }
 
     // ---- the doorway: one question per page, and the cave changes with each answer -------------
@@ -1883,7 +2826,7 @@
       scene.fog.density = look.fog * STEP_LOOK[0].fogK;
       lk.idx = 0; lk.light.setHex(STEP_LOOK[0].light); lk.fog.setHex(STEP_LOOK[0].fog); lk.fogK = STEP_LOOK[0].fogK; lk.hemi = STEP_LOOK[0].hemi; lk.flash = 0;
       scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog);
-      avatar = buildAvatar(THREE, s.texture); scene.add(avatar);
+      avatar = buildAvatar(THREE, s.texture, true); scene.add(avatar);
       parts.dress = { wall: tex[2], width: Math.round(w * 100) / 100, fog: look.fog, element: null, lamp: 0xffe0b0 };
       state.dress = parts.dress;
       state.layout = { seed: s.spot.id + ":" + s.texture, rows: main.rows, stops: main.stops.map(function (v) { return Math.round(v.s * 100) / 100; }), length: Math.round(main.len * 10) / 10 };
@@ -1930,7 +2873,7 @@
       else if (stp.face) { var f = lookup(FACES, stp.face); label = f[1] + "'s branch"; words = f[3]; }
       else { var pl = PLACE_BY[stp.place]; label = pl.step + (stp.stone != null ? " · " + FACES[stp.stone][1] : ""); words = stp.stone != null ? FACES[stp.stone][1] + ": " + FACES[stp.stone][2] + ". Its branch opens here." : PLACE_ASK[stp.place]; }
       var kids = [P(words)];
-      if (!state.walkedOnce) kids.push(P("Walk with the stick, or the arrow keys. Drag to look. Tap these words to open them.", { "data-cave-hint": "" }));
+      // The walk, the look and the words are the walkthrough's lessons now (gd-teach-by-doing), so no line of rules here.
       fill(label, kids);
       stat.setAttribute("data-cave-walking", stp.level ? "level-" + stp.level + (stp.toFace ? "-" + stp.toFace : "") : stp.wave != null ? WAVE[i][0] : stp.face ? "face-" + stp.face : stp.place);
       wk.arrived = false; wk.ready = true; wk.s0 = wk.s; wk.D = Math.max(1, stp.s - wk.s + (wk.route.loop && stp.s <= wk.s ? wk.route.len : 0)); wk.t = 0; wk.moving = false;
@@ -1960,6 +2903,30 @@
     var stickPad = el("div", { class: "oagr-stick", "data-cave-stick": "", "aria-label": "Walk", role: "slider", style: "display:none" });
     var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob); canvasBox.appendChild(stickPad);
     var promptBox = el("div", { class: "oagr-door", "data-cave-prompt-box": "", style: "display:none" }); canvasBox.appendChild(promptBox);
+    // The cave's lessons (gd-teach-by-doing): the walk and the look where the room has not taught them, then a glowing mark's
+    // prompt by the right thumb and a word stone, the pane over the figure. The light floats to the mark it teaches.
+    function shows(n) { return n.style.display !== "none" && n.style.visibility !== "hidden"; }
+    var teach = teacher(THREE, { wrap: wrap, scene: scene, camera: camera, canvas: renderer.domElement, lessons: CAVE_LESSONS, size: AVATAR_H / DESIGN_H,
+      still: function () { return state.calm || reducedMotion; },
+      ready: function (id) {
+        if (!avatar || !canWalk() || state.auto) return false;
+        if (id === "walk") return shows(stickPad);
+        if (!teach.has("walk")) return false;
+        if (id === "mark") return shows(promptBox) && state.walk.near != null;
+        if (id === "stone") return !docked && page.has && shows(pane) && !shows(promptBox);
+        return true; // look
+      },
+      spot: function (id, v) {
+        var wk = state.walk, r = wk.route, h = ch ? ch.h : AVATAR_H, p;
+        if (id === "walk") { v.set(avatar.position.x + Math.sin(avatar.rotation.y) * 3, avatar.position.y + AVATAR_H * 0.6, avatar.position.z + Math.cos(avatar.rotation.y) * 3); return true; }
+        if (id === "look") { p = at(r, r.loop ? wrapLoop(r, wk.s + 7) : clamp(wk.s + 7 * (wk.dir || 1), 0, r.len)); v.set(p.x, p.y - h * 0.35, p.z); return true; }
+        if (id === "mark") { var stp = r.stops[wk.near]; if (!stp) return false; p = at(r, stp.s); v.set(p.x, p.y - h * 0.6, p.z); return true; }
+        return false; // a word stone: the light stays at the chest and the glyph sits by the words
+      },
+      anchor: function (id) { return id === "walk" ? stickPad : id === "mark" ? promptBox : id === "stone" ? pane : { x: window.innerWidth / 2, y: window.innerHeight * 0.42 }; },
+      home: function (v) { return avatar ? avatar.userData.chest.getWorldPosition(v) : v.set(0, 0, 0); },
+    });
+    promptBox.addEventListener("click", function (e) { if (e.target.closest("button")) teach.learn("mark"); }, true);
     function stickAt(e) { // a hidden stick lets go (the WAVE room's iPhone fix: a hidden stick measures 0 wide)
       var rc = stickPad.getBoundingClientRect(), r = rc.width / 2;
       if (!(r > 0) || stickPad.style.display === "none") { stickUp(); return; }
@@ -1967,23 +2934,50 @@
       stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
       stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
     }
-    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; if (floater) floater.home(); }
     holdArea(stickPad);
     stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
     stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
     ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { stickPad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
     var KEYS = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
     function typing() { var a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT"); }
-    function keyDown(e) { if (!KEYS[e.code] || typing() || !canWalk()) return; keys[e.code] = true; e.preventDefault(); }
-    function keyUp(e) { delete keys[e.code]; }
+    var shiftOn = false; // Shift held walks at a run, as the Run button does
+    function keyDown(e) { shiftOn = e.shiftKey; if (!KEYS[e.code] || typing() || !canWalk()) return; keys[e.code] = true; e.preventDefault(); }
+    function keyUp(e) { shiftOn = e.shiftKey; delete keys[e.code]; }
+    function runK() { return state.run || shiftOn ? RUN_K : 1; }
     window.addEventListener("keydown", keyDown); window.addEventListener("keyup", keyUp);
+    window.addEventListener("pagehide", leaveVoice); // a page closed in a voice's place leaves it too
     // The stick shows whenever the walk is in view, and hides only while a page is open (rule 5) or the game has the figure.
-    function canWalk() { return state.mode === "chamber" && !!state.walk && state.walk.ready && !state.modal && !sit && !busy && !flight && !state.rise; }
+    function canWalk() { return state.mode === "chamber" && !!state.walk && state.walk.ready && !state.modal && !state.selfOn && !sit && !busy && !flight && !state.rise; }
+    // Self and Run, Big Mind's two buttons (bigmind.js selfPause, runBtn). Self takes control back (bmc-safety): the walk stops and
+    // nothing has to happen next; the player can sit as long as they like, go on, or walk back out. Run walks at 2.1 times the pace.
+    var runBtn = el("button", { class: "oagc-run", "data-cave-run": "", "aria-pressed": "false", style: "display:none", text: "Run", onclick: function () { state.run = !state.run; runBtn.setAttribute("aria-pressed", String(state.run)); } });
+    var selfBtn = el("button", { class: "oagc-self", "data-cave-self": "", style: "display:none", text: "Self", onclick: function () { selfPause(); } });
+    var selfBox = el("div", { class: "oagc-selfbox", "data-cave-selfbox": "", style: "display:none" });
+    canvasBox.appendChild(runBtn); canvasBox.appendChild(selfBtn); wrap.appendChild(selfBox);
+    function selfPause() {
+      if (state.selfOn) return;
+      state.selfOn = true; keys = {}; if (stickId != null) stickUp();
+      selfBox.innerHTML = "";
+      [el("h2", { text: "You're the self again" }), P("Nothing has to happen next. You can sit here as long as you like, go on when you're ready, or walk back out."),
+        row([btn("Go on", { "data-cave-self-goon": "" }, selfResume), btn("Walk back out", { "data-cave-self-out": "" }, function () { selfResume(); goHome(); }, true)])].forEach(function (k) { selfBox.appendChild(k); });
+      selfBox.style.display = "";
+    }
+    function selfResume() { state.selfOn = false; selfBox.style.display = "none"; }
     function wantWalk() {
       var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { x += KEYS[k][0]; z += KEYS[k][1]; });
       var m = Math.hypot(x, z);
       var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var wk = state.walk;
+      // In the hall and the centre the stick's forward is the camera's as the thumb went down, held while the thumb stays (home
+      // base's R.stickFrame, 19 October 2026), and carried round with the ring: kept as a turn off the ring's way, so up held still
+      // walks round the ring to the next door, and the camera can come round behind the figure without bending the way it walks.
+      // A look turned by hand turns it too (walkStep). In a tunnel the camera turns along the way, so the stick keeps the live view.
+      if (m >= 0.15 && wk && wk.route.doors) {
+        var ringYaw = yawFacing(at(wk.route, wk.s));
+        if (state.stickOff == null) state.stickOff = wrapAng(Math.atan2(fx, fz) - ringYaw);
+        state.stickYaw = ringYaw + state.stickOff; fx = Math.sin(state.stickYaw); fz = Math.cos(state.stickYaw);
+      } else state.stickYaw = state.stickOff = null; // the thumb is off: the next push takes the camera's forward afresh
       if (m >= 0.15) { if (wk) wk.goTo = null; } // the stick or a key takes over from a click
       else if (wk && wk.goTo) { // a click on the floor walks there (for playing at a computer)
         var g = wk.goTo, p = figureAt(wk), dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz);
@@ -2018,18 +3012,26 @@
         return;
       }
       var on = canWalk();
-      stickPad.style.display = on ? "" : "none";
+      stickPad.style.display = runBtn.style.display = on ? "" : "none";
+      wrap.classList.toggle("oagr-still", reducedMotion);
+      tapMark.userData.step(dt, on && !!(wk && wk.goTo));
       if (!on) { if (stickId != null) stickUp(); keys = {}; if (promptBox.style.display !== "none" && (state.modal || sit || busy)) promptBox.style.display = "none"; return; }
       if (wk.near != null && promptBox.style.display === "none" && !wk.arrived) showPrompt(wk.route.stops[wk.near]);
       if (wk.arrived) wk.lat *= 1 - Math.min(1, dt * 2); // standing at a stop is standing on its spot
       var w = wantWalk();
       if (w) {
-        var r = wk.route, a = at(r, wk.s), nx = -a.fz, nz = a.fx, sp = WALK_SPEED * state.speed * (state.calm ? 0.8 : 1) * w.m;
+        var r = wk.route, a = at(r, wk.s), nx = -a.fz, nz = a.fx, sp = WALK_SPEED * state.speed * runK() * (state.calm ? 0.8 : 1) * w.m;
         var along = w.x * a.fx + w.z * a.fz, side = w.x * nx + w.z * nz;
         // Walking away from the camera against the way it faces (the camera turned round by a drag): the camera takes that way
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
-        if (state.look.yaw && !state.peek) { wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); state.look.yaw = 0; } // a look turned by hand becomes the way the camera follows
+        if (state.look.yaw && !state.peek) { // a look turned by hand becomes the way the camera follows, and the stick's forward with it
+          wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); if (state.stickOff != null) state.stickOff = wrapAng(state.stickOff + state.look.yaw); state.look.yaw = 0;
+        }
+        // The figure faces the way the stick points (Wendell, 2026-10-21: "The player should face in the direction of the stick"),
+        // not the way it slid along a wall or round a stone.
+        var my = Math.atan2(w.x, w.z);
+        wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
         // Round a ring, a step along at radius rho moves the angle more than on the ring itself, so the pace stays the same.
         var inMid = r.doors ? wk.lat * r.inner : 0, rho = r.doors ? Math.max(r.R - inMid, MID_R) : 0, kS = r.doors ? r.R / rho : 1;
         var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt * kS, lim.lo, lim.hi);
@@ -2047,29 +3049,33 @@
         if (blocked()) { wk.lat = latOld; if (blocked()) { wk.s = sOld; wk.lat = lat1; if (blocked()) wk.lat = latOld; } }
         var p1 = at(r, wk.s), mx = p1.x - p1.fz * wk.lat - x0, mz = p1.z + p1.fx * wk.lat - z0, moved = Math.hypot(mx, mz);
         if (w.click) wk.goTo.stuck = moved > 0.3 * sp * dt ? 0 : (wk.goTo.stuck || 0) + dt; // walked into a wall: the click is done
+        // The camera turns by itself only once a look turned by hand has held for TOUCH.hold seconds of walking, and in still
+        // mode never (ctl-gentle-camera, ctl-still-mode): the hand turn and the follow no longer pull against each other.
+        var autoK = reducedMotion || state.handHold > 0 ? 0 : 1;
         if (moved > 1e-4) {
-          wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * w.m * STRIDE_K;
-          var my = Math.atan2(mx, mz); // the way the figure actually went: along a wall it slides, so it faces along the wall
-          wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
+          state.handHold = Math.max(0, state.handHold - dt);
+          wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * runK() * w.m * STRIDE_K; teach.learn("walk");
           // Walking away from the camera, it comes round behind the figure; walking back or sideways it stays put, so the thumb
           // keeps meaning the same way (the WAVE room's rule).
           // It turns along the way, the way the figure is going, so up on the stick keeps walking round the bends of a tunnel and
           // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
           // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
-          // Out in the open middle of the hall or the centre it turns toward the way the figure walks, when that is ahead and
-          // nothing is in the way; on the ring it turns along the ring only as much as the walk goes along it, so walking in toward
-          // the middle keeps the view.
-          if (r.doors && inMid > r.w * 0.6) {
-            if (w.fwd > 0.7 && moved > 0.6 * sp * dt) wk.camYaw += wrapAng(my - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          // In the hall and the centre, ring and open middle alike, it comes round behind the way the figure faces, which is the
+          // stick's way; the stick's forward is held off the ring's way while the thumb stays, so the turn does not chase itself
+          // round the ring. (The turn along the ring flipped half round when a frame held still in the world took the walk backward
+          // along it, round 1, 2026-10-21.)
+          if (r.doors) {
+            wk.camYaw += wrapAng(yawFacing(at(r, wk.s)) - yawFacing(a)) * autoK; // it rides round with the ring, as the stick's forward does
+            if (w.fwd > 0.3) wk.camYaw += wrapAng(wk.yaw - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * autoK;
           } else if (w.fwd > 0.3) {
             if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;
             var want = yawFacing(at(r, wk.s)) + (wk.dir < 0 ? Math.PI : 0);
-            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1));
+            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1)) * autoK;
           }
         }
         if (deadEnd && w.fwd > 0.3) {
           // Pushed ahead into the dead end behind (the start of a branch, the way back): the camera turns round to the open way.
-          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * (reducedMotion ? 0 : 1);
         }
       }
       stopZones(wk);
@@ -2358,6 +3364,7 @@
     // The walk on the route a branch left from, standing at the stop it left from.
     function backOn(fr, blk) { var w = newWalk(fr.route, blk, fr.s); w.sMin = fr.sMin != null ? fr.sMin : w.sMin; w.dir = 1; w.ready = true; w.target = fr.target; w.arrived = true; w.near = fr.target; return w; }
     function release() {
+      var cb = state.walk && state.walk.blk; if (cb && cb.daemon) keepPromise(cb.daemon, "return", cb); // back to one's own place, as promised
       backRound(function (fr) {
         var pb = fr.blk;
         if (pb && fr.route.stops[fr.target].place === "passage" && pb.stepAside === "not-yet") { pb.dug++; pb.stepAside = null; } // the daemon is asked again
@@ -2379,6 +3386,7 @@
     }
     function skip() {
       if (busy) return;
+      leaveVoice(); // a skip out of a daemon's branch leaves its place without releasing it
       var s = me(), wk = state.walk;
       var chain = [], b = wk.blk; while (b) { chain.unshift(b.key); b = b.frame.blk; }
       chain.forEach(function (k) { if (s.skipped.indexOf(k) < 0) s.skipped.push(k); });
@@ -2488,23 +3496,36 @@
           body.push(P("A daemon stands in the way. Which one is it?"));
           body.push(choice(DAEMONS.map(function (x) { return [x[0], x[1]]; }), null, function (o) { meet(blk, o[0]); }));
           go.disabled = true;
+        } else if (!blk.met && !blk.bm && !blk.approached) {
+          title = approachCard(blk, d, body); go.disabled = true;
         } else if (!blk.met && blk.bm) {
           title = meetCard(blk, d, body); go.disabled = true;
+        } else if (blk.wv) {
+          title = waveCard(blk, d, body); go.disabled = true;
+        } else if (blk.tv) {
+          title = trustCard(blk, d, body); go.disabled = true;
         } else {
           body.push(P(d[1] + "'s job: " + d[2], { "data-cave-daemon-job": "" }));
           body.push(P("Who it works for: " + DAEMON_WORKS_FOR, { "data-cave-daemon-for": "" }));
+          if (!blk.visitSeen) { blk.visitSeen = true; keepPromise(blk.daemon, "visit", blk); }
+          if (!blk.met) returningLines(blk, d, body);
+          vouching(blk, body);
+          if (blk.pushNote && !blk.met) body.push(P(d[1] + ": " + blk.pushNote, { "data-cave-pushed": String(blk.pushed) }), P("Pushing past a refusal costs its trust. Owning it later can repair it."));
           if (!blk.met) {
             // Met the Big Mind way (board merge-layout): its permission first. "Not now" is a full answer; the daemon still holds the
             // way and is asked to step aside, as before (cave-daemon-wall), so nothing here becomes a skip.
             body.push(P("May I speak with " + lowerName(d[1]) + "?", { "data-cave-bm-ask": "" }));
             body.push(P("Ask it first. It can say no, and that is an answer too."));
             body.push(row([
-              btn("It says yes", { "data-cave-bm-speak": "yes" }, function () { blk.bm = { phase: "q", n: 0, picked: [], heard: {}, seat: true, draft: "", waiting: [] }; placeCard(blk); }),
+              btn("It says yes", { "data-cave-bm-speak": "yes" }, function () { blk.bm = { phase: needsFeel(blk) ? "feel" : "q", n: 0, picked: [], heard: {}, seat: true, draft: "", waiting: [] }; placeCard(blk); }),
               btn("Not now", { "data-cave-bm-speak": "not-now" }, function () { blk.met = "declined"; placeCard(blk); }, true),
             ]));
             go.disabled = true;
           } else if (!blk.stepAside) {
-            if (blk.met === "declined" && !blk.dug) body.push(P(d[1] + " would rather not speak yet.", { "data-cave-met": "declined" }));
+            if (blk.met === "declined" && !blk.dug) {
+              body.push(P(d[1] + " would rather not speak yet.", { "data-cave-met": "declined" }));
+              refusalPath(blk, d, body);
+            }
             if (blk.met === "spoken" && !blk.dug) body.push(P("You stood in its place and spoke as it. It has been heard.", { "data-cave-met": "spoken" }));
             if (blk.dug) body.push(P("You worked what it was holding.", { "data-cave-dug": "" }));
             body.push(P(blk.dug ? "Will it step aside now?" : "Knowing that, will it step aside?"));
@@ -2514,7 +3535,8 @@
             ]));
             go.disabled = true;
           } else if (blk.stepAside === "yes") {
-            body.push(P(d[1] + " stepped to the wall, and the way is open.", { "data-cave-open": "" }));
+            if (blk.letting) { body.push(P(d[1] + " lets go.", { "data-cave-letgo": "" })); go.disabled = true; }
+            else body.push(P(d[1] + " stepped to the wall, and the way is open.", { "data-cave-open": "" }));
           } else {
             // Wendell, 10 October 2026: "This type of blocker shouldn't be able to be moved past and there should be an encounter
             // where they only stand aside after resolving the emergent issue presented by the daemon." The way stays shut; the
@@ -2541,6 +3563,8 @@
                 btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
                 btn("Take it home", { "data-cave-take-home": "" }, function () { takeHome(blk, d); }, true),
               ]));
+              body.push(row([btn("Breathe with it (W.A.V.E.)", { "data-cave-wave": "" }, function () { waveStart(blk); }, true),
+                btn("Show it who you are", { "data-cave-trustbtn": "" }, function () { blk.tv = {}; placeCard(blk); }, true)]));
             } else {
               title = chat321(blk, d, t, body);
             }
@@ -2566,6 +3590,7 @@
         if (stp.place !== "way_out") kids.push(btn("This step won't go further", { "data-cave-block": "" }, function () { openBlock(p.key, p.step); }, true));
         if (stp.place !== "way_out" && !daemonHolds(blk)) kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true));
       }
+      meterUi(stp.place === "passage" ? blk : null);
       fill(title, body.concat([row(kids)]));
     }
     // "Take it home" (board wave-room-cave-link = both, by lantern): a lantern is left at this spot, the cave rests, and the charge
@@ -2595,14 +3620,50 @@
     var spirits = [];
     var spiritBtn = el("button", { class: "oagc-spiritbtn", "data-cave-spiritbtn": "", style: "display:none", onclick: function () { spiritPanel(); } });
     var spiritBox = el("div", { class: "oagc-spirits", "data-cave-spirits": "", style: "display:none" });
-    canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
+    wrap.appendChild(spiritBox);
+    // The cave's switches, in the Menu (menu(), above): Breath ring, Calm and Spirits, each with what it does, and a key.
+    menu(canvasBox, [
+      { btn: ringBtn, glyph: "◯", about: "A ring at the foot of the screen. Hold it to breathe in, let go to breathe out." },
+      { btn: calmBtn, glyph: "≈", about: "Stills the water and the breath. Tap it again to let them move." },
+      { btn: spiritBtn, glyph: "✦", about: "The spirits walking with you. Thank one, then breathe it out or take it home." },
+      { glyph: "◎", word: "The walk stick", about: "Hold it and push the way you want to go." },
+      { glyph: "❝", word: "The words above you", about: "Where you are and what is asked here. Tap them to open the questions." }]);
+    // The two charges (Wendell's board answer bmw-whose-charge, 11 October 2026: "Two charges, yours and its"): the daemon's ("it")
+    // is the 3-2-1's reading, the player's own ("you") is what a standing W.A.V.E. beside it works. Only "it" decides whether it
+    // steps aside. Shown while a daemon holds the passage.
+    function meterBar(key, label) {
+      var fill = el("s"), num = el("b", { text: "" }), box = el("div", { class: "oagc-meter", "data-cave-meter": key, style: "display:none" }, [el("span", { text: label }), el("div", { class: "oagc-bar" }, [fill]), num]);
+      return { box: box, fill: fill, num: num };
+    }
+    var meterIt = meterBar("it", "It"), meterYou = meterBar("you", "You"), meterBox = el("div", { class: "oagc-meters", "data-cave-meters": "", style: "display:none" }, [meterIt.box, meterYou.box]);
+    var marksEl = el("div", { class: "oagc-marks", "data-cave-marks": "" });
+    meterBox.appendChild(marksEl);
+    var easedLine = el("div", { class: "oagc-eased", "data-cave-eased": "", "aria-live": "polite" });
+    wrap.appendChild(meterBox); wrap.appendChild(easedLine);
+    function setMeter(m, v) {
+      m.box.style.display = v == null ? "none" : "";
+      if (v != null) { m.fill.style.width = (v * 10) + "%"; m.num.textContent = String(v); m.box.setAttribute("data-cave-meter-value", String(v)); }
+    }
+    function meterUi(blk) {
+      var on = blk && blk.daemon && blk.met && blk.dm && blk.stepAside !== "yes";
+      meterBox.style.display = on ? "" : "none";
+      if (!on) return;
+      setMeter(meterIt, heatOf(blk.t321, blk.dm.heat)); setMeter(meterYou, blk.wv && blk.wv.n < 0 ? blk.wv.you : blk.you);
+      var tr = trustFor(blk.daemon), cn = markOf(tr, blk.daemon, "can"), wl = markOf(tr, blk.daemon, "will");
+      marksEl.innerHTML = ""; marksEl.appendChild(document.createTextNode("Can you")); marksEl.appendChild(el("b", { text: pips(cn) }));
+      marksEl.appendChild(document.createTextNode("Will you")); marksEl.appendChild(el("b", { text: pips(wl) }));
+      marksEl.setAttribute("data-cave-can", String(cn)); marksEl.setAttribute("data-cave-will", String(wl));
+    }
+    // A spirit of a family (a met daemon's, kept in oag.spirits.v1) wears the form its sittings give it; the rest are orbs.
     function addSpirit(o, at0) {
-      var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element)); if (o.lighter) g.userData.level = 0.2;
+      if (o.family && spirits.some(function (x) { return x.family === o.family && x.name === o.name; })) return; // already walking with you
+      if (o.family && !o.stage) o.stage = sittingStage(o.sittings || 0);
+      var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element), o.family ? { family: o.family, stage: o.stage, from: o.from } : null); if (o.lighter) g.userData.level = 0.2;
       // a spirit still under a perceptual shadow walks dimmer, by its polarity
-      if (o.polarity) { var oc = occlusion(o.polarity), fl = flooding(o.polarity); g.userData.level = g.userData.level * (1 - oc) + (1 - g.userData.level) * fl; g.userData.orb.material.opacity = 0.9 * (1 - 0.7 * oc);
+      if (o.polarity && g.userData.orb) { var oc = occlusion(o.polarity), fl = flooding(o.polarity); g.userData.level = g.userData.level * (1 - oc) + (1 - g.userData.level) * fl; g.userData.orb.material.opacity = 0.9 * (1 - 0.7 * oc);
         g.userData.orb.scale.setScalar(1 + 0.8 * fl); g.userData.polarity = o.polarity; } // a flooding one walks bigger and blazes
       if (at0) g.position.copy(at0); else if (avatar) g.position.set(avatar.position.x, avatar.position.y + 1.7, avatar.position.z);
-      scene.add(g); o.g = g; o.light = carryLight(g, g.userData.color.getHex()); spirits.push(o); spiritsUi();
+      delete o.from; scene.add(g); o.g = g; o.light = carryLight(g, g.userData.color.getHex()); spirits.push(o); spiritsUi();
     }
     function spiritsUi() {
       var n = spirits.length;
@@ -2621,6 +3682,7 @@
         return;
       }
       spiritBox.appendChild(el("h2", { text: o.name }));
+      if (o.ally) spiritBox.appendChild(P("Its voice trusts you, so it walks with you as your ally and vouches for you further in.", { "data-cave-ally": o.ally }));
       spiritBox.appendChild(P("You: Thank you for coming with me.", { class: "oagc-you" }));
       spiritBox.appendChild(P("Breathe it out and let it go, or take it home and sit with it again."));
       spiritBox.appendChild(row([btn("Breathe out, and let it go", { "data-cave-spirit-out": "" }, function () { spiritBox.style.display = "none"; letSpiritGo(o); }),
@@ -2632,6 +3694,14 @@
       var li = o.light && o.light.intensity;
       tween(1600, function (k) { g.position.y = y0 + 2.5 * ease(k); g.traverse(function (m) { if (m.material) m.material.opacity = 0.9 * (1 - k); }); if (o.light) o.light.intensity = li * (1 - k); }, function () { scene.remove(g); dropLight(g); });
     }
+    // A sitting with a spirit of a family counts once a run, whether or not anything shifted (time spent together), and the store
+    // keeps the count; its stage comes from the count alone (spirit-forms.js stageOf).
+    var satRun = {};
+    function sittingCounted(o) {
+      var key = o.id || o.name; if (satRun[key]) return; satRun[key] = true;
+      o.sittings = (o.sittings || 0) + 1; o.stage = sittingStage(o.sittings);
+      try { if (SPIRIT_STORE && o.id) SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "Cave of Lessons"); } catch (e) { /* the sitting still counted */ }
+    }
     // Sitting with it again: the room opens with its feeling known. What is worked there comes back out; if nothing is, it does.
     function spiritHome(o) {
       if (busy || !state.walk) return;
@@ -2639,9 +3709,9 @@
       var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); scene.remove(o.g); dropLight(o.g); spiritsUi();
       setTimeout(function () {
         cancelAnimationFrame(running); wrap.style.display = "none";
-        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
+        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element, spirit: o.id ? { id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings || 0 } : null }).then(function (r) {
           wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
-          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity }];
+          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity, family: o.family, id: o.id, sittings: o.sittings, stage: o.stage }];
           back.forEach(function (x) { addSpirit(x); });
         });
       }, 520);
@@ -2680,7 +3750,7 @@
     }
     function sitPage(title, kids, tag) {
       modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", tag);
-      modal.appendChild(el("h2", { text: title })); kids.forEach(function (k) { if (k) modal.appendChild(k); });
+      sheet(modal, title, kids);
       pane.innerHTML = ""; pane.appendChild(el("strong", { text: title }));
       page.title = title; page.text = ""; openModal();
     }
@@ -2701,6 +3771,8 @@
         element: spirit ? spirit.element : null, unknown: false, allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, valid: false, goal: "", move: "", appreciate: "",
         t321: { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }, k: 0, come: 1, spirit: spirit || null, route: wk.route, s: wk.s };
       if (spirit) { var i = spirits.indexOf(spirit); if (i >= 0) spirits.splice(i, 1); scene.remove(spirit.g); dropLight(spirit.g); spiritsUi(); }
+      // The spirits you brought settle around you as you sit (board sic-first-cave-sitting): the ones walking in view, three at most.
+      S.around = spirits.filter(function (o) { return !o.hidden; }).slice(0, SPIRITS_SHOWN);
       state.held = false; sitBtn.style.display = "none";
       var g = new THREE.Group(), au = buildAura(THREE, 0.9);
       var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
@@ -2731,6 +3803,7 @@
       }
       var R = ROOM_STEPS[S.n], w = R.wave != null ? WAVE[R.wave] : [R.id, R.title, R.words];
       var kids = [P("Sitting with what's coming up · " + (S.n + 1) + " of " + ROOM_STEPS.length, { class: "oagc-note" }), P(w[2])];
+      if (S.n === 0 && S.around.length) kids.splice(1, 0, P(S.around.map(function (o) { return o.name; }).join(", ").replace(/, ([^,]*)$/, " and $1") + (S.around.length > 1 ? " settle" : " settles") + " around you.", { class: "oagc-note", "data-cave-sit-around": String(S.around.length) }));
       var go = btn("Go on", { "data-cave-sitnext": "" }, function () { if (R.id === "validate") S.valid = true; sitNext(); }), extra = [];
       if (R.id === "witness") {
         kids.push(P(S.place ? "Where: " + S.place + "." : "Where is it in your body?"));
@@ -2779,22 +3852,33 @@
         var o = { name: nm, element: S.element, lighter: branch === "goes" };
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
+        if (S.spirit && S.spirit.family) { o.family = S.spirit.family; o.id = S.spirit.id; o.sittings = S.spirit.sittings || 0; if (branch !== "stood") sittingCounted(o); }
+        // Each spirit that sat around you counts the sitting too, once a run, and unfolds where it is if the count crosses a stage.
+        if (branch !== "stood") S.around.forEach(function (x) {
+          if (!x.family || spirits.indexOf(x) < 0) return;
+          var was = x.stage; sittingCounted(x);
+          if (x.stage !== was && x.g.userData.unfold) x.g.userData.unfold(x.stage, true);
+        });
         if (branch !== "stood" || S.spirit) addSpirit(o, from);
         unstashPage(S.back);
       });
     }
-    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure lowers to sit.
+    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure sits down.
     function sitFrame(dt, nowMs, route, wk, h) {
       var S = sit; if (!S || route !== S.route) return;
       var a = at(route, Math.min(route.len || 1e9, wk.s + 2.4 + 9 * S.come));
       S.g.position.set(a.x, a.y - h * 0.92 + 0.15 + 0.05 * Math.sin(nowMs / 700), a.z);
-      avatar.position.y -= 0.32 * S.k;
+      seatAvatar(avatar, S.k); // sat on the tunnel floor, cross-legged
       var hex = sitHex(S), body = S.g.userData.body, col = S.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
       body.material.color.copy(col); body.material.emissive.copy(col);
       var grow = S.allowed ? 1 + S.allow.grow / 10 : 1; S.g.scale.setScalar(S.g.scale.x + (grow - S.g.scale.x) * Math.min(1, dt * 2));
       body.material.emissiveIntensity = S.valid ? 0.35 : 0.25 + (state.calm ? 0 : 0.12 * Math.sin(nowMs / 90));
       stepAura(S.g.userData.aura, col, S.allowed ? S.allow.bright / 10 : 0.3, dt, state.calm);
       if (S.light) S.light.color.copy(col);
+      stepOrb(dt);
+    }
+    // The breath orb in the open page: in for 4 s, out for 6.
+    function stepOrb(dt) {
       var ob = modal.querySelector("[data-cave-orb]");
       if (ob) {
         ob._t = (ob._t + dt) % (BREATH.inS + BREATH.outS);
@@ -2810,19 +3894,325 @@
     function daemonHolds(b) { while (b) { if (b.daemon && b.stepAside !== "yes") return true; b = b.frame.blk; } return false; }
     // The 3-2-1 with the daemon in the way (talk321, above, holds the chat). Asked at the end whether it feels satisfied.
     function chat321(blk, d, t, body) {
-      return talk321(t, { name: d[1], damaged: blk.daemon === "damaged-self", redraw: function () { placeCard(blk); }, focus: function () { focusChat(modal); },
+      return talk321(t, { name: d[1], damaged: blk.daemon === "damaged-self", redraw: function () { placeCard(blk); }, focus: function () { focusChat(modal); }, onCharge: function () { meterUi(blk); },
         // Allow, at the daemon (callsheet wave-room, Next: the room's sliders reach the cave's daemons): it grows a little by itself
         before: function (body) {
           body.push(el("div", { "data-cave-allow": "" }, [el("p", { text: "Allow it: let it be as big and as bright as it is." })].concat(allowSliders(blk.dm, "data-cave-allow-slider"))));
         },
         ask: function (body) {
+        if (t.after < t.before && t.easedRound !== t.rounds) { t.easedRound = t.rounds; easeReward(blk, d, t.before, t.after); } // the chamber answers a lower charge
+        if (t.resolvedRound !== t.rounds) { t.resolvedRound = t.rounds; resolveTrust(blk, d, t.before, t.after); } // the moves made so far count if it eased
+        trustNoteLines(blk, d, body);
         body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
         body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
         body.push(row([
-          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
-          btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
+          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; blk.trustNote = null; letGoDaemon(blk, d); }),
+          btn("Show it who you are", { "data-cave-trustbtn": "" }, function () { blk.tv = {}; placeCard(blk); }, true),
+          btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { blk.trustNote = null; t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
         ]));
         } }, body);
+    }
+    // The reward for a lower charge (Wendell, 11 October 2026: "There should be a visual reward for when the charge goes down"), as in
+    // Big Mind's `eased`: a ring of warm light spreads out from the daemon's feet, its meter drains with a glow, and a line says so.
+    // A bigger drop gives a wider ring; crossing the ready line (3) gives the most. Reduced motion: no ring, the line and the glow.
+    var READY = 3;
+    function easeReward(blk, d, was, v) {
+      var drop = was - v, crossed = was > READY && v <= READY, nm = d[1], c = blk.route.ctx, fig = c && c.daemonFig;
+      blk.eases = (blk.eases || 0) + 1;
+      meterIt.box.setAttribute("data-cave-eases", String(blk.eases)); meterIt.box.classList.remove("eased"); void meterIt.box.offsetWidth; meterIt.box.classList.add("eased");
+      easedLine.innerHTML = ""; easedLine.appendChild(document.createTextNode(crossed ? nm + " lets its breath out." : drop >= 3 ? nm + " eases a lot." : nm + " eases."));
+      easedLine.appendChild(el("small", { text: was + " down to " + v })); easedLine.classList.add("on");
+      var big = Math.min(1, 0.45 + drop * 0.18 + (crossed ? 0.35 : 0)), ring = null;
+      blk.lastEase = { was: was, v: v, big: big, crossed: crossed };
+      if (fig && fig.parent && !reducedMotion) {
+        ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.25, 48), new THREE.MeshBasicMaterial({ color: 0xffe6a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+        ring.rotation.x = -Math.PI / 2; ring.position.set(fig.position.x, fig.position.y + 0.06, fig.position.z); fig.parent.add(ring);
+      }
+      tween(crossed ? 2600 : 2100, function (k) {
+        if (ring) { ring.scale.setScalar(1 + (1.5 + 3 * big) * ease(k)); ring.material.opacity = 0.75 * big * (1 - k); }
+      }, function () { if (ring && ring.parent) ring.parent.remove(ring); easedLine.classList.remove("on"); });
+    }
+    // The let-go (bars-engine #356, in Big Mind `letGoVoice`): when the 3-2-1 ends with the daemon satisfied, its body plays its
+    // Integrate action once, the held shape opening into its honored form, and then stands willing as it steps to the wall.
+    function letGoDaemon(blk, d) {
+      var c = blk.route.ctx, fig = c && c.daemonFig;
+      if (fig) fig.userData.stance = "held"; // the Integrate action starts from the held shape, whatever trust had it standing in
+      var len = fig ? integrateBody(fig) : 0;
+      blk.letGo = { len: len, done: false };
+      if (!len) { blk.letGo.done = true; moveDaemon(blk); return placeCard(blk); }
+      blk.letting = true; fig.userData.stance = "willing"; // it ends honored and stays there
+      easedLine.innerHTML = ""; easedLine.appendChild(document.createTextNode(d[1] + " lets go.")); easedLine.appendChild(el("small", { text: "This is how it stands when it is honored." })); easedLine.classList.add("on");
+      placeCard(blk);
+      var waits = 0;
+      (function wait() {
+        var rig = fig.userData.rig;
+        if (rig && rig.playing >= 0 && waits++ < 600) return setTimeout(wait, 100); // not tween(): a tween started from a tween's end is dropped by the render loop's filter
+        setTimeout(function () { blk.letting = false; blk.letGo.done = true; easedLine.classList.remove("on"); moveDaemon(blk); placeCard(blk); }, 900);
+      })();
+    }
+
+    // ---- trust and allies (sic-first-cave-sitting, 4d) ----------------------------------------------------------------------
+    // Big Mind's trustOffer, marksUi, resolvePending and allyJoins, over the tables above. A move is pending until the next 3-2-1
+    // reading, and counts only if the daemon's charge eased there (bmt-honest-moves); a right move on a reading that did not ease is
+    // spent for nothing. Once a daemon has seen all three it is willing, its spirit becomes the player's ally, and at later daemons
+    // the allies vouch together (bmt-spirits-vouch). Trust is kept for the run; saves across visits are slice 4e. The falls (a push
+    // past its refusal, a promise broken by leaving) are 4e too, since they need the refusal path and the leave; the record already
+    // has their shape (broken, repaired) and the "Own it" moves show when there is one to own.
+    var trustBy = {}, pendBy = {}, satTrust = {}, trustLoaded = {}, trustBack = {};
+    // A daemon's record is read from the device the first time it is asked for in a visit; one that has a history there is a voice
+    // met before (trustBack), and its page says so.
+    function trustGet(id) {
+      if (!trustBy[id] && !trustLoaded[id]) {
+        trustLoaded[id] = true; var rec = readTrustStore()[id];
+        if (rec) { trustBy[id] = trustFromStore(rec); trustBack[id] = hasHistory(trustBy[id]); }
+      }
+      return trustBy[id];
+    }
+    function trustFor(id) { return trustGet(id) || (trustBy[id] = blankTrust()); }
+    // Written as it changes: the voices in this visit over the ones on the device, so a voice not met today keeps its record.
+    function trustSave() {
+      var all = readTrustStore();
+      Object.keys(trustBy).forEach(function (id) { if (hasHistory(trustBy[id])) all[id] = trustToStore(trustBy[id]); });
+      writeTrustStore(all);
+    }
+    // The falls (bmt-trust-falls). Leaving from the voice's place breaks the promise to come back to one's own; pushing past its
+    // refusal lowers its read of your goodness. Each stands as a break until the player owns it to the voice (the Own it moves).
+    function voiceBlocks() { // the blocks the player is inside that hold a daemon, nearest first: a daemon's side passage is the voice's place
+      var out = [], b = state.walk && state.walk.blk;
+      while (b) { if (b.daemon) out.push(b); b = b.frame && b.frame.blk; }
+      return out;
+    }
+    function breakReturn(id) {
+      var t = trustFor(id), hit = false;
+      t.promises.forEach(function (p) { if (p.kind === "return" && p.kept == null) { p.kept = false; hit = true; } });
+      if (hit) { t.broken.push({ dim: "will", kind: "return", at: new Date().toISOString() }); trustSave(); }
+      return hit;
+    }
+    function leaveVoice() {
+      return voiceBlocks().filter(function (b) {
+        if (!breakReturn(b.daemon)) return false;
+        var fig = b.route.ctx && b.route.ctx.daemonFig; if (fig && !b.letting) fig.userData.stance = stanceOf(trustFor(b.daemon), b.daemon, {});
+        return true;
+      }).map(function (b) { return b.daemon; });
+    }
+    function pushPast(blk) {
+      var id = blk.daemon, t = trustFor(id), c = blk.route.ctx;
+      t.broken.push({ dim: "good", kind: "push", at: new Date().toISOString() }); trustSave();
+      pendBy[id] = (pendBy[id] || []).filter(function (p) { return !(p.dim === "good" && p.kind === "honour"); }); // a wait it had just seen is spent
+      if (c && c.daemonFig && !blk.letting) c.daemonFig.userData.stance = stanceOf(t, id, {});
+      blk.pushed = (blk.pushed || 0) + 1; blk.pushNote = TRUST[id].read.broken; blk.met = null; blk.honoured = false; placeCard(blk);
+    }
+    // A voice met before says so, with what it remembers: the falls not yet owned, in its words.
+    function returningLines(blk, d, body) {
+      var id = blk.daemon; if (!trustBack[id] || blk.metBefore) return;
+      var t = trustFor(id);
+      body.push(P("You have met " + lowerName(d[1]) + " before. What it said then doesn't stand in for today, so ask again.", { "data-cave-returning": "" }));
+      openBreaks(t).forEach(function (b) { body.push(P(d[1] + ": " + (b.dim === "will" ? "You said you'd come back to your own place, and you walked out from mine." : "You pushed when I said no."), { "data-cave-remembers": b.dim + ":" + b.kind })); });
+    }
+    function pend(id, dim, kind, repair) {
+      var Q = pendBy[id] || (pendBy[id] = []);
+      if (!Q.some(function (p) { return p.dim === dim && p.kind === kind && !!p.repair === !!repair; })) Q.push({ dim: dim, kind: kind, repair: !!repair });
+    }
+    function resolveTrust(blk, d, was, v) {
+      var id = blk.daemon, Q = pendBy[id] || []; pendBy[id] = [];
+      if (!Q.length || !(v < was)) return null;
+      var t = trustFor(id), TR = TRUST[id], at = new Date().toISOString(), out = { saw: [], hint: [], ally: false, good: false };
+      Q.forEach(function (x) {
+        if (x.repair) { t.repaired.push({ dim: x.dim, kind: x.kind, at: at }); out.saw.push("It heard you own it."); out.good = out.good || x.dim === "good"; return; }
+        var key = id + ":" + x.dim + ":" + x.kind; if (satTrust[key]) return; // once a run
+        if (x.dim === "good" || x.kind === TR.needs[x.dim] || x.kind === "vouch") {
+          satTrust[key] = true; t.seen.push({ dim: x.dim, kind: x.kind, at: at }); out.saw.push(KIND_LINES[x.dim][x.kind]); if (x.dim === "good") out.good = true;
+        } else if (out.hint.indexOf(TR.hint[x.dim]) < 0) out.hint.push(TR.hint[x.dim]);
+      });
+      if (!t.ally && trusted(t, id)) { t.ally = at; out.ally = true; allyJoins(id); }
+      var fig = blk.route.ctx && blk.route.ctx.daemonFig;
+      if (fig && !blk.letting && blk.stepAside !== "yes") fig.userData.stance = stanceOf(t, id, {});
+      blk.trustNote = out; trustSave(); return out;
+    }
+    // What the daemon saw at the last reading, said on the page that follows, in its own words for its read of you.
+    function trustNoteLines(blk, d, body) {
+      var o = blk.trustNote; if (!o) return;
+      o.saw.forEach(function (l) { body.push(P(d[1] + " saw it. " + l, { class: "oagc-trustsaw", "data-cave-trustsaw": "" })); });
+      o.hint.forEach(function (h) { body.push(P(d[1] + ": " + h, { "data-cave-trusthint": "" })); });
+      if (o.good) body.push(P(d[1] + ": " + TRUST[blk.daemon].read[goodOf(trustFor(blk.daemon))], { "data-cave-trustread": "" }));
+      if (o.ally) body.push(P("It trusts you now. Its spirit comes with you as your ally, and it will vouch for you further in.", { "data-cave-trustally": "" }));
+    }
+    // Its refusal (Big Mind's refused): it says what it hasn't seen yet (bmt-two-roads), and the player can wait with it, which it
+    // sees if its charge eases at the next reading, or ask again now, which is a push past it and costs its trust (bmt-trust-falls).
+    function refusalPath(blk, d, body) {
+      var id = blk.daemon, t = trustFor(id), TR = TRUST[id], dim = markOf(t, id, "can") === 0 ? "can" : markOf(t, id, "will") === 0 ? "will" : goodOf(t) !== "seen" ? "good" : null;
+      if (dim) body.push(P(d[1] + ": " + TR.doubt[dim], { "data-cave-doubt": dim }));
+      var wait = btn(blk.honoured ? "You are waiting with it" : "That's fair. I'll wait with you a while.", { "data-cave-honour": "" }, function () { blk.honoured = true; pend(id, "good", "honour"); placeCard(blk); }, true);
+      if (blk.honoured) wait.disabled = true;
+      body.push(row([wait, btn("Ask again, now", { "data-cave-push": "" }, function () { pushPast(blk); }, true)]));
+      if (blk.honoured) body.push(P("It sees you wait. If it was honest, you'll see it ease the next time you check how charged it is.", { "data-cave-honoured": "" }));
+    }
+    function keepPromise(id, kind, blk) {
+      var t = trustFor(id), hit = false;
+      t.promises.forEach(function (p) {
+        if (p.kind !== kind || p.kept != null) return;
+        if (kind === "visit" ? p.blk === blk : p.blk !== blk) return; // return: from the block it was made in; visit: at a later meeting
+        p.kept = new Date().toISOString(); hit = true;
+      });
+      if (hit) { pend(id, "will", kind); trustSave(); }
+      return hit;
+    }
+    function allies(except) {
+      return DAEMONS.map(function (x) { return x[0]; }).filter(function (id) { var t = trustGet(id); return id !== except && t && t.ally && trusted(t, id); });
+    }
+    // The spirit born on meeting the daemon becomes the ally; one let go, or never born, is sent in its own colour.
+    function allyJoins(id) {
+      if (window.__oagVessel) window.__oagVessel.store.ally(id); // an ally makes the ship a part (board iv-daemon-not-part, his steer)
+      var sid = "meet-" + id, mine = spirits.filter(function (o) { return o.id === sid; })[0];
+      if (mine) { mine.ally = id; return mine; }
+      if (spirits.some(function (o) { return o.ally === id; })) return null;
+      var t = null; try { t = SPIRIT_STORE && SPIRIT_STORE.get(sid); } catch (e) { /* no store: its own colour */ }
+      if (t) return addSpirit({ id: sid, name: t.name, element: t.element, family: t.family, sittings: t.sittings || 0, ally: id });
+      var dd = lookup(DAEMONS, id); addSpirit({ id: "ally-" + id, name: dd[1] + "'s spirit", hex: dd[3], ally: id });
+    }
+    // At a daemon, the allies answer "Who vouches for you?" each in their own voice's terms; together they count once as a can move.
+    function vouching(blk, body) {
+      var A = allies(blk.daemon); if (!A.length) return;
+      if (!blk.vouched) { blk.vouched = true; pend(blk.daemon, "can", "vouch"); }
+      body.push(P("Who vouches for you?", { "data-cave-vouch-ask": "" }));
+      A.forEach(function (id) { body.push(P(TRUST[id].vouch, { class: "oagc-trustsaw", "data-cave-vouch": id })); });
+    }
+    function trustCard(blk, d, body) {
+      var V = blk.tv, nm = lowerName(d[1]), id = blk.daemon, t = trustFor(id), TR = TRUST[id], done = function () { blk.tv = null; placeCard(blk); };
+      var said = function (line) { V.said = line; placeCard(blk); };
+      if (V.said) {
+        body.push(P("You: " + V.said, { class: "oagc-you" }), P("It heard you. If it was honest, you'll see it ease the next time you check how charged it is."));
+        body.push(row([btn("Go on", { "data-cave-trust-ok": "" }, done)]));
+        return "Show it who you are";
+      }
+      if (V.wait) { // one breath to wait, two to sit, its button waking when the breath has been taken
+        var W = V.wait, sit = W.kind === "sit", ok = btn(sit ? "I sat with it" : "I waited with it", { "data-cave-trust-waited": W.kind }, function () { pend(id, "can", W.kind); done(); });
+        body.push(P(sit ? "Sit with " + nm + " without fixing anything, for two breaths." : "Nothing to do or say. Stay with " + nm + " for one breath."), breathOrb());
+        if (!W.open) ok.disabled = true;
+        if (!W.started) { W.started = true; tween((state.waveMs != null ? state.waveMs : BREATH_S * 1000) * (sit ? 2 : 1), function () {}, function () { W.open = true; if (blk.tv && blk.tv.wait === W && W.go) W.go.disabled = false; }); }
+        W.go = ok; body.push(row([ok, btn("Back", { "data-cave-trust-back": "" }, function () { V.wait = null; placeCard(blk); }, true)]));
+        return sit ? "Sit with it" : "Wait with it";
+      }
+      body.push(P("Show " + nm + " who you are", { class: "oagc-note" }), P("It watches for three things: can you, will you, and are you good. Each daemon needs something of its own. A move counts only when it's honest, and that shows as its charge easing the next time you check."));
+      body.push(P("Can you", { class: "oagc-note" }), row([
+        btn("Wait with it a breath", { "data-cave-trust": "wait" }, function () { V.wait = { kind: "wait" }; placeCard(blk); }, true),
+        btn("Breathe a W.A.V.E. through beside it", { "data-cave-trust": "hold" }, function () { blk.tv = null; waveStart(blk); }, true),
+        btn("Sit with it", { "data-cave-trust": "sit" }, function () { V.wait = { kind: "sit" }; placeCard(blk); }, true),
+        btn("I'll go slowly, and you can stop me.", { "data-cave-trust": "pace" }, function () { pend(id, "can", "pace"); said("I'll go slowly, and you can stop me at any time."); }, true)]));
+      body.push(P("Will you", { class: "oagc-note" }), row(PROMISES.map(function (pr) {
+        var made = t.promises.some(function (x) { return x.kind === pr[0] && x.kept == null; });
+        var b = btn(pr[1] + (made ? " (promised, not yet kept)" : ""), { "data-cave-promise": pr[0] }, function () { t.promises.push({ kind: pr[0], made: new Date().toISOString(), kept: null, blk: blk }); trustSave(); said(pr[1]); }, true);
+        if (made) b.disabled = true; return b; })));
+      body.push(P("Are you good", { class: "oagc-note" }), P("To " + nm + ", " + TR.picture + ". Show it where you already share that, from where you stand."));
+      body.push(row(TR.share.map(function (c, ci) { return btn(c[0], { "data-cave-share": String(ci) }, function () { pend(id, "good", "share"); said(c[0]); }, true); })));
+      body.push(line("data-cave-shareline", V.draft || "", "Or where you share it, in your own words", function (v) { V.draft = v; }));
+      body.push(row([btn("Say it", { "data-cave-sharesay": "" }, function () { var x = (V.draft || "").trim(); if (!x) return; pend(id, "good", "share"); said(x); }, true)]));
+      var open = openBreaks(t);
+      if (open.length) {
+        body.push(P("Own it", { class: "oagc-note" }));
+        body.push(row(open.filter(function (b, bi) { return open.map(function (x) { return x.dim + x.kind; }).indexOf(b.dim + b.kind) === bi; }).map(function (b) {
+          return btn(OWN_LINES[b.dim + ":" + b.kind], { "data-cave-own": b.dim + ":" + b.kind }, function () { pend(id, b.dim, b.kind, true); said(OWN_LINES[b.dim + ":" + b.kind]); }, true); })));
+      }
+      body.push(row([btn("Back", { "data-cave-trust-back": "" }, done, true)]));
+      return "Show it who you are";
+    }
+
+    // ---- the standing W.A.V.E. beside a daemon (sic-first-cave-sitting, 4c) -------------------------------------------------
+    // Big Mind's `waveStart`: an offer beside the daemon, never required. It is on the player's own charge ("you"); the daemon's
+    // charge ("it") stays as the 3-2-1 left it and only that decides whether it steps aside (bmw-number-stays). The player sets their
+    // own number, then goes through the W.A.V.E.'s steps standing where they stand, one breath each, the charge showing beside them
+    // as a shape that takes its element's colour at Acknowledge, grows by Allow's sliders and dulls at Validate. At the Exhale it
+    // either stays and walks with the player as a spirit, or rises and fades. A W.A.V.E. gone through to the end counts a sitting
+    // for the spirit of this daemon's family (once a run), as the sitting in Big Mind does; going back partway counts none.
+    function waveStart(blk) {
+      blk.wv = { n: -1, you: blk.you == null ? 5 : blk.you, word: "", element: null, unknown: false, allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, valid: false, appreciate: "", step: 0 };
+      var g = new THREE.Group(), au = buildAura(THREE, 0.9);
+      var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
+      m.position.y = 0.6; g.add(m); g.add(au); g.userData = { body: m, aura: au, color: new THREE.Color(0x8a8a96) };
+      g.visible = false; scene.add(g);
+      blk.wv.blob = { g: g, come: 1, rise: 0, fade: 1, light: carryLight(g, 0x9a9aa8), route: blk.route };
+      waveBlob = blk.wv; placeCard(blk);
+    }
+    var waveBlob = null;
+    function waveHex(W) { return W.element ? spiritHex(W.element) : 0x8a8a96; }
+    function waveGone(blk, how) { // how: "back" (sinks away), "release" (rises and fades), "stay" (walks with you as a spirit)
+      var W = blk.wv, B = W.blob, from = B.g.position.clone();
+      blk.wv = null; // waveBlob keeps drawing it until it is gone
+      tween(how === "release" ? 2200 : 1200, function (k) { var e = ease(k); if (how === "release") { B.rise = 2.5 * e; B.fade = 1 - e; } else if (how === "back") { B.fade = 1 - e; } }, function () {
+        scene.remove(B.g); dropLight(B.g); if (waveBlob === W) waveBlob = null;
+        if (how === "stay") addSpirit({ name: (W.word.trim() || genName()), element: W.element, hex: W.element ? null : 0x8a8a96 }, from);
+      });
+      placeCard(blk);
+    }
+    function waveCount(blk) { // a sitting for the spirit of this daemon's family, once a run
+      var id = "meet-" + blk.daemon, o = spirits.filter(function (x) { return x.id === id; })[0];
+      if (o) { var was = o.stage; sittingCounted(o); if (o.stage !== was && o.g.userData.unfold) o.g.userData.unfold(o.stage, true); return o; }
+      try {
+        var t = SPIRIT_STORE && SPIRIT_STORE.get(id);
+        if (t && !satRun[id]) { satRun[id] = true; SPIRIT_STORE.put({ id: id, name: t.name, element: t.element, family: t.family, sittings: (t.sittings || 0) + 1 }, "Cave of Lessons"); }
+      } catch (e) { /* the W.A.V.E. still happened */ }
+      return null;
+    }
+    function waveCard(blk, d, body) {
+      var W = blk.wv, nm = lowerName(d[1]);
+      var back = btn("Back to " + nm, { "data-cave-wave-back": "" }, function () { waveGone(blk, "back"); }, true);
+      if (W.n < 0) {
+        body.push(P("Breathe with it", { class: "oagc-note", "data-cave-wave-step": "you" }));
+        body.push(P("This is about your own charge: the feeling that comes up in you while you stand with " + nm + ". Its charge stays as you set it. How charged are you right now?"));
+        var num = el("span", { class: "oagc-read", "data-cave-wave-you-read": "", text: W.you + " of 10" });
+        var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-wave-you": "", "aria-label": "Your own charge, 0 to 10" }); inp.value = W.you;
+        inp.addEventListener("input", function () { W.you = +inp.value; num.textContent = W.you + " of 10"; setMeter(meterYou, W.you); });
+        body.push(el("div", { class: "oagc-slide" }, [inp, num]));
+        body.push(row([btn("That's me right now", { "data-cave-wave-youset": "" }, function () { blk.you = W.you; W.n = 0; W.blob.g.visible = true; W.blob.come = 1; tween(1400, function (k) { W.blob.come = 1 - ease(k); }); meterUi(blk); placeCard(blk); }), back]));
+        return "Breathe with it";
+      }
+      var R = WAVE[W.n], id = R[0], cont = btn("Go on", { "data-cave-wave-next": id }, function () { if (id === "validate") W.valid = true; W.n++; placeCard(blk); }), extra = [];
+      body.push(P("Standing W.A.V.E. beside " + nm + " · " + (W.n + 1) + " of " + WAVE.length, { class: "oagc-note", "data-cave-wave-step": id }), P(R[2]));
+      var gate = id !== "exhale";
+      if (id === "acknowledge") {
+        body.push(P("Name the feeling to yourself in one word, then pick its element. You can say you don't know."));
+        body.push(line("data-cave-wave-word", W.word, "One word for the feeling", function (v) { W.word = v; }));
+        body.push(cards(ELEMENTS.map(function (x) { return [x[0], x[1] + " · " + x[0]]; }).concat([["unknown", "I don't know"]]), W.unknown ? "unknown" : W.element, "data-cave-wave-element",
+          function (v) { W.unknown = v === "unknown"; W.element = W.unknown ? null : v; placeCard(blk); }));
+        if (!(W.element || W.unknown)) cont.disabled = true, gate = false;
+      } else if (id === "allow") {
+        W.allowed = true;
+        body.push(P((W.word.trim() || "It") + " grows a little as you let it be here."));
+        allowSliders(W.allow, "data-cave-wave-allow").forEach(function (n) { body.push(n); });
+      } else if (id === "appreciate") {
+        body.push(line("data-cave-wave-appreciate", W.appreciate, "In your own words, if you want", function (v) { W.appreciate = v; }), P("You may not find anything to appreciate today, and that's all right."));
+        extra.push(btn("Not now", { "data-cave-wave-notnow": "" }, function () { W.n++; placeCard(blk); }, true));
+      } else if (id === "exhale") {
+        cont = btn("Yes, let it stay", { "data-cave-wave-exhale": "stay" }, function () { waveDone(blk, "stay"); });
+        extra.push(btn("No, exhale and release", { "data-cave-wave-exhale": "release" }, function () { waveDone(blk, "release"); }, true));
+      }
+      if (id !== "exhale") body.push(breathOrb());
+      // One step, one breath: its button wakes when the breath has been taken (the cave's own 4 s in, 6 s out).
+      if (gate && W.gateStep !== W.n) { W.gateStep = W.n; W.gateOpen = false; var at = W.n; tween(state.waveMs != null ? state.waveMs : BREATH_S * 1000, function () {}, function () { if (blk.wv === W && W.n === at) { W.gateOpen = true; if (W.go) W.go.disabled = false; } }); }
+      if (gate && !W.gateOpen) cont.disabled = true;
+      W.go = cont;
+      body.push(row([cont].concat(extra)));
+      body.push(row([back]));
+      return R[1];
+    }
+    function waveDone(blk, how) {
+      var W = blk.wv; blk.waves = (blk.waves || 0) + 1; W.exhale = how;
+      blk.lastWave = { you: W.you, word: W.word.trim(), element: W.element, exhale: how, allow: { grow: W.allow.grow, bright: W.allow.bright } };
+      pend(blk.daemon, "can", "hold"); // a W.A.V.E. breathed through beside it, counted if its charge eases at the next reading
+      waveCount(blk); waveGone(blk, how);
+    }
+    // Each frame: the shape comes in beside the figure, takes its colour, grows and brightens by Allow, and dulls at Validate.
+    function waveFrame(dt, nowMs, route, wk, h) {
+      var W = waveBlob, B = W && W.blob; if (!B || B.route !== route) return;
+      stepOrb(dt);
+      var a = at(route, Math.min(route.len || 1e9, wk.s + 1.8 + 9 * B.come)), e = 1.3;
+      B.g.position.set(a.x - a.fz * e, a.y - h * 0.92 + 0.95 + 0.05 * Math.sin(nowMs / 700) + B.rise, a.z + a.fx * e);
+      var hex = waveHex(W), body = B.g.userData.body, col = B.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
+      body.material.color.copy(col); body.material.emissive.copy(col);
+      var grow = W.allowed ? 1 + W.allow.grow / 10 : 1; B.g.scale.setScalar(B.g.scale.x + (grow - B.g.scale.x) * Math.min(1, dt * 2));
+      body.material.opacity = 0.85 * B.fade; body.material.emissiveIntensity = W.valid ? 0.15 : 0.25 + (state.calm ? 0 : 0.12 * Math.sin(nowMs / 90));
+      stepAura(B.g.userData.aura, col, (W.allowed ? W.allow.bright / 10 : 0.3) * (W.valid ? 0.5 : 1) * B.fade, dt, state.calm);
+      if (B.light) B.light.color.copy(col);
     }
     // ---- meeting a daemon the Big Mind way (board merge-layout) --------------------------------------------------------
     // blk.bm.phase: q (a question, answered as the daemon from its place), secret (another voice spoke), thank (it is asked to
@@ -2859,6 +4249,8 @@
         body.push(row([btn("Step back out", { "data-cave-bm-out": "" }, function () { meetDone(blk); })]));
         return d[1];
       }
+      if (m.phase === "feel") return feelCard(blk, d, body, leave);
+      if (m.phase === "room") return roomCard(blk, d, body);
       var q = MEET_Q[m.n], cards = ((MEET_CARDS[blk.daemon] || {})[q.id] || []).slice();
       // What it protects you from may be what you carry in (bms-protects-from): the spirits' names are cards too.
       if (q.id === "from") spirits.forEach(function (o) { if (o.name) cards.push([o.name + "."]); });
@@ -2901,6 +4293,130 @@
       m.phase = "done"; blk.met = any ? "spoken" : "declined";
       placeCard(blk);
     }
+    // The meeting spirit (bmt-meeting-spirit): asked once per voice, the first time it is met. A spirit of the daemon's family is
+    // born from the answer, walks with the player and is kept in the spirit store as "meet-<voice id>", as Big Mind keeps it. A voice
+    // met in Big Mind already has its spirit, so it is not asked again.
+    function needsFeel(blk) {
+      var id = "meet-" + blk.daemon;
+      if (spirits.some(function (o) { return o.id === id; })) return false;
+      try { if (SPIRIT_STORE && SPIRIT_STORE.get(id)) return false; } catch (e) { /* no store: asked */ }
+      return true;
+    }
+    function feelCard(blk, d, body, leave) {
+      var m = blk.bm, nm = lowerName(d[1]);
+      body.push(P(MEET_FEEL + " Whatever it is, it's honest, and it counts for nothing and against nothing.", { "data-cave-bm-feel-ask": "" }));
+      body.push(el("div", { class: "oagc-row" }, ELEMENTS.map(function (e) {
+        return btn(e[0] + " (" + e[1] + ")", { "data-cave-bm-feel": e[0].toLowerCase() }, function () { felt(blk, d, e[0], e[0]); }, true);
+      }).concat([btn(NO_WORD, { "data-cave-bm-feel": "none" }, function () { felt(blk, d, NO_WORD, null); }, true)])));
+      var input = el("input", { type: "text", "data-cave-bm-feelline": "", placeholder: "Or in your own words", maxlength: "60", enterkeyhint: "done", "aria-label": MEET_FEEL });
+      function own() { var t = input.value.trim(); if (t) felt(blk, d, t.charAt(0).toUpperCase() + t.slice(1), null); }
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); own(); } });
+      body.push(el("div", { class: "oagc-compose" }, [input, el("button", { "data-cave-bm-feelsay": "", "aria-label": "Say it", text: "↑", onclick: own })]));
+      body.push(row([btn("Not now, go on", { "data-cave-bm-feelskip": "" }, function () { m.phase = "q"; placeCard(blk); }, true), leave]));
+      return d[1];
+    }
+    // A new spirit joins the ones that walk with you, up to the loadout's three. With three already walking, one of them has to rest
+    // in the WAVE room to make room for it, or it stays here and is asked for again next time (Wendell on sic-first-cave-sitting,
+    // 2026-10-19: "you can also find a new spirit in the cave, but you'd need to dismiss one of your own to make room for it if you
+    // go into the cave with max spirits").
+    function ownWalking() { return spirits.filter(function (o) { return o.family && !o.hidden && !o.resting; }); }
+    function maxWalking() { return SPIRIT_STORE ? SPIRIT_STORE.MAX_LOADOUT : SPIRITS_SHOWN; }
+    function felt(blk, d, name, element) {
+      if (ownWalking().length >= maxWalking()) { blk.bm.newSp = { name: name, element: element }; blk.bm.phase = "room"; placeCard(blk); return; }
+      born(blk, name, element);
+    }
+    function roomCard(blk, d, body) {
+      var m = blk.bm, sp = m.newSp, own = ownWalking();
+      body.push(P("A spirit of " + lowerName(d[1]) + " is here: " + sp.name + ". " + own.length + " of yours walk with you, as many as can. To take it with you, let one of yours rest in the WAVE room. It keeps everything it has lived through.", { "data-cave-bm-room": String(own.length) }));
+      body.push(el("div", { class: "oagc-row" }, own.map(function (o) {
+        return btn("Let " + o.name + " rest", { "data-cave-bm-rest": o.id || o.name }, function () { restSpirit(o); born(blk, sp.name, sp.element); }, true);
+      })));
+      body.push(row([btn("Leave it here", { "data-cave-bm-leaveit": "" }, function () { m.newSp = null; m.phase = "q"; placeCard(blk); }, true)]));
+      return d[1];
+    }
+    // Resting: it leaves the walk and waits in the WAVE room, out of the loadout, with its sittings kept.
+    function restSpirit(o) {
+      o.resting = true; var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); spiritsUi();
+      try { if (SPIRIT_STORE && o.id) { SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "Cave of Lessons"); SPIRIT_STORE.setLoadout(o.id, false); } } catch (e) { /* it still rests */ }
+      var g = o.g, li = o.light && o.light.intensity;
+      tween(900, function (k) { g.traverse(function (n) { if (n.material) n.material.opacity = 0.9 * (1 - k); }); if (o.light) o.light.intensity = li * (1 - k); }, function () { scene.remove(g); dropLight(g); });
+    }
+    function born(blk, name, element) {
+      var m = blk.bm, fig = blk.route.ctx.daemonFig, o = { id: "meet-" + blk.daemon, name: name, element: element, family: blk.daemon, stage: "gas", sittings: 0 };
+      if (fig) o.from = new THREE.Box3().setFromObject(fig).getCenter(new THREE.Vector3()); // its motes stream out of the daemon's body
+      addSpirit(o, avatar ? new THREE.Vector3(avatar.position.x, avatar.position.y + 1.7, avatar.position.z) : null);
+      try { if (SPIRIT_STORE) { SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: 0 }, "Cave of Lessons"); SPIRIT_STORE.setLoadout(o.id, true); } } catch (e) { /* the spirit still walks with you */ }
+      blk.felt = o.id; m.newSp = null; m.phase = "q"; placeCard(blk);
+    }
+    // The approach check-in (pass daemon-meeting1, build 4), here before the daemon is asked for its time: up to four asks, each
+    // skippable, in this order: the body (what it feels like, what it is doing), the feeling, whether it is faint, too much or clear,
+    // and, only when it is not faint, whether it sits all right. Each answer shows at once on a meeting spirit standing before the
+    // daemon, tinted by what has been said. Skip all and walking on always pass. Kept on the sitting as blk.approach: no words, no
+    // numbers, never a daemon's name.
+    function approachCard(blk, d, body) {
+      var ap = blk.ap || (blk.ap = { step: "body", rows: {}, draft: "", a: { body: null, texture: null, element: null, feeling: null, veil: null, state: null, merged: null }, asked: 0 }), a = ap.a;
+      var skipAll = btn("Skip all, walk on", { "data-cave-ap-skipall": "" }, function () { approachDone(blk); }, true);
+      function ask(step, prompt, items, attr, pick, extra) {
+        body.push(P(prompt, { "data-cave-ap": step }));
+        if (a.merged) body.push(P("Something of another voice is in this one.", { "data-cave-ap-merged": a.merged }));
+        body.push(el("div", { class: "oagc-row" }, items.map(function (c) { var at = {}; at[attr] = c[0]; return btn(c[1], at, function () { pick(c[0]); }, true); })));
+        if (extra) body.push(extra);
+        body.push(row([btn("Skip this", { "data-cave-ap-skip": "" }, function () { pick(null); }, true), skipAll]));
+      }
+      if (ap.step === "body") {
+        body.push(P("Before you go on, notice your body.", { "data-cave-ap": "body" }));
+        function toggles(key, label, items, attr) {
+          body.push(P(label));
+          body.push(el("div", { class: "oagc-row" }, items.map(function (c) {
+            var at = { "aria-pressed": String(ap.rows[key] === c[0]) }; at[attr] = c[0];
+            return btn(c[1], at, function () { ap.rows[key] = ap.rows[key] === c[0] ? null : c[0]; placeCard(blk); }, ap.rows[key] !== c[0]);
+          })));
+        }
+        toggles("texture", "What does it feel like?", AP_SENSES, "data-cave-ap-tex");
+        toggles("move", "What is your body doing?", AP_MOVES, "data-cave-ap-move");
+        body.push(row([btn("That's it", { "data-cave-ap-done": "" }, function () {
+          a.texture = ap.rows.texture || null; a.body = ap.rows.move || null; a.merged = a.body && AP_MOVE_OF[a.body] !== blk.daemon ? AP_MOVE_OF[a.body] : null;
+          ap.asked++; ap.step = "feel"; approachShow(blk, d); placeCard(blk);
+        }), skipAll]));
+      } else if (ap.step === "feel") {
+        var input = el("input", { type: "text", "data-cave-ap-line": "", placeholder: "Or in your own words", maxlength: "60", enterkeyhint: "done", "aria-label": "In your own words" });
+        input.value = ap.draft; input.addEventListener("input", function () { ap.draft = input.value; });
+        function own() { if (!input.value.trim()) return; a.feeling = "own"; ap.asked++; ap.step = "veil"; approachShow(blk, d); placeCard(blk); }
+        input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); own(); } });
+        ask("feel", "And the feeling, if there is one?", ELEMENTS.map(function (e) { return [e[0].toLowerCase(), e[0] + " (" + e[1] + ")"]; }).concat([["none", NO_WORD]]), "data-cave-ap-feel", function (v) {
+          a.feeling = v; a.element = v && v !== "none" ? v : null; if (v) ap.asked++; ap.step = "veil"; approachShow(blk, d); placeCard(blk);
+        }, el("div", { class: "oagc-compose" }, [input, el("button", { "data-cave-ap-say": "", "aria-label": "Say it", text: "↑", onclick: own })]));
+      } else if (ap.step === "veil") {
+        ask("veil", "How near is it?", AP_VEILS, "data-cave-ap-veil", function (v) {
+          a.veil = v; if (v) ap.asked++; approachShow(blk, d); if (v === "veiled") approachDone(blk); else { ap.step = "state"; placeCard(blk); }
+        });
+      } else {
+        ask("state", "Where it is, how does it sit?", AP_STATES, "data-cave-ap-state", function (v) { a.state = v; if (v) ap.asked++; approachShow(blk, d); approachDone(blk); });
+      }
+      return "Before the way on";
+    }
+    function approachShow(blk, d) {
+      var a = blk.ap.a, c = blk.route.ctx, r = blk.route, h = ch.h;
+      if (!a.body && !a.texture && !a.element && !a.veil && !a.state) return;
+      var tx = a.texture && a.texture !== "free" ? lookup(TEXTURES, a.texture) : null;
+      var hex = a.element ? spiritHex(a.element) : tx ? tx[2] : d[3];
+      var gasRow = a.merged ? lookup(DAEMONS, a.merged) : d, gas = gasRow ? gasRow[3] : hex;
+      if (!blk.apSpirit) {
+        var g = buildSpirit(THREE, "meeting spirit", hex); g.userData.label.visible = false;
+        var p = at(r, c.daemonS - 2.4); g.position.set(p.x, p.y - h * 0.9 + 1.5, p.z); r.group.add(g); blk.apSpirit = g;
+      }
+      var g2 = blk.apSpirit;
+      g2.userData.color.setHex(gas); g2.userData.orb.material.color.setHex(hex);
+      g2.userData.level = a.veil === "veiled" ? 0.15 : a.veil === "flooding" ? 0.95 : 0.45; // polarity: veiled is dim, flooding is bright
+      g2.scale.setScalar(a.veil === "flooding" ? 1.35 : a.veil === "veiled" ? 0.8 : 1);
+      stepAura(g2.userData.aura, g2.userData.color, g2.userData.level, 1, true);
+    }
+    function approachDone(blk) {
+      var ap = blk.ap, a = ap.a; blk.approached = true;
+      blk.approach = ap.asked && (a.body || a.texture || a.feeling || a.veil || a.state) ? { body: a.body, texture: a.texture, feeling: a.feeling, veil: a.veil, state: a.state, merged: a.merged || null } : null;
+      if (blk.apSpirit) { var g = blk.apSpirit; blk.apSpirit = null; blk.route.group.remove(g); }
+      placeCard(blk);
+    }
     // A voice that was secretly speaking comes out behind the daemon, then walks on ahead and waits by the wall for its own turn.
     function waiterOut(blk, id) {
       var c = blk.route.ctx, r = blk.route, h = ch.h, vr = voiceRow(id); if (!c || c.daemonS == null || !vr) return;
@@ -2932,6 +4448,12 @@
       state.sens.push(state.cur);
       buildLevel("hall");
       (o.spirits || []).forEach(function (sp) { addSpirit(sp); });
+      addLoadout();
+      allies().forEach(function (id) { allyJoins(id); }); // the voices that trust you come back with you
+    }
+    // The three the player chose in the WAVE room walk in from the one store (board sic-loadout-three).
+    function addLoadout() {
+      try { if (SPIRIT_STORE) SPIRIT_STORE.loadout().forEach(function (t) { if (t.family) addSpirit({ id: t.id, name: t.name, element: t.element, family: t.family, sittings: t.sittings }); }); } catch (e) { /* no store: only the ones from the room */ }
     }
     function goTo(place, face) {
       if (busy) return;
@@ -2943,6 +4465,7 @@
       if (busy) return;
       busy = true; closeModal();
       var where = state.level.where; leave(false);
+      if (window.__oagVessel) window.__oagVessel.store.visited("hall"); // a visit that ends mines the place's fuel for the ship
       setTimeout(function () { homeBase(A, home, { where: where }); }, 540);
     }
     function buildLevel(place, face) {
@@ -2960,7 +4483,7 @@
       var lg = route.look;
       lk.idx = -1; lk.light.setHex(lg.light); lk.fog.setHex(lg.fog); lk.fogK = lg.fogK; lk.hemi = lg.hemi; lk.flash = 0.6;
       scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog); scene.fog.density = parts.fog * lg.fogK;
-      avatar = buildAvatar(THREE, "self"); scene.add(avatar);
+      avatar = buildAvatar(THREE, "self", true); scene.add(avatar);
       parts.dress = { wall: parts.rock.userData.hex, width: route.w, fog: parts.fog, element: null, lamp: 0xffe0b0 };
       state.dress = parts.dress;
       state.walk = newWalk(route, null, route.startS);
@@ -3100,7 +4623,7 @@
       window.OAGBody.pick().then(function (r) {
         if (!r) return;
         var sp = spotNamed(A, r.label);
-        if (!sp) { alert("That place is not on the figure yet. Tap the figure to choose one."); return; }
+        if (!sp) { notice("That place is not on the figure yet. Tap the figure to choose one."); return; }
         if (!state.sens.filter(function (o) { return o.id === sp.id; }).length) addSensation(sp);
         if (state.walk.arrived) arrive();
       });
@@ -3110,6 +4633,7 @@
       var route = blk.route, c = route.ctx, d = lookup(DAEMONS, id), h = ch.h, a = at(route, stopAt(route, "passage").s + 6);
       if (c.daemonFig) route.group.remove(c.daemonFig);
       c.daemonFig = buildDaemon(THREE, d, h * 1.1);
+      var rec0 = trustGet(id); if (rec0) c.daemonFig.userData.stance = stanceOf(rec0, id, {}); // met before: it stands as it stood
       c.daemonFig.position.set(a.x, a.y - h * 0.9, a.z); c.daemonFig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
       c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx }; c.daemonS = stopAt(route, "passage").s + 6; c.daemonRoute = route; c.daemonMoved = false;
       // its charge shows around it, and Allow's sliders set how large it gets and how bright it can glow (see buildAura)
@@ -3148,6 +4672,8 @@
       flight = { curve: curve, t: 0, lamp: fl, done: function () { portal(to); } };
     }
     function leave(doSave) {
+      leaveVoice(); // walking out from a voice's place breaks the promise to come back to one's own
+      window.removeEventListener("pagehide", leaveVoice);
       if (doSave && me()) save(me());
       fade.style.opacity = 1;
       setTimeout(function () {
@@ -3212,6 +4738,7 @@
         if (k >= 1) { if (tw.done) tw.done(); return false; }
         return true;
       });
+      selfBtn.style.display = state.level && state.mode === "chamber" && !state.selfOn ? "" : "none";
       sitBtn.style.display = !sit && state.mode === "chamber" && state.walk && promptBox.style.display === "none" ? "" : "none";
       if (flight) {
         flight.t = Math.min(1, flight.t + 0.006);
@@ -3250,23 +4777,32 @@
           stCam = stageCam(stg.cam, sa, sd, h, t321Of(wk));
         }
         if (spirits.length) { // the spirits walk behind the figure, on the path it came along
+          var seated = sit && sit.route === route;
           followSpirits(THREE, spirits, function (j) {
+            if (seated) { // sitting, they settle round the figure: one at each side, one behind
+              var sq = at(route, Math.max(0, wk.s + (j === 2 ? -1.3 : 0.5))), e = j === 0 ? 1.4 : j === 1 ? -1.4 : 0;
+              return { x: sq.x - sq.fz * e, y: sq.y - h * 0.92 + 1.0, z: sq.z + sq.fx * e };
+            }
             var sp = at(route, Math.max(0, wk.s - dir * (2.2 + 1.6 * j))), d = (j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2) + lat * 0.6;
             return { x: sp.x - sp.fz * d, y: sp.y - h * 0.92 + 1.7, z: sp.z + sp.fx * d };
           }, dt, nowMs, state.calm);
           spirits.forEach(function (o) { if (!o.g.parent) scene.add(o.g); });
         }
         if (sit) sitFrame(dt, nowMs, route, wk, h);
+        waveFrame(dt, nowMs, route, wk, h);
         sitBtn.disabled = !canSit();
         if (route.pendingExit && wk.s > route.len * 0.5) openWayBack(route);
         // camera: behind the figure on the way it follows (wk.camYaw), and a little above. It follows the figure itself, not the
         // path's line (Wendell, 14 October 2026: "Camera controls are clunky in the game master space"): walking across the hall
         // to a door, the camera comes round behind the figure as in the WAVE room. The stone keeps it inside (keepIn, below).
-        var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
+        var frT = state.stack[state.stack.length - 1], back = (route.kind === "face" ? 3.6 : CAM_BACK) * (state.zoom || 1); // a face's tight loop keeps the camera closer; a pinch moves it
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
         a.fx = Math.sin(wk.camYaw); a.fz = Math.cos(wk.camYaw); // the way ahead, as the camera takes it
         var cs = wk.s - back, cby = at(route, route.loop ? (cs % route.len + route.len) % route.len : clamp(cs, 0, route.len)).y;
         var cbx = a.x - a.fx * back, cbz = a.z - a.fz * back;
+        // A tilt by hand eases back to level once the thumb has rested LOOK.settle ms and the figure walks on (ctl-gentle-camera).
+        if (!reducedMotion && wk.moving && Date.now() - lastLook > LOOK.settle) state.look.pitch *= Math.exp(-dt * 1.2);
+        if (state.peek && reducedMotion) state.peek = null; // still mode: the camera does not swing round to show an opening
         if (state.peek) { // while an opening appears the camera swings round to show it beside the figure, then lets go
           var px0 = cbx - a.x, pz0 = cbz - a.z, ox = state.peek.x - a.x, oz = state.peek.z - a.z, bestY = 0, bestD = -9;
           for (var yq = -1.4; yq <= 1.4; yq += 0.05) { // the swing that puts the opening straight past the figure; half of it frames both
@@ -3298,10 +4834,24 @@
           if (best && (best.ratio > f || best.room < m)) { var q = best.clamp(f, m); v.set(q.x, q.y, q.z); }
         };
         var free = !stCam && !state.rise && !state.camAt;
-        if (free) keepIn(want, 0.94, 0.35);
+        // Then a ray from the figure's head out to where the camera wants to be stops it in front of the first stone on the way
+        // (ctl-gentle-camera, as Cinemachine's deoccluder does), and the camera eases there: near a wall it closes in on the figure
+        // along its own line instead of being shoved sideways after the ease, which jumped. Only where the ease itself would cut
+        // through stone is the camera brought in at once, and keepIn stays the backstop where the head is not clear.
+        var pivot = tmpV2.set(a.x, fl + 1.6, a.z), probe = tmpV3;
+        var clear = function (v) { return tubes.some(function (tb) { var c2 = tb.contain(v, true); return c2 && c2.ratio <= 0.96 && c2.room >= 0.25; }); };
+        var pullIn = function (v) {
+          if (!clear(pivot)) return false;
+          var lo = 0, hi = 1, N = 10, i;
+          for (i = 1; i <= N; i++) { probe.lerpVectors(pivot, v, i / N); if (!clear(probe)) { hi = i / N; break; } lo = i / N; }
+          if (lo >= 1) return true;
+          for (i = 0; i < 4; i++) { var mid = (lo + hi) / 2; probe.lerpVectors(pivot, v, mid); if (clear(probe)) lo = mid; else hi = mid; }
+          v.lerpVectors(pivot, v, lo); return true;
+        };
+        if (free) { keepIn(want, 0.94, 0.35); pullIn(want); }
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
-        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
-        if (free) keepIn(camPos, 0.96, 0.25);
+        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : TOUCH.follow)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
+        if (free && !clear(camPos) && !pullIn(camPos)) keepIn(camPos, 0.96, 0.25); // the ease cut a corner: come in along the line
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         if (state.camFix) { var ca = state.camFix; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
         var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
@@ -3369,6 +4919,7 @@
         }
         layoutPane();
       }
+      if (ch && state.walk && avatar && !flight) teach.step(dt, nowMs); else teach.hide();
       renderer.render(scene, camera);
       running = requestAnimationFrame(render);
     }
@@ -3390,10 +4941,17 @@
       Object.keys(J).forEach(function (k) { r[k] = J[k].rotation.x; });
       return { names: Object.keys(J), x: r, g: avatar.userData.g, hipsY: J.hips.position.y, spineScale: J.spine.scale.y, shoulderY: J.shoulderL.position.y };
     };
+    // The worn walker (Average Dusk on its mocap clip): whether it is on, the clip frame now, and the stand-in parts still shown.
+    api.walker = function () {
+      var w = avatar && avatar.userData.walker, shown = 0;
+      if (!w) return { worn: false };
+      avatar.userData.body.traverse(function (o) { if (o.isMesh && o.visible && !o.userData.walker) shown++; });
+      return { worn: true, frame: w.f, length: w.walk.length, run: w.r, speed: w.v, runLength: w.run ? w.run.length : 0, idleFrame: w.idleFrame, joints: w.bones.length, standInShown: shown, opacity: w.mat.opacity };
+    };
     api.gait = function () {
       var wk = state.walk, d = avatar.userData;
       return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, moving: wk.moving, steps: d.stepIdx, time: stretchTime(wk.D),
-        inS: BREATH.inS, outS: BREATH.outS, speed: WALK_SPEED, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
+        inS: BREATH.inS, outS: BREATH.outS, speed: WALK_SPEED, run: runK(), stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
     // Free walking: where the figure is on its route and to the side of it, the way the camera takes as ahead, the stop it is at,
     // and whether the stick and a prompt show. stick(x, z) holds the stick as a thumb would (z -1 is up), for the tests.
@@ -3410,9 +4968,11 @@
         range: lim, halfWidth: hw, stick: stickPad.style.display !== "none", prompt: promptBox.style.display !== "none" ? promptBox.textContent : null, sit: sitBtn.style.display !== "none", modal: state.modal };
     };
     api.stick = function (x, z) { stick.x = x; stick.z = z; };
+    api.camAt = function () { return camera.position.toArray(); }; // tests: where the camera is this frame
     api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
-    api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k } : null; };
+    api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k,
+      around: sit.around.map(function (o) { return { name: o.name, d: Math.hypot(o.g.position.x - avatar.position.x, o.g.position.z - avatar.position.z), y: o.g.position.y - avatar.position.y }; }) } : null; };
     api.carried = function () { return carried.length; };
     api.look = function () {
       return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density, lamp: lamp.intensity, reach: lamp.distance };
@@ -3420,8 +4980,27 @@
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
     api.branchStyle = function () { var r = state.walk && state.walk.route; return { shown: styleSel.style.display !== "none", value: styleSel.value, style: r && r.style || null, rock: r && r.kind === "face" ? r.tube.rock.userData.hex : null, light: lk.light.getHex(), motes: !!(r && r.motes) }; };
+    api.forgetRun = function () { satRun = {}; satTrust = {}; };
+    api.trust = function (id) {
+      var c = ctxOf(), k = c && c.daemonBlk; id = id || (k && k.daemon); if (!id) return null;
+      var t = trustFor(id), fig = k && k.daemon === id && c.daemonFig;
+      return { can: markOf(t, id, "can"), will: markOf(t, id, "will"), good: goodOf(t), trusted: trusted(t, id), ally: !!t.ally, seen: t.seen.map(function (x) { return x.dim + ":" + x.kind; }), pending: (pendBy[id] || []).map(function (x) { return x.dim + ":" + x.kind; }),
+        promises: t.promises.map(function (x) { return x.kind + (x.kept ? ":kept" : ":open"); }), stance: fig && fig.userData.stance || null, allies: allies(id), vouched: !!(k && k.vouched), marks: { can: +marksEl.getAttribute("data-cave-can"), will: +marksEl.getAttribute("data-cave-will") } };
+    };
+    api.trustSet = function (id, rec) { trustBy[id] = Object.assign(blankTrust(), rec || {}); }; // a test gives a daemon a record
+    api.trustClear = function () { trustBy = {}; pendBy = {}; satTrust = {}; trustLoaded = {}; trustBack = {}; try { localStorage.removeItem(TRUST_KEY); } catch (e) { /* none kept */ } };
+    api.trustRevisit = function () { trustBy = {}; pendBy = {}; satTrust = {}; trustLoaded = {}; trustBack = {}; }; // a test starts a new visit: the device keeps its record
+    api.trustStored = function () { return readTrustStore(); };
+    api.voicePlace = function () { return voiceBlocks().map(function (b) { return b.daemon; }); };
+    api.recard = function () { var c = ctxOf(), k = c && c.daemonBlk; if (k) placeCard(k); };
+    api.stepAside = function () { var c = ctxOf(), k = c && c.daemonBlk; if (k) { k.stepAside = "yes"; moveDaemon(k); placeCard(k); } }; // a test lets the way open without the 3-2-1
+    api.allyJoins = allyJoins; // a test counts sittings again as a new run would
+    api.meters = function () { return { shown: meterBox.style.display !== "none", it: meterIt.box.style.display === "none" ? null : +meterIt.box.getAttribute("data-cave-meter-value"), you: meterYou.box.style.display === "none" ? null : +meterYou.box.getAttribute("data-cave-meter-value"), eases: +(meterIt.box.getAttribute("data-cave-eases") || 0), easeLine: easedLine.classList.contains("on") }; };
+    api.wave = function () { var b = waveBlob, c = ctxOf(), k = c && c.daemonBlk; return { open: !!(k && k.wv), n: k && k.wv ? k.wv.n : null, blob: b ? { hex: b.blob.g.userData.color.getHex(), scale: b.blob.g.scale.x, visible: b.blob.g.visible, dist: Math.hypot(b.blob.g.position.x - avatar.position.x, b.blob.g.position.z - avatar.position.z), fade: b.blob.fade } : null, last: k && k.lastWave || null, waves: k ? k.waves || 0 : 0, you: k ? k.you : null }; };
+    api.letGo = function () { var c = ctxOf(), k = c && c.daemonBlk, fig = c && c.daemonFig, rig = fig && fig.userData.rig; return { letGo: k && k.letGo || null, letting: !!(k && k.letting), playing: rig ? rig.playing : null, honored: !!(fig && fig.userData.letGo), stance: fig && fig.userData.stance || null, lastEase: k && k.lastEase || null }; };
     api.daemonGlow = function () { var c = ctxOf(); if (!c || !c.daemonAura) return null; var dm = c.daemonBlk.dm; return { level: c.daemonAura.userData.level, want: daemonLevel(c.daemonBlk), scale: c.daemonFig.scale.x, grow: dm.grow, bright: dm.bright, allowed: dm.allowed }; };
     api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0, colony: !!(c && c.colony && c.colony.parent) }; };
+    api.teach = function () { return teach.probe(); };
     api.pane = function () {
       var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
       return { shown: pane.style.display !== "none" && pane.style.visibility !== "hidden" && r.width > 0, title: page.title, text: page.text, at: paneAt, rect: { x: r.left, y: r.top, w: r.width, h: r.height }, font: parseFloat(cs.fontSize), docked: docked };
@@ -3473,6 +5052,7 @@
         turnIn: Math.acos(clamp((b.fx * (r.cross[0].x - b.x) + b.fz * (r.cross[0].z - b.z)) / Math.max(1e-6, Math.hypot(r.cross[0].x - b.x, r.cross[0].z - b.z)), -1, 1)) * 180 / Math.PI };
     };
     api.meeting = function () { var b = state.walk && state.walk.blk; if (!b) return null; return { met: b.met || null, phase: b.bm ? b.bm.phase : null, n: b.bm ? b.bm.n : null, heard: b.bm ? b.bm.heard : null, waiting: b.bm ? b.bm.waiting.slice() : [], waiters: (b.waiters || []).map(function (f) { return { who: f.userData.who, wait: !!f.userData.wait }; }) }; };
+    api.approach = function () { var b = state.walk && state.walk.blk; return b ? { done: !!b.approached, step: b.ap ? b.ap.step : null, saved: b.approach || null, spirit: !!b.apSpirit, felt: b.felt || null } : null; };
     api.lanterns = function () { return lanternsOn.length; };
     // The level the player is in: the place, the face of the tunnel (or the one the centre wears), the doors walked and the way here.
     api.level = function () {
@@ -3531,6 +5111,104 @@
     { id: "validate", wave: 5, look: 5 },
     { id: "fork", wave: 6, look: 6 },
   ];
+  // The Arrival (gd-lantern-guide, gd-teach-by-doing): the WAVE room's lessons, in order. The player's light leaves the chest,
+  // floats to what the lesson is about and waits there with one glyph beside it until the player does the thing once. label
+  // is for screen readers only; the screen shows the glyph. A lesson done out of order is done (T2: nothing taught twice).
+  var ROOM_LESSONS = [
+    { id: "walk", label: "Walk with the stick at the bottom left, or the arrow keys." },
+    { id: "look", label: "Drag across the room to look around." },
+    { id: "tap", label: "Tap the floor where the light is to walk there." },
+    { id: "rug", label: "Walk to the rug and sit down to begin." },
+    { id: "doors", label: "Walk up to a door to see where it goes." },
+  ];
+  var TEACH_SVG = { // drawn in the light's colour, 44 px; no words
+    walk: '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="24" cy="18" r="7" fill="currentColor"/><path d="M24 30v10M19 35l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>' +
+      '<svg class="oagr-keys" viewBox="0 0 60 44" width="60" height="44" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="21" y="2" width="18" height="18" rx="3"/><rect x="2" y="24" width="18" height="18" rx="3"/><rect x="21" y="24" width="18" height="18" rx="3"/><rect x="40" y="24" width="18" height="18" rx="3"/></g><g fill="currentColor"><path d="M30 6l5 7h-10z"/><path d="M6 33l7-5v10z"/><path d="M30 38l5-7h-10z"/><path d="M54 33l-7-5v10z"/></g></svg>',
+    look: '<svg viewBox="0 0 64 48" width="58" height="44" aria-hidden="true"><circle cx="32" cy="22" r="7" fill="currentColor"/><path d="M6 38h52M6 38l6-5M6 38l6 5M58 38l-6-5M58 38l-6 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+    tap: '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="6" fill="currentColor"/><circle class="oagr-ring" cx="24" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="2"/><circle class="oagr-ring" cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/></svg>',
+    rug: '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><ellipse cx="24" cy="38" rx="20" ry="7" fill="none" stroke="currentColor" stroke-width="2.5"/><ellipse cx="24" cy="38" rx="11" ry="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M24 4v20M17 17l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+    doors: '<svg viewBox="0 0 64 48" width="58" height="44" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 44V20a9 9 0 0 1 18 0v24"/><path d="M40 44V20a9 9 0 0 1 18 0v24"/></g><path d="M28 30h8M33 26l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  };
+  // The cave's and the Big Mind cave's glyphs, drawn the same way. A glyph by a button points at it (up for one at the top).
+  var DOWN = '<path d="M24 39v7M20 42l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>';
+  TEACH_SVG.run = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><path d="M8 10l12 12-12 12M22 10l12 12-12 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 14h6M38 22h8M38 30h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' + DOWN + '</svg>' +
+    '<svg class="oagr-keys" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true"><rect x="3" y="8" width="38" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M22 14l8 9h-4v7h-8v-7h-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+  TEACH_SVG.mark = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><ellipse cx="24" cy="36" rx="17" ry="6" fill="none" stroke="currentColor" stroke-width="2.5"/><ellipse cx="24" cy="36" rx="7" ry="2.5" fill="currentColor"/><path d="M24 6v18M13 13l5 7M35 13l-5 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  TEACH_SVG.stone = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><rect x="5" y="6" width="32" height="24" rx="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M11 14h20M11 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="35" cy="36" r="5" fill="currentColor"/><path d="M27 44a10 10 0 0 1 0-16" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/></svg>';
+  TEACH_SVG.self = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><path d="M24 2v7M20 6l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="29" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="24" cy="29" r="5" fill="currentColor"/></svg>';
+  TEACH_SVG.back = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="22" r="19" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="24" cy="30" r="7" fill="currentColor"/><path d="M24 4v12M19 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" transform="rotate(180 24 10)"/></svg>';
+  TEACH_SVG.spirits = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="12" cy="20" r="6" fill="currentColor" opacity=".7"/><circle cx="24" cy="13" r="7" fill="currentColor"/><circle cx="36" cy="20" r="6" fill="currentColor" opacity=".7"/>' + DOWN + '</svg>';
+  TEACH_SVG.trust = '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="15" cy="18" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M15 10a8 8 0 0 1 0 16z" fill="currentColor"/><circle cx="33" cy="18" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/>' + DOWN + '</svg>';
+  // The cave's lessons and the Big Mind cave's, the WAVE room's pattern carried on (gd-teach-by-doing): each where its control
+  // first shows. walk and look keep the room's ids, so a lesson learned in the room is not taught again (T2). label is for screen
+  // readers only. In the Big Mind cave the mouth's rules list became these (gd-mouth-in-world): Self, the way back, the walk.
+  var CAVE_LESSONS = [
+    { id: "walk", label: ROOM_LESSONS[0].label },
+    { id: "look", label: "Drag across the cave to look around." },
+    { id: "mark", label: "A glowing mark is a place to stop. Tap its prompt by your right thumb to stop there." },
+    { id: "stone", label: "Tap the words above your figure to read all of them." },
+  ];
+  var BIGMIND_LESSONS = [
+    { id: "walk", label: "Walk with the stick at the bottom left or the arrow keys, or hold anywhere to walk straight on." },
+    { id: "run", label: "Tap Run, or hold Shift, to go faster." },
+    { id: "self", label: "The Self button at the top brings you back to being yourself, any time." },
+    { id: "back", label: "Pull the stick back to walk back up and out, whenever you like. Your place is saved at every chamber." },
+    { id: "spirits", label: "The spirits walking with you. Tap to see them and thank one." },
+    { id: "trust", label: "Tap Trust to offer the voice something honest." },
+  ];
+  // teacher(THREE, o): one place's lessons in the world. The player's light leaves the chest for the lesson's spot, the glyph
+  // waits by its control, and both go once the player does it (learn) or taps "I know this". o: wrap (holds the glyph and the
+  // button), scene, camera, canvas, lessons, ready(id) (its control is in view now), spot(id, v) (puts where the light waits
+  // into v; false keeps the light home), anchor(id) (the control the glyph sits by, an element or a screen point; none: by the
+  // light), home(v) (the chest), size (the light's, the room's figure being 1), still(). The first lesson not done and ready is
+  // the one shown, so a button's lesson shows the first time its button does.
+  function teacher(THREE, o) {
+    var K = o.size || 1, g = { done: readTutorial(), shown: null };
+    var lantern = new THREE.Group(), glow = new THREE.PointLight(0xffd9a0, 0, 6 * K);
+    lantern.add(new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 10), new THREE.MeshBasicMaterial({ color: 0xfff1d0 })));
+    lantern.add(new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.25, depthWrite: false })));
+    lantern.add(glow); lantern.visible = false; o.scene.add(lantern);
+    var box = el("div", { class: "oagr-teach", "data-teach": "", role: "status" });
+    var skip = el("button", { class: "alt oagr-skip", "data-teach-skip": "", text: "I know this", style: "display:none", onclick: function () { var L = now(); if (L) learn(L.id); } });
+    o.wrap.appendChild(box); o.wrap.appendChild(skip);
+    var at = new THREE.Vector3(), want = new THREE.Vector3(), home = new THREE.Vector3(), q = new THREE.Vector3(), set = false, away = false;
+    function has(id) { return g.done.indexOf(id) >= 0; }
+    function now() { return o.lessons.filter(function (l) { return !has(l.id) && o.ready(l.id); })[0] || null; }
+    function learn(id) { if (!has(id)) g.done = learnTutorial(id, g.done); }
+    function hide() { if (g.shown) { box.style.display = "none"; skip.style.display = "none"; g.shown = null; } }
+    function step(dt, nowMs) {
+      var L = now(), still = o.still();
+      if (!lantern.parent) o.scene.add(lantern); // a scene cleared for the next place takes the light with it
+      o.home(home); away = !!(L && o.spot(L.id, want));
+      var to = away ? want : home;
+      if (!set || still) { at.copy(to); set = true; } else at.lerp(to, 1 - Math.exp(-dt * (away ? 2.2 : 6)));
+      lantern.position.copy(at); if (away && !still) lantern.position.y += 0.06 * K * Math.sin(nowMs / 450);
+      lantern.scale.setScalar(K * (away ? 1.5 : 1)); glow.intensity = away ? 1.1 : 0;
+      lantern.visible = away || at.distanceTo(home) > 0.2 * K; // at home the chest's own glow is the light
+      if (!L) { hide(); return; }
+      if (g.shown !== L.id) {
+        box.innerHTML = ""; box.setAttribute("data-teach", L.id); box.setAttribute("aria-label", L.label);
+        var gl = el("div", { class: "oagr-glyphs" }); gl.innerHTML = TEACH_SVG[L.id]; box.appendChild(gl);
+        box.style.display = "flex"; skip.style.display = ""; g.shown = L.id;
+      }
+      box.classList.toggle("still", still);
+      var Wd = window.innerWidth, Hd = window.innerHeight, sx, sy, off = "", below = false, an = o.anchor ? o.anchor(L.id) : null;
+      if (an && an.getBoundingClientRect) { var b = an.getBoundingClientRect(); sx = b.left + b.width / 2; below = b.top + b.height / 2 < Hd * 0.15; sy = below ? b.bottom + 8 : b.top - 8; }
+      else if (an) { sx = an.x; sy = an.y; }
+      else {
+        o.camera.updateMatrixWorld(); q.copy(lantern.position).project(o.camera);
+        var cs = lantern.position.clone().applyMatrix4(o.camera.matrixWorldInverse), rc = o.canvas.getBoundingClientRect();
+        if (cs.z > 0 || Math.abs(q.x) > 0.85 || Math.abs(q.y) > 0.9) { off = cs.x < 0 ? "left" : "right"; sx = off === "left" ? rc.left : rc.right; sy = rc.top + rc.height * 0.5; } // behind or past the edge: wait at that side, pointing
+        else { sx = rc.left + (q.x + 1) / 2 * rc.width; sy = rc.top + (1 - q.y) / 2 * rc.height - 26; }
+      }
+      box.setAttribute("data-teach-off", off); box.classList.toggle("below", below);
+      var bw = box.offsetWidth / 2, bh = box.offsetHeight;
+      sx = clamp(sx, bw + 8, Wd - bw - 8); sy = below ? clamp(sy, 8, Hd - bh - 8) : clamp(sy, bh + 8, Hd - 8);
+      box.style.left = sx + "px"; box.style.top = sy + "px";
+    }
+    return { step: step, learn: learn, has: has, hide: hide,
+      probe: function () { var L = now(); return { lesson: L && L.id, done: g.done.slice(), shown: box.style.display !== "none" && g.shown ? g.shown : null, away: away, lantern: [lantern.position.x, lantern.position.y, lantern.position.z], visible: lantern.visible }; } };
+  }
   var ROOM_ROUNDS_REST = 3; // board wave-room-stop: after three rounds in a sitting, offer to rest it by the door with a lantern
   var ROOM_TEST_KEY = "oag:wave-room:test"; // the 18 October test: the answer and the round, on this device only
   // Where the player stands at each step of the 3-2-1 in the room (the staged form, board cave-321-form, as in the cave).
@@ -3541,6 +5219,12 @@
     ".oagr-close{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;max-height:40vh;overflow-y:auto;padding:.7rem .9rem;background:rgba(12,12,28,.9);border:1px solid rgba(255,241,176,.5);border-radius:16px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-close h2{margin:0 0 .3rem;font-size:1.15rem;color:#fff1b0;display:flex;align-items:center;gap:.5rem}.oagr-close p{margin:.25rem 0;font-size:.95rem;line-height:1.35}.oagr-close .oagc-row{margin-top:.5rem}" +
     ".oagc button.oagr-portalbtn{right:auto;left:10px;border-color:rgba(200,184,255,.7);color:#e8e0ff}" +
+    ".oagc button.oagr-spirits{position:absolute;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.55);color:#fff1d0;background:rgba(20,20,40,.85)}" +
+    ".oagr-load{width:min(300px,calc(100vw - 170px))}.oagr-load button[aria-pressed=true]{border-color:#fff1b0;background:rgba(80,70,30,.85)}" +
+    ".oagr-door.oagr-elder{width:min(300px,calc(100vw - 28px));padding:.45rem .55rem}.oagr-elder-head{display:flex;align-items:center;gap:.35rem}.oagr-elder-head h2{flex:1;margin:0;font-size:.95rem}" +
+    ".oagr-door.oagr-elder .oagr-elder-head button{width:2rem;min-width:2rem;height:2rem;padding:0;margin:0;font-size:1.1rem;line-height:1}.oagr-door.oagr-elder p{margin:.2rem 0 .1rem;font-size:.8rem;line-height:1.25}" +
+    ".oagr-door.oagr-elder .oagc-row{flex-wrap:nowrap;gap:.25rem;margin-top:.3rem}.oagr-door.oagr-elder .oagc-row button{flex:1;width:auto;min-width:0;margin:0;padding:.35rem .1rem;font-size:.72rem}" +
+    ".oagr-door.oagr-elder.oagr-elder-min{width:auto;padding:0;background:none;border:0}.oagr-door.oagr-elder.oagr-elder-min button{width:auto;padding:.4rem .7rem;font-size:.8rem}" +
     ".oagc button.oagr-sit{position:absolute;right:16px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.8);color:#fff1b0;background:rgba(60,30,24,.85)}" +
     ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
@@ -3610,18 +5294,40 @@
       rug.rotation.x = -Math.PI / 2; rug.position.set(SEAT.x, 0.015, SEAT.z); scene.add(rug);
       var seat = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.46, 24), new THREE.MeshStandardMaterial({ color: 0x8c3b2e, roughness: 0.9 })); // the cushion
       seat.position.set(SEAT.x, 0.23, SEAT.z + 0.15); seat.scale.z = 1.15; scene.add(seat);
+      var SEAT_TOP = 0.46, CUSHION_R = 0.7 + 0.28; // its top, and how near the figure's middle comes to its edge (its own half-width)
+      function cushionIn(x, z) { var dx = x - SEAT.x, dz = (z - SEAT.z - 0.15) / 1.15; return { dx: dx, dz: dz, k: Math.max(1e-4, Math.hypot(dx, dz) / CUSHION_R) / 1 }; }
+      // How the worn body (the walker) sits on the cushion, for the tests: its hip joints' height over the top, the lowest leg
+      // vertex, how far out from the cushion's middle the legs reach (1 is its top edge), and how many leg vertices are inside it.
+      function seatFit() {
+        var w = avatar.userData.walker; if (!w) return null;
+        var m = w.mesh, geo = m.geometry, pos = geo.attributes.position, si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight, v = new THREE.Vector3();
+        var legs = {}; w.bones.forEach(function (b, i) { if (/^(thigh|shin|foot|toe)\./.test(b.name)) legs[i] = true; });
+        avatar.updateMatrixWorld(true);
+        var hipY = Math.min.apply(null, ["thigh.L", "thigh.R"].map(function (n) { var b = w.bones.filter(function (x) { return x.name === n; })[0]; return b.getWorldPosition(v).y; }));
+        var low = Infinity, reach = 0, inside = 0, n = 0, zr = [Infinity, -Infinity];
+        for (var i = 0; i < pos.count; i++) {
+          var top = -1, tw = 0; for (var j = 0; j < 4; j++) if (sw.array[i * 4 + j] > tw) { tw = sw.array[i * 4 + j]; top = si.array[i * 4 + j]; }
+          if (!legs[top]) continue;
+          v.fromBufferAttribute(pos, i); m.boneTransform(i, v); v.applyMatrix4(m.matrixWorld); n++;
+          var y = v.y, dx = v.x - SEAT.x, dz = (v.z - SEAT.z - 0.15) / 1.15, rr = Math.hypot(dx, dz), rAt = 0.7 - 0.08 * Math.max(0, Math.min(1, y / SEAT_TOP));
+          zr[0] = Math.min(zr[0], v.z); zr[1] = Math.max(zr[1], v.z); low = Math.min(low, y); reach = Math.max(reach, rr / 0.62);
+          if (y < SEAT_TOP - 0.01 && rr < rAt - 0.01) inside++;
+        }
+        return { hipY: hipY, top: SEAT_TOP, lowLeg: low, reach: reach, legInside: inside, legVerts: n, legZ: zr };
+      }
       // Home base's portal (LEVELS.md): a second arch in the wall, behind the seat and to its side, glowing faintly. The charge's
       // door stays the charge's door: what comes in comes through the door, and the player goes out through the portal.
       // The Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room")
       // is the same kind of arch on the other side of the seat, marked with the seven daemons' colours in the order they are met.
       // The portal leads to the six game masters (the hall of the six). The player walks to either one; arriving opens its card.
       var EXITS = {};
-      function exitArch(id, ang, hex, glowHex, name) {
+      // dark: a mouth in the stone instead of a lit arch (the basin's): no frame, and the opening nearly black.
+      function exitArch(id, ang, hex, glowHex, name, dark) {
         var px = Math.sin(ang) * RR * 0.9, pz = Math.cos(ang) * RR * 0.9, pyaw = Math.atan2(-px, -pz);
-        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
+        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: dark ? 0.94 : 0.55, side: THREE.DoubleSide }));
         glow.position.set(px, 0.01, pz); glow.rotation.y = pyaw; scene.add(glow);
         var a2 = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: hex })); a2.scale.setScalar(DW / 2 + 0.1);
-        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2);
+        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2); a2.visible = !dark;
         var tag = labelSprite(THREE, name, "#" + new THREE.Color(hex).getHexString(), 2.6); tag.position.set(px * 0.9, DH + 0.45, pz * 0.9); scene.add(tag);
         var k = (RR - 2.2) / (RR * 0.9); // where the figure stands to go through: just in front of it
         EXITS[id] = { id: id, x: px, z: pz, yaw: pyaw, stand: { x: px * k, z: pz * k }, glow: glow, arch: a2 };
@@ -3636,29 +5342,136 @@
           dot.position.set(bm.x + Math.cos(bm.yaw) * lx + Math.sin(bm.yaw) * 0.12, ly, bm.z - Math.sin(bm.yaw) * lx + Math.cos(bm.yaw) * 0.12); scene.add(dot);
         });
       }
+      // The basin's mouth (basin.js): the body map's inside, a dark mouth in the stone on the side wall, clear of the portal, the
+      // Big Mind door and the charge's door. It has no card: walking into it goes in (mab-one-mouth: no menu, no button).
+      if (opts.basin) exitArch("basin", 1.9, 0x9aa8b8, 0x07060a, "The basin", true);
+      // The brow's floor in the one organ state (organs.js): once a sitting has reached it, the room's haze thins (the chamber's
+      // half of mao-first-organ-brow). Read when the room opens and again after a raise.
+      function browFloor() { try { var O = window.__oagOrgans; return O ? O.floorOf(O.store.get(), "brow") : 0; } catch (e) { return 0; } }
+      var hazeK = browFloor() >= 1 ? 0.6 : 1;
       var hemi = new THREE.HemisphereLight(0xfff4e0, 0x2a2420, 0.4); scene.add(hemi);
       var lamp = new THREE.PointLight(0xffe0b0, 1, 34); lamp.position.set(0, RH * 0.85, 1.4); scene.add(lamp);
       var doorLight = new THREE.PointLight(0xfff1d0, 0, 14); doorLight.position.set(0, 2, DZ + 1.2); scene.add(doorLight);
-      var avatar = buildAvatar(THREE, "self"); scene.add(avatar);
+      var avatar = buildAvatar(THREE, "self", true); scene.add(avatar);
       var FIG_K = 0.6; avatar.scale.setScalar(FIG_K); // the cave's figure is 3.6 tall for its long tunnels; in the room it stands about 2.2, under the door
       avatar.position.set(SEAT.x, 0, SEAT.z); avatar.rotation.y = Math.PI;
+      // The player's own light (gd-lantern-guide), the glow at the chest as on the title. It leaves the chest to teach.
+      var lantern = new THREE.Group(), lanternLight = new THREE.PointLight(0xffd9a0, 0.7, 6);
+      lantern.add(new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 10), new THREE.MeshBasicMaterial({ color: 0xfff1d0 })));
+      lantern.add(new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.25, depthWrite: false })));
+      lantern.add(lanternLight); scene.add(lantern);
 
       // ---- the charge: a grey shape that takes the texture, and then its element's colour -------------------------------------
-      var GREY = 0x8a8a92;
-      function buildCharge() {
+      // Since 21 October 2026 the charge is a gas spirit (Wendell: "the blobs that emerge from the door need to be the energy gas
+      // energy spirits"; board gs-door-gas): a cloud of motes from spirit-forms.js, drawn when it first comes in (formIn), whose
+      // motes stream out of the doorway. Every charge comes in as a gas, even one of your spirits come home (opts.spirit): it is
+      // fed to that spirit at the end and unfolds to its stage then (grow; Wendell, 21 October 2026: "it still showed up as a
+      // creature instead of the gas when it entered the room"). u.mat holds the colour and opacity the room works out each frame
+      // (syncForm puts them on the motes). The shadow spirit is a smaller gas of its own (summonShade, below).
+      var GREY = 0x8a8a92, SF = window.__oagSpiritForms || null, FORM_K = 2.2, FORM_Y = 1.1, FORM_AT = { hologram: 1.8, creature: 1.3, ally: 1.3 };
+      function buildCharge(blob) {
         var g = new THREE.Group(), body = new THREE.Group(), S = new THREE.SphereGeometry(1, 18, 12);
         var mat = new THREE.MeshStandardMaterial({ color: GREY, roughness: 0.6, emissive: GREY, emissiveIntensity: 0.2, transparent: true, opacity: 0.85 });
-        [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
+        blob = blob || !SF;
+        if (blob) [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
           var m = new THREE.Mesh(S, mat); m.position.set(q[0], q[1], q[2]); m.scale.set(q[3], q[4], q[5]); body.add(m);
         });
         var core = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
-        core.position.set(0, 1.2, 0.42); body.add(core); g.add(body);
+        core.position.set(0, 1.2, 0.42); if (blob) body.add(core); g.add(body);
         var aura = buildAura(THREE, 1.25); g.add(aura);
         // the shadow's veil: a dark haze round the creature that thickens with its polarity
         var veil = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: 0x1a1620, transparent: true, opacity: 0, depthWrite: false }));
         veil.position.y = 1.15; veil.scale.y = 1.25; veil.visible = false; g.add(veil);
-        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
+        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false, blob: blob, form: null };
         return g;
+      }
+      // The charge's gas, drawn the first time it is seen: from (a world point, the doorway) streams its motes in. A spirit come
+      // home wears its own family's forms, and comes in as their gas like any charge; it takes its stage when it is fed.
+      function formIn(c, from) {
+        var u = c.fig.userData; if (u.blob || u.form) return;
+        var sp = c.spirit, fam = sp && sp.family && SF.familyOf(sp.family) ? sp.family : "charge";
+        var f = SF.buildForm(THREE, fam, u.col.getHex(), { from: from || null, stage: "gas" });
+        f.position.y = FORM_Y; f.scale.setScalar(FORM_K); u.body.add(f); u.form = f; u.tint = SF.tintProxy(f);
+      }
+      // Defined by the work (board gw-form-by-step; Wendell, 21 October 2026: "the spirit should show up in an occluded gas form and
+      // as it's worked through should turn into a fully formed spirit"): a new charge comes in as an occluded gas, its motes spread
+      // wide, grey, faint, behind a dark haze, and each step of the W.A.V.E. done (definition: steps credited / ROOM_STEPS) gathers
+      // the motes, clears the haze and brings up its element's colour. A spirit of yours come home is defined the same way, step
+      // by step (it was defined at once until 21 October 2026). The stage still comes from sittings only, so a W.A.V.E. never jumps
+      // a stage.
+      // Until 21 October 2026 it came in fainter (0.3), spread wider (1.3), in the blobs' grey and behind a thicker haze (0.42),
+      // and was too hard to find on a phone (Wendell: "I can't see the spirit that has shown up in the room"); now its undefined
+      // motes are a pale grey that shows against the stone.
+      var HAZE = 0x2a2630, FAINT = 0.6, HAZE_K = 0.24, SPREAD = 0.8, greyC = new THREE.Color(0xc4c4d0), defC = new THREE.Color();
+      function definition(c) { var n = 0; for (var id in c.credit) if (c.credit[id]) n++; return Math.min(1, n / ROOM_STEPS.length); }
+      // Each frame the motes (and the core, hologram, creature or ally it has unfolded into) wear u.mat's colour and opacity.
+      function syncForm(c, now, dt) {
+        var u = c.fig.userData, f = u.form, st = f.userData.form, k = clamp(u.mat.opacity / 0.85, 0, 1), d = definition(c), fade = u.fade == null ? 1 : u.fade;
+        u.def = u.def == null ? d : u.def + (d - u.def) * Math.min(1, dt * 1.5);
+        st.spread = SPREAD * (1 - u.def);
+        u.tint.material.color.setHex(defC.copy(greyC).lerp(u.mat.color, u.def).getHex());
+        k *= FAINT + (1 - FAINT) * u.def;
+        if (!c.polarity && 1 - u.def > 0.01) { u.veil.visible = true; u.veil.material.color.setHex(HAZE); u.veil.material.opacity = HAZE_K * (1 - u.def) * fade; u.veil.scale.set(1.1, 1.35, 1.1); }
+        var kw = FORM_AT[st.drawn] || FORM_K; f.scale.setScalar(f.scale.x + (kw - f.scale.x) * 0.06); // the drawn bodies are bigger than the cloud
+        walkForm(c, u, f, st, dt);
+        if (st.mesh && now - (st.unfoldedAt || 0) < 2700) return; // the unfolding fades the forms itself
+        f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * k; });
+        if (st.mesh) st.mesh.children.forEach(function (m) { var L = m.userData.look || {}; m.material.opacity = (L.opacity == null ? 1 : L.opacity) * k; if (L.rgb || L.paint) m.material.transparent = k < 1; });
+      }
+      // Walking (Wendell, 21 October 2026: "spirit should be walking on the ground (if and when they turn into a creature) and ...
+      // we need walking animations"). A body without a rig has no legs to move, so the gait is drawn here: the body's lowest
+      // point is kept on the floor (measured each frame, a frame behind), and while it moves it bobs a step at GAIT_HZ, rolls side
+      // to side, squashes a little and faces where it goes. The gas, core and hologram float as before.
+      // A rigged body (spirit-forms.js poseRig) plays its own Walk instead, at most MAX_CYCLES a second, so a short-legged
+      // tortoise hurried across the room still steps rather than blurs.
+      var GAIT_HZ = 2, STEP_UP = 0.05, ROLL = 0.05, SQUASH = 0.04, WALKS = { creature: 1, ally: 1 }, footBox = new THREE.Box3(), MAX_CYCLES = 2.2, rigWs = new THREE.Vector3();
+      function walkForm(c, u, f, st, dt) {
+        var p = c.fig.position, vx = 0, vz = 0;
+        if (u.lastX != null && dt > 0) { vx = (p.x - u.lastX) / dt; vz = (p.z - u.lastZ) / dt; }
+        u.lastX = p.x; u.lastZ = p.z;
+        if (!st.mesh || !WALKS[st.drawn] || !SF.turnOf) { f.position.y = FORM_Y; f.rotation.z = 0; st.faceAt = null; u.walking = false; u.ground = null; return; }
+        var sy = c.fig.scale.y * u.body.scale.y, sc = f.scale.x;
+        { c.fig.updateMatrixWorld(true); footBox.setFromObject(st.mesh); if (isFinite(footBox.min.y)) u.low = ((footBox.min.y - p.y) / sy - f.position.y) / f.scale.y; }
+        u.walking = Math.hypot(vx, vz) > 0.15 && !reducedMotion;
+        var w = u.gaitW = (u.gaitW || 0) + ((u.walking && !R.calm ? 1 : 0) - (u.gaitW || 0)) * Math.min(1, dt * 4);
+        if (u.walking) {
+          u.gait = (u.gait || 0) + dt * GAIT_HZ * Math.PI * 2;
+          var yaw = Math.atan2(vx, vz) - (SF.turnOf(st.drawn) + Math.PI / 2); // the root's yaw that puts the body's front along the walk
+          st.faceAt = (st.faceAt || new THREE.Vector3()).set(p.x + 10 * Math.sin(yaw), p.y, p.z + 10 * Math.cos(yaw));
+        } else st.faceAt = null;
+        var rig = st.mesh.userData.rig;
+        if (rig) { // rigged (rig.py's frame, bars-engine #325): the Walk clip, its phase carried by the ground covered, the Idle when it stops
+          var cyc = rig.walk.travel * st.mesh.getWorldScale(rigWs).x; // world units the body covers in one Walk cycle
+          if (u.walking) st.mesh.userData.walkPh = (st.mesh.userData.walkPh + Math.min(MAX_CYCLES * dt, Math.hypot(vx, vz) * dt / Math.max(1e-3, cyc))) % 1;
+          st.mesh.userData.walkW = w; f.scale.y = sc; f.rotation.z = 0;
+          f.position.y = rig.low == null ? FORM_Y : -sc * rig.low * st.mesh.scale.y; // the clip's lowest point now (spirit-forms.js lowsOf) on the floor
+          u.ground = p.y; return;
+        }
+        var ph = u.gait || 0, sqY = sc * (1 - SQUASH * w * Math.abs(Math.cos(ph)));
+        f.scale.y = sqY; f.rotation.z = ROLL * w * Math.sin(ph);
+        f.position.y = u.low == null ? FORM_Y : STEP_UP * w * Math.abs(Math.sin(ph)) / sy - sqY * u.low;
+        u.ground = p.y;
+      }
+      // Growing (boards gs-two-acts, gs-same-charge-grows): a W.A.V.E. worked on a charge one of your spirits carries (the
+      // spirit taken home, or a summoned spirit of the same name) adds one sitting to it, and it unfolds in front of you if that
+      // crosses a stage (sic-unfold-by-sitting). It never makes a second spirit. Counted once a charge. Only a charge you keep
+      // grows: one let go by the door leaves as it came (Wendell, 21 October 2026: "when I finished and released the spirit it
+      // evolved and stayed in the room instead of being released").
+      // A charge let become a vibeulon (c.unkept) never grows a spirit either (board gw-unkept-vibeulon). Feed <name> on the kept
+      // card grows it there and then, so the gas it came in as unfolds to its stage by the wall, in front of you.
+      function carrier(c) { // the spirit of yours this charge is: the one come home, or a charge you have summoned before, by its name
+        if (!c.spirit && SPIRIT_STORE && c.name.trim()) {
+          var nm = c.name.trim().toLowerCase();
+          try { c.spirit = SPIRIT_STORE.all().filter(function (t) { return t.family === "charge" && (t.name || "").trim().toLowerCase() === nm; })[0] || null; } catch (e) { c.spirit = null; }
+        }
+        return c.spirit || null;
+      }
+      function grow(c) {
+        if (c.grownTo != null || c.push !== "toward" || c.unkept) return;
+        if (!carrier(c)) return;
+        c.grownTo = (c.spirit.sittings || 0) + 1;
+        var u = c.fig.userData, to = sittingStage(c.grownTo);
+        if (u.form && u.form.userData.form.stage !== to) { u.form.userData.unfold(to, true); c.unfolds = to; }
       }
       function dressCharge(c) {
         var u = c.fig.userData, look = AVATAR_LOOK[c.texture] || null, e = c.element && lookup(ELEMENTS, c.element);
@@ -3677,10 +5490,12 @@
         var l = { name: name, element: element || null, ring: ring, label: label, steady: !!c.steady };
         c.layers.push(l); return l;
       }
-      // A light the charge leaves on the threshold, named by the player, for the sitting.
+      // The vibeulon a charge not kept condenses into on the threshold (board gw-unkept-vibeulon; it was a light until 21 October
+      // 2026), named by the player: a gold coin standing on its edge in a halo, for the sitting. The count goes to the purse.
+      var VIBEULON_GOLD = 0xe8c050;
       function buildLight(hex, name, n) {
         var g = new THREE.Group();
-        var orb = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: hex })); orb.position.y = 0.32; g.add(orb);
+        var orb = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 24), new THREE.MeshBasicMaterial({ color: hex })); orb.rotation.x = Math.PI / 2; orb.position.y = 0.32; g.add(orb);
         var halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.22, depthWrite: false })); halo.position.y = 0.32; g.add(halo);
         var cv = document.createElement("canvas"); cv.width = 512; cv.height = 96;
         var cx = cv.getContext && cv.getContext("2d");
@@ -3697,9 +5512,11 @@
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
       var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [], all: [], startedAt: new Date().toISOString(), heat: { before: null, after: null }, ending: { kind: null, text: "" } };
       function newCharge(first, slot) {
-        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
+        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false, credit: {}, keepAs: null, unkept: false, home: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
           polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, askAt: 0, askAnswers: [], askLine: "", askPick: null, askBoss: null, shadeElement: null, shadeUnknown: false };
+        if (first && opts.spirit) { c.spirit = opts.spirit; c.home = true; c.name = opts.spirit.name || ""; c.element = c.element || opts.spirit.element || null; c.known = !!c.element; }
+        if (first && opts.hidden > 0) raiseShadow(c, "preview", opts.hidden); // a preview link's hidden part (#go=home&hidden=N)
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -3716,24 +5533,31 @@
       function levelOf(c) { return clamp(heatOf(c.t321, c.heat) / 10, 0, 1) * (c.allow.bright / 10) * c.dull; }
       var br = { b: 0.5, t0: performance.now() / 1000, exhaling: false };
       var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
+      // The Arrival's state: the lessons this room teaches (the doors only where there are doors), the ones done (kept in
+      // oag.tutorial.v1), and the light. live is set once the first page has been tucked away for the lessons.
+      var guide = { lessons: ROOM_LESSONS.filter(function (l) { return l.id !== "doors" || Object.keys(EXITS).length; }), done: readTutorial(), live: false, dragged: 0, tapAt: { x: -2.6, z: 0.4 }, shown: null, lantern: null, at: null, box: null };
+      function lessonNow() { return guide.live ? guide.lessons.filter(function (l) { return guide.done.indexOf(l.id) < 0; })[0] || null : null; }
+      function learn(id) {
+        if (guide.done.indexOf(id) >= 0) return;
+        guide.done = learnTutorial(id, guide.done);
+        if (!lessonNow()) guide.live = false; // all learned: the light goes home to the chest
+      }
 
       // A close-up (below) keeps the step's page tucked away until the player goes back to the room, and keeps its card current.
       function draw() { drawPage(); saveRun(); if (R.close) { closeModal(); pane.style.display = "none"; closeCard(); } }
       function drawPage() {
         modal.innerHTML = ""; stat.innerHTML = ""; pane.innerHTML = "";
         var pg = page(), kids = pg.kids || [];
-        modal.appendChild(el("h2", { text: pg.title }));
-        kids.forEach(function (k) { modal.appendChild(k); });
         stat.appendChild(el("h2", { text: pg.title })); kids.forEach(function (k) { if (k.tagName === "P") stat.appendChild(el("p", { text: k.textContent })); });
         stat.setAttribute("data-room-phase", R.phase); stat.setAttribute("data-room-round", String(R.round));
         pane.appendChild(el("strong", { text: pg.title }));
         var first = kids.filter(function (k) { return k.tagName === "P"; })[0]; if (first) pane.appendChild(el("span", { text: first.textContent }));
-        if (pg.still) { closeModal(); pane.style.display = ""; return; } // a page with nothing to choose: the pane, so the room is in view
-        if (R.active.length > 1 && !R.back && ["else", "layer", "waiting"].indexOf(R.phase) < 0) modal.appendChild(focusRow());
-        modal.appendChild(row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)]));
+        if (pg.still) { sheet(modal, pg.title, kids); closeModal(); pane.style.display = ""; return; } // a page with nothing to choose: the pane, so the room is in view
+        sheet(modal, pg.title, kids, [R.active.length > 1 && !R.back && ["else", "layer", "waiting"].indexOf(R.phase) < 0 ? focusRow() : null,
+          row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)])]);
         pane.style.display = ""; openModal();
       }
-      function openModal() { stopWalking(); if (stickKnob) stickUp(); R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
+      function openModal() { if (guide.live) learn("rug"); stopWalking(); if (stickKnob) stickUp(); R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
       function closeModal() { R.modal = false; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); pane.style.visibility = ""; }
       pane.addEventListener("click", function () { if (modal.childNodes.length) openModal(); });
       function field(attr, value, hint, onInput) {
@@ -3764,7 +5588,16 @@
       function elseBtn() { return btn("What else is here?", { "data-room-else": "" }, function () { R.prev = R.phase; R.phase = "else"; R.back = false; draw(); }, true); }
       function go(phase) { R.phase = phase; R.back = false; draw(); }
       function stepIndex(id) { for (var i = 0; i < ROOM_STEPS.length; i++) if (ROOM_STEPS[i].id === id) return i; return -1; }
-      function nextStep() { var i = stepIndex(R.phase); go(ROOM_STEPS[i + 1].id); }
+      // Each step done defines the charge a little more (board gw-form-by-step); Not now gives no credit, and a step done twice
+      // (after Step back) counts once.
+      function nextStep(noCredit) { var i = stepIndex(R.phase); if (noCredit !== true) { ch.credit[R.phase] = true; reachOrgan(ch); } go(ROOM_STEPS[i + 1].id); }
+      // A Fear charge's sitting reaches the brow (organs.js, mao-first-organ-brow): witnessed, accepted, validated set its floor.
+      // The floor only rises, so a step done again changes nothing; any other channel is left for a later pass.
+      function reachOrgan(c) {
+        var O = window.__oagOrgans; if (!O || (c.element !== "Fear" && c.element !== "Metal")) return;
+        try { O.store.raise({ channel: "fear", floor: O.floorFromCredit(c.credit), source: "the WAVE room" }); } catch (e) { return; }
+        hazeK = browFloor() >= 1 ? 0.6 : 1;
+      }
       function words(st) { return st.wave != null ? WAVE[st.wave] : [st.id, st.title, st.words]; }
       function nm() { return ch.name || "It"; }
 
@@ -3780,7 +5613,7 @@
           k.push(P(ch.hiddenOf ? "The part of " + ch.hiddenOf + " that stayed hidden is at the door." : ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
           if (ch.about) k.push(P("From the board: " + ch.about + ". Whatever is in the way of it is at the door.", { "data-room-about": "" }));
           if (R.from === "board" && R.round === 1 && ch === R.all[0]) heatRow(k, "before", "How much charge does it carry, 0 to 10?");
-          if (Object.keys(EXITS).length && R.round === 1) k.push(P("Walk round the room with the circle at the bottom left (or the arrow keys), or tap the floor. The rug is where you sit to work with what comes in. " + (EXITS.bigmind && EXITS.portal ? "Behind you are two doors: Big Mind on the left, and the six game masters on the right." : "Behind you is a door."), { "data-room-walk-hint": "" }));
+          if (elder && R.round === 1) k.push(P("Beside the door an elder spirit, a Shellback, lifts its head to greet you. It has grown through all five forms a spirit can take. Tap it to see them.", { "data-room-elder-hello": "" }));
           k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
           return { title: w[1], kids: k };
         }
@@ -3864,15 +5697,15 @@
             if (ph === "validate") { ch.steady = true; ch.dull = 0.6; ch.layers.forEach(function (l) { l.steady = true; }); dressCharge(ch); } // worked through: it dulls
             nextStep();
           })];
-          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, nextStep, true));
+          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, function () { nextStep(true); }, true));
           kk.push(elseBtn()); kk.push(stepBack()); k.push(row(kk));
           return { title: w[1], kids: k };
         }
         if (ph === "fork") {
           k.push(P(w[2], { "data-room-prompt": "" }));
           k.push(P("What do you actually want right now?", { "data-room-goal-ask": "" }));
-          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; startStays(); });
-          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; go("goes"); }, true);
+          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; ch.credit.fork = true; startStays(); });
+          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; ch.credit.fork = true; ch.unkept = true; go("goes"); }, true);
           var ok = function () { tw.disabled = aw.disabled = !ch.goal.trim(); };
           k.push(field("data-room-goal", ch.goal, "What you want, in your words", function (v) { ch.goal = v; ok(); }));
           k.push(P("Is " + nm() + " pushing your next move toward it, or away from it?"));
@@ -3885,10 +5718,10 @@
           if (ch.texture === "numbness") k.push(P("Numbness is how it feels, and it can also be what keeps it out of reach. The second one is a shadow.", { "data-room-shadow-numb": "" }));
           var order = ch.texture === "numbness" ? [SHADOWS[3], SHADOWS[0], SHADOWS[1], SHADOWS[2]] : SHADOWS;
           order.forEach(function (sh) {
-            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; go("unveil"); } });
+            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; summonShade(ch); go("unveil"); } });
             b.setAttribute("data-room-shadow", sh[0]); k.push(el("div", { class: "oagc-row" }, [b])); k.push(P(sh[2], { class: "oagr-note" }));
           });
-          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go("witness"); }, true)]));
+          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; summonShade(ch); go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go(shadeOpen(ch) ? "unveil" : "witness"); }, true)]));
           return { title: "Something hides it", kids: k };
         }
         if (ph === "flood") { // the practice that turns a flooding charge down, 3 of polarity a time
@@ -3928,7 +5761,7 @@
             return { title: "The shadow spirit", kids: k };
           }
           k.push(P(ch.polarity ? "The shadow spirit of " + shadowName(ch).toLowerCase() + " stands beside " + (ch.name || "it") + ". It does the shadow's work. Ask it what that work is for." : "The shadow has cleared. Its spirit stays beside " + (ch.name || "it") + ".", { "data-room-shade": "" }));
-          if (!ch.polarity) shadeReveal(k);
+          var clear = true; if (!ch.polarity) { shadeReveal(k); clear = shadeChoice(k); }
           var prev = ch.asks[ch.asks.length - 1], next = ch.polarity && prev && prev.boss ? lookup(SHADOW_ASKS, prev.boss) : null;
           if (next && !ch.asks.some(function (a) { return a.daemon === next[0]; })) { // follow who it works for
             k.push(P(lookup(SHADOW_ASKS, prev.daemon)[1] + " works for " + next[1].replace(/^The /, "the ") + ".", { "data-room-ask-chain-line": "" }));
@@ -3940,7 +5773,7 @@
             b.setAttribute("data-room-ask", q[0]); b.style.borderLeft = "6px solid #" + ("00000" + q[3].toString(16)).slice(-6);
             k.push(el("div", { class: "oagc-row" }, [b]));
           });
-          k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
+          if (clear) k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
           return { title: "The shadow spirit", kids: k };
         }
         if (ph === "unveil") { // the practice that thins the shadow, 3 of polarity a time
@@ -3949,7 +5782,7 @@
           if (!ch.polarity) {
             k.push(P("It is in plain sight now.", { "data-room-unveiled": "" }));
             if (ch.shade) shadeReveal(k);
-            k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
+            if (!ch.shade || shadeChoice(k)) k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
             return { title: "In plain sight", kids: k };
           }
           k.push(P(sh ? sh[3] : SHADOW_PLAIN, { "data-room-practice-ask": "" }));
@@ -3960,7 +5793,9 @@
             k.push(field("data-room-practice-line", ch.practiceLine, sh[0] === "distracting" ? "What pulled you away" : "Where feeling starts again", function (v) { ch.practiceLine = v; done.disabled = !v.trim(); }));
             done.disabled = !(ch.practiceLine || "").trim();
           }
-          k.push(row([done, btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)]));
+          // Its shadow spirit is a gate (Wendell, 21 October 2026: "that part has to be worked though ... before moving on to the
+          // existing spirit"): while it stands, there is no going on with it hidden.
+          k.push(row([done, shadeOpen(ch) ? null : btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)].filter(Boolean)));
           k.push(row([btn("What's in the way of it clearing?", { "data-room-shadow-spirit": "" }, function () { summonShade(ch); go("asks"); }, true)]));
           return { title: sh ? sh[1] : "A shadow", kids: k };
         }
@@ -3974,22 +5809,29 @@
             } }, k);
           return { title: title, kids: k };
         }
+        // Summoning has a price (Wendell, 21 October 2026; board gw-summon-price): a W.A.V.E. finished mints a vibeulon, and a charge
+        // kept as a spirit keeps that vibeulon in it. So the player chooses: keep it (or feed the spirit of theirs it is), or let it
+        // condense into a vibeulon as it goes out the door.
         if (ph === "kept") {
+          var sp = carrier(ch);
           k.push(P(nm() + " has a place in the room now.", { "data-room-kept": "" }));
           k.push(P("Your next move: " + ch.move));
-          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
+          k.push(P(sp ? "Feed it to " + sp.name + " and it grows by one sitting, with the vibeulon this W.A.V.E. makes inside it. Or let it condense into the vibeulon and go." :
+            "Keep it as a spirit, and the vibeulon this W.A.V.E. makes stays inside it. Or let it condense into the vibeulon and go.", { "data-room-price": String(SUMMON_PRICE) }));
+          k.push(row([btn(sp ? "Feed " + sp.name : "Keep it as a spirit", { "data-room-keep": "spirit" }, function () { ch.keepAs = "spirit"; grow(ch); go("checkin"); }),
+            btn("Let it become a vibeulon", { "data-room-keep": "vibeulon" }, function () { unkeep(ch); }, true)]));
           return { title: "It stays", kids: k };
         }
         if (ph === "goes") {
           k.push(P("Let the out-breath carry it. It leaves at its own pace, and it can come back."));
           k.push(field("data-room-line", ch.line, "A line to it, if you want", function (v) { ch.line = v; }));
-          k.push(field("data-room-light-name", ch.lightName, "A name for the light it leaves", function (v) { ch.lightName = v; }));
+          k.push(field("data-room-light-name", ch.lightName, "A name for the vibeulon it becomes", function (v) { ch.lightName = v; }));
           k.push(row([btn("Breathe out", { "data-room-exhale": "" }, function () { R.phase = "leaving"; R.wait = "door-out"; draw(); }), stepBack()]));
           return { title: "Exhale", kids: k };
         }
         if (ph === "leaving") return { title: "Exhale", kids: [P(R.calm ? "The door opens, and it goes when it's ready." : "On your out-breath the door opens, and it goes when it's ready.")], still: true };
         if (ph === "gone") {
-          k.push(P("A light in its colour stays on the threshold: " + lightName() + ". The door stays ajar. It can come back.", { "data-room-gone": "" }));
+          k.push(P("On the threshold it condensed into a vibeulon: " + lightName() + ". " + (ch.purse != null ? "You hold " + ch.purse + (ch.purse === 1 ? " vibeulon. " : " vibeulons. ") : "") + "The door stays ajar. It can come back.", { "data-room-gone": "" }));
           if (ch.line.trim()) k.push(P("You told it: " + ch.line.trim()));
           k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
           return { title: "It left", kids: k };
@@ -3997,8 +5839,8 @@
         if (ph === "checkin") {
           k.push(P("Did it leave, or did you get rid of it?", { "data-room-checkin-ask": "" }));
           var ans = [["left", "It left"], ["got-rid", "I got rid of it"]];
-          if (ch.push === "toward") ans.push(["stayed", "It stayed"]);
-          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v }); workedThrough(); }));
+          if (ch.push === "toward" && !ch.unkept) ans.push(["stayed", "It stayed"]);
+          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v, vibeulon: !!ch.unkept }); workedThrough(); }));
           k.push(P("Your answer and the round number stay on this device. What you wrote stays on this page.", { class: "oagr-note" }));
           return { title: "For the test", kids: k };
         }
@@ -4015,7 +5857,7 @@
         }
         // end
         k.push(P(R.rested ? "What's left rests by the door, with a lantern beside it." : "The room is quiet.", { "data-room-end": "" }));
-        if (R.lights.length) k.push(P("On the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
+        if (R.lights.length) k.push(P("Vibeulons on the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
         if (R.from === "board") boardEnding(k);
         if (R.from === "board" && R.heat.before != null && R.heat.after != null && R.heat.after >= R.heat.before && !R.all[0].lookedAgain)
           lookAgainRow(k, R.all[0], R.heat.after + " of 10 left, from " + R.heat.before, R.heat.after);
@@ -4026,11 +5868,65 @@
       function shadowRow(c) { return c.shadow ? lookup(SHADOWS, c.shadow) : null; }
       function shadowName(c) { var sh = shadowRow(c); return sh ? sh[1] : "a shadow"; }
       function shadowLine(c) { return c.polarity > 0 ? "Hidden " + c.polarity + " of 10, by " + shadowName(c).toLowerCase() + "." : c.polarity < 0 ? "Flooding " + (-c.polarity) + " of 10." : "In plain sight."; }
-      // A shadow spirit: the room's creature body in the shadow's colour, smaller, standing beside the one it hides.
+      // A shadow spirit (Wendell, 21 October 2026: "The part that was hiding it is still showing up as the blobs instead of its own
+      // gas form and that part has to be worked though and turned into a vibeulon/released or accepted as a spirit before moving
+      // on to the existing spirit"): a gas of its own in the shadow's colour, smaller, beside the one it hides, its motes streaming
+      // out of it as soon as the shadow is named. While the shadow stands it is faint and spread; it gathers as the practice and
+      // the asks bring the polarity down (its definition is how far it has come to 0). Cleared, it is a gate: kept as a spirit it
+      // takes a place by the wall and walks out with you; let go, it condenses into a vibeulon on the threshold. Only then does
+      // the W.A.V.E. go on with the one it hid. Its motes are drawn over the room, not added to it, so a dark gas reads as dark.
+      var SHADE_K = 1.5, SHADE_Y = 0.9, SHADE_DX = 1.5, SHADE_FAINT = 0.35;
       function summonShade(c) {
         if (c.shade) return;
-        var g = buildCharge(), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
-        g.scale.setScalar(0.55); g.position.set(c.fig.position.x + 1.4, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+        var g = new THREE.Group(); g.position.set(c.fig.position.x + SHADE_DX, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+        if (!SF) { var b = buildCharge(true), bu = b.userData; bu.mat.color.setHex(SHADOW_HEX); b.scale.setScalar(0.55); g.add(b); g.userData = { blob: b, def: 0 }; return; }
+        var f = SF.buildForm(THREE, "charge", SHADOW_HEX, { from: new THREE.Vector3(c.fig.position.x, FORM_Y, c.fig.position.z) });
+        f.userData.materials.forEach(function (m) { m.blending = THREE.NormalBlending; m.size *= 1.5; m.needsUpdate = true; }); // bigger motes, so the smaller gas still reads
+        f.position.y = SHADE_Y; f.scale.setScalar(SHADE_K); g.add(f);
+        g.userData = { form: f, tint: SF.tintProxy(f), def: 0, fade: null };
+      }
+      function shadeOpen(c) { return !!(c.shade && !c.shadeKeep); }
+      function shadeHexOf(c) { return c.shadeElement && !c.polarity ? shadeHex(c.shadeElement) : SHADOW_HEX; }
+      // Each frame: beside its creature until it is chosen for; defined as the shadow thins; its colour kin to its element once named.
+      function syncShade(c, dt) {
+        var sh = c.shade, su = sh.userData, f = su.form, src = c.fig.userData;
+        sh.visible = !su.gone && (c.shadeKeep ? true : c.fig.visible && !c.gone && c.fig.parent === scene);
+        if (!c.shadeKeep) {
+          sh.position.x += (c.fig.position.x + SHADE_DX * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
+        }
+        var d = c.polarity <= 0 ? 1 : c.shadowStart > 0 ? clamp(1 - c.polarity / c.shadowStart, 0, 1) : 0;
+        su.def += (d - su.def) * Math.min(1, dt * 1.5);
+        var fade = (su.fade == null ? 1 : su.fade) * (c.shadeKeep || src.fade == null ? 1 : src.fade);
+        if (!f) { su.blob.children[0].children.forEach(function (m) { m.material.opacity = 0.8 * fade; }); return; }
+        var st = f.userData.form; st.spread = SPREAD * (1 - su.def);
+        if (su.tint.material.color.getHex() !== shadeHexOf(c)) su.tint.material.color.setHex(shadeHexOf(c));
+        f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * (SHADE_FAINT + (1 - SHADE_FAINT) * su.def) * fade; });
+      }
+      // The gate's two ways, once the shadow has cleared. Returns true once one is chosen, so the page can offer to go on.
+      function shadeChoice(k) {
+        var c = ch;
+        if (c.shadeKeep) {
+          k.push(P(c.shadeKeep === "spirit" ? "The shadow spirit has a place by the wall now. It walks out with you." : c.shade.userData.gone ? "On the threshold it condensed into a vibeulon: " + shadeLight(c) + "." : "The shadow spirit goes to the door, to condense into a vibeulon there.", { "data-room-shade-kept": c.shadeKeep }));
+          return true;
+        }
+        k.push(P("Keep it as a spirit, and it takes a place by the wall and walks out with you. Or let it condense into a vibeulon on the threshold. Then you go on with " + nm() + ".", { "data-room-shade-ask": "" }));
+        k.push(row([btn("Keep it as a spirit", { "data-room-shade-keep": "spirit" }, function () { keepShade(c, "spirit"); }),
+          btn("Let it become a vibeulon", { "data-room-shade-keep": "vibeulon" }, function () { keepShade(c, "vibeulon"); }, true)]));
+        return false;
+      }
+      function shadeLight(c) { return shadowName(c) + ((c.name || "").trim() ? " of " + c.name.trim() : ""); }
+      function keepShade(c, how) {
+        var sh = c.shade, from = { x: sh.position.x, z: sh.position.z }; c.shadeKeep = how;
+        if (how === "spirit") R.moves.push({ c: { fig: sh }, from: from, to: keptSpot("shade"), t: 0, dur: 3 });
+        else { // to the door and out, as an unkept charge goes, and a vibeulon on the threshold for the purse
+          R.doorWant = 1;
+          R.moves.push({ c: { fig: sh }, from: from, to: { x: 0, z: DZ - 3 }, t: -0.3, dur: 4.5, fadeOut: true, then: function () {
+            sh.userData.gone = true; sh.visible = false; var l = buildLight(VIBEULON_GOLD, shadeLight(c), R.lights.length); scene.add(l); R.lights.push(l);
+            if (!c.shadeMinted) { c.shadeMinted = true; try { c.shadePurse = SPIRIT_STORE ? SPIRIT_STORE.mint(SUMMON_PRICE, "the WAVE room") : null; } catch (e) { c.shadePurse = null; } }
+            if (ch === c && (R.phase === "unveil" || R.phase === "asks")) draw();
+          } });
+        }
+        draw();
       }
       // Fully revealed, the shadow spirit shows its element, and from then on it can be dissolved like any spirit (Wendell, board
       // read 14 October 2026). Until the player names one it stays a shadow spirit with no element.
@@ -4103,7 +5999,7 @@
           texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
           move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
           layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0, reading: c.reading,
-          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null } : null,
+          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null, shadeKeep: c.shadeKeep || null } : null,
           hiddenOf: c.hiddenOf };
         Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
         return r;
@@ -4134,18 +6030,28 @@
       }
       // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
       function workedThrough() {
-        if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
+        grow(ch); if (R.worked.indexOf(ch) < 0) { R.worked.push(ch); shipEmber(ch); } // each W.A.V.E. worked here walks back out with the player as a spirit
         R.active.splice(R.active.indexOf(ch), 1);
         if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
         if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
         go("again");
       }
       function startStays() { ch.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }; go("stays"); }
-      function keep() { // the charge takes a place in the room, beside the wall, for the sitting
-        var n = R.kept.length % 4, spot = [[-5.2, 1.4], [5.2, 1.4], [-5.4, -2.4], [5.4, -2.4]][n]; // by the wall, clear of the three places
-        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 });
+      // A kept charge takes a place toward the back wall, right of the door, clear of the three places and the way in, where the
+      // seat's camera sees it on a phone held upright; a kept shadow spirit takes one on the left, in front of the elder, so a fed
+      // charge's ally never stands beside the elder's. The places by the side walls (x 5.2) were out of frame (Wendell, 21 October
+      // 2026: "I can't see the spirit that has shown up in the room").
+      var KEPT_AT = { charge: [[1.4, -4.4], [1.8, -6.2], [2.0, -2.9], [-2.4, -2.6]], shade: [[-0.9, -3.4], [-2.3, -3.3], [0.9, -6.0], [2.3, -4.2]] }, spotsUsed = { charge: 0, shade: 0 };
+      function keptSpot(kind) { var L = KEPT_AT[kind || "charge"], q = L[spotsUsed[kind || "charge"]++ % L.length]; return { x: q[0], z: q[1] }; }
+      function keep() { // the charge takes a place in the room, by the wall, for the sitting
+        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: keptSpot("charge"), t: 0, dur: 3 });
         ch.reading = { before: ch.t321.before, after: ch.t321.after }; // the shadow's second signal reads these
         ch.heat = ch.t321.after; ch.dull *= 0.6; R.kept.push(ch); ch.t321 = null; go("kept");
+      }
+      var SUMMON_PRICE = 1; // the vibeulon a finished W.A.V.E. mints, which a kept spirit keeps inside it (board gw-summon-price)
+      function unkeep(c) { // a kept charge let go after all: it leaves the wall by the door and condenses into a vibeulon there
+        c.keepAs = "vibeulon"; c.unkept = true; var i = R.kept.indexOf(c); if (i >= 0) R.kept.splice(i, 1);
+        R.phase = "leaving"; R.wait = "door-out"; draw();
       }
       function restart() {
         R.round++; if (ch.gone) scene.remove(ch.fig);
@@ -4157,26 +6063,56 @@
         var c = newCharge(false); c.fig.visible = true; c.fig.position.set(DW / 2 + 1.9, 0, DZ + 1.1); c.fig.scale.setScalar(0.45); R.restFig = c.fig;
         R.rested = true; R.doorWant = 0; go("end");
       }
+      // What a worked charge leaves as (boards gs-two-acts, gs-door-gas): one it grew is that spirit, with its sittings one up and
+      // no new entry in oag.spirits.v1; any other kept charge is a newly summoned spirit, stored once, at gas (0 sittings). One let
+      // go by the door is not kept: nothing is stored or grown, and it is a vibeulon in the purse (leave() does not take it along).
+      function spiritOf(c, n) {
+        var o = { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
+        if (c.push !== "toward") return o;
+        grow(c);
+        if (c.spirit) { o.id = c.spirit.id; o.family = c.spirit.family || "charge"; o.sittings = c.grownTo; o.name = c.spirit.name || o.name; o.element = c.spirit.element || o.element; o.hex = spiritHex(o.element); }
+        else { o.id = "charge-" + Date.now().toString(36) + "-" + n; o.family = "charge"; o.sittings = 0; o.summoned = true; }
+        o.stage = sittingStage(o.sittings);
+        try { if (SPIRIT_STORE) SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "the WAVE room"); } catch (e) { /* it still walks out with you */ }
+        return o;
+      }
       function leave(portal) {
         fade.style.opacity = 1;
         // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
         // it's been engaged with"), so one still being worked stays in the room, by any door.
-        var going = R.worked; saveRun(true);
-        var shades = going.filter(function (c) { return c.shade; }); // each shadow spirit called up walks out beside its creature
+        var going = R.worked.filter(function (c) { return !c.unkept; }); saveRun(true); // one let become a vibeulon is in the purse, not walking with you
+        var shades = R.all.filter(function (c) { return c.shade && c.shadeKeep === "spirit"; }); // only a shadow spirit kept walks out; one let go is a vibeulon in the purse
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
-          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
-            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
-          }).concat(shades.map(function (c) {
-            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.polarity ? null : c.shadeElement || null, hex: !c.polarity && c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !c.polarity && !!c.shadeElement };
+          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", basin: portal === "basin", spirits: going.map(spiritOf).concat(shades.map(function (c) {
+            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.shadeElement || null, hex: c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !!c.shadeElement };
           })) });
         }, 520);
       }
 
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
+      // The WAVE room is the ship's cabin (Six-faces-council council/callsheets/inner-vessel.md). Each charge worked through the
+      // whole W.A.V.E. gives the ship one ember (a 3-2-1 in it makes it a 3-2-1 ember, its bonus when the charge dropped by more
+      // than 2), and the spirits aboard power the ship. The button by Calm walks out to the living ship.
+      function shipEmber(c) {
+        var VS = window.__oagVessel && window.__oagVessel.store; if (!VS) return;
+        var drop = (c.heatStart != null ? c.heatStart : 6) - c.heat;
+        VS.route({ source: c.t321 ? "321" : "wave", element: c.element || null, intensity: c.heat, bonus: !!c.t321 && drop > 2 });
+        VS.spirits();
+      }
+      // The button walks out to the living ship (/calrunia/arrive), which reads the same stores; the grid dock is gone (sd-dock-scrapped).
+      if (window.__oagVessel) stage.appendChild(el("button", { class: "oagc-calm oagr-ship", "data-room-ship": "", text: "The ship", onclick: function () {
+        stopWalking(); location.href = "/calrunia/arrive";
+      } }));
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
-      stage.appendChild(calmBtn);
+      // The room's switch and its key, in the Menu (menu(), above); Sit down and a door's card show when they can be used.
+      menu(wrap, [
+        { btn: calmBtn, glyph: "≈", about: "Doors open without waiting for your out-breath, and the breath stills. Tap it again to undo." },
+        { glyph: "◎", word: "The walk stick", about: "Hold it and push the way you want to go. Arrow keys and W A S D work too." },
+        { glyph: "◌", word: "The rug", about: "Walk onto it and tap Sit down to work what you brought in." },
+        { glyph: "⌂", word: "The doors", about: "Walk up to one and its card says where it leads." },
+        { glyph: "❝", word: "The words at the top", about: "The step you are on. Tap them to open its questions." }]);
       // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
       // zoom in the wave room"), and the mouse wheel does the same on a computer. A tap on a creature brings it close (below).
       var lookYaw = 0, lookPitch = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
@@ -4184,17 +6120,27 @@
       function spread() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
       if (renderer) {
         var dom = renderer.domElement;
+        var floatR = null, stickTap = null; // the floating stick and the tap a thumb on it may still be (ctl-split-thumbs, ctl-tap-rule)
         dom.addEventListener("pointerdown", function (e) {
+          if (!floatR) floatR = floatStick(stickPad);
+          // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+          if (stickId != null && stickTap) { ptrs[stickId] = { x: stickTap.x, y: stickTap.y }; stickTap = null; stickUp(); }
+          else if (stickId == null && !R.modal && !R.close && floatR.wants(e)) {
+            try { dom.setPointerCapture(e.pointerId); } catch (x) {}
+            stickId = e.pointerId; floatR.at(e); stickAt(e); stickTap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; return;
+          }
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
+          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; }
           else { drag = null; tap = null; pinch = { d: spread(), z: zoom }; }
         });
         dom.addEventListener("pointermove", function (e) {
+          if (e.pointerId === stickId) { if (stickTap && Math.hypot(e.clientX - stickTap.x, e.clientY - stickTap.y) >= TOUCH.px) stickTap = null; stickAt(e); return; }
           if (!ptrs[e.pointerId]) return;
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
+          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) >= TOUCH.px) tap = null;
           if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
           if (!drag) return;
+          guide.dragged += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); if (guide.dragged > 60) learn("look");
           if (R.roam && R.roam.free && R.walkYaw != null) R.walkYaw += (e.clientX - drag.x) * 0.006; // walking, a drag turns the camera round the figure
           else lookYaw = clamp(lookYaw + (e.clientX - drag.x) * 0.005, -0.9, 0.9);
           // up and down tilts the camera (Wendell, 13 October 2026: "you can pan the camera side to side but not up and down")
@@ -4202,8 +6148,13 @@
           drag.x = e.clientX; drag.y = e.clientY;
         });
         ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
+          if (e.pointerId === stickId) {
+            var st = stickTap; stickTap = null; stickUp();
+            if (n === "pointerup" && st && e.timeStamp - st.t < TOUCH.ms) tapAt(e.clientX, e.clientY);
+            return;
+          }
           delete ptrs[e.pointerId];
-          if (n === "pointerup" && tap && performance.now() - tap.t < 600) tapAt(e.clientX, e.clientY);
+          if (n === "pointerup" && tap && e.timeStamp - tap.t < TOUCH.ms) tapAt(e.clientX, e.clientY);
           tap = null;
           var left = Object.keys(ptrs);
           if (left.length < 2) pinch = null;
@@ -4219,6 +6170,95 @@
       var stick = { x: 0, z: 0 }, keys = {}, stickPad = el("div", { class: "oagr-stick", "data-room-stick": "", "aria-label": "Walk", role: "slider" });
       var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob); wrap.appendChild(stickPad);
       var sitBtn = el("button", { class: "oagr-sit", "data-room-sit": "", text: "Sit down", style: "display:none", onclick: function () { sitDown(); } }); wrap.appendChild(sitBtn);
+      // The loadout (board sic-loadout-three): on the rug the player chooses which three of the spirits kept in oag.spirits.v1 walk
+      // with them; the rest rest here. Nothing is locked behind a stage, and a spirit's sittings are not shown as a score.
+      var loadBtn = el("button", { class: "oagr-spirits", "data-room-spirits": "", text: "Your spirits", style: "display:none", onclick: function () { loadoutCard(); } }); wrap.appendChild(loadBtn);
+      var loadBox = el("div", { class: "oagr-door oagr-load", "data-room-loadout": "", style: "display:none" }); wrap.appendChild(loadBox);
+      function keptSpirits() { try { return SPIRIT_STORE ? SPIRIT_STORE.all().filter(function (t) { return t.family; }) : []; } catch (e) { return []; } }
+      function stageWord(t) { var st = sittingStage(t.sittings || 0), fam = spiritForms && spiritForms.FAMILIES[t.family] && spiritForms.FAMILIES[t.family][0]; return (fam ? fam + ", " : "") + st; }
+      function loadoutCard(note) {
+        var all = keptSpirits(), max = SPIRIT_STORE ? SPIRIT_STORE.MAX_LOADOUT : 3, n = all.filter(function (t) { return t.loadout; }).length;
+        var kids = [el("h2", { text: "Your spirits" }), P("Up to " + max + " walk with you. The rest rest here and wait.", { "data-room-loadout-count": String(n) })];
+        if (note) kids.push(P(note, { class: "oagr-note", "data-room-loadout-note": "" }));
+        all.forEach(function (t) {
+          kids.push(btn(t.name + " (" + stageWord(t) + ")", { "data-room-loadout-spirit": t.id, "aria-pressed": String(!!t.loadout) }, function () {
+            var ok = SPIRIT_STORE.setLoadout(t.id, !t.loadout);
+            loadoutCard(ok ? null : "Already " + max + " walk with you. Let one rest first.");
+          }, true));
+        });
+        kids.push(btn("Back to the room", { "data-room-loadout-back": "" }, function () { loadBox.style.display = "none"; }));
+        loadBox.innerHTML = ""; kids.forEach(function (k) { loadBox.appendChild(k); }); loadBox.style.display = "";
+      }
+      // ---- the elder spirit (board sic-demo-showcase = elder; Six-faces-council council/callsheets/spirits-in-caves.md, slice 5) ----
+      // A grown ally already lives in home base, beside the door, and greets the player in the first round. A tap on it
+      // shows the five forms it came through, one after another, and then each on its own button. It is a Shellback, the first
+      // family whose creature and ally are drawn. It belongs to the room: never in the store or the loadout, and it stays here.
+      var ELDER_FORMS = [["gas", "Cloud", "Every spirit begins as a cloud, the day you meet its daemon.", "Cloud"], ["core", "Core", "Sat with twice, the cloud draws in to a core.", "Core"],
+        ["hologram", "Hologram", "Sat with four times, the core opens into a likeness of its animal.", "Hologram"], ["creature", "Creature", "Sat with six times, the likeness takes a body.", "Creature"],
+        ["ally", "Standing ally", "Sat with eight times, it stands beside you as an ally.", "Ally"]];
+      var ELDER_AT = { x: -1.7, y: 0.9, z: -4.9 }, ELDER_Y = { creature: 0.42, ally: 0.42 }, ELDER_SIZE = 1.6, ELDER_FACES = new THREE.Vector3(0, 0, 0), ELDER_STEP_MS = 1600, elder = null, elderShow = null;
+      var elderBox = el("div", { class: "oagr-door oagr-load oagr-elder", "data-room-elder": "", style: "display:none" }); wrap.appendChild(elderBox);
+      function elderWear(stage) {
+        var g = buildSpirit(THREE, "Shellback, an elder", lookup(DAEMONS, "protector")[3], { family: "protector", stage: stage, faceAt: ELDER_FACES }); // it faces the middle of the room, not the camera
+        g.scale.setScalar(ELDER_SIZE); g.position.set(ELDER_AT.x, ELDER_Y[stage] || ELDER_AT.y, ELDER_AT.z); g.userData.level = 0.6;
+        if (elder) scene.remove(elder.g);
+        elder = { g: g, stage: stage }; scene.add(g); elderLabel();
+      }
+      // The card stays small so the figure and the elder both stay in shot (Wendell, 21 October 2026: "Need to be able to minimize
+      // or x out of the menu so the player and the spirit can be in shot"): one line, the forms in one row of short buttons, a fold
+      // button that leaves only a chip (a tap opens it again), and an X that closes it. The elder's floating name shrinks while open.
+      var elderMin = false;
+      // Talk (ctl-generous-taps): standing by the elder, a round 88px button by the right thumb opens its card, so the thumb
+      // does not have to find the creature on the screen. It sits above a door's card when one is up.
+      var talkBtn = el("button", { class: "oagr-talk", "data-room-talk": "", "aria-label": "Talk to the elder", text: "Talk", style: "display:none", onclick: function () { elderOpen(); } }); wrap.appendChild(talkBtn);
+      function talkShow() {
+        var on = !!elder && !R.modal && !R.close && elderBox.style.display === "none" && Math.hypot(fig.x - ELDER_AT.x, fig.z - ELDER_AT.z) < 3.2;
+        talkBtn.style.display = on ? "" : "none";
+        if (on) talkBtn.style.bottom = doorBox && doorBox.style.display !== "none" ? "calc(" + (doorBox.offsetHeight + 30) + "px + env(safe-area-inset-bottom))" : "";
+      }
+      function elderLabel() { var l = elder && elder.g.userData.label, open = elderBox.style.display !== "none"; if (l) l.scale.set(open ? 1.2 : 2.4, (open ? 1.2 : 2.4) * 0.1875, 1); }
+      function elderCard() {
+        clearTimeout(elderShow); elderShow = null;
+        var cur = ELDER_FORMS.filter(function (f) { return f[0] === elder.stage; })[0], kids;
+        elderBox.classList.toggle("oagr-elder-min", elderMin);
+        if (elderMin) {
+          kids = [btn("Shellback: " + cur[1] + " \u25B4", { "data-room-elder-chip": "", "aria-label": "Open the elder's card" }, function () { elderMin = false; elderCard(); })];
+        } else {
+          kids = [el("div", { class: "oagr-elder-head" }, [el("h2", { text: "Shellback, an elder" }),
+              btn("\u2013", { "data-room-elder-min": "", "aria-label": "Fold the card down", title: "Fold" }, function () { elderMin = true; elderCard(); }, true),
+              btn("\u00D7", { "data-room-elder-x": "", "aria-label": "Close", title: "Close" }, function () { elderClose(); }, true)]),
+            P(cur[2], { "data-room-elder-says": "", "data-room-elder-form": cur[0] }),
+            el("div", { class: "oagc-row" }, ELDER_FORMS.map(function (f) {
+              return btn(f[3], { "data-room-elder-stage": f[0], "aria-pressed": String(f[0] === elder.stage), "aria-label": f[1] }, function () { elderWear(f[0]); elderCard(); }, f[0] !== elder.stage);
+            }))];
+        }
+        elderBox.innerHTML = ""; kids.forEach(function (k) { elderBox.appendChild(k); }); elderBox.style.display = ""; elderLabel();
+      }
+      // The five forms a breath apart, cloud to standing ally, and the card waits on the ally; with reduced motion it shows the ally.
+      // Folded, the chip keeps counting through the forms.
+      function elderOpen() {
+        var n = 0; elderMin = false;
+        function next() { elderWear(ELDER_FORMS[n][0]); elderCard(); n++; if (n < ELDER_FORMS.length) elderShow = setTimeout(next, ELDER_STEP_MS); }
+        if (reducedMotion) { elderWear("ally"); elderCard(); } else next();
+      }
+      function elderClose() { clearTimeout(elderShow); elderShow = null; elderMin = false; elderBox.style.display = "none"; if (elder.stage !== "ally") elderWear("ally"); elderLabel(); }
+      function elderScreen() {
+        if (!elder || !renderer) return null;
+        var rc = renderer.domElement.getBoundingClientRect(), c = elder.g.position.clone(), e = c.clone();
+        e.addScaledVector(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), ELDER_SIZE * 0.7); c.project(camera); e.project(camera);
+        if (c.z > 1) return null;
+        return { x: rc.left + (c.x + 1) / 2 * rc.width, y: rc.top + (1 - c.y) / 2 * rc.height, r: Math.hypot((e.x - c.x) / 2 * rc.width, (e.y - c.y) / 2 * rc.height) };
+      }
+      if (opts.portal && spiritForms && spiritForms.buildForm) elderWear("ally");
+      // A preview link's skip-ahead (?go=elder): the figure stands up off the rug beside the elder, facing it.
+      var skipNear = opts.near === "elder"; // done on the first frame the room is free to walk, after its opening page has settled
+      function standByElder() {
+        skipNear = false; if (!elder) return;
+        // come from the rug's side, and stand a step to its right, so the camera behind the figure sees the elder past its shoulder
+        var dx = ELDER_AT.x - SEAT.x, dz = ELDER_AT.z - SEAT.z, d = Math.hypot(dx, dz); dx /= d; dz /= d;
+        fig.x = ELDER_AT.x - dx * 2.6 - dz * 1.2; fig.z = ELDER_AT.z - dz * 2.6 + dx * 1.2; fig.sit = 0; fig.yaw = Math.atan2(dx, dz);
+        R.roam = { free: true, x: fig.x, z: fig.z, exit: null, arrived: true }; R.walkYaw = fig.yaw;
+      }
       var stickId = null;
       // On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card, and a hidden stick
       // measures 0 wide: dividing by that walked the figure to nowhere and left the room dark (Wendell, 14 October 2026: "Stay in
@@ -4230,7 +6270,7 @@
         stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
         stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
       }
-      function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+      function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; if (floatR) floatR.home(); }
       stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
       stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
       ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { stickPad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
@@ -4244,7 +6284,10 @@
         var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { x += KEYS[k][0]; z += KEYS[k][1]; });
         var m = Math.hypot(x, z); if (!(m >= 0.15)) return null; if (m > 1) { x /= m; z /= m; }
         R.walkFwd = -z / Math.max(m, 1e-6); // how far the thumb points away from the camera, -1 to 1
-        var fx = camAim.x - camPos.x, fz = camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+        // The stick's forward is the camera's as the thumb went down, and it holds while the thumb stays (19 October 2026, the
+        // WAVE room's "funky" camera): the camera can then swing round behind the figure without bending the way it walks.
+        if (!R.stickFrame) { var fx0 = camAim.x - camPos.x, fz0 = camAim.z - camPos.z, fl0 = Math.hypot(fx0, fz0) || 1; R.stickFrame = { x: fx0 / fl0, z: fz0 / fl0 }; }
+        var fx = R.stickFrame.x, fz = R.stickFrame.z;
         return { x: -z * fx - x * fz, z: -z * fz + x * fx }; // forward times -z, plus right (-fz, fx) times x
       }
       // In front of door k: within reach of it and not far off its middle.
@@ -4256,14 +6299,20 @@
       function sitDown() { sitBtn.style.display = "none"; stopWalking(); if (modal.childNodes.length) openModal(); }
       function freeWalk(dt) {
         if (!isFinite(fig.x) || !isFinite(fig.z) || !isFinite(fig.yaw)) { fig.x = SEAT.x; fig.z = SEAT.z; fig.yaw = Math.PI; R.walkYaw = null; R.roam = null; snap = true; } // never lost: back on the rug
+        if (skipNear && !R.modal && !R.close) standByElder();
         var w = R.modal || R.close ? null : wantWalk();
+        if (!w) R.stickFrame = null; // the thumb is off: the next push takes the camera's forward afresh
         if (w) {
           if (!R.roam || !R.roam.free) { R.roam = { free: true, x: fig.x, z: fig.z, exit: null, arrived: true }; R.walkYaw = fig.yaw; }
           fig.sit = Math.max(0, fig.sit - dt * 2.4);
           if (fig.sit <= 0) {
             var sp = dt * 2.6 * Math.min(1, Math.hypot(w.x, w.z)), nx = fig.x + w.x * sp, nz = fig.z + w.z * sp, r = Math.hypot(nx, nz), RW = RR - 1.4;
             if (r > RW) { nx *= RW / r; nz *= RW / r; }
+            // The cushion is solid (Wendell, 19 October 2026: "the character needs to actually be able to sit on the seat as opposed
+            // to walking through it"): a step that would go further into it slides round its edge; stepping off it is free.
+            var cq = cushionIn(nx, nz); if (cq.k < 1 && cq.k < cushionIn(fig.x, fig.z).k) { nx = SEAT.x + cq.dx / cq.k * 1.0; nz = SEAT.z + 0.15 + cq.dz / cq.k * 1.0 * 1.15; }
             fig.x = nx; fig.z = nz; fig.clk += dt; fig.yaw = turnTo(fig.yaw, Math.atan2(w.x, w.z), dt * 8);
+            learn("walk");
           }
           R.roam.x = fig.x; R.roam.z = fig.z;
         }
@@ -4277,8 +6326,11 @@
           if (near && near !== R.atDoor) doorCard(near);
           else if (!near && R.atDoor) hideDoor();
         }
-        if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; return !!w; }
+        talkShow(); wrap.classList.toggle("oagr-still", reducedMotion);
+        if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; loadBtn.style.display = "none"; loadBox.style.display = "none"; return !!w; }
         sitBtn.style.display = onRug() && !R.modal ? "" : "none";
+        loadBtn.style.display = onRug() && !R.modal && keptSpirits().length ? "" : "none";
+        if (R.modal) loadBox.style.display = "none";
         return !!w;
       }
 
@@ -4296,13 +6348,15 @@
       function tapAt(x, y) {
         if (!renderer) return;
         var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
+        // the elder takes a tap on itself, except while the guide is teaching the tap on the floor (its spot can fall by the elder)
+        var es = !R.close && guide.shown !== "tap" && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < tapReach(es.r)) { elderOpen(); return; }
         var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
         seen().forEach(function (c) {
           var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
           if (p.z > 1) return; // behind the camera
           var sx = rc.left + (p.x + 1) / 2 * rc.width, sy = rc.top + (1 - p.y) / 2 * rc.height;
           var rad = Math.hypot((e.x - p.x) / 2 * rc.width, (e.y - p.y) / 2 * rc.height), d = Math.hypot(x - sx, y - sy);
-          var k = d / (rad * 1.4 + 24); if (k < 1 && k < bestK) { best = c; bestK = k; }
+          var k = d / Math.max(rad * 1.4 + 24, tapReach(0)); if (k < 1 && k < bestK) { best = c; bestK = k; }
         });
         if (best && best !== R.close) closeUp(best);
         else if (!best && !R.close) walkTap(x, y, rc);
@@ -4313,6 +6367,7 @@
       var ray = new THREE.Raycaster(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), doorBox = null;
       function walkTap(x, y, rc) {
         ray.setFromCamera(new THREE.Vector2((x - rc.left) / rc.width * 2 - 1, -((y - rc.top) / rc.height * 2 - 1)), camera);
+        learn("tap");
         var ids = Object.keys(EXITS), hit = ray.intersectObjects(ids.map(function (k) { return EXITS[k].glow; }))[0], p = new THREE.Vector3();
         if (hit) { walkTo(ids.filter(function (k) { return EXITS[k].glow === hit.object; })[0]); return; }
         if (!ray.ray.intersectPlane(ground, p)) return;
@@ -4326,7 +6381,7 @@
         R.roam = { x: q.x, z: q.z, exit: ex ? ex.id : null, arrived: false };
         hideDoor(); closeModal();
       }
-      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; }
+      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; if (loadBtn) { loadBtn.style.display = "none"; loadBox.style.display = "none"; } }
       function hideDoor() { if (doorBox) doorBox.style.display = "none"; R.atDoor = null; }
       // A door's prompt, while the figure stands in front of it. The Big Mind cave and the six game masters are each a door the
       // player goes through by choice; walking away is how they stay.
@@ -4335,10 +6390,13 @@
         portal: ["The six game masters", "A hall with a door for each of the six faces.", "Go through"],
       };
       function doorCard(id) {
+        // The basin's mouth is walked into, not opened from a card (mab-one-mouth): arriving in front of it goes in.
+        if (id === "basin") { if (!R.leftBy) { R.leftBy = "basin"; stopWalking(); leave("basin"); } return; }
         if (!doorBox) { doorBox = el("div", { class: "oagr-door", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
+        learn("doors");
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
         var kids = [el("h2", { text: w[0] }), P(w[1])];
-        var going = R.worked.length;
+        var going = R.worked.filter(function (c) { return !c.unkept; }).length;
         if (going) kids.push(P(going === 1 ? "The one you worked with comes along as a spirit." : "The " + going + " you worked with come along as spirits.", { class: "oagr-note" }));
         kids.push(btn(w[2], go, function () { leave(id === "portal" ? true : id); }));
         doorBox.innerHTML = ""; kids.forEach(function (n) { doorBox.appendChild(n); }); doorBox.style.display = ""; R.atDoor = id;
@@ -4413,7 +6471,11 @@
         if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
         if (name === "roam") { // behind the figure and above it, looking where it faces
           var ry0 = R.roam && R.roam.free && R.walkYaw != null ? R.walkYaw : fig.yaw, sy = Math.sin(ry0), cy = Math.cos(ry0);
-          return { pos: V(fig.x - sy * 4.2, 3.4, fig.z - cy * 4.2), aim: V(fig.x + sy * 2.6, 1.0, fig.z + cy * 2.6) };
+          // Near a wall the camera comes in along the line behind the figure, and rises, instead of sliding sideways round the
+          // wall: d is how far back it can stand and stay a little inside the room.
+          var bR = RR - 1.1, pb = fig.x * sy + fig.z * cy, disc = pb * pb - (fig.x * fig.x + fig.z * fig.z - bR * bR);
+          var d = disc > 0 ? clamp(pb + Math.sqrt(disc), 1.6, 4.2) : 1.6;
+          return { pos: V(fig.x - sy * d, 3.4 + (4.2 - d) * 0.55, fig.z - cy * d), aim: V(fig.x + sy * 2.6, 1.0, fig.z + cy * 2.6) };
         }
         if (name === "close") { // in front of the creature, near enough that it fills the frame above the card
           var cc = R.close, s = cc.fig.scale.x, mid = centreOf(cc), ry = cc.fig.rotation.y;
@@ -4431,9 +6493,10 @@
         // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
         if (R.wait && (R.calm || br.exhaling)) {
           var w0 = R.wait; R.wait = null; R.doorWant = 1;
-          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
-          else { var cout = ch; R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
-            cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+          if (w0 === "door-in") { var cin = ch; cin.credit.welcome = true; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); formIn(cin, new THREE.Vector3(0, 1.4, DZ + 0.2)); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
+          else { var cout = ch; grow(cout); R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: cout.unfolds ? -3.4 : -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
+            cout.gone = true; cout.fig.visible = false; var l = buildLight(VIBEULON_GOLD, (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+            if (!cout.minted) { cout.minted = true; try { cout.purse = SPIRIT_STORE ? SPIRIT_STORE.mint(SUMMON_PRICE, "the WAVE room") : null; } catch (e) { cout.purse = null; } }
             if (ch === cout) go("gone"); else cout.phase = "gone";
           } }); }
         }
@@ -4489,11 +6552,8 @@
           c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
         });
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
-        R.all.forEach(function (c) { // a shadow spirit keeps beside its creature, and goes when it goes
-          if (!c.shade) return; var sh = c.shade, su = sh.userData; sh.visible = c.fig.visible && !c.gone && c.fig.parent === scene; su.fade = c.fig.userData.fade;
-          sh.position.x += (c.fig.position.x + 1.4 * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
-          su.mat.opacity = 0.8 * (su.fade == null ? 1 : su.fade); su.mat.emissiveIntensity = 0.25 + 0.15 * br.b; stepAura(su.aura, su.col, 0.25, dt, R.calm);
-        });
+        R.all.forEach(function (c) { var u = c.fig.userData; if (u.blob || !c.fig.visible) return; if (!u.form) formIn(c, null); syncForm(c, now, dt); });
+        R.all.forEach(function (c) { if (c.shade) syncShade(c, dt); }); // a shadow spirit keeps beside its creature until it is chosen for
         // the figure: stands up, walks to its place, sits down again
         var stepping = freeWalk(dt);
         var hideStick = R.modal || R.close;
@@ -4512,15 +6572,11 @@
           if (tg.sit && Math.abs(angleDiff(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z))) < 0.15) fig.sit = Math.min(1, fig.sit + dt * 1.6);
         }
         avatar.position.set(fig.x, 0, fig.z); avatar.rotation.y = fig.yaw;
+        var sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
         poseAvatar(avatar, fig.clk, moving, dt, br.b, 0.7, R.calm);
-        var J = avatar.userData.J, sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
         if (sk > 0) {
-          ["L", "R"].forEach(function (n) {
-            J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - sk) - 1.45 * sk; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - sk) + 1.45 * sk;
-            J["ankle" + n].rotation.x *= 1 - sk; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - sk) - 0.35 * sk; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - sk) - 0.5 * sk;
-          });
-          J.hips.position.y = J.hips.position.y * (1 - sk) + 0.6 * sk;
-          avatar.position.z = fig.z - Math.cos(fig.yaw) * 0.25 * FIG_K * sk; avatar.position.x = fig.x - Math.sin(fig.yaw) * 0.25 * FIG_K * sk; // hips back over the seat
+          seatAvatar(avatar, sk, { on: SEAT_TOP / (FIG_K * AVATAR_H / BODY_FRAME_H) }); // cross-legged on the cushion's top
+          avatar.position.z = fig.z - Math.cos(fig.yaw) * 0.6 * FIG_K * sk; avatar.position.x = fig.x - Math.sin(fig.yaw) * 0.6 * FIG_K * sk; // hips back, so the crossed legs rest in the cushion's middle
         }
         loosenAvatar(avatar, 0, br.b);
         // the room's look follows the step, as the cave's path does; the walls breathe
@@ -4528,15 +6584,18 @@
         lamp.color.lerp(tmpC.setHex(lg.light).lerp(new THREE.Color(0xffffff), 0.45), fe);
         hemi.intensity += (lg.hemi * 0.8 - hemi.intensity) * fe;
         scene.fog.color.lerp(tmpC.setHex(lg.fog), fe); scene.background.copy(scene.fog.color);
-        scene.fog.density += (0.03 * lg.fogK - scene.fog.density) * fe;
+        scene.fog.density += (0.03 * lg.fogK * hazeK - scene.fog.density) * fe; // hazeK: thinner once the brow is reached
         lamp.intensity = 0.9 + 0.35 * (1 - br.b);
         var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
         R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
+        if (elder) { stepAura(elder.g.userData.aura, elder.g.userData.color, elder.g.userData.level, dt, R.calm); if (!reducedMotion && !ELDER_Y[elder.stage]) elder.g.position.y = ELDER_AT.y + 0.06 * Math.sin(now / 1100); } // the creature and the ally stand
         // the camera
         if (R.close && (R.close.gone || !R.close.fig.visible)) backToRoom(); // it left the room while close up
         // The camera comes round behind the figure only while it walks away from the camera, so walking back towards the
         // camera or sideways keeps going the way the thumb points instead of circling; a drag turns it by hand.
-        if (R.walkYaw != null && moving && R.walkFwd > 0.3) R.walkYaw = turnTo(R.walkYaw, fig.yaw, dt * 0.9);
+        // Walking any way, the camera comes round behind the figure (it used to follow only a walk away from it, so a walk to the
+        // doors behind the seat came face on into a camera pinned to the wall).
+        if (R.walkYaw != null && moving) R.walkYaw = turnTo(R.walkYaw, fig.yaw, dt * (R.walkFwd > 0.3 ? 0.9 : 1.6));
         var vw = view(R.close ? "close" : tg.view, 0, 0); R.view = R.close ? "close" : tg.view;
         if (lookYaw) { var off = vw.pos.clone().sub(vw.aim), c0 = Math.cos(lookYaw), s0 = Math.sin(lookYaw); vw.pos.set(vw.aim.x + off.x * c0 + off.z * s0, vw.pos.y, vw.aim.z - off.x * s0 + off.z * c0); }
         if (lookPitch) { // the camera swings over or under the point it looks at, keeping its distance: drag down to look down on the room, up to look up
@@ -4552,23 +6611,89 @@
         if (snap) { camPos.copy(vw.pos); camAim.copy(vw.aim); snap = false; }
         else { var f = 1 - Math.exp(-dt * 2.6); camPos.lerp(vw.pos, f); camAim.lerp(vw.aim, f); }
         camera.position.copy(camPos); camera.lookAt(camAim);
+        teachStep(dt, now, sk);
         if (renderer) renderer.render(scene, camera);
         running = requestAnimationFrame(frame);
+      }
+      // ---- the Arrival: the light floats to the lesson and its glyph waits beside it -----------------------------------------
+      var teachBox = el("div", { class: "oagr-teach", "data-room-teach": "", role: "status" }); wrap.appendChild(teachBox);
+      // "I know this" stays still at the bottom, so a thumb can find it while the light moves.
+      var skipBtn = btn("I know this", { "data-room-teach-skip": "", class: "alt oagr-skip", style: "display:none" }, function () { var L = lessonNow(); if (L) learn(L.id); });
+      wrap.appendChild(skipBtn);
+      var lanternAt = new THREE.Vector3(), lanternWant = new THREE.Vector3(), lanternSet = false;
+      function lessonSpot(id, out) { // where the light waits for each lesson, in the room
+        var fx = Math.sin(fig.yaw), fz = Math.cos(fig.yaw);
+        if (id === "walk") return out.set(fig.x + fx * 1.8, 1.3, fig.z + fz * 1.8);
+        if (id === "look") return out.set(SLOTS[1].x, 2.2, SLOTS[1].z);
+        if (id === "tap") return out.set(guide.tapAt.x, 0.35, guide.tapAt.z);
+        if (id === "rug") return out.set(SEAT.x, 0.7, SEAT.z);
+        // the basin's mouth has no card to teach, so the light waits in the nearer of the other doorways
+        var ex = Object.keys(EXITS).filter(function (k) { return k !== "basin"; }).map(function (k) { return EXITS[k]; }).sort(function (a, b) { return Math.hypot(a.x - fig.x, a.z - fig.z) - Math.hypot(b.x - fig.x, b.z - fig.z); })[0];
+        return out.set(ex.x * 0.85, 1.9, ex.z * 0.85); // in the nearer doorway
+      }
+      function teachStep(dt, now, sk) {
+        var L = R.modal || R.close || R.phase === "opening" ? null : lessonNow(), still = R.calm || reducedMotion;
+        if (L) lessonSpot(L.id, lanternWant);
+        else lanternWant.set(fig.x + Math.sin(fig.yaw) * 0.42 * FIG_K, (2.42 - 0.9 * sk) * FIG_K, fig.z + Math.cos(fig.yaw) * 0.42 * FIG_K); // home: the chest
+        if (!lanternSet || still) { lanternAt.copy(lanternWant); lanternSet = true; }
+        else lanternAt.lerp(lanternWant, 1 - Math.exp(-dt * (L ? 2.2 : 6)));
+        lantern.position.copy(lanternAt); if (L && !still) lantern.position.y += 0.06 * Math.sin(now / 450);
+        lantern.scale.setScalar(L ? 1.5 : 1); lanternLight.intensity = L ? 1.1 : 0.5 + 0.3 * br.b;
+        if (!L || !renderer) { if (guide.shown) { teachBox.style.display = "none"; skipBtn.style.display = "none"; guide.shown = null; } return; }
+        if (guide.shown !== L.id) {
+          if (L.id === "tap") { // a spot on the floor in view: under the middle of the screen, a little below centre, inside the walls
+            camera.updateMatrixWorld(); ray.setFromCamera(new THREE.Vector2(0, -0.3), camera);
+            var tp = new THREE.Vector3(); if (!ray.ray.intersectPlane(ground, tp)) tp.set(fig.x, 0, fig.z - 2);
+            var tr = Math.hypot(tp.x, tp.z), TW = RR - 2.2; guide.tapAt = tr > TW ? { x: tp.x * TW / tr, z: tp.z * TW / tr } : { x: tp.x, z: tp.z };
+          }
+          teachBox.innerHTML = ""; teachBox.setAttribute("data-room-teach", L.id); teachBox.setAttribute("aria-label", L.label);
+          var gl = el("div", { class: "oagr-glyphs" }); gl.innerHTML = TEACH_SVG[L.id]; teachBox.appendChild(gl);
+          teachBox.style.display = "flex"; skipBtn.style.display = ""; guide.shown = L.id;
+        }
+        teachBox.classList.toggle("still", still);
+        var rc = renderer.domElement.getBoundingClientRect(), sx, sy, off = false, cs = null;
+        if (L.id === "walk") { var sb = stickPad.getBoundingClientRect(); sx = sb.left + sb.width / 2 + 30; sy = sb.top - 12; } // above the stick
+        else if (L.id === "look") { sx = rc.left + rc.width / 2; sy = rc.top + rc.height * 0.42; }
+        else {
+          camera.updateMatrixWorld(); var q = lantern.position.clone().project(camera), cs = lantern.position.clone().applyMatrix4(camera.matrixWorldInverse);
+          off = cs.z > 0 || Math.abs(q.x) > 0.85 || Math.abs(q.y) > 0.9; // behind the camera or past the edge: the glyph waits at that side, pointing
+          if (off) { sx = cs.x < 0 ? rc.left : rc.right; sy = rc.top + rc.height * 0.5; }
+          else { sx = rc.left + (q.x + 1) / 2 * rc.width; sy = rc.top + (1 - q.y) / 2 * rc.height - 26; }
+        }
+        teachBox.setAttribute("data-room-teach-off", off ? (cs.x < 0 ? "left" : "right") : "");
+        var bw = teachBox.offsetWidth / 2;
+        sx = clamp(sx, rc.left + bw + 8, rc.right - bw - 8); sy = clamp(sy, rc.top + teachBox.offsetHeight + 8, rc.bottom - 150);
+        teachBox.style.left = sx + "px"; teachBox.style.top = sy + "px";
       }
       function angleDiff(a, b) { var d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
       function turnTo(a, b, k) { return a + angleDiff(a, b) * Math.min(1, k); }
 
-      draw(); frame();
+      draw();
+      // A room with lessons to teach opens with its first page tucked into the pane, so the light can show the way round first;
+      // sitting on the rug (or opening the pane) brings the page up and finishes the rug's lesson. From the board the player
+      // came to work a charge, so the page stays up and the lessons wait until they look round. No WebGL, no lessons.
+      if (renderer && guide.lessons.some(function (l) { return guide.done.indexOf(l.id) < 0; })) { if (R.from !== "board") closeModal(); guide.live = true; }
+      frame();
 
       // ---- hooks for the browser test --------------------------------------------------------------------------------------
       var api = window.__oagCave;
       api.room = {
         state: R,
+        teach: function () { var L = lessonNow(); return { lesson: L && L.id, done: guide.done.slice(), shown: teachBox.style.display !== "none" && !!guide.shown ? guide.shown : null, live: guide.live, lantern: [lantern.position.x, lantern.position.y, lantern.position.z], tapAt: guide.tapAt, modal: R.modal }; },
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
           slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
           polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf,
-          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.mat.color.getHex(), x: ch.shade.position.x, element: ch.shadeElement || null } : null, asks: ch.asks.slice() }; },
+          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.tint ? ch.shade.userData.tint.material.color.getHex() : SHADOW_HEX, x: ch.shade.position.x, z: ch.shade.position.z, element: ch.shadeElement || null,
+            drawn: ch.shade.userData.form ? ch.shade.userData.form.userData.form.drawn : "blob", motes: ch.shade.userData.form ? ch.shade.userData.form.userData.form.motes : 0, def: ch.shade.userData.def, spread: ch.shade.userData.form ? ch.shade.userData.form.userData.form.spread : null,
+            keep: ch.shadeKeep || null, gone: !!ch.shade.userData.gone, open: shadeOpen(ch) } : null, asks: ch.asks.slice() }; },
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
+        // the charge's form: how defined it is, the stage drawn, whether it walks, and its lowest point above its own ground
+        form: function () {
+          var u = ch.fig.userData, f = u.form, st = f && f.userData.form, low = null;
+          if (st && st.mesh) { ch.fig.updateMatrixWorld(true); footBox.setFromObject(st.mesh); low = footBox.min.y - ch.fig.position.y; }
+          return { def: u.def == null ? null : u.def, credited: definition(ch), drawn: st ? st.drawn : null, spread: st ? st.spread : null, walking: !!u.walking, low: low, veil: u.veil.visible ? u.veil.material.opacity : 0 };
+        },
+        vibeulons: function () { try { return SPIRIT_STORE ? SPIRIT_STORE.vibeulons() : null; } catch (e) { return null; } },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
         run: function () { return runRecord(); },
@@ -4579,14 +6704,27 @@
         stick: function (x, y) { stick.x = x || 0; stick.z = y || 0; },
         steer: function (x, z) {
           var wx = x - fig.x, wz = z - fig.z, m = Math.hypot(wx, wz); if (m < 0.05) { stick.x = 0; stick.z = 0; return m; }
-          wx /= m; wz /= m; var fx = camAim.x - camPos.x, fz = camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+          wx /= m; wz /= m; var fx = R.stickFrame ? R.stickFrame.x : camAim.x - camPos.x, fz = R.stickFrame ? R.stickFrame.z : camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
           stick.x = wx * -fz + wz * fx; stick.z = -(wx * fx + wz * fz); return m;
         },
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
-        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
-          exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
+        walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
+          exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }), seated: fig.sit > 0.5 ? seatFit() : null }; },
+        // where a charge's form (or its shade's) is on screen, how opaque it is drawn, and whether it is clear of the card
+        seen: function (which) {
+          var c = typeof which === "number" ? R.all[which] : ch, root = which === "shade" ? ch.shade : c.fig, f = root && (which === "shade" ? root.userData.form : c.fig.userData.form);
+          if (!f || !renderer) return null;
+          var st = f.userData.form; root.updateMatrixWorld(true);
+          var bb = st.mesh ? new THREE.Box3().setFromObject(st.mesh) : null, mid = bb ? bb.getCenter(new THREE.Vector3()) : f.getWorldPosition(new THREE.Vector3()), p = mid.clone().project(camera), rc = renderer.domElement.getBoundingClientRect();
+          var op = st.mesh ? Math.max.apply(null, st.mesh.children.map(function (m) { return m.material.opacity; })) : f.userData.materials[0].opacity;
+          var card = modal.classList.contains("open") ? modal.getBoundingClientRect().top : rc.bottom, sy = rc.top + (1 - p.y) / 2 * rc.height;
+          return { stage: st.stage, drawn: st.drawn, gas: st.gas, opacity: op, visible: root.visible && f.visible, ndc: [p.x, p.y, p.z], x: rc.left + (p.x + 1) / 2 * rc.width, y: sy,
+            inFrame: Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95 && p.z < 1, aboveCard: sy < card, card: card, world: [mid.x, mid.y, mid.z], low: bb ? bb.min.y : null };
+        },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
+        // the elder spirit (slice 5): its form, whether its card shows, and where it is on screen for a test to tap it
+        elder: function () { if (!elder) return null; var f = elder.g.userData.form; return { stage: elder.stage, drawn: f ? f.drawn : null, card: elderBox.style.display !== "none", x: elder.g.position.x, z: elder.g.position.z, screen: elderScreen() }; },
         close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
         // where a creature is on screen (by its index in creatures(), or the n-th kept one with kept true), for a test to tap it
         screenOf: function (n, kept) {
@@ -4618,17 +6756,19 @@
     el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
     makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
     buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
-    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, dressCave: dressCave, DAEMONS: DAEMONS,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, seatAvatar: seatAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, integrateBody: integrateBody, bodyPose: bodyPose, BODY_STANCES: BODY_STANCES, dressCave: dressCave, DAEMONS: DAEMONS,
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
-    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, labelSprite: labelSprite, P: P, btn: btn, row: row,
-    buildSpirit: buildSpirit, followSpirits: followSpirits, spiritHex: spiritHex, SPIRITS_SHOWN: SPIRITS_SHOWN,
+    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, dial: dial, notice: notice, menu: menu, sheet: sheet, labelSprite: labelSprite, P: P, btn: btn, row: row,
+    buildSpirit: buildSpirit, followSpirits: followSpirits, spiritHex: spiritHex, SPIRITS_SHOWN: SPIRITS_SHOWN, spiritForms: window.__oagSpiritForms,
     // the Cave of Lessons' stone and light, so the Big Mind cave wears the same map (Wendell, 2026-10-13: "import the WAVE
     // process into this map")
     loadTiles: loadTiles, stoneOf: stoneOf, tileStone: tileStone, LAMP: LAMP,
+    // the walkthrough's light and glyphs (gd-teach-by-doing), so the Big Mind cave teaches the way the room and the cave do
+    teacher: teacher, BIGMIND_LESSONS: BIGMIND_LESSONS, settings: function () { return settings; }, reducedMotion: function () { return reducedMotion; },
   };
-  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
+  window.__oagCave = { start: start, load: load, settings: function () { return settings; }, setSetting: setSetting, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
     crystalBlock: crystalBlock, geomOf: geomOf, stoneOf: stoneOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE,
     openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); },
     levels: function (o) { return load().then(function (A) { enter(A, null, document.querySelector("[data-cave-home]"), o || {}); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit, buildElement: buildElement, buildPool: buildPool,

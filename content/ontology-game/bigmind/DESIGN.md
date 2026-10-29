@@ -515,8 +515,9 @@ stands unless he flips it.
 - **Spirits vouch.** A voice that trusts the player gives its spirit as an ally, which walks with them while that trust holds.
   At each later chamber the voice asks who vouches for you and each ally answers in its own voice's terms ("The Protector's
   spirit says you kept watch."); together they count once as a can-you move if the voice eases. At the mouth of the centre the
-  allies vouch together. How many spirits are carried adds nothing (`bmt-spirits-vouch`). Build 3's meeting spirit is to
-  become this ally; until then the ally is a spirit in the voice's colour named for it.
+  allies vouch together. How many spirits are carried adds nothing (`bmt-spirits-vouch`). Since build 3 the ally is the spirit
+  born when the player met the voice; a voice met before then, or whose meeting spirit was let go, sends a spirit in its own
+  colour named for it.
 - **Ask again.** Going back in always enters the chamber's first hallway, so the voice is asked again whatever the save
   holds; a voice met before says so, and what it said before stays with it if it is declined today (`bmt-ask-again`).
 - **The return.** Walking out passes a skippable rite: thank the voices met, take one breath, and one plain line naming the
@@ -526,3 +527,50 @@ stands unless he flips it.
 - **Arrivals.** Each voice's arrival line describes its body as the held movement in Six-faces-council
   `council/daemons/GESTURES.md` (push, grasp, pull, reach, release too soon, yield collapsed, release refused), so the words
   match the WARP bodies.
+
+## Build 3: the full 3-2-1 and the meeting spirit (pass `big-mind-trust1`)
+
+- **The meeting spirit** (`bmt-meeting-spirit`). The first time the player meets a voice, after its opening line, the guide
+  asks "How do you feel, meeting it?": the W.A.V.E.'s five feelings with their elements (Anger, Fire; Sadness, Water; Joy,
+  Wood; Fear, Metal; Neutrality, Earth), "No word yet" as an equal answer, or the player's own words, with Not now still
+  there. The answer spawns a spirit that walks with them; "No word yet" and own words leave it grey until it is named in a
+  sitting with it. It counts for nothing and against nothing. Its name and element are saved with the voice
+  (`voices[id].spirit`), so it comes back in with its voice rather than through the mouth's keep-or-let-go list; letting it go
+  from the spirit list marks it `gone`. A voice is asked once; going back in does not ask again.
+- **It becomes the ally** (`bmt-spirits-vouch`). When the voice trusts the player, its meeting spirit is the ally that walks
+  with them and vouches further in, under its own name and colour. While a fall is not yet owned it walks as a plain spirit.
+- **Talk it through** (`bmt-321-offer`). Every poll, the willing voice and its seat offer the cave's full typed 3-2-1
+  (`K.talk321`): Face it, Talk to it, Be it, with the charge read before and after. It is skippable and never gates stepping
+  aside. Every turn has cards, a gesture (in brackets; at Be it, the voice's held movement from GESTURES.md) and an open
+  line. Be it opens only with the voice's permission, asked as the chamber asks everything (`permit("be")`, with its refusal
+  path, waiting, and the push that costs trust); "Stay on your own side of it" goes on to the reading without it. From its
+  seat it has already let the player stand there, so Be it opens without asking. The reading after is a check-in: a lower
+  charge eases, honest moves waiting are seen, and the chamber goes on from it. The Damaged Self's 3-2-1 asks before Be it,
+  as the cave does. The words never leave the page and are never saved; the record keeps only how many were had
+  (`voices[id].talked`), and the return rite can name "facing a part of you, talking with it and speaking as it".
+- **The hooks in cave.js** `talk321`: `o.beforeOne(go, stay)` and `o.cards(ph, voice)`, both optional, so the WAVE room
+  and the Cave of Lessons are unchanged.
+
+## The let-go after a willing 3-2-1 (17 October 2026)
+
+When a 3-2-1 ends and the voice is willing (its charge at 3 or below, all three kinds of trust seen, or already willing),
+the panel steps away and its body plays its let-go: it eases back to its held shape, then its Integrate action (cave.js
+`integrateBody`, bars-engine #356) opens that shape into its honored form, the one Wendell approved for each daemon, and it
+stands willing from there. The cave says "The Protector lets go. This is how it stands when it is honored." and the
+chamber goes on to its ready step. It plays once a visit, after any easing, never while a fall is not yet owned, and only
+after a 3-2-1 that was had (a skipped one does not count). From its seat the voice is out of sight, so it lets go when it
+is back at its post, before it is asked to let the player pass. The Self button pauses it like the easing.
+
+## The approach check-in (build 4, pass daemon-meeting1, amended on dmt-body-blockers)
+
+At the end of each hallway, before the shut mouth, up to four skippable asks in order: the body (one card, two rows: "What does
+it feel like?" in the texture words, tightness, tension, strength, numbness, moving freely, something else; and "What is your
+body doing?" in the seven movement words; either, both or neither), the feeling (the five, own words, or no word yet), how near
+it is (veiled, flooding, clear) and, only when it is not faint, how it sits. There is no storyteller line: the Victim leads the
+council review, not the hallway (`dmt-victim-leads-review`). Each answer shows at once: the mouth's light takes the element's
+colour and the meeting spirit forms from the layers so far (a sensation tints it until a feeling is named; veil sets brightness
+and size; state sets stillness). Its family is always the chamber's daemon. A movement that belongs to another daemon
+(bracing Protector, gripping Controller, pulling back Skeptic, leaning in Fixer, sinking Victim, curling in Damaged Self,
+flinging open Emotional Body) is saved as `approach.merged`, wraps the spirit in that daemon's gas and says "Something of
+another voice is in this one.", never naming it. "Skip all" always passes; it is asked every visit. Saved as
+`voices[id].approach = { body, texture, feeling, veil, state, at }` plus `merged`, no words, no numbers. Wording is a draft.
