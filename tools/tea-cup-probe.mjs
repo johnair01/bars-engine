@@ -9,7 +9,7 @@
    - savour: the head lifts and the warmth shows only once the cup is on its way down from the lips.
    Prints a line per check and exits 1 when one fails.
      node tools/tea-cup-probe.mjs [--json] */
-import { teaAt, spoutReach, TOTAL, CUP, TEA, KETTLE } from '../public/between/tea-pose.js';
+import { teaAt, spoutReach, kettleAt, TOTAL, CUP, TEA, KETTLE } from '../public/between/tea-pose.js';
 
 const JSON_OUT = process.argv.includes('--json');
 const LIMIT = 20, STEP = 1 / 120, SPEED = 1.5;   // seconds end to end; the arm's fastest turn, rad/s (tea-look-2: "move slowly")
@@ -17,7 +17,7 @@ const rows = [], fail = [];
 const check = (name, ok, detail) => { rows.push({ name, ok, detail }); if (!ok) fail.push(name); };
 
 const r = spoutReach();
-check('reach', r.over === 0, `${r.d.toFixed(3)} m to the spout, the arm spans ${r.span.toFixed(3)} m, ${r.margin.toFixed(3)} m spare`);
+check('reach', r.over === 0, `${r.d.toFixed(3)} m to the hand on the cup on the stone, the arm spans ${r.span.toFixed(3)} m, ${r.margin.toFixed(3)} m spare`);
 
 let worstCarry = 0, streamOutside = 0, streamEarly = 0, last = null, fastest = 0, prev = null, savorUp = 0, savorPeak = 0;
 const phases = [];
@@ -38,7 +38,7 @@ check('slow', fastest <= SPEED, `the arm turns at most ${fastest.toFixed(2)} rad
 check('savour', savorPeak > 0.9 && savorUp === 0, `the savour peaks at ${savorPeak.toFixed(2)}, ${savorUp} samples while the cup is still at the lips`);
 check('ends', teaAt(TOTAL + 0.01).done === true, 'the pour is over and the cup is held in the lap');
 check('beats', phases.join(' > ') === 'reach > pour > back > sip > set > done', phases.join(' > '));
-check('clear', Math.hypot(KETTLE.lip.x, KETTLE.lip.z) >= 0.35, `the kettle stands ${Math.hypot(KETTLE.lip.x, KETTLE.lip.z).toFixed(3)} m out from the seat's middle`);
+{ const k = kettleAt(), d = Math.hypot(k.x, k.z); check('clear', d - KETTLE.stone[1] >= 0.45, `the table stone's near edge stands ${(d - KETTLE.stone[1]).toFixed(3)} m out from the seat's middle, past the crossed knees`); }
 
 if (JSON_OUT) console.log(JSON.stringify({ rows, fail, total: TOTAL, reach: r }, null, 1));
 else {

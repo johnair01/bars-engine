@@ -10,8 +10,10 @@
    and stays held in the lap after the pour until you stand, when it goes back on the stone. His look on it (2026-10-29: "The arm
    should move slowly as if someone is enjoying the tea. Maybe even a little effect of enlightenment and enjoyment"): the beats
    are slow (tea-pose.js TEA), steam rises from a full cup, and after each sip the figure savours it: the head lifts, the chest
-   opens, a warm glow comes up round the head and a few motes of light drift up from the heart. */
-import { teaAt, sipAt, HAND, KETTLE, CUP, TOTAL, TEA } from "./tea-pose.js";
+   opens, a warm glow comes up round the head and a few motes of light drift up from the heart. Look tea-cup-look-3 (his note
+   2026-10-29): the cup passed through the hands and the table clipped the robe and the arms, so the cup is held by its side
+   (GRIP) and the kettle's table stone stands beside the seat, clear of the figure along the whole pour (tools/tea-hand-probe.mjs). */
+import { teaAt, sipAt, HAND, GRIP, KETTLE, CUP, TOTAL, TEA, kettleAt } from "./tea-pose.js";
 
 const IRON = 0x332f2c, STONE = 0x6a645c, CLAY = 0xd8c8ae, AMBER = 0xd9a24a, GLOW = 0xffc874;
 const TEA_FULL = TEA.streamTo;   // of the pour beat: the cup counts as full once the stream stops
@@ -26,15 +28,15 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
   const clay = new THREE.MeshStandardMaterial({ color: CLAY, roughness: 0.6 });
 
   const base = new THREE.Group(); g.add(base);            // the stone, the pot and its spout, in the kettle's own frame
-  const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, 1, 9), rock); base.add(stone);
+  const stone = new THREE.Mesh(new THREE.CylinderGeometry(KETTLE.stone[0], KETTLE.stone[1], 1, 12), rock); base.add(stone);
   const pot = new THREE.Group(); base.add(pot);
   const body = new THREE.Mesh(new THREE.SphereGeometry(KETTLE.body, 14, 10), iron); body.scale.y = 0.82; body.position.y = 0.075; pot.add(body);
   const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.02, 12), iron); lid.position.y = 0.16; pot.add(lid);
-  const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.024, 0.13, 8), iron);
-  spout.position.set(-0.075, 0.14, 0.02); spout.rotation.z = 0.9; pot.add(spout);
+  const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.024, 0.17, 8), iron);   // along the pot's -x, toward the seat
+  spout.position.set(-0.095, 0.135, 0); spout.rotation.z = 0.9; pot.add(spout);
   const handle = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.009, 6, 12, Math.PI), iron);
   handle.position.set(0.02, 0.17, 0); handle.rotation.set(0, 0, 0); pot.add(handle);
-  const lipAt = new THREE.Object3D(); lipAt.position.set(-0.13, 0.19, 0.02); pot.add(lipAt);   // where the tea comes out
+  const lipAt = new THREE.Object3D(); lipAt.position.set(-KETTLE.spout, KETTLE.lipH, 0); pot.add(lipAt);   // where the tea comes out
 
   const cup = new THREE.Group();
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(CUP.r, CUP.r * 0.78, CUP.h, 14), clay); cup.add(bowl);
@@ -61,43 +63,54 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
   const J = {};   // the held figure's bones, looked up once on attach
   let frozen = null, lastT = null;   // frozen: a probe holds the beat at that many seconds in (freeze())
   let seatNow = seat, attached = null, t0 = null, mode = "pour", held = false, stoneH = 0.04, full = false, glowK = 0;
-  const a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), ws = new THREE.Vector3(), X = new THREE.Vector3(1, 0, 0);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), ws = new THREE.Vector3(), X = new THREE.Vector3(1, 0, 0), gv = new THREE.Vector3();
   const qp = new THREE.Quaternion(), qt = new THREE.Quaternion(), eu = new THREE.Euler(), hp = new THREE.Vector3(), cp = new THREE.Vector3();
 
-  /* The kettle stands where the probe says a seated arm reaches: KETTLE.lip over the seat's top, and the stone makes up
-     whatever the ground leaves of that height. */
+  /* The kettle on its table stone beside the seat, to the right and a little ahead, where the probe says the figure stays clear
+     of it (tea-pose.js KETTLE, tools/tea-hand-probe.mjs): the stone's top KETTLE.top over the seat's top, whatever the ground. */
   function place(s) {
     if (!s) return;
     seatNow = s;
     const fx = Math.sin(s.yaw), fz = Math.cos(s.yaw), lx = fz, lz = -fx;   // the figure's facing, and its left
-    const kx = s.x + fx * KETTLE.lip.z + lx * KETTLE.lip.x;
-    const kz = s.z + fz * KETTLE.lip.z + lz * KETTLE.lip.x;
-    const gy = groundY(kx, kz), lipY = s.top + KETTLE.lip.y;
-    stoneH = Math.max(0.04, lipY - gy - KETTLE.height);
+    const k = kettleAt(), kx = s.x + lx * k.x + fx * k.z, kz = s.z + lz * k.x + fz * k.z;
+    const gy = groundY(kx, kz);
+    stoneH = Math.max(0.04, s.top + KETTLE.top - gy);
     base.position.set(kx, gy, kz);
-    base.rotation.y = Math.atan2(s.x - kx, s.z - kz);       // the spout turns toward whoever sits
+    const ux = s.x - kx, uz = s.z - kz, ul = Math.hypot(ux, uz) || 1;
+    base.rotation.y = Math.atan2(uz / ul, -ux / ul);        // the spout (the pot's -x) turns toward whoever sits
     stone.scale.y = stoneH; stone.position.y = stoneH / 2;
     pot.position.y = stoneH;
     if (!attached) putDown();
   }
-  /* The cup on the stone, beside the pot on the side toward the seat, until a hand takes it up. */
+  /* The cup on the stone, under the spout on the side toward the seat: where the tea is poured into it, and where it stays
+     until the hand has it. */
   function putDown() {
     if (cup.parent !== g) g.add(cup);
     base.updateMatrix();
-    cup.position.set(0.12, stoneH + CUP.h / 2, 0.08).applyMatrix4(base.matrix);
+    cup.position.set(-KETTLE.spot, stoneH + CUP.h / 2, 0).applyMatrix4(base.matrix);
     cup.quaternion.identity(); cup.scale.setScalar(1); cup.visible = true;
   }
 
-  /* Into the right hand: HAND past the wrist joint, along the hand. A figure without a wrist bone keeps it at the elbow's end. */
+  /* The cup goes to the right hand once the hand is on it (the back beat): HAND past the wrist joint, along the hand, and then
+     GRIP out through the palm, so the hand holds its side (tea-cup-look-3: the cup passed through the hands). A figure without
+     a wrist bone keeps it at the elbow's end. */
   function attach(body3d) {
     const o = body3d && body3d.holder;
     const wrist = o && o.getObjectByName("wristR"), bone = wrist || (o && o.getObjectByName("elbowR"));
     if (!bone) return false;
-    attached = body3d; bone.add(cup);
+    attached = body3d; J.hand = bone; J.along = wrist ? HAND : 0.3;
     for (const n of ["shoulderR", "elbowR", "neck", "spine", "head"]) J[n] = o.getObjectByName(n);
-    cup.position.set(0, wrist ? HAND : 0.3, 0);
-    cup.visible = true;
     return true;
+  }
+  /* In the hand, its side against the palm: `grip` is the way the palm faces, in the figure's frame (x left, z ahead). */
+  function inHand(grip, tilt) {
+    if (cup.parent !== J.hand) J.hand.add(cup);
+    orient(tilt);
+    const k = attached.scale || 1;
+    J.hand.localToWorld(a.set(0, J.along, 0));
+    attached.holder.getWorldQuaternion(qt);
+    gv.set(grip.x, 0, grip.z).normalize().applyQuaternion(qt).multiplyScalar(GRIP * k);
+    cup.position.copy(J.hand.worldToLocal(a.add(gv)));
   }
   function detach() { attached = null; held = false; t0 = null; full = false; glowK = 0; stream.visible = false; putDown(); for (const m of [...steam, halo, ...motes]) m.visible = false; }
 
@@ -126,12 +139,14 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     if (S) S.quaternion.multiply(qt.setFromEuler(eu.set(s.arm.sx, s.arm.sy || 0, s.arm.sz, "XYZ")));   // after pose(), so it sits on the sit
     if (E) E.quaternion.multiply(qt.setFromEuler(eu.set(s.arm.ex, 0, 0, "XYZ")));
     /* The savour: the head lifts and the chest opens a little (neck and spine X back, read off the rig). */
-    const sv = s.savor || 0, N = J.neck, Sp = J.spine;
+    const sv = s.savor || 0, N = J.neck, Sp = J.spine, lean = s.arm.lean || 0;
+    if (Sp && lean) Sp.quaternion.multiply(qt.setFromAxisAngle(X, lean));   // the body bends a little toward the stone
     if (sv > 0.001) {
       if (N) N.quaternion.multiply(qt.setFromAxisAngle(X, -0.22 * sv));
       if (Sp) Sp.quaternion.multiply(qt.setFromAxisAngle(X, -0.05 * sv));
     }
-    orient(s.tilt);
+    if (s.phase === "reach" || s.phase === "pour") { if (cup.parent !== g) putDown(); }   // on the stone until the hand has it
+    else inHand(s.grip || { x: 1, z: 0 }, s.tilt);
     if (s.phase === "pour" ? s.pour > TEA_FULL : s.phase !== "reach") full = true;   // poured into once, it stays full
     glow(t, sv, dt); last = { phase: s.phase, savor: sv, up: s.up || 0, pour: s.pour || 0, glow: glowK, full, steam: steam.map(m => [m.visible, +m.material.opacity.toFixed(2), m.position.toArray().map(x => +x.toFixed(2))])[0], halo: [halo.visible, +halo.material.opacity.toFixed(2)] };
     if (s.stream) {

@@ -13,7 +13,7 @@ import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure w
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
-import { NEAR as TEA_NEAR } from "./tea-pose.js";
+import { NEAR as TEA_NEAR, TEA as TEA_BEATS } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -564,6 +564,9 @@ const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOS
 // previews: ?embers=demo puts four held embers in your pouch on this page only (never saved), so the seated hearth moment shows
 // with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
+// previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
+// E.g. ?nook=1&sit=hearth&tea=sip
+const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
@@ -676,6 +679,7 @@ function renderSatchel() {
 }
 const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
 let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+const TEA_VIEW = { wide: [[0.69, 0.8, 0.98], [-0.12, 0.45, 0.15]], phone: [[0.8, 0.8, 1.15], [-0.1, 0.45, 0.15]] };   // camera, focus, in the seats frame (x left, z ahead)
 let seatK = 0, seatViewAt = null; // the low view of you sat on the hearth's cushion (or one you set down), eased in
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
 function setMirror(on) {
@@ -1077,7 +1081,7 @@ function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
    goes into the right hand of whoever is sat there (bt-cup-is-the-figure) and stays held in the lap until they stand.
    "Pour a cup" is offered only to someone sat within NEAR of the kettle (tea-look-2, his note 2026-10-29: "the cup is offering
    when they aren't near the teapot"). No qi, no shelf and no music yet: someone who has worked through nothing can sit and pour. */
-let tea = null, teaRoom = null, teaKey = "", teaWas = false;
+let tea = null, teaRoom = null, teaKey = "", teaWas = false, teaSkipped = false, teaK = 0;
 function teaNow() {
   const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return null;
   if (!tea) tea = buildTea({ THREE, scene, seat: s, groundY });
@@ -1098,16 +1102,19 @@ function teaBtn() {
   return tea.holding() ? `<button type="button" class="hmlink" data-act="teaSip">Take a sip</button>`
     : `<button type="button" class="hmlink" data-act="teaPour">Pour a cup</button>`;
 }
-function teaPour() {
+function teaPour(skip = 0) {
   if (!teaNear()) return;
   const m = tea; if (m.running() || m.holding()) return;
   if (!m.attach(meState.body)) return;
-  m.pour(performance.now() / 1000);
+  m.pour(performance.now() / 1000 - skip);
   toast("A cup, by the fire."); hmHud();
 }
 function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
 function teaFrame(t) {
   if (hollow) teaNow();
+  if (TEA_SKIP && !teaSkipped && tea && !tea.holding() && teaNear() && meState.body) {
+    teaSkipped = true; teaPour(TEA_SKIP === "sip" ? TEA_BEATS.reach + TEA_BEATS.pour + TEA_BEATS.back - 0.4 : 0);
+  }
   if (!tea || !tea.holding()) return;
   if (!meState.sitting || !teaNear()) { tea.stop(); teaWas = false; return; }   // standing up puts the cup back on the stone
   tea.tick(t);
@@ -1571,6 +1578,19 @@ function frameBody() {
     if (hmUp > 0.001 && hm) { const hk = (hm.L.hang || hm.hooks[0]).pos, k2 = hmUp * hmUp * (3 - 2 * hmUp); p.lerp(hmAt(F, -1.9, 0.95, 1.05), k2); f.lerp(hk.clone().setY(hk.y - 1.0).lerp(hm.L.g.position, 0.3), k2); }
     clampCamera(p, f);
     const k = hmK * hmK * (3 - 2 * hmK); cp.lerp(p, k); focus.lerp(f, k);
+  }
+  /* Tea in your hand (tea-cup-look-3, his note 2026-10-29: when you sit to drink, the camera should move so you see yourself
+     drinking): the view comes round in front of you, a little to your left and level with your face, so the cup coming up to
+     your mouth, your hand on it and the kettle on its stone are all in sight. It eases back behind you when you stand. */
+  const teaOn = !!(tea && tea.holding() && meState.sitting && seatViewAt && !mirrorOn);
+  teaK += ((teaOn ? 1 : 0) - teaK) * Math.min(1, dt * 1.1);
+  if (teaK < 0.002 && !teaOn) teaK = 0;
+  if (teaK > 0 && seatViewAt) {
+    const S = seatViewAt, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), lx = fz, lz = -fx, tall = innerWidth < innerHeight;
+    const at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
+    const V = tall ? TEA_VIEW.phone : TEA_VIEW.wide, p = at(...V[0]), f = at(...V[1]);
+    clampCamera(p, f);
+    const k = teaK * teaK * (3 - 2 * teaK); cp.lerp(p, k); focus.lerp(f, k);
   }
   const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
