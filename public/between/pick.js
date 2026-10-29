@@ -4,13 +4,16 @@
    (the spark, a spirit curled beside the cushion, a placed item), so sitting is always the first move a cushion offers.
    Pure: no three.js, no DOM, so the rule reads the same here and in the tests. */
 export const isSeat = key => typeof key === "string" && key.startsWith("seat:");
+/* A stone of the shared pick round the hearth (shared-pick.js): like a seat, it takes the tap ahead of what stands over it. */
+export const isStone = key => typeof key === "string" && key.startsWith("stone:");
+const first = key => isSeat(key) || isStone(key);
 
 export function pickTap(hits) {
   let best = null;
   for (const h of hits || []) {
     if (!h) continue;
     if (!best) { best = h; continue; }
-    const s = isSeat(h.key), bs = isSeat(best.key);
+    const s = first(h.key), bs = first(best.key);
     if (s !== bs ? s : h.along < best.along) best = h;
   }
   return best;
