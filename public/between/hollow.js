@@ -100,6 +100,41 @@ export function walkable(x, z, pad = 0.35) {
   if (LAY.stream && distToStream(x, z) < STREAM_HALF + pad) return false;
   return true;
 }
+/* The way from `from` to `goal` round whatever stands between (the Between, the card table, a stone): a few points to walk
+   through in turn, ending at the goal. Until any cushion was anyone's (pt1-cushion-look-1) a walk only went to your own
+   cushion, straight, from your own side; the far cushion sits behind the Between and the card table, whose edges meet,
+   and a straight walk there was pushed back out each frame and never arrived. A* on a grid of walkable(), then pulled
+   tight so the walk keeps to straight lines. A goal nothing reaches gets the straight line, as before. */
+export function routeTo(from, goal, pad = 0.35) {
+  const clear = (ax, az, bx, bz) => { const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.1); for (let i = 1; i < n; i++) if (!walkable(ax + (bx - ax) * i / n, az + (bz - az) * i / n, pad)) return false; return true; };
+  if (clear(from.x, from.z, goal.x, goal.z)) return [{ x: goal.x, z: goal.z }];
+  const S = 0.25, N = Math.ceil(WALK_R / S) * 2 + 1, o = (N - 1) / 2, cell = v => Math.max(0, Math.min(N - 1, Math.round(v / S) + o));
+  const at = c => (c - o) * S, idx = (i, j) => i * N + j;
+  const ok = new Uint8Array(N * N); for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) ok[idx(i, j)] = walkable(at(i), at(j), pad) ? 1 : 0;
+  const si = cell(from.x), sj = cell(from.z), gi = cell(goal.x), gj = cell(goal.z);
+  ok[idx(si, sj)] = 1; ok[idx(gi, gj)] = 1;                         // you may stand at an edge, and a seat may sit at one
+  const g = new Float32Array(N * N).fill(Infinity), came = new Int32Array(N * N).fill(-1), done = new Uint8Array(N * N), open = [idx(si, sj)];
+  g[idx(si, sj)] = 0;
+  const h = k => Math.hypot(Math.floor(k / N) - gi, k % N - gj);
+  while (open.length) {
+    let b = 0; for (let k = 1; k < open.length; k++) if (g[open[k]] + h(open[k]) < g[open[b]] + h(open[b])) b = k;
+    const k = open.splice(b, 1)[0]; if (done[k]) continue; done[k] = 1;
+    if (k === idx(gi, gj)) break;
+    const i = Math.floor(k / N), j = k % N;
+    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+      const ni = i + di, nj = j + dj; if ((!di && !dj) || ni < 0 || nj < 0 || ni >= N || nj >= N) continue;
+      const nk = idx(ni, nj); if (!ok[nk] || done[nk]) continue;
+      const c = g[k] + Math.hypot(di, dj); if (c < g[nk]) { g[nk] = c; came[nk] = k; open.push(nk); }
+    }
+  }
+  if (came[idx(gi, gj)] < 0) return [{ x: goal.x, z: goal.z }];
+  const pts = []; for (let k = idx(gi, gj); k !== idx(si, sj); k = came[k]) pts.unshift({ x: at(Math.floor(k / N)), z: at(k % N) });
+  pts[pts.length - 1] = { x: goal.x, z: goal.z };
+  // pull it tight: from each point, go straight to the furthest point still in clear sight
+  const out = []; let cur = from, k = 0;
+  while (k < pts.length) { let far = k; for (let m = pts.length - 1; m > k; m--) if (clear(cur.x, cur.z, pts[m].x, pts[m].z)) { far = m; break; } out.push(pts[far]); cur = pts[far]; k = far + 1; }
+  return out;
+}
 export function pushOut(v, pad = 0.35) {
   for (let k = 0; k < 3; k++) {
     const d = Math.hypot(v.x, v.z), max = WALK_R - pad;
