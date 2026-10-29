@@ -10,7 +10,9 @@
  *   4. both reach the same spark: one garden id, both members, the phase now "between";
  *   5. the partner's figure loads on each screen (a dressed body, not left loading), even when the phone's first fetch of
  *      the figures' robe drops, as a phone on a weak signal drops one;
- *   6. the link is findable again from the homeroom: the planter's Rooms sheet sends a spark's link again, and the
+ *   6. the shared pick (Six-faces-council ch1-shared-pick): at ?pick=a6 the planter lifts a stone, the phone sees it go dark
+ *      and is refused it, and at the hollow the partner picks first;
+ *   7. the link is findable again from the homeroom: the planter's Rooms sheet sends a spark's link again, and the
  *      partner, back in their homeroom without the link, still finds the doorway to the room they were invited to.
  * The real route is not started: it sits behind the sign-in and `next build` needs the deployment's env, so this serves
  * the page the route serves (src/lib/between/page.ts) and an in-memory store that answers /api/between the way
@@ -369,6 +371,43 @@ async function main() {
       await Promise.all([pollNow(A), pollNow(Bp)])
       await loaded(A, 'pl-partner'); await loaded(Bp, 'pl-planter')
       return "the planter sees the partner's dressed figure, and the phone sees the planter's" + (dropped.length ? ', after the phone\'s dropped fetch of ' + dropped.map(d => d.split(' ')[1]).join(', ') : '')
+    })
+
+    await step('the shared pick: a lifted stone goes dark on both screens, and the hollow turns the order', async () => {
+      type SP = { state(): (Doc & { local: boolean }) | null; act(a: Doc): Promise<void>; stonesAt(): { card: string; lit: boolean }[] }
+      const sp = (p: Page) => p.waitForFunction(() => !!(window as unknown as { __between: { sp?: SP } }).__between.sp, undefined, { polling: 250, timeout: 15_000 })
+      const state = (p: Page) => p.evaluate(() => (window as unknown as { __between: { sp: SP } }).__between.sp.state())
+      const seen = async (p: Page, what: string, f: Promise<unknown>) => f.catch(async () => {
+        const at = await p.evaluate(() => { const b = (window as unknown as { __between: { sp?: SP; view(): { g: Doc | null } } }).__between; return JSON.stringify({ sp: !!b.sp, state: b.sp && b.sp.state(), members: b.view().g && Object.keys((b.view().g as Doc).members as Doc || {}), pick: b.view().g && (b.view().g as Doc).pick }) }).catch(e => String(e))
+        throw new Error(what + ' did not happen; the page holds ' + at.slice(0, 400))
+      })
+      // the planter opens the garden at the hunters' choice; a garden of two opens a real pool, not the rehearsal
+      A = await reopen(A, `${base}/ontology-game/between?g=${roomId}&skipHome=1&pick=a6`, watch('pl-planter')); await seen(A, 'the pick module loading', sp(A))
+      await seen(A, 'the pool opening', A.waitForFunction(() => { const s = (window as unknown as { __between: { sp: SP } }).__between.sp.state(); return !!s && !s.local && s.turn === 'pl-planter' }, undefined, { polling: 250, timeout: 15_000 }))
+      await A.evaluate(() => (window as unknown as { __between: { sp: SP } }).__between.sp.act({ lift: 'WAKE-DA-REGENT' }))
+      await pollNow(Bp); await seen(Bp, 'the phone loading the pick', sp(Bp))
+      await seen(Bp, 'the stone going dark on the phone', Bp.waitForFunction(() => { const b = (window as unknown as { __between: { sp: SP } }).__between.sp; const s = b.state(); return !!s && s.turn === 'pl-partner' && b.stonesAt().some(x => x.card === 'WAKE-DA-REGENT' && !x.lit) }, undefined, { polling: 250, timeout: 20_000 }))
+      // the phone cannot lift the stone that went dark
+      const refused = await Bp.evaluate(async ([g, me]) => {
+        const cur = (window as unknown as { __between: { view(): { g: Doc } } }).__between.view().g.pick as Doc
+        const again = { ...cur, taken: { ...(cur.taken as Doc), 'WAKE-DA-REGENT': { by: me, moment: cur.moment, at: Date.now() } }, turn: 'pl-partner' }
+        const r = await fetch('/api/between/' + g + '/doc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'garden/main', op: 'update', data: { pick: again } }) })
+        return r.status
+      }, [roomId, 'pl-partner'])
+      if (refused !== 409) throw new Error('lifting a stone already lifted answered ' + refused + ', not 409')
+      await Bp.evaluate(() => (window as unknown as { __between: { sp: SP } }).__between.sp.act({ lift: 'WAKE-DA-DIPLOMAT' }))
+      await pollNow(A)
+      await seen(A, 'the hollow turning the order', A.waitForFunction(() => { const s = (window as unknown as { __between: { sp: SP } }).__between.sp.state(); return !!s && s.moment === 'a8-hollow' && s.turn === 'pl-partner' }, undefined, { polling: 250, timeout: 20_000 }))
+      const shots = process.env.BETWEEN_CHECK_SHOTS
+      if (shots) { // the planter's screen, the camera on the ring of stones (the phone's software WebGL is too slow to shoot here)
+        await A.evaluate(() => { const b = (window as unknown as { __between: B & { anchors(): { hearth: number[] } } }).__between; const [x, , z] = b.anchors().hearth; const d = Math.hypot(x, z) || 1; b.setCam([x - x / d * 6.5, 4.2, z - z / d * 6.5, x - x / d * 1.4, 0.1, z - z / d * 1.4]) })
+        await A.waitForTimeout(800)
+        await A.screenshot({ path: join(shots, 'pick-planter-hollow.png'), timeout: 90_000 }).catch(e => console.log('  shot: ' + (e as Error).message.split('\n')[0]))
+        await A.evaluate(() => (window as unknown as { __between: B }).__between.setCam(null))
+      }
+      const b = await state(Bp)
+      if (!b || (b.pool as string[]).length !== 5) throw new Error('the phone does not see five stones still lit')
+      return 'the planter lifted Which Fight Is Yours, it went dark on the phone, the phone was refused it (409) and lifted Who\'s at Risk; at the hollow the partner picks first'
     })
 
     await step('the link is findable again from the homeroom', async () => {
