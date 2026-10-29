@@ -565,8 +565,17 @@ def j5():
             # round 8: no turned-hem point anchored across a slit (cloth_walk.mjs fold_far: anchor further than 8 edges)
             check(row["cloth"].get("folds", 0) > 0 and row["cloth"].get("fold_far", 1) == 0,
                   f"{row['id']}: {row['cloth'].get('fold_far')} of {row['cloth'].get('folds')} fold points anchored across a slit")
+            # round 11 (T2): the sleeves' spring chains carry no sleeve point into the forearm, the hand or a leg past
+            # where skinning puts it, at the walk or at the fast swing (cloth_walk.mjs arm_mm, leg_mm; capsules, so
+            # 1 mm of slack)
+            sl = row["cloth"].get("sleeves") or {}
+            check(set(sl) >= {"walk", "fast"} and all(v and v["arm_mm"] <= 1 and v["leg_mm"] <= 1 for v in sl.values()),
+                  f"{row['id']}: sleeves into the arm or a leg: {sl}")
     sizes = [(out / x["file"]).stat().st_size for x in rows]
-    return f"36 garments on nine figures, none through at 25 keys, {min(sizes) // 1024} to {max(sizes) // 1024} KB; {secs:.0f} s"
+    sl = [x["cloth"]["sleeves"] for x in rows if x["garment"] == "robe"]
+    t1 = (f"; sleeves at the walk: rim lag {min(v['walk']['lag_frames'] for v in sl)} to {max(v['walk']['lag_frames'] for v in sl)} "
+          f"frames, coherence {min(v['walk']['coherence'] for v in sl)} to {max(v['walk']['coherence'] for v in sl)} (T1 asks 3 to 6, under 0.8)")
+    return f"36 garments on nine figures, none through at 25 keys, {min(sizes) // 1024} to {max(sizes) // 1024} KB; {secs:.0f} s{t1}"
 
 
 @test("J5b")

@@ -56,7 +56,8 @@ DRAPE_TRIES = 6                                  # processes tried at most, per 
 BEND_BODY, BEND_HEM = 0.05, 0.4                  # bending stiffness of the cloth, and of a hemmed edge (the cuff)
 CUFF_HEM = 0.10                                  # metres of the cuff that is hemmed
 WALK_X = int(os.environ.get("WALK_X", "1"))          # the walk strip's resolution multiple (3 to look closely at a cuff)
-CUFF_ROUNDS = 60                                 # smoothing rounds on the cuffs' open edges, before the trim is cut (25 until round 8)
+CUFF_ROUNDS = 60                                 # smoothing rounds on the hem's open edge, before the trim is cut (25 until
+                                                 # round 8; the cuffs too until round 10, when clean_cuffs() made them rings)
 SKIRT_SMOOTH = 6                                 # rounds of averaging the skirt's weights with its neighbours'
 FIT_MARGIN = 0.008                               # metres past the point that came through that a push aims for
 FIT_RADIUS = 0.08                               # metres, how far a push spreads over the cloth (falls off smoothly)
@@ -328,7 +329,7 @@ def pattern(fig, build, shoulder):
     nb = max(8, round(2 * wb / CLOTH_H))
     nlow = max(4, round((za - HEM_CUT) / CLOTH_H))
     nup = max(3, round((ztop(wb) - za) / CLOTH_H))
-    verts, idx, upper, faces, parts, seams = [], {}, [], [], [], set()
+    verts, idx, upper, faces, parts, seams, sleeve = [], {}, [], [], [], set(), {}
     for k in range(nlow + nup + 1):
         for i in range(nb + 1):
             u = -1 + 2 * i / nb
@@ -366,6 +367,7 @@ def pattern(fig, build, shoulder):
             w = w0 + (SLEEVE_W - w0) * smooth(0.0, 0.9, t) + (CUFF_W - SLEEVE_W) * smooth(0.5, 1.0, t)
             for m in range(nup + 1):
                 idx[(side, j, m)] = len(verts)
+                sleeve[len(verts)] = (side, j, m)
                 verts.append((T.x, T.y - w * (nup - m) / nup))
                 upper.append(0.0)
         q = lambda jj, mm: idx[("b", icol, nlow + mm)] if jj == 0 else idx[(side, jj, mm)]
@@ -376,7 +378,7 @@ def pattern(fig, build, shoulder):
                 parts.append(1 if s > 0 else 2)
         for j in range(1, ns + 1):                       # the sleeve's top and bottom seams, to the cuff's corners; the cuff stays open
             seams |= {idx[(side, j, 0)], idx[(side, j, nup)]}
-    return verts, faces, parts, seams, upper
+    return verts, faces, parts, seams, upper, (sleeve, ns, nup)
 
 
 def arms_out(rig, ang):
@@ -386,6 +388,55 @@ def arms_out(rig, ang):
         B = rig.data.bones["shoulder" + side].matrix_local.to_3x3()
         out["shoulder" + side] = (B.inverted() @ Matrix.Rotation(s * ang, 3, "Y") @ B).to_quaternion()
     return out
+
+
+CUFF_LOFT = 0.10                                 # metres of the sleeve's end that are rebuilt as a clean ring (round 10)
+CUFF_HARM = 2                                    # the ring's shape round the forearm: harmonics of its radius kept
+
+
+def clean_cuffs(co, sleeve, bk, build):
+    """Each sleeve's end as a clean ring round the forearm (round 10). The cloth crumples where the sleeve's end meets
+    the hand, and the cuff's edge came out of the drape as a ragged loop with a tongue where the two panels' corners
+    meet; the trim cut along it was torn cream patches (Wendell, round 7: "we do still need to fix the cuffs"). The
+    edge ring keeps the drape's size and droop, but smoothly: its points are spread evenly round it, its radius round
+    the forearm keeps only CUFF_HARM harmonics and its reach along the forearm only a tilt. The rings in the last
+    CUFF_LOFT before it are eased toward the same shape, so the sleeve narrows into the cuff without a crease."""
+    sleeve, ns, nup = sleeve
+    J = C.joints(build)
+    at = {(side, j, m): i for i, (side, j, m) in sleeve.items()}
+    co = [c.copy() for c in co]
+    for side in ("L", "R"):
+        E, Wr = Vector(J["elbow" + side][0]), Vector(J["wrist" + side][0])
+        a = (Wr - E).normalized()                        # along the forearm, toward the hand
+        u = a.cross(Vector((0, 1, 0))).normalized()      # round it: u across, v front to back
+        v = a.cross(u).normalized()
+        k_loft = max(2, round(CUFF_LOFT / CLOTH_H))
+        for j in range(ns - k_loft, ns + 1):
+            # the ring: the front panel from the top seam round to the bottom seam, then the back panel back up
+            ring = [at[(side, j, m)] for m in range(nup + 1)] + [bk(at[(side, j, m)]) for m in range(nup - 1, 0, -1)]
+            P = [co[i] for i in ring]
+            n = len(P)
+            c = sum(P, Vector()) / n
+            h = [(p - c).dot(a) for p in P]
+            flat = [p - a * hh for p, hh in zip(P, h)]
+            th = [math.atan2((q - c).dot(v), (q - c).dot(u)) for q in flat]
+            r = [(q - c).length for q in flat]
+            turn = sum(math.remainder(th[(k + 1) % n] - th[k], math.tau) for k in range(n))
+            sgn = 1 if turn >= 0 else -1
+            # least squares fits: the radius to CUFF_HARM harmonics, the reach along the forearm to a tilt (one)
+            def fit(y, order):
+                import numpy as np
+                A = np.array([[1.0] + [f(o * t) for o in range(1, order + 1) for f in (math.cos, math.sin)] for t in th])
+                x = np.linalg.lstsq(A, np.array(y), rcond=None)[0]
+                return lambda t: float(x[0] + sum(x[2 * o - 1] * math.cos(o * t) + x[2 * o] * math.sin(o * t)
+                                                  for o in range(1, order + 1)))
+            R, H = fit(r, CUFF_HARM), fit(h, 1)
+            w = smooth(ns - k_loft, ns, j)
+            for k, i in enumerate(ring):
+                t = th[0] + sgn * math.tau * k / n           # evenly round, from the top seam
+                clean = c + a * H(t) + (u * math.cos(t) + v * math.sin(t)) * R(t)
+                co[i] = co[i].lerp(clean, w)
+    return co
 
 
 def drape(fig, rig, build):
@@ -415,7 +466,7 @@ def drape(fig, rig, build):
     def depth(x, z, s):                                  # how far the body reaches toward the front (s -1) or back
         hit = tree.ray_cast(Vector((x, s * 1.0, z)), Vector((0, -s, 0)))[0]
         return abs(hit.y) if hit is not None and hit.y * s > -0.05 else 0.0
-    verts2, faces2, parts, seams, upper = pattern(fig, build, shoulder)
+    verts2, faces2, parts, seams, upper, sleeve = pattern(fig, build, shoulder)
     # the two panels: a seam point is one point shared by both. Each starts wrapped round the body in front (or
     # behind) it, clear of it; its rest shape is the flat pattern, the front a hair in front of the back
     verts, flat, back = [], [], {}
@@ -477,6 +528,7 @@ def drape(fig, rig, build):
         sc.frame_set(f)
     ev = cl.evaluated_get(bpy.context.evaluated_depsgraph_get())
     co = [cl.matrix_world @ v.co for v in ev.data.vertices]
+    co = clean_cuffs(co, sleeve, bk, build)
     fig.modifiers.remove(collide)
     bpy.data.objects.remove(cl)
     rig.animation_data.action = walk
@@ -500,10 +552,9 @@ def trimmed(co, faces, parts, build):
         bm.faces.new([bm.verts[i] for i in f])
     for _ in range(2):
         bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
-    # a hem or cuff is a smooth line, not the free edge's ripples: round the cuffs' and the hem's open edges before
-    # cutting the trim
-    cuff_edge = [v for v in bm.verts if any(len(e.link_faces) == 1 for e in v.link_edges) and
-                 ((v.co.z > 0.7 and abs(v.co.x) > 0.2) or v.co.z < 0.3)]
+    # a hem is a smooth line, not the free edge's ripples: round the hem's open edge before cutting the trim (the
+    # cuffs are already clean rings, clean_cuffs(), and these rounds only shrank them into the hand)
+    cuff_edge = [v for v in bm.verts if any(len(e.link_faces) == 1 for e in v.link_edges) and v.co.z < 0.3]
     for _ in range(CUFF_ROUNDS):
         bmesh.ops.smooth_vert(bm, verts=cuff_edge, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.faces.ensure_lookup_table()
@@ -600,11 +651,64 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
     return weights
 
 
+PANEL_FROM = 0.3                                 # round 12: the sleeve's seams open from this share of the forearm
+                                                 # (from the elbow) to the cuff, so each sleeve hangs as two panels
+SLEEVE_CLOTH = os.environ.get("SLEEVE_CLOTH", "1") != "0"   # the panels as cloth (cloth.js; the default since round 12), 0: on spring chains (CLOTH.md)
+PANEL_GAP = 0.003                                # metres between the two sides of an opened seam at rest (cloth.js
+                                                 # welds points closer than 1e-5 m, and would sew it shut again)
+
+
+def panels(verts, faces, labels, J):
+    """The sleeves re-cut into panels (round 12; Wendell chose cd-sleeve-open C, "Re-cut into panels", 2026-10-17, on
+    his note on round 10: "They are moving like solid objects and not clothes"). A sleeve is its front and back panels
+    sewn along its top and bottom seams; below PANEL_FROM of the forearm those seams are opened, each seam point split
+    in two, one for each panel's faces, set PANEL_GAP apart. Each panel then hangs on its own spring chains in
+    cloth.js, so the two part and swing out of step, and the hand passes between them. Returns the points and faces,
+    and for each new point the point it was split from."""
+    V, F = list(verts), [list(f) for f in faces]
+    of = {}
+    for fi, ((p, _), f) in enumerate(zip(labels, F)):
+        for v in f:
+            of.setdefault(v, set()).add(p)
+    src = {}
+    for side, front in (("L", 1), ("R", 2)):
+        E, Wr = (Vector(J[b + side][0]) for b in ("elbow", "wrist"))
+        A = Wr - E
+        t = lambda p: (p - E).dot(A) / A.length_squared
+        seam = {v for v, ps in of.items() if front in ps and front + 3 in ps and t(verts[v]) > PANEL_FROM}
+        if not seam:
+            continue
+        twin = {}
+        for v in seam:
+            twin[v] = len(V)
+            src[len(V)] = v
+            V.append(verts[v].copy())
+        inward = {v: [Vector(), Vector()] for v in seam}   # each side's way into its own panel, away from the seam
+        for fi, f in enumerate(F):
+            p = labels[fi][0]
+            if p not in (front, front + 3):
+                continue
+            k = 0 if p == front else 1
+            for v in f:
+                if v in seam:
+                    inward[v][k] += sum((verts[u] - verts[v] for u in f if u not in seam), Vector())
+            if k:
+                F[fi] = [twin.get(v, v) for v in f]
+        for v in seam:
+            for k, i in ((0, v), (1, twin[v])):
+                d = inward[v][k]
+                if d.length > 1e-9:
+                    V[i] = verts[v] + d.normalized() * (PANEL_GAP / 2)
+    return V, F, src
+
+
 def robe(fig, rig, build, cw):
-    """The draped robe with its trim, reduced, hemmed, and weighted from the body under it."""
+    """The draped robe with its trim, reduced, re-cut into sleeve panels, hemmed, and weighted from the body under it."""
     co, faces, parts = drape(fig, rig, build)
     verts, faces, labels = reduce(*trimmed(co, faces, parts, build), ROBE_VERTS)
     W = bone_weights(fig)
+    J = C.joints(build)
+    verts, faces, _ = panels(verts, faces, labels, J)
     from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
                                                                   "shoulderL", "shoulderR"))
     from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
@@ -620,11 +724,28 @@ def robe(fig, rig, build, cw):
             weights.append(skirt_weights(p, from_body(p)))
             cloth.append(1.0 if p.z < PIN_Z else 0.0)        # the skirt: cloth at runtime (cloth.js)
         else:
-            weights.append(from_body(p) if any(q % 3 == 0 for q in ps) else from_arm["L" if 1 in [q % 3 for q in ps] else "R"](p))
+            if any(q % 3 == 0 for q in ps):
+                weights.append(from_body(p))
+            else:
+                # a sleeve: from the middle of the forearm on, it rides the forearm alone, so the cuff's ring keeps
+                # its shape (round 10; its nearest body points mixed the hand and the hip in)
+                s = "L" if 1 in [q % 3 for q in ps] else "R"
+                E, Wr = (Vector(J[b + s][0]) for b in ("elbow", "wrist"))
+                ta = (p - E).dot(Wr - E) / (Wr - E).length_squared
+                b = smooth(0.3, 0.7, ta)
+                w = {k: (1 - b) * x for k, x in from_arm[s](p).items()}
+                w["elbow" + s] = w.get("elbow" + s, 0.0) + b
+                weights.append(norm(w))
+                # round 12, second pass: below where its seams open the sleeve's panels are cloth, as the skirt is
+                # below the belt, hung from the sleeve above and pushed aside by the forearm and the hand
+                cloth.append(1.0 if SLEEVE_CLOTH and ta > PANEL_FROM else 0.0)
+                continue
             cloth.append(0.0)
     weights = smooth_skirt(weights, verts, faces, [p % 3 for p, _ in labels])
     n_faces = len(faces)
-    verts, faces, labels, src = hemmed(verts, faces, labels)
+    arms = {s: (Vector(J["elbow" + s][0]), (Vector(J["wrist" + s][0]) - Vector(J["elbow" + s][0])).normalized())
+            for s in "LR"}
+    verts, faces, labels, src = hemmed(verts, faces, labels, arms)
     weights += [weights[src[i]] for i in range(len(weights), len(verts))]   # the turned hem moves with its edge
     base = list(cloth)
     for i in range(len(cloth), len(verts)):            # the hem's edge is stiff (2); the hem turned back inside it
@@ -644,11 +765,12 @@ HEM_IN, HEM_UP = 0.006, 0.03                     # metres: the hem's turned edge
 FACING = 3                                       # the turned hem's faces' part: inside the cloth, never tested
 
 
-def hemmed(verts, faces, labels):
+def hemmed(verts, faces, labels, arms=None):
     """The hem and the cuffs turned back inside, as a sewn hem is: the cloth goes on past its edge, round a fold
     HEM_IN thick, and back up inside for HEM_UP, so the edge has a body of its own (Wendell, 2026-10-14: "The hems
     also need to feel like they are more than just painted on"). The slits are left raw. Returns the points, faces and
-    labels with the turned hem added after the rest, and for each new point the edge point it was turned from."""
+    labels with the turned hem added after the rest, and for each new point the edge point it was turned from. arms,
+    {side: (elbow, along the forearm)}, turns a cuff's fold in toward its forearm (round 10)."""
     count, nxt = {}, {}
     for fi, f in enumerate(faces):
         for a, b in zip(f, f[1:] + f[:1]):
@@ -678,10 +800,19 @@ def hemmed(verts, faces, labels):
     for v in on_edge:
         inside = [verts[u] - verts[v] for u in nbr[v] if u not in on_edge]
         up = sum(inside, Vector()) if inside else Vector((0, 0, 1))
-        n = normal[v].normalized()
+        p = verts[v]
+        if arms and p.z > 0.6 and abs(p.x) > 0.2:
+            # a cuff: in toward the forearm. The cloth's normal cancels where the cuff's ring crosses a seam (the
+            # front and back panels face apart there), and that point's fold shot off as a spike below the hand; and
+            # in toward the wearer's middle turned the fold outward on the ring's inner side
+            E, a = arms["L" if p.x > 0 else "R"]
+            n = (p - E) - a * (p - E).dot(a)
+            n.normalize()
+        else:
+            n = normal[v].normalized()
+            if n.dot(Vector((p.x, p.y, 0))) < 0:         # the fold goes in, toward the wearer's middle
+                n = -n
         up = (up - n * up.dot(n)).normalized()
-        if n.dot(Vector((verts[v].x, verts[v].y, 0))) < 0:   # the fold goes in, toward the wearer's middle
-            n = -n
         ring[v] = len(V)
         src[len(V)], src[len(V) + 1] = v, v
         V.append(verts[v] - n * HEM_IN)
@@ -769,6 +900,30 @@ def leg_capsules(fig, build):
     return out
 
 
+HAND_PCT = 0.9                                   # the hand's capsule: this share of the hand's points inside it (a flat
+                                                 # hand in a round capsule; it only stops a sleeve point coming closer)
+
+
+def arm_capsules(fig, build):
+    """The forearm and hand capsules the sleeves' spring chains keep their points off (cloth.js, round 11): the
+    forearm from the elbow to the wrist round the forearm's own points, and the hand from the wrist to the middle
+    finger's last knuckle round the hand's. Marked arm, so the skirt's cloth does not use them."""
+    W = bone_weights(fig)
+    out = []
+    for s in "LR":
+        J = C.joints(build)
+        hand = tuple(n + s for n in ("wrist",) + C.FINGER_BONES)
+        for a, b, own, pct in (("elbow" + s, "wrist" + s, ("elbow" + s,), CAP_PCT),
+                               ("wrist" + s, "middle3" + s, hand, HAND_PCT)):
+            if b not in J:
+                continue
+            A, B = Vector(J[a][0]), Vector(J[b][0])
+            d = sorted(seg_dist(v.co, A, B) for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in own)
+            if d:
+                out.append({"a": a, "b": b, "r": round(d[min(len(d) - 1, int(pct * len(d)))], 4), "arm": True})
+    return out
+
+
 def cloth_job(robe_obj, rig, capsules, scenarios):
     """What cloth_walk.mjs needs: the rig at rest, the robe (points, triangles, the cloth mask, weights), the leg
     capsules and the walks to run."""
@@ -829,9 +984,16 @@ def cloth_scenarios():
              "samples": [WARM + t for t in (0.0, 0.2, 0.4, 0.6, 0.9, 1.3, 2.0, 3.0)]}]
 
 
+def fast_swing():
+    """Round 11 (test T2): cave.js's fast stride (2.5 steps a second at its widest swing, 0.62) for three seconds, so the
+    sleeves' spring chains are measured at the hardest arm swing the game has (cloth_walk.mjs: arm_mm, leg_mm)."""
+    return {"name": "fast", "steps": 2.5, "amp": 0.62, "turn": None, "samples": [WARM + 1.0]}
+
+
 def cloth_walk(robe_obj, rig, capsules):
-    """The robe over the test's walk, cloth below the belt: sets POSED for the robe at each key; returns the result."""
-    res = run_cloth(cloth_job(robe_obj, rig, capsules, [walk_keys()]), robe_obj.name)
+    """The robe over the test's walk, cloth below the belt: sets POSED for the robe at each key; returns the result.
+    The fast swing runs after it, for the sleeves' measures only."""
+    res = run_cloth(cloth_job(robe_obj, rig, capsules, [walk_keys(), fast_swing()]), robe_obj.name)
     s = res["scenarios"][0]["samples"]
     POSED[robe_obj.name] = {1 + k: [Vector(x["robe"][3 * i:3 * i + 3]) for i in range(len(x["robe"]) // 3)]
                             for k, x in enumerate(s)}
@@ -1318,12 +1480,40 @@ def tidy_nodes(path):
                 node[k] = [round(v, 6) + 0.0 for v in node[k]]
         if all(abs(v - 1) < 1e-6 for v in node.get("scale", (2,))):
             del node["scale"]
+    rest = colours_as_bytes(j, b[20 + n:])
     text = json.dumps(j, separators=(",", ":")).encode()
     text += b" " * (-len(text) % 4)
-    rest = b[20 + n:]
     out = b[:8] + struct.pack("<I", 12 + 8 + len(text) + len(rest)) + struct.pack("<I", len(text)) + b"JSON" + text + rest
     with open(path, "wb") as f:
         f.write(out)
+
+
+def colours_as_bytes(j, rest):
+    """Round 12: each point's colour written as four bytes, not four 16-bit numbers (the exporter's choice). The cloth
+    sleeves' extra points put the robe 3 KB over its 150 KB line, and a byte a channel is all a flat colour needs.
+    rest is the GLB's BIN chunk (its 8-byte header first); returns it repacked, with j's buffer views moved to match."""
+    import struct
+    if len(rest) < 8 or rest[4:8] != b"BIN\0":
+        return rest
+    data = rest[8:8 + struct.unpack("<I", rest[:4])[0]]
+    views = [data[v.get("byteOffset", 0):v.get("byteOffset", 0) + v["byteLength"]] for v in j["bufferViews"]]
+    for mesh in j.get("meshes", []):
+        for prim in mesh["primitives"]:
+            a = j["accessors"][prim["attributes"].get("COLOR_0", -1)] if "COLOR_0" in prim["attributes"] else None
+            if not a or a["componentType"] != 5123 or a.get("byteOffset", 0) or j["bufferViews"][a["bufferView"]].get("byteStride"):
+                continue
+            src = views[a["bufferView"]]
+            vals = struct.unpack(f"<{len(src) // 2}H", src)
+            views[a["bufferView"]] = bytes(min(255, (v * 255 + 32767) // 65535) for v in vals)
+            a["componentType"], a["normalized"] = 5121, True
+    out = bytearray()
+    for v, bv in zip(views, j["bufferViews"]):
+        out += b"\0" * (-len(out) % 4)
+        bv["byteOffset"], bv["byteLength"] = len(out), len(v)
+        out += v
+    out += b"\0" * (-len(out) % 4)
+    j["buffers"][0]["byteLength"] = len(out)
+    return struct.pack("<I", len(out)) + b"BIN\0" + bytes(out)
 
 
 def build_all(build, palette, out_dir, do_fit=True):
@@ -1348,8 +1538,17 @@ def build_all(build, palette, out_dir, do_fit=True):
     rp = [d.value for d in R.data.attributes["part"].data]
     body_pts = {v for f in R.data.polygons if rp[f.index] == 0 for v in f.vertices}
     slits = max(rc[v].z for e in openings(R) for v in e if v in body_pts and 0.25 < rc[v].z < 1.0 and abs(rc[v].x) > 0.12)
-    legs = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") and \
-        fig.data.vertices[i].co.z < slits + 0.08 else None
+    J = C.joints(build)
+
+    def opened(i):                                         # round 12: a forearm point past where the sleeve's seams open
+        b = main_bone(W[i])
+        if b not in ("elbowL", "elbowR"):
+            return False
+        E, Wr = (Vector(J[n + b[-1]][0]) for n in ("elbow", "wrist"))
+        return (fig.data.vertices[i].co - E).dot(Wr - E) / (Wr - E).length_squared > PANEL_FROM - 0.05
+    # a leg below the slits' tops may step out through a slit, and a forearm show between its sleeve's two panels
+    legs = lambda i: main_bone(W[i]) if (main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") and
+                                         fig.data.vertices[i].co.z < slits + 0.08) or opened(i) else None
     # the walking fit shapes the robe above the belt, which rides the body; below it the cloth finds its own way
     zs = lambda i: fig.data.vertices[i if isinstance(i, int) else i[0]].co.z
     upper = [i for i in cover if zs(i) > PIN_Z - 0.02 or main_bone(W[i if isinstance(i, int) else i[0]]) in ARMS]
@@ -1359,8 +1558,8 @@ def build_all(build, palette, out_dir, do_fit=True):
         log += polish(fig, upper, R, keys, parts=parts, ray_from=axis, limb_of=legs)   # a few stubborn points: smaller, stronger pushes
     if os.environ.get("GARMENTS_SAVE"):                  # for looking into a build by hand
         bpy.ops.wm.save_as_mainfile(filepath=os.environ["GARMENTS_SAVE"])
-    caps = leg_capsules(fig, build)
-    R["cloth"] = json.dumps({"capsules": caps})          # glTF extras: cloth.js reads the leg capsules from here
+    caps = leg_capsules(fig, build) + arm_capsules(fig, build)
+    R["cloth"] = json.dumps({"capsules": caps})          # glTF extras: cloth.js reads the leg and arm capsules from here
     leg = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") else None
     for opts in json.loads(os.environ.get("CLOTH_SWEEP", "[]")):   # for tuning: cloth.js options tried on this one drape
         os.environ["CLOTH_OPTS"] = json.dumps(opts)
@@ -1377,7 +1576,7 @@ def build_all(build, palette, out_dir, do_fit=True):
     POSED.pop(R.name, None)
     rows.append(("robe", R, counts, log, len(cover)))
     cloth_stats = {"particles": cres["particles"], "free": cres["free"], "node_step_ms": cres["step_ms"],
-                   "folds": cres["folds"], "fold_far": cres["fold_far"]}
+                   "folds": cres["folds"], "fold_far": cres["fold_far"], "sleeves": cres.get("sleeves")}
     S = sash(fig, rig, cw, "sash")
     cover_s = with_faces(fig, cover_band(fig, SASH_Z[0] + 0.01, SASH_Z[-1] - 0.01))
     band = lambda i: (0,)                                   # held by the band or the cap, not the decoration
