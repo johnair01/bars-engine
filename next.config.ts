@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
       // The Between's page and models (7 MB of .glb), loaded only by the browser. The first preview of bars-engine
       // PR #357 pushed api/guidance to 254.91 MB without this line.
       "./public/between/**",
+      // Chapter 1's arrival aboard the ship and its models, loaded only by the browser.
+      "./public/calrunia/**",
     ],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
@@ -26,6 +28,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "20mb",
     },
+  },
+  // Tap the Vein's embed is framed only by the Council Board on this same site (/board/council).
+  async headers() {
+    return [{ source: "/tap-the-vein/embed", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }];
   },
   // Legacy /hand route renamed to /vault (see .specify/specs/hand-vault-rename).
   // 301-redirect old links/bookmarks, preserving sub-paths and query params.
@@ -58,6 +64,8 @@ const nextConfig: NextConfig = {
       { source: '/ontology-game/body', destination: '/ontology-game/body.html' },
       // The Cave of Lessons: the block work walked inside the body map.
       { source: '/ontology-game/cave', destination: '/ontology-game/cave/index.html' },
+      // Chapter 1's arrival aboard the ship (scripts/build-calrunia-arrive.mjs). The passport rides in the #p= fragment.
+      { source: '/calrunia/arrive', destination: '/calrunia/arrive/index.html' },
     ];
   },
 };

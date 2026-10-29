@@ -8,7 +8,7 @@
 // compile of about 270 KB on every load). This compiles once at build time with the
 // TypeScript compiler the repo already has, so a client's phone downloads React and the
 // compiled game only.
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ts from 'typescript';
@@ -99,6 +99,16 @@ ${inline(bodyMap)}
 // /ontology-game/cave: the Cave of Lessons, the same block work walked inside the body map (cave/DESIGN.md).
 // cave-kit.glb and spots.json are made by cave/build_kit.py, the stone tiles by cave/bake_tiles.py; all are committed, so this build needs no Blender.
 const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
+// The spirits' family forms (the gas a met daemon's spirit wears), loaded before cave.js, whose buildSpirit asks for them.
+const spiritFormsJs = readFileSync(path.join(srcDir, 'cave', 'spirit-forms.js'), 'utf8');
+// The one store for spirits kept between runs (oag.spirits.v1), read by both caves.
+const spiritStoreJs = readFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), 'utf8');
+// The inner vessel the WAVE room rides in (oag.vessel.v1), its parts, fuel and the places reached from it (cave/vessel.js).
+const vesselJs = readFileSync(path.join(srcDir, 'cave', 'vessel.js'), 'utf8');
+// The one organ state (oag.organs.v1): which seat of the body map a sitting reached, read by the WAVE room and the basin (cave/organs.js).
+const organsJs = readFileSync(path.join(srcDir, 'cave', 'organs.js'), 'utf8');
+// The basin: the body map's inside as a walkable place, entered by its one mouth from the WAVE room (cave/basin.js).
+const basinJs = readFileSync(path.join(srcDir, 'cave', 'basin.js'), 'utf8');
 // Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
 const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
@@ -125,7 +135,18 @@ ${inline(bodyMap)}
 ${inline(daemonQuestionsJs)}
 </script>
 <script>
+${inline(spiritFormsJs)}
+</script>
+<script>
+${inline(spiritStoreJs)}
+${inline(vesselJs)}
+${inline(organsJs)}
+</script>
+<script>
 ${inline(caveJs)}
+</script>
+<script>
+${inline(basinJs)}
 </script>
 <script>
 ${inline(walkRoomJs)}
@@ -162,6 +183,13 @@ ${inline(bodyMap)}
 ${inline(daemonQuestionsJs)}
 </script>
 <script>
+${inline(spiritFormsJs)}
+</script>
+<script>
+${inline(spiritStoreJs)}
+${inline(vesselJs)}
+</script>
+<script>
 ${inline(caveJs)}
 </script>
 <script>
@@ -176,6 +204,8 @@ mkdirSync(path.join(outDir, 'big-mind'), { recursive: true });
 writeFileSync(path.join(outDir, 'big-mind', 'index.html'), bigMindHtml);
 mkdirSync(path.join(outDir, 'cave'), { recursive: true });
 writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
+// The Between reads the same store on the same origin (its homeroom calls spirits from the caves), so it is served as a file too.
+copyFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), path.join(outDir, 'cave', 'spirit-store.js'));
 copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
 copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 'spots.json'));
 // The stone tiles, baked by cave/bake_tiles.py and committed.
@@ -185,6 +215,13 @@ for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.jo
 // only when a scene asks for that daemon.
 mkdirSync(path.join(outDir, 'cave', 'daemons'), { recursive: true });
 for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) copyFileSync(path.join(srcDir, 'cave', 'daemons', d + '.glb'), path.join(outDir, 'cave', 'daemons', d + '.glb'));
+// The player's own figure: Average Dusk walking a CMU mocap clip (rig_mocap, bake_daemons.py --walker), worn over the avatar.
+mkdirSync(path.join(outDir, 'cave', 'player'), { recursive: true });
+copyFileSync(path.join(srcDir, 'cave', 'player', 'walker.glb'), path.join(outDir, 'cave', 'player', 'walker.glb'));
+// The spirits' core and hologram per family (cave/bake_spirits.py, from the spirit page's GLBs), fetched by spirit-forms.js
+// only when a spirit first unfolds into one (board sic-unfold-by-sitting).
+mkdirSync(path.join(outDir, 'cave', 'spirits'), { recursive: true });
+for (const f of readdirSync(path.join(srcDir, 'cave', 'spirits'))) if (f.endsWith('.glb')) copyFileSync(path.join(srcDir, 'cave', 'spirits', f), path.join(outDir, 'cave', 'spirits', f));
 mkdirSync(path.join(outDir, 'cave', 'rooms'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'rooms', 'wave-room', 'room.glb'), path.join(outDir, 'cave', 'rooms', 'wave-room.glb'));
 writeFileSync(path.join(outDir, 'index.html'), html);

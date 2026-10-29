@@ -1,0 +1,80 @@
+{
+ "shellback-core": {
+  "bytes": 11088,
+  "tris": 820,
+  "source_bytes": 112140,
+  "source": "glb/fire-core.glb"
+ },
+ "shellback-hologram": {
+  "bytes": 14556,
+  "tris": 1192,
+  "source_bytes": 96912,
+  "source": "glb/fire-hologram.glb"
+ },
+ "romp-core": {
+  "bytes": 13368,
+  "tris": 1000,
+  "source_bytes": 125604,
+  "source": "round11/fox/glb/fire-core.glb"
+ },
+ "romp-hologram": {
+  "bytes": 27344,
+  "tris": 2500,
+  "source_bytes": 201380,
+  "source": "round11/fox/glb/fire-hologram.glb"
+ },
+ "tinker-core": {
+  "bytes": 28660,
+  "tris": 2136,
+  "source_bytes": 183780,
+  "source": "round13/raccoon-neutral/glb/fire-core.glb"
+ },
+ "tinker-hologram": {
+  "bytes": 49328,
+  "tris": 4324,
+  "source_bytes": 304864,
+  "source": "round13/raccoon-neutral/glb/fire-hologram.glb"
+ },
+ "hedge-core": {
+  "bytes": 32900,
+  "tris": 2560,
+  "source_bytes": 182888,
+  "source": "round18/pallas-photo-rebuild/pallas-neutral/glb/fire-core.glb"
+ },
+ "hedge-hologram": {
+  "bytes": 51332,
+  "tris": 4440,
+  "source_bytes": 284572,
+  "source": "round18/pallas-photo-rebuild/pallas-neutral/glb/fire-hologram.glb"
+ },
+ "ballad-core": {
+  "bytes": 33932,
+  "tris": 2660,
+  "source_bytes": 209528,
+  "source": "round19/donkey-neutral/glb/fire-core.glb"
+ },
+ "ballad-hologram": {
+  "bytes": 48824,
+  "tris": 4228,
+  "source_bytes": 288332,
+  "source": "round19/donkey-neutral/glb/fire-hologram.glb"
+ },
+ "shellback-creature": {
+  "bytes": 198892,
+  "tris": 12007,
+  "source_bytes": 2388932,
+  "simplify": "--ratio 0.035 --error 0.03",
+  "source": "fire-creature-tortoise-rig.glb",
+  "rig": "rig.py --base tortoise --stage creature",
+  "joints": 19
+ },
+ "shellback-ally": {
+  "bytes": 204784,
+  "tris": 13047,
+  "source_bytes": 2588536,
+  "simplify": "--ratio 0.035 --error 0.03",
+  "source": "fire-ascended-tortoise-rig.glb",
+  "rig": "rig.py --base tortoise --stage ascended",
+  "joints": 17
+ }
+}

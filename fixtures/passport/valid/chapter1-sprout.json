@@ -1,0 +1,51 @@
+{
+  "v": 1,
+  "player": {
+    "id": "clplayer0002",
+    "name": "Ari",
+    "guest_id": "guest-mgx1a2b3c4"
+  },
+  "spirits": [
+    {
+      "id": "sp-still-heron",
+      "name": "Still Heron",
+      "element": "water",
+      "family": "heron",
+      "sittings": 1,
+      "born": {
+        "where": "the Cave of Lessons",
+        "at": "2026-10-19T18:02:00.000Z"
+      },
+      "lineage": [
+        {
+          "where": "the Cave of Lessons",
+          "at": "2026-10-19T18:02:00.000Z"
+        }
+      ],
+      "loadout": true,
+      "care": null
+    }
+  ],
+  "hand": [
+    {
+      "id": "a6",
+      "kind": "card",
+      "title": "Show up",
+      "from": "sprout"
+    },
+    {
+      "id": "bar-ch1-1",
+      "kind": "bar",
+      "title": "I said no and stayed kind",
+      "from": "sprout"
+    }
+  ],
+  "qi": 0,
+  "vibeulons": 2,
+  "embers": [],
+  "places_reached": [
+    "sprout",
+    "cave"
+  ],
+  "updated_at": "2026-10-21T02:05:00.000Z"
+}

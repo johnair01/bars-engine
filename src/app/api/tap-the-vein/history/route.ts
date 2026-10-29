@@ -58,6 +58,9 @@ export async function GET(req: NextRequest) {
             carryCount: true,
             completedAt: true,
             compostReason: true,
+            // The council's BAR read (Six-faces-council pass ttv-bars 1) weighs how much context he has given a task, so
+            // the export carries the count of his notes, never their text.
+            _count: { select: { notes: true } },
           },
         },
       },

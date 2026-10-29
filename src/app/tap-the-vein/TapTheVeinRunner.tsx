@@ -12,7 +12,7 @@
  */
 
 import { useMemo, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   type TtvToday,
@@ -42,6 +42,9 @@ import { MenuPhase } from './MenuPhase'
 import { initialTtvPhase } from '@/lib/tap-the-vein/initial-phase'
 import { isOutOfDay, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
 import { Resurfaced, SeedLibrary } from './SeedLibrary'
+import { Unchosen } from './Unchosen'
+import type { UnchosenLine, UnchosenPattern } from '@/lib/tap-the-vein/unchosen'
+import type { PitchView } from '@/lib/tap-the-vein/unchosen-read'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -65,6 +68,10 @@ type Props = {
   lensDomain?: LensDomainKey | null
   /** What he set aside to draw from later. */
   seeds?: SeedLibraryEntry[]
+  /** Lines named on past mornings and not chosen, and the words that keep coming back (pass unchosen1). */
+  unchosen?: { lines: UnchosenLine[]; patterns: UnchosenPattern[]; pitches?: PitchView[]; sample?: boolean }
+  /** ?view=unchosen opens that section, so a preview link lands on it. */
+  openUnchosen?: boolean
 }
 
 function countWords(s: string) {
@@ -74,8 +81,11 @@ function isLive(t: TtvTaskDTO) {
   return !isOutOfDay(t.status)
 }
 
-export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [] }: Props) {
+export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [], unchosen = { lines: [], patterns: [] }, openUnchosen = false }: Props) {
   const router = useRouter()
+  // /tap-the-vein/embed is this same runner inside the Council Board's Morning tab (/board/council), so the board
+  // shows Tap the Vein itself, never a copy of it (Wendell, 2026-10-19: "They differ enough as to confuse me an annoy me").
+  const embedded = usePathname() === '/tap-the-vein/embed'
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -112,6 +122,11 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
       after?.()
       router.refresh()
     })
+  }
+  // Tells the board around the embed that today is sealed, so its Tap-the-Vein-first gate opens without a recheck.
+  const onSealed = () => {
+    setPhase('seal')
+    if (embedded && window.parent !== window) window.parent.postMessage({ type: 'ttv-sealed', date: initial.sessionDate }, window.location.origin)
   }
 
   // Commit one named move: persists + deals it into the Hand (or Vault if full).
@@ -203,9 +218,11 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
       <div className="w-full flex flex-col" style={{ maxWidth: 432, minHeight: '100dvh', padding: '20px 20px calc(20px + env(safe-area-inset-bottom))' }}>
         {/* Header */}
         <header className="flex items-center justify-between" style={{ marginBottom: 14 }}>
-          <Link href="/" style={{ fontFamily: mono, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bars-text-muted)' }}>
-            ← Back
-          </Link>
+          {embedded ? <span /> : (
+            <Link href="/" style={{ fontFamily: mono, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bars-text-muted)' }}>
+              ← Back
+            </Link>
+          )}
           <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bars-text-muted)' }}>
             Tap the Vein · {initial.sessionDate}
           </span>
@@ -297,7 +314,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               pending={pending}
               onOpenMenu={(t) => setMenuTask(t)}
               onOpenMorningMenu={() => setPhase('menu')}
-              onSeal={() => run(() => sealSession(), () => setPhase('seal'))}
+              onSeal={() => run(() => sealSession(), onSealed)}
               library={
                 <>
                   <Resurfaced
@@ -313,6 +330,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
                     onDraw={(id) => run(() => drawSeed(id))}
                     onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
                   />
+                  <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} pitches={unchosen.pitches} sample={unchosen.sample} defaultOpen={openUnchosen} />
                 </>
               }
             />
@@ -320,6 +338,10 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
           {phase === 'seal' && (
             <SealPhase tasks={initial.tasks} element={element} vibulons={vibulons} />
+          )}
+
+          {(phase === 'open' || phase === 'seal') && (
+            <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} pitches={unchosen.pitches} sample={unchosen.sample} defaultOpen={openUnchosen} />
           )}
         </main>
       </div>

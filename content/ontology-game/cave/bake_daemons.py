@@ -12,7 +12,8 @@ shape to the two ends of the trust stances (character.py HONORED and charged, be
 which cave.js moves between by trust (the stances of bars-engine #355). A daemon with an Integrate action
 (character.py --warp X --integrate, bars-engine #351) carries its keys too, in two buffer views.
 
-Plain Python, no bpy. Run it after character.py --daemons (and --warp controller --integrate into a second folder):
+Plain Python, no bpy. Run it after character.py --daemons (and --warp controller --integrate into a second folder), or with
+--walker on rig_mocap/export_walker.py's GLB for the player's mocap-walking figure (its MocapWalk keys ride as "walk", MocapRun's as "run"):
 
   python3 content/ontology-game/cave/bake_daemons.py /tmp/blender-cloud/characters content/ontology-game/cave/daemons \
       /tmp/blender-cloud/integrate
@@ -25,6 +26,7 @@ these numbers.
 import json, math, os, struct, sys
 
 BUDGET_BYTES, BUDGET_TRIS = 128 * 1024, 7000  # 96 KB before the rig rode along
+WALKER_BYTES = 144 * 1024  # the player's own figure carries two clips, walk and run (about 14 KB a clip)
 # the figure GLB's id for each daemon id the game uses (cave.js DAEMONS), and the Player for the centre
 IDS = ["protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body", "player"]
 BANDS = ["skin", "tunic", "trim", "sash", "trousers", "shoes"]
@@ -149,6 +151,8 @@ def action_of(g, rows, name):
     joints = j["skins"][0]["joints"]
     out = []
     for c in a["channels"]:
+        if c["target"]["path"] == "scale":  # the mocap walk keys scale too, all at one; the body format has no scale
+            continue
         s = a["samplers"][c["sampler"]]
         if s.get("interpolation", "LINEAR") != "LINEAR":
             raise SystemExit(f"{name}: only straight-line keys are baked")
@@ -164,11 +168,12 @@ def band_of(rgb):
     return min(range(len(BANDS)), key=lambda i: sum((a - b) ** 2 for a, b in zip(rgb, DUSK[BANDS[i]])))
 
 
-def bake(src, out, act_src=None):
+def bake(src, out, act_src=None, act="Integrate", key="integrate", more=()):
     g = read_glb(src)
     pos, nor, col, idx = g["pos"], g["nor"], g["col"], g["idx"]
     rows, world = rig_of(g)
-    ends = json.load(open(src[:-4] + ".stances.json"))
+    stances = src[:-4] + ".stances.json"  # the walker has none: both ends are its rest
+    ends = json.load(open(stances)) if os.path.exists(stances) else {e: {r[0]: (0, 0, 0, 1) for r in rows} for e in ("honored", "charged")}
     lo = [min(p[i] for p in pos) for i in range(3)]
     hi = [max(p[i] for p in pos) for i in range(3)]
     span = [max(h - l, 1e-6) for l, h in zip(lo, hi)]
@@ -195,17 +200,19 @@ def bake(src, out, act_src=None):
         if [r[:2] for r in arows] != [r[:2] for r in rows] or any(
                 max(abs(x - y) for x, y in zip(p[2] + p[3], q[2] + q[3])) > 1e-3 for p, q in zip(arows, rows)):
             raise SystemExit(f"{act_src}: its rig is not the baked figure's")
-        keys = action_of(a, rows, "Integrate")
-        if keys:
-            # frames as 16-bit counts at 24 a second; rotations and the hips' shift as 16-bit fractions of one
-            fr = b"".join(struct.pack(f"<{len(f)}H", *f) for _, _, f, _ in keys)
-            vals = b"".join(struct.pack(f"<{len(v)}h", *(round(max(-1, min(1, x)) * 32767) for x in v))
-                            for _, _, _, vs in keys for v in vs)
-            fr += b"\0" * (-len(fr) % 4)
-            rig["integrate"] = {"fps": 24, "frames": len(chunks), "values": len(chunks) + 1,
-                                "channels": [[k, path, len(f)] for k, path, f, _ in keys],
-                                "length": max(max(f) for _, _, f, _ in keys)}
-            chunks += [(fr, None), (vals, None)]
+        for act, key in ((act, key), *more):
+            keys = action_of(a, rows, act)
+            if keys:
+                # frames as 16-bit counts at 24 a second; rotations and the hips' shift as 16-bit fractions of one
+                fr = b"".join(struct.pack(f"<{len(f)}H", *f) for _, _, f, _ in keys)
+                vals = b"".join(struct.pack(f"<{len(v)}h", *(round(max(-1, min(1, x)) * 32767) for x in v))
+                                for _, _, _, vs in keys for v in vs)
+                fr += b"\0" * (-len(fr) % 4)
+                travel = next((x.get("extras", {}).get("travel_m") for x in a["j"].get("animations", []) if x["name"] == act), None)
+                rig[key] = {"fps": 24, "frames": len(chunks), "values": len(chunks) + 1, "travel": travel,
+                            "channels": [[k, path, len(f)] for k, path, f, _ in keys],
+                            "length": max(max(f) for _, _, f, _ in keys)}
+                chunks += [(fr, None), (vals, None)]
     views, blob = [], b""
     for chunk, stride in chunks:
         v = {"buffer": 0, "byteOffset": len(blob), "byteLength": len(chunk)}
@@ -236,10 +243,17 @@ def bake(src, out, act_src=None):
     tris = len(idx) // 3
     counts = {BANDS[i]: bands.count(i) for i in range(len(BANDS))}
     return {"id": os.path.basename(out)[:-4], "bytes": len(glb), "tris": tris, "verts": n, "joints": len(rows),
-            "height": round(hi[1], 3), "bands": counts, "integrate": "integrate" in rig}
+            "height": round(hi[1], 3), "bands": counts, "integrate": "integrate" in rig, "walk": "walk" in rig, "run": "run" in rig}
 
 
 def main():
+    if sys.argv[1] == "--walker":  # the player's figure, rigged with Rigify and walking a CMU mocap clip (rig_mocap/export_walker.py)
+        src, out = sys.argv[2], sys.argv[3]
+        r = bake(src, out, src, "MocapWalk", "walk", more=[("MocapRun", "run")])
+        if r["bytes"] > WALKER_BYTES or r["tris"] > BUDGET_TRIS or not r["walk"] or r["bands"]["skin"] == 0:
+            raise SystemExit(f"walker: {r}")
+        print(json.dumps(r))
+        return
     src, out = sys.argv[1], sys.argv[2]
     acts = sys.argv[3] if len(sys.argv) > 3 else None
     os.makedirs(out, exist_ok=True)

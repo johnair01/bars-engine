@@ -43,6 +43,8 @@ export type VeinTaskRow = {
   carryCount: number
   completedAt: Date | null
   compostReason: string | null
+  /** How many notes he has written on the task; the route counts them, their text never leaves. */
+  _count?: { notes: number }
 }
 
 export type VeinBarRow = { id: string; seedMetabolization: string | null; archivedAt: Date | null }
@@ -58,6 +60,10 @@ export type VeinSeed = {
   questId: string | null
   chargeLevel: string | null
   blocked: boolean
+  /** When he marked it blocked, or null. */
+  blockedAt: string | null
+  /** How many notes he has written on it (context, blocker, unblock, charge). Only the count; the notes stay his. */
+  notes: number
   carryCount: number
   completedAt: string | null
   compostReason: string | null
@@ -132,6 +138,8 @@ export function toVeinHistory(
         questId: t.questId,
         chargeLevel: t.chargeLevel,
         blocked: t.blockedAt !== null,
+        blockedAt: iso(t.blockedAt),
+        notes: t._count?.notes ?? 0,
         carryCount: t.carryCount,
         completedAt: iso(t.completedAt),
         compostReason: t.compostReason,

@@ -28,6 +28,10 @@ Round 14 adds the Tinker's beaver (--base beaver) and aye-aye (--base ayeaye) on
 Round 15 adds the Controller's Holdfast family with its badger (--base badger), its stance the Controller's grasp in each state.
 Round 16 adds the Holdfast's meerkat (--base meerkat) and koala (--base koala) on the badger's gas, core, stances and coat.
 Round 17 adds the Skeptic's Hedge family with its llama (--base llama), its stance the Skeptic's pull in each state.
+Round 18 adds the Hedge's hedgehog (--base hedgehog) and Pallas's cat (--base pallas) on the llama's gas, core, lens and outfit.
+Round 20 adds the Ballad's basset hound (--base basset) and elephant (--base elephant) on the donkey's gas, core, scrolls and outfit.
+Round 19 adds the Victim's Ballad family with its donkey (--base donkey), on the Hedge's four-legged body, its stance the
+Victim's collapsed yield in each state and its satisfied ally the Victim's honored storyteller.
 """
 import argparse, json, math, os, pathlib, random, sys
 
@@ -42,7 +46,7 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
-ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye", "badger", "meerkat", "koala", "llama"],
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye", "badger", "meerkat", "koala", "llama", "hedgehog", "pallas", "donkey", "basset", "elephant"],
                 help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox, round 9 its otter, round 10 its kid goat)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
@@ -343,6 +347,11 @@ BASES = {
     "meerkat": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="holdfast"),  # round 16: the Holdfast's sentry
     "koala": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="holdfast"),  # round 16: the Holdfast's keeper
     "llama": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="hedge"),  # round 17: the Skeptic's Hedge, first base
+    "hedgehog": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="hedge"),  # round 18: the Hedge's other two bases
+    "pallas": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="hedge"),
+    "donkey": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="ballad"),  # round 19: the Victim's Ballad, first base
+    "basset": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="ballad"),  # round 20: the Ballad's other two bases
+    "elephant": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="ballad"),
 }
 FAMILY = BASES[args.base].get("family", "shellback")
 SHELL_SQUASH = Vector(BASES[args.base]["squash"])
@@ -2637,6 +2646,7 @@ def tinker_ascended(sc, el, lt, dk):
     s = 0.95
     H = Vector(A["head"])
     HEAD["at"] = H
+    HEAD["ally"] = True
     lean, hip = A["lean"], A["hip"]
     top = Vector((lean, 0, 1.5))
     NECK["at"] = (top + (H - top) * 0.45, (H - top).normalized(), 0.12)
@@ -3402,14 +3412,337 @@ def llama_tail(name, pts, r, F, s=1.0):
     return path
 
 
-HEDGE = {  # each Hedge base's colours, head, face, coat and tail; its girth, height, body length and head size
+# Round 18: the Hedge's other two bases (council/loops/prompts/spirit-generator-r17.md), on the llama's gas, core, lens
+# and examiner's outfit. The hedgehog draws in behind its spines: dissatisfied, it hunches, tucks its snout down and
+# away and raises its spines; satisfied, the spines lie flat and it lifts its snout toward you. The Pallas's cat gives a
+# long sideways look: dissatisfied, it sinks low with its ears flattened out to the sides, its head turned away and its
+# tail low; satisfied, it sits up, ears up, head turned to you and tail lifted.
+HEDGEHOG = {  # coat (the fur under and between the spines), band (the spines' dark band), pale (face, belly, spine tips), dark (nose, eyes, feet)
+    "wood":  ((0.62, 0.5, 0.36), (0.36, 0.24, 0.14), (0.9, 0.84, 0.7), (0.08, 0.06, 0.05)),
+    "fire":  ((0.66, 0.42, 0.28), (0.42, 0.16, 0.08), (0.94, 0.8, 0.62), (0.1, 0.04, 0.03)),
+    "water": ((0.56, 0.56, 0.56), (0.26, 0.3, 0.36), (0.88, 0.88, 0.86), (0.05, 0.07, 0.1)),
+    "metal": ((0.68, 0.66, 0.64), (0.36, 0.36, 0.38), (0.93, 0.93, 0.92), (0.08, 0.08, 0.09)),
+    "earth": ((0.66, 0.52, 0.34), (0.4, 0.26, 0.12), (0.92, 0.82, 0.62), (0.1, 0.07, 0.04)),
+}
+PALLAS = {  # coat (long grey), saddle (darker over the back), frost (the white tips, face and chin), dark (cheek bars, tail rings, brow spots)
+    "wood":  ((0.42, 0.4, 0.36), (0.3, 0.28, 0.24), (0.92, 0.9, 0.86), (0.08, 0.07, 0.06)),
+    "fire":  ((0.62, 0.5, 0.42), (0.46, 0.32, 0.24), (0.95, 0.88, 0.8), (0.1, 0.05, 0.04)),
+    "water": ((0.5, 0.54, 0.58), (0.34, 0.38, 0.44), (0.9, 0.93, 0.95), (0.05, 0.07, 0.1)),
+    "metal": ((0.62, 0.62, 0.64), (0.44, 0.44, 0.47), (0.95, 0.95, 0.96), (0.08, 0.08, 0.09)),
+    "earth": ((0.6, 0.52, 0.42), (0.43, 0.35, 0.26), (0.94, 0.9, 0.82), (0.1, 0.07, 0.05)),
+}
+HEDGEHOG_POSE = {  # as HEDGE_POSE, plus how far the spines stand (0 flat, 1 raised)
+    "neutral": dict(chest=0.32, rump=0.32, head=(0.5, 0, 0.32), yaw=0.0, chin=0.0, ears=1.0, fore=0.3, hind=-0.32, spread=1.0, tail=0.0, brace=False, spines=0.45),
+    "dissatisfied": dict(chest=0.27, rump=0.34, head=(0.4, 0.08, 0.2), yaw=1.0, chin=-1.2, ears=0.0, fore=0.36, hind=-0.24, spread=1.15, tail=0.0, brace=True, spines=1.0),
+    "satisfied": dict(chest=0.35, rump=0.31, head=(0.56, -0.05, 0.4), yaw=-0.35, chin=0.7, ears=1.2, fore=0.32, hind=-0.34, spread=1.05, tail=0.0, brace=False, spines=0.0),
+}
+PALLAS_POSE = {  # low and round, the head sitting straight on the shoulders with no neck showing
+    "neutral": dict(chest=0.42, rump=0.42, head=(0.68, 0, 0.6), yaw=0.0, chin=0.0, ears=1.0, fore=0.34, hind=-0.44, spread=1.0, tail=0.2, brace=False),
+    "dissatisfied": dict(chest=0.36, rump=0.33, head=(0.6, 0.1, 0.5), yaw=1.0, chin=-0.45, ears=0.0, fore=0.46, hind=-0.32, spread=1.2, tail=-0.4, brace=True),
+    "satisfied": dict(chest=0.48, rump=0.42, head=(0.72, -0.05, 0.68), yaw=-0.35, chin=0.25, ears=1.2, fore=0.36, hind=-0.46, spread=1.05, tail=0.9, brace=False),
+}
+
+
+def short_ally(drop):
+    """HEDGE_ALLY with the head set lower on a short neck, for the bases without the llama's."""
+    out = {}
+    for k, a in HEDGE_ALLY.items():
+        a = dict(a); h = a["head"]
+        a["head"] = (h[0] + 0.04, h[1], h[2] - drop)
+        out[k] = a
+    return out
+
+
+def spines(name, host, centre, F, s, raise_, n, keep, seed, length=0.12, r=0.013, back=Vector((-1, 0, 0))):
+    """A hedgehog's spines: thin four-sided spikes fired out of the host's surface, swept back along it, standing up
+    as raise_ goes from 0 (flat) to 1 (raised), banded pale at the root, dark in the middle and pale at the tip. keep
+    says which surface points grow one. One mesh, its colours painted per vertex."""
+    import bmesh
+    rng = random.Random(seed)
+    bm = bmesh.new(); cols = []
+    centre = Vector(centre); ga = math.pi * (3 - math.sqrt(5))
+    for i in range(n):
+        z = 1 - 2 * (i + 0.5) / n
+        rad = math.sqrt(max(0.0, 1 - z * z)); a = i * ga
+        d = Vector((math.cos(a) * rad, math.sin(a) * rad, z))
+        hit, loc, nrm, _ = host.ray_cast(centre + d * 3, -d)
+        if not hit or not keep(loc, nrm): continue
+        nrm = nrm.normalized()
+        dirn = (nrm * (0.4 + 0.75 * raise_) + back * (1.0 - 0.65 * raise_) + Vector((0, 0, 0.12))).normalized()
+        L = length * s * (0.75 + 0.45 * raise_) * rng.uniform(0.8, 1.15)
+        u = dirn.orthogonal().normalized(); w = dirn.cross(u)
+        root = loc - dirn * 0.012 * s
+        ring0 = [bm.verts.new(root + (u * math.cos(t) + w * math.sin(t)) * r * s) for t in (0, 1.571, 3.142, 4.712)]
+        ring1 = [bm.verts.new(root + dirn * L * 0.55 + (u * math.cos(t) + w * math.sin(t)) * r * 0.6 * s) for t in (0, 1.571, 3.142, 4.712)]
+        tip = bm.verts.new(root + dirn * L)
+        for k in range(4):
+            bm.faces.new((ring0[k], ring0[(k + 1) % 4], ring1[(k + 1) % 4], ring1[k]))
+            bm.faces.new((ring1[k], ring1[(k + 1) % 4], tip))
+        cols += [F[2]] * 4 + [F[1]] * 4 + [mixc(F[2], (1, 1, 1), 0.3)]
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
+    ca = me.color_attributes.new("Col", "FLOAT_COLOR", "POINT"); me.color_attributes.active_color = ca
+    for k, c in enumerate(cols): ca.data[k].color = (*lin(c), 1)
+    o.data.materials.append(vmat("spine", 0.55))
+    return o
+
+
+def hedgehog_head(H, s=1.0, chin=0.0, yaw=0.0):
+    """Metaball parts for the hedgehog's head: a rounded skull drawn out to a long pointed snout."""
+    v, _ = hedge_turn(H, s, chin, yaw)
+    return [("ell", v(0, 0, 0), 0.11 * s, (1.1, 1.0, 0.95))] + \
+        taper(v, (0.06, 0, -0.02), (0.24, 0, -0.045), 0.08 * s, 0.022 * s, (1.1, 0.95, 0.9), (1.2, 0.85, 0.85), 8)
+
+
+def hedgehog_face(body, H, S, F, s, r, chin=0.0, yaw=0.0, ears=1.0):
+    """The hedgehog's small dark eyes, its dark wet nose at the snout's tip, and small round ears, laid back when
+    it draws in. Returns the mouth seam."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    lids = dict(S, skin=F[2], spot=F[3])
+    for side in (1, -1):
+        eye(body, v(0.06, side * 0.065, 0.03), R @ Vector((0.45, side * 0.85, 0.2)), lids, r * 0.75)
+    tip = v(0.27, 0, -0.045)
+    d = (R @ Vector((1, 0, 0.1))).normalized()
+    hit, loc, _, _ = body.ray_cast(tip + d, -d)
+    ball("nose", solid("nose", (0.03, 0.025, 0.025), 0.15), (loc if hit else tip), 0.024 * s, (1.0, 1.1, 0.9), 12)
+    ear = solid("ear", mixc(F[0], F[3], 0.25), 0.8)
+    for side in (1, -1):
+        at = v(-0.02 - 0.04 * (1 - min(ears, 1.0)), side * 0.085, 0.065 - 0.02 * (1 - min(ears, 1.0)))
+        o = ball("ear", ear, at, 0.035 * s, (0.45, 1.0, 1.0), 14)
+        o.rotation_euler = (side * 0.5, -0.9 * (1 - min(ears, 1.0)), yaw + side * 0.4)
+    return mouth_seam(body, v(0.12, 0, 0), v(0.12, 0, -0.07).z, 45, 0.008 * s, 0.005 * s)
+
+
+def hedgehog_paint(H, F, s, feet, low=0.2, upright=False, seed=0.0):
+    """The hedgehog's fur: a pale face with a darker band over the eyes, a pale belly, brown under the spines, dark feet."""
+    def fn(p, n):
+        d = (p - H) / s
+        if d.length < 0.3:
+            c = F[2]
+            if abs(d.z - 0.02) < 0.04 and d.length < 0.14: c = mixc(F[2], F[1], 0.45)  # the darker band over the eyes
+            return c
+        c = mixc(F[0], F[1], max(0.0, n.z) * 0.6)
+        if n.z < -0.3 or (upright and n.x > 0.4 and abs(p.y) < 0.18): c = mixc(c, F[2], 0.7)  # pale belly
+        c = mixc(c, F[1], 0.12 * abs(noise.noise(p * 22.0 + Vector((seed, 0, 0)))) * 3)
+        if any((p - f).length < 0.06 for f in feet): c = mixc(F[3], F[0], 0.25)
+        return c
+    return fn
+
+
+def hedgehog_tail(name, pts, r, F, s=1.0):
+    """The hedgehog's tail: a small stub, hidden under its spines."""
+    path = tail_path(pts, 5)
+    o = blob(name, [("ball", tuple(p), r * (1 - 0.4 * k / 4)) for k, p in enumerate(path)], 0.014 * s, 800)
+    paint(o, lambda p, n: F[0])
+    o.data.materials.append(vmat("fur", 0.85))
+    return path
+
+
+PALLAS_R = {}  # the cat's head turn as built, so the face paint lands in the head's own frame
+
+
+def pallas_head(H, s=1.0, chin=0.0, yaw=0.0):
+    """Metaball parts for the Pallas's cat's head, after reference photos (iNaturalist, 2026-10-17): round and flat in
+    front like an owl's, wider at the cheeks where the fur flares, the muzzle barely standing out of the face."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    PALLAS_R.update(H=H, s=s, R=R)
+    return [("ell", v(0, 0, 0), 0.14 * s, (0.82, 1.12, 0.92)),
+            ("ell", v(-0.01, 0.1, -0.05), 0.09 * s, (0.8, 1.0, 0.85)), ("ell", v(-0.01, -0.1, -0.05), 0.09 * s, (0.8, 1.0, 0.85)),
+            ("ell", v(0.085, 0, -0.045), 0.05 * s, (0.6, 1.15, 0.7))]
+
+
+def pallas_face(body, H, S, F, s, r, chin=0.0, yaw=0.0, ears=1.0):
+    """The Pallas's cat's big round pale gold eyes set forward high in the flat face, its small nose, and its tiny round
+    ears set low and wide on the sides of the head, half lost in the fur: flattened right out when it is wary.
+    Returns the mouth seam."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    lids = dict(S, skin=F[0], spot=F[1])
+    for side in (1, -1):
+        eye(body, v(0.1, side * 0.056, 0.03), R @ Vector((0.95, side * 0.28, 0.06)), lids, r * 1.15, iris=(0.86, 0.76, 0.3))
+    tip = v(0.12, 0, -0.02)
+    d = (R @ Vector((1, 0, 0))).normalized()
+    hit, loc, _, _ = body.ray_cast(tip + d, -d)
+    ball("nose", solid("nose", (0.36, 0.24, 0.24), 0.4), (loc if hit else tip), 0.016 * s, (0.7, 1.3, 0.8), 12)
+    ear = solid("ear", mixc(F[0], F[1], 0.5), 0.9)
+    flat_ = 1 - min(ears, 1.0)
+    for side in (1, -1):  # tiny and rounded, set low and wide, tipped out to the side
+        o = ball("ear", ear, v(-0.04, side * 0.135, 0.045 - 0.02 * flat_), 0.032 * s, (0.4, 0.85, 0.7), 14)
+        o.rotation_euler = (side * (1.0 + 0.5 * flat_ - 0.15 * (ears - 1.0)), -0.2, yaw)
+    return mouth_seam(body, v(0.07, 0, 0), v(0.07, 0, -0.085).z, 45, 0.006 * s, 0.004 * s)
+
+
+def pallas_paint(H, F, s, feet, low=0.2, upright=False, seed=0.0):
+    """The Pallas's cat's coat, after the photos: long and grey, every tip frosted white, faint dark bars across the back
+    and loins; on the face a pale muzzle and chin, a pale ring round each eye and a pale brow over it, two dark lines
+    running back from each eye across the cheek, and small dark spots on the crown."""
+    def fn(p, n):
+        frost = max(0.0, noise.noise(p * 30.0 + Vector((seed, 0, 0))))
+        hh = PALLAS_R.get("H", H)
+        d = (p - hh) / s
+        if d.length < 0.3:
+            q = PALLAS_R["R"].transposed() @ d if "R" in PALLAS_R else d  # the head's own frame, x along the face
+            c = mixc(F[0], F[2], 0.05 + 0.2 * frost)
+            ay = abs(q.y)
+            if q.x > 0.06 and q.z < 0.0: c = F[2]  # the pale muzzle and chin
+            for k, dz in enumerate((0.0, -0.035)):  # two dark lines back from the eye's outer corner across the cheek
+                if 0.07 < ay < 0.15 and -0.04 < q.x < 0.08 and abs(q.z - (0.015 + dz) + 0.35 * (0.08 - q.x)) < 0.014: c = F[3]
+            if q.x > 0.02 and abs(ay - 0.056) < 0.04 and -0.005 < q.z - 0.03 < 0.045 and ((ay - 0.056) ** 2 + (q.z - 0.03) ** 2) > 0.0009: c = mixc(c, F[2], 0.45)  # pale ring and brow
+            if q.z > 0.08 and q.x > -0.06 and noise.noise(q * 60.0) > 0.25: c = mixc(c, F[3], 0.75)  # crown spots
+            return c
+        c = mixc(F[0], F[1], max(0.0, n.z - 0.2) * 0.6)
+        c = mixc(c, F[2], 0.25 * frost)
+        if not upright and n.z > 0.1 and p.x < -0.05 and math.sin(p.x * 26) > 0.75: c = mixc(c, F[3], 0.35)  # bars on the loins
+        if n.z < -0.4 or (upright and n.x > 0.4 and abs(p.y) < 0.16): c = mixc(c, F[2], 0.35)
+        if not upright and p.z < low and abs(math.sin(p.z * 40)) > 0.85: c = mixc(c, F[3], 0.35)  # leg bars
+        return c
+    return fn
+
+
+def pallas_tail(name, pts, r, F, s=1.0):
+    """The thick bushy tail, the same girth to its blunt end, ringed in black, the tip black."""
+    path = tail_path(pts, 14)
+    m = len(path) - 1
+    o = blob(name, [("ball", tuple(p), r * (0.8 + 0.25 * math.sin(math.pi * min(1.0, k / m * 0.8 + 0.1)))) for k, p in enumerate(path)], 0.02 * s, 5000)
+    fluff(o, 0.03 * s, 10.0, 7.0)
+    cum = [0.0]
+    for a, b in zip(path, path[1:]): cum.append(cum[-1] + (b - a).length)
+    total = cum[-1]
+
+    def fn(p, n):
+        k = min(range(len(path)), key=lambda i: (p - path[i]).length)
+        t = cum[k] / total
+        if t > 0.88: return F[3]
+        return F[3] if t > 0.3 and math.sin(t * 34) > 0.6 else mixc(F[0], F[2], 0.3)
+    paint(o, fn)
+    o.data.materials.append(vmat("fur", 0.9))
+    return path
+
+
+def hedge_tail(T, F, rump, lift, s=1.0, upright=None):
+    """Each Hedge base's tail: the llama's short one held up, the hedgehog's stub, the Pallas's cat's thick ringed
+    brush (curled on the ground beside its feet when it stands upright)."""
+    b = args.base
+    if upright is not None:
+        hip = upright
+        pts = {"llama": [(-0.22, 0, hip - 0.02), (-0.3, 0, hip - 0.06), (-0.34, 0, hip - 0.14)],
+               "hedgehog": [(-0.24, 0, hip - 0.04), (-0.29, 0, hip - 0.08)],
+               "pallas": [(-0.22, 0, hip - 0.05), (-0.36, 0, hip - 0.3), (-0.42, 0.04, 0.35), (-0.36, 0.2, 0.12), (-0.12, 0.34, 0.1)],
+               "donkey": [(-0.22, 0, hip - 0.04), (-0.3, 0, hip - 0.2), (-0.33, 0, hip - 0.42), (-0.33, 0, hip - 0.56)],
+               "basset": [(-0.22, 0, hip - 0.04), (-0.32, 0, hip - 0.12), (-0.38, 0, hip - 0.3), (-0.36, 0, hip - 0.45)],
+               "elephant": [(-0.24, 0, hip - 0.04), (-0.34, 0, hip - 0.25), (-0.37, 0, hip - 0.55), (-0.37, 0, hip - 0.75)]}[b]
+        return T["tail"]("tail", pts, {"llama": 0.055, "hedgehog": 0.04, "pallas": 0.075, "donkey": 0.03, "basset": 0.035, "elephant": 0.04}[b], F, s)
+    off = {"llama": [(-0.2, 0, 0.1), (-0.28, 0, 0.12 + 0.12 * lift), (-0.32, 0, 0.1 + 0.24 * lift)],
+           "hedgehog": [(-0.18, 0, -0.06), (-0.24, 0, -0.09)],
+           "pallas": [(-0.14, 0, 0.0), (-0.38, 0, -0.1 + 0.2 * lift), (-0.62, 0.06 * (1 - lift), -0.18 + 0.4 * lift), (-0.8, 0.18 * (1 - lift), -0.2 + 0.62 * lift)],
+           "donkey": [(-0.2, 0, 0.06), (-0.28 - 0.1 * max(lift, 0), 0, -0.06 + 0.12 * lift), (-0.32 - 0.22 * max(lift, 0), 0.04 * lift, -0.24 + 0.26 * lift),
+                      (-0.34 - 0.3 * max(lift, 0), 0.08 * lift, -0.42 + 0.36 * lift)],
+           "basset": [(-0.1, 0, 0.02), (-0.2, 0, 0.0 + 0.1 * lift), (-0.26, 0, 0.0 + 0.3 * lift), (-0.28 - 0.04 * lift, 0, -0.1 + 0.52 * lift)],
+           "elephant": [(-0.2, 0, 0.1), (-0.3, 0, -0.1 + 0.1 * lift), (-0.34, 0, -0.4 + 0.3 * lift), (-0.34 - 0.1 * max(lift, 0), 0, -0.7 + 0.4 * lift)]}[b]
+    pts = [rump + Vector(o) for o in off]
+    if b != "llama": pts = [Vector((p.x, p.y, max(0.09, p.z))) for p in pts]  # never through the ground
+    return T["tail"]("tail", [tuple(p) for p in pts], {"llama": 0.06, "hedgehog": 0.045, "pallas": 0.08, "donkey": 0.034, "basset": 0.04, "elephant": 0.045}[b], F)
+
+
+def hedgehog_spines(body, H, chest, rump, F, s, raise_, upright=False, seed=""):
+    """The spine coat: over the back and flanks down to the belly line and forward onto the crown, never on the face
+    (living creature); on the back of the head and down the nape (upright, where the mantle covers the rest)."""
+    if upright:
+        centre = H + Vector((-0.06, 0, 0.0))
+        keep = lambda p, n: (p - H).x < 0.0 * s and (p - H).z > -0.1 * s and n.x < 0.25
+        return spines("spines", body, centre, F, s, raise_, 360, keep, seed, 0.09, 0.011)
+    centre = (chest + rump) / 2 + Vector((0, 0, 0.02))
+    top = max(chest.z, rump.z)
+
+    def keep(p, n):
+        if p.z < top - 0.09: return False  # the belly and the legs stay furred
+        dh = p - H
+        if dh.length < 0.2 * s and (dh.x > -0.05 * s or dh.z < 0.04 * s): return False  # the face stays bare
+        return p.x < H.x - 0.06 * s
+    return spines("spines", body, centre, F, s, raise_, 900, keep, seed)
+
+
+def hedge_hologram_other(lt, dk):
+    """The projected hedgehog or Pallas's cat, built like the llama's: the hedgehog a low dome of light bristling with
+    spines over a pointed snout; the cat low and broad, a wide flat head with ears set out to the sides and a thick
+    ringed tail."""
+    hog = args.base == "hedgehog"
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    if hog:
+        body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.36))
+        body.scale = (0.5, 0.4, 0.34); traced(body)
+        sp = mat("spine", lt, 2.0, 0.75)
+        for k in range(26):  # spines of light over the dome
+            a = k * 2.4; z = 0.25 + 0.7 * ((k * 0.37) % 1.0)
+            d = Vector((math.cos(a) * math.sqrt(1 - z * z) - 0.35, math.sin(a) * math.sqrt(1 - z * z), z)).normalized()
+            p = Vector((-0.05, 0, 0.36)) + Vector((d.x * 0.5, d.y * 0.4, d.z * 0.34))
+            o = obj_from(bpy.ops.mesh.primitive_cone_add, "spine", sp, vertices=4, radius1=0.035, depth=0.2, location=p + d * 0.08)
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(d).to_euler()
+        head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.14, location=(0.5, 0, 0.36))
+        traced(head)
+        traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.08, depth=0.24,
+                        location=(0.7, 0, 0.32), rotation=(0, math.pi / 2 + 0.15, 0)))
+        for side in (1, -1):
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.02, location=(0.6, side * 0.08, 0.4))
+        legs, lr, ld = ((0.25, 0.14), (0.25, -0.14), (-0.3, 0.14), (-0.3, -0.14)), 0.04, 0.2
+    else:
+        body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.5))
+        body.scale = (0.56, 0.34, 0.3); traced(body)
+        head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.19, location=(0.58, 0, 0.66))
+        head.scale = (0.9, 1.25, 0.85); traced(head)
+        for side in (1, -1):
+            o = obj_from(bpy.ops.mesh.primitive_cone_add, "ear", skin, vertices=4, radius1=0.06, depth=0.1,
+                         location=(0.55, side * 0.24, 0.76), rotation=(side * -0.9, 0, 0))
+            traced(o)
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.024, location=(0.72, side * 0.08, 0.7))
+            o = obj_from(bpy.ops.mesh.primitive_cube_add, "bar", mat("bar", dk, 0.6, 0.8), size=1, location=(0.66, side * 0.17, 0.62))
+            o.scale = (0.12, 0.02, 0.02); o.rotation_euler = (0, 0.3, side * 0.3)
+        at, _ = along([(-0.55, 0, 0.5), (-0.8, 0, 0.36), (-1.0, 0.1, 0.3), (-1.15, 0.25, 0.35)])
+        for k in range(6):  # the thick tail, ringed
+            p0, p1 = at(k / 6)[0], at((k + 1) / 6)[0]
+            bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.085, depth=(p1 - p0).length, location=(p0 + p1) / 2)
+            o = bpy.context.active_object; o.name = "tail"; o.data.materials.append(skin if k % 2 == 0 and k < 5 else deep)
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(p1 - p0).to_euler(); traced(o)
+        legs, lr, ld = ((0.32, 0.15), (0.32, -0.15), (-0.38, 0.15), (-0.38, -0.15)), 0.065, 0.42
+    for x, y in legs:
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=lr, depth=ld, location=(x, y, ld / 2 - 0.17))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.3, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    hedge_core(lt, at=(0, 0, 0.42 if hog else 0.5), size=0.15)
+
+
+HEDGE = {  # each Hedge base's colours, head, face, coat and tail; its girth, height, body length and head size. Round 18 adds
+    # each base's own pose tables, body and leg girths, toes, coat fluff, where its leg colouring starts, how far the
+    # growth sits above its back, its aura and camera (centre height, ortho), its upright girth and head size
     "llama": dict(F=LLAMA, head=llama_head, face=llama_face, paint=llama_paint, tail=llama_tail, girth=1.0, tall=1.0, long=1.0, s=1.25),
+    "hedgehog": dict(F=HEDGEHOG, head=hedgehog_head, face=hedgehog_face, paint=hedgehog_paint, tail=hedgehog_tail, girth=1.0, tall=1.0, long=0.62, s=1.0,
+                     pose=HEDGEHOG_POSE, ally=short_ally(0.24), body_r=0.2, body_sc=(1.1, 1.05, 0.95), neck_r=(0.1, 0.09), leg_r=(0.05, 0.055, 0.04),
+                     toes="claws", fluffy=0.006, low=0.16, lift=0.1, aura=(0.4, (0.95, 0.75, 0.55), 1.1), cam=(0.36, 2.9), cam_h=(0.35, 3.3),
+                     cam_a=(1.2, 4.1), ally_g=1.15, ally_s=1.0),
+    "pallas": dict(F=PALLAS, head=pallas_head, face=pallas_face, paint=pallas_paint, tail=pallas_tail, girth=1.2, tall=1.0, long=0.8, s=1.2,
+                   pose=PALLAS_POSE, ally=short_ally(0.26), scarf=0.8, body_r=0.22, body_sc=(1.0, 1.1, 1.0), neck_r=(0.17, 0.15), leg_r=(0.07, 0.075, 0.055),
+                   toes="none", fluffy=0.018, low=0.28, lift=0.04, aura=(0.5, (1.15, 0.8, 0.65), 1.35), cam=(0.5, 3.4), cam_h=(0.4, 3.4),
+                   cam_a=(1.2, 4.1), ally_g=1.1, ally_s=0.95),
 }
 
 
 def hedge_hologram(lt, dk):
     """The projected llama: a faceted body of light on four long legs, a tall neck, a small head with two tall ears,
     and a short tail."""
+    if args.base == "donkey":
+        return ballad_hologram(lt, dk)
+    if args.base in ("basset", "elephant"):
+        return ballad_hologram_other(lt, dk)
+    if args.base != "llama":
+        return hedge_hologram_other(lt, dk)
     skin = mat("holo", lt, 1.1, 0.32, scan=True)
     edge = mat("edge", lt, 2.2, 0.9)
     deep = mat("deep", lt, 0.9, 0.22, scan=True)
@@ -3446,7 +3779,8 @@ def hedge_creature(sc, el, lt, dk):
     chest. Its stance is the Skeptic's pull for the state it is in (HEDGE_POSE)."""
     T = HEDGE[args.base]
     S, F = STYLE[el], T["F"][el]
-    P = HEDGE_POSE[look_state()]
+    P = T.get("pose", HEDGE_POSE)[look_state()]
+    HEAD["ally"] = False
     lights(sc)
     rng = random.Random(f"creature-{args.base}-{el}")
     s, g, t, L = T["s"], T["girth"], T["tall"], T["long"]
@@ -3459,10 +3793,12 @@ def hedge_creature(sc, el, lt, dk):
     under = v(-0.06, 0, -0.07)
     mid = neck0 + (under - neck0) * 0.5 + Vector((-0.04, 0, 0.0))
     NECK["at"] = (neck0 + (under - neck0) * 0.25, (under - neck0).normalized(), 0.12 * g)
-    parts = T["head"](H, s, P["chin"], P["yaw"]) + [("cap", tuple(neck0), tuple(mid), 0.11 * g), ("cap", tuple(mid), tuple(under), 0.085 * g)]
+    nr = T.get("neck_r", (0.11, 0.085))
+    parts = T["head"](H, s, P["chin"], P["yaw"]) + [("cap", tuple(neck0), tuple(mid), nr[0] * g), ("cap", tuple(mid), tuple(under), nr[1] * g)]
+    br, bsc = T.get("body_r", 0.22), T.get("body_sc", (1.0, 1.15 * g, 1.05))
     for k in range(6):  # a deep woolly body, from the chest back to the rump
         u = k / 5
-        parts.append(("ell", tuple(chest + (rump - chest) * u), (0.22 + 0.02 * math.sin(math.pi * u)) * g, (1.0, 1.15 * g, 1.05)))
+        parts.append(("ell", tuple(chest + (rump - chest) * u), (br + 0.02 * math.sin(math.pi * u)) * g, bsc))
     fx, hx, sp = P["fore"] * L, P["hind"] * L, P["spread"]
     legs = []
     for x0, z0, x1, y0, y1, k in ((0.3 * L, cz - 0.14, fx, 0.12, 0.13, 0), (-0.4 * L, rz - 0.14, hx, 0.13, 0.14, 1)):
@@ -3479,29 +3815,48 @@ def hedge_creature(sc, el, lt, dk):
     LEGS.update(stand(legs))
     feet = []
     for k, (a, b, c) in enumerate(legs):
-        parts += [("cap", a, b, (0.07 if k < 2 else 0.08) * g), ("cap", b, c, 0.045 * g)]
+        lr = T.get("leg_r", (0.07, 0.08, 0.045))
+        parts += [("cap", a, b, (lr[0] if k < 2 else lr[1]) * g), ("cap", b, c, lr[2] * g)]
         foot = Vector(c) + Vector((0.035, 0, -0.025))
-        parts.append(("ell", tuple(foot), 0.05, (1.4, 1.0, 0.5)))
+        parts.append(("ell", tuple(foot), T.get("foot", 0.05), (1.4, 1.0, 0.5)))
         feet.append(foot)
     body = blob("body", parts, 0.02, 15000)
-    fluff(body, 0.02, 9.0)
-    for f in feet:  # two toes on each foot, each with a dark nail
-        for side in (-1, 1):
-            ball("toe", solid("toe", F[3], 0.5), f + Vector((0.055, side * 0.022, -0.005)), 0.02, (1.4, 0.9, 0.7), 8)
-    tail = T["tail"]("tail", [tuple(rump + Vector((-0.2, 0, 0.1))), tuple(rump + Vector((-0.28, 0, 0.12 + 0.12 * P["tail"]))),
-                              tuple(rump + Vector((-0.32, 0, 0.1 + 0.24 * P["tail"])))], 0.06, F)
+    fluff(body, T.get("fluffy", 0.02), 9.0)
+    toes = T.get("toes", "llama")
+    for f in feet:
+        if toes == "llama":  # two toes on each foot, each with a dark nail
+            for side in (-1, 1):
+                ball("toe", solid("toe", F[3], 0.5), f + Vector((0.055, side * 0.022, -0.005)), 0.02, (1.4, 0.9, 0.7), 8)
+        elif toes == "nails":  # an elephant's pale-edged toenails, five across the front of the foot
+            for k in (-2, -1, 0, 1, 2):
+                ball("toe", solid("toe", F[1], 0.5), f + Vector((0.075, k * 0.03, -0.01)), 0.022, (1.2, 1.0, 0.6), 8)
+        elif toes == "claws":  # small dark claws
+            for side in (-1, 0, 1):
+                ball("claw", solid("claw", F[3], 0.4), f + Vector((0.06, side * 0.02, -0.01)), 0.01, (1.8, 0.8, 0.7), 8)
+    tail = hedge_tail(T, F, rump, P["tail"])
     seam = T["face"](body, H, S, F, s, 0.042, P["chin"], P["yaw"], P["ears"])
-    fn = T["paint"](H, F, s, feet, 0.42 * t)
+    HEAD["chest"] = chest
+    if args.base == "donkey":
+        donkey_mane(H, s, P["chin"], P["yaw"], neck0 + Vector((-0.06, 0, nr[0] * g + 0.03)), F)
+    fn = T["paint"](H, F, s, feet, T.get("low", 0.42) * t)
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.9))
-    drape("scarf", tuple(NECK["at"][0]), tuple(-NECK["at"][1]), 0.12, 0.16, 0.13, S["cloth"], S["trim"], f"scarf-{args.base}-{el}", 0.6)
+    if args.base == "hedgehog":
+        hedgehog_spines(body, H, chest, rump, F, s, P["spines"], seed=f"spines-{el}")
+    k_ = T.get("scarf", nr[0] / 0.11)
+    drape("scarf", tuple(NECK["at"][0]), tuple(-NECK["at"][1]), 0.12 * k_, 0.16 * k_, 0.13, S["cloth"], S["trim"], f"scarf-{args.base}-{el}", 0.6)
     beads(tuple(NECK["at"][0] + Vector((0.0, 0, -0.04))), tuple(NECK["at"][1]), 0.14, 12, 0.08, 3, lt, S)
-    hand_lens(chest + Vector((0.27 * g, 0.08 * g, -0.06)), 0.85, NECK["at"][0] + Vector((0.06, 0.06, -0.06)))
-    hedge_core(lt, chest + Vector((0.26 * g, -0.1 * g, -0.06)), 0.08)
-    back = (chest + rump) / 2 + Vector((0, 0, 0.2 * g))
-    spine = [neck0 + Vector((0, 0, 0.12)), chest + Vector((0, 0, 0.18)), back, rump + Vector((0, 0, 0.18))]
+    if "gear" in T:
+        T["gear"](lt, S, chest, g)
+    else:
+        hand_lens(chest + Vector((0.27 * g, 0.08 * g, -0.06)), 0.85, NECK["at"][0] + Vector((0.06, 0.06, -0.06)))
+        hedge_core(lt, chest + Vector((0.26 * g, -0.1 * g, -0.06)), 0.08)
+    up = Vector((0, 0, T.get("lift", 0.0)))
+    back = (chest + rump) / 2 + Vector((0, 0, 0.2 * g)) + up
+    spine = [neck0 + Vector((0, 0, 0.12)) + up, chest + Vector((0, 0, 0.18)) + up, back, rump + Vector((0, 0, 0.18)) + up]
     fox_growth(rng, el, S, F, lt, spine, tail, 0.75)
-    aura(rng, S["aura"], lt, (0.0, 0, 0.8), (1.2, 0.8, 0.9), 1.9)
+    az, ar, at_ = T.get("aura", (0.8, (1.2, 0.8, 0.9), 1.9))
+    aura(rng, S["aura"], lt, (0.0, 0, az), ar, at_)
 
 
 def hedge_ascended(sc, el, lt, dk):
@@ -3511,12 +3866,12 @@ def hedge_ascended(sc, el, lt, dk):
     elbows pulled behind, hands drawn in to the belly and the weight on the back leg when dissatisfied; leaning in,
     head turned toward you and both hands held out open when satisfied."""
     T = HEDGE[args.base]
-    g = T["girth"]
+    g = T.get("ally_g", T["girth"])
     S, F = STYLE[el], T["F"][el]
-    A = HEDGE_ALLY[look_state()]
+    A = T.get("ally", HEDGE_ALLY)[look_state()]
     lights(sc)
     rng = random.Random(f"ascended-{args.base}-{el}")
-    s = 0.95 * T["s"] / 1.25
+    s = T.get("ally_s", 0.95 * T["s"] / 1.25)
     H = Vector(A["head"])
     HEAD["at"] = H
     lean, hip = A["lean"], A["hip"]
@@ -3543,7 +3898,7 @@ def hedge_ascended(sc, el, lt, dk):
         feet.append(Vector((fx + 0.05, fy, 0.05)))
     body = blob("body", parts, 0.02, 15000)
     fluff(body, 0.012, 10.0)
-    toe = solid("toe", F[3], 0.5)
+    toe = solid("toe", F[3] if args.base != "pallas" else mixc(F[0], F[2], 0.5), 0.5)
     for f, d in zip(hands, ends):  # two dark-nailed fingers on each hand
         side = d.cross(Vector((0, 0, 1))).normalized() if abs(d.z) < 0.95 else Vector((0, 1, 0))
         for k in (-1, 1):
@@ -3551,11 +3906,21 @@ def hedge_ascended(sc, el, lt, dk):
     for f in feet:
         for k in (-1, 1):
             ball("toe", toe, f + Vector((0.05, k * 0.02, -0.005)), 0.018, (1.3, 0.9, 0.7), 8)
-    tail = T["tail"]("tail", [(-0.22, 0, hip - 0.02), (-0.3, 0, hip - 0.06), (-0.34, 0, hip - 0.14)], 0.055, F, s)
+    tail = hedge_tail(T, F, None, 0.0, s, upright=hip)
     seam = T["face"](body, H, S, F, s, 0.034, A["chin"], A["yaw"], A["ears"])
     fn = T["paint"](H, F, s, hands + feet, 0.0, upright=True)
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.9))
+    if args.base == "hedgehog":
+        hedgehog_spines(body, H, None, None, F, s, HEDGEHOG_POSE[look_state()]["spines"], upright=True, seed=f"spines-ally-{el}")
+    if FAMILY == "ballad":
+        if args.base == "donkey": donkey_mane(H, s, A["chin"], A["yaw"], top + Vector((-0.1, 0, 0.12)), F)
+        ballad_outfit(top, lean, g, S, lt, el)
+        beads(tuple(NECK["at"][0] - Vector((0, 0, 0.1))), (0.12 + lean * 0.5, 0, 1), 0.17, 14, 0.07, 3, lt, S)
+        T["gear"](lt, S, top, g, upright=True)
+        fox_growth(rng, el, S, F, lt, [top + Vector((-0.05, 0, 0.12)), top + Vector((-0.12, 0, -0.1))], tail, 0.7)
+        aura(rng, S["aura"], lt, (lean * 0.5, 0, 1.15), (0.95, 0.85, 1.0), 2.5)
+        return
     tunic = mixc(S["cloth"], (0.4, 0.4, 0.42), 0.35)
     mantle = mixc(S["trim"], (0.5, 0.5, 0.52), 0.3)
     drape("tunic", tuple(top + Vector((0.0, 0, 0.04))), (lean * 0.5, 0, -1), 0.27 * g, 0.34 * g, 0.98, tunic, S["trim"], f"tunic-{el}", 0.0)
@@ -3570,6 +3935,542 @@ def hedge_ascended(sc, el, lt, dk):
     fox_growth(rng, el, S, F, lt, [top + Vector((-0.05, 0, 0.12)), top + Vector((-0.12, 0, -0.1))], tail, 0.7)
     aura(rng, S["aura"], lt, (lean * 0.5, 0, 1.15), (0.95, 0.85, 1.0), 2.5)
 
+
+# Round 19: the Victim's family, the Ballad (council/loops/prompts/spirit-generator-r19.md; dmt-next-families: the Victim
+# built as the teller, its urge to be heard). A ballad is a sorrow sung so it is heard. First base the donkey: the beast
+# of burden who brays. It stands on the Hedge's four-legged body with its own head, ears, mane, coat and tail. Its
+# stance is the Victim's collapsed yield (GESTURES.md): dissatisfied, sunk into the knees with the back rounded, the
+# head hung to the ground and the ears hanging out to the sides; satisfied, the yield has become the story, chest up,
+# head lifted toward you and ears up. Its upright ally takes the Victim's HONORED pose (dmt-ally-honored): the
+# storyteller, one arm swept high presenting the tale and the other palm up, "and then...".
+DONKEY = {  # coat, dark (mane, the cross on the back and shoulders, ear tips, tail tuft), pale (muzzle, eye rings, belly), hoof
+    "wood":  ((0.52, 0.48, 0.43), (0.22, 0.18, 0.15), (0.88, 0.85, 0.8), (0.12, 0.1, 0.08)),
+    "fire":  ((0.66, 0.46, 0.34), (0.3, 0.14, 0.08), (0.92, 0.82, 0.72), (0.14, 0.07, 0.05)),
+    "water": ((0.5, 0.54, 0.58), (0.16, 0.2, 0.26), (0.86, 0.88, 0.9), (0.07, 0.09, 0.12)),
+    "metal": ((0.7, 0.7, 0.72), (0.26, 0.26, 0.28), (0.93, 0.93, 0.93), (0.1, 0.1, 0.11)),
+    "earth": ((0.52, 0.4, 0.28), (0.22, 0.15, 0.09), (0.86, 0.78, 0.64), (0.12, 0.08, 0.05)),
+}
+BALLAD_POSE = {  # as HEDGE_POSE; ears 1 up, 0 hanging out to the sides. Checked against photographs of donkeys (round 19):
+                 # the neck runs forward rather than up, the long head carried at about the withers' height, nose down
+    "neutral": dict(chest=0.78, rump=0.8, head=(0.8, 0, 1.08), yaw=0.0, chin=-0.4, ears=1.0, fore=0.34, hind=-0.44, spread=1.0, tail=0.0, brace=False),
+    "dissatisfied": dict(chest=0.58, rump=0.66, head=(0.64, 0.04, 0.5), yaw=0.3, chin=-1.2, ears=0.0, fore=0.24, hind=-0.32, spread=0.85, tail=-0.6, brace=False),
+    "satisfied": dict(chest=0.92, rump=0.76, head=(0.98, -0.1, 1.42), yaw=-0.45, chin=1.0, ears=1.25, fore=0.46, hind=-0.48, spread=1.15, tail=0.9, brace=False),
+}
+BALLAD_ALLY = {  # as HEDGE_ALLY
+    "neutral": dict(lean=0.0, head=(0.16, 0, 2.02), yaw=0.0, chin=0.0, ears=1.0, hands=((0.22, -0.34, 1.0), (0.22, 0.34, 1.0)),
+                    elbows=((0.02, -0.4, 1.22), (0.02, 0.4, 1.22)), feet=((0.04, -0.15), (0.04, 0.15)), hip=0.9),
+    "dissatisfied": dict(lean=0.22, head=(0.62, 0.02, 1.58), yaw=0.25, chin=-1.2, ears=0.0, hands=((0.32, -0.3, 0.66), (0.32, 0.3, 0.66)),
+                         elbows=((0.26, -0.36, 1.12), (0.26, 0.36, 1.12)), feet=((0.1, -0.12), (0.1, 0.12)), hip=0.74),
+    "satisfied": dict(lean=-0.06, head=(0.2, -0.06, 2.1), yaw=-0.35, chin=0.35, ears=1.2, hands=((-0.28, -0.6, 2.32), (0.6, 0.36, 1.3)),
+                      elbows=((-0.08, -0.52, 1.88), (0.26, 0.42, 1.18)), feet=((0.22, -0.17), (-0.12, 0.19)), hip=0.92),
+}
+GILT = (0.95, 0.74, 0.3)
+
+
+def ballad_gas(rng, lt, dk, n=150):
+    """The Ballad's gas: motes drawn into a teardrop, point up, facing the sprite camera, and three dots of motes
+    trailing away from it to the right, as a told sorrow trails off: "and then..."."""
+    motes = [mat(f"mote{i}", lt if i % 3 else dk, 1.8 - i * 0.4, 0.55 - i * 0.12) for i in range(3)]
+    across_ = Vector((-CAM_DIR.y, CAM_DIR.x, 0)).normalized()
+    for i in range(n):
+        t = rng.random()
+        if t < 0.74:  # the tear's outline, x = sin a sin(a/2), z = cos a, its point at the top
+            a = rng.random() * 2 * math.pi
+            c = across_ * (-0.14 + 0.36 * math.sin(a) * math.sin(a / 2)) + Vector((0, 0, 0.05 + 0.4 * math.cos(a))); r = 0.05
+        else:  # the three dots, low and to the right
+            k = rng.randrange(3)
+            c = across_ * (0.3 + 0.17 * k) + Vector((0, 0, -0.3)); r = 0.045
+        c = c + Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))) * 0.03
+        c *= 1.35; r *= (0.8 + rng.random() * 0.6) * 1.5
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, f"mote{i}", motes[i % 3], subdivisions=1, radius=r,
+                 location=(c.x, c.y, 0.42 + c.z))
+
+
+def ballad_core(lt, at=(0, 0, 0.35), size=0.32, face=None):
+    """The Ballad's core: a teardrop-cut gem, point up, hung in the mouth of a small bronze bell (a told sorrow is one
+    that is heard), the yin-yang and trigrams on the gem, turned to the sprite camera."""
+    face = (face or (CAM_DIR + Vector((0, 0, 0.35)))).normalized()
+    at = Vector(at)
+    bronze = solid("corelid", mixc(lt, BRONZE, 0.75), 0.35, 0.3, metal=1.0)
+    rot = Vector((0, 0, 1)).rotation_difference(-face).to_euler()  # the cone's wide end (local -z) toward the camera
+    bpy.ops.mesh.primitive_cone_add(vertices=28, radius1=size * 1.05, radius2=size * 0.5, depth=size * 0.85, end_fill_type="NOTHING",
+                                    location=at - face * size * 0.15, rotation=rot)
+    o = bpy.context.active_object; o.name = "corelid"; o.data.materials.append(bronze); smooth(o)
+    bpy.ops.mesh.primitive_torus_add(major_radius=size * 1.05, minor_radius=size * 0.07, major_segments=32, minor_segments=6,
+                                     location=at + face * size * 0.27, rotation=rot)
+    o = bpy.context.active_object; o.name = "corelid"; o.data.materials.append(bronze)
+    bpy.ops.mesh.primitive_torus_add(major_radius=size * 0.16, minor_radius=size * 0.05, major_segments=16, minor_segments=6,
+                                     location=at - face * size * 0.62, rotation=Vector((0, 0, 1)).rotation_difference(Vector((0, 0, 1)).cross(face)).to_euler())
+    o = bpy.context.active_object; o.name = "corelid"; o.data.materials.append(bronze)
+    gem = mat("core", lt, 2.4, 0.95)
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=size * 0.5, location=at + face * size * 0.3)
+    o = bpy.context.active_object; o.name = "core"; o.data.materials.append(gem)
+    for v in o.data.vertices:  # draw the top out to a point: a tear
+        z = v.co.z / (size * 0.5)
+        if z > 0:
+            f = 1 - 0.9 * z
+            v.co = Vector((v.co.x * f, v.co.y * f, v.co.z * 1.7))
+    o.scale = (1.0, 0.55, 1.0)
+    o.rotation_euler = (0, 0, math.atan2(face.y, face.x) - math.pi / 2)
+    for f_ in o.data.polygons: f_.use_smooth = False
+    bagua_on(mixc(lt, (1, 1, 1), 0.3), at + face * size * 0.6 + Vector((0, 0, -0.05 * size)), face, size * 0.24)
+    return o
+
+
+def scroll(at, axis, s=1.0):
+    """Two rolled parchment scrolls tied with a red cord, wooden knobs at the ends: the tales it carries."""
+    paper, wood, cord = solid("parchment", (0.92, 0.86, 0.7), 0.8), solid("knob", (0.36, 0.2, 0.1), 0.6), solid("cord", (0.7, 0.12, 0.08), 0.8)
+    axis = Vector(axis).normalized()
+    rot = Vector((0, 0, 1)).rotation_difference(axis).to_euler()
+    side = axis.cross(Vector((0, 0, 1))).normalized() if abs(axis.z) < 0.9 else Vector((1, 0, 0))
+    for k in (-1, 1):
+        c = Vector(at) + side * k * 0.03 * s + Vector((0, 0, 0.01 * k * s))
+        bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.032 * s, depth=0.24 * s, location=c, rotation=rot)
+        o = bpy.context.active_object; o.name = "scroll"; o.data.materials.append(paper); smooth(o)
+        for e in (-1, 1):
+            ball("knob", wood, c + axis * e * 0.13 * s, 0.018 * s, (1, 1, 1), 10)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.07 * s, minor_radius=0.008 * s, major_segments=24, minor_segments=6,
+                                     location=at, rotation=rot)
+    bpy.context.active_object.name = "cord"; bpy.context.active_object.data.materials.append(cord)
+    tassel(Vector(at) - Vector((0, 0, 0.06 * s)), (0.7, 0.12, 0.08), 0.6 * s)
+
+
+def ballad_gear(lt, S, at, g, upright=False):
+    """What the Ballad carries: the scrolls (hung at the flank, or tucked at the belt when it stands) and the bell core
+    at its chest."""
+    gk = HEDGE[args.base].get("gear_k", (1.0, 1.0)) if not upright else (1.0, 1.0)
+    if upright:
+        scroll(at + Vector((0.12 * g, -0.27 * g, -0.62)), (0.2, 0.2, 1.0), 1.0)
+        ballad_core(lt, at + Vector((0.3 * g, -0.06, -0.3)), 0.09)
+    else:
+        scroll(at + Vector((-0.12, -0.31 * g * gk[0], 0.0)), (1.0, 0, 0.15), 1.0)
+        ballad_core(lt, at + Vector((0.3 * g * gk[1], -0.1 * g * gk[0], -0.08)), 0.08)
+
+
+def donkey_head(H, s=1.0, chin=0.0, yaw=0.0):
+    """Metaball parts for the donkey's head: a long heavy head, broad at the cheek, the muzzle deep and soft."""
+    v, _ = hedge_turn(H, s, chin, yaw)
+    return [("ell", v(0, 0, 0), 0.115 * s, (1.2, 0.95, 1.05)), ("ell", v(0.0, 0, -0.07), 0.095 * s, (1.1, 0.9, 1.0)),
+            ("ell", v(0.27, 0, -0.1), 0.075 * s, (1.05, 0.95, 1.0))] + \
+        taper(v, (0.05, 0, -0.03), (0.26, 0, -0.09), 0.095 * s, 0.075 * s, (1.1, 0.9, 1.0), (1.05, 0.92, 1.05), 7)
+
+
+def donkey_ear(at, up, side, s, m, tip):
+    """A long donkey ear: a broad leaf narrowing to a dark tip."""
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=24, ring_count=16, radius=1.0)
+    o = bpy.context.active_object; o.name = "ear"
+    for vv in o.data.vertices:
+        t = (vv.co.z + 1) / 2
+        w = (1 - t) ** 0.6 * min(1.0, 0.45 + 2.0 * t)
+        vv.co = Vector((vv.co.x * 0.03 * w, vv.co.y * 0.068 * w, t * 0.3)) * s
+    up = Vector(up).normalized()
+    o.rotation_euler = Vector((0, 0, 1)).rotation_difference(up).to_euler()
+    o.location = at
+    o.data.materials.append(m); smooth(o)
+    ball("eartip", tip, at + up * 0.25 * s, 0.022 * s, (1, 1, 1.6), 10).rotation_euler = o.rotation_euler
+    return o
+
+
+def donkey_face(body, H, S, F, s, r, chin=0.0, yaw=0.0, ears=1.0):
+    """The donkey's dark eyes ringed pale, its nostrils, and its long ears: up when neutral, up and forward when
+    satisfied, hanging out to the sides when dissatisfied. Returns the mouth seam."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    lids = dict(S, skin=F[2], spot=F[1])
+    HEAD["eyes"] = [v(0.04, side * 0.095, 0.04) for side in (1, -1)]
+    HEAD["mz"] = v(0.3, 0, -0.1)
+    for side in (1, -1):
+        eye(body, v(0.04, side * 0.095, 0.04), R @ Vector((0.25, side * 0.95, 0.15)), lids, r)
+    dark = solid("nose", F[3], 0.4)
+    for side in (1, -1):
+        ball("nose", dark, v(0.34, side * 0.04, -0.07), 0.014 * s, (1.0, 1.4, 0.7), 10)
+    m, tip = solid("ear", mixc(F[0], F[1], 0.15), 0.8), solid("eartip", F[1], 0.8)
+    up_, fwd, hang = Vector((0.0, 0.3, 1.0)), Vector((0.35, 0.22, 1.0)), Vector((0.15, 1.0, -0.5))
+    for side in (1, -1):
+        root = v(-0.05, side * 0.06, 0.09)
+        d = up_.lerp(fwd, min(1.0, (ears - 1.0) / 0.25)) if ears >= 1 else hang.lerp(up_, ears)
+        donkey_ear(root, R @ Vector((d.x, side * d.y, d.z)), side, s, m, tip)
+    return mouth_seam(body, v(0.2, 0, 0), v(0.2, 0, -0.12).z, 55, 0.01 * s, 0.006 * s)
+
+
+def donkey_mane(H, s, chin, yaw, withers, F):
+    """A short dark mane standing up along the top of the neck, from the poll to the withers."""
+    v, _ = hedge_turn(H, s, chin, yaw)
+    poll = v(-0.12, 0, 0.07)
+    m = solid("mane", F[1], 0.9)
+    for k in range(9):
+        p = poll + (withers - poll) * (k / 8)
+        ball("mane", m, p, 0.042, (0.9, 0.35, 1.3), 10)
+
+
+def donkey_paint(H, F, s, feet, low=0.3, upright=False, seed=0.0):
+    """The donkey's coat: plain dun, a pale mealy muzzle, pale rings round the eyes and a pale belly, a dark stripe down
+    the back crossed by a dark bar over the shoulders, the hooves dark."""
+    chest = HEAD.get("chest", Vector((0.3, 0, 0.8)))
+    mz, eyes = HEAD.get("mz", H), HEAD.get("eyes", [])
+
+    def fn(p, n):
+        if (p - mz).length < 0.12 * s: return F[2]
+        if any(0.028 * s < (p - e).length < 0.05 * s for e in eyes): return F[2]
+        if (p - H).length < 0.32 * s: return F[0]
+        if any((p - f).length < 0.07 for f in feet): return F[3]
+        if n.z < -0.55 and not upright: return F[2]  # the belly
+        if not upright and n.z > 0.75 and abs(p.y) < 0.035: return F[1]  # the stripe down the back
+        if not upright and abs(p.x - chest.x - 0.02) < 0.035 and n.z > 0.15 and p.z > chest.z - 0.02: return F[1]  # the shoulder bar
+        c = F[0]
+        if not upright and p.z < low: c = mixc(F[0], F[2], 0.25)
+        return mixc(c, (0, 0, 0), 0.08 * max(0, -n.z))
+    return fn
+
+
+def donkey_tail(name, pts, r, F, s=1.0):
+    """A thin tail ending in a dark tuft."""
+    path = tail_path(pts, 10)
+    m = len(path) - 1
+    tube(name, [Vector(p) for p in path[:-2]], r * 0.5, solid("tail", F[0], 0.85))
+    o = blob(name + "tuft", [("ball", tuple(p), r * (0.6 + 0.9 * (k / 3))) for k, p in enumerate(path[-4:])], 0.015 * s, 1500)
+    fluff(o, 0.02 * s, 12.0, 3.0)
+    paint(o, lambda p, n: F[1])
+    o.data.materials.append(vmat("fur", 0.92))
+    return path
+
+
+def ballad_outfit(top, lean, g, S, lt, el):
+    """The Ballad's performer's dress: a long tunic and a jester's collar of points in two colours, each
+    with a small gilt bell at its tip."""
+    tunic = mixc(S["cloth"], (0.4, 0.4, 0.42), 0.3)
+    cape = mixc(S["trim"], (0.5, 0.5, 0.52), 0.2)
+    drape("tunic", tuple(top + Vector((0.0, 0, 0.04))), (lean * 0.5, 0, -1), 0.27 * g, 0.36 * g, 0.92, tunic, S["trim"], f"tunic-{el}", 0.0)
+    a_, b_, gilt = solid("motley", tunic, 0.8), solid("motley", cape, 0.8), solid("bell", GILT, 0.3, metal=1.0)
+    c = top + Vector((0.02, 0, 0.1))
+    for k in range(12):
+        a = 2 * math.pi * k / 12
+        out = Vector((math.cos(a), math.sin(a), 0))
+        p0, tip = c + out * 0.24 * g, c + out * 0.4 * g + Vector((0, 0, -0.13))
+        d = tip - p0
+        bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.05, radius2=0.0, depth=d.length, location=(p0 + tip) / 2,
+                                        rotation=Vector((0, 0, 1)).rotation_difference(d).to_euler())
+        o = bpy.context.active_object; o.name = "collar"; o.data.materials.append(a_ if k % 2 else b_)
+        o.scale = (1.0, 0.45, 1.0)
+        ball("bell", gilt, tip + d.normalized() * 0.02, 0.022, (1, 1, 1), 10)
+
+
+def ballad_hologram(lt, dk):
+    """The projected donkey: a faceted body of light on four legs, a short heavy neck, a long head with two long ears,
+    and a thin tail with a tuft."""
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.56))
+    body.scale = (0.56, 0.32, 0.3); traced(body)
+    traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "neck", skin, vertices=6, radius=0.11, depth=0.42,
+                    location=(0.44, 0, 0.84), rotation=(0, 0.55, 0)))
+    head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.14, location=(0.6, 0, 1.06))
+    head.scale = (1.2, 0.9, 1.0); traced(head)
+    traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.1, radius2=0.075, depth=0.26,
+                    location=(0.8, 0, 0.98), rotation=(0, math.pi / 2 + 0.35, 0)))
+    for side in (1, -1):
+        traced(obj_from(bpy.ops.mesh.primitive_cone_add, "ear", skin, vertices=4, radius1=0.05, depth=0.36,
+                        location=(0.52, side * 0.09, 1.34), rotation=(side * -0.35, -0.15, 0)))
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", mat("eye", (1, 1, 1), 9.0, 1.0), subdivisions=1, radius=0.022,
+                 location=(0.66, side * 0.1, 1.1))
+    traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "tail", skin, vertices=5, radius=0.02, depth=0.34,
+                    location=(-0.66, 0, 0.5), rotation=(0, 0.25, 0)))
+    traced(obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "tuft", deep, subdivisions=1, radius=0.06, location=(-0.7, 0, 0.32)))
+    for x, y in ((0.3, 0.13), (0.3, -0.13), (-0.38, 0.13), (-0.38, -0.13)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=0.055, depth=0.62, location=(x, y, 0.1))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.3, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    ballad_core(lt, at=(0, 0, 0.6), size=0.15)
+
+
+HEDGE["donkey"] = dict(F=DONKEY, head=donkey_head, face=donkey_face, paint=donkey_paint, tail=donkey_tail, girth=1.15, tall=1.0, long=1.0, s=1.3,
+                       pose=BALLAD_POSE, ally=BALLAD_ALLY, body_r=0.24, body_sc=(1.05, 1.05, 1.05), neck_r=(0.13, 0.11), leg_r=(0.075, 0.085, 0.05),
+                       toes="none", fluffy=0.008, low=0.36, lift=0.0, gear=ballad_gear, ally_g=1.1, ally_s=1.0)
+
+
+
+# Round 20: the Ballad's other two bases, the basset hound and the elephant (council/loops/prompts/spirit-generator-r19.md),
+# on the donkey's teardrop gas, bell core, scrolls and storyteller's tunic. Both were modelled against Wikimedia Commons
+# photographs (round20/basset-reference-photos.jpg, elephant-reference-photos.jpg): the basset a very long low body on
+# short heavy legs, a domed skull and long flews, long ears hanging to the ground, a tricolour coat; the African elephant
+# a domed head on a short neck, huge flat ears, a trunk thick at the root, short tusks, pillar legs and wrinkled grey hide.
+# Stance is the Victim's yield (GESTURES.md): dissatisfied, the basset's head hung to the ground with its ears trailing and
+# the elephant's trunk hung to the ground, ears pinned; satisfied, the yield is the story, the basset baying with its nose
+# raised and the elephant trumpeting with its trunk up and ears spread.
+BASSET = {  # tan (head, ears, patches), black (the saddle), white (blaze, muzzle, chest, legs, belly, tail tip), nose and nails
+    "wood":  ((0.74, 0.42, 0.18), (0.1, 0.08, 0.07), (0.94, 0.91, 0.86), (0.06, 0.05, 0.05)),
+    "fire":  ((0.82, 0.38, 0.14), (0.16, 0.07, 0.05), (0.96, 0.88, 0.8), (0.1, 0.04, 0.03)),
+    "water": ((0.6, 0.5, 0.4), (0.07, 0.1, 0.16), (0.9, 0.93, 0.95), (0.04, 0.06, 0.1)),
+    "metal": ((0.72, 0.6, 0.46), (0.2, 0.2, 0.22), (0.96, 0.96, 0.95), (0.08, 0.08, 0.09)),
+    "earth": ((0.7, 0.48, 0.24), (0.14, 0.1, 0.06), (0.92, 0.86, 0.74), (0.08, 0.06, 0.04)),
+}
+ELEPHANT = {  # hide, dark (wrinkles, ear rims, tail tuft, toenails), ivory (tusks), inner ear and nostril
+    "wood":  ((0.5, 0.48, 0.45), (0.3, 0.28, 0.26), (0.92, 0.88, 0.76), (0.62, 0.5, 0.48)),
+    "fire":  ((0.58, 0.42, 0.34), (0.34, 0.2, 0.15), (0.94, 0.86, 0.72), (0.7, 0.44, 0.38)),
+    "water": ((0.46, 0.5, 0.56), (0.26, 0.3, 0.36), (0.92, 0.92, 0.88), (0.58, 0.52, 0.54)),
+    "metal": ((0.62, 0.62, 0.64), (0.38, 0.38, 0.4), (0.95, 0.94, 0.9), (0.68, 0.6, 0.6)),
+    "earth": ((0.56, 0.47, 0.36), (0.34, 0.27, 0.19), (0.93, 0.87, 0.72), (0.66, 0.5, 0.42)),
+}
+BASSET_POSE = {  # as BALLAD_POSE; ears 1 hanging, 0 trailing on the ground, 1.25 swung back
+    "neutral": dict(chest=0.36, rump=0.36, head=(0.5, 0, 0.54), yaw=0.0, chin=0.25, ears=1.0, fore=0.36, hind=-0.42, spread=1.0, tail=0.4, brace=False),
+    "dissatisfied": dict(chest=0.27, rump=0.33, head=(0.52, 0.05, 0.22), yaw=0.4, chin=-1.0, ears=0.0, fore=0.4, hind=-0.4, spread=1.15, tail=-0.6, brace=False),
+    "satisfied": dict(chest=0.4, rump=0.36, head=(0.5, -0.06, 0.84), yaw=-0.3, chin=1.6, ears=1.25, fore=0.34, hind=-0.44, spread=1.05, tail=1.0, brace=False),
+}
+ELEPHANT_POSE = {  # trunk and ears follow the pose through chin and ears; the trunk's reach is set in elephant_head by state
+    "neutral": dict(chest=1.0, rump=1.0, head=(0.74, 0, 1.12), yaw=0.0, chin=0.0, ears=1.0, fore=0.3, hind=-0.4, spread=1.0, tail=0.3, brace=True),
+    "dissatisfied": dict(chest=0.86, rump=0.9, head=(0.74, 0.05, 0.72), yaw=0.3, chin=-1.0, ears=0.0, fore=0.36, hind=-0.42, spread=0.92, tail=-0.6, brace=False),
+    "satisfied": dict(chest=1.04, rump=1.0, head=(0.8, -0.05, 1.3), yaw=-0.3, chin=1.0, ears=1.25, fore=0.32, hind=-0.42, spread=1.1, tail=0.9, brace=True),
+}
+
+
+def ballad_ally(drop):
+    """BALLAD_ALLY with the head set lower and forward on a shorter neck, for the bases shorter than the donkey."""
+    out = {}
+    for k, a in BALLAD_ALLY.items():
+        a = dict(a); h = a["head"]
+        a["head"] = (h[0] + 0.04, h[1], h[2] - drop)
+        out[k] = a
+    return out
+
+
+def flat_leaf(name, at, d, side, m, length, width, thick, t0=0.45, taper_=0.0):
+    """A flat leaf (an ear) from its root at `at` along direction d, its face turned outward to `side`: a rounded blade,
+    broadest a little way down and rounded at the tip, taper_ narrowing the root."""
+    d = Vector(d).normalized()
+    n = Vector((0, side, 0)) - d * d.y * side
+    n = n.normalized() if n.length > 1e-4 else Vector((side, 0, 0))
+    w = d.cross(n).normalized()
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=28, ring_count=18, radius=1.0)
+    o = bpy.context.active_object; o.name = name
+    for vv in o.data.vertices:
+        t = (vv.co.z + 1) / 2
+        wd = math.sin(math.pi * (0.04 + 0.96 * t ** 0.85)) ** 0.7 * (1.0 - taper_ * (1 - t)) if True else 1
+        wd = max(wd, 0.0)
+        vv.co = Vector((vv.co.x * thick * (0.4 + 0.6 * wd), vv.co.y * width * wd * 0.5 * (0.35 + 0.65 * min(1.0, t / t0)), t * length))
+    from mathutils import Matrix as _M
+    o.rotation_euler = _M(((n.x, w.x, d.x), (n.y, w.y, d.y), (n.z, w.z, d.z))).to_euler()
+    o.location = at
+    o.data.materials.append(m); smooth(o)
+    return o
+
+
+def ear_dir(ears, pinned, rest, wide):
+    d = Vector(pinned).lerp(Vector(rest), max(0.0, min(1.0, ears))) if ears < 1 else Vector(rest).lerp(Vector(wide), min(1.0, (ears - 1.0) / 0.25))
+    return d.normalized()
+
+
+def basset_head(H, s=1.0, chin=0.0, yaw=0.0):
+    """Metaball parts for the basset hound's head, after photographs: a high domed skull with a pronounced occiput, a long
+    deep muzzle, heavy flews hanging at the lips and loose skin under the throat."""
+    v, _ = hedge_turn(H, s, chin, yaw)
+    parts = [("ell", v(0, 0, 0), 0.105 * s, (1.15, 0.9, 1.05)), ("ell", v(-0.07, 0, 0.025), 0.075 * s, (1.0, 0.95, 1.0)),
+             ("ell", v(0.03, 0, -0.1), 0.075 * s, (1.1, 0.95, 0.9)), ("ell", v(0.0, 0, -0.17), 0.065 * s, (1.4, 1.0, 0.8))]
+    parts += taper(v, (0.06, 0, -0.04), (0.28, 0, -0.08), 0.085 * s, 0.07 * s, (1.1, 0.9, 1.0), (1.0, 0.95, 1.1), 7)
+    for side in (1, -1):  # the flews, hanging loose below the lips
+        parts += [("ell", v(0.15, side * 0.055, -0.135), 0.05 * s, (1.5, 0.75, 0.9)), ("ell", v(0.24, side * 0.05, -0.12), 0.04 * s, (1.1, 0.8, 0.9))]
+    return parts
+
+
+def basset_face(body, H, S, F, s, r, chin=0.0, yaw=0.0, ears=1.0):
+    """The basset's soft dark eyes under heavy brows, its big dark nose, and its long ears, set low on the skull and hanging:
+    straight down when it stands, trailing out along the ground when it is low, swung back when it bays."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    lids = dict(S, skin=F[0], spot=F[1])
+    HEAD["eyes"] = [v(0.07, side * 0.085, 0.03) for side in (1, -1)]
+    HEAD["mz"] = v(0.28, 0, -0.07)
+    for side in (1, -1):
+        eye(body, v(0.07, side * 0.085, 0.03), R @ Vector((0.3, side * 0.95, 0.12)), lids, r * 1.1, iris=(0.32, 0.18, 0.08))
+        ball("brow", solid("brow", mixc(F[0], F[1], 0.2), 0.9), v(0.07, side * 0.075, 0.075), 0.03 * s, (1.4, 0.9, 0.55), 10)
+    ball("nose", solid("nose", F[3], 0.35), v(0.325, 0, -0.065), 0.036 * s, (0.95, 1.5, 0.95), 12)
+    m = solid("ear", mixc(F[0], F[1], 0.25), 0.85)
+    for side in (1, -1):
+        d = ear_dir(ears, (-0.75, 0.6, -0.45), (-0.08, 0.28, -1.0), (-0.6, 0.35, -0.85))
+        root = v(-0.04, side * 0.085, 0.045)
+        flat_leaf("ear", root, R @ Vector((d.x, side * d.y, d.z)), side, m, 0.43 * s, 0.17 * s, 0.014 * s, 0.4, 0.45)
+    return mouth_seam(body, v(0.22, 0, 0), v(0.22, 0, -0.1).z, 60, 0.012 * s, 0.006 * s)
+
+
+def basset_paint(H, F, s, feet, low=0.2, upright=False, seed=0.0):
+    """The basset's tricolour coat: a tan head with a white blaze and muzzle, a black saddle over the back and flanks, tan
+    patches at its edges, white chest, belly and legs, white-tipped tail."""
+    chest = HEAD.get("chest", Vector((0.4, 0, 0.36)))
+    mz, eyes = HEAD.get("mz", H), HEAD.get("eyes", [])
+    Lx = chest.x
+
+    def fn(p, n):
+        q = p - H
+        if (p - mz).length < 0.1 * s: return F[2]
+        if abs(q.y) < 0.03 * s and q.z > -0.06 * s and q.x > -0.02 * s and q.length < 0.2 * s: return F[2]  # the blaze
+        if any((p - e).length < 0.03 * s for e in eyes): return mixc(F[1], F[0], 0.4)
+        if q.length < 0.3 * s: return mixc(F[0], F[1], 0.12)
+        if any((p - f).length < 0.07 for f in feet): return F[2]
+        nz = noise.noise(p * 9.0 + Vector((seed, 0, 0)))
+        if upright:
+            return F[2] if n.z < 0.1 and p.z < 1.0 else mixc(F[0], F[1], 0.3 + 0.2 * nz)
+        if n.z < -0.35 or p.z < low: return F[2]  # belly and legs
+        if p.x > chest.x + 0.1: return F[2]  # the white chest
+        edge = 0.05 * nz
+        if n.z > 0.35 + edge and -0.5 < p.x < chest.x + 0.02: return F[1]  # the saddle
+        if n.z > 0.0 + edge and -0.5 < p.x < chest.x - 0.04: return F[1] if nz > 0.15 else F[0]  # ragged flank patches
+        return mixc(F[0], F[2], 0.12 + 0.2 * max(0, nz))
+    return fn
+
+
+def basset_tail(name, pts, r, F, s=1.0):
+    """The basset's tail: a thick-rooted sabre carried up, tipped white."""
+    path = tail_path(pts, 10)
+    tube(name, [Vector(p) for p in path[:-3]], r * 0.8, solid("tail", F[1], 0.85))
+    o = blob(name + "tip", [("ball", tuple(p), r * (1.0 - 0.45 * (k / 3))) for k, p in enumerate(path[-4:])], 0.015 * s, 1500)
+    paint(o, lambda p, n: F[2])
+    o.data.materials.append(vmat("fur", 0.92))
+    return path
+
+
+def elephant_head(H, s=1.0, chin=0.0, yaw=0.0):
+    """Metaball parts for the African elephant's head, after photographs: a huge domed skull, a flat broad forehead, cheeks
+    and a short neck, and the trunk thick at its root, tapering to a finger at the tip. The trunk hangs to the ground when
+    the elephant is dissatisfied, hangs relaxed with its tip curled forward when neutral, and is raised to trumpet when
+    satisfied (the upright form hangs it to the belly, or raises it)."""
+    v, _ = hedge_turn(H, s, chin, yaw)
+    st = look_state(); up = HEAD.get("ally", False)
+    parts = [("ell", v(0, 0, 0.02), 0.2 * s, (1.0, 1.0, 1.15)), ("ell", v(0.07, 0, -0.1), 0.17 * s, (1.1, 0.95, 1.0)),
+             ("ell", v(0.0, 0.1, -0.05), 0.12 * s, (1.0, 0.8, 1.0)), ("ell", v(0.0, -0.1, -0.05), 0.12 * s, (1.0, 0.8, 1.0))]
+    base = v(0.2, 0, -0.14)
+    ground = base.z - 0.06 if up else 0.07
+    if st == "dissatisfied":
+        tip = Vector((base.x + 0.06, base.y, max(ground, 0.07)))
+        mid = Vector((base.x + 0.18, base.y, (base.z + tip.z) * 0.5))
+    elif st == "satisfied":
+        tip = base + Vector((0.42 * s / 1.5, 0.0, 0.5 * s / 1.5))
+        mid = base + Vector((0.36 * s / 1.5, 0.0, -0.08 * s / 1.5))
+    else:
+        tip = Vector((base.x + 0.22, base.y, max(0.1 if not up else base.z - 0.8, base.z - 0.72 * s / 1.5)))
+        mid = Vector((base.x + 0.14, base.y, (base.z + tip.z) * 0.5 + 0.05))
+    n = 11
+    for k in range(n):
+        t = k / (n - 1)
+        p = (1 - t) ** 2 * base + 2 * (1 - t) * t * mid + t * t * tip
+        r = (0.105 - 0.065 * t ** 0.8) * s
+        parts.append(("ell", p, r, (1.0, 0.95, 1.0)))
+    HEAD["trunk_tip"] = tip
+    return parts
+
+
+def elephant_face(body, H, S, F, s, r, chin=0.0, yaw=0.0, ears=1.0):
+    """The elephant's small dark eyes under heavy lids low on the side of the head, its short curved ivory tusks, and the huge
+    flat ears: pinned back flat against the neck when it is low, hanging relaxed when it stands, spread wide when it trumpets."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    lids = dict(S, skin=F[0], spot=F[1])
+    HEAD["eyes"] = []
+    for side in (1, -1):
+        eye(body, v(0.06, side * 0.175, 0.0), R @ Vector((0.2, side * 0.95, 0.1)), lids, r * 0.9)
+    ivory = solid("tusk", F[2], 0.35)
+    for side in (1, -1):
+        pts = [v(0.14, side * 0.1, -0.2), v(0.22, side * 0.13, -0.3), v(0.34, side * 0.14, -0.33), v(0.44, side * 0.12, -0.3)]
+        tube("tusk", [Vector(p) for p in pts], 0.03 * s, ivory)
+        ball("tusk", ivory, pts[-1] + (pts[-1] - pts[-2]).normalized() * 0.01, 0.016 * s, (1, 1, 1), 8)
+    m, inner = solid("ear", mixc(F[0], F[1], 0.1), 0.9), solid("earin", F[3], 0.9)
+    for side in (1, -1):
+        d = ear_dir(ears, (-0.85, 0.2, -0.5), (-0.5, 0.6, -0.65), (-0.25, 1.0, -0.35))
+        root = v(-0.03, side * 0.15, 0.1)
+        dd = R @ Vector((d.x, side * d.y, d.z))
+        flat_leaf("ear", root, dd, side, m, 0.7 * s, 0.62 * s, 0.022 * s, 0.35, 0.3)
+        flat_leaf("earin", root - Vector((0, side * 0.012 * s, 0)), dd, side, inner, 0.6 * s, 0.48 * s, 0.021 * s, 0.35, 0.3)
+    return mouth_seam(body, v(0.12, 0, -0.2), v(0.12, 0, -0.22).z, 20, 0.004 * s, 0.004 * s)
+
+
+def elephant_paint(H, F, s, feet, low=0.3, upright=False, seed=0.0):
+    """The elephant's hide: grey with a darker wrinkle texture, pale inside the trunk's tip and round the toenails, the
+    legs and feet dustier."""
+    def fn(p, n):
+        w1 = noise.noise(p * 22.0 + Vector((seed, 0, 0)))
+        w2 = noise.noise(p * 7.0 + Vector((0, seed, 0)))
+        c = mixc(F[0], F[1], 0.18 + 0.3 * max(0.0, abs(w1) * 1.6 - 0.2) + 0.12 * w2)
+        tip = HEAD.get("trunk_tip")
+        if tip is not None and (p - tip).length < 0.05: c = mixc(F[0], F[3], 0.6)
+        if any((p - f).length < 0.06 for f in feet): c = mixc(c, F[1], 0.35)
+        return mixc(c, (0, 0, 0), 0.1 * max(0, -n.z))
+    return fn
+
+
+def elephant_tail(name, pts, r, F, s=1.0):
+    """A thin tail ending in a dark tuft of coarse hair."""
+    path = tail_path(pts, 10)
+    tube(name, [Vector(p) for p in path[:-2]], r * 0.45, solid("tail", F[0], 0.85))
+    o = blob(name + "tuft", [("ball", tuple(p), r * (0.5 + 0.6 * (k / 3))) for k, p in enumerate(path[-4:])], 0.015 * s, 1500)
+    fluff(o, 0.015 * s, 14.0, 2.0)
+    paint(o, lambda p, n: F[1])
+    o.data.materials.append(vmat("fur", 0.95))
+    return path
+
+
+def ballad_hologram_other(lt, dk):
+    """The projected basset hound or elephant, built like the donkey's: a faceted body of light on four legs, a head with
+    its ears, and for the elephant a trunk and tusks."""
+    ele = args.base == "elephant"
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    if ele:
+        body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.9))
+        body.scale = (0.7, 0.42, 0.42); traced(body)
+        head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.28, location=(0.66, 0, 1.0))
+        head.scale = (0.95, 0.9, 1.1); traced(head)
+        for k in range(5):  # the trunk, hanging in segments
+            traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "trunk", skin, vertices=5, radius=0.085 - 0.012 * k, depth=0.19,
+                            location=(0.92 + 0.03 * k, 0, 0.84 - 0.17 * k), rotation=(0, -0.15, 0)))
+        for side in (1, -1):
+            traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "ear", skin, vertices=6, radius=0.26, depth=0.025,
+                            location=(0.48, side * 0.3, 1.0), rotation=(math.pi / 2 - side * 0.4, 0, 0.2)))
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.025, location=(0.78, side * 0.2, 1.02))
+            obj_from(bpy.ops.mesh.primitive_cone_add, "tusk", edge, vertices=4, radius1=0.03, depth=0.3,
+                     location=(0.9, side * 0.13, 0.68), rotation=(0, math.pi / 2 + 0.7, 0))
+        traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "tail", skin, vertices=5, radius=0.02, depth=0.42,
+                        location=(-0.78, 0, 0.7), rotation=(0, 0.1, 0)))
+        legs, lr, ld = ((0.35, 0.22), (0.35, -0.22), (-0.48, 0.22), (-0.48, -0.22)), 0.1, 0.72
+    else:
+        body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.06, 0, 0.36))
+        body.scale = (0.64, 0.22, 0.2); traced(body)
+        head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.12, location=(0.62, 0, 0.5))
+        head.scale = (1.2, 0.85, 1.0); traced(head)
+        traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.08, radius2=0.06, depth=0.24,
+                        location=(0.82, 0, 0.45), rotation=(0, math.pi / 2 + 0.2, 0)))
+        for side in (1, -1):
+            traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "ear", skin, vertices=5, radius=0.07, depth=0.012,
+                            location=(0.54, side * 0.12, 0.34), rotation=(side * 0.3, 0, 0)))
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.02, location=(0.68, side * 0.08, 0.53))
+        for k in range(4):
+            traced(obj_from(bpy.ops.mesh.primitive_cone_add, "tail", skin, vertices=4, radius1=0.03 - 0.005 * k, depth=0.14,
+                            location=(-0.7 - 0.05 * k, 0, 0.46 + 0.1 * k), rotation=(0, -0.5, 0)))
+        legs, lr, ld = ((0.32, 0.12), (0.32, -0.12), (-0.4, 0.12), (-0.4, -0.12)), 0.06, 0.22
+    for x, y in legs:
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=lr, depth=ld, location=(x, y, ld / 2 - 0.17 + (0.0 if ele else 0.1)))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.3, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    ballad_core(lt, at=(0, 0, 0.9 if ele else 0.4), size=0.2 if ele else 0.14)
+
+
+HEDGE["basset"] = dict(F=BASSET, head=basset_head, face=basset_face, paint=basset_paint, tail=basset_tail, girth=1.15, tall=1.0, long=1.35, s=1.15,
+                       pose=BASSET_POSE, ally=ballad_ally(0.2), body_r=0.2, body_sc=(1.1, 1.1, 1.05), neck_r=(0.1, 0.09), leg_r=(0.07, 0.075, 0.06),
+                       toes="none", fluffy=0.006, low=0.2, lift=0.0, cam=(0.34, 3.0), cam_h=(0.38, 3.4), cam_a=(1.2, 4.1), ally_g=1.05, ally_s=0.95,
+                       gear=ballad_gear, gear_k=(0.7, 0.6), scarf=0.85, foot=0.06)
+HEDGE["elephant"] = dict(F=ELEPHANT, head=elephant_head, face=elephant_face, paint=elephant_paint, tail=elephant_tail, girth=1.2, tall=1.0, long=1.1, s=1.5,
+                         pose=ELEPHANT_POSE, ally=ballad_ally(0.0), body_r=0.33, body_sc=(1.15, 1.05, 1.0), neck_r=(0.2, 0.18), leg_r=(0.12, 0.125, 0.1),
+                         toes="nails", fluffy=0.012, low=0.3, lift=0.0, cam=(0.8, 4.6), cam_h=(0.7, 3.8), cam_a=(1.2, 4.5), ally_g=1.25, ally_s=0.85,
+                         gear=ballad_gear, gear_k=(1.4, 1.2), scarf=1.5, foot=0.09)
 
 # Round 7: one nation style over every stage (sg-look-layers: the element sets colour, material and aura; where you
 # met the spirit sets the regional style). Meridia, the Golden Noon (Earth; clarity, trade and exchange), in stone and
@@ -3911,9 +4812,11 @@ for el, (lt, dk) in ELEMENTS.items():
         fox, otter, goat = args.base == "fox", args.base == "otter", args.base == "goat"
         tinker = FAMILY == "tinker"
         hold = FAMILY == "holdfast"
-        hedge = FAMILY == "hedge"
-        sc = reset(1.3, 4.3) if (st == "ascended" and hedge) else reset(0.85, 4.2) if (st == "creature" and hedge) \
-            else reset(0.55, 3.6) if (st == "hologram" and hedge) else reset(1.25, 4.0) if (st == "ascended" and hold) else reset(0.55, 3.8) if (st == "creature" and hold) \
+        ballad = FAMILY == "ballad"
+        hedge = FAMILY in ("hedge", "ballad")  # the Ballad stands on the Hedge's four-legged body
+        HT = HEDGE.get(args.base, {})
+        sc = reset(*HT.get("cam_a", (1.3, 4.3))) if (st == "ascended" and hedge) else reset(*HT.get("cam", (0.85, 4.2))) if (st == "creature" and hedge) \
+            else reset(*HT.get("cam_h", (0.55, 3.6))) if (st == "hologram" and hedge) else reset(1.25, 4.0) if (st == "ascended" and hold) else reset(0.55, 3.8) if (st == "creature" and hold) \
             else reset(0.4, 3.4) if (st == "hologram" and hold) else reset(1.25, 4.0) if (st == "ascended" and tinker) else reset(1.3, 3.8) if st == "ascended" \
             else reset(0.6, 4.0) if (st == "creature" and tinker) else reset(0.45, 3.5) if (st == "hologram" and tinker) else reset(0.85, 4.3) if (st == "creature" and fox) \
             else reset(0.42, 3.2) if (st == "creature" and otter) else reset(0.66, 3.1) if (st == "creature" and goat) \
@@ -3923,10 +4826,10 @@ for el, (lt, dk) in ELEMENTS.items():
             else reset(0.35, 3.7) if (st == "hologram" and long_) else reset()
         rng = random.Random(f"{FAMILY}-{el}-{st}")  # gas and core are the family's, the same for every base
         if st == "gas":
-            romp_gas(rng, lt, dk) if FAMILY == "romp" else tinker_gas(rng, lt, dk) if tinker else holdfast_gas(rng, lt, dk) if hold else hedge_gas(rng, lt, dk) if hedge else gas(rng, lt, dk, 140, 0.42)
+            romp_gas(rng, lt, dk) if FAMILY == "romp" else tinker_gas(rng, lt, dk) if tinker else holdfast_gas(rng, lt, dk) if hold else ballad_gas(rng, lt, dk) if ballad else hedge_gas(rng, lt, dk) if hedge else gas(rng, lt, dk, 140, 0.42)
         elif st == "core":
             gas(rng, lt, dk, 40, 0.38, core_pull=0.45)
-            romp_core(lt, (0, 0, 0.3), 0.3) if FAMILY == "romp" else tinker_core(lt, (0, 0, 0.32), 0.3) if tinker else holdfast_core(lt, (0, 0, 0.32), 0.3) if hold else hedge_core(lt, (0, 0, 0.32), 0.3) if hedge else core(lt)
+            romp_core(lt, (0, 0, 0.3), 0.3) if FAMILY == "romp" else tinker_core(lt, (0, 0, 0.32), 0.3) if tinker else holdfast_core(lt, (0, 0, 0.32), 0.3) if hold else ballad_core(lt, (0, 0, 0.32), 0.3) if ballad else hedge_core(lt, (0, 0, 0.32), 0.3) if hedge else core(lt)
         elif st == "hologram":
             tinker_hologram(lt, dk) if tinker else holdfast_hologram(lt, dk) if hold else hedge_hologram(lt, dk) if hedge else hologram(lt, dk) if args.base == "tortoise" else fox_hologram(lt, dk) if fox \
                 else otter_hologram(lt, dk) if otter else goat_hologram(lt, dk) if goat else hologram_long(lt, dk, args.base)

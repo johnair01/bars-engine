@@ -2,8 +2,8 @@
  * Wuxing (五行) emotional channel routing.
  *
  * Maps the Five Elements to emotional channels and encodes the two cycles:
- *   生 shēng (generation) — the nourishing/produce cycle → translate UPWARD
- *   克 kè (control/destruction) — the overcoming cycle → translate DOWNWARD
+ *   生 shēng (generation) — the nourishing/produce cycle → translate upward
+ *   克 kè (control/destruction) — the overcoming cycle → never raises; depends on the start
  *
  * Element mapping (canonical — matches src/lib/quest-grammar/elements.ts):
  *   Wood  (木) = joy / delight ("love of the game"; vitality; jouissance)
@@ -19,87 +19,49 @@
 
 import type { EmotionChannel } from './types'
 import type { AlchemyAltitude } from './types'
+import moveTable from '../quest-grammar/move-table.json'
+import { SHENG_CYCLE, KE_CYCLE } from './wuxing-cycles'
 
 export type SceneType = 'transcend' | 'generate' | 'control'
 
-// Generation (shēng 生) cycle: Wood→Fire→Earth→Metal→Water→Wood
-// In Emotional Alchemy channels (see elements.ts):
-//   joy(Wood) → anger(Fire) → neutrality(Earth) → fear(Metal) → sadness(Water) → joy(Wood)
-const SHENG_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  joy:        'anger',
-  anger:      'neutrality',
-  neutrality: 'fear',
-  fear:       'sadness',
-  sadness:    'joy',
-}
+// Both cycles and what each family does to satisfaction come from the move table, a copy of six-faces-council
+// schema/move-table.json (src/lib/quest-grammar/__tests__/move-table.test.ts keeps them in step).
 
-// Control/destruction (kè 克) cycle: Wood→Earth→Water→Fire→Metal→Wood
-// In Emotional Alchemy channels:
-//   joy(Wood) → neutrality(Earth) → sadness(Water) → anger(Fire) → fear(Metal) → joy(Wood)
-const KE_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  joy:        'neutrality',
-  neutrality: 'sadness',
-  sadness:    'anger',
-  anger:      'fear',
-  fear:       'joy',
-}
+const ALTITUDE_ORDER = moveTable.states as AlchemyAltitude[]
 
-const ALTITUDE_ORDER: AlchemyAltitude[] = ['dissatisfied', 'neutral', 'satisfied']
-
-function altitudeStep(altitude: AlchemyAltitude, delta: 1 | -1): AlchemyAltitude {
-  const idx = ALTITUDE_ORDER.indexOf(altitude)
-  const next = idx + delta
-  if (next < 0) return 'dissatisfied'
-  if (next >= ALTITUDE_ORDER.length) return 'satisfied'
-  return ALTITUDE_ORDER[next]
+const FAMILY: Record<SceneType, keyof typeof moveTable.families> = {
+  transcend: 'transcend',
+  generate: 'generative',
+  control: 'control',
 }
 
 export interface MoveResolution {
   targetChannel: EmotionChannel
   targetAltitude: AlchemyAltitude
-  /** Human-readable vector label, e.g. "fear:dissatisfied→anger:neutral" */
+  /** Human-readable vector label, e.g. "fear:dissatisfied→sadness:neutral" */
   vector: string
 }
 
 /**
  * Resolve where a move takes a player given their current state and chosen scene type.
  *
- * Transcend: same channel, +1 altitude
- * Generate:  shēng target channel, +1 altitude
- * Control:   kè target channel, −1 altitude (floor: dissatisfied)
+ * Transcend: same channel, two steps (dissatisfied → neutral → satisfied); from satisfied there is no step
+ * Generate:  shēng target channel, +1 (satisfied is the ceiling)
+ * Control:   kè target channel; depends on the start: satisfied holds, neutral pulls back, dissatisfied holds
  */
 export function resolveMoveDestination(
   channel: EmotionChannel,
   altitude: AlchemyAltitude,
   sceneType: SceneType,
 ): MoveResolution {
-  switch (sceneType) {
-    case 'transcend': {
-      const targetAltitude = altitudeStep(altitude, 1)
-      return {
-        targetChannel: channel,
-        targetAltitude,
-        vector: `${channel}:${altitude}→${channel}:${targetAltitude}`,
-      }
-    }
-    case 'generate': {
-      const targetChannel = SHENG_CYCLE[channel]
-      const targetAltitude = altitudeStep(altitude, 1)
-      return {
-        targetChannel,
-        targetAltitude,
-        vector: `${channel}:${altitude}→${targetChannel}:${targetAltitude}`,
-      }
-    }
-    case 'control': {
-      const targetChannel = KE_CYCLE[channel]
-      const targetAltitude = altitudeStep(altitude, -1)
-      return {
-        targetChannel,
-        targetAltitude,
-        vector: `${channel}:${altitude}→${targetChannel}:${targetAltitude}`,
-      }
-    }
+  const family = moveTable.families[FAMILY[sceneType]]
+  const targetChannel =
+    family.channel === 'sheng' ? SHENG_CYCLE[channel] : family.channel === 'ke' ? KE_CYCLE[channel] : channel
+  const targetAltitude = ((family.state as Record<string, string | null>)[altitude] ?? altitude) as AlchemyAltitude
+  return {
+    targetChannel,
+    targetAltitude,
+    vector: `${channel}:${altitude}→${targetChannel}:${targetAltitude}`,
   }
 }
 

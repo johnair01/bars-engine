@@ -550,3 +550,27 @@ stands unless he flips it.
   (`voices[id].talked`), and the return rite can name "facing a part of you, talking with it and speaking as it".
 - **The hooks in cave.js** `talk321`: `o.beforeOne(go, stay)` and `o.cards(ph, voice)`, both optional, so the WAVE room
   and the Cave of Lessons are unchanged.
+
+## The let-go after a willing 3-2-1 (17 October 2026)
+
+When a 3-2-1 ends and the voice is willing (its charge at 3 or below, all three kinds of trust seen, or already willing),
+the panel steps away and its body plays its let-go: it eases back to its held shape, then its Integrate action (cave.js
+`integrateBody`, bars-engine #356) opens that shape into its honored form, the one Wendell approved for each daemon, and it
+stands willing from there. The cave says "The Protector lets go. This is how it stands when it is honored." and the
+chamber goes on to its ready step. It plays once a visit, after any easing, never while a fall is not yet owned, and only
+after a 3-2-1 that was had (a skipped one does not count). From its seat the voice is out of sight, so it lets go when it
+is back at its post, before it is asked to let the player pass. The Self button pauses it like the easing.
+
+## The approach check-in (build 4, pass daemon-meeting1, amended on dmt-body-blockers)
+
+At the end of each hallway, before the shut mouth, up to four skippable asks in order: the body (one card, two rows: "What does
+it feel like?" in the texture words, tightness, tension, strength, numbness, moving freely, something else; and "What is your
+body doing?" in the seven movement words; either, both or neither), the feeling (the five, own words, or no word yet), how near
+it is (veiled, flooding, clear) and, only when it is not faint, how it sits. There is no storyteller line: the Victim leads the
+council review, not the hallway (`dmt-victim-leads-review`). Each answer shows at once: the mouth's light takes the element's
+colour and the meeting spirit forms from the layers so far (a sensation tints it until a feeling is named; veil sets brightness
+and size; state sets stillness). Its family is always the chamber's daemon. A movement that belongs to another daemon
+(bracing Protector, gripping Controller, pulling back Skeptic, leaning in Fixer, sinking Victim, curling in Damaged Self,
+flinging open Emotional Body) is saved as `approach.merged`, wraps the spirit in that daemon's gas and says "Something of
+another voice is in this one.", never naming it. "Skip all" always passes; it is asked every visit. Saved as
+`voices[id].approach = { body, texture, feeling, veil, state, at }` plus `merged`, no words, no numbers. Wording is a draft.

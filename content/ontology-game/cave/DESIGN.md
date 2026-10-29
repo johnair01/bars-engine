@@ -821,6 +821,6 @@ In `cave.js` the body is a `SkinnedMesh` that poses itself each time it is drawn
 parent, then a turn, a lean, a nod, a tilt, a step and a reach, eased so a repair arrives slower than a hurt. Guarded and
 testing are charged, hurt fully charged and turned away, softening halfway to honored, trusting nearly honored, willing and
 repaired honored. A body with no stance holds its baked shape and breathes. `integrateBody(g)` plays the let-go; when it
-ends the body stands honored and moves by its stance again. No scene calls it yet. `body_viewer.mjs` writes a one-file page
+ends the body stands honored and moves by its stance again. Big Mind plays it when a 3-2-1 ends with the voice willing. `body_viewer.mjs` writes a one-file page
 of all eight in each stance with a Let go button. Rebake: `character.py --daemons --out X`, `character.py --warp D
 --integrate --out Y` for each daemon, then `bake_daemons.py X content/ontology-game/cave/daemons Y`.

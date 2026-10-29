@@ -5347,3 +5347,84 @@ model BetweenPresence {
   @@id([gardenId, playerId])
   @@map("between_presence")
 }
+
+/// The Calrunian passport (six-faces-council pass calrunia-world1, cw-passport): the one record that crosses Calrunia's places,
+/// beside the Between's tables. `data` is the whole passport in the shape of schema/passport.schema.json; playerId is Player.id
+/// as a plain column, the way the Between keeps its owners. A guest's passport lives in the browser until sign-in claims it
+/// (POST /api/passport); `claimedGuestIds` lists the guest passports folded in, so a second claim of the same one is a no-op.
+model Passport {
+  playerId        String   @id @map("player_id")
+  data            Json
+  claimedGuestIds String[] @default([]) @map("claimed_guest_ids")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("passports")
+}
+
+
+/// The council's weekly read of the unchosen lines (six-faces-council pass unchosen1, uc-who-reads B, 2026-10-21): at
+/// most five patterns a week, each with one pitch and his lines quoted with their days, written by POST
+/// /api/tap-the-vein/unchosen. When a pattern returns, the new pitch replaces the live one for the same word and the old
+/// row turns composted with replacedById pointing at its successor, so the chain shows the pitch sharpening (his steer
+/// on uc-pattern-returns). playerId is Player.id as a plain column, the way the passport keeps it.
+model TapTheVeinUnchosenPitch {
+  id           String    @id @default(cuid())
+  playerId     String    @map("player_id")
+  weekOf       DateTime  @map("week_of") @db.Date
+  word         String
+  face         String
+  kernel       String    @db.Text
+  pitch        String    @db.Text
+  quotes       Json
+  status       String    @default("live") // live|composted
+  compostedAt  DateTime? @map("composted_at")
+  replacedById String?   @map("replaced_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([playerId, status])
+  @@index([playerId, weekOf])
+  @@map("ttv_unchosen_pitches")
+}
+
+/// Dojo practice (spec .specify/specs/dojo-entry-practice-seeds): private live practice, one row per practice.
+/// kind: seed (PracticeSeed) | incipient_bar (IncipientBarDraft) | bar (BarPracticeLink, barId set).
+/// status: active|settled|discarded|planted. constellation holds the player's raw Thought String; it is private to
+/// playerId and no read path returns it to anyone else. outcomes holds the BarPracticeLink.selectedOutcomes the player
+/// chose to return. playerId and barId are plain columns, the way the passport keeps them.
+model DojoPractice {
+  id            String   @id @default(cuid())
+  playerId      String   @map("player_id")
+  kind          String
+  barId         String?  @map("bar_id")
+  plantedBarId  String?  @map("planted_bar_id")
+  title         String?
+  intention     String?  @db.Text
+  platform      Json     @default("[]")
+  spiritId      String?  @map("spirit_id")
+  status        String   @default("active")
+  constellation Json
+  outcomes      Json     @default("[]")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([playerId, status])
+  @@index([playerId, barId])
+  @@map("dojo_practices")
+}
+
+/// Placeholder ember from a settled or returned dojo practice (held in the player's private satchel; no feeding yet).
+model DojoEmber {
+  id                  String   @id @default(cuid())
+  playerId            String   @map("player_id")
+  sourceKind          String   @map("source_kind")
+  sourceId            String   @map("source_id")
+  element             String?
+  intensity           Int      @default(1)
+  selectedIngredients Json     @default("[]") @map("selected_ingredients")
+  status              String   @default("held")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@index([playerId, status])
+  @@map("dojo_embers")
+}
