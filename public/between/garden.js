@@ -1229,6 +1229,8 @@ function tapAt(cx, cy) {
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
+  // the shared pick's stones round the hearth take the tap first (shared-pick.js, ch1-shared-pick)
+  if (!placing && !satchelOpen && window.__between && window.__between.sp && window.__between.sp.tap(ray.ray)) return;
   // things first: the nearest one whose sphere the ray passes through, a seat ahead of anything over it (pick.js)
   const hits = []; let best = null;
   const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { hits.push({ key, pos, along: ray.ray.origin.distanceTo(pos) }); best = pickTap(hits); } };
@@ -3842,7 +3844,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { outbox, view, meState, op, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -3855,3 +3857,6 @@ window.__between = { outbox, view, meState, peers, walkers, things, look: () => 
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
+// the shared pick at Chapter 1's hunters' choice and the hollow (Six-faces-council ch1-shared-pick): stones round the hearth
+// when a garden of two holds a pick. Previews: ?pick=a6 opens it (with a stand-in partner when you are alone), ?pick=a8 at the hollow
+import("./shared-pick.js").then(m => { window.__between.sp = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "pick"));
