@@ -103,6 +103,12 @@ const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
 const spiritFormsJs = readFileSync(path.join(srcDir, 'cave', 'spirit-forms.js'), 'utf8');
 // The one store for spirits kept between runs (oag.spirits.v1), read by both caves.
 const spiritStoreJs = readFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), 'utf8');
+// The inner vessel the WAVE room rides in (oag.vessel.v1), its parts, fuel and the places reached from it (cave/vessel.js).
+const vesselJs = readFileSync(path.join(srcDir, 'cave', 'vessel.js'), 'utf8');
+// The one organ state (oag.organs.v1): which seat of the body map a sitting reached, read by the WAVE room and the basin (cave/organs.js).
+const organsJs = readFileSync(path.join(srcDir, 'cave', 'organs.js'), 'utf8');
+// The basin: the body map's inside as a walkable place, entered by its one mouth from the WAVE room (cave/basin.js).
+const basinJs = readFileSync(path.join(srcDir, 'cave', 'basin.js'), 'utf8');
 // Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
 const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
@@ -133,9 +139,14 @@ ${inline(spiritFormsJs)}
 </script>
 <script>
 ${inline(spiritStoreJs)}
+${inline(vesselJs)}
+${inline(organsJs)}
 </script>
 <script>
 ${inline(caveJs)}
+</script>
+<script>
+${inline(basinJs)}
 </script>
 <script>
 ${inline(walkRoomJs)}
@@ -176,6 +187,7 @@ ${inline(spiritFormsJs)}
 </script>
 <script>
 ${inline(spiritStoreJs)}
+${inline(vesselJs)}
 </script>
 <script>
 ${inline(caveJs)}
@@ -192,6 +204,8 @@ mkdirSync(path.join(outDir, 'big-mind'), { recursive: true });
 writeFileSync(path.join(outDir, 'big-mind', 'index.html'), bigMindHtml);
 mkdirSync(path.join(outDir, 'cave'), { recursive: true });
 writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
+// The Between reads the same store on the same origin (its homeroom calls spirits from the caves), so it is served as a file too.
+copyFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), path.join(outDir, 'cave', 'spirit-store.js'));
 copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
 copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 'spots.json'));
 // The stone tiles, baked by cave/bake_tiles.py and committed.

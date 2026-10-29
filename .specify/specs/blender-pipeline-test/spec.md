@@ -285,6 +285,94 @@ seven and a half), a short neck, a plain trunk with no waist or chest sculpting,
 feet. The nine GLBs are 246 to 266 KB (line 300). The long robe, the sash as cloth and the topknot are J5's, as separate
 meshes on this rig. The figures reach the game when J5's garments are wired into `cave.js`.
 
+**J5 result (2026-10-13):** passed on the machine half; the sheet waits for his eye (`cc-wardrobe-gate`).
+`content/ontology-game/cave/garments.py` cuts three garments of the robe set on each of the nine J4 figures, each its own
+skinned mesh on the figure's rig: an ankle-length robe with wide sleeves, the crossed collar (J4's `collar_path`, left over
+right) and side slits to the knee; a sash knotted in front on the wearer's left with two tails, cut twice (`sash` on the
+body, `sash-robe` over the robe) so it sits close on either; and a topknot (hair over the crown and back of the head, a
+bun, its tie and a pin). Each comes in the three palettes (dusk, jade, hemp). What came from root-game, and what was set
+aside, is in tasks.md.
+
+- Built from the body: the robe is rings measured from the standing body's own outline at each height (where its edges
+  cross that height, since the decimated body's vertices alone miss it), offset and flared to an A-line, then thickened
+  4 mm outward. Above the hips it takes the body's weights; the sleeves take the arm's.
+- The hem bones: J4's rig gains two bones, `hemF` and `hemB`, hanging from the hips. The walk turns the front one with
+  whichever leg is ahead and the back one with whichever is behind (character.py `pose`). Below the hips the robe hangs
+  from the hips and these two, and its sides from their own thigh. The body carries no weight on them, and the J4 walk
+  tests still pass. cave.js must compute the same two when the figures are wired in.
+- (a) The test checks every covered body point, and the middle of every covered face, at all 25 keys of the walk (the
+  walk is one second, 25 keys, so the plan's frames 0, 12, 24 and 36 became every key). A point is through when it lies
+  outside the garment's surface and is not at an opening (hem, slits, cuffs, neck), or when the line out from the body's
+  middle through it meets no cloth (that second check found what the first missed where cloth folds: a speck of tunic at
+  the hip on the first sheet). Where a point came through, `fit()` pushes the cloth out and walks again: root-game's
+  fullness rule, found by walking. The robe needs one or two rounds; all 36 garments end at zero. Without the fit
+  (`--no-fit`, test J5b) the robe has points through.
+- (b) Robe 109 to 119 KB, sash 20, topknot 28 (line 150). Each garment's skin uses the figure's own joint names.
+- (c) `tools/blender-cloud/tests/j5_swap.mjs` in headless Chromium: the wardrobe is parsed and bound to the figure's
+  bones once on loading (about 50 ms for twelve garments), and a swap (take one off, put the next on) takes under 1 ms.
+  The frame after a swap is no slower than the walk's own at the median (16.7 ms). The 30 a second line is judged on
+  his phone, as J1's was (`bpt-j1-frame-rate`): the cloud browser draws without a graphics chip, and its walk alone has
+  frames of 33 to 50 ms before any swap.
+- (d) Three pictures in `/mnt/project-files/3d-build/j5-garments-2026-10-13/`: each garment alone in each palette on the
+  three builds (27 figures), the whole set on all nine, and the average dusk figure in the set from the front, the side
+  and the back at four points of the walk. The sheet is rendered from the GLBs, rebound to the figure's armature by
+  bone name, the same way the game will swap them.
+
+Round 2 (his look, 2026-10-13 23:24, `j5-look-01`): "We still have issues with how the garments hang on the shoulders.
+There's peeking through on top. None of the robes do this well. Also the hems are being held open against gravity. We
+want them to hang more". The shoulder tops were not in the test's covered points (it stopped at 1.40 m), so they passed
+unseen. Now the robe's rows from the chest to the neck are laid over the body from the inside out, so they follow the
+nearly level top of the shoulder, and the test covers the trunk up to the neck. The hem's A-line went from 11 cm to
+3 cm, and the back hem bone follows the kicking shin a little more (`hemB` = hip + 0.6 knee), so the walk needs less
+room and the fit no longer opens the hem into a bell. `fit()` now undoes a round that leaves more points through and
+halves its next step. The robe is 117 to 125 KB. All 36 garments end at zero, and J4, J4b, J5, J5b and J5c pass.
+Pictures in `/mnt/project-files/3d-build/j5-round2-2026-10-13/`.
+
+Round 3 (his look, 2026-10-14 00:25, `j5-look-02`): "Yeah the shoulders are still funky. They aren't operating like
+clothes it's very obvious they are being rendered by geometry and handwaving", and "We're making it look like
+something instead of simulating what happens". The robe is no longer laid round the body by rule. It is cut as two
+flat panels (a body and two sleeves each), sewn at the shoulders, along the sleeves and down the sides to the slits,
+and dropped on the standing body by Blender's cloth solver, with the flat pattern as the cloth's rest shape, so where
+it lies flat, folds or bunches is the solver's answer. A belt at the sash's height is simulated by shrinking that band
+of cloth until it grips the waist. The draped cloth's trim is cut in at full detail, then the cloth is reduced for the
+phone with the trim's lines kept: every robe is 109 to 112 KB. The walk test no longer counts the points where the
+body faces itself a few centimetres away (under the arm, between the thighs), where real cloth is caught too.
+Open: J5 passes on the average build; on slight and broad the cloth solver does not settle the same way on every run,
+and some drapes leave up to 30 points through at the hips mid-stride that `fit()` does not clear. J4, J4b, J5b and
+J5c pass. Pictures in `/mnt/project-files/3d-build/j5-round3-2026-10-14/`.
+
+Round 4 (his look, 2026-10-14 16:46): "the places where there are slits in the robe aren't separating when they walk.
+The figrues without robes should have bare or basic tops so they aren't duplicating the robes. The hems also need to
+feel like they are more than just painted on", and later "the slit is supposed to separate and close as the leg
+moves". Near each slit, the front panel's edge follows its own side's thigh and the back panel's edge follows the leg
+behind, so a slit opens as its leg strides forward and closes as the leg passes back. The walk test counts a leg out through a slit as held when no cloth lies between the
+point and its bone. The hem and the cuffs are turned back inside the robe, round a 6 mm fold and 3 cm up. The hem is
+stiffened in the cloth solver and its edge is smoothed, as the cuffs already were. The figure's painted under-layer is
+a plain short-sleeved top to the waist with a round neck, over the tied trousers. Every robe is 132 to 135 KB. J4,
+J4b, J5, J5b and J5c pass. Pictures in `/mnt/project-files/3d-build/j5-round4-2026-10-14/`.
+
+Round 5 (his look, 2026-10-14 21:15): "nope this isn't closer. We're missing something important about how the
+physics of how the bottom robe is supposed to move. It's not moving like clothes and every fix is still too
+localized and not seeing the major problem". The cause: through round 4 the skirt was draped once, standing, and then
+glued to the leg and hem bones for the whole walk, so nothing in its motion was physics, and every slit fix only
+changed which bone a point was glued to. Board position `j5-skirt-cloth`: below the belt the robe is cloth every
+frame. `cave/cloth.js` is a position-based cloth (small fixed substeps, 480 a second; stretch, bend and tether
+constraints from the robe's own edges at their standing lengths): the belt and everything above it ride the skinned
+body, the skirt hangs from the belt under gravity and carries the figure's motion as inertia, capsules round the
+thighs, shins, knees and pelvis push it out, and the front and back panels are joined only above the slits, so a slit
+parts as a leg strides through it and falls shut after. The hem's turned-back inside keeps its place in the frame of
+the hem's edge, which is stiffer than the cloth. The GLB carries what the game needs: `_CLOTH` per point (1 cloth,
+2 the hem's edge, 3 the hem turned inside, 0 rides the body) and the capsules in the robe node's extras. The same
+cloth.js runs in Node over the walk for Blender (`cave/cloth_walk.mjs`), so test J5 and the pictures show what the game
+shows: J5 counts body points through the cloth at the walk's 25 keys after two seconds of walking, and inside the
+cloth it counts by rays (a point is inside when a ray out from it crosses the cloth an odd number of times, two rays
+of three), because a swinging skirt folds and a fold's side can be the face nearest a point well inside. J5b also
+runs the cloth without its leg capsules and must see the legs come through. J5d (`j5_cloth.mjs`, headless Chromium,
+three.js r128 as cave.js loads it) puts the cloth on four walking figures through `CaveCloth.attach` and holds its cost
+under 1.5 ms a figure per 1/60 s. The slit weights of round 4 (`skirt_weights`' slit term, `SLIT_REACH`) are gone; the
+skirt's skin weights ride the pelvis and only say where the cloth starts. Pictures: `cloth-walk.png` (from the
+figure's left: a step cycle at the normal stride, one at the fast stride, a quarter turn).
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built

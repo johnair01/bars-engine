@@ -25,7 +25,7 @@ const PAGE = `<!doctype html>
 <meta name="theme-color" content="#1a1018">
 <title>The Between</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&family=Marcellus&display=swap">
 <link rel="stylesheet" href="/between/garden.css">
 <script type="importmap">
 { "imports": {
@@ -48,6 +48,7 @@ const PAGE = `<!doctype html>
     </div>
   </div>
   <div class="bottom">
+    <div class="next" id="next" hidden></div>
     <div class="hint" id="hint"></div>
     <div class="near" id="near" hidden></div>
     <div class="tools" id="tools"></div>
@@ -57,6 +58,7 @@ const PAGE = `<!doctype html>
 <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><div class="inner" id="sheetInner"></div></section>
 <div class="toast" id="toast" hidden></div>
 <script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="the 3D library did not load";}},20000);</script>
+<script src="/ontology-game/cave/spirit-store.js"></script>
 <script type="module" src="/between/garden.js"></script>
 </body></html>
 `

@@ -6,19 +6,51 @@
    Lights are few on purpose (hearth, two lanterns, crystals, the Between's own): each point light costs every pixel. */
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { SHELLS } from "../calrunia/room-kit.js";
 
 /* ---------- layout (metres; the floor is y = 0, the dais top is DAIS_Y) ---------- */
-export const DAIS_R = 2.5, DAIS_Y = 0.28;
+/* The room kit (public/calrunia/room-kit.js): buildHollow builds one of two shells. `hollow` is the Dusk hollow as it was;
+   `nook` (opts.shell) is the homeroom, small and bare. The layout below is the hollow's and changes with the shell built:
+   these are live bindings, so garden.js reads the nook's values once the nook is built. */
+export let DAIS_R = 2.5, DAIS_Y = 0.28;
 export const SHELL_R = 7, SHELL_H = 5.25;            // the root shell: an ellipsoid, open toward -z
-export const WALK_R = 5.0;                           // how far from the middle anyone walks
+export let WALK_R = 5.0;                             // how far from the middle anyone walks
+export const NOOK_R = 4.6, NOOK_H = 3.4;             // the nook's shell: a smaller ellipsoid with an arched window
+const NOOK_WIN = { a: 0.5, w: 0.3, top: 0.74, bot: 1.3 }; // the window: its middle (radians right of -z), half-width, top and sill (angles from up)
 const OPEN_W = 0.95;                                 // half-width of the opening, radians either side of -z
 const OPEN_THETA = 0.86;                             // the opening's top edge, as an angle from straight up
-export const SEATS = [                               // teal for whoever started, plum for whoever joined
+const HOLLOW_SEATS = [                               // teal for whoever started, plum for whoever joined
   { x: -0.95, z: 0.5, yaw: Math.atan2(0.95, -1.7), hue: 0x3e9e93 },
   { x: 0.95, z: 0.5, yaw: Math.atan2(-0.95, -1.7), hue: 0x8f3f78 },
 ];
+export let SEATS = HOLLOW_SEATS;                     // the nook has none: a cushion there is earned and set on a spot
 export const TABLE = { x: 0, z: 1.3, r: 0.5 };
-export const HEARTH = { x: 3.9, z: 3.1 };
+/* Where anyone sits (Wendell, 2026-10-24: "When asked to sit down the player should walk to a cushion and actually sit instead
+   of having a card modal open up"): one list for every shell, so the hollow's two cushions, the hearth's own worn cushion and
+   any cushion set down on a floor spot are walked to and sat on the same way. garden.js reads seatsNow(spots) each time.
+   A seat: id (0 and 1 are the hollow's own two, so presence keeps sending them as numbers), x, z, yaw (facing), floor (the y
+   it stands on) and top (the y of its top, what the hips rest on). */
+export const CUSHION_TOP = 0.25;                     // a cushion's top over what it stands on (the box is 0.26 high, centred at 0.12)
+export const MAT_TOP = 0.155;                        // the hearth's worn cushion: the same shape, flatter
+const HEARTH_SEAT_D = { nook: 1.55, hollow: 1.85 };  // from the hearth's middle out over its hearthstone, towards the room
+export function hearthSeat() {
+  const r = Math.hypot(HEARTH.x, HEARTH.z) || 1, d = HEARTH_SEAT_D[LAY.shell] || 1.6;
+  const x = HEARTH.x - HEARTH.x / r * d, z = HEARTH.z - HEARTH.z / r * d, floor = groundY(x, z);
+  return { id: "hearth", x, z, yaw: Math.atan2(HEARTH.x - x, HEARTH.z - z), floor, top: floor + MAT_TOP, hearth: true };
+}
+export function seatsNow(spots) {
+  const out = [];
+  if (LAY.shell === "hollow") HOLLOW_SEATS.forEach((s, i) => out.push({ id: i, x: s.x, z: s.z, yaw: s.yaw, floor: DAIS_Y, top: DAIS_Y + CUSHION_TOP, hue: s.hue }));
+  out.push(hearthSeat());
+  // a cushion set down on a floor spot: in the nook it faces the hearth, in a room the middle
+  for (const h of Object.values(spots || {})) if (h.item === "cushion" && h.takes === "floor") {
+    const fx = LAY.shell === "nook" ? HEARTH.x : 0, fz = LAY.shell === "nook" ? HEARTH.z : 0;
+    out.push({ id: "spot:" + h.id, spot: h.id, x: h.pos.x, z: h.pos.z, yaw: Math.atan2(fx - h.pos.x, fz - h.pos.z), floor: h.pos.y, top: h.pos.y + CUSHION_TOP });
+  }
+  return out;
+}
+export let HEARTH = { x: 3.9, z: 3.1 };
+const NOOK_HEARTH = { x: -Math.sin(0.85) * 3.15, z: -Math.cos(0.85) * 3.15 }; // back left, as in Still A
 const SHELF = { x: 5.0, z: 0.4 };
 export const LANTERNS = [new THREE.Vector3(-2.3, 3.0, 1.7), new THREE.Vector3(1.8, 3.25, -2.1)];
 // the stream runs down the left side (seen from the cushions, facing the opening) and out over the ledge
@@ -29,6 +61,15 @@ const STREAM = new THREE.CatmullRomCurve3([
 const STREAM_HALF = 0.62;
 const STREAM_PTS = STREAM.getSpacedPoints(80);
 const OBST = [[HEARTH.x, HEARTH.z, 1.35], [SHELF.x, SHELF.z, 0.85], [TABLE.x, TABLE.z, TABLE.r + 0.05], [0, -0.35, 0.62], [4.6, -2.6, 0.5], [-1.8, 4.3, 0.45]];
+const NOOK_OBST = [[NOOK_HEARTH.x, NOOK_HEARTH.z, 1.15], [2.9, 1.9, 0.45], [-3.0, 1.5, 0.4]];
+/* What walking and the camera read: the shell built last. */
+const LAY = { shell: "hollow", obst: OBST, stream: true, fence: true, camR: 8.4, camY: 4.3 };
+function setLayout(shell) {
+  const nook = shell === "nook";
+  LAY.shell = nook ? "nook" : "hollow"; LAY.obst = nook ? NOOK_OBST : OBST; LAY.stream = !nook; LAY.fence = !nook; LAY.camR = nook ? 3.7 : 8.4; LAY.camY = nook ? 2.75 : 4.3; // the nook is seen from inside, not as a dollhouse
+  DAIS_R = nook ? 0 : 2.5; DAIS_Y = nook ? 0 : 0.28; WALK_R = nook ? 3.35 : 5.0;
+  SEATS = nook ? [] : HOLLOW_SEATS; HEARTH = nook ? NOOK_HEARTH : { x: 3.9, z: 3.1 };
+}
 
 /* ---------- small helpers ---------- */
 function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -51,24 +92,25 @@ function speckle(ctx, w, h, n, cols, rmin, rmax, r) {
 const distToStream = (x, z) => { let d = Infinity; for (const p of STREAM_PTS) { const dd = (p.x - x) ** 2 + (p.z - z) ** 2; if (dd < d) d = dd; } return Math.sqrt(d); };
 
 /* ---------- where people and walkers may stand ---------- */
-export function groundY(x, z) { return Math.hypot(x, z) <= DAIS_R + 0.12 ? DAIS_Y : 0; }
+export function groundY(x, z) { return DAIS_R > 0 && Math.hypot(x, z) <= DAIS_R + 0.12 ? DAIS_Y : 0; }
 export function walkable(x, z, pad = 0.35) {
   if (Math.hypot(x, z) > WALK_R - pad) return false;
-  if (z < -WALK_R + 0.9 + pad) return false; // the rope fence along the ledge
-  for (const [ox, oz, r] of OBST) if (Math.hypot(x - ox, z - oz) < r + pad) return false;
-  if (distToStream(x, z) < STREAM_HALF + pad) return false;
+  if (LAY.fence && z < -WALK_R + 0.9 + pad) return false; // the rope fence along the ledge
+  for (const [ox, oz, r] of LAY.obst) if (Math.hypot(x - ox, z - oz) < r + pad) return false;
+  if (LAY.stream && distToStream(x, z) < STREAM_HALF + pad) return false;
   return true;
 }
 export function pushOut(v, pad = 0.35) {
   for (let k = 0; k < 3; k++) {
     const d = Math.hypot(v.x, v.z), max = WALK_R - pad;
     if (d > max) { v.x *= max / d; v.z *= max / d; }
-    const zmin = -WALK_R + 0.9 + pad; if (v.z < zmin) v.z = zmin;
-    for (const [ox, oz, r] of OBST) {
+    const zmin = -WALK_R + 0.9 + pad; if (LAY.fence && v.z < zmin) v.z = zmin;
+    for (const [ox, oz, r] of LAY.obst) {
       const dx = v.x - ox, dz = v.z - oz, dd = Math.hypot(dx, dz), m = r + pad;
       if (dd < m && dd > 1e-4) { v.x = ox + dx / dd * m; v.z = oz + dz / dd * m; }
     }
     // the stream: step back onto the bank nearest you
+    if (!LAY.stream) continue;
     let best = null, bd = Infinity;
     for (const p of STREAM_PTS) { const dd = Math.hypot(p.x - v.x, p.z - v.z); if (dd < bd) { bd = dd; best = p; } }
     const m = STREAM_HALF + pad;
@@ -84,9 +126,9 @@ export function pushOut(v, pad = 0.35) {
    vanishes and the hollow reads like a cut-away dollhouse. Roots between the camera and the room are hidden each frame
    (see update). It stays below the ceiling's height and above the floor. */
 export function clampCamera(p, focus) {
-  const rh = Math.hypot(p.x, p.z), max = 8.4;
+  const rh = Math.hypot(p.x, p.z), max = LAY.camR;
   if (rh > max) { p.x *= max / rh; p.z *= max / rh; }
-  p.y = Math.max(0.45, Math.min(4.3, p.y));
+  p.y = Math.max(0.45, Math.min(LAY.camY, p.y));
   return p;
 }
 /* Merge every plain mesh under `group` that shares a material into one mesh, baked in place. Meshes (or groups) marked
@@ -155,6 +197,9 @@ export function mergeByParent(root) {
    =================================================================================================== */
 export function buildHollow(scene, opts = {}) {
   const lowPower = !!opts.lowPower;
+  const nook = opts.shell === "nook";
+  setLayout(nook ? "nook" : "hollow");
+  const R = nook ? NOOK_R : SHELL_R, H = nook ? NOOK_H : SHELL_H;
   const r = rng(20261017);
   const anim = { flames: [], lanterns: [], vines: null, water: null, flies: null, sky: null, crystals: [], ferns: [] };
 
@@ -218,14 +263,14 @@ export function buildHollow(scene, opts = {}) {
   const add = (geo, mat, x, y, z, parent = root) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
 
   /* ---------- the shell: an ellipsoid of root wood with the opening cut out toward -z ---------- */
-  function shellPiece(phiStart, phiLen, thetaLen, ws, hs) {
-    const g = new THREE.SphereGeometry(SHELL_R, ws, hs, phiStart, phiLen, 0, thetaLen);
+  function shellPiece(phiStart, phiLen, thetaLen, ws, hs, thetaStart = 0) {
+    const g = new THREE.SphereGeometry(R, ws, hs, phiStart, phiLen, thetaStart, thetaLen);
     const p = g.attributes.position, col = new Float32Array(p.count * 3), v = new THREE.Vector3();
     for (let i = 0; i < p.count; i++) {
       v.fromBufferAttribute(p, i);
       const d = v.clone().normalize();
       const n = noise3(d.x * 4, d.y * 4, d.z * 4) * 0.35 + Math.sin(Math.atan2(d.x, d.z) * 9 + d.y * 6) * 0.18; // ridges like twisted roots
-      v.multiplyScalar(1 - 0.05 + n * 0.06); v.y *= SHELL_H / SHELL_R;
+      v.multiplyScalar(1 - 0.05 + n * 0.06); v.y *= H / R;
       p.setXYZ(i, v.x, v.y, v.z);
       const k = 0.55 + 0.45 * (0.5 + n);
       const moss = Math.max(0, Math.min(1, (1.3 - v.y) / 1.1)) * (0.5 + 0.5 * noise3(d.x * 9, d.y * 9, d.z * 9)); // moss creeping up from the floor
@@ -236,11 +281,18 @@ export function buildHollow(scene, opts = {}) {
     const m = new THREE.Mesh(g, M.bark); m.material.side = THREE.BackSide; root.add(m); return m;
   }
   const ws = lowPower ? 40 : 56, hs = lowPower ? 18 : 24;
-  shellPiece(Math.PI * 1.5 + OPEN_W, Math.PI * 2 - OPEN_W * 2, Math.PI / 2, ws, hs);
-  shellPiece(Math.PI * 1.5 - OPEN_W, OPEN_W * 2, OPEN_THETA, 14, 10);
+  const W = NOOK_WIN, winPhi = Math.PI * 1.5 - W.a;   // the nook's window, in the sphere's own angles
+  if (nook) { // walls all round but the window: the wall either side, above it, and below the sill
+    shellPiece(winPhi + W.w, Math.PI * 2 - W.w * 2, Math.PI / 2, ws, hs);
+    shellPiece(winPhi - W.w, W.w * 2, W.top, 8, 10);
+    shellPiece(winPhi - W.w, W.w * 2, Math.PI / 2 - W.bot, 8, 5, W.bot);
+  } else {
+    shellPiece(Math.PI * 1.5 + OPEN_W, Math.PI * 2 - OPEN_W * 2, Math.PI / 2, ws, hs);
+    shellPiece(Math.PI * 1.5 - OPEN_W, OPEN_W * 2, OPEN_THETA, 14, 10);
+  }
 
   /* roots arching over the ceiling, and two great ones framing the opening */
-  const onShell = (phi, theta, k = 0.93) => new THREE.Vector3(-Math.cos(phi) * Math.sin(theta) * SHELL_R * k, Math.cos(theta) * SHELL_H * k, Math.sin(phi) * Math.sin(theta) * SHELL_R * k);
+  const onShell = (phi, theta, k = 0.93) => new THREE.Vector3(-Math.cos(phi) * Math.sin(theta) * R * k, Math.cos(theta) * H * k, Math.sin(phi) * Math.sin(theta) * R * k);
   const rootTube = (pts, rad, seg = 36) => {
     const curve = new THREE.CatmullRomCurve3(pts);
     const g = new THREE.TubeGeometry(curve, seg, rad, lowPower ? 6 : 8, false);
@@ -259,14 +311,24 @@ export function buildHollow(scene, opts = {}) {
   };
   const openAt = Math.PI * 1.5;
   const roots = [];
-  for (let i = 0; i < (lowPower ? 12 : 18); i++) {
-    let phi = openAt + OPEN_W + 0.15 + r() * (Math.PI * 2 - OPEN_W * 2 - 0.3);
-    const drift = (r() - 0.5) * 1.6, pts = [];
+  const gapAt = nook ? winPhi : openAt, gapW = nook ? W.w + 0.12 : OPEN_W;
+  for (let i = 0; i < (nook ? 9 : lowPower ? 12 : 18); i++) {
+    let phi = gapAt + gapW + 0.15 + r() * (Math.PI * 2 - gapW * 2 - 0.3);
+    const drift = (r() - 0.5) * (nook ? 0.9 : 1.6), pts = [];
     for (let k = 0; k <= 6; k++) { const th = Math.PI / 2 - k / 6 * (Math.PI / 2 - 0.08 - r() * 0.3); pts.push(onShell(phi + drift * k / 6 + Math.sin(k + i) * 0.08, th, 0.95 - r() * 0.03)); }
     pts[0].y = -0.1;
-    rootTube(pts, 0.2 + r() * 0.25);
+    rootTube(pts, (nook ? 0.13 : 0.2) + r() * (nook ? 0.14 : 0.25));
   }
-  for (const s of [-1, 1]) { // the arch: one root up each side of the opening, meeting overhead
+  if (nook) { // the window's frame: a root up each side, arching over, and a sill root beneath
+    const pts = [];
+    for (let k = 0; k <= 5; k++) pts.push(onShell(winPhi - W.w - 0.03, W.bot + 0.12 - k / 5 * (W.bot - W.top + 0.06), 0.93));
+    for (let k = 1; k <= 7; k++) { const u = k / 8; pts.push(onShell(winPhi - W.w - 0.03 + u * (W.w * 2 + 0.06), W.top - 0.03 - Math.sin(u * Math.PI) * 0.09, 0.93)); }
+    for (let k = 0; k <= 5; k++) pts.push(onShell(winPhi + W.w + 0.03, W.top + 0.06 + k / 5 * (W.bot - W.top + 0.06), 0.93));
+    rootTube(pts, 0.15, 56);
+    const sill = []; for (let k = 0; k <= 6; k++) sill.push(onShell(winPhi - W.w - 0.08 + k / 6 * (W.w * 2 + 0.16), W.bot + 0.02, 0.95));
+    rootTube(sill, 0.11, 20);
+  }
+  if (!nook) for (const s of [-1, 1]) { // the arch: one root up each side of the opening, meeting overhead
     const pts = [];
     for (let k = 0; k <= 8; k++) { const th = Math.PI / 2 - k / 8 * (Math.PI / 2 - OPEN_THETA + 0.05); pts.push(onShell(openAt + s * (OPEN_W + 0.04 - k * 0.012), th, 0.94)); }
     for (let k = 1; k <= 5; k++) pts.push(onShell(openAt + s * (OPEN_W - k / 5 * OPEN_W), OPEN_THETA - 0.04 - Math.sin(k / 5 * Math.PI) * 0.05, 0.94));
@@ -279,16 +341,16 @@ export function buildHollow(scene, opts = {}) {
     const strands = [];
     const ls = new THREE.Shape(); ls.moveTo(0, 0); ls.quadraticCurveTo(0.07, -0.06, 0, -0.17); ls.quadraticCurveTo(-0.07, -0.06, 0, 0);
     const leafGeo = new THREE.ShapeGeometry(ls, 3);
-    const n = lowPower ? 26 : 40;
+    const n = nook ? 18 : lowPower ? 26 : 40;
     for (let i = 0; i < n; i++) {
       const nearArch = i < n * 0.6;
       // along the arch, thicker toward its sides so the middle of the view stays open
       const side = r() < 0.5 ? -1 : 1, off = 0.35 + Math.pow(r(), 0.7) * 0.7;
-      const phi = nearArch ? openAt + side * off * OPEN_W : r() * Math.PI * 2;
-      const th = nearArch ? OPEN_THETA - 0.06 - r() * 0.1 : 0.4 + r() * 0.8;
+      const phi = nearArch ? (nook ? winPhi + side * (W.w + 0.04) * (0.6 + off * 0.5) : openAt + side * off * OPEN_W) : r() * Math.PI * 2;
+      const th = nearArch ? (nook ? W.top - 0.04 - r() * 0.08 : OPEN_THETA - 0.06 - r() * 0.1) : 0.4 + r() * 0.8;
       const top = onShell(phi, th, 0.9);
-      if (top.y < 2.6) continue;
-      strands.push({ top, len: (nearArch ? 5 + Math.floor((1 - Math.abs(off - 0.35)) * 6) : 4) + Math.floor(r() * 5), ph: r() * 6 });
+      if (top.y < (nook ? 2.0 : 2.6)) continue;
+      strands.push({ top, len: nook ? 3 + Math.floor(r() * 5) : (nearArch ? 5 + Math.floor((1 - Math.abs(off - 0.35)) * 6) : 4) + Math.floor(r() * 5), ph: r() * 6 });
     }
     const count = strands.reduce((a, s) => a + s.len, 0);
     const vm = new THREE.InstancedMesh(leafGeo, new THREE.MeshStandardMaterial({ color: 0xa8d070, roughness: 0.7, side: THREE.DoubleSide, emissive: 0x2a3a10, emissiveIntensity: 0.6 }), count);
@@ -298,7 +360,18 @@ export function buildHollow(scene, opts = {}) {
   }
 
   /* ---------- floor, dais, rim, rope fence ---------- */
-  const floor = add(new THREE.CircleGeometry(SHELL_R * 0.98, 48), M.floor, 0, 0, 0); floor.rotation.x = -Math.PI / 2;
+  const floor = add(new THREE.CircleGeometry(R * 0.98, 48), M.floor, 0, 0, 0); floor.rotation.x = -Math.PI / 2;
+  if (nook) { // bare: a mossy floor in the middle, soft at its edge, and a few stones by the walls
+    const mp = new THREE.CircleGeometry(2.7, 40), pp = mp.attributes.position;
+    for (let i = 1; i < pp.count; i++) { const x = pp.getX(i), y = pp.getY(i), a = Math.atan2(y, x), k = 1 + Math.sin(a * 5 + 1) * 0.06 + Math.sin(a * 11) * 0.04; pp.setXY(i, x * k * 1.12, y * k * 0.92); }
+    const moss = add(mp, M.moss, 0.1, 0.012, 0.2); moss.rotation.x = -Math.PI / 2;
+    const g = new THREE.SphereGeometry(0.2, 8, 6), n = 26, tufts = new THREE.InstancedMesh(g, M.moss, n), o = new THREE.Object3D();
+    for (let i = 0; i < n; i++) { const a = r() * Math.PI * 2; o.position.set(0.1 + Math.cos(a) * 2.95 * (0.95 + r() * 0.1), 0.02, 0.2 + Math.sin(a) * 2.4 * (0.95 + r() * 0.1)); o.scale.set(1 + r(), 0.3 + r() * 0.2, 1 + r()); o.updateMatrix(); tufts.setMatrixAt(i, o.matrix); }
+    root.add(tufts);
+    const rg = new THREE.DodecahedronGeometry(0.5, 1);
+    for (const [x, z, sc] of [[2.9, 1.9, 0.6], [-3.0, 1.5, 0.55], [2.5, -2.9, 0.45], [-0.6, -3.7, 0.4]]) { const m = add(rg, M.rock, x, sc * 0.3, z); m.scale.set(sc * 1.3, sc * 0.8, sc); m.rotation.y = r() * 3; }
+  }
+  if (!nook) {
   const dais = add(new THREE.CylinderGeometry(DAIS_R, DAIS_R + 0.05, DAIS_Y, 48), M.moss, 0, DAIS_Y / 2, 0);
   { // rim stones
     const g = new THREE.BoxGeometry(0.62, 0.34, 0.34, 2, 1, 1); const n = 28;
@@ -325,9 +398,11 @@ export function buildHollow(scene, opts = {}) {
     const g = new THREE.DodecahedronGeometry(0.5, 1);
     for (const [x, z, s] of [[4.6, -2.6, 1.0], [-1.8, 4.3, 0.8], [5.4, 2.0, 0.7], [-5.6, -2.0, 0.9], [2.4, 5.2, 0.9], [-5.0, 4.4, 0.8]]) { const m = add(g, M.rock, x, s * 0.3, z); m.scale.set(s * 1.3, s * 0.8, s); m.rotation.y = r() * 3; }
   }
+  } // the hollow's dais, fence and boulders
 
   /* ---------- the hearth, its fire, and shelves of pots ---------- */
   const hearth = new THREE.Group(); hearth.position.set(HEARTH.x, 0, HEARTH.z); hearth.rotation.y = Math.atan2(-HEARTH.x, -HEARTH.z); root.add(hearth);
+  if (nook) hearth.scale.setScalar(0.85);
   {
     const blk = new THREE.BoxGeometry(1, 1, 1);
     const stone = (w, h, d, x, y, z) => { const m = add(blk, M.rock, x, y, z, hearth); m.scale.set(w, h, d); return m; };
@@ -347,7 +422,14 @@ export function buildHollow(scene, opts = {}) {
     // pots on the mantel
     const pot = (h, rr, mat) => { const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push(new THREE.Vector2(rr * (0.55 + Math.sin(u * Math.PI) * 0.6) * (u > 0.85 ? 0.75 : 1), u * h)); } return new THREE.Mesh(new THREE.LatheGeometry(pts, 12), mat); };
     const clays = [M.clay, new THREE.MeshStandardMaterial({ color: 0x8a5a3a, roughness: 0.8 }), new THREE.MeshStandardMaterial({ color: 0x6e6a5a, roughness: 0.7 })];
-    for (let i = 0; i < 6; i++) { const p = pot(0.22 + r() * 0.2, 0.1 + r() * 0.06, clays[i % 3]); p.position.set(-1.1 + i * 0.44, 1.99, 0.1); hearth.add(p); }
+    if (!nook) for (let i = 0; i < 6; i++) { const p = pot(0.22 + r() * 0.2, 0.1 + r() * 0.06, clays[i % 3]); p.position.set(-1.1 + i * 0.44, 1.99, 0.1); hearth.add(p); }
+    if (nook) { // the nook's one shelf: a plank on the wall right of the hearth, on two root brackets (the `shelf` spot)
+      const sp = SHELLS.nook.spots.find(x => x.id === "shelf"), [sx, sy, sz] = sp.at;
+      const plank = new THREE.Group(); plank.position.set(sx, sy, sz); plank.rotation.y = sp.face || 0; root.add(plank);
+      add(new THREE.BoxGeometry(0.9, 0.06, 0.42), M.wood, 0, -0.03, -0.05, plank);
+      for (const bx of [-0.32, 0.32]) { const b = add(new THREE.BoxGeometry(0.05, 0.3, 0.3), M.darkWood, bx, -0.2, -0.1, plank); b.rotation.x = 0.5; }
+    }
+    if (!nook) {
     // a shelf unit beside the hearth, against the wall
     const shelf = new THREE.Group(); shelf.position.set(SHELF.x, 0, SHELF.z); shelf.rotation.y = Math.atan2(-SHELF.x, -SHELF.z); root.add(shelf);
     for (const y of [0.05, 0.75, 1.45]) { const b = add(new THREE.BoxGeometry(1.5, 0.07, 0.5), M.wood, 0, y, 0, shelf); }
@@ -357,10 +439,11 @@ export function buildHollow(scene, opts = {}) {
     for (let i = 0; i < 4; i++) { const b = add(new THREE.BoxGeometry(0.07, 0.28, 0.22), new THREE.MeshStandardMaterial({ color: bookCols[i], roughness: 0.8 }), 0.2 + i * 0.08, 1.63, 0, shelf); b.rotation.z = i === 3 ? 0.3 : 0; }
     // two small stools
     for (const [x, z] of [[2.4, 3.8], [4.4, 1.6]]) { add(new THREE.CylinderGeometry(0.24, 0.24, 0.08, 12), M.wood, x, 0.42, z); for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; const leg = add(new THREE.CylinderGeometry(0.03, 0.03, 0.42, 5), M.darkWood, x + Math.cos(a) * 0.15, 0.2, z + Math.sin(a) * 0.15); } }
+    } // the hollow's shelf unit and stools
   }
 
-  /* ---------- the two paper lanterns ---------- */
-  {
+  /* ---------- the two paper lanterns (the nook has a hook instead: a lantern there is earned) ---------- */
+  if (!nook) {
     const pts = []; for (let k = 0; k <= 10; k++) { const u = k / 10; pts.push(new THREE.Vector2(0.24 * Math.sin(0.25 + u * (Math.PI - 0.5)) + 0.04, u * 0.62 - 0.31)); }
     const geo = new THREE.LatheGeometry(pts, 18);
     const mat = new THREE.MeshStandardMaterial({ map: paperTex, emissive: 0xffb860, emissiveMap: paperTex, emissiveIntensity: 1.25, roughness: 0.9, side: THREE.DoubleSide });
@@ -377,8 +460,8 @@ export function buildHollow(scene, opts = {}) {
     }
   }
 
-  /* ---------- the stream: water, banks, stepping stones, lily pads, crystals ---------- */
-  {
+  /* ---------- the stream: water, banks, stepping stones, lily pads, crystals (the hollow's only) ---------- */
+  if (!nook) {
     const n = 90, pos = [], uv = [], idx = [];
     for (let i = 0; i <= n; i++) {
       const u = i / n, p = STREAM.getPointAt(u), t = STREAM.getTangentAt(u), side = new THREE.Vector3(-t.z, 0, t.x).normalize();
@@ -437,6 +520,11 @@ export function buildHollow(scene, opts = {}) {
     const p = cg.attributes.position; // round the box into a cushion
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const k = 1 - (Math.abs(x * 2) ** 4 + Math.abs(z * 2) ** 4) * 0.35; p.setY(i, y * Math.max(0.25, k)); const s = 1 - Math.abs(y) * 0.12; p.setX(i, x * s); p.setZ(i, z * s); }
     cg.computeVertexNormals();
+    { // the hearth's own cushion, always there: worn flat and faded from sitting by the fire (seatsNow's "hearth" seat)
+      const hs = hearthSeat(), m = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: quilt("#8a5a3a"), color: 0xd9c2a6, roughness: 0.95 }));
+      m.scale.set(0.95, 0.16, 0.82); m.position.set(hs.x, hs.floor + 0.075, hs.z); m.rotation.y = hs.yaw; m.name = "hearth-cushion"; root.add(m);
+    }
+    if (!nook) {
     SEATS.forEach((s, i) => {
       const m = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: quilt(i ? "#7d3466" : "#2f7f78"), roughness: 0.85 }));
       m.scale.set(1.0, 0.26, 0.85); m.position.set(s.x, DAIS_Y + 0.12, s.z); m.rotation.y = s.yaw; root.add(m);
@@ -455,10 +543,11 @@ export function buildHollow(scene, opts = {}) {
     const spout = add(new THREE.CylinderGeometry(0.015, 0.03, 0.14, 6), tea, TABLE.x + 0.03, DAIS_Y + 0.4, TABLE.z - 0.05); spout.rotation.z = -0.9;
     for (const [dx, dz] of [[0.2, 0.1], [-0.3, 0.18]]) add(new THREE.CylinderGeometry(0.05, 0.04, 0.06, 10), tea, TABLE.x + dx, DAIS_Y + 0.32, TABLE.z + dz);
     add(new THREE.BoxGeometry(0.26, 0.05, 0.19), new THREE.MeshStandardMaterial({ color: 0x6a4a34, roughness: 0.8 }), TABLE.x + 0.2, DAIS_Y + 0.31, TABLE.z - 0.15).rotation.y = 0.3;
+    } // the hollow's cushions, blankets and tea table
     // ferns and glowing flowers round the back of the dais
     const frond = new THREE.PlaneGeometry(0.16, 0.7, 1, 4); frond.translate(0, 0.35, 0);
     { const p2 = frond.attributes.position; for (let i = 0; i < p2.count; i++) { const y = p2.getY(i); p2.setZ(i, (y * y) * 0.5); p2.setX(i, p2.getX(i) * (1 - y / 0.8)); } frond.computeVertexNormals(); }
-    for (const [x, z] of [[-2.0, -1.2], [2.1, -1.0], [-1.6, 1.9], [-2.4, 0.2], [2.3, 0.9], [5.3, -0.9], [-4.6, 1.8], [3.2, 4.4], [-3.0, 4.7], [1.0, 5.0]]) {
+    for (const [x, z] of nook ? [[-3.3, 0.5], [3.15, 0.6], [0.6, -3.45], [-3.1, 2.4]] : [[-2.0, -1.2], [2.1, -1.0], [-1.6, 1.9], [-2.4, 0.2], [2.3, 0.9], [5.3, -0.9], [-4.6, 1.8], [3.2, 4.4], [-3.0, 4.7], [1.0, 5.0]]) {
       const f = new THREE.Group(); f.position.set(x, groundY(x, z), z); root.add(f);
       for (let k = 0; k < 7; k++) { const m = new THREE.Mesh(frond, M.leaf); m.rotation.set(0, k / 7 * Math.PI * 2 + r(), 0); m.children; const tilt = new THREE.Group(); tilt.rotation.y = k / 7 * Math.PI * 2; m.rotation.set(0.5 + r() * 0.4, 0, 0); tilt.add(m); f.add(tilt); }
       f.scale.setScalar(0.8 + r() * 0.5);
@@ -466,14 +555,18 @@ export function buildHollow(scene, opts = {}) {
   }
 
   /* ---------- the valley outside: sky, sun, mountains, forest, river (unlit, no fog) ---------- */
+  let sunM = null, starMat = null;
+  const land = { ranges: [], valley: null, river: null, pines: null }; // what a room style tints outside
   {
     const sky = new THREE.ShaderMaterial({
-      side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: new THREE.Vector3(0.18, 0.05, -1).normalize() } },
+      side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: new THREE.Vector3(0.18, 0.05, -1).normalize() },
+        uTop: { value: new THREE.Vector3(0.17, 0.12, 0.36) }, uMid: { value: new THREE.Vector3(0.52, 0.33, 0.62) },
+        uLow: { value: new THREE.Vector3(0.98, 0.56, 0.40) }, uHor: { value: new THREE.Vector3(1.0, 0.74, 0.48) } },
       vertexShader: "varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: `varying vec3 vDir; uniform vec3 uSun;
+      fragmentShader: `varying vec3 vDir; uniform vec3 uSun, uTop, uMid, uLow, uHor;
         void main(){
           float h = vDir.y;
-          vec3 top = vec3(0.17,0.12,0.36), mid = vec3(0.52,0.33,0.62), low = vec3(0.98,0.56,0.40), hor = vec3(1.0,0.74,0.48);
+          vec3 top = uTop, mid = uMid, low = uLow, hor = uHor; // the room style sets these (public/calrunia/room-styles.js)
           vec3 c = mix(low, mid, smoothstep(0.02,0.22,h)); c = mix(c, top, smoothstep(0.2,0.65,h)); c = mix(hor, c, smoothstep(-0.02,0.06,h));
           float s = max(dot(vDir, uSun), 0.0);
           c += vec3(1.0,0.6,0.3) * pow(s, 18.0) * 0.6 + vec3(1.0,0.85,0.6) * pow(s, 400.0) * 2.0;
@@ -483,7 +576,7 @@ export function buildHollow(scene, opts = {}) {
         }`,
     });
     const skyM = new THREE.Mesh(new THREE.SphereGeometry(95, 32, 16), sky); skyM.renderOrder = -2; root.add(skyM);
-    const sunM = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), new THREE.MeshBasicMaterial({ color: 0xffcf86, fog: false }));
+    sunM = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), new THREE.MeshBasicMaterial({ color: 0xffcf86, fog: false }));
     sunM.position.set(0.18, 0.05, -1).normalize().multiplyScalar(88); sunM.position.y = 3.4; sunM.lookAt(0, 0, 0); root.add(sunM);
     // mountain ranges, far to near
     const range = (dist, base, amp, col, seed, peaks) => {
@@ -495,14 +588,14 @@ export function buildHollow(scene, opts = {}) {
         pos.push(x, -24, z, x, h, z); if (i < n) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
       }
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
-      const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, fog: false, side: THREE.DoubleSide })); root.add(m); return m;
+      const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, fog: false, side: THREE.DoubleSide })); root.add(m); land.ranges.push(m.material); return m;
     };
     range(84, -2, 6, 0x9a7cb0, 3, [[0.32, 0.2, 12]]);
     range(70, -6, 5, 0x75609a, 7, [[-0.5, 0.3, 4]]);
     range(55, -10, 4, 0x4a4674, 11, []);
     range(40, -13, 3, 0x2e3758, 13, []);
     // the valley floor, the river catching the sunset, and pines
-    const vf = new THREE.Mesh(new THREE.CircleGeometry(80, 32, Math.PI * 1.02, Math.PI * 0.96), new THREE.MeshBasicMaterial({ color: 0x1f2c40, fog: false })); vf.rotation.x = -Math.PI / 2; vf.position.y = -14; vf.rotation.z = Math.PI; root.add(vf);
+    const vf = new THREE.Mesh(new THREE.CircleGeometry(80, 32, Math.PI * 1.02, Math.PI * 0.96), new THREE.MeshBasicMaterial({ color: 0x1f2c40, fog: false })); vf.rotation.x = -Math.PI / 2; vf.position.y = -14; vf.rotation.z = Math.PI; root.add(vf); land.valley = vf.material;
     const riv = new THREE.CatmullRomCurve3([new THREE.Vector3(10, -13.9, -66), new THREE.Vector3(-2, -13.9, -48), new THREE.Vector3(8, -13.9, -34), new THREE.Vector3(-6, -13.9, -22), new THREE.Vector3(-14, -13.9, -12)]);
     { const n = 60, pos = [], col = [], idx = [];
       for (let i = 0; i <= n; i++) { const u = i / n, p = riv.getPointAt(u), t = riv.getTangentAt(u), s = new THREE.Vector3(-t.z, 0, t.x).normalize(), w = 0.6 + u * 3.2;
@@ -510,7 +603,7 @@ export function buildHollow(scene, opts = {}) {
         const c = new THREE.Color(0xf7b07a).lerp(new THREE.Color(0x6a5aa8), u * 0.8); col.push(c.r, c.g, c.b, c.r, c.g, c.b);
         if (i < n) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); } }
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
-      root.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }))); }
+      const rm = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }); land.river = rm; root.add(new THREE.Mesh(g, rm)); }
     const pineGeo = new THREE.ConeGeometry(1, 3, 6); pineGeo.translate(0, 1.5, 0);
     const pn = lowPower ? 220 : 380, pines = new THREE.InstancedMesh(pineGeo, new THREE.MeshBasicMaterial({ fog: false }), pn), o = new THREE.Object3D(), pc = new THREE.Color();
     for (let i = 0; i < pn; i++) {
@@ -519,21 +612,32 @@ export function buildHollow(scene, opts = {}) {
       o.position.set(x, -14 + Math.max(0, (Math.abs(x) - 20) * 0.25), z); o.scale.set(s * 0.6, s * (1 + r() * 0.6), s * 0.6); o.updateMatrix(); pines.setMatrixAt(i, o.matrix);
       pc.set(0x14283a).lerp(new THREE.Color(0x4a4a7a), Math.min(1, d / 75)); pines.setColorAt(i, pc);
     }
-    root.add(pines);
+    root.add(pines); land.pines = pines.material;
     // a sliver of clouds and the first stars
     const stars = new THREE.BufferGeometry(), sp = [];
     for (let i = 0; i < 70; i++) { const a = -1.4 + r() * 2.8, e = 0.35 + r() * 0.5; sp.push(Math.sin(a) * Math.cos(e) * 90, Math.sin(e) * 90, -Math.cos(a) * Math.cos(e) * 90); }
     stars.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3));
-    root.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0xfff4e0, size: 2.5, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.7 })));
+    starMat = new THREE.PointsMaterial({ color: 0xfff4e0, size: 2.5, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.7 });
+    root.add(new THREE.Points(stars, starMat));
     anim.sky = sky;
+  }
+
+  /* ---------- rain past the opening, shown only by a style with weather: "rain" (room-styles.js) ---------- */
+  let rain = null;
+  {
+    const n = lowPower ? 500 : 900, pos = new Float32Array(n * 6), seeds = [];
+    for (let i = 0; i < n; i++) { const a = -1.2 + r() * 2.4, d = 9 + r() * 30; seeds.push({ x: Math.sin(a) * d, z: -Math.cos(a) * d - 2, ph: r(), sp: 9 + r() * 5 }); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    rain = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x9aa4b8, transparent: true, opacity: 0.45, fog: false, depthWrite: false }));
+    rain.visible = false; rain.frustumCulled = false; root.add(rain); anim.rain = { geo, seeds, pos };
   }
 
   /* ---------- fireflies ---------- */
   {
     const glow = canvasTex(64, 64, (c, w) => { const g = c.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, "rgba(255,250,200,1)"); g.addColorStop(0.3, "rgba(230,240,140,.6)"); g.addColorStop(1, "rgba(200,220,100,0)"); c.fillStyle = g; c.fillRect(0, 0, w, w); });
-    const n = lowPower ? 36 : 56, geo = new THREE.BufferGeometry(), seeds = [];
+    const n = nook ? 18 : lowPower ? 36 : 56, geo = new THREE.BufferGeometry(), seeds = [];
     geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
-    for (let i = 0; i < n; i++) { const a = r() * Math.PI * 2, d = 1.5 + r() * 4.5; seeds.push({ x: Math.sin(a) * d, z: Math.cos(a) * d - 0.6, y: 0.5 + r() * 2.6, ph: r() * 20, sp: 0.2 + r() * 0.4 }); }
+    for (let i = 0; i < n; i++) { const a = r() * Math.PI * 2, d = nook ? 0.8 + r() * 2.2 : 1.5 + r() * 4.5; seeds.push({ x: Math.sin(a) * d, z: Math.cos(a) * d - (nook ? 0.3 : 0.6), y: 0.5 + r() * (nook ? 1.8 : 2.6), ph: r() * 20, sp: 0.2 + r() * 0.4 }); }
     const mat = new THREE.PointsMaterial({ map: glow, size: 0.22, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xfff6b0 });
     const pts = new THREE.Points(geo, mat); root.add(pts); anim.flies = { geo, seeds, mat };
   }
@@ -542,7 +646,22 @@ export function buildHollow(scene, opts = {}) {
   const hemi = new THREE.HemisphereLight(0xffcf9a, 0x2a1c22, 0.55); root.add(hemi);
   const dusk = new THREE.DirectionalLight(0x8a7ad8, 0.9); dusk.position.set(0.5, 3, -10); root.add(dusk);
   const rim = new THREE.DirectionalLight(0xff9a6a, 0.35); rim.position.set(2, 1.5, -12); root.add(rim);
+  // the strengths the flicker moves around; a room style changes them (public/calrunia/room-styles.js applyStyle)
+  const base = { hemi: 0.55, fire: 16, lantern: 7 };
   const fire = new THREE.PointLight(0xff8a3a, 16, 10, 1.5); fire.position.set(HEARTH.x * 0.82, 0.8, HEARTH.z * 0.82); root.add(fire);
+  /* The hearth can be out (Still C, the first minute: you wake to a cold hearth). `hearth.want` is 1 lit, 0 out; `hearth.k`
+     eases toward it, so the fire catches rather than snapping on. `hearth.ember` (0..1) is the one ember's glow in the cold
+     hearth, tapped to light it; it rides on the fire's own light, so no new light is added. */
+  /* The focus sit (garden.js fs*): `bank` (0..1) banks the fire to coals, as it is when you come back early; `room` (about
+     0.4..1.15) is the rest of the room's light, dropped to the fire, the window and the lanterns for a sit, raised a little
+     after one (qi as weather). Both ease. */
+  const hearthFx = { want: 1, k: 1, ember: 0, bank: 0, room: 1, bankK: 0, roomK: 1 };
+  const emberMat = new THREE.MeshStandardMaterial({ color: 0x3a1a0c, emissive: 0xff6a1a, emissiveIntensity: 0, roughness: 0.6 });
+  const emberMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 1), emberMat); emberMesh.position.set(0.05, 0.3, 0.16); emberMesh.scale.set(1.3, 0.75, 1); hearth.add(emberMesh);
+  emberMesh.userData.keep = true;
+  const haloTex = canvasTex(64, 64, (c, w, h) => { const g = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, "rgba(255,190,110,1)"); g.addColorStop(0.35, "rgba(255,120,40,.55)"); g.addColorStop(1, "rgba(255,90,20,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h); }, [1, 1]);
+  const emberHalo = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.75), new THREE.MeshBasicMaterial({ map: haloTex, color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  emberHalo.position.set(0.05, 0.3, 0.2); emberHalo.userData.keep = true; hearth.add(emberHalo);
 
   /* ---------- once a frame ---------- */
   const o3 = new THREE.Object3D(), seg = new THREE.Line3(), tmp = new THREE.Vector3();
@@ -553,12 +672,20 @@ export function buildHollow(scene, opts = {}) {
     }
     // fire flicker, and the light it throws
     const fl = 0.75 + Math.sin(t * 11.3) * 0.08 + Math.sin(t * 23.7) * 0.06 + Math.sin(t * 5.1) * 0.08;
-    fire.intensity = 16 * fl * scale;
-    for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; f.m.scale.set(f.base.x * (1.1 - k * 0.2), f.base.y * k * 1.15, f.base.z); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
-    for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = 7 * scale * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
+    hearthFx.k += (hearthFx.want - hearthFx.k) * Math.min(1, dt * (hearthFx.want > hearthFx.k ? 0.9 : 3));
+    if (Math.abs(hearthFx.want - hearthFx.k) < 0.002) hearthFx.k = hearthFx.want;
+    hearthFx.bankK += (hearthFx.bank - hearthFx.bankK) * Math.min(1, dt * 0.8); hearthFx.roomK += (hearthFx.room - hearthFx.roomK) * Math.min(1, dt * 0.5);
+    const hk = hearthFx.k, eg = hearthFx.ember * (0.75 + 0.25 * Math.sin(t * 2.6)) * (1 - hk), bk = 1 - hearthFx.bankK * 0.72, rm = hearthFx.roomK;
+    fire.intensity = base.fire * fl * scale * hk * bk + base.fire * 0.09 * eg;
+    emberMat.emissiveIntensity = 0.25 + 2.6 * eg + hk * 0.8; emberHalo.material.opacity = 0.55 * eg; if (cam && eg > 0) emberHalo.lookAt(cam);
+    for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; const g = hk * (0.6 + 0.4 * hk) * (1 - hearthFx.bankK * 0.8); f.m.visible = g > 0.01; f.m.scale.set(f.base.x * (1.1 - k * 0.2) * Math.max(0.2, g), f.base.y * k * 1.15 * g, f.base.z * Math.max(0.2, g)); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
+    for (const sp of spotList) if (sp.light) sp.light.intensity = base.lantern * 0.9 * scale * sp.glow * Math.min(1, rm + 0.35) * (0.93 + Math.sin(t * 7 + 1.3) * 0.04 + Math.sin(t * 17) * 0.03);
+    for (const sp of spotList) if (sp.takes === "hang" && sp.item) { sp.slot.rotation.z = Math.sin(t * 0.7 + 2) * 0.03; sp.slot.rotation.x = Math.sin(t * 0.5 + 2) * 0.025; }
+    for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = base.lantern * scale * Math.min(1.1, rm + 0.35) * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
     if (anim.water) anim.water.uniforms.uT.value = t;
+    if (rain.visible) { const { seeds, pos, geo } = anim.rain; seeds.forEach((q, i) => { const y = 9 - ((t * q.sp / 20 + q.ph) % 1) * 24; pos.set([q.x, y, q.z, q.x - 0.04, y - 0.55, q.z], i * 6); }); geo.attributes.position.needsUpdate = true; }
     if (anim.crystalLight) { anim.crystalLight.intensity = 6 * (0.85 + Math.sin(t * 1.3) * 0.15); anim.crystalMat.emissiveIntensity = 1.2 + Math.sin(t * 1.3) * 0.25; }
-    hemi.intensity = 0.55 * (0.6 + 0.4 * scale);
+    hemi.intensity = base.hemi * (0.6 + 0.4 * scale) * (1 + (1 - hearthFx.k) * 1.1) * rm; // a cold hearth: the dusk through the window carries the room
     // vines sway
     if (anim.vines) {
       const { mesh, strands } = anim.vines; let k = 0;
@@ -581,7 +708,87 @@ export function buildHollow(scene, opts = {}) {
   for (const f of anim.flames) f.m.userData.keep = true;
   cushions.forEach(c => c.userData.keep = true);
   mergeStatic(root);
-  return { root, update, cushions };
+
+  /* ---------- the room kit's spots (public/calrunia/room-kit.js): a slot for what is set there, and a glowing ring ----------
+     Built after the merge, so what is set on a spot can come and go. A hook carries its own cord and a light that is dark until
+     a lantern hangs there. The rings show only while the satchel is open (garden.js sets them each frame). */
+  const spots = {}, spotList = [];
+  const ringMat = () => new THREE.MeshBasicMaterial({ color: 0xffcf86, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide, fog: false });
+  const ringFlat = new THREE.RingGeometry(0.4, 0.47, 40); ringFlat.rotateX(-Math.PI / 2);
+  const glowFlat = new THREE.CircleGeometry(0.52, 32); glowFlat.rotateX(-Math.PI / 2);
+  const ringUp = new THREE.RingGeometry(0.2, 0.25, 32), glowUp = new THREE.CircleGeometry(0.28, 24);
+  for (const sp of SHELLS[nook ? "nook" : "hollow"].spots) {
+    if (sp.fixed) continue;
+    const [x, y, z] = sp.at;
+    const slot = new THREE.Group(); slot.position.set(x, y, z); slot.rotation.y = sp.face || 0; root.add(slot);
+    const ring = new THREE.Group(); ring.visible = false; root.add(ring);
+    const flat = sp.takes === "floor";
+    const rm = ringMat(), gm = ringMat(); gm.opacity = 0.14;
+    const a = new THREE.Mesh(flat ? ringFlat : ringUp, rm), b = new THREE.Mesh(flat ? glowFlat : glowUp, gm);
+    ring.add(a, b); a.renderOrder = b.renderOrder = 3;
+    if (flat) ring.position.set(x, y + 0.03, z); else ring.position.set(x, sp.takes === "hang" ? y - 0.42 : y + 0.22, z);
+    let light = null;
+    if (sp.takes === "hang") {
+      const rho = Math.hypot(x, z) / (R * 0.95), len = Math.max(0.3, H * 0.95 * Math.sqrt(Math.max(0, 1 - rho * rho)) - y); // up to the ceiling
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, len, 4), M.rope); cord.position.set(x, y + len / 2, z); root.add(cord);
+      const hook = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 14, Math.PI * 1.5), M.darkWood); hook.position.set(x, y - 0.03, z); hook.rotation.z = Math.PI / 2; root.add(hook);
+      light = new THREE.PointLight(0xffb066, 0, 8, 1.6); light.position.set(x, y - 0.45, z); root.add(light);
+    }
+    const h = { id: sp.id, takes: sp.takes, slot, ring, ringMats: [rm, gm], light, item: null, glow: 0, pos: new THREE.Vector3(x, y, z), flat };
+    spots[sp.id] = h; spotList.push(h);
+  }
+  // where you look to change the light: the window's middle (the hollow's opening, for a room)
+  const windowAt = nook ? onShell(winPhi, (W.top + W.bot) / 2, 0.92) : onShell(openAt, 1.1, 0.9);
+  const layout = nook
+    ? { shell: "nook", portal: { x: Math.sin(1.35) * 2.9, z: -Math.cos(1.35) * 2.9, yaw: -1.35 }, spawn: [[1.55, 1.55], [-1.55, 1.55]], window: windowAt }
+    : { shell: "hollow", portal: { x: 1.3, z: -1.15, yaw: -0.3 }, spawn: [[-0.8, 3.1], [0.8, 3.1]], window: windowAt };
+  // what a room style sets (public/calrunia/room-styles.js applyStyle); values only. `spots` is what applyRoom sets.
+  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots, hearth: hearthFx };
+  return { root, update, cushions, handles, layout };
+}
+
+/* ---------- the room kit's items, made in code (room-kit.js ITEMS: `make`) ----------
+   Each faces +z with its foot at the slot's origin; a hanging one hangs down from it. The mirror is garden.js's own. */
+const itemParts = {};
+function itemTex(key, draw) { if (!itemParts[key]) itemParts[key] = canvasTex(128, 128, draw); return itemParts[key]; }
+export function makeRoomItem(kind) {
+  const g = new THREE.Group(); g.name = "item:" + kind;
+  if (kind === "lantern") {
+    if (!itemParts.lanternGeo) { const pts = []; for (let k = 0; k <= 10; k++) { const u = k / 10; pts.push(new THREE.Vector2(0.24 * Math.sin(0.25 + u * (Math.PI - 0.5)) + 0.04, u * 0.62 - 0.31)); } itemParts.lanternGeo = new THREE.LatheGeometry(pts, 18); }
+    const mat = new THREE.MeshStandardMaterial({ map: paperShared, color: 0xfff1d6, emissive: 0xffb860, emissiveMap: paperShared, emissiveIntensity: 1.25, roughness: 0.9, side: THREE.DoubleSide });
+    const body = new THREE.Mesh(itemParts.lanternGeo, mat); body.position.y = -0.45; g.add(body);
+    const wood = new THREE.MeshStandardMaterial({ color: 0x4f321e, roughness: 0.85 }), cap = new THREE.CylinderGeometry(0.12, 0.12, 0.05, 12);
+    for (const y of [-0.12, -0.78]) { const m = new THREE.Mesh(cap, wood); m.position.y = y; g.add(m); }
+    const tassel = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.035, 0.2, 5), new THREE.MeshStandardMaterial({ color: 0xa0402a })); tassel.position.y = -0.92; g.add(tassel);
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1, 4), wood); cord.position.y = -0.05; g.add(cord);
+  } else if (kind === "seedPot") {
+    const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push(new THREE.Vector2(0.11 * (0.6 + Math.sin(u * Math.PI) * 0.55) * (u > 0.85 ? 0.85 : 1), u * 0.22)); }
+    g.add(new THREE.Mesh(new THREE.LatheGeometry(pts, 14), new THREE.MeshStandardMaterial({ color: 0xa8603a, roughness: 0.8 })));
+    const soil = new THREE.Mesh(new THREE.CircleGeometry(0.085, 14), new THREE.MeshStandardMaterial({ color: 0x3a2618, roughness: 1 })); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.2; g.add(soil);
+    const ls = new THREE.Shape(); ls.moveTo(0, 0); ls.quadraticCurveTo(0.06, 0.05, 0, 0.16); ls.quadraticCurveTo(-0.06, 0.05, 0, 0);
+    const leaf = new THREE.ShapeGeometry(ls, 4), lm = new THREE.MeshStandardMaterial({ color: 0x8fd08a, emissive: 0x3a7a40, emissiveIntensity: 0.5, roughness: 0.6, side: THREE.DoubleSide });
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.16, 5), lm); stem.position.y = 0.28; g.add(stem);
+    for (const [ry, rz] of [[0.2, 0.7], [Math.PI + 0.3, 0.8]]) { const l = new THREE.Mesh(leaf, lm); l.position.y = 0.34; l.rotation.set(0, ry, rz); g.add(l); }
+    const seed = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), new THREE.MeshStandardMaterial({ color: 0xfff0b0, emissive: 0xffd27a, emissiveIntensity: 1.4 })); seed.position.y = 0.37; g.add(seed);
+  } else if (kind === "cushion") {
+    if (!itemParts.cushionGeo) {
+      const cg = new THREE.BoxGeometry(1, 1, 1, 6, 2, 6), p = cg.attributes.position;
+      for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const k = 1 - (Math.abs(x * 2) ** 4 + Math.abs(z * 2) ** 4) * 0.35; p.setY(i, y * Math.max(0.25, k)); const s = 1 - Math.abs(y) * 0.12; p.setX(i, x * s); p.setZ(i, z * s); }
+      cg.computeVertexNormals(); itemParts.cushionGeo = cg;
+    }
+    const q = itemTex("plum", (c, w, h) => { c.fillStyle = "#7d3466"; c.fillRect(0, 0, w, h); c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = 2; c.strokeRect(10, 10, w - 20, h - 20); c.beginPath(); c.moveTo(w / 2, 10); c.lineTo(w / 2, h - 10); c.moveTo(10, h / 2); c.lineTo(w - 10, h / 2); c.stroke(); });
+    const m = new THREE.Mesh(itemParts.cushionGeo, new THREE.MeshStandardMaterial({ map: q, roughness: 0.85 })); m.scale.set(0.95, 0.26, 0.82); m.position.y = 0.12; g.add(m);
+  } else if (kind === "rug") {
+    const t = itemTex("wave", (c, w, h) => { c.fillStyle = "#2f7f78"; c.fillRect(0, 0, w, h); c.strokeStyle = "#efe2c4"; c.lineWidth = 3;
+      for (const rr of [18, 34, 50]) { c.beginPath(); for (let a = 0; a <= 64; a++) { const th = a / 64 * Math.PI * 2, k = rr + Math.sin(th * 8) * 2.5; c[a ? "lineTo" : "moveTo"](w / 2 + Math.cos(th) * k, h / 2 + Math.sin(th) * k); } c.stroke(); } });
+    const m = new THREE.Mesh(new THREE.CircleGeometry(0.62, 40), new THREE.MeshStandardMaterial({ map: t, roughness: 1 })); m.rotation.x = -Math.PI / 2; m.scale.set(1.3, 1, 1); m.position.y = 0.022; g.add(m);
+  } else if (kind === "scroll") {
+    const paper = new THREE.MeshStandardMaterial({ color: 0xefe2c4, roughness: 0.9 }), rod = new THREE.MeshStandardMaterial({ color: 0x7a5236, roughness: 0.7 });
+    const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.34, 14), paper); roll.rotation.z = Math.PI / 2; roll.position.y = 0.05; g.add(roll);
+    for (const sx of [-1, 1]) { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8), rod); k.rotation.z = Math.PI / 2; k.position.set(sx * 0.19, 0.05, 0); g.add(k); }
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.053, 0.053, 0.04, 14), new THREE.MeshStandardMaterial({ color: 0x9a5a8e, roughness: 0.6 })); band.rotation.z = Math.PI / 2; band.position.y = 0.05; g.add(band);
+  } else return null;
+  return g;
 }
 /* A standing paper lantern made at the hearth (council pass crafting-charge1): the hanging lanterns' body and paper, on a
    small wooden foot, one size for all. It glows by its own emissive paper and carries no point light. */

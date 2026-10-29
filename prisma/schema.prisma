@@ -5386,3 +5386,45 @@ model TapTheVeinUnchosenPitch {
   @@index([playerId, weekOf])
   @@map("ttv_unchosen_pitches")
 }
+
+/// Dojo practice (spec .specify/specs/dojo-entry-practice-seeds): private live practice, one row per practice.
+/// kind: seed (PracticeSeed) | incipient_bar (IncipientBarDraft) | bar (BarPracticeLink, barId set).
+/// status: active|settled|discarded|planted. constellation holds the player's raw Thought String; it is private to
+/// playerId and no read path returns it to anyone else. outcomes holds the BarPracticeLink.selectedOutcomes the player
+/// chose to return. playerId and barId are plain columns, the way the passport keeps them.
+model DojoPractice {
+  id            String   @id @default(cuid())
+  playerId      String   @map("player_id")
+  kind          String
+  barId         String?  @map("bar_id")
+  plantedBarId  String?  @map("planted_bar_id")
+  title         String?
+  intention     String?  @db.Text
+  platform      Json     @default("[]")
+  spiritId      String?  @map("spirit_id")
+  status        String   @default("active")
+  constellation Json
+  outcomes      Json     @default("[]")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([playerId, status])
+  @@index([playerId, barId])
+  @@map("dojo_practices")
+}
+
+/// Placeholder ember from a settled or returned dojo practice (held in the player's private satchel; no feeding yet).
+model DojoEmber {
+  id                  String   @id @default(cuid())
+  playerId            String   @map("player_id")
+  sourceKind          String   @map("source_kind")
+  sourceId            String   @map("source_id")
+  element             String?
+  intensity           Int      @default(1)
+  selectedIngredients Json     @default("[]") @map("selected_ingredients")
+  status              String   @default("held")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@index([playerId, status])
+  @@map("dojo_embers")
+}
