@@ -107,7 +107,7 @@ export function mount(B, opts = {}) {
   const hearth = () => new THREE.Vector3(...B.anchors().hearth);
   function stonePos(i) {
     const h = hearth(), out = h.clone().negate().setY(0).normalize(); // the ring opens toward the room's middle
-    const a = Math.atan2(out.z, out.x) + (i - 3) * (Math.PI * 1.3 / 6);
+    const a = Math.atan2(out.z, out.x) + (i - 3) * (Math.PI * 0.8 / 6);
     return new THREE.Vector3(h.x + Math.cos(a) * RING_R, 0.12, h.z + Math.sin(a) * RING_R);
   }
   function place(p) {

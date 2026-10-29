@@ -398,6 +398,13 @@ async function main() {
       await Bp.evaluate(() => (window as unknown as { __between: { sp: SP } }).__between.sp.act({ lift: 'WAKE-DA-DIPLOMAT' }))
       await pollNow(A)
       await seen(A, 'the hollow turning the order', A.waitForFunction(() => { const s = (window as unknown as { __between: { sp: SP } }).__between.sp.state(); return !!s && s.moment === 'a8-hollow' && s.turn === 'pl-partner' }, undefined, { polling: 250, timeout: 20_000 }))
+      const shots = process.env.BETWEEN_CHECK_SHOTS
+      if (shots) { // the planter's screen, the camera on the ring of stones (the phone's software WebGL is too slow to shoot here)
+        await A.evaluate(() => { const b = (window as unknown as { __between: B & { anchors(): { hearth: number[] } } }).__between; const [x, , z] = b.anchors().hearth; const d = Math.hypot(x, z) || 1; b.setCam([x - x / d * 6.5, 4.2, z - z / d * 6.5, x - x / d * 1.4, 0.1, z - z / d * 1.4]) })
+        await A.waitForTimeout(800)
+        await A.screenshot({ path: join(shots, 'pick-planter-hollow.png'), timeout: 90_000 }).catch(e => console.log('  shot: ' + (e as Error).message.split('\n')[0]))
+        await A.evaluate(() => (window as unknown as { __between: B }).__between.setCam(null))
+      }
       const b = await state(Bp)
       if (!b || (b.pool as string[]).length !== 5) throw new Error('the phone does not see five stones still lit')
       return 'the planter lifted Which Fight Is Yours, it went dark on the phone, the phone was refused it (409) and lifted Who\'s at Risk; at the hollow the partner picks first'
