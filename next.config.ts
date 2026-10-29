@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
       "./tools/**",
       "./content/ontology-game/cave/pictures/**",
       "./content/ontology-game/**/*.glb",
+      // The game sources themselves: build scripts copy what the browser needs into public/, and no route reads them at
+      // run time. The J5 garment pipeline (bars-engine PR #364) pushed api/guidance to 250.22 MB without this line.
+      "./content/ontology-game/**",
       "./public/ontology-game/**",
       // The Between's page and models (7 MB of .glb), loaded only by the browser. The first preview of bars-engine
       // PR #357 pushed api/guidance to 254.91 MB without this line.

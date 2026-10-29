@@ -35,6 +35,15 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
       el.style.color = 'var(--warn, #b45309)';
     } else { el.textContent = pulled; el.style.color = ''; }
   }
+  // A store that will not load turns saving off; say why on the page, so the cause is not a guess.
+  function showFault(e){
+    console.error(e);
+    let el = document.getElementById('board-pull-note');
+    if (!el){ el = document.createElement('div'); el.id = 'board-pull-note';
+      el.style.cssText = 'font-size:.8rem;text-align:center;padding:6px 8px 72px'; document.body.appendChild(el); }
+    el.style.color = 'var(--warn, #b45309)';
+    el.textContent = 'Saving is off: the board store did not load (' + (e && e.message || 'error') + '). Reload; if it stays, tell Claude this line.';
+  }
   async function refresh(){
     const r = await fetch(API + '?board=' + BOARD, {credentials: 'same-origin', cache: 'no-store'});
     if (r.status === 401){ location.href = '/login?returnTo=' + ${back}; return; }
@@ -70,7 +79,7 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
   const dbReady = refresh().then(() => { ready = true; setTimeout(notify, 0);
     setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
-    return db; }, () => null);
+    return db; }, e => { showFault(e); return null; });
   // barsEngine tells the page its saves reach bars-engine, so a Council Board "Set aside" can rest the task here.
   window.claude = {barsEngine: true, use: name => name === 'db' ? dbReady : name === 'mcp' ? Promise.resolve(mcp) : Promise.resolve(null)};
 })();

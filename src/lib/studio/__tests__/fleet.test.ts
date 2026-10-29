@@ -19,6 +19,14 @@ describe('studio fleet', () => {
     expect(stagesOf(p)).toEqual(['spec', 'falsify', 'plan', 'intake', 'verify', 'falsify'])
   })
 
+  it('sends a yes on a step to ship and a deprecated step to close', () => {
+    const p = pull('2026-10-25T01:00:00Z', {}, [
+      { what: 'note', note: 'Yes, ship it' }, { what: 'note', note: 'yes' }, { what: 'note', note: 'yesterday it broke' },
+      { what: 'deprecated' }, { what: 'ticked', note: 'yes' }, { what: 'back to AI' },
+    ])
+    expect(stagesOf(p)).toEqual(['ship', 'ship', 'falsify', 'close', 'verify', 'falsify'])
+  })
+
   it('lands one seed a room a run, and counts earlier runs apart', () => {
     const s = seedsOf([
       pull('2026-10-25T01:00:00Z', { a: { kind: 'position', status: 'stands' }, b: { kind: 'position', status: 'stands' } }),
@@ -119,7 +127,7 @@ describe('studio fleet', () => {
     expect(html).toContain('window.FLEET=')
     expect(html).toContain('window.FLEET_DEMO=')
     expect(html).toContain('window.FLEET_DEFAULT=' + FLEET_DEFAULT)
-    expect(FLEET_DEFAULT).toBe(false) // the fleet stays behind ?fleet=1 until it is flipped on (council #412)
+    expect(FLEET_DEFAULT).toBe(true) // the fleet is the default view; ?fleet=0 opens the single-ship Orrery loop
     expect(html).not.toMatch(/<(ul|ol|table)\b/)
     expect(html).not.toContain('</script><script>alert')
   })

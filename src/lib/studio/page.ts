@@ -9,9 +9,9 @@
 import { demoFleet, type FleetWorld } from './fleet'
 
 /** Flip to true to make the fleet the page's default view. */
-export const FLEET_DEFAULT = false
+export const FLEET_DEFAULT = true
 
-export const ALTITUDE_JS = '/studio/altitude.js?v=4'
+export const ALTITUDE_JS = '/studio/altitude.js?v=7'
 
 export function studioPage(world: FleetWorld): string {
   const data = JSON.stringify(world).replace(/</g, '\\u003c')
