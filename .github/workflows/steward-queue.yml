@@ -1,0 +1,31 @@
+# Runs the council's steward in queue mode (wendell-britt/six-faces-council, docs/merging.md): it marks finished drafts
+# ready once Vercel is green and prints the order Wendell merges by hand. It never merges and never pushes.
+name: steward-queue
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, closed]
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: read
+concurrency:
+  group: steward-queue
+  cancel-in-progress: true
+jobs:
+  queue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v5
+        with:
+          repository: wendell-britt/six-faces-council
+          path: council-src
+      - run: python3 council-src/.github/scripts/steward.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEWARD_MODE: queue
