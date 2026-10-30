@@ -1,0 +1,76 @@
+{
+  "id": "sample-player-episode-1",
+  "player": "the sample player (invented for pass charge-to-world-1; no real person)",
+  "episode": "episode 1",
+  "line": "creative",
+  "q1": {
+    "words": "a small recording studio in the garage, to make music with friends",
+    "form": "vessel",
+    "quadrant": "upper_right",
+    "domain": "creativity",
+    "help": "order"
+  },
+  "q2": {
+    "feelings": ["free", "proud"],
+    "gets": ["songs finished, not just started", "evenings with friends that have a point"],
+    "already": {"free": "humming in the car on the way home"}
+  },
+  "q3": {
+    "distance": "a day's walk",
+    "obstacles": ["a skill", "time"],
+    "risk": "quiet evenings alone that ask nothing of anyone",
+    "townsfolk": [
+      {"role": "friend", "name": "Oriel"},
+      {"role": "neighbour", "name": "the Tinker"}
+    ]
+  },
+  "q4": {
+    "weather": [{"feeling": "disappointed", "strength": "a storm"}]
+  },
+  "q5": {
+    "keys": {"sadness": "The music I care about is one evening away, not a lifetime."}
+  },
+  "q6": {
+    "beliefs": ["I'm not capable", "I'm not good enough"],
+    "loudest": "I'm not capable",
+    "when": "a skill",
+    "voice": "a shop teacher's sigh",
+    "hoard": "the half-finished songs, kept in the toolbag so nobody hears them"
+  },
+  "drafted": {
+    "strong_start": "Every branch the player brushes hangs lower, and the toolbag on their back drags at the shoulders. Rain ticks on the leaves. Ahead, through the trees, a hum of music starts, and stops mid-bar.",
+    "secrets": [
+      "The half-finished songs are lighter than the toolbag.",
+      "The friends already have a key to the garage.",
+      "The Weigher's scale reads the bag, never the song.",
+      "The stump in the clearing answers any note, even a wrong one.",
+      "The hum that stops mid-bar is the player's own, from a year ago.",
+      "Oriel kept a recording of the last time they played together.",
+      "The broken bridge needs one plank, and the toolbag already holds it.",
+      "The Tinker built the Scale-House and regrets it.",
+      "The rain stops in any place where a song is played to its end.",
+      "The Protector carries the bag because it once kept the songs safe from laughter."
+    ],
+    "locations": {
+      "encounter": {
+        "name": "The Unfinished Clearing",
+        "aspects": ["a ring of instruments grown into the tree trunks", "a bar of music that loops and stops", "a stump that sounds a note when you do"]
+      },
+      "villain": {
+        "name": "The Scale-House",
+        "aspects": ["a hut built of stacked brass weights beside a broken footbridge", "air thick and amber, smelling of oil", "a brass balance in the doorway whose pan holds your toolbag"]
+      },
+      "road-home": {
+        "name": "The Friends' Fire",
+        "aspects": ["a low fire ringed with upturned crates for seats", "laughter and a guitar being tuned", "an empty crate left for you"]
+      }
+    },
+    "daemon": "the Protector",
+    "npc_lines": {
+      "Oriel": "Play what you have so far?",
+      "the Tinker": "Weights only weigh what you put in the pan.",
+      "the Protector": "If nobody hears it, nobody can say it's bad."
+    },
+    "capability": {"act": "Play one unfinished song for one person this week.", "quadrant": "upper_right"}
+  }
+}

@@ -12,6 +12,8 @@ import { createCreature } from "./creature.js";
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
+import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
+import { NEAR as TEA_NEAR } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -562,6 +564,9 @@ const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOS
 // previews: ?embers=demo puts four held embers in your pouch on this page only (never saved), so the seated hearth moment shows
 // with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
+// previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
+// E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
+const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
@@ -674,6 +679,7 @@ function renderSatchel() {
 }
 const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
 let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+const TEA_VIEW = { wide: [[0.69, 0.8, 0.98], [-0.12, 0.45, 0.15]], phone: [[0.8, 0.8, 1.15], [-0.1, 0.45, 0.15]] };   // camera, focus, in the seats frame (x left, z ahead)
 let seatK = 0, seatViewAt = null; // the low view of you sat on the hearth's cushion (or one you set down), eased in
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
 function setMirror(on) {
@@ -1070,6 +1076,51 @@ function sitOn(id, then = null) {
   selected = "seat:" + id; refreshHud();
 }
 function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
+/* Tea by the fire (between-tea-1 slice 1, the solo cup). The kettle is drawn by the scene at the hearth's seat, not placed
+   through the room kit (bt-tea-needs-a-spot), and stands there from the moment the room is up, with its cup on the stone; the cup
+   goes into the right hand of whoever is sat there (bt-cup-is-the-figure) and stays held in the lap until they stand.
+   "Pour a cup" is offered only to someone sat within NEAR of the kettle (tea-look-2, his note 2026-10-29: "the cup is offering
+   when they aren't near the teapot"). No qi, no shelf and no music yet: someone who has worked through nothing can sit and pour. */
+let tea = null, teaRoom = null, teaKey = "", teaWas = false, teaSkipped = false, teaK = 0;
+function teaNow() {
+  const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return null;
+  if (!tea) tea = buildTea({ THREE, scene, seat: s, groundY });
+  const key = `${s.id}:${s.x.toFixed(2)}:${s.z.toFixed(2)}:${s.yaw.toFixed(2)}:${s.top}`;
+  if ((teaRoom !== hollow || key !== teaKey) && !tea.holding()) { tea.place(s); teaRoom = hollow; teaKey = key; }
+  return tea;
+}
+/* Sat, and the kettle within reach of the seat. */
+function teaNear() {
+  if (!meState.sitting || !tea) return false;
+  const s = seatBy(meState.seatWant); if (!s) return false;
+  const k = tea.kettle.position;
+  return Math.hypot(s.x - k.x, s.z - k.z) <= TEA_NEAR;
+}
+function teaBtn() {
+  if (!teaNear()) return "";
+  if (tea.running()) return "";
+  return tea.holding() ? `<button type="button" class="hmlink" data-act="teaSip">Take a sip</button>`
+    : `<button type="button" class="hmlink" data-act="teaPour">Pour a cup</button>`;
+}
+function teaPour(skip = 0) {
+  if (!teaNear()) return;
+  const m = tea; if (m.running() || m.holding()) return;
+  if (!m.attach(meState.body)) return;
+  m.pour(performance.now() / 1000, skip);   // skip: seconds in, or "sip" (tea.js knows where each drink's first sip is)
+  toast("A cup, by the fire."); hmHud();
+}
+function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
+function teaFrame(t) {
+  if (hollow) teaNow();
+  if (TEA_SKIP && !teaSkipped && tea && !tea.holding() && teaNear() && meState.body) {
+    teaSkipped = true; teaPour(TEA_SKIP === "sip" ? "sip" : 0);
+  }
+  if (!tea || !tea.holding()) return;
+  if (!meState.sitting || !teaNear()) { tea.stop(); teaWas = false; return; }   // standing up puts the cup back on the stone
+  tea.tick(t);
+  const r = tea.running(); if (r !== teaWas) { teaWas = r; hmHud(); }
+}
+function teaStop() { if (tea) tea.stop(); teaWas = false; }
 const seatedAtHearth = () => { const s = meState.sitting && seatBy(meState.seatWant); return !!s && (s.hearth || (!!s.spot && inNook() && s.id === hearthSeatId())); };
 const othersHere = () => [...peers.values()].filter(p => p.uid !== me);
 function ownerSeatNow(uid) {
@@ -1079,6 +1130,7 @@ function ownerSeatNow(uid) {
 }
 function standUp() {
   const wasHearth = sheetName === "hearth" && seatedAtHearth();
+  teaStop();
   meState.seatWant = null; meState.onSeated = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); }
   if (wasHearth) closeSheet(); // the hearth moment is had sitting; getting up ends it
   if (hm) hmEnd();
@@ -1382,6 +1434,7 @@ function frameBody() {
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
     meState.body.pose(t, dt, meState.sitting, false, mySeatAt);
+    teaFrame(t);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
     meState.wasWalking = walking;
   }
@@ -1525,6 +1578,19 @@ function frameBody() {
     if (hmUp > 0.001 && hm) { const hk = (hm.L.hang || hm.hooks[0]).pos, k2 = hmUp * hmUp * (3 - 2 * hmUp); p.lerp(hmAt(F, -1.9, 0.95, 1.05), k2); f.lerp(hk.clone().setY(hk.y - 1.0).lerp(hm.L.g.position, 0.3), k2); }
     clampCamera(p, f);
     const k = hmK * hmK * (3 - 2 * hmK); cp.lerp(p, k); focus.lerp(f, k);
+  }
+  /* Tea in your hand (tea-cup-look-3, his note 2026-10-29: when you sit to drink, the camera should move so you see yourself
+     drinking): the view comes round in front of you, a little to your left and level with your face, so the cup coming up to
+     your mouth, your hand on it and the kettle on its stone are all in sight. It eases back behind you when you stand. */
+  const teaOn = !!(tea && tea.holding() && meState.sitting && seatViewAt && !mirrorOn);
+  teaK += ((teaOn ? 1 : 0) - teaK) * Math.min(1, dt * 1.1);
+  if (teaK < 0.002 && !teaOn) teaK = 0;
+  if (teaK > 0 && seatViewAt) {
+    const S = seatViewAt, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), lx = fz, lz = -fx, tall = innerWidth < innerHeight;
+    const at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
+    const V = tall ? TEA_VIEW.phone : TEA_VIEW.wide, p = at(...V[0]), f = at(...V[1]);
+    clampCamera(p, f);
+    const k = teaK * teaK * (3 - 2 * teaK); cp.lerp(p, k); focus.lerp(f, k);
   }
   const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
@@ -1740,6 +1806,7 @@ function nearHtml(key, V, g) {
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
   if (key === "portal") {
     if (!portalOpen()) return `<div class="what"><b>A doorway, grown over</b><span class="t">The vines fall at the end of your first minute here.</span></div>`;
+    if (portalTo && !((list && list.gardens) || []).some(r => r.id === portalTo.id)) return `<div class="what"><b>The doorway</b><span class="t">${portalTo.name ? esc(portalTo.name) + " invited you to a room." : "You were invited to a room."}</span></div><div class="row"><button type="button" data-act="through">Walk through</button><button class="quiet" type="button" data-open="destinations">Other places</button></div>`;
     return `<div class="what"><b>The doorway</b><span class="t">A threshold to shared rooms and private practice.</span></div><div class="row"><button type="button" data-open="destinations">Choose a place</button></div>`;
   }
   if (key === "between" && isHome(g)) {
@@ -2104,7 +2171,7 @@ function hmHud() {
   const h = `<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
     ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
     ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
-    <button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
+    ${teaBtn()}<button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
   if (hmEl._h === h) return; hmEl._h = h; hmEl.innerHTML = h;
 }
 // breathing by keyboard or on the button: held down, as a press on the ember is
@@ -2514,8 +2581,14 @@ function destinationsSheet() {
   const sharedRows = shared.length
     ? shared.map(r => `<div class="roomrow"><div><b>${esc(roomName(r))}</b><span class="small muted">${r.phase === "spark" ? "A spark you are tending" : "Your shared Between"}</span></div><button type="button" data-act="goRoom" data-id="${esc(r.id)}">Enter</button></div>`).join("")
     : `<p class="small muted">No shared room is open yet. You can make one from Rooms.</p>`;
+  // the room an invite link names: she is not in it yet, so it is not among list.gardens, and the doorway must still
+  // offer it, first (an invite opened her nook but the doorway only listed her own rooms, 2026-10-28)
+  const invited = portalTo && !shared.some(r => r.id === portalTo.id)
+    ? `<div class="roomrow"><div><b>${portalTo.name ? esc(portalTo.name) + " invited you" : "The room you were invited to"}</b><span class="small muted">Walk through to join them there.</span></div><button type="button" data-act="through">Enter</button></div>`
+    : "";
   return `<div class="stack"><h2>The doorway</h2>
     <p class="muted">Choose where to go. You always return to your Nook.</p>
+    ${invited}
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
@@ -3278,6 +3351,8 @@ document.addEventListener("click", async ev => {
   if (a === "hmLantern") { hmLight(); return; }
   if (a === "hmHang") { const h = hm && hm.hooks && hm.hooks.find(x => x.id === id); if (h) hmSend(h); return; }
   if (a === "hmStand") { hmStand(); return; }
+  if (a === "teaPour") { teaPour(); return; }
+  if (a === "teaSip") { teaSip(); return; }
   if (a === "fsLay") { fsLay(); return; }
   if (a === "fsStay") { fsStay(); return; }
   if (a === "hmBreathe") return; // a press held on it, not a click (hmEl's own listeners)
@@ -3816,7 +3891,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { tea: () => tea, outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -3826,3 +3901,6 @@ window.__between = { outbox, view, meState, peers, walkers, things, look: () => 
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };
+// the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
+// previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
+import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));

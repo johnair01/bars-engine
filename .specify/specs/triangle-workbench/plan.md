@@ -6,6 +6,7 @@
 2. Define the persisted constellation schema for words, word-triangles, thought strings, movement history, and lock semantics.
 3. Build a word harvest with player-owned charged/salient markers, then construct thought strings by adding word-triangles through shared words, with selection and an accessible list alternative.
 4. Build the 3D wall as a focus-region renderer: stable local growth, settled strand glyphs, branch buds, pins, and a focus lens—not an unbounded graph renderer.
+5. Build the Dojo Loop Lab: one authored, non-persistent proof that a player-language thought string can expose a player-confirmed EA teaching triangle and resolve to a container-appropriate action form without AI interpretation.
 
 ## Milestone 1 — Projection loop
 

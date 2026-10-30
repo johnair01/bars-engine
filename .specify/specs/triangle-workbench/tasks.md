@@ -8,6 +8,13 @@
 - [x] Add prototype charge propagation, positive-string extension, and pause-gated reversible 8th-Ray move.
 - [x] Let the prototype extend a selected existing triangle from a player-chosen shared word plus exactly two harvested concepts.
 - [x] Audit the relevant Alchemy playbooks and define the orientation-versus-live-practice contract.
+- [x] Define and implement the deterministic Metal → Water → Wood / Activate Hope fixture, including confirmation and same-altitude guards.
+- [x] Preserve the end-to-end ontology and first demo contract in the Dojo Loop Library.
+- [ ] Build the non-persistent Dojo Loop Lab authored scenario: thought string → confirmed EA triangle → life lens / domain / personal-move selection → BAR preview.
+- [ ] Author the first deterministic gathering action grammar for Career + small dojo gathering across Skillful Organizing, Gathering Resources, Raise Awareness, and Direct Action.
+- [ ] Replace the prototype's scalar charge control with activation plus player-owned orientation.
+- [ ] Add a player-confirmed EA-anchor picker; proposed/declined anchors must never affect move availability.
+- [ ] Render derived EA teaching triangles as an optional lens over a thought string, never as a replacement for player-language triangles.
 - [x] Build a replayable authored orientation constellation with no BAR, spirit, daemon, ember, or Between mutations.
 - [x] Add explicit entry/return affordances between Orientation, Nook, BAR-linked live practice, and unlinked private live practice.
 - [x] Add the live-practice arrival moment: private BAR/intention selection, optional three-word platform, optional spirit witness, and clear discard/settle exits.

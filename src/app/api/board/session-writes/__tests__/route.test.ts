@@ -5,6 +5,8 @@ const dbm = vi.hoisted(() => ({ boardSave: { findFirst: vi.fn(), create: vi.fn()
 const store = vi.hoisted(() => ({ latestDocs: vi.fn() }))
 vi.mock('@/lib/db', () => ({ db: dbm }))
 vi.mock('@/lib/board/store', () => store)
+const dispatch = vi.hoisted(() => ({ dispatchBoardPull: vi.fn() }))
+vi.mock('@/lib/board/dispatch', () => dispatch)
 
 import { GET, POST } from '../route'
 import { canonical, docHash } from '@/lib/board/session-write'
@@ -22,6 +24,18 @@ describe('/api/board/session-writes', () => {
     process.env.COUNCIL_MENU_TOKEN = 'secret'
     dbm.boardSave.findFirst.mockResolvedValue(null)
     dbm.boardSave.create.mockResolvedValue({})
+    dispatch.dispatchBoardPull.mockResolvedValue('sent')
+  })
+
+  it('takes a council row, born unrecorded, and starts a board-pull to land it (worklist-api)', async () => {
+    const row = { collection: 'rows', docId: 'wl-probe', mode: 'set',
+                  data: { kind: 'positions', pass: 'p', faces: ['sage'], pos: 'A probe.' } }
+    const body = await (await POST(req({ docs: [row] }))).json()
+    expect(body).toMatchObject({ written: ['rows/wl-probe'], refused: [] })
+    expect(dbm.boardSave.create.mock.calls[0][0].data).toMatchObject({ collection: 'rows', recordedAt: null })
+    expect(dispatch.dispatchBoardPull).toHaveBeenCalledTimes(1)
+    await POST(req({ docs: [row], dry: true }))
+    expect(dispatch.dispatchBoardPull).toHaveBeenCalledTimes(1)
   })
 
   it('needs COUNCIL_MENU_TOKEN', async () => {
