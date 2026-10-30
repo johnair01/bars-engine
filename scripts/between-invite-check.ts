@@ -251,7 +251,7 @@ async function tapSeat(p: Page, id: number) {
   await p.mouse.click(xy[0], xy[1])
   await p.evaluate(() => (window as unknown as { __between: B }).__between.setCam(null))
 }
-const sittingOn = (p: Page, id: number, ms = 15_000) => p.waitForFunction(i => { const b = (window as unknown as { __between: B }).__between; return b.meState.sitting && b.meState.seatWant === i }, id, { polling: 250, timeout: ms })
+const sittingOn = (p: Page, id: number, ms = 60_000) => p.waitForFunction(i => { const b = (window as unknown as { __between: B }).__between; return b.meState.sitting && b.meState.seatWant === i }, id, { polling: 250, timeout: ms })
 const pollNow = (p: Page) => p.evaluate(() => (window as unknown as { __between: { poll(): Promise<void> } }).__between.poll())
 
 async function main() {
@@ -403,15 +403,12 @@ async function main() {
       if (await A.evaluate(() => { const b = (window as unknown as { __between: B }).__between; return b.meState.sitting && b.meState.seatWant === 0 })) throw new Error('the planter sat on the teal cushion while the partner was on it')
       await tapSeat(A, 1)
       // the plum cushion sits behind the Between and the card table from the teal side: the walk goes round them, and two
-      // figures in software WebGL draw a few frames a second (each frame's step is capped), so the walk is given a minute
-      await sittingOn(A, 1, 60_000).catch(async () => { throw new Error("the planter's tap on the plum cushion did not sit them on it (stopped at " + JSON.stringify(await A.evaluate(async () => {
-        const m = (window as unknown as { __between: { meState: { pos: { x: number; z: number }; target: { x: number; z: number } | null; route?: { x: number; z: number }[]; seatWant: unknown; sitting: boolean } } }).__between.meState
-        const H = await import('/between/hollow.js' as string)
-        const p0 = { x: m.pos.x, z: m.pos.z }; let frames = 0; const f = () => { frames++; if (frames < 999) requestAnimationFrame(f) }; requestAnimationFrame(f)
-        await new Promise(r => setTimeout(r, 1000))
-        const r0 = m.route && m.route[0], dir = r0 ? { x: r0.x - m.pos.x, z: r0.z - m.pos.z } : null, dl = dir ? Math.hypot(dir.x, dir.z) : 1
-        const nx = dir ? { x: m.pos.x + dir.x / dl * 0.05, z: m.pos.z + dir.z / dl * 0.05 } : null
-        return { pos: m.pos, moved: Math.hypot(m.pos.x - p0.x, m.pos.z - p0.z), frames, target: m.target, want: m.seatWant, sitting: m.sitting, route: m.route, walkHere: H.walkable(m.pos.x, m.pos.z), next: nx, walkNext: nx && H.walkable(nx.x, nx.z), pushedNext: nx && H.pushOut({ ...nx }) }
+      // figures in software WebGL can draw under one frame a second here (each frame's step is capped), so the walk is
+      // given two minutes; a walk that stopped is told apart from a slow one by how far it moved in the last few seconds
+      await sittingOn(A, 1, 120_000).catch(async () => { throw new Error("the planter's tap on the plum cushion did not sit them on it (" + JSON.stringify(await A.evaluate(async () => {
+        const m = (window as unknown as { __between: { meState: { pos: { x: number; z: number }; target: unknown; sitting: boolean } } }).__between.meState
+        const p0 = { x: m.pos.x, z: m.pos.z }; await new Promise(r => setTimeout(r, 4000))
+        return { at: m.pos, movedIn4s: +Math.hypot(m.pos.x - p0.x, m.pos.z - p0.z).toFixed(2), target: m.target, sitting: m.sitting }
       })) + ')') })
       if (process.env.BETWEEN_CHECK_SHOTS) { await A.waitForTimeout(1_500); await A.screenshot({ path: join(process.env.BETWEEN_CHECK_SHOTS, 'both-sitting.png') }) }
       for (const p of [A, Bp]) await p.evaluate(() => (window as unknown as { __between: { standUp(): void } }).__between.standUp())
