@@ -18,7 +18,7 @@ export function memoryBackend(seed: Record<string, string> = {}) {
     async read(key) {
       reads.push(key)
       const o = objects.get(key)
-      return o ? { body: new Response(o.bytes).body!, type: o.type } : null
+      return o ? { body: new ReadableStream<Uint8Array>({ start(c) { c.enqueue(o.bytes); c.close() } }), type: o.type } : null
     },
     async write(key, bytes, type) { objects.set(key, { bytes, type }) },
   }
