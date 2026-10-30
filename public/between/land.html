@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a332f">
+<title>The first land</title>
+<!-- Charge to world, build 3: the episode's first land, walked (land/land.js). You arrive from the nook's doorway. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Marcellus&display=swap">
+<link rel="stylesheet" href="/between/garden.css">
+<style>
+  .land-top { position: fixed; z-index: 20; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; pointer-events: none; }
+  .land-top > * { pointer-events: auto; }
+  .land-name { background: var(--glass); backdrop-filter: blur(6px); border-radius: 14px; padding: 8px 12px; max-width: 62vw; }
+  .land-name b { font-family: var(--display); font-size: 1.02rem; display: block; }
+  .land-name span { font-size: .78rem; color: var(--glass-muted); }
+  .land-top .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .land-top button { background: var(--glass); color: var(--glass-ink); border-color: rgba(255,255,255,.18); backdrop-filter: blur(6px); min-height: 40px; }
+  .land-card { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: min(92vw, 520px); box-sizing: border-box;
+    background: var(--glass); color: var(--glass-ink); backdrop-filter: blur(6px); border-radius: 14px; padding: 10px 14px; display: grid; gap: 8px; }
+  .land-card b { font-family: var(--display); } .land-card .t { font-size: .88rem; color: var(--glass-muted); }
+  .land-card .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .land-card .notes button { min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: #3f6a3a; border-color: rgba(255,255,255,.3); font-family: Marcellus, serif; font-size: 1rem; }
+  .land-cap { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); width: min(90vw, 560px); text-align: center;
+    font: 1.02rem/1.45 Marcellus, serif; color: #f3ece2; text-shadow: 0 1px 4px rgba(0,0,0,.85), 0 0 18px rgba(0,0,0,.5); opacity: 0; transition: opacity .9s; pointer-events: none; }
+  .land-cap.on { opacity: 1; }
+  @media (max-width: 600px) { .land-name { max-width: 56vw; } .land-cap { top: calc(132px + env(safe-area-inset-top, 0px)); font-size: .96rem; } }
+  .loading { background: #232b28; z-index: 60; transition: opacity .8s; } .loading.gone { opacity: 0; }
+  .land-fade { position: fixed; inset: 0; z-index: 70; background: #1a1210; opacity: 0; transition: opacity .6s; pointer-events: none; } .land-fade.on { opacity: 1; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head><body>
+<div id="stage" aria-label="The land. Tap the ground to walk there; drag to look around."></div>
+<div class="loading" id="loading"><div><h1>Through the doorway</h1><p id="loadMsg">The roots part…</p><p id="loadStep" style="font-size:.8rem;opacity:.6;margin-top:8px">starting</p></div></div>
+<div id="hud" hidden>
+  <div class="land-top">
+    <div class="land-name"><b id="placeName">The first land</b><span id="placeLand"></span></div>
+    <div class="btns"><button type="button" id="soundBtn" aria-pressed="true">Sound on</button><button type="button" id="homeBtn">Home</button></div>
+  </div>
+  <div class="land-cap" id="caption" hidden aria-live="polite"></div>
+  <div class="land-card" id="card" hidden></div>
+</div>
+<div class="land-fade" id="fade" hidden></div>
+<script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="the 3D library did not load";}},20000);</script>
+<script type="module" src="/between/land/land.js"></script>
+</body></html>
