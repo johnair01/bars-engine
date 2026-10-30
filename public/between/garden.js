@@ -13,7 +13,7 @@ import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure w
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
-import { NEAR as TEA_NEAR, TEA as TEA_BEATS } from "./tea-pose.js";
+import { NEAR as TEA_NEAR } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -565,7 +565,7 @@ const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOS
 // with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 // previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
-// E.g. ?nook=1&sit=hearth&tea=sip
+// E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
 const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
@@ -1106,14 +1106,14 @@ function teaPour(skip = 0) {
   if (!teaNear()) return;
   const m = tea; if (m.running() || m.holding()) return;
   if (!m.attach(meState.body)) return;
-  m.pour(performance.now() / 1000 - skip);
+  m.pour(performance.now() / 1000, skip);   // skip: seconds in, or "sip" (tea.js knows where each drink's first sip is)
   toast("A cup, by the fire."); hmHud();
 }
 function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
 function teaFrame(t) {
   if (hollow) teaNow();
   if (TEA_SKIP && !teaSkipped && tea && !tea.holding() && teaNear() && meState.body) {
-    teaSkipped = true; teaPour(TEA_SKIP === "sip" ? TEA_BEATS.reach + TEA_BEATS.pour + TEA_BEATS.back - 0.4 : 0);
+    teaSkipped = true; teaPour(TEA_SKIP === "sip" ? "sip" : 0);
   }
   if (!tea || !tea.holding()) return;
   if (!meState.sitting || !teaNear()) { tea.stop(); teaWas = false; return; }   // standing up puts the cup back on the stone
