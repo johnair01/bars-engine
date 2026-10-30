@@ -1,3 +1,5 @@
+import { rowErrors } from './rows'
+
 /**
  * The board-save contract, mirrored from six-faces-council schema/board-save.schema.json. Both repos check the same
  * fixtures (fixtures/board-saves here, tests/fixtures/board-saves there), so a change to one without the other fails
@@ -6,7 +8,7 @@
 export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
-  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds',
+  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows',
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
@@ -53,6 +55,11 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
   if (errors.length) return { ok: false, errors }
 
   const data = d as Record<string, unknown>
+  if (s.collection === 'rows') {
+    if (s.board !== 'council') errors.push('rows are the Council Board\'s')
+    if (s.mode === 'update') errors.push('a row is posted whole: mode set (a revision is a new id)')
+    errors.push(...rowErrors(data))
+  }
   if (s.mode !== 'update') {
     const c = s.collection as string
     if (['positions', 'questions', 'terms', 'causes', 'picks', 'blockers'].includes(c) && !(str(data.savedAt) && ISO.test(data.savedAt)))
