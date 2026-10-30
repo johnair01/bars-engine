@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isBoardOwner } from '@/lib/board/owner'
 import { patchCouncilPage } from '@/lib/board/council-page'
 import { boardShim } from './shim'
+import { councilRepoHeaders } from '@/lib/board/council-repo'
 
 const PAGES: Record<string, string> = {
   nonprofit: process.env.BOARD_PAGE_URL
@@ -26,7 +27,7 @@ async function page(board: string, url = PAGES[board]): Promise<string | null> {
   const hit = caches.get(url)
   if (hit && Date.now() - hit.at < 5 * 60_000) return hit.html
   try {
-    const r = await fetch(url, { cache: 'no-store' })
+    const r = await fetch(url, { cache: 'no-store', headers: councilRepoHeaders() })
     if (r.ok) { const raw = await r.text(), html = board === 'council' ? patchCouncilPage(raw) : raw; caches.set(url, { html, at: Date.now() }); return html }
   } catch { /* keep the last good copy */ }
   return hit?.html ?? null

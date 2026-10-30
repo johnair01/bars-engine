@@ -5,6 +5,8 @@
  * inspect a look's pictures at full size. Only image files under the two stills folders are passed, never the repo. */
 import { NextResponse } from 'next/server'
 
+import { councilRepoHeaders } from '@/lib/board/council-repo'
+
 const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
 const TYPES: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }
 
@@ -21,7 +23,7 @@ export function artPath(parts: string[]): string | null {
 export async function serveArt(parts: string[]): Promise<NextResponse> {
   const p = artPath(parts)
   if (!p) return new NextResponse('Not a look picture.', { status: 404 })
-  const r = await fetch(RAW + p.split('/').map(encodeURIComponent).join('/'), { cache: 'no-store' })
+  const r = await fetch(RAW + p.split('/').map(encodeURIComponent).join('/'), { cache: 'no-store', headers: councilRepoHeaders() })
   if (!r.ok || !r.body) return new NextResponse('That picture is not on six-faces-council main.', { status: 404 })
   const hashed = p.startsWith('board/stills/')
   return new NextResponse(r.body, {

@@ -5,6 +5,7 @@
  * board's own words so the card can show it. Read from six-faces-council main like the fleet; pure apart from
  * `loadShaman`. */
 import { RUN_MS, pullTime, seedsOf, type Pull, type Stage } from './fleet'
+import { councilRepoHeaders } from '@/lib/board/council-repo'
 
 const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
 const LEDGER_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/contents/council/ledger?ref=main'
@@ -235,7 +236,7 @@ export function demoShaman(now = new Date(), o: { hearth?: 'cold' } = {}): Shama
 }
 
 async function text(url: string): Promise<string | null> {
-  try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.text() : null } catch { return null }
+  try { const r = await fetch(url, { cache: 'no-store', headers: councilRepoHeaders() }); return r.ok ? await r.text() : null } catch { return null }
 }
 function json<T>(s: string | null): T | null { try { return s ? JSON.parse(s) as T : null } catch { return null } }
 

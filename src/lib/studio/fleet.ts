@@ -4,6 +4,8 @@
  * rung, and more can pay for the next hull (boat-grid-learnings-are-seeds). The work is read from the board's own
  * ledger on six-faces-council main, so the seeds are his real answers. Pure apart from `loadFleet`. */
 
+import { councilRepoHeaders } from '@/lib/board/council-repo'
+
 const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
 const LEDGER_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/contents/council/ledger?ref=main'
 
@@ -203,7 +205,7 @@ export const DEMO_SEEDS: Seeds = {
 export function demoFleet(now = new Date()): FleetWorld { return fleetOf(DEMO_SEEDS, DEMO_SHIPS, now) }
 
 async function text(url: string): Promise<string | null> {
-  try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.text() : null } catch { return null }
+  try { const r = await fetch(url, { cache: 'no-store', headers: councilRepoHeaders() }); return r.ok ? await r.text() : null } catch { return null }
 }
 
 /** `2026-10-25-pull-014112.json` -> 2026-10-25T01:41:12Z (board/pull.py names its records in UTC). */

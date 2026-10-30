@@ -2,6 +2,7 @@
  * (position ty-real-data). Strands come from council/callsheets/INDEX.md, loop rounds from council/loops/*.json,
  * staff from the Claude-Code-Game-Studios roster, the gate bar from the seven stages applied to Chapter 1. */
 import { ROSTER, type Staff } from './roster'
+import { councilRepoHeaders } from '@/lib/board/council-repo'
 
 const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
 const LOOPS_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/contents/council/loops?ref=main'
@@ -86,7 +87,7 @@ export function crew(): Staff[] {
 let cache: { deck: Deck; at: number } | null = null
 
 async function text(url: string): Promise<string | null> {
-  try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.text() : null } catch { return null }
+  try { const r = await fetch(url, { cache: 'no-store', headers: councilRepoHeaders() }); return r.ok ? await r.text() : null } catch { return null }
 }
 
 async function loops(): Promise<Map<string, LoopState>> {
