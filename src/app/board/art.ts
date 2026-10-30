@@ -1,11 +1,11 @@
-/** Look pictures for the Council Board, served from six-faces-council main (Wendell, 2026-10-30: "we need a solution
- * for me to see these screenshots in the council board and on bars-engine without breaking the bank on storage").
- * Art stays in git (docs/stills-round.md there); this host only passes it through, so storage costs nothing here and
- * the CDN holds each picture after its first request. /board/stills/<path> is the picture; /board/look is a page to
+/** Look pictures for the Council Board (Wendell, 2026-10-30: "we need a solution for me to see these screenshots in
+ * the council board and on bars-engine without breaking the bank on storage"). six-faces-council is private, so its
+ * board Actions push the pictures to the content store (src/lib/board/content-store.ts) and this host serves them from
+ * there; the CDN holds each picture after its first request. /board/stills/<path> is the picture; /board/look is a page to
  * inspect a look's pictures at full size. Only image files under the two stills folders are passed, never the repo. */
 import { NextResponse } from 'next/server'
+import { readFile } from '@/lib/board/content-store'
 
-const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
 const TYPES: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }
 
 /** The repo path a /board/stills/ request names, or null. A bare `<hash>.<ext>` is a board still (board/stills/,
@@ -21,10 +21,10 @@ export function artPath(parts: string[]): string | null {
 export async function serveArt(parts: string[]): Promise<NextResponse> {
   const p = artPath(parts)
   if (!p) return new NextResponse('Not a look picture.', { status: 404 })
-  const r = await fetch(RAW + p.split('/').map(encodeURIComponent).join('/'), { cache: 'no-store' })
-  if (!r.ok || !r.body) return new NextResponse('That picture is not on six-faces-council main.', { status: 404 })
+  const f = await readFile(p)
+  if (!f) return new NextResponse('That picture has not been pushed from six-faces-council main.', { status: 404 })
   const hashed = p.startsWith('board/stills/')
-  return new NextResponse(r.body, {
+  return new NextResponse(f.body, {
     headers: {
       'Content-Type': TYPES[p.split('.').pop()!.toLowerCase()],
       // A board still is named by its content: cache it for good. A callsheet frame can be redrawn under its name.

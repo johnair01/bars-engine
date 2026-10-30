@@ -1,8 +1,8 @@
 /**
  * @route GET /board/stills/[...path]
  * @entity SYSTEM
- * @description A look picture from six-faces-council main (board/stills or council/callsheets/stills), passed through
- * @permissions public (the pictures are public in git)
+ * @description A look picture pushed from six-faces-council main (board/stills or council/callsheets/stills), served from the content store
+ * @permissions public (as when the pictures were public in git)
  * @agentDiscoverable false
  */
 import { NextRequest } from 'next/server'
