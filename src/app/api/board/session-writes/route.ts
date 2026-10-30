@@ -1,11 +1,14 @@
 /**
  * @route POST /api/board/session-writes
  * @entity SYSTEM
- * @description A Claude session writes Your steps lists and steps, and Outreach contacts and shows, to the Council
- *   Board's store here, so bars-engine's /board/council stops drifting from what sessions publish (board-home step 5).
- *   Update merges onto the latest document; a write that changes nothing is skipped (src/lib/board/session-write.ts).
+ * @description A Claude session writes Your steps lists and steps, Outreach contacts and shows, and the council's rows
+ *   to the Council Board's store here, so bars-engine's /board/council stops drifting from what sessions publish
+ *   (board-home step 5). Update merges onto the latest document; a write that changes nothing is skipped
+ *   (src/lib/board/session-write.ts). A row (collection rows, one document per row, six-faces-council
+ *   docs/worklist-api.md) shows on /board/council at its next load and starts a board-pull, which lands it on main.
  * @permissions COUNCIL_MENU_TOKEN, as a bearer token or ?token= (the egress proxy injects it for sessions)
  * @example POST /api/board/session-writes {"docs":[{"collection":"steps","docId":"feat-01","data":{"do":"..."}}],"dry":true}
+ * @example POST /api/board/session-writes {"docs":[{"collection":"rows","docId":"wl-x","mode":"set","data":{"list":"positions","pass":"p","faces":["sage"],"pos":"..."}}]}
  * @agentDiscoverable false
  *
  * @route GET /api/board/session-writes
@@ -22,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { latestDocs } from '@/lib/board/store'
+import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { docHash, sessionWrite, SESSION_COLLECTIONS, type SessionDoc } from '@/lib/board/session-write'
 
 export const dynamic = 'force-dynamic'
@@ -39,7 +43,7 @@ export async function GET(req: NextRequest) {
   const no = refused(req); if (no) return no
   const want = req.nextUrl.searchParams.get('collection')
   if (want && !SESSION_COLLECTIONS.has(want))
-    return NextResponse.json({ error: 'collection must be lists, steps, contacts or shows' }, { status: 400 })
+    return NextResponse.json({ error: `collection must be one of ${[...SESSION_COLLECTIONS].join(', ')}` }, { status: 400 })
   const docs = (await latestDocs('council')) as Record<string, Record<string, unknown>>
   const hashes: Record<string, Record<string, string>> = {}
   for (const c of want ? [want] : [...SESSION_COLLECTIONS])
@@ -63,5 +67,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Expected {docs: [{collection, docId, mode?, data}] (at most ${MAX_DOCS})}` },
       { status: 400 })
   const r = await sessionWrite(db, b.docs as SessionDoc[], b.dry === true)
+  if (b.dry !== true && r.written.some(k => k.startsWith('rows/'))) await dispatchBoardPull().catch(() => undefined)
   return NextResponse.json({ board: 'council', dry: b.dry === true, ...r }, { headers: NO_STORE })
 }
