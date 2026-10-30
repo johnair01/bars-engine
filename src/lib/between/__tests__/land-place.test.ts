@@ -12,7 +12,7 @@ async function clearing() {
   const charge = sample()
   const g = await read(charge)
   const md = sheet(charge, g)
-  const loc = locations(charge, g).find((l: { role: string }) => l.role === 'encounter')
+  const loc = locations(charge, g).find((l: { role: string | number }) => l.role === 'encounter')
   return { g, md, loc, p: plan(loc, g.weather) }
 }
 
