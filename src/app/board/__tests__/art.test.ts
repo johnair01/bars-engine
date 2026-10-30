@@ -1,0 +1,38 @@
+import { describe, expect, it, vi } from 'vitest'
+import { artPath, lookPage, serveArt } from '../art'
+
+describe('artPath', () => {
+  it('passes board stills and callsheet stills, nothing else', () => {
+    expect(artPath(['94a1067981bd2ba3.jpg'])).toBe('board/stills/94a1067981bd2ba3.jpg')
+    expect(artPath('council/callsheets/stills/2026-10-30-cultivation-parts-2/frames/a.png'.split('/')))
+      .toBe('council/callsheets/stills/2026-10-30-cultivation-parts-2/frames/a.png')
+    expect(artPath(['council', 'callsheets', 'stills', '..', '..', 'faces.yaml'])).toBeNull()
+    expect(artPath(['council', 'faces.yaml'])).toBeNull()
+    expect(artPath(['board', 'board_data.json'])).toBeNull()
+    expect(artPath(['notes.png'])).toBeNull()
+    expect(artPath(['%E0%A4%A.png'])).toBeNull()
+  })
+})
+
+describe('serveArt', () => {
+  it('caches a hashed still for good and refuses a path outside the stills', async () => {
+    const seen: string[] = []
+    vi.stubGlobal('fetch', async (u: string) => { seen.push(u); return { ok: true, body: new ReadableStream() } })
+    const r = await serveArt(['94a1067981bd2ba3.jpg'])
+    expect(seen[0]).toBe('https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/board/stills/94a1067981bd2ba3.jpg')
+    expect(r.headers.get('content-type')).toBe('image/jpeg')
+    expect(r.headers.get('cache-control')).toContain('immutable')
+    expect((await serveArt(['..', 'x.png'])).status).toBe(404)
+  })
+})
+
+describe('lookPage', () => {
+  it('shows each picture from this host, escaped, and drops paths it will not serve', () => {
+    const html = lookPage('Round <3>', ['council/callsheets/stills/r/frames/a.png', 'board/stills/94a1067981bd2ba3.jpg', 'council/x.png'])
+    expect(html).toContain('Round &lt;3&gt;')
+    expect(html).toContain('src="/board/stills/council/callsheets/stills/r/frames/a.png"')
+    expect(html).toContain('src="/board/stills/94a1067981bd2ba3.jpg"')
+    expect(html).not.toContain('council/x.png')
+    expect(html).not.toContain('github.com')
+  })
+})
