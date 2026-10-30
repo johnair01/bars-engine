@@ -8,7 +8,7 @@
  *   docs/worklist-api.md) shows on /board/council at its next load and starts a board-pull, which lands it on main.
  * @permissions COUNCIL_MENU_TOKEN, as a bearer token or ?token= (the egress proxy injects it for sessions)
  * @example POST /api/board/session-writes {"docs":[{"collection":"steps","docId":"feat-01","data":{"do":"..."}}],"dry":true}
- * @example POST /api/board/session-writes {"docs":[{"collection":"rows","docId":"wl-x","mode":"set","data":{"list":"positions","pass":"p","faces":["sage"],"pos":"..."}}]}
+ * @example POST /api/board/session-writes {"docs":[{"collection":"rows","docId":"wl-x","mode":"set","data":{"kind":"positions","pass":"p","faces":["sage"],"pos":"..."}}]}
  * @agentDiscoverable false
  *
  * @route GET /api/board/session-writes

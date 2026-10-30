@@ -1,6 +1,7 @@
 /**
  * The council's rows, posted one document per row to the `rows` collection (six-faces-council docs/worklist-api.md).
- * A row is what a rows file in council/callsheets/rows holds: `list` names its list, the docId is its id, and `pass`
+ * A row is what a rows file in council/callsheets/rows holds: `kind` names its board list (a look's own `list` is its
+ * strand, as on a step), the docId is its id, and `pass`
  * names the pass that posted it. The checks are schema/board-save.schema.json's `row` rule, the same ones
  * board/post_rows.py runs before it posts and the board page runs before it draws, so a row this refuses would also
  * have stopped land_rows.py or broken the page.
@@ -12,8 +13,8 @@ const faces = (v: unknown) => Array.isArray(v) && v.length > 0 && v.every(f => t
 
 export function rowErrors(data: Record<string, unknown>): string[] {
   const errors: string[] = []
-  const list = data.list as string
-  if (!ROW_LISTS.includes(list as never)) return [`a row's list is one of ${ROW_LISTS.join(', ')}`]
+  const list = data.kind as string
+  if (!ROW_LISTS.includes(list as never)) return [`a row's kind (its board list) is one of ${ROW_LISTS.join(', ')}`]
   if (!text(data.pass)) errors.push('a row names the pass that posted it')
   if ('id' in data) errors.push('a row\'s id is its docId, not a field')
   if (data.lane !== undefined && typeof data.lane !== 'string') errors.push('lane is a string')

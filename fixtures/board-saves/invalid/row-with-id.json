@@ -1,1 +1,1 @@
-{"board":"council","collection":"rows","docId":"wl-x","data":{"id":"wl-y","list":"positions","pass":"p","faces":["sage"],"pos":"An id that is not the docId."}}
+{"board":"council","collection":"rows","docId":"wl-x","data":{"id":"wl-y","kind":"positions","pass":"p","faces":["sage"],"pos":"An id that is not the docId."}}

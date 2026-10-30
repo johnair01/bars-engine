@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wendell-britt/Six-faces-council/blob/main/schema/board-save.schema.json",
   "title": "Board save",
-  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its list named, always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only.",
+  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only.",
   "type": "object",
   "additionalProperties": false,
   "required": ["board", "collection", "docId", "data"],
@@ -19,21 +19,21 @@
     "faces": {"type": "array", "minItems": 1, "items": {"type": "string"}},
     "row": {
       "properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
-        "required": ["list", "pass"], "not": {"required": ["id"]},
-        "properties": {"list": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
+        "required": ["kind", "pass"], "not": {"required": ["id"]},
+        "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
                        "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"}},
         "allOf": [
-          {"if": {"properties": {"list": {"const": "positions"}}},
+          {"if": {"properties": {"kind": {"const": "positions"}}},
            "then": {"required": ["faces", "pos"], "properties": {"faces": {"$ref": "#/$defs/faces"}, "pos": {"$ref": "#/$defs/text"}}}},
-          {"if": {"properties": {"list": {"const": "questions"}}},
+          {"if": {"properties": {"kind": {"const": "questions"}}},
            "then": {"required": ["faces", "q", "options"], "properties": {"faces": {"$ref": "#/$defs/faces"},
              "q": {"$ref": "#/$defs/text"}, "options": {"type": "array", "minItems": 1, "items": {"type": "object",
                "required": ["v", "label"], "properties": {"v": {"$ref": "#/$defs/text"}, "label": {"type": "string"}}}}}}},
-          {"if": {"properties": {"list": {"const": "terms"}}},
+          {"if": {"properties": {"kind": {"const": "terms"}}},
            "then": {"required": ["term", "plain"], "properties": {"term": {"$ref": "#/$defs/text"}, "plain": {"type": "string"}}}},
-          {"if": {"properties": {"list": {"const": "causes"}}},
+          {"if": {"properties": {"kind": {"const": "causes"}}},
            "then": {"required": ["desc"], "properties": {"desc": {"$ref": "#/$defs/text"}}}},
-          {"if": {"properties": {"list": {"const": "battles"}}},
+          {"if": {"properties": {"kind": {"const": "battles"}}},
            "then": {"required": ["name", "rounds"], "properties": {"name": {"$ref": "#/$defs/text"}, "rounds": {"type": "array"}}}}
         ]}}
     },

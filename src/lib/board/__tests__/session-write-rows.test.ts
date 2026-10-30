@@ -14,7 +14,7 @@ function fakeDb() {
   }
 }
 
-const row = { list: 'positions', pass: 'worklist-api-slice-a', lane: 'claude', faces: ['architect'], auto: true,
+const row = { kind: 'positions', pass: 'worklist-api-slice-a', lane: 'claude', faces: ['architect'], auto: true,
               pos: 'A probe position.', why: 'test' }
 
 describe('sessionWrite rows (worklist-api)', () => {
@@ -28,7 +28,7 @@ describe('sessionWrite rows (worklist-api)', () => {
   it('refuses a malformed row and writes nothing', async () => {
     const db = fakeDb()
     const r = await sessionWrite(db as never, [
-      { collection: 'rows', docId: 'wl-bad', data: { list: 'questions', pass: 'p', faces: ['sage'], q: 'No options?' } },
+      { collection: 'rows', docId: 'wl-bad', data: { kind: 'questions', pass: 'p', faces: ['sage'], q: 'No options?' } },
       { collection: 'rows', docId: 'wl-nopass', data: { ...row, pass: '' } },
       { collection: 'rows', docId: 'wl-upd', mode: 'update', data: row },
     ])
