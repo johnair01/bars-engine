@@ -105,7 +105,7 @@ export function walkable(x, z, pad = 0.35) {
    cushion, straight, from your own side; the far cushion sits behind the Between and the card table, whose edges meet,
    and a straight walk there was pushed back out each frame and never arrived. A* on a grid of walkable(), then pulled
    tight so the walk keeps to straight lines. A goal nothing reaches gets the straight line, as before. */
-export function routeTo(from, goal, pad = 0.35) {
+export function routeTo(from, goal, pad = 0.42) {    // a little wider than pushOut's 0.35, so the walk keeps off the edge
   const clear = (ax, az, bx, bz) => { const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.1); for (let i = 1; i < n; i++) if (!walkable(ax + (bx - ax) * i / n, az + (bz - az) * i / n, pad)) return false; return true; };
   if (clear(from.x, from.z, goal.x, goal.z)) return [{ x: goal.x, z: goal.z }];
   const S = 0.25, N = Math.ceil(WALK_R / S) * 2 + 1, o = (N - 1) / 2, cell = v => Math.max(0, Math.min(N - 1, Math.round(v / S) + o));

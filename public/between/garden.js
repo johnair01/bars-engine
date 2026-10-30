@@ -1384,7 +1384,11 @@ function frameBody() {
     if (walking) {
       const step = Math.min(move.length(), 2.3 * dt);
       move.normalize();
+      const was = meState.pos.clone();
       meState.pos.add(move.clone().multiplyScalar(step)); if (meState.seatWant == null || meState.pos.distanceTo(seatPos(meState.seatWant)) > 0.9) pushOut(meState.pos);
+      // pushed back against an edge instead of moving on: find the way again from here (a route cut close to a corner)
+      if (meState.target && step > 1e-3 && meState.pos.distanceTo(was) < step * 0.3) { meState.stuckT = (meState.stuckT || 0) + dt; if (meState.stuckT > 0.25) { meState.routeFor = null; meState.stuckT = 0; } }
+      else meState.stuckT = 0;
       const want = Math.atan2(move.x, move.z);
       let d = want - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 10);
     }
