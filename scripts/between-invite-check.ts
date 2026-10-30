@@ -410,7 +410,7 @@ async function main() {
         const p0 = { x: m.pos.x, z: m.pos.z }; await new Promise(r => setTimeout(r, 4000))
         return { at: m.pos, movedIn4s: +Math.hypot(m.pos.x - p0.x, m.pos.z - p0.z).toFixed(2), target: m.target, sitting: m.sitting }
       })) + ')') })
-      if (process.env.BETWEEN_CHECK_SHOTS) { await A.waitForTimeout(1_500); await A.screenshot({ path: join(process.env.BETWEEN_CHECK_SHOTS, 'both-sitting.png') }) }
+      if (process.env.BETWEEN_CHECK_SHOTS) { await A.waitForTimeout(1_500); await A.screenshot({ path: join(process.env.BETWEEN_CHECK_SHOTS, 'both-sitting.png'), timeout: 120_000 }).catch(e => console.log('  (no still: ' + (e as Error).message.split('\n')[0] + ')')) }
       for (const p of [A, Bp]) await p.evaluate(() => (window as unknown as { __between: { standUp(): void } }).__between.standUp())
       return 'the partner sat on the teal cushion, the planter could not sit on them there, and sat on the plum one'
     })
