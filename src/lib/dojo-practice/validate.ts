@@ -1,5 +1,6 @@
 import { clampCharge } from './constellation'
-import { MAX_TEXT_LENGTH, MAX_WORD_LENGTH, type Constellation } from './types'
+import { equilateralAt } from './geometry'
+import { MAX_TEXT_LENGTH, MAX_WORD_LENGTH, type Constellation, type Triangle } from './types'
 
 export const MAX_WORDS = 200
 export const MAX_TRIANGLES = 200
@@ -7,6 +8,16 @@ export const MAX_TRIANGLES = 200
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const str = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '')
 const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
+
+const isPt = (v: unknown): v is { x: number; y: number } => isObj(v) && Number.isFinite(v.x) && Number.isFinite(v.y)
+
+/** Corners as saved, or for a save from before lines carried concepts, a regular triangle at the old percent position. */
+function readPoints(t: Record<string, unknown>): Triangle['points'] {
+  if (Array.isArray(t.points) && t.points.length === 3 && t.points.every(isPt)) {
+    return t.points.map(p => ({ x: p.x, y: p.y })) as Triangle['points']
+  }
+  return equilateralAt(num(t.x, 50) - 50, num(t.y, 50) - 50)
+}
 
 /**
  * Rebuilds a Constellation from untrusted JSON (a client save). Shape is enforced, not trusted: three distinct known
@@ -27,8 +38,8 @@ export function sanitizeConstellation(input: unknown): Constellation | null {
     const parent = typeof t.parentTriangleId === 'string' && triangles.some(p => p.id === t.parentTriangleId) ? t.parentTriangleId : undefined
     const anchor = parent && typeof t.anchorWordId === 'string' && ids.includes(t.anchorWordId) ? t.anchorWordId : undefined
     triangles.push({
-      id: t.id, wordIds: [ids[0], ids[1], ids[2]] as [string, string, string], x: Math.max(0, Math.min(100, num(t.x, 50))),
-      y: Math.max(0, Math.min(100, num(t.y, 50))), ...(parent && anchor ? { parentTriangleId: parent, anchorWordId: anchor } : {}),
+      id: t.id, wordIds: [ids[0], ids[1], ids[2]] as [string, string, string], points: readPoints(t),
+      ...(parent && anchor ? { parentTriangleId: parent, anchorWordId: anchor } : {}),
     })
   }
   const tIds = new Set(triangles.map(t => t.id))

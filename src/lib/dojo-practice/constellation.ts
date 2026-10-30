@@ -1,3 +1,4 @@
+import { extensionPoints, freeStandalone, occupied } from './geometry'
 import {
   CHARGE_MAX, CHARGE_MIN, MAX_TEXT_LENGTH, MAX_WORD_LENGTH,
   type Constellation, type PracticeState, type Triangle, type Word,
@@ -67,36 +68,18 @@ function requireWords(c: Constellation, ids: string[]) {
   for (const id of ids) if (!wordById(c, id)) fail('That word is not on the wall.')
 }
 
-/** Spaces standalone triangles along rows, and grows extensions outward from the parent, away from the wall centre. */
-function placeStandalone(c: Constellation): { x: number; y: number } {
-  const roots = c.triangles.filter(t => !t.parentTriangleId).length
-  return { x: 16 + (roots % 4) * 22, y: 22 + Math.floor(roots / 4) * 30 }
-}
-
-function placeExtension(c: Constellation, parent: Triangle, anchorIndex: number): { x: number; y: number } {
-  // The three corners of a triangle point up, lower right, lower left (the glyph's own geometry).
-  const angles = [-90, 30, 150].map(a => (a * Math.PI) / 180)
-  const a = angles[anchorIndex]
-  const clampPct = (n: number) => Math.max(10, Math.min(90, n))
-  for (const reach of [24, 32, 40]) {
-    const x = clampPct(parent.x + Math.cos(a) * reach)
-    const y = clampPct(parent.y + Math.sin(a) * reach)
-    if (!c.triangles.some(t => Math.hypot(t.x - x, t.y - y) < 14)) return { x, y }
-  }
-  return { x: clampPct(parent.x + Math.cos(a) * 24), y: clampPct(parent.y + Math.sin(a) * 24) }
-}
-
 /** A standalone triangle from three harvested words. */
 export function buildTriangle(c: Constellation, wordIds: string[]): { constellation: Constellation; triangle: Triangle } {
   if (wordIds.length !== 3) return fail('A triangle has exactly three words.')
   requireWords(c, wordIds)
-  const triangle: Triangle = { id: newId('t'), wordIds: wordIds as [string, string, string], ...placeStandalone(c) }
+  const triangle: Triangle = { id: newId('t'), wordIds: wordIds as [string, string, string], points: freeStandalone(c) }
   return { constellation: { ...c, triangles: [...c.triangles, triangle] }, triangle }
 }
 
 /**
- * Extend an existing triangle: one of its words is the shared anchor, plus exactly two further harvested words.
- * The new triangle holds the same word object as its anchor, so its charge moves with every triangle that shares it.
+ * Extend an existing triangle across one of its lines: that line's word is the shared anchor, plus exactly two further
+ * words for the two new lines. The new triangle holds the same word as its anchor and sits on the line's far side, so
+ * its charge moves with every triangle that shares it.
  */
 export function extendTriangle(
   c: Constellation, triangleId: string, anchorWordId: string, extraWordIds: string[],
@@ -108,12 +91,14 @@ export function extendTriangle(
   if (extraWordIds.length !== 2) return fail('Choose exactly two more words to extend from the shared word.')
   if (extraWordIds.includes(anchorWordId)) return fail('The shared word is already in the triangle. Choose two other words.')
   requireWords(c, extraWordIds)
+  const points = extensionPoints(parent, anchorIndex)
+  if (occupied(c, points)) return fail('That side of the line already has a triangle. Choose another line.')
   const triangle: Triangle = {
     id: newId('t'),
     wordIds: [anchorWordId, extraWordIds[0], extraWordIds[1]],
     parentTriangleId: parent.id,
     anchorWordId,
-    ...placeExtension(c, parent, anchorIndex),
+    points,
   }
   return { constellation: { ...c, triangles: [...c.triangles, triangle] }, triangle }
 }
@@ -169,6 +154,35 @@ export function addBridge(
   if (clean.length > MAX_TEXT_LENGTH) return fail(`Keep a bridge under ${MAX_TEXT_LENGTH} characters.`)
   return { ...c, bridges: [...c.bridges, { id: newId('b'), chargedTriangleId: from.id, positiveTriangleId: to.id, text: clean, createdAt: now }] }
 }
+
+/** Rename a concept. The line keeps its charge and every triangle that holds it shows the new name. */
+export function renameWord(c: Constellation, wordId: string, raw: string): Constellation {
+  const word = wordById(c, wordId)
+  if (!word) return fail('That word is not on the wall.')
+  const label = raw.trim().replace(/\s+/g, ' ')
+  if (!label) return fail('Type a word first.')
+  if (label.length > MAX_WORD_LENGTH) return fail(`Keep a word under ${MAX_WORD_LENGTH} characters.`)
+  const clash = c.words.find(w => w.id !== wordId && w.label.toLowerCase() === label.toLowerCase())
+  if (clash) return fail(`“${clash.label}” is already on the wall.`)
+  return { ...c, words: c.words.map(w => (w.id === wordId ? { ...w, label } : w)) }
+}
+
+/**
+ * Take back a triangle, the way you would erase the last shape on paper. Only a triangle nothing else grew from can
+ * go, so the drawing never loses a middle. Its words stay in the margin, and bridges that touched it go with it.
+ */
+export function removeTriangle(c: Constellation, triangleId: string): Constellation {
+  if (!triangleById(c, triangleId)) return fail('That triangle is not on the wall.')
+  if (c.triangles.some(t => t.parentTriangleId === triangleId)) return fail('Another triangle grew from it. Take that one back first.')
+  return {
+    ...c,
+    triangles: c.triangles.filter(t => t.id !== triangleId),
+    bridges: c.bridges.filter(b => b.chargedTriangleId !== triangleId && b.positiveTriangleId !== triangleId),
+  }
+}
+
+/** Words not on any line yet: the margin. */
+export const marginWords = (c: Constellation) => c.words.filter(w => !c.triangles.some(t => t.wordIds.includes(w.id)))
 
 /** Triangles that hold a word, for showing how far one charge change travels. */
 export const trianglesHolding = (c: Constellation, wordId: string) => c.triangles.filter(t => t.wordIds.includes(wordId))

@@ -12,7 +12,8 @@ assert.match(learning, /Well-being/)
 assert.doesNotMatch(learning, /8th-Ray|Bridge to/, 'the Learning constellation never offers the 8th-Ray move or bridges')
 
 const blank = renderToStaticMarkup(createElement(ThoughtStringBoard, { state: emptyPractice(), onChange: noop, live: true }))
-assert.match(blank, /No words yet/)
+assert.match(blank, /The page is empty/)
+assert.match(blank, /Draw the first triangle/)
 
 let c = emptyPractice().constellation
 const ids: string[] = []
@@ -20,5 +21,6 @@ for (const [w, ch] of [['Not ready', -2], ['Hider', -2], ['Embarrassed', -1]] as
 const t = buildTriangle(c, ids)
 c = setCharge(t.constellation, ids[0], -3)
 const live = renderToStaticMarkup(createElement(ThoughtStringBoard, { state: { constellation: c, projectedTriangleId: null }, onChange: noop, live: true }))
-assert.match(live, /Triangle Not ready, Hider, Embarrassed, charge -6/)
+assert.match(live, /Triangle of Not ready, Hider, Embarrassed, charge -6/)
+assert.match(live, /aria-label="Line Hider, charge -2"/, 'every line is its own tap target')
 console.log('board render: ok')

@@ -1,5 +1,7 @@
 # Spec: Triangle Workbench and Projection Room
 
+> **Amended 2026-10-28 (council position `dr-line-is-concept`, pass dojo-retro1).** Wendell: "extending a triangle means that it shares a line. Each segment is one of the concepts... we should be able to build these up line by line and extend them not unlike how one would do it with pen and paper but optimized for touch screen". Each line of a triangle is one concept, and extending shares a line. Earlier wording in this spec put words at corners and shared a word; where any remains, the line model governs. Built in `src/lib/dojo-practice/geometry.ts` and `draft.ts`.
+
 ## Purpose
 
 Make Triangle Workshop a place for sustained play with many related triangles, rather than a one-off form. A private whiteboard holds a player’s evolving pattern-map. The dojo projects one selected triangle into embodied space for exploration and then returns it to the board.
@@ -7,7 +9,7 @@ Make Triangle Workshop a place for sustained play with many related triangles, r
 ## Core loop
 
 1. **Notice** — create words and assemble one word-triangle.
-2. **Arrange** — grow a thought string by adding triangles that share a word with an existing triangle; strings can branch from any shared word.
+2. **Arrange** — grow a thought string by adding triangles that share a line with an existing triangle; strings can branch from any line that has a free side.
 3. **Select** — tap a triangle to focus it; the selected triangle becomes the candidate for the dojo.
 4. **Project** — send one focused word-triangle from the active thought string into the room.
 5. **Read charge** — mark each word's **activation** (0–3) and present orientation (**constricting, supportive, mixed, or unread**). A triangle can show these player-owned reads without claiming that intensity and goodness are the same thing.
@@ -66,16 +68,16 @@ The 3D wall is the spatial view of the active constellation, not a literal one-t
 - **Settled regions:** completed/older segments remain as dim, compact strand-glyphs at the edge of the wall. Tapping one brings that segment into focus; it does not vanish or get deleted.
 - **Unseen remainder:** the wall gives a small count and direction cue for further branches beyond the visible region, while the full 2D workbench remains the authoritative overview.
 - **One active projection:** exactly one word-triangle can extend from the wall to the floor stools at a time.
-- **Stable layout:** existing word-points do not automatically rearrange when new triangles are added. New material grows outward from the selected shared word. Any reflow is explicit and previewable.
-- **Pinned placement:** a player may pin a word-point or triangle arrangement. Pins resist any later optional reflow.
+- **Stable layout:** existing triangles do not automatically rearrange when new triangles are added. New material grows outward from the selected shared line. Any reflow is explicit and previewable.
+- **Pinned placement:** a player may pin a triangle arrangement. Pins resist any later optional reflow.
 
 ### Whiteboard primitives
 
 | Primitive | Meaning | State |
 |---|---|---|
 | Word | A word or short phrase used as the active material of construction | label, optional note, board position, status |
-| Word-triangle | Three word references arranged as one triangle | title, source/intent, projection history |
-| Thought string | An ordered or branching construction of word-triangles connected through shared words | title, intention, triangle order/branches, move history |
+| Word-triangle | Three lines, each carrying one word, closed as one triangle | title, source/intent, projection history |
+| Thought string | An ordered or branching construction of word-triangles connected through shared lines | title, intention, triangle order/branches, move history |
 | Cluster | A visual grouping / territory on the board | title, color, collapsed state |
 
 Words are reusable: several word-triangles can reference the same word. Editing its wording propagates intentionally; triangle-specific interpretations are stored as annotations, not copied words.
@@ -104,11 +106,11 @@ The first falsification fixture is `elemental-triad-fixture.md`: Metal/satisfied
 
 These constraints preserve the recognizable Thought String grammar while keeping the wall playable on a phone.
 
-- A word-triangle always has exactly three word-points.
-- To extend a thought string, the player selects exactly one existing word as the shared word and adds exactly two words. This makes the continuation legible.
+- A word-triangle always has exactly three lines, each carrying one word.
+- To extend a thought string, the player selects exactly one existing line as the shared line and names exactly two new lines. This makes the continuation legible.
 - To branch, the player selects an existing word and begins another triangle from it; branches never appear through automatic inference.
 - A new word can be introduced freely, but reuse selects the existing word object rather than making a duplicate. The interface must show when a word already participates elsewhere in the active constellation.
-- The 3D wall shows at most three direct continuations from one visible word-point. More continuations collapse into a small branch bud which opens in the 2D workbench/focus lens.
+- The 3D wall shows at most three direct continuations from one visible triangle. More continuations collapse into a small branch bud which opens in the 2D workbench/focus lens.
 - There is no hard lifetime limit on a thought string. Density is handled by focus, settled regions, and the authoritative 2D overview rather than forced deletion.
 - A player must explicitly select an operation and its target word, triangle, or later-specialized component. The system never mutates a string merely because it is visually near another string.
 
@@ -116,7 +118,7 @@ These constraints preserve the recognizable Thought String grammar while keeping
 
 | Player action | 3D room behavior | Focus-lens behavior |
 |---|---|---|
-| Approach/tap a word-point | It brightens and shows its immediate triangles | Inspect wording, notes, linked occurrences, pin or rename |
+| Approach/tap a line | It brightens and shows its immediate triangles | Inspect wording, notes, linked occurrences, pin or rename |
 | Tap a triangle | Its three lines glow; its relation to the wider string stays visible | Project, edit words, add a continuation, or branch |
 | Tap a branch bud / settled glyph | Camera attention shifts toward that region | Open the focused slice without rearranging the rest |
 | Long-press a word or triangle | Opens a small radial action ring | Pin, move, archive, or view history |
@@ -166,7 +168,7 @@ Every move creates a small, reversible history record: what changed, who made it
 - A player can add their own words and draw from an optional starter vocabulary before or after triangle construction.
 - A player can mark a word's charge and intensity (−3 through +3) without being required to explain its origin, project it, or change it.
 - A player can use an explicit, reversible 8th-Ray move on a negatively charged triangle only after an intentional pause/orientation moment; the changed word propagates through its shared thought string.
-- A player can extend a positively charged triangle into a new positive continuation through a shared word.
+- A player can extend a positively charged triangle into a new positive continuation through a shared line.
 - The workbench accommodates branching thought strings without a fixed maximum triangle count.
 - A player can select exactly one word-triangle from an active thought string and project it to the dojo.
 - The projection room displays the selected three words and their triangle without claiming it is a fear-clearing configuration.

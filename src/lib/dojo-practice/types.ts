@@ -12,7 +12,7 @@ export type PracticeContext =
   | { kind: 'incipient_bar'; draftId: string }
   | { kind: 'bar'; barId: string }
 
-/** A word is one shared object: every triangle that holds it reads the same charge. */
+/** A word is one concept, drawn as a line. Every triangle that holds it reads the same charge. */
 export type Word = { id: string; label: string; charge: number }
 
 export type Triangle = {
@@ -22,9 +22,8 @@ export type Triangle = {
   /** Set when this triangle grew from another one through a shared word. */
   parentTriangleId?: string
   anchorWordId?: string
-  /** Wall position in percent. Assigned once at creation, never inferred afterwards. */
-  x: number
-  y: number
+  /** Three corners in wall units. Line i runs from points[i] to points[i+1] and carries wordIds[i]. */
+  points: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }]
 }
 
 export type ChargeHistoryEntry = {

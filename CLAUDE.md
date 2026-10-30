@@ -31,6 +31,18 @@ Wendell, 2026-10-04: *"If you need rulings from me this should've gone to the co
 Session-start prompt for AI UI work:
 > "Read `UI_COVENANT.md` before writing any UI code. Apply the three-channel encoding system (element=color, altitude=border, stage=density). Use CSS classes from `src/styles/cultivation-cards.css` for all game aesthetic. Use Tailwind only for layout. Reference `src/lib/ui/card-tokens.ts` for all color values."
 
+## Code Discipline — ub-mode
+
+Every code change follows [`.claude/skills/ub-mode/SKILL.md`](.claude/skills/ub-mode/SKILL.md) (from
+https://github.com/unclebob/ub-mode, copied unchanged): First Make it Work, then Make it Right, then Practice. Read it
+before writing or changing code. Where this repo's rules differ, they win:
+
+- "Push to the main line at the end" becomes: push the session's designated branch and open a draft pull request.
+- Questions for Wendell still go to the Council Board, never to chat.
+- The crapper, dryer and mutator tools (Clojure-based) are not installed here. Until a TypeScript equivalent is chosen,
+  apply their intent by hand: keep functions small and tested, remove duplication, and run `npm run test:*` suites for
+  the code you touch.
+
 ## Project Ethos
 
 BARs Engine is built on **Integral Theory** (AQAL). This gives the project a moral center strong enough to navigate the tensions of AI-augmented creative work. If you are ever unsure about a design or implementation choice, check it against the four quadrants (I/We/It/Its) and the developmental stages.

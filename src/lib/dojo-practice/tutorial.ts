@@ -47,15 +47,15 @@ export const emptyTutorialLog = (): TutorialLog => ({ projected: false, returned
 const learnerWordCount = (start: PracticeState, now: PracticeState) => now.constellation.words.length - start.constellation.words.length
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
-  { id: 'harvest', title: 'Words can be harvested', instruction: 'Add one word of your own to the harvest. Anything will do.',
+  { id: 'harvest', title: 'Words can be harvested', instruction: 'Add one word of your own to the margin. Anything will do.',
     seen: (s, n) => learnerWordCount(s, n) >= 1 },
-  { id: 'triangle', title: 'Three words make a triangle', instruction: 'Pick any three words and make a triangle.',
+  { id: 'triangle', title: 'Three lines make a triangle', instruction: 'Draw a new triangle. Each line is one word.',
     seen: (s, n) => n.constellation.triangles.length > s.constellation.triangles.length },
-  { id: 'extend', title: 'A word can be shared', instruction: 'Select a triangle, choose one of its words as the shared word, then pick two more words to grow a new triangle from it.',
+  { id: 'extend', title: 'A line can be shared', instruction: 'Tap a line, choose “Build on this line”, then name the two new lines.',
     seen: (_, n) => n.constellation.triangles.some(t => !!t.parentTriangleId) },
-  { id: 'charge', title: 'Charge runs from −3 to +3', instruction: 'Mark a word’s charge. Every triangle that holds it changes together.',
+  { id: 'charge', title: 'Charge runs from −3 to +3', instruction: 'Tap a line and mark its charge. Every triangle that holds the line changes together.',
     seen: (_, n) => n.constellation.history.some(h => h.kind === 'charge_shift') },
-  { id: 'positive', title: 'Extend toward a positive region', instruction: 'Grow a triangle from a charged word out to words that feel open or good.',
+  { id: 'positive', title: 'Extend toward a positive region', instruction: 'Build on a charged line, and name new lines that feel open or good.',
     seen: (_, n) => n.constellation.triangles.some(t => {
       const parent = t.parentTriangleId ? triangleById(n.constellation, t.parentTriangleId) : undefined
       return !!parent && triangleCharge(n.constellation, parent) < 0 && triangleCharge(n.constellation, t) > 0
