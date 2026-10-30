@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
   const v = validateSave(body)
   if (!v.ok) return NextResponse.json({ error: 'Not a board save', details: v.errors }, { status: 422 })
   const { board, collection, docId } = v.save
+  if (collection === 'rows')  // rows are the council's, posted by sessions (/api/board/session-writes); his saves are answers
+    return NextResponse.json({ error: 'Rows are posted by sessions, not saved from the page' }, { status: 403 })
   const doc = applyWrite(v.save.mode === 'update' ? await latestDoc(board, collection, docId) : null, v.save)
   const data = { board, collection, docId, recordedAt: RECORD_KINDS.has(collection) ? null : new Date(),
                  record: RECORD_KINDS.has(collection) ? null : 'board state; not recorded on main' }
