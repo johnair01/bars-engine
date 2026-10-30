@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
       "./public/between/**",
       // Chapter 1's arrival aboard the ship and its models, loaded only by the browser.
       "./public/calrunia/**",
+      // Source art kept in git for the next round (the Between tea's .blend and its Blender build), never read at run
+      // time. The first preview of the tea round 5 (bars-engine #463) pushed api/guidance to 250.91 MB without this line.
+      "./art/**",
     ],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
