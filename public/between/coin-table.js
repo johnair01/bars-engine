@@ -18,7 +18,7 @@
    Every word goes through the one screen owner (voice.js, hi-screen-owner) while you are at the table or the book.
    Previews (any host but bars-engine.vercel.app) write nothing, with a stand-in person when you share no Between:
    ?nook=1&coins=self sits you at the nook table with a cast for yourself, ?nook=1&coins=them with a cast for the stand-in,
-   and ?coins=faceup (the hollow) opens with the stand-in's cast face up on the table, ready to answer. */
+   and ?room=first&coins=faceup (the hollow) opens with the stand-in's cast face up on the table, ready to answer. */
 import * as THREE from "three";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { SUITS, SELF, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
@@ -284,8 +284,8 @@ export function mount(B, opts = {}) {
     if (s.answered) return { subject, head: "Answered", sub: `You drew ${s.answered.card.title} from ${s.answered.card.suit.name}: "${s.answered.card.prompts[s.answered.depth]}" Say it aloud to them when you next sit together.`, actions: [leave] };
     if (s.answering) {
       const fu = s.answering, c = s.card, nm = theirName(fu);
-      if (!c) return { subject, head: `${nm} left this face up`, sub: fu.it.line, actions: [leave] };
-      return { subject, head: `${nm} left this face up`, sub: `${fu.it.line} Answer it with a turn: ${c.title}, from ${c.suit.name}. Choose how deep, and say it aloud to them when you next sit together.`,
+      if (!c) return { subject, head: `${nm} left this face up`, sub: `Their move: ${fu.it.line}`, actions: [leave] };
+      return { subject, head: `${nm} left this face up`, sub: `Their move: ${fu.it.line} Answer it with a turn: ${c.title}, from ${c.suit.name}. Choose how deep, and say it aloud to them when you next sit together.`,
         actions: [...DEPTHS.map(d => ({ label: c.prompts[d], sub: DEPTH_NAMES[d], on: () => answer(d) })), { label: "Not now", quiet: true, on: () => { s.answering = null; s.card = null; cardKey = ""; } }] };
     }
     if (!s.who) {
@@ -314,7 +314,7 @@ export function mount(B, opts = {}) {
       return { subject, head, sub: `${m.line} ${said}`, foot: atBook ? "" : "One cast a sitting. Stand and sit again to toss again.", actions: [leave] };
     }
     const acts = [{ label: m.line, sub: `Keep it · ${LANE_NAMES[m.lane]} · draw from ${suit.name} next`, on: keep }];
-    if (m.who.kind === "them" && (hereRoom() === m.who.room || (down() && m.who.standIn && !hereRoom() && builtFor === "hollow"))) acts.push({ label: "Leave it face up", sub: `${m.who.name} sees it when they sit here`, on: leaveFaceUp });
+    if (m.who.kind === "them" && (hereRoom() === m.who.room || (down() && s.who.standIn && !hereRoom() && builtFor === "hollow"))) acts.push({ label: "Leave it face up", sub: `${m.who.name} sees it when they sit here`, on: leaveFaceUp });
     acts.push({ label: "Let it go", quiet: true, on: letGo });
     return { subject, head, sub: m.reading + heading, actions: acts };
   }
@@ -385,7 +385,8 @@ export function mount(B, opts = {}) {
     while (!B.meState.placed) await new Promise(r => setTimeout(r, 250)); // the page sets you down where you wake first
     await new Promise(r => setTimeout(r, 600));
     if (opts.open === "faceup") { // the stand-in left a cast for you face up on this hollow's table
-      const c = castFromTosses(PREVIEW_TOSSES, hexTable, "stand-in"), mv = moveOf(c, { kind: "them", room: "stand-in", name: "you" }, readings);
+      // the stand-in's move names whoever looks at the preview; on a real table it names the person it was tossed for
+      const c = castFromTosses(PREVIEW_TOSSES, hexTable, "stand-in"), mv = moveOf(c, { kind: "them", room: "stand-in", name: "Wendell" }, readings);
       localItems.set("local-standin", faceUpItem(mv, "stand-in", Date.now()));
       marksSig = ""; layMarks();
     }

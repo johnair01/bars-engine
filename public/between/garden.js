@@ -3938,5 +3938,5 @@ import("./voice.js").then(v => { window.__between.voice = v.createVoice(); retur
   .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
 // the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
-// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?coins=faceup opens the hollow with a stand-in's cast face up
+// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST }); }).catch(e => noteError(e, "coins"));
