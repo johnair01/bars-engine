@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import type { PrismaClient } from '@prisma/client'
 import { applyWrite, validateSave } from './save'
+import { missingObjects } from './content-store'
 
 /** What a Claude session writes to the Council Board: the Your steps lists and steps, Outreach's contacts and shows,
  * and the council's rows (src/lib/board/rows.ts). His answers (positions, questions, ...) are his to save, never a
@@ -12,6 +13,13 @@ export const UNRECORDED_COLLECTIONS = new Set(['rows'])
 
 export type SessionDoc = { collection: string; docId: string; mode?: 'set' | 'update'; data: unknown }
 export type SessionResult = { written: string[]; same: number; refused: string[] }
+
+/** The content hashes a row names: a picture at /board/stills/sha/<sha256>.<ext>, or a look page's `i=sha/<sha256>...`
+ * (escaped or not). board/post_rows.py pushes each one before it posts the row. */
+const HOLD = /sha(?:\/|%2F)([0-9a-f]{64})\.(?:jpe?g|png|gif|webp)/gi
+export function holdOf(data: unknown): string[] {
+  return [...new Set([...canonical(data).matchAll(HOLD)].map(m => m[1].toLowerCase()))]
+}
 
 /** JSON with keys sorted at every level, so a document hashes the same here (jsonb reorders keys) and in
  * Six-faces-council board/store_write.py (json.dumps sort_keys, no spaces). */
@@ -28,16 +36,26 @@ export const docHash = (v: unknown) => createHash('sha256').update(canonical(v))
  * latest document, so a session that rewrites a step's text keeps the tick, note and moves Wendell saved on the page;
  * `set` replaces; a row is always `set`. A write that changes nothing is skipped, so a rerun adds nothing. Lists, steps,
  * contacts and shows are born recorded: they are the council's own board state, not answers for board-pull to land.
- * Rows are born unrecorded, because main is their record (worklist-api, FR-002).
+ * Rows are born unrecorded, because main is their record (worklist-api, FR-002). A row naming a picture hash the
+ * content store lacks is refused (`hold not aboard`).
  */
-export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: SessionDoc[], dry = false):
-    Promise<SessionResult> {
+export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: SessionDoc[], dry = false,
+    missing: (shas: string[]) => Promise<string[]> = missingObjects): Promise<SessionResult> {
   const out: SessionResult = { written: [], same: 0, refused: [] }
   for (const { collection, docId, mode = collection === 'rows' ? 'set' : 'update', data } of docs) {
     const key = `${collection}/${docId}`
     if (!SESSION_COLLECTIONS.has(collection)) { out.refused.push(`${key}: sessions write ${[...SESSION_COLLECTIONS].join(', ')}`); continue }
     const v = validateSave({ board: 'council', collection, docId, mode, data })
     if (!v.ok) { out.refused.push(`${key}: ${v.errors.join('; ')}`); continue }
+    // The seal (six-faces-council canon/mechanics/lading-seal.yaml): a row docks only with every picture it names
+    // already in the content store, so he never opens a card whose frames wait on a merge.
+    const hold = collection === 'rows' ? holdOf(data) : []
+    const gone = hold.length ? await missing(hold) : []
+    if (gone.length) {
+      out.refused.push(`${key}: refused: hold not aboard (${gone.length} of ${hold.length} pictures not in the content store: `
+        + `${gone.slice(0, 3).map(h => h.slice(0, 12)).join(', ')}${gone.length > 3 ? ', ...' : ''}); push them with board/post_rows.py`)
+      continue
+    }
     const latest = await db.boardSave.findFirst({
       where: { board: 'council', collection, docId }, orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }],
     })

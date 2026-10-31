@@ -113,6 +113,26 @@ export async function setEntries(set: Record<string, Entry>, remove: string[] = 
   return next
 }
 
+/** One stored object by its content hash, as a stream; null when the store does not hold it. A picture a session pushed
+ * from a branch is served this way, with no repo path and no merge (Homeport level 1, the seal: six-faces-council
+ * canon/mechanics/lading-seal.yaml). */
+export async function readObject(sha: string): Promise<{ body: ReadableStream<Uint8Array>; type?: string } | null> {
+  const b = backend()
+  if (!b || !/^[0-9a-f]{64}$/.test(sha)) return null
+  return b.read('sha/' + sha).catch(() => null)
+}
+
+/** The hashes of `shas` the store does not hold. Each check reads the object's head and drops the stream. */
+export async function missingObjects(shas: string[]): Promise<string[]> {
+  const out: string[] = []
+  for (const sha of [...new Set(shas)]) {
+    const got = await readObject(sha)
+    if (got) await got.body.cancel().catch(() => undefined)
+    else out.push(sha)
+  }
+  return out
+}
+
 export async function storeObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {
   const b = backend()
   if (!b) throw new Error('no content store configured')
