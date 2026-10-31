@@ -41,7 +41,7 @@ export async function latestDocs(board: string, opts: { leaveOutRecordedRows?: b
       FROM board_saves WHERE board = ${board}
       ORDER BY collection, doc_id, received_at DESC, id DESC
     ) h`
-  const heads = readableHeads(all, !!opts.leaveOutRecordedRows)
+  const heads = readableHeads<(typeof all)[number]>(all, !!opts.leaveOutRecordedRows)
   const out: Docs = {}
   for (const ids of batchIds(heads)) {
     const rows = await db.boardSave.findMany({ where: { id: { in: ids } }, select: { collection: true, docId: true, data: true } })
