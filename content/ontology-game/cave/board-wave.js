@@ -20,7 +20,7 @@
   var el = CAVE.kit.el;
   var API = window.__oagWaveRunsApi || "/api/council/wave-runs";
   var OUTBOX = "oag:wave-room:outbox";
-  var BOARD_URL = "https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho";
+  var BOARD_URL = "/board/council";
   var REF = /^[a-z0-9][a-z0-9-]{0,79}$/;
   var CSS = ".oagbw{position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:960;max-width:420px;margin:0 auto;padding:.8rem 1rem;" +
     "background:rgba(12,12,28,.94);border:1px solid rgba(255,241,176,.55);border-radius:16px;color:#f4f4fa;font:15px/1.4 system-ui,sans-serif}" +
