@@ -47,7 +47,7 @@ export type Pull = { at: string; answers: Record<string, Answer>; steps: { id?: 
  * course set (star chart); a look ticked is a verify (mirror pool); an overrule or a look sent back is a falsify
  * (forge); a note on a question is a new ask in his words (bell). Builds (foundry) come from needs-work items done.
  * The Shaman's loop adds two (position shaman-loop-ship-close-data): his "yes" note on a step is a release (ship), and
- * a step laid down as deprecated is a close. */
+ * a step laid down as deprecated is a close, and so is a thing placed in the Stores' move (stores.ts). */
 export function stagesOf(p: Pull): Stage[] {
   const out: Stage[] = []
   for (const a of Object.values(p.answers ?? {})) {
@@ -56,7 +56,7 @@ export function stagesOf(p: Pull): Stage[] {
   }
   for (const s of p.steps ?? []) {
     if (s.what === 'ticked') out.push('verify')
-    else if (s.what === 'deprecated') out.push('close')
+    else if (s.what === 'deprecated' || s.what === 'stores') out.push('close')
     else if (/^\s*yes\b/i.test(s.note ?? '')) out.push('ship')
     else out.push('falsify')
   }

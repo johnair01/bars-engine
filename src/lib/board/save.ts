@@ -8,13 +8,13 @@ import { rowErrors } from './rows'
 export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
-  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows',
+  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores',
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
  * aside (src/lib/tap-the-vein/board-set-aside.ts). */
 export const RECORD_KINDS = new Set<string>([
-  'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv',
+  'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv', 'stores',
 ])
 /** The `board` of a request: absent means the nonprofit board; anything not in BOARDS is null. */
 export function parseBoard(v: unknown): (typeof BOARDS)[number] | null {
@@ -78,6 +78,13 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (c === 'seeds') {
       if (s.board !== 'council') errors.push('the seed library is the Council Board\'s')
       if (!nonBlank(data.taskId) || data.taskId !== s.docId) errors.push('a seed lives at seeds/<taskId> and names its taskId')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
+    }
+    if (c === 'stores') { // the Stores' move: one placement of a run's thing (src/lib/studio/stores.ts)
+      if (s.board !== 'council') errors.push('the Stores are the Council Board\'s')
+      if (!nonBlank(data.run) || !nonBlank(data.thing) || !nonBlank(data.words)) errors.push('a placement names its run, thing and words')
+      if (!['jar', 'seed', 'thread', 'husk'].includes(data.kind as string)) errors.push('a placement\'s kind is jar, seed, thread or husk')
+      if (!['shelf', 'seeds', 'bell', 'compost', 'tide'].includes(data.to as string)) errors.push('a placement goes to shelf, seeds, bell, compost or tide')
       if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
     }
     if (c === 'morning' && s.docId === 'menu') {
