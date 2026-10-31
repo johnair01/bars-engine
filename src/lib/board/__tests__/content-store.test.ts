@@ -49,3 +49,13 @@ describe('the store', () => {
     expect(seen[0]).toBe('https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/council/callsheets/INDEX.md')
   })
 })
+
+describe('boardToken', () => {
+  it('takes BOARD_BLOB_READ_WRITE_TOKEN, else the one token no other store owns, else the project token', async () => {
+    const { boardToken } = await import('../content-store')
+    expect(boardToken({ BOARD_BLOB_READ_WRITE_TOKEN: 'b', BLOB_READ_WRITE_TOKEN: 'p' })).toBe('b')
+    expect(boardToken({ COUNCILBOARD_READ_WRITE_TOKEN: 'c', BLOB_READ_WRITE_TOKEN: 'p', FAMILY_ROOM_BLOB_READ_WRITE_TOKEN: 'f' })).toBe('c')
+    expect(boardToken({ A_READ_WRITE_TOKEN: 'a', B_READ_WRITE_TOKEN: 'b', BLOB_READ_WRITE_TOKEN: 'p' })).toBe('p')
+    expect(boardToken({ BLOB_READ_WRITE_TOKEN: 'p' })).toBe('p')
+  })
+})

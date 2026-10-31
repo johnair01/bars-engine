@@ -20,7 +20,7 @@ import { createHash } from 'crypto'
 import { gunzipSync } from 'zlib'
 import { NextRequest, NextResponse } from 'next/server'
 import { givenToken, tokenMatches } from '@/lib/council/token'
-import { allowedPath, backend, manifest, setEntries, storeObject, TYPES, type Entry } from '@/lib/board/content-store'
+import { allowedPath, backend, tokenNames, manifest, setEntries, storeObject, TYPES, type Entry } from '@/lib/board/content-store'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -35,7 +35,8 @@ function refused(req: NextRequest) {
 }
 
 const storeError = (e: unknown) => NextResponse.json({ error: `The content store refused the write: ${e instanceof Error ? e.message : String(e)}`
-  + ' (a public Blob store refuses private files; connect a private store as BOARD_BLOB_READ_WRITE_TOKEN)' }, { status: 502 })
+  + ' (a public Blob store refuses private files; connect a private store as BOARD_BLOB_READ_WRITE_TOKEN)',
+  tokenNamesSeen: tokenNames() }, { status: 502 })
 
 export async function GET(req: NextRequest) {
   const no = refused(req); if (no) return no

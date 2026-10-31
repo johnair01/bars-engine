@@ -44,8 +44,24 @@ export function allowedPath(p: string): boolean {
 export const TYPES = new Set(['text/html; charset=utf-8', 'application/json', 'text/markdown; charset=utf-8',
   'image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 
-/** A private Vercel Blob store: BOARD_BLOB_READ_WRITE_TOKEN when the board has its own store, else the project's. */
-export function blobBackend(token = process.env.BOARD_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN): ContentBackend | null {
+/** Blob tokens the project already uses for other stores; the board's store is any other one. */
+const OTHER_STORES = new Set(['BLOB_READ_WRITE_TOKEN', 'FAMILY_ROOM_BLOB_READ_WRITE_TOKEN'])
+
+/** The env names that could hold the board's store token. Vercel names it `<custom prefix>_READ_WRITE_TOKEN` when the
+ * store is connected, so a prefix other than BOARD_BLOB still works (2026-10-31: the first connection got another). */
+export function tokenNames(env: Record<string, string | undefined> = process.env): string[] {
+  return Object.keys(env).filter(k => k.endsWith('_READ_WRITE_TOKEN') && env[k]).sort()
+}
+
+/** BOARD_BLOB_READ_WRITE_TOKEN; else the one Blob token that belongs to no other store; else the project's own. */
+export function boardToken(env: Record<string, string | undefined> = process.env): string | undefined {
+  if (env.BOARD_BLOB_READ_WRITE_TOKEN) return env.BOARD_BLOB_READ_WRITE_TOKEN
+  const own = tokenNames(env).filter(k => !OTHER_STORES.has(k))
+  return own.length === 1 ? env[own[0]] : env.BLOB_READ_WRITE_TOKEN
+}
+
+/** A private Vercel Blob store: the board's own store when it is connected (`boardToken`), else the project's. */
+export function blobBackend(token = boardToken()): ContentBackend | null {
   if (!token) return null
   return {
     name: 'vercel-blob',
