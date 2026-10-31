@@ -3,9 +3,7 @@
  * Hearth; nothing on a ship changes mid-run. At the orientation intake the seeds are spent: one deepens a room by a
  * rung, and more can pay for the next hull (boat-grid-learnings-are-seeds). The work is read from the board's own
  * ledger on six-faces-council main, so the seeds are his real answers. Pure apart from `loadFleet`. */
-
-const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
-const LEDGER_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/contents/council/ledger?ref=main'
+import { listNames, readText } from '@/lib/board/content-store'
 
 export type Stage = 'intake' | 'spec' | 'falsify' | 'plan' | 'build' | 'verify' | 'ship' | 'close'
 export type Room = { stage: Stage; machine: string; rung: number }
@@ -202,10 +200,6 @@ export const DEMO_SEEDS: Seeds = {
 }
 export function demoFleet(now = new Date()): FleetWorld { return fleetOf(DEMO_SEEDS, DEMO_SHIPS, now) }
 
-async function text(url: string): Promise<string | null> {
-  try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.text() : null } catch { return null }
-}
-
 /** `2026-10-25-pull-014112.json` -> 2026-10-25T01:41:12Z (board/pull.py names its records in UTC). */
 export function pullTime(name: string): string | null {
   const m = name.match(/^(\d{4}-\d{2}-\d{2})-pull-(\d{2})(\d{2})(\d{2})\.json$/)
@@ -217,18 +211,16 @@ let cache: { world: FleetWorld; at: number } | null = null
 /** The fleet's world as main has it now, cached five minutes like the boards. Null when the ledger can't be read. */
 export async function loadFleet(now = new Date()): Promise<FleetWorld | null> {
   if (cache && now.getTime() - cache.at < 5 * 60_000) return cache.world
-  const list = await text(LEDGER_API)
-  if (!list) return cache?.world ?? null
-  let names: string[] = []
-  try { names = (JSON.parse(list) as { name: string }[]).map(f => f.name) } catch { return cache?.world ?? null }
+  const names = await listNames('council/ledger/')
+  if (!names.length) return cache?.world ?? null
   const timed = names.map(n => ({ n, t: pullTime(n) })).filter((x): x is { n: string; t: string } => !!x.t)
   const newest = Math.max(0, ...timed.map(x => Date.parse(x.t)))
   const recent = timed.filter(x => newest - Date.parse(x.t) < 7 * RUN_MS)
   const pulls = (await Promise.all(recent.map(async x => {
-    const body = await text(RAW + 'council/ledger/' + x.n)
+    const body = await readText('council/ledger/' + x.n)
     try { const j = body ? JSON.parse(body) : null; return j ? { at: x.t, answers: j.answers ?? {}, steps: j.steps ?? [] } as Pull : null } catch { return null }
   }))).filter((p): p is Pull => !!p)
-  const done = await text(RAW + 'council/needs-work-done.json')
+  const done = await readText('council/needs-work-done.json')
   let builds: string[] = []
   try { builds = Object.values((done ? JSON.parse(done) : {}).done ?? {}).map(d => (d as { at?: string }).at ?? '').filter(Boolean) } catch { /* none */ }
   const world = fleetOf(seedsOf(pulls, builds), SHIPS, now)

@@ -1,10 +1,9 @@
 /** The boat deck of the studio game (/board/studio): every number on it is read from six-faces-council main
  * (position ty-real-data). Strands come from council/callsheets/INDEX.md, loop rounds from council/loops/*.json,
  * staff from the Claude-Code-Game-Studios roster, the gate bar from the seven stages applied to Chapter 1. */
+import { listNames, readText } from '@/lib/board/content-store'
 import { ROSTER, type Staff } from './roster'
 
-const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
-const LOOPS_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/contents/council/loops?ref=main'
 
 /** Spirits are let go after 21 days of neglect (spirit-care.md), so a strand untouched that long has faded. */
 export const FADE_DAYS = 21
@@ -85,17 +84,12 @@ export function crew(): Staff[] {
 
 let cache: { deck: Deck; at: number } | null = null
 
-async function text(url: string): Promise<string | null> {
-  try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.text() : null } catch { return null }
-}
-
 async function loops(): Promise<Map<string, LoopState>> {
   const out = new Map<string, LoopState>()
-  const list = await text(LOOPS_API)
-  let names: string[] = ['spirit-generator.json']
-  try { if (list) names = (JSON.parse(list) as { name: string }[]).map(f => f.name).filter(n => n.endsWith('.json')) } catch { /* keep the known one */ }
+  const listed = (await listNames('council/loops/')).filter(n => n.endsWith('.json'))
+  const names = listed.length ? listed : ['spirit-generator.json']
   await Promise.all(names.map(async n => {
-    const body = await text(RAW + 'council/loops/' + n)
+    const body = await readText('council/loops/' + n)
     try { const l = body && parseLoop(JSON.parse(body)); if (l) out.set(n.replace(/\.json$/, ''), l) } catch { /* skip */ }
   }))
   return out
@@ -104,7 +98,7 @@ async function loops(): Promise<Map<string, LoopState>> {
 /** The deck as main has it now, cached five minutes like the boards. */
 export async function loadDeck(now = new Date()): Promise<Deck | null> {
   if (cache && now.getTime() - cache.at < 5 * 60_000) return cache.deck
-  const index = await text(RAW + 'council/callsheets/INDEX.md')
+  const index = await readText('council/callsheets/INDEX.md')
   if (!index) return cache?.deck ?? null
   const passengers = parseIndex(index, now), loopMap = await loops()
   for (const p of passengers) { const l = loopMap.get(p.strand); if (l) p.loop = l }

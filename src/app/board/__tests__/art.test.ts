@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { artPath, lookPage, serveArt } from '../art'
+import { setBackend } from '@/lib/board/content-store'
+import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 
 describe('artPath', () => {
   it('passes board stills and callsheet stills, nothing else', () => {
@@ -15,14 +17,19 @@ describe('artPath', () => {
 })
 
 describe('serveArt', () => {
-  it('caches a hashed still for good and refuses a path outside the stills', async () => {
+  it('serves a pushed still from the store, caches it for good, and refuses a path outside the stills', async () => {
     const seen: string[] = []
-    vi.stubGlobal('fetch', async (u: string) => { seen.push(u); return { ok: true, body: new ReadableStream() } })
+    vi.stubGlobal('fetch', async (u: string) => { seen.push(u); return { ok: false } })
+    const mem = memoryBackend({ 'board/stills/94a1067981bd2ba3.jpg': 'jpeg bytes' })
+    setBackend(mem.backend)
     const r = await serveArt(['94a1067981bd2ba3.jpg'])
-    expect(seen[0]).toBe('https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/board/stills/94a1067981bd2ba3.jpg')
+    expect(await r.text()).toBe('jpeg bytes')
+    expect(seen).toEqual([])
     expect(r.headers.get('content-type')).toBe('image/jpeg')
     expect(r.headers.get('cache-control')).toContain('immutable')
     expect((await serveArt(['..', 'x.png'])).status).toBe(404)
+    expect((await serveArt(['0000000000000000.png'])).status).toBe(404)
+    setBackend(undefined)
   })
 })
 

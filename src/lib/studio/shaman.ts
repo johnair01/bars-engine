@@ -4,10 +4,9 @@
  * card). For each stage the world says whether its work landed this run and which rows wait on it, each row in the
  * board's own words so the card can show it. Read from six-faces-council main like the fleet; pure apart from
  * `loadShaman`. */
+import { listNames, readText } from '@/lib/board/content-store'
 import { RUN_MS, pullTime, seedsOf, type Pull, type Stage } from './fleet'
 
-const RAW = 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/'
-const LEDGER_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/contents/council/ledger?ref=main'
 const PULL_RUNS_API = 'https://api.github.com/repos/wendell-britt/Six-faces-council/actions/workflows/board-pull.yml/runs?branch=main&status=completed&per_page=1'
 
 export const STAGES8: Stage[] = ['intake', 'spec', 'falsify', 'plan', 'build', 'verify', 'ship', 'close']
@@ -252,17 +251,17 @@ export function pullColdOf(j: { workflow_runs?: { conclusion?: string | null; up
  * is set by the route when a configured store fails, and holds the Hearth. */
 export async function loadShaman(steps: Record<string, StepDoc> | null, now = new Date(), storeCold: StoreCold | null = null): Promise<ShamanWorld | null> {
   if (!cache || now.getTime() - cache.at >= 5 * 60_000) {
-    const list = json<{ name: string }[]>(await text(LEDGER_API))
-    if (!list) return cache ? shamanWorldOf({ ...cache.base, steps, now, storeCold }) : null
-    const timed = list.map(f => ({ n: f.name, t: pullTime(f.name) })).filter((x): x is { n: string; t: string } => !!x.t)
+    const names = await listNames('council/ledger/')
+    if (!names.length) return cache ? shamanWorldOf({ ...cache.base, steps, now, storeCold }) : null
+    const timed = names.map(n => ({ n, t: pullTime(n) })).filter((x): x is { n: string; t: string } => !!x.t)
     const newest = Math.max(0, ...timed.map(x => Date.parse(x.t)))
     const recent = timed.filter(x => newest - Date.parse(x.t) < 7 * RUN_MS)
     const pulls = (await Promise.all(recent.map(async (x): Promise<ShamanPull | null> => {
-      const j = json<{ answers?: Pull['answers']; steps?: Pull['steps']; needs_work?: string[] }>(await text(RAW + 'council/ledger/' + x.n))
+      const j = json<{ answers?: Pull['answers']; steps?: Pull['steps']; needs_work?: string[] }>(await readText('council/ledger/' + x.n))
       return j ? { at: x.t, stem: x.n.replace(/\.json$/, ''), answers: j.answers ?? {}, steps: j.steps ?? [], needs_work: j.needs_work ?? [] } : null
     }))).filter((p): p is ShamanPull => !!p)
-    const doneFile = json<{ done?: Record<string, { at?: string }> }>(await text(RAW + 'council/needs-work-done.json'))
-    const board = json<BoardData>(await text(RAW + 'board/board_data.json'))
+    const doneFile = json<{ done?: Record<string, { at?: string }> }>(await readText('council/needs-work-done.json'))
+    const board = json<BoardData>(await readText('board/board_data.json'))
     const pullCold = pullColdOf(json(await text(PULL_RUNS_API)))
     const doneKeys = Object.keys(doneFile?.done ?? {})
     const builds = Object.values(doneFile?.done ?? {}).map(d => d?.at ?? '').filter(Boolean)
