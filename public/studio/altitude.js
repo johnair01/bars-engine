@@ -18,6 +18,7 @@
 // frame drawn. Round 10: AltR9.frame(..., { ship }) runs the same loop for any one-room ship (a fleet.ts ShipWorld), and
 // AltR9.fleetFrame(ctx, W, H, { phone, t, fleet }) draws the six ships in convoy; fleetHit/fleetBox name a tapped ship.
 // The Shaman's loop (?shaman=1): AltR9.shamanFrame draws the Gourd Star's eight rooms; see its section for the API.
+// The Stores' move (?stores=1): AltR9.storesFrame closes a run in the Stores room; see its section for the API.
 ;(function () {
   const TAU = Math.PI * 2
   // the six altitudes in faces.yaml order; amber (3) is never drawn this round
@@ -1903,5 +1904,333 @@
   function shamanHearth() { return SHM.hearth ? { x: SHM.hearth.x, y: SHM.hearth.y, r: SHM.hearth.r } : null }
   function shamanEmbers() { return SHM.embers.map((e) => ({ id: e.id, x: e.x, y: e.y })) }
 
-  window.AltR9 = { shamanFrame, shamanHit, shamanBox, shamanPoint, shamanAnchor, shamanHearth, shamanAt, shamanKeep, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
+  // ================= the Stores' move: the close stage's room inside the Gourd Star (2026-10-30) =================
+  // Spliced into board/moorings/altitude.js (the built Gourd Star: geo('gourd-star'), SKIN.shaman, rimG, hullG,
+  // elementFx vines, room(), crew(), bead(), store(), storesM's WOOD and jars, lantern, floorPool) by make/build.py, so
+  // the room is drawn with the ship's own code and nothing about the gourd is redrawn. Direction: ../art-direction.md.
+  // The move: one crew figure files what a finished run left behind. Tap a thing on the floor (the keeper walks to it and
+  // holds it up), then tap where it goes: the shelf (a record kept), the Hearth basket (a lesson, seed for the next
+  // intake), the bell line (an unfinished thread rerouted to the Bell) or the compost ring (let go, provenance kept).
+  // Keeping costs beads from the bowl; composting is free, and a spent draft gives its bead back. The tide fills the
+  // arch slowly and takes whatever is still on the floor to the compost. No number, bar or text in the world.
+  // In bars-engine (/board/studio?stores=1, src/lib/studio/stores.ts) AltR9.storesRun(things, beads) puts a real run's
+  // leftovers on the floor in place of the mock, and each placement (the tide's included) calls window.StoresOnPlace(thing,
+  // where), which the page saves to the board store; a thing already placed starts in its place.
+  const ST = { x0: 0.2, x1: 7.0, d: 5.6, front: 7, H: 3.9 }
+  const ST_Y0 = ST.front - ST.d
+  const SPOT = {
+    shelf: [3.9, ST_Y0 + 0.45], bell: [1.05, ST_Y0 + 0.75], seeds: [6.15, 2.75], compost: [1.35, 5.55], bowl: [2.3, 3.7],
+  }
+  const STAND = { shelf: [3.9, ST_Y0 + 1.25], bell: [0.95, ST_Y0 + 1.7], seeds: [5.45, 3.25], compost: [2.15, 5.35] }
+  const NAME = { jar: 'A sealed jar', seed: 'A seed', thread: 'A loose thread', husk: 'A dry husk' }
+  const KINDS = {
+    jar: { to: 'shelf', cost: 1, hint: 'Something done. It keeps on the shelf.' },
+    seed: { to: 'seeds', cost: 1, hint: 'A lesson. It keeps in the seed basket for the next intake.' },
+    thread: { to: 'bell', cost: 2, hint: 'Work not finished. The bell line sends it up to the Bell.' },
+    husk: { to: 'compost', cost: 0, back: 1, hint: 'A spent draft. Composting it gives its bead back.' },
+  }
+  // the run being closed is real: ship run 1's still round (council/callsheets/studio-lot.md, 2026-10-27)
+  const RUN = [
+    { kind: 'jar', words: "The art director's review of the plane still", at: [3.3, 4.7] },
+    { kind: 'husk', words: 'Stills v1 to v5, set aside', at: [4.5, 4.55] },
+    { kind: 'seed', words: 'Look up what already draws it before drawing', at: [5.7, 4.7] },
+    { kind: 'thread', words: "The hull's ends, still undrawn", at: [6.45, 5.55] },
+    { kind: 'jar', words: 'The plane still\'s rows, landed on the board', at: [3.2, 5.95] },
+    { kind: 'husk', words: 'A second gourd, drawn from nothing', at: [4.35, 5.85] },
+    { kind: 'seed', words: 'On a phone, crop the chamber; never shrink the hull', at: [5.4, 6.0] },
+    { kind: 'jar', words: "The Challenger's objection: the Bell first", at: [4.0, 6.65] },
+  ]
+  let ST_FLOOR = RUN.map((r, i) => ({ id: 'mock-' + i, ...r })), ST_PURSE = 3
+  const ST_AT = RUN.map((r) => r.at)
+  const ST_PLACES = ['shelf', 'seeds', 'bell', 'compost', 'tide']
+  const TIDE_S = 180 // the tide's whole rise, in seconds: a clock, never a window
+  let SM = null
+  function smNew() {
+    SM = {
+      items: ST_FLOOR.map((r, i) => ({ i, id: r.id, kind: r.kind, words: r.words, x: ST_AT[i % ST_AT.length][0], y: ST_AT[i % ST_AT.length][1], st: ST_PLACES.includes(r.st) ? r.st : 'floor', f: r.st === 'tide' ? 1 : 0 })),
+      beads: ST_PURSE, keeper: { x: 2.3, y: 6.3, tx: 2.3, ty: 6.3, face: 1 }, held: null, plan: null, fly: [], ring: 0,
+      shelfN: 0, seedN: 0, compostN: 0, belled: 0, shake: 0, clock: 0, done: false, msg: null, glowAt: {},
+    }
+    for (const it of SM.items) { // a thing placed before this visit starts in its place
+      if (it.st === 'shelf') SM.shelfN++
+      if (it.st === 'seeds') SM.seedN++
+      if (it.st === 'bell') SM.belled++
+      if (it.st === 'compost' || it.st === 'tide') SM.compostN++
+    }
+    if (SM.items.length && !SM.items.some((q) => q.st === 'floor')) SM.done = true
+    return SM
+  }
+  const WALK = 2.8
+  function smTap(px, py) { // a tap at a screen point; returns what it touched
+    if (!SM || SM.done) return null
+    if (SM.plan) return null // the keeper is on the way; a tap waits for them
+    const near = (q, r) => Math.hypot(px - q[0], py - q[1]) < r
+    if (!SM.held) {
+      let best = null, bd = 1e9
+      for (const it of SM.items) if (it.st === 'floor') { const q = P(it.x, it.y, 0.38), d = Math.hypot(px - q[0], py - q[1]); if (d < bd) { bd = d; best = it } }
+      if (best && bd < Math.max(30, 0.75 * k)) { SM.plan = { kind: 'pick', it: best, tx: best.x - 0.35, ty: best.y + 0.25 }; SM.msg = null; return 'item' }
+      return null
+    }
+    const dest = ['shelf', 'bell', 'seeds', 'compost'].find((d) => near(destAt(d), Math.max(44, 1.05 * k)))
+    if (!dest) return null
+    const K = KINDS[SM.held.kind], fits = dest === 'compost' || (dest === K.to && SM.beads >= K.cost)
+    if (!fits) {
+      SM.shake = 1
+      SM.msg = dest === K.to ? 'The bowl is short of beads for that. The compost ring takes anything, free.' : K.hint
+      return 'refused'
+    }
+    SM.plan = { kind: 'put', dest, tx: STAND[dest][0], ty: STAND[dest][1] }
+    SM.msg = null
+    return dest
+  }
+  function destAt(d) {
+    const s = SPOT[d], z = d === 'shelf' ? 1.0 : d === 'bell' ? 1.7 : d === 'seeds' ? 0.5 : 0.3
+    return P(s[0], s[1], z)
+  }
+  function smStep(dt) {
+    if (!SM) return
+    SM.clock += dt
+    SM.shake = Math.max(0, SM.shake - dt * 2.2)
+    const kp = SM.keeper
+    if (SM.plan) {
+      const dx = SM.plan.tx - kp.x, dy = SM.plan.ty - kp.y, dd = Math.hypot(dx, dy)
+      if (dd > 0.04) { const s = Math.min(dd, WALK * dt); kp.x += dx / dd * s; kp.y += dy / dd * s; kp.face = faceOf({ dx, dy }); kp.walk = true }
+      else { kp.walk = false; arrive() }
+    } else kp.walk = false
+    for (const f of SM.fly) f.t += dt
+    SM.fly = SM.fly.filter((f) => f.t < f.dur + 0.05 || f.keep)
+    for (const it of SM.items) if (it.st === 'tide') it.f = Math.min(1, it.f + dt * 0.5)
+    SM.ring = Math.max(0, SM.ring - dt * 0.6)
+    if (!SM.done && SM.clock >= TIDE_S) { // the tide takes what is still on the floor, to the compost, provenance kept
+      for (const it of SM.items) if (it.st === 'floor') { it.st = 'tide'; SM.compostN++; placed(it, 'tide') }
+      finish()
+    }
+  }
+  function arrive() {
+    const p = SM.plan; SM.plan = null
+    if (p.kind === 'pick') { p.it.st = 'held'; SM.held = p.it; return }
+    const it = SM.held, K = KINDS[it.kind]; SM.held = null; it.st = p.dest
+    placed(it, p.dest)
+    if (p.dest === 'compost') {
+      SM.compostN++
+      if (K.back) SM.fly.push({ from: [SPOT.compost[0], SPOT.compost[1], 0.5], to: [SPOT.bowl[0], SPOT.bowl[1], 0.75], t: 0, dur: 1.4, land: () => { SM.beads++ } })
+    } else {
+      SM.beads -= K.cost
+      for (let i = 0; i < K.cost; i++) SM.fly.push({ from: [SPOT.bowl[0], SPOT.bowl[1], 0.75], to: [...SPOT[p.dest], p.dest === 'bell' ? 2.4 : 1.0], t: -i * 0.35, dur: 1.1 })
+      if (p.dest === 'shelf') SM.shelfN++
+      if (p.dest === 'seeds') SM.seedN++
+      if (p.dest === 'bell') { SM.belled++; SM.ring = 1; it.rise = SM.clock }
+    }
+    if (!SM.items.some((q) => q.st === 'floor' || q.st === 'held')) setTimeout(finish, 1200)
+  }
+  function placed(it, where) { if (typeof window !== 'undefined' && window.StoresOnPlace) window.StoresOnPlace({ id: it.id, kind: it.kind, words: it.words }, where) }
+  function finish() { if (SM && !SM.done) { SM.done = true; SM.doneAt = SM.clock } }
+
+  // ---------- the room's things, drawn with the ship's own parts ----------
+  function jar(x, y, z, sc, lit) {
+    const r = 0.15 * (sc || 1), h = 0.36 * (sc || 1)
+    if (lit) glow3(x, y, z + h * 0.6, 0.6, '#fff1c8', 0.5 * lit)
+    cylinder(x, y, z, z + h, r, '#fff1d8', '#e7d4b0')
+    cylinder(x, y, z + h, z + h + 0.06 * (sc || 1), r * 1.05, '#8fd0d0', '#6fb4b4')
+  }
+  function husk(x, y, z, sc) { // a spent draft: an empty split pod, dry and pale, lying open on the floor
+    const p = P(x, y, z), s = k * (sc || 1)
+    g.save(); g.translate(p[0], p[1]); g.rotate(-0.3)
+    g.fillStyle = 'rgba(20,24,60,0.16)'; g.beginPath(); g.ellipse(0.02 * s, 0.05 * s, 0.32 * s, 0.1 * s, 0, 0, TAU); g.fill()
+    const gr = g.createLinearGradient(0, -0.2 * s, 0, 0.08 * s); gr.addColorStop(0, '#dcc39a'); gr.addColorStop(1, '#a8875e')
+    g.fillStyle = gr; g.beginPath(); g.moveTo(-0.3 * s, -0.04 * s); g.quadraticCurveTo(0, 0.16 * s, 0.3 * s, -0.04 * s); g.quadraticCurveTo(0.05 * s, -0.22 * s, -0.3 * s, -0.04 * s); g.fill()
+    g.fillStyle = '#6e5238'; g.beginPath(); g.moveTo(-0.22 * s, -0.05 * s); g.quadraticCurveTo(0, -0.17 * s, 0.22 * s, -0.05 * s); g.quadraticCurveTo(0, 0.04 * s, -0.22 * s, -0.05 * s); g.fill()
+    g.strokeStyle = 'rgba(90,60,40,0.6)'; g.lineWidth = Math.max(0.6, 0.02 * s); g.beginPath(); g.moveTo(0.3 * s, -0.04 * s); g.lineTo(0.38 * s, -0.12 * s); g.stroke()
+    g.restore()
+  }
+  function threadSpool(x, y, z, sc, sway) { // an unfinished thread: a small spool with its end trailing loose
+    const s = sc || 1
+    cylinder(x, y, z, z + 0.05 * s, 0.17 * s, '#e8cba3', '#ad8762')
+    cylinder(x, y, z + 0.05 * s, z + 0.27 * s, 0.1 * s, '#f6c6dc', '#e98fb8')
+    cylinder(x, y, z + 0.27 * s, z + 0.32 * s, 0.17 * s, '#e8cba3', '#ad8762')
+    const a = P(x + 0.1 * s, y, z + 0.16 * s), b = P(x + 0.75 * s, y + 0.35 * s, z), sw = Math.sin(S.time * 1.7) * (sway || 0.05) * k
+    g.strokeStyle = '#e98fb8'; g.lineWidth = Math.max(1, 0.035 * k * s); g.lineCap = 'round'
+    g.beginPath(); g.moveTo(a[0], a[1]); g.bezierCurveTo(a[0] + 0.3 * k * s, a[1] - 0.2 * k * s + sw, b[0] - 0.1 * k * s, b[1] - 0.25 * k * s, b[0], b[1]); g.stroke()
+  }
+  function thing(it, x, y, z, sc, lit) {
+    if (it.kind === 'jar') jar(x, y, z, sc, lit)
+    if (it.kind === 'seed') seed(x, y, z + 0.14 * (sc || 1), 0.4 + 0.5 * (lit || 0), 1.35 * (sc || 1))
+    if (it.kind === 'husk') husk(x, y, z, sc)
+    if (it.kind === 'thread') threadSpool(x, y, z, sc)
+  }
+  function shelf(cx, cy, z, n, lit) { // storesM's shelves of sealed jars, three boards wide; earlier runs' jars stand on it
+    box(cx - 1.45, cy - 0.25, z, cx - 1.35, cy + 0.25, z + 2.35, ...WOOD)
+    box(cx + 1.35, cy - 0.25, z, cx + 1.45, cy + 0.25, z + 2.35, ...WOOD)
+    const old = [5, 5], open = 3
+    ;[z + 0.02, z + 0.8, z + 1.58].forEach((zz, b) => {
+      box(cx - 1.4, cy - 0.25, zz, cx + 1.4, cy + 0.25, zz + 0.07, ...WOOD)
+      for (let i = 0; i < 6; i++) {
+        const x = cx - 1.1 + i * 0.44
+        if (b < 2) { if (i < old[b]) cylinder(x, cy, zz + 0.07, zz + 0.45, 0.13, i % 2 ? '#8fd0d0' : '#fff1d8', '#e7d4b0') }
+        else if (i < open) {
+          if (i < n) jar(x, cy, zz + 0.07, 0.9, 0.6 + 0.4 * Math.sin(S.time * 2 + i))
+          else plane('z', zz + 0.075, () => { g.fillStyle = 'rgba(255,236,190,0.55)'; g.beginPath(); g.ellipse(x, cy, 0.17, 0.17, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(170,120,70,0.8)'; g.lineWidth = 0.035; g.setLineDash([0.06, 0.05]); g.stroke(); g.setLineDash([]) })
+        }
+      }
+    })
+    glow3(cx, cy, z + 1.9, 1.6, '#fff1c8', 0.2 + 0.45 * lit)
+  }
+  function bellLine(cx, cy, H, ft, lit) { // the bell line: a rope up through the ceiling to the Bell, a small bell and a sling
+    const top = P(cx, cy, H), bot = P(cx, cy, 1.15), s = k
+    g.strokeStyle = '#b89870'; g.lineWidth = Math.max(1.2, 0.05 * k); g.beginPath(); g.moveTo(top[0], top[1]); g.lineTo(bot[0], bot[1]); g.stroke()
+    poly([[cx - 0.32, cy - 0.32, H - 0.02], [cx + 0.32, cy - 0.32, H - 0.02], [cx + 0.32, cy + 0.32, H - 0.02], [cx - 0.32, cy + 0.32, H - 0.02]], '#3a2c40', null)
+    box(cx - 0.3, cy - 0.22, 0.95, cx + 0.3, cy + 0.22, 1.15, '#e8cba3', '#d1ad83', '#ad8762')
+    const p = P(cx, cy, 2.55), sw = Math.sin(S.time * 1.3) * 0.05 + SM.ring * 0.25 * Math.sin(S.time * 14)
+    for (let i = 0; i < 3; i++) if (SM.ring > 0 || lit) { const f = loopT(S.time * 0.5 + i / 3, 1), r = (0.4 + f * 0.9) * k; g.strokeStyle = rgba('#fff2cc', 0.5 * (1 - f) * Math.max(SM.ring, lit * 0.6)); g.lineWidth = Math.max(1, 0.035 * k); g.beginPath(); g.ellipse(p[0], p[1] + 0.3 * s, r, r * 0.45, 0, 0, TAU); g.stroke() }
+    g.save(); g.translate(p[0], p[1]); g.rotate(sw)
+    const gr = g.createLinearGradient(-0.25 * s, 0, 0.25 * s, 0); gr.addColorStop(0, '#c99a5a'); gr.addColorStop(0.45, '#f6e2b0'); gr.addColorStop(1, '#b8884a')
+    g.fillStyle = gr; g.beginPath(); g.moveTo(-0.07 * s, 0); g.quadraticCurveTo(-0.11 * s, 0.3 * s, -0.25 * s, 0.5 * s); g.lineTo(0.25 * s, 0.5 * s); g.quadraticCurveTo(0.11 * s, 0.3 * s, 0.07 * s, 0); g.closePath(); g.fill()
+    g.restore()
+    if (lit) glow3(cx, cy, 1.6, 1.1, SEED, 0.45 * lit)
+  }
+  function compostRing(cx, cy, n, lit) { // a woven ring of dark soil; every thing let go grows a sprout in it
+    if (lit) glow3(cx, cy, 0.3, 1.1, '#bff3c8', 0.4 * lit)
+    cylinder(cx, cy, 0, 0.34, 0.62, '#5a4232', '#b08a62')
+    plane('z', 0.34, () => { g.fillStyle = '#4a3528'; g.beginPath(); g.ellipse(cx, cy, 0.55, 0.55, 0, 0, TAU); g.fill() })
+    for (let i = 0; i < Math.min(12, 2 + n * 2); i++) {
+      const a = hash(i * 4.1) * TAU, rr = 0.12 + hash(i * 2.7) * 0.36, x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr
+      const p = P(x, y, 0.34), q = P(x, y, 0.5 + hash(i) * 0.25), sw = Math.sin(S.time * 1.2 + i) * 0.03 * k
+      g.strokeStyle = '#76c8a0'; g.lineWidth = Math.max(1, 0.03 * k); g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(q[0] + sw, q[1]); g.stroke()
+      g.fillStyle = i % 2 ? '#9ee0bc' : '#7cc9a4'; g.beginPath(); g.ellipse(q[0] + sw + 0.06 * k, q[1], 0.08 * k, 0.045 * k, 0.5, 0, TAU); g.fill()
+    }
+  }
+  function bowl(cx, cy, n) { // the bead bowl on its stand: what the room was given to spend; its pile is the only count
+    cylinder(cx, cy, 0, 0.42, 0.12, '#d6c2e2', '#b6a2c8')
+    cylinder(cx, cy, 0.42, 0.66, 0.62, '#efe3f4', '#cdb8dc')
+    plane('z', 0.66, () => { g.fillStyle = '#8c76a6'; g.beginPath(); g.ellipse(cx, cy, 0.54, 0.54, 0, 0, TAU); g.fill() })
+    beadPile(cx, cy, 0.56, n)
+  }
+  function tide(x0, front, ft, f) { // the record's clock: sea-green water rising in the arch, and a wet sheen at the open edge
+    const yc = front - Math.min(1.6, ST.d * 0.35), w = 0.55, top = ft + f * (2.05 - ft)
+    plane('x', x0 + 0.002, () => {
+      g.save(); g.beginPath(); g.moveTo(yc - w, ft); g.lineTo(yc - w, 1.5); g.arc(yc, 1.5, w, Math.PI, 0, true); g.lineTo(yc + w, ft); g.closePath(); g.clip()
+      const gr = g.createLinearGradient(0, ft, 0, top); gr.addColorStop(0, 'rgba(70,169,154,0.9)'); gr.addColorStop(1, 'rgba(127,224,200,0.75)')
+      g.fillStyle = gr; g.fillRect(yc - w, ft, 2 * w, top - ft)
+      g.strokeStyle = 'rgba(230,255,248,0.9)'; g.lineWidth = 0.05; g.beginPath()
+      for (let s = 0; s <= 20; s++) { const yy = yc - w + (s / 20) * 2 * w, zz = top + Math.sin(s * 0.9 + S.time * 1.6) * 0.035; s ? g.lineTo(yy, zz) : g.moveTo(yy, zz) }
+      g.stroke(); g.restore()
+    })
+    plane('z', ft + 0.004, () => {
+      const dpt = 0.15 + f * 1.3, gr = g.createLinearGradient(0, front, 0, front - dpt)
+      gr.addColorStop(0, 'rgba(110,214,190,0.7)'); gr.addColorStop(0.8, 'rgba(127,224,200,0.3)'); gr.addColorStop(1, 'rgba(127,224,200,0)')
+      g.fillStyle = gr; g.fillRect(x0, front - dpt, ST.x1 - x0, dpt)
+      g.strokeStyle = 'rgba(235,255,250,0.7)'; g.lineWidth = 0.035; g.beginPath(); for (let s = 0; s <= 40; s++) { const xx = x0 + (s / 40) * (ST.x1 - x0), yy = front - dpt * 0.8 + Math.sin(s * 0.7 + S.time * 1.4) * 0.05; s ? g.lineTo(xx, yy) : g.moveTo(xx, yy) } g.stroke()
+    })
+  }
+
+  // ---------- the scene: the built gourd, its walkway and Hearth, and the Stores room cut open ----------
+  function storesScene(h, sk) {
+    { const p = P(h.xc, 4.0, -h.bot - 2.2); g.save(); g.translate(p[0], p[1]); g.scale(1, 0.18); glow(0, 0, h.L * k * 1.1, '#0f2a3a', 0.35); g.restore() }
+    tail(h)
+    rimG(h, sk)
+    hullG(h, sk, { under: 1 })
+    elementFx(h, sk, 'shaman')
+    const xl = h.xc - h.L, xr = h.xc + h.L
+    ribbon([[xl + 0.6, 7.6], [xr - 0.6, 7.6]], 0.02, 0.6)
+    ribbon([[8.4, 7.6], [9.3, 5.6]], 0.02, 0.5)
+    const held = SM.held, K = held ? KINDS[held.kind] : null
+    const can = (d) => !held ? 0 : d === 'compost' ? 0.7 : d === K.to && SM.beads >= K.cost ? 1 : 0
+    const pulse = 0.8 + 0.2 * Math.sin(S.time * 3)
+    room({ x0: ST.x0, x1: ST.x1, d: ST.d, front: ST.front, H: ST.H, col: RUNG[1], wall: wallOf(sk) }, (y0, ft) => {
+      floorPool(ST.x0 + 3.4, ST.front - 2.6, ft, 4.2, [ST.x0, y0, ST.x1 - ST.x0, ST.d], 0.3)
+      tide(ST.x0, ST.front, ft, clamp(SM.clock / TIDE_S))
+      const items = []
+      if (held) for (const d of ['shelf', 'bell', 'seeds', 'compost']) { // the floor lights where the held thing can go
+        const a = can(d); if (!a) continue
+        const [sx, sy] = STAND[d]
+        plane('z', ft + 0.006, () => { const gr = g.createRadialGradient(sx, sy, 0, sx, sy, 0.75); gr.addColorStop(0, `rgba(242,195,90,${0.45 * a * pulse})`); gr.addColorStop(1, 'rgba(242,195,90,0)'); g.fillStyle = gr; g.beginPath(); g.ellipse(sx, sy, 0.75, 0.75, 0, 0, TAU); g.fill(); g.strokeStyle = `rgba(214,150,60,${0.9 * a})`; g.lineWidth = 0.05; g.setLineDash([0.12, 0.09]); g.beginPath(); g.ellipse(sx, sy, 0.55, 0.55, 0, 0, TAU); g.stroke(); g.setLineDash([]) })
+      }
+      items.push({ x: SPOT.shelf[0], y: SPOT.shelf[1], f: () => shelf(SPOT.shelf[0], SPOT.shelf[1], ft, SM.shelfN, can('shelf') * pulse) })
+      items.push({ x: SPOT.bell[0], y: SPOT.bell[1], f: () => bellLine(SPOT.bell[0], SPOT.bell[1], ST.H, ft, can('bell') * pulse) })
+      items.push({ x: SPOT.seeds[0], y: SPOT.seeds[1], f: () => {
+        if (can('seeds')) glow3(SPOT.seeds[0], SPOT.seeds[1], 0.5, 1.2, SEED, 0.55 * pulse)
+        S.storeN = SM.seedN + 2; S.storeGlow = can('seeds') * pulse; store(SPOT.seeds[0], SPOT.seeds[1])
+      } })
+      items.push({ x: SPOT.compost[0], y: SPOT.compost[1], f: () => compostRing(SPOT.compost[0], SPOT.compost[1], SM.compostN, can('compost') * pulse) })
+      items.push({ x: SPOT.bowl[0], y: SPOT.bowl[1], f: () => bowl(SPOT.bowl[0], SPOT.bowl[1], SM.beads) })
+      for (const it of SM.items) {
+        if (it.st === 'floor') items.push({ x: it.x, y: it.y, f: () => { glow3(it.x, it.y, ft + 0.1, 0.55, '#fff1c8', 0.35); thing(it, it.x, it.y, ft, 1.4, 0) } })
+        if (it.st === 'tide') items.push({ x: it.x, y: it.y, f: () => { g.save(); g.globalAlpha *= 1 - it.f; thing(it, lerp(it.x, SPOT.compost[0], it.f), lerp(it.y, SPOT.compost[1], it.f), ft + Math.sin(it.f * Math.PI) * 0.6, 1, 0); g.restore() } })
+        if (it.st === 'bell' && it.rise !== undefined && SM.clock - it.rise < 2.5) { const f = clamp((SM.clock - it.rise) / 2.5); items.push({ x: SPOT.bell[0], y: SPOT.bell[1] + 0.01, f: () => { g.save(); g.globalAlpha *= 1 - f * f; thing(it, SPOT.bell[0], SPOT.bell[1], 1.15 + f * 2.6, 0.9, 0); g.restore() } }) }
+      }
+      const kp = SM.keeper, sh = Math.sin(S.time * 30) * 0.05 * SM.shake
+      items.push({ x: kp.x, y: kp.y, f: () => {
+        crew(kp.x + sh, kp.y, ft, { sash: RUNG[1], walk: kp.walk, face: kp.face, seed: 0.9 })
+        if (SM.held) { // held up in both hands at the chest: the object in hand
+          const p = P(kp.x + sh, kp.y, ft), s = k / CREW, hx = p[0] + 9 * s * kp.face, hy = p[1] - 14 * s
+          const back = (sx, sy) => { const d = AX[0] * AY[1] - AX[1] * AY[0]; return [((sx - ox) * AY[1] - (sy - oy + 0) * AY[0]) / k / d, (-(sx - ox) * AX[1] + (sy - oy) * AX[0]) / k / d] }
+          const [wx, wy] = back(hx, hy + 0.0)
+          glow(hx, hy, 1.1 * k, '#fff6dc', 0.8)
+          thing(SM.held, wx, wy, 0, 1.25, 1)
+        }
+      } })
+      sortDraw(items)
+      lantern(ST.x0 + 3.4, ST.front - 2.8, 3.0)
+    })
+    hearth(9.9, 4.3)
+    const T = S.time * 0.55
+    for (let i = 0; i < 9; i++) { const x0 = xl + 0.8, span = xr - 0.8 - x0; bead(x0 + loopT(i * span / 9 + T, span), 7.6, 0.02, 0.1) }
+    for (const f of SM.fly) { // beads in flight: spent from the bowl, or given back by the compost
+      if (f.t < 0) continue
+      const u = ease(Math.min(1, f.t / f.dur)), x = lerp(f.from[0], f.to[0], u), y = lerp(f.from[1], f.to[1], u), z = lerp(f.from[2], f.to[2], u) + Math.sin(u * Math.PI) * 1.1
+      bead(x, y, z, 0.12)
+      if (f.t >= f.dur && f.land) { f.land(); f.land = null }
+    }
+  }
+  function storesCamera(W, H, phone, h) {
+    if (phone) fit([[ST.x0 - 0.3, ST_Y0 - 0.3, ST.H + 0.2], [ST.x1 + 0.2, ST.front + 0.3, 0], [ST.x0 - 0.3, ST.front + 0.6, -0.6], [ST.x1 + 0.4, ST_Y0, ST.H]], 4, H * 0.08, W - 8, H * 0.62)
+    else fit([[h.xc - h.L - 1.2, h.y1, -0.5], [h.xc + h.L + 1.6, h.y0, 3.0], [h.xc, h.y1, -h.bot - 0.6], [ST.x0 - 0.3, ST_Y0 - 0.3, ST.H + 0.4]], W * 0.05, H * 0.06, W * 0.9, H * 0.86)
+    oy += Math.sin(S.time * 1.1) * 1.4 * (k / 45)
+  }
+  let lastT = null
+  function storesFrame(ctx, W, H, opts) {
+    opts = opts || {}
+    g = ctx; Wd = DEMO
+    if (!SM) smNew()
+    const now = opts.t === undefined ? 0 : opts.t
+    if (!opts.hold) { if (lastT !== null) smStep(Math.min(0.1, Math.max(0, now - lastT))); lastT = now }
+    S = state('run', 0); S.time = now; S.D = now * 0.25; S.v = 0.15; S.phone = !!opts.phone
+    const h = geo('gourd-star', 1), sk = SKIN.shaman
+    storesCamera(W, H, S.phone, h)
+    sky(W, H)
+    storesScene(h, sk)
+  }
+  function storesState() { return SM }
+  function storesReset() { smNew(); lastT = null; return SM }
+  function storesPose(name) { // fixed states for the stills (make/render.mjs): the same rules, played forward by hand
+    storesReset()
+    const put = (i, dest) => { const it = SM.items[i]; SM.held = it; it.st = 'held'; SM.plan = { kind: 'put', dest }; SM.keeper.x = STAND[dest][0]; SM.keeper.y = STAND[dest][1]; arrive(); SM.fly.forEach((f) => { f.t = 99; if (f.land) { f.land(); f.land = null } }); SM.fly = [] }
+    if (name === 'open') { SM.clock = 6 }
+    if (name === 'hold') {
+      put(1, 'compost'); put(0, 'shelf'); put(2, 'seeds')
+      SM.clock = 74
+      const it = SM.items[3]; it.st = 'held'; SM.held = it; SM.keeper.x = 4.7; SM.keeper.y = 4.9; SM.keeper.face = -1
+    }
+    if (name === 'closed') {
+      put(1, 'compost'); put(0, 'shelf'); put(2, 'seeds'); put(5, 'compost'); put(3, 'bell'); put(4, 'shelf'); put(6, 'compost'); put(7, 'compost')
+      SM.items[3].rise = undefined; SM.ring = 0; SM.clock = 140; SM.keeper.x = 2.6; SM.keeper.y = 5.9; SM.done = true; SM.held = null
+    }
+    return SM
+  }
+  function storesHint(kind) { return KINDS[kind].hint }
+  function storesName(kind) { return NAME[kind] }
+  const storesTap = smTap
+  function storesRun(things, beads) { // a real run's leftovers ({ id, kind, words, st? }, at most 8) and the bowl's beads
+    ST_FLOOR = (things || []).filter((t) => KINDS[t.kind]).slice(0, ST_AT.length)
+    ST_PURSE = Math.max(0, beads | 0)
+    return storesReset()
+  }
+  function storesAim() { // for the render script's play-through: where a player would tap next, in screen px
+    if (!SM || SM.done || SM.plan) return null
+    if (!SM.held) { const it = SM.items.find((q) => q.st === 'floor'); if (!it) return null; const q = P(it.x, it.y, 0.38); return { x: q[0], y: q[1], what: 'pick:' + it.kind } }
+    const K = KINDS[SM.held.kind], d = SM.beads >= K.cost ? K.to : 'compost', q = destAt(d)
+    return { x: q[0], y: q[1], what: 'put:' + d }
+  }
+
+  window.AltR9 = { storesFrame, storesTap, storesState, storesReset, storesPose, storesHint, storesName, storesAim, storesRun, shamanFrame, shamanHit, shamanBox, shamanPoint, shamanAnchor, shamanHearth, shamanAt, shamanKeep, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
 })()
