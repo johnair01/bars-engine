@@ -6,6 +6,8 @@
  *   (board-home step 5). Update merges onto the latest document; a write that changes nothing is skipped
  *   (src/lib/board/session-write.ts). A row (collection rows, one document per row, six-faces-council
  *   docs/worklist-api.md) shows on /board/council at its next load and starts a board-pull, which lands it on main.
+ *   A draw (collection draws, docId <deck>--<card id>, data deck, card and at) is a project deck's top card turned up;
+ *   board/pull.py records it on main.
  * @permissions COUNCIL_MENU_TOKEN, as a bearer token or ?token= (the egress proxy injects it for sessions)
  * @example POST /api/board/session-writes {"docs":[{"collection":"steps","docId":"feat-01","data":{"do":"..."}}],"dry":true}
  * @example POST /api/board/session-writes {"docs":[{"collection":"rows","docId":"wl-x","mode":"set","data":{"kind":"positions","pass":"p","faces":["sage"],"pos":"..."}}]}
