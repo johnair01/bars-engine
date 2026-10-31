@@ -18,4 +18,17 @@ describe('board shim', () => {
     expect(shim).toContain("server !== 'Vercel' || tool !== 'web_fetch_vercel_url'")
     expect(shim).not.toContain('fire_trigger')
   })
+
+  it('emits a script that parses, so escapes in the template survive', () => {
+    const body = boardShim('council').replace(/^<script>/, '').replace(/<\/script>$/, '')
+    expect(() => new Function(body)).not.toThrow()
+  })
+
+  it('keeps typed words across a refresh, a re-render and a reload', () => {
+    const shim = boardShim('council')
+    expect(shim).toContain("const DKEY = 'board-drafts:' + BOARD")
+    expect(shim).toContain('if (ready) show();')
+    expect(shim).toContain('new MutationObserver(refill)')
+    expect(shim).toContain('settle(data)')
+  })
 })
