@@ -56,7 +56,8 @@ describe('a cast to a move in a lane and a suit', () => {
   })
 
   it('a toss for yourself goes to your own lane; for them, to the lane its reading names, with their name', () => {
-    const c = castFromTosses(BOTH, table)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = castFromTosses(BOTH, table) as any
     const me = moveOf(c, SELF, readings)
     expect(me.lane).toBe('yourself')
     expect(me.line).toBe(readings.readings.find((r: { n: number }) => r.n === c.n).self)

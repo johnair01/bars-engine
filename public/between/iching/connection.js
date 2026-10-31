@@ -32,7 +32,8 @@ export function suitOf(cast) {
 }
 
 /** Who a toss can be for: yourself, then each person you share an open Between with (from the page's own room list,
-    rules.ts roomSummary). Inside a room, only that room's person. Nobody outside your Betweens can be named. */
+    rules.ts roomSummary). Inside a room, only that room's person. Nobody outside your Betweens can be named.
+    @param {any[]} rooms  @param {string | null} [here] */
 export function whoChoices(rooms, here = null) {
   const out = [SELF];
   for (const r of rooms || []) {
