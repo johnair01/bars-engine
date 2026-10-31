@@ -3222,11 +3222,15 @@ async function sealScroll() {
   }, 1350);
 }
 /* A spark's person has no shelf yet: the scroll's line goes with the room's link, the way an invitation always has. */
-async function sparkLink(to, note) {
-  let token = to.id === gardenId ? myInvite : null;
-  if (!token) { const j = await api("/api/between/" + to.id + "/poll", {}); token = j.invite || null; }
+/** A spark's invitation link, from its own invite token (the coin table lays it for a Show Up cast, build 3b). */
+async function sparkUrl(id) {
+  let token = id === gardenId ? myInvite : null;
+  if (!token) { const j = await api("/api/between/" + id + "/poll", {}); token = j.invite || null; }
   if (!token) throw fail("unavailable", "no link");
-  const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(to.id) + "&invite=" + encodeURIComponent(token);
+  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token);
+}
+async function sparkLink(to, note) {
+  const link = await sparkUrl(to.id);
   const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
   let shared = false;
   if (navigator.share) { try { await navigator.share({ title: "The Between", text }); shared = true; } catch {} }
@@ -3927,7 +3931,8 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
-  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data) };
+  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data),
+  openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
@@ -3938,5 +3943,6 @@ import("./voice.js").then(v => { window.__between.voice = v.createVoice(); retur
   .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
 // the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
-// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST }); }).catch(e => noteError(e, "coins"));
+// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation)
+// ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door") }); }).catch(e => noteError(e, "coins"));
