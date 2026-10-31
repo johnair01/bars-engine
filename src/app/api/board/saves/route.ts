@@ -23,7 +23,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 export async function GET(req: NextRequest) {
   if (!(await isBoardOwner())) return NextResponse.json({ error: 'Sign in as the board owner' }, { status: 401 })
   const board = req.nextUrl.searchParams.get('board') || 'nonprofit'
-  const [docs, pull, waiting] = await Promise.all([latestDocs(board), lastPull(board), unrecordedSaves(board)])
+  const [docs, pull, waiting] = await Promise.all([latestDocs(board, { leaveOutRecordedRows: true }), lastPull(board), unrecordedSaves(board)])
   return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting }, { headers: NO_STORE })
 }
 

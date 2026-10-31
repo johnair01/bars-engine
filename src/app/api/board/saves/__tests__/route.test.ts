@@ -36,6 +36,12 @@ describe('GET /api/board/saves', () => {
     expect(store.unrecordedSaves).toHaveBeenCalledWith('other')
   })
 
+  it('leaves recorded rows out of the page read', async () => {
+    store.unrecordedSaves.mockResolvedValue({ oldestReceivedAt: null, count: 0 })
+    await GET(req('board=council'))
+    expect(store.latestDocs).toHaveBeenCalledWith('council', { leaveOutRecordedRows: true })
+  })
+
   it('refuses a visitor who is not the owner', async () => {
     owner.isBoardOwner.mockResolvedValue(false)
     expect((await GET(req())).status).toBe(401)
