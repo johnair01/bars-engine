@@ -85,6 +85,7 @@ export default defineConfig({
       'src/app/board/__tests__/serve.test.ts',
       'src/app/board/__tests__/art.test.ts',
       'src/lib/board/__tests__/content-store.test.ts',
+      'src/lib/board/__tests__/store.test.ts',
       'src/app/api/board/content/__tests__/route.test.ts',
       'src/lib/work/__tests__/ticket.test.ts',
       'src/lib/work/__tests__/queue.test.ts',
