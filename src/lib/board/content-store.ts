@@ -53,11 +53,15 @@ export function tokenNames(env: Record<string, string | undefined> = process.env
   return Object.keys(env).filter(k => k.endsWith('_READ_WRITE_TOKEN') && env[k]).sort()
 }
 
-/** BOARD_BLOB_READ_WRITE_TOKEN; else the one Blob token that belongs to no other store; else the project's own. */
+/** BOARD_BLOB_READ_WRITE_TOKEN; else the one Blob token that belongs to no other store; else the family room's private
+ * store, under its own board-content/ folder (Wendell, 2026-10-31, "Existing private store": the CouncilBoard store
+ * he made never reached production's env, and this is the private store production already has); else the project's
+ * own, which is public and refuses private files. */
 export function boardToken(env: Record<string, string | undefined> = process.env): string | undefined {
   if (env.BOARD_BLOB_READ_WRITE_TOKEN) return env.BOARD_BLOB_READ_WRITE_TOKEN
   const own = tokenNames(env).filter(k => !OTHER_STORES.has(k))
-  return own.length === 1 ? env[own[0]] : env.BLOB_READ_WRITE_TOKEN
+  if (own.length === 1) return env[own[0]]
+  return env.FAMILY_ROOM_BLOB_READ_WRITE_TOKEN || env.BLOB_READ_WRITE_TOKEN
 }
 
 /** A private Vercel Blob store: the board's own store when it is connected (`boardToken`), else the project's. */
