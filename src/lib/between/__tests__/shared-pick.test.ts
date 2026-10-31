@@ -1,108 +1,108 @@
 import assert from 'node:assert/strict'
-import { mayWrite, plantedGarden, pouchWrite, type Doc, type Who } from '@/lib/between/rules'
-import { chapter1Hand, HOLLOW_CARD, keepsakeFor, nextTurn, openPick, pickLog, takeTurn, WRITTEN } from '@/lib/between/shared-pick'
+import { merge, mayWrite, plantedGarden, pouchWrite, type Doc, type Who } from '@/lib/between/rules'
+import { chapter1Hand, HOLLOW_CARD, keepsakeFor, openLetters, settle, viewGarden } from '@/lib/between/shared-pick'
+import { HAND, LINES, NOOK, ORDER, encounterState, storyName } from '../../../../public/between/encounter-lines.js'
 
-// The shared pick (Six-faces-council ch1-shared-pick, FR-001 to FR-006): the turn rule the server holds.
+// Letters from the nook (Six-faces-council hollow-interface rounds 3 and 4): the rule the server holds. Each player sends
+// one card as a letter, sealed until both are in; each presses one step, sealed until the try's steps are in; the server
+// keeps the overcome obstacle as a story; a card goes once a chapter.
 const A = 'playerA', B = 'playerB'
 const member = (playerId: string): Who => ({ playerId, member: true, invited: false })
 const lone = (): Doc => plantedGarden(A, { setup: { who: 'Ari', kind: 'Friendship' } }, 1)!
-const two = (pick?: Doc): Doc => ({ ...lone(), members: { [A]: { joinedAt: 1 }, [B]: { joinedAt: 2 } }, phase: 'between', ...(pick ? { pick } : {}) })
-const write = (who: string, g: Doc, pick: Doc | null) => mayWrite(member(who), g, { table: 'garden' }, 'update', { pick }, g)
+const two = (letters?: Doc): Doc => ({ ...lone(), members: { [A]: { joinedAt: 1 }, [B]: { joinedAt: 2 } }, phase: 'between', ...(letters ? { letters } : {}) })
+const write = (who: string, g: Doc, letters: Doc) => mayWrite(member(who), g, { table: 'garden' }, 'update', { letters }, g)
 const status = (v: ReturnType<typeof write>) => (v.ok ? 200 : v.status)
+/** What the server does on a write it allows: merge, then settle. */
+function apply(who: string, g: Doc, partial: Doc): Doc {
+  const v = write(who, g, partial)
+  assert.ok(v.ok, `${who}'s write was refused: ${v.ok ? '' : v.error}`)
+  const next = merge(g, { letters: partial })
+  return { ...next, letters: settle(next.letters as Doc, 5) }
+}
+const send = (who: string, enc: string, card: string) => ({ [enc]: { sent: { [who]: { card, at: 1 } } } })
+const step = (who: string, enc: string, n: number, i: number) => ({ [enc]: { tries: { [String(n)]: { [who]: { i, at: 2 } } } } })
 
-function testTheHand() {
-  const h = chapter1Hand('regent')
-  assert.equal(h.length, 7)
-  assert.equal(new Set(h).size, 7)
-  assert.ok(h.includes(WRITTEN['a6-whole']) && h.includes(WRITTEN['a6-hunters']) && h.includes(HOLLOW_CARD))
-  assert.equal(keepsakeFor('regent'), 'WAKE-RA-REGENT')
-  assert.equal(keepsakeFor('shaman'), 'WAKE-DA-SHAMAN', 'Shaman\'s Raise Awareness card is already dealt at A4')
-  assert.equal(keepsakeFor('challenger'), 'WAKE-DA-CHALLENGER', 'Challenger\'s is dealt at A8')
-  assert.equal(new Set(chapter1Hand('shaman')).size, 7)
+function testTheLines() {
+  assert.deepEqual(chapter1Hand(null), HAND, 'the lines are written for the hand the garden deals')
+  for (const c of HAND) assert.equal(NOOK[c].length, 3, `${c} has three nook lines`)
+  let parts = 0, steps = 0
+  for (const e of ORDER) for (const c of HAND) {
+    const l = LINES[e][c]
+    assert.ok(l && l.part && l.line && l.phrase, `${e} ${c} has a part, a line and a phrase`)
+    assert.equal(l.steps.length, 3); parts++; steps += 3
+    assert.ok(l.steps.some(s => s[2]) && l.steps.some(s => !s[2]), `${e} ${c}: a step answers and one shows what it missed`)
+    for (const s of l.steps) assert.ok(!/—/.test(s[0] + s[1]), 'no em-dashes on a card')
+  }
+  assert.equal(parts, 14); assert.equal(steps, 42)
+  assert.equal(storyName('a6', ['WAKE-DA-REGENT', 'WAKE-DA-DIPLOMAT']), 'The two on the path, the knock at Pip\'s door.')
+  assert.equal(keepsakeFor('shaman'), 'WAKE-DA-SHAMAN')
   assert.equal(new Set(chapter1Hand('challenger')).size, 7)
 }
 
-function testAloneKeepsTheHand() {
-  assert.equal(openPick(lone()), null, 'one member: no pool (FR-005)')
-  const fresh = openPick(two())!
-  assert.equal(status(write(A, lone(), fresh)), 400, 'a garden of one cannot open a pool')
+function testAloneAndHome() {
+  assert.equal(openLetters(lone()), null, 'one member: no letters (sp-alone-keeps-the-hand)')
+  assert.equal(status(write(A, lone(), openLetters(two())!)), 400)
+  assert.equal(status(write(A, { ...two(), kind: 'home' }, openLetters(two())!)), 400, 'a homeroom holds no letters')
+  assert.equal(status(mayWrite(member(A), two(), { table: 'garden' }, 'update', { pick: {} }, two())), 400, 'the shared draft is gone')
 }
 
-function testOpenerFirst() {
-  const p = openPick(two())!
-  assert.deepEqual(p.order, [A, B])
-  assert.equal(p.turn, A)
-  assert.equal(status(write(B, two(), p)), 200, 'either of them opens it, and the opener picks first')
-  assert.equal(status(write(A, two(), { ...p, turn: B })), 400, 'the partner cannot be put first at A6')
+function testOpen() {
+  const f = openLetters(two())!
+  assert.deepEqual(f.order, [A, B], 'the one who started the garden first')
+  assert.equal(status(write(B, two(), f)), 200, 'either of the two may open the letters')
+  assert.equal(status(write(A, two(), { ...f, stories: { a6: { name: 'x' } } })), 400, 'they open with nothing in them')
 }
 
-function testTurnsAndTaken() {
-  let p = openPick(two())!
-  assert.equal(status(write(B, two(p), takeTurn(p, B, { lift: WRITTEN['a6-whole'] }))), 409, 'not their turn')
-  const p1 = takeTurn(p, A, { lift: WRITTEN['a6-whole'] }, 10)
-  assert.equal(status(write(A, two(p), p1)), 200)
-  assert.equal((p1.pool as string[]).length, 6)
-  assert.equal(p1.turn, B)
-  assert.equal(p1.moment, 'a6-hunters')
-  assert.equal(status(write(B, two(p1), takeTurn(p1, B, { lift: WRITTEN['a6-whole'] }))), 409, 'a lifted card is gone for both')
-  const sneaky = { ...takeTurn(p1, B, { lift: WRITTEN['a6-hunters'] }), pool: p1.pool }
-  assert.equal(status(write(B, two(p1), sneaky)), 400, 'a lifted card leaves the pool')
-  const double = takeTurn(takeTurn(p1, B, { lift: WRITTEN['a6-hunters'] }), B, { pass: true })
-  assert.equal(status(write(B, two(p1), double)), 400, 'one turn at a time')
-  // A pass is always a valid turn and hands the turn on.
-  const p2 = takeTurn(p1, B, { pass: true }, 20)
-  assert.equal(status(write(B, two(p1), p2)), 200)
-  assert.deepEqual(p2.pool, p1.pool)
-  p = p2
-  assert.equal(p.moment, 'a8-hollow')
-  assert.equal(p.turn, B, 'the order reverses at the hollow: the partner first (FR-003)')
+function testSealedUntilBoth() {
+  let g = two(openLetters(two())!)
+  g = apply(A, g, send(A, 'a6', 'WAKE-DA-REGENT'))
+  const seen = viewGarden(g, B).letters as Doc
+  assert.deepEqual(((seen.a6 as Doc).sent as Doc)[A], { sealed: true, at: 1 }, 'the partner sees a sealed letter, not the card')
+  assert.equal(((((viewGarden(g, A).letters as Doc).a6 as Doc).sent as Doc)[A] as Doc).card, 'WAKE-DA-REGENT', 'the sender sees their own')
+  assert.equal(status(write(A, g, send(A, 'a6', 'WAKE-GR-SAGE'))), 409, 'one letter per player per encounter')
+  assert.equal(status(write(A, g, step(A, 'a6', 1, 0))), 409, 'no step before both letters are in')
+  assert.equal(status(write(B, g, send(B, 'a6', 'NOT-A-CARD'))), 400)
+  assert.equal(status(write(B, g, send(A, 'a6', 'WAKE-GR-SAGE'))), 403, 'nobody sends the other\'s letter')
+  g = apply(B, g, send(B, 'a6', 'WAKE-DA-DIPLOMAT'))
+  const open = viewGarden(g, B).letters as Doc
+  assert.equal((((open.a6 as Doc).sent as Doc)[A] as Doc).card, 'WAKE-DA-REGENT', 'both in: the server opens them together')
+  return g
 }
 
-function testTheHollow() {
-  let p = takeTurn(takeTurn(openPick(two())!, A, { lift: 'WAKE-GR-SAGE' }), B, { lift: WRITTEN['a6-hunters'] })
-  assert.equal(status(write(A, two(p), takeTurn(p, A, { pass: true }))), 409, 'at A8 the opener waits')
-  const own = takeTurn(p, B, { own: true }, 30)
-  assert.equal(status(write(B, two(p), own)), 200)
-  assert.deepEqual(Object.keys((own.own as Doc[])[0]).sort(), ['at', 'by', 'moment'], 'the hollow card is never written as a pick')
-  assert.equal(Object.keys(own.taken as Doc).includes(HOLLOW_CARD), false)
-  assert.deepEqual(own.pool, p.pool, 'lifting one\'s own hollow card leaves the pool as it was')
-  p = own
-  assert.equal(p.turn, A)
-  const last = takeTurn(p, A, { own: true }, 40)
-  assert.equal(status(write(A, two(p), last)), 200)
-  assert.deepEqual(nextTurn(last), { moment: 'done', turn: null })
-  assert.equal(status(write(A, two(last), takeTurn(last, A, { pass: true }))), 409, 'the pick is over')
-  assert.equal(status(write(A, two(p), null)), 409, 'a pick under way is not cleared')
-  assert.equal(status(write(B, two(last), null)), 200, 'a finished pick can be cleared to play again')
-  // Only the hollow has a card of one's own.
-  const early = openPick(two())!
-  assert.equal(status(write(A, two(early), takeTurn(early, A, { own: true }))), 400)
-  // The pouch keeps it privately.
-  assert.equal(pouchWrite({ hollow: { card: HOLLOW_CARD, at: 1 } }).ok, true)
-  assert.equal(pouchWrite({ hollow: { card: 'WAKE-DA-REGENT', at: 1 } }).ok, false)
+function testStepsAndStory(g: Doc) {
+  // A answers (stand on the path); B misses (brings the hunters to the door), so Pip's door still stands
+  g = apply(A, g, step(A, 'a6', 1, 0))
+  assert.deepEqual((((((viewGarden(g, B).letters as Doc).a6 as Doc).tries as Doc)['1'] as Doc)[A]), { sealed: true, at: 2 }, 'a step is sealed until the try is in')
+  assert.equal(status(write(A, g, step(A, 'a6', 1, 2))), 400, 'one step per player per try')
+  g = apply(B, g, step(B, 'a6', 1, 2))
+  let st = encounterState(g.letters, 'a6')
+  assert.deepEqual(st.given, [A]); assert.equal(st.try, 2); assert.deepEqual(st.need, [B], 'only the part still standing steps again')
+  assert.equal(status(write(A, g, step(A, 'a6', 2, 0))), 409, 'your part has given')
+  assert.ok(!(g.letters as Doc).stories || !((g.letters as Doc).stories as Doc).a6, 'no story yet')
+  g = apply(B, g, step(B, 'a6', 2, 0))
+  st = encounterState(g.letters, 'a6')
+  assert.ok(st.overcome)
+  assert.deepEqual(((g.letters as Doc).stories as Doc).a6, { name: 'The two on the path, the knock at Pip\'s door.', cards: ['WAKE-DA-REGENT', 'WAKE-DA-DIPLOMAT'], at: 5 }, 'the server keeps the story')
+  assert.equal(status(write(A, g, { stories: { a8: { name: 'mine', cards: [], at: 1 } } })), 400, 'the page never writes a story')
+  return g
 }
 
-function testTheLog() {
-  let p = openPick(two())!
-  p = takeTurn(p, A, { lift: WRITTEN['a6-whole'] })
-  p = takeTurn(p, B, { lift: 'WAKE-GR-SHAMAN' })
-  p = takeTurn(p, B, { own: true })
-  p = takeTurn(p, A, { pass: true })
-  const mine = pickLog(p, A)
-  assert.equal(mine.length, 4)
-  assert.deepEqual(mine.map(r => [r.by, r.moment, r.card, r.fit]), [
-    [A, 'a6-whole', WRITTEN['a6-whole'], true],
-    [B, 'a6-hunters', 'WAKE-GR-SHAMAN', false],
-    [B, 'a8-hollow', null, true],
-    [A, 'a8-hollow', null, false],
-  ])
-  assert.equal(pickLog(p, B)[2].card, HOLLOW_CARD, 'your own hollow card is in your own log')
+function testOnceAChapter(g: Doc) {
+  assert.equal(status(write(A, g, send(A, 'a8', 'WAKE-DA-REGENT'))), 409, 'a card sent at A6 stays in the Between (hi3-card-goes-once)')
+  assert.equal(status(write(A, g, send(A, 'a6', 'WAKE-GR-SAGE'))), 409, 'A6 is overcome; the letters are at A8')
+  g = apply(A, g, send(A, 'a8', 'WAKE-RA-CHALLENGER'))
+  g = apply(B, g, send(B, 'a8', 'WAKE-DA-REGENT'))
+  g = apply(B, g, step(B, 'a8', 1, 1)); g = apply(A, g, step(A, 'a8', 1, 0))
+  assert.equal(((g.letters as Doc).stories as Doc & { a8: Doc }).a8.name, 'The grin at the name, the one fight kept.')
+  assert.equal(status(write(A, g, send(A, 'a8', 'WAKE-GR-SAGE'))), 409, 'the chapter is over')
 }
 
-function testHomeroom() {
-  const home = { ...two(), kind: 'home' }
-  assert.equal(status(write(A, home, openPick(two())!)), 400)
+function testHollowCardStaysOwn() {
+  assert.ok(pouchWrite({ hollow: { card: HOLLOW_CARD, at: 1 } }).ok)
+  assert.ok(!pouchWrite({ hollow: { card: 'WAKE-GR-SAGE', at: 1 } }).ok)
 }
 
-for (const t of [testTheHand, testAloneKeepsTheHand, testOpenerFirst, testTurnsAndTaken, testTheHollow, testTheLog, testHomeroom]) t()
-console.log('shared pick: all checks passed')
+testTheLines(); testAloneAndHome(); testOpen()
+testOnceAChapter(testStepsAndStory(testSealedUntilBoth()))
+testHollowCardStaysOwn()
+console.log('letters: all checks passed')

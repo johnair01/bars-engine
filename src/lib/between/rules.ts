@@ -10,7 +10,7 @@
 
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
-import { HOLLOW_CARD, pickWrite } from './shared-pick'
+import { HOLLOW_CARD, lettersWrite } from './shared-pick'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -96,10 +96,11 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if ('looks' in data) { const v = looksWrite(me, data.looks); if (!v.ok) return v }
       if ('invitations' in data) { const v = invitationsWrite(me, garden, data.invitations); if (!v.ok) return v }
       if ('room' in data) { const v = roomWrite(me, garden, data.room); if (!v.ok) return v }
-      if ('pick' in data) {
+      if ('pick' in data) return no(400, 'The shared pick became letters from the nook.')
+      if ('letters' in data) {
         if (home) return no(400, 'A homeroom is held by one person.')
-        const p = data.pick, was = garden.pick
-        const v = pickWrite(me, garden, was, p === null ? null : isObj(p) && isObj(was) ? merge(was, p) : p)
+        const l = data.letters, was = garden.letters
+        const v = lettersWrite(me, garden, was, isObj(l) && isObj(was) ? merge(was, l) : l)
         if (!v.ok) return v
       }
       if ('members' in data) {

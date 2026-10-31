@@ -1,30 +1,24 @@
 /**
- * The shared pick at Chapter 1's hunters' choice (A6) and the hollow (A8): two players in one garden take turns lifting
- * Wake Up cards from one pool of seven, so each pick shrinks what the other can play (Six-faces-council feature
- * ch1-shared-pick, .specify/specs/ch1-shared-pick/; atlas allocation-public-pick and allocation-snake-order, ontology
- * TurnsAndSharedPool). Pure, so rules.ts, the page and the invite check all run the same turn rule.
+ * Letters from the nook (Six-faces-council hollow-interface rounds 3 and 4; positions hi3-letters-from-the-nook,
+ * hi3-card-goes-once, hi4-obstacle-from-the-draw, hi4-overcome-becomes-story). This replaces the shared draft of
+ * ch1-shared-pick: nobody takes a card from anybody. Each player sends one Wake Up card from their own hand, from their
+ * own nook, as a letter; the server keeps each letter sealed until both are in and then opens them together. The two
+ * cards draw the obstacle; each player presses one step of their own card, sealed the same way until every step the try
+ * waits on is in. When every part has given, the server keeps the overcome obstacle as a named story in the garden doc.
+ * A card sent at A6 stays in the Between, so it cannot be sent again at A8 (a card goes once a chapter).
  *
- * garden.pick = { v: 1, order: [opener, partner], moment, turn, pool, taken: { card: {by, moment, at} }, passed: [..], own: [..] }
- * A6: the opener picks for the whole, then the partner for the hunters. A8 reverses: the partner first, then the opener.
- * At A8 each hand may lift its own hollow card instead of a pool card (sp-hollow-card-is-own): that card goes to the
- * player's private pouch, and the shared doc records only that a turn was taken from their own hollow, never which card.
- * A pass is always a valid turn. A garden with one member never opens a pool (sp-alone-keeps-the-hand).
+ * garden.letters = { v: 2, order: [opener, partner],
+ *   a6: { sent: { uid: { card, at } }, tries: { "1": { uid: { i, at } } } }, a8: { ... },
+ *   stories: { a6: { name, cards, at } } }
+ * Pure, so rules.ts, the page and the invite check all run the same rule. The lines live in
+ * public/between/encounter-lines.js, read by the page too.
  */
 
 import type { Doc, Json, Verdict } from './rules'
+import { HAND, ORDER, currentEncounter, encounterState } from '../../../public/between/encounter-lines.js'
 
-export const MOMENTS = ['a6-whole', 'a6-hunters', 'a8-hollow'] as const
-export type Moment = (typeof MOMENTS)[number]
-
-/** The card written for each moment (sprout campaigns/mtgoa-ch1/encounters.yaml `hand`), which the end screen scores against. */
-export const WRITTEN: Record<Moment, string> = {
-  'a6-whole': 'WAKE-DA-REGENT',
-  'a6-hunters': 'WAKE-DA-DIPLOMAT',
-  'a8-hollow': 'WAKE-RA-CHALLENGER',
-}
-
-/** Each hand's own hollow card: the A8 card, drawn from its own hollow and kept private. */
-export const HOLLOW_CARD = WRITTEN['a8-hollow']
+/** The A8 card each hand may keep in its own pouch (rules.ts pouchWrite, sp-hollow-card-is-own). */
+export const HOLLOW_CARD = 'WAKE-RA-CHALLENGER'
 
 /**
  * A5's keepsake: the home face's Raise Awareness card, or that face's Direct Action card when the Raise Awareness one is
@@ -35,117 +29,106 @@ export function keepsakeFor(face: string | null | undefined): string {
   const f = (FACES as readonly string[]).includes(face ?? '') ? face!.toUpperCase() : 'SAGE'
   return f === 'SHAMAN' || f === 'CHALLENGER' ? `WAKE-DA-${f}` : `WAKE-RA-${f}`
 }
-
-/** The seven-card Chapter 1 hand (ch1-deck-hand), in the order the beats deal it: A2, A3, A4, A5, A6 twice, A8. */
+/** The seven-card Chapter 1 hand (ch1-deck-hand), in the order the beats deal it. The lines are written for the Sage's keepsake. */
 export function chapter1Hand(face?: string | null): string[] {
   return ['WAKE-GR-SHAMAN', 'WAKE-GR-SAGE', 'WAKE-RA-SHAMAN', keepsakeFor(face), 'WAKE-DA-REGENT', 'WAKE-DA-DIPLOMAT', 'WAKE-RA-CHALLENGER']
-}
-
-/** The turns in order: who picks at each moment. A8 runs the A6 order reversed. */
-export function turns(order: string[]): { moment: Moment; by: string }[] {
-  const [a, b] = order
-  return [{ moment: 'a6-whole', by: a }, { moment: 'a6-hunters', by: b }, { moment: 'a8-hollow', by: b }, { moment: 'a8-hollow', by: a }]
 }
 
 const isObj = (v: unknown): v is Doc => !!v && typeof v === 'object' && !Array.isArray(v)
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const no = (status: number, error: string): Verdict => ({ ok: false, status, error })
 const yes: Verdict = { ok: true }
-const WAKE = /^WAKE-(GR|RA|DA|SO)-(SHAMAN|CHALLENGER|REGENT|ARCHITECT|DIPLOMAT|SAGE)$/
-
-const list = (v: Json | undefined): Doc[] => (Array.isArray(v) ? (v.filter(isObj) as Doc[]) : [])
-/** How many turns have been taken: a card lifted from the pool, a pass, or a lift from one's own hollow. */
-export const turnsTaken = (p: Doc) => Object.keys(isObj(p.taken) ? p.taken : {}).length + list(p.passed).length + list(p.own).length
-
-/** Who picks now and at which moment, from the turns taken; `done` once all four are. */
-export function nextTurn(p: Doc): { moment: Moment | 'done'; turn: string | null } {
-  const t = turns(p.order as string[])[turnsTaken(p)]
-  return t ? { moment: t.moment, turn: t.by } : { moment: 'done', turn: null }
-}
-
+const obj = (v: Json | undefined): Doc => (isObj(v) ? v : {})
+/** JSON with sorted keys, so two docs built in different orders compare equal. */
+const canon = (v: Json | undefined): string =>
+  v === undefined || v === null ? 'null' : Array.isArray(v) ? `[${v.map(canon).join(',')}]`
+    : isObj(v) ? `{${Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',')}}` : JSON.stringify(v)
+const same = (a: Json | undefined, b: Json | undefined) => canon(a) === canon(b)
 const members = (g: Doc) => (isObj(g.members) ? Object.keys(g.members) : [])
 
-/** A new pool for a garden of two: the opener first. Null for a garden of one, which keeps its dealt hand. */
-export function openPick(garden: Doc, face?: string | null): Doc | null {
+/** A fresh letters doc for a garden of two, the opener first. Null for a garden of one, which keeps its dealt hand. */
+export function openLetters(garden: Doc): Doc | null {
   const ms = members(garden), opener = garden.startedBy as string
   if (ms.length !== 2 || !ms.includes(opener) || garden.kind === 'home') return null
-  const order = [opener, ms.find(m => m !== opener)!]
-  return { v: 1, order, moment: 'a6-whole', turn: opener, pool: chapter1Hand(face), taken: {}, passed: [], own: [] }
+  return { v: 2, order: [opener, ms.find(m => m !== opener)!], a6: { sent: {}, tries: {} }, a8: { sent: {}, tries: {} }, stories: {} }
 }
 
-const same = (a: Json | undefined, b: Json | undefined) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
-const entryOk = (e: Json | undefined, me: string, moment: Json) =>
-  isObj(e) && Object.keys(e).every(k => k === 'by' || k === 'moment' || k === 'at') && e.by === me && e.moment === moment && isNum(e.at)
+/** The cards `me` has sent this chapter, at any encounter. */
+export const sentBy = (L: Doc, me: string) =>
+  ORDER.map(e => obj(obj(obj(L[e]).sent)[me]).card).filter((c): c is string => typeof c === 'string')
+
+const entryOk = (e: Json | undefined, keys: string[]) => isObj(e) && Object.keys(e).length === keys.length && keys.every(k => k in e) && isNum(e.at)
 
 /**
- * May `me` move the pick from `cur` (the garden's pick now, or none) to `next` (after the page's merge)? Only the hand
- * whose turn it is writes, one turn at a time; a card leaves the pool only once, and the pool only shrinks (FR-004).
+ * May `me` move the letters from `cur` (the garden's now, or none) to `next` (after the page's merge)? A write does one
+ * thing: open the letters for a garden of two, seal my letter at the encounter the pair is at, or press my step in the
+ * try that waits on me. The stories are the server's to keep (`settle`), never the page's.
  */
-export function pickWrite(me: string, garden: Doc, cur: Json | undefined, next: Json): Verdict {
-  if (next === null) return !isObj(cur) || cur.moment === 'done' ? yes : no(409, 'The pick is still going. Finish it first.')
-  if (!isObj(next)) return no(400, 'A pick is a small thing.')
-  for (const k of Object.keys(next))
-    if (!['v', 'order', 'moment', 'turn', 'pool', 'taken', 'passed', 'own'].includes(k)) return no(400, 'A pick keeps whose turn it is and what is left, nothing more.')
+export function lettersWrite(me: string, garden: Doc, cur: Json | undefined, next: Json): Verdict {
+  if (!isObj(next)) return no(400, 'Letters are a small thing.')
   if (!isObj(cur)) {
-    const fresh = openPick(garden)
-    if (!fresh) return no(400, 'A shared pick needs the two of you in the garden.')
-    const pool = next.pool
-    if (!Array.isArray(pool) || pool.length !== 7 || new Set(pool).size !== 7 || !pool.every(c => typeof c === 'string' && WAKE.test(c)))
-      return no(400, 'The pool is the seven Wake Up cards of the hand.')
-    if (!same(next.order, fresh.order) || next.moment !== 'a6-whole' || next.turn !== fresh.turn || !same(next.taken, {}) || !same(next.passed, []) || !same(next.own, []) || next.v !== 1)
-      return no(400, 'A pick opens with the one who started the garden choosing first.')
-    return yes
+    const fresh = openLetters(garden)
+    if (!fresh) return no(400, 'Letters need the two of you in the garden.')
+    return same(next, fresh) ? yes : no(400, 'The letters open with the one who started the garden first, and nothing sent.')
   }
-  if (cur.moment === 'done') return no(409, 'The pick is over.')
-  if (cur.turn !== me) return no(409, 'It is their pick.')
-  if (!same(next.order, cur.order) || next.v !== cur.v) return no(400, 'The order of the pick does not change.')
-  const curTaken = isObj(cur.taken) ? cur.taken : {}, nextTaken = isObj(next.taken) ? next.taken : {}
-  for (const [c, e] of Object.entries(curTaken)) if (!same(nextTaken[c], e)) return no(409, 'That card has already been lifted.')
-  if (turnsTaken(next) !== turnsTaken(cur) + 1) return no(400, 'One turn at a time.')
-  for (const f of ['passed', 'own'] as const)
-    if (!same(list(next[f]).slice(0, list(cur[f]).length), list(cur[f]))) return no(400, 'A turn taken stays taken.')
-  const pool = Array.isArray(cur.pool) ? (cur.pool as string[]) : []
-  const added = Object.keys(nextTaken).filter(c => !(c in curTaken))
-  if (added.length) {
-    const c = added[0]
-    if (!pool.includes(c)) return no(409, 'That card has already been lifted.')
-    if (!entryOk(nextTaken[c], me, cur.moment)) return no(400, 'A pick names who lifted it, when, and nothing more.')
-    if (!same(next.pool, pool.filter(x => x !== c))) return no(400, 'A lifted card leaves the pool, and only that one.')
-  } else {
-    const f = list(next.passed).length > list(cur.passed).length ? 'passed' : 'own'
-    if (!entryOk(list(next[f]).at(-1), me, cur.moment)) return no(400, 'A turn names who took it, when, and nothing more.')
-    if (f === 'own' && cur.moment !== 'a8-hollow') return no(400, 'Only the hollow has a card of your own.')
-    if (!same(next.pool, pool)) return no(400, 'A pass leaves the pool as it was.')
+  const order = (cur.order as string[]) || []
+  if (!order.includes(me)) return no(403, 'These letters are between the two of them.')
+  if (!same(next.stories, cur.stories) || !same(next.order, cur.order) || next.v !== cur.v) return no(400, 'The stories are the Between\'s to keep, and the order does not change.')
+  const enc = currentEncounter(cur)
+  if (enc === 'done') return no(409, 'The chapter is over.')
+  for (const e of ORDER) if (e !== enc && !same(next[e], cur[e])) return no(409, `The two of you are at ${enc === 'a6' ? 'Pip\'s floor' : 'the hollow'} now.`)
+  const E = obj(cur[enc]), sent = obj(E.sent)
+  const st = encounterState(cur, enc)
+  const nE = obj(next[enc]), nSent = obj(nE.sent)
+  for (const u of order) if (u !== me && !same(nSent[u], sent[u])) return no(403, 'That letter is the other person\'s own.')
+  // sealing my letter
+  if (!isObj(sent[me]) && isObj(nSent[me])) {
+    const l = nSent[me] as Doc
+    if (!entryOk(l, ['card', 'at'])) return no(400, 'A letter carries one card and when it was sent.')
+    const card = l.card as string
+    if (!HAND.includes(card)) return no(400, 'Send one of the seven cards of your hand.')
+    if (sentBy(cur, me).includes(card)) return no(409, 'That card is already in the Between. Each card goes once a chapter.')
+    const want = { ...cur, [enc]: { ...E, sent: { ...sent, [me]: l } } }
+    return same(next, want) ? yes : no(400, 'A letter is sent on its own.')
   }
-  const want = nextTurn(next)
-  if (next.moment !== want.moment || next.turn !== want.turn) return no(400, 'The turn passes in order.')
-  return yes
+  if (isObj(sent[me]) && !same(nSent[me], sent[me])) return no(409, 'Your letter is already in the Between. One card each, each encounter.')
+  // pressing my step
+  if (!st.both) return no(409, 'The letters are not both in yet.')
+  if (st.overcome) return no(409, 'This one is overcome already.')
+  const k = String(st.try), t = obj(obj(E.tries)[k]), nT = obj(obj(nE.tries)[k])
+  if (!isObj(nT[me]) || isObj(t[me])) return no(400, 'A write sends a letter or takes a step, one at a time.')
+  if (!st.need.includes(me)) return no(409, 'Your part has given. Your partner is taking their step.')
+  const s = nT[me] as Doc
+  if (!entryOk(s, ['i', 'at']) || ![0, 1, 2].includes(s.i as number)) return no(400, 'Take one of your card\'s three steps.')
+  const want = { ...cur, [enc]: { ...E, tries: { ...obj(E.tries), [k]: { ...t, [me]: s } } } }
+  return same(next, want) ? yes : no(400, 'A step is taken on its own.')
 }
 
-/** The page's next pick after `me` takes a turn: lift `card` from the pool, lift their own hollow card, or pass. */
-export function takeTurn(p: Doc, me: string, act: { lift: string } | { own: true } | { pass: true }, at = Date.now()): Doc {
-  const entry = { by: me, moment: p.moment as Json, at }
-  const out: Doc = { ...p, taken: { ...(isObj(p.taken) ? p.taken : {}) }, passed: [...list(p.passed)], own: [...list(p.own)] }
-  if ('lift' in act) { (out.taken as Doc)[act.lift] = entry; out.pool = (p.pool as string[]).filter(c => c !== act.lift) }
-  else if ('own' in act) (out.own as Doc[]).push(entry)
-  else (out.passed as Doc[]).push(entry)
-  return { ...out, ...nextTurn(out) }
+/** After a write: when every part has given, keep the story. The server runs this, so neither page writes a story. */
+export function settle(L: Doc, at = Date.now()): Doc {
+  const enc = currentEncounter(L)
+  if (enc === 'done') return L
+  const st = encounterState(L, enc)
+  if (!st.overcome) return L
+  return { ...L, stories: { ...obj(L.stories), [enc]: { name: st.story, cards: st.cards as string[], at } } }
 }
 
 /**
- * The end screen's log (FR-006): for each hand, what it played at each moment and the card written for it. Another
- * hand's lift from its own hollow shows as `own` with no card, since that card is theirs alone.
+ * The letters as `me` sees them: the other's letter sealed (no card) until both are in, and the other's step sealed (no
+ * step) until every step the try waits on is in. So the server, not the page, opens them together.
  */
-export function pickLog(p: Doc, me: string): { by: string; moment: Moment; card: string | null; own: boolean; passed: boolean; written: string; fit: boolean }[] {
-  const out: ReturnType<typeof pickLog> = []
-  const taken = isObj(p.taken) ? p.taken : {}
-  for (const t of turns(p.order as string[])) {
-    const lift = Object.entries(taken).find(([, e]) => isObj(e) && e.by === t.by && e.moment === t.moment)
-    const own = list(p.own).some(e => e.by === t.by && e.moment === t.moment)
-    const passed = list(p.passed).some(e => e.by === t.by && e.moment === t.moment)
-    if (!lift && !own && !passed) continue
-    const card = lift ? lift[0] : own && t.by === me ? HOLLOW_CARD : null
-    out.push({ by: t.by, moment: t.moment, card, own, passed, written: WRITTEN[t.moment], fit: lift ? lift[0] === WRITTEN[t.moment] : own })
+export function viewLetters(L: Json | undefined, me: string): Json | undefined {
+  if (!isObj(L)) return L
+  const out: Doc = { ...L }
+  for (const enc of ORDER) {
+    const E = obj(L[enc]), sent = obj(E.sent), st = encounterState(L, enc)
+    if (!st.both) out[enc] = { ...E, sent: Object.fromEntries(Object.entries(sent).map(([u, l]) => [u, u === me ? l : { sealed: true, at: obj(l).at ?? null }])) }
+    else if (st.try != null) {
+      const k = String(st.try), t = obj(obj(E.tries)[k])
+      out[enc] = { ...E, tries: { ...obj(E.tries), [k]: Object.fromEntries(Object.entries(t).map(([u, s]) => [u, u === me ? s : { sealed: true, at: obj(s).at ?? null }])) } }
+    }
   }
   return out
 }
+/** The garden doc as `me` sees it. */
+export const viewGarden = (g: Doc, me: string): Doc => ('letters' in g ? { ...g, letters: viewLetters(g.letters, me) as Json } : g)

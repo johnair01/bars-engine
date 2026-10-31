@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
+import { settle, viewGarden } from './shared-pick'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -57,7 +58,7 @@ export async function snapshot(gardenId: string, who: Who) {
   const byId = <T extends { data: Prisma.JsonValue }>(rows: T[], key: (r: T) => string) =>
     Object.fromEntries(rows.map(r => [key(r), asDoc(r.data)]))
   return {
-    member: true, invite: g.inviteToken, garden: data, names, peers,
+    member: true, invite: g.inviteToken, garden: viewGarden(data, who.playerId), names, peers,
     items: Object.fromEntries(items.map(r => [r.id, itemFor(who.playerId, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
     shown: byId(shown, r => r.playerId), mine: byId(mine, r => r.key),
   }
@@ -127,20 +128,22 @@ const seatOf = (s: unknown) => (s === 0 || s === 1 ? s : typeof s === 'string' &
 /** One write from the page, checked against the rules and applied in a transaction so two people's tending merges. */
 export async function write(gardenId: string, who: Who, t: Target, op: Op, data: Doc | null) {
   return db.$transaction(async tx => {
-    // Two phones lifting at once: hold the garden's row so the second pick reads the first (shared-pick.ts, FR-004).
-    if (t.table === 'garden' && data && 'pick' in data) await tx.$queryRaw`SELECT id FROM between_gardens WHERE id = ${gardenId} FOR UPDATE`
+    // Two phones sending at once: hold the garden's row so the second letter or step reads the first (shared-pick.ts).
+    if (t.table === 'garden' && data && 'letters' in data) await tx.$queryRaw`SELECT id FROM between_gardens WHERE id = ${gardenId} FOR UPDATE`
     const g = await tx.betweenGarden.findUnique({ where: { id: gardenId } })
     if (!g) return { ok: false as const, status: 404, error: 'There is no garden here.' }
     const garden = asDoc(g.data)
     const cur = t.table === 'garden' ? garden : await current(tx, gardenId, t)
     const verdict = mayWrite(who, garden, t, op, data, cur)
     if (!verdict.ok) return verdict
-    const next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
+    let next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
+    // both letters (or both steps) in: the server keeps the overcome obstacle as a story (shared-pick.ts settle)
+    if (t.table === 'garden' && next && data && 'letters' in data && next.letters && typeof next.letters === 'object') next = { ...next, letters: settle(next.letters as Doc) }
     await put(tx, gardenId, t, next)
     if (t.table === 'garden' && data && data.members && typeof data.members === 'object')
       for (const playerId of Object.keys(data.members as Doc))
         await tx.betweenMember.upsert({ where: { gardenId_playerId: { gardenId, playerId } }, create: { gardenId, playerId }, update: {} })
-    return { ok: true as const, doc: next }
+    return { ok: true as const, doc: t.table === 'garden' && next ? viewGarden(next, who.playerId) : next }
   })
 }
 

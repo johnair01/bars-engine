@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSeat, isStone, pickTap } from '../../../../public/between/pick.js'
+import { isSeat, pickTap } from '../../../../public/between/pick.js'
 
 // The cushion takes the tap ahead of the spark over it (Six-faces-council pt1-cushion-first, playtest 1 of 2026-10-28: the
 // player tried to sit and the taps landed on the spark).
@@ -18,9 +18,5 @@ describe('what a tap lands on', () => {
   })
   it('knows a seat by its key', () => {
     expect([isSeat('seat:0'), isSeat('seat:spot:a1'), isSeat('between'), isSeat(undefined)]).toEqual([true, true, false, false])
-  })
-  it('gives a stone of the shared pick the tap ahead of the hearth behind it', () => {
-    expect(pickTap([{ key: 'hearth', along: 2 }, { key: 'stone:3', along: 2.6 }])!.key).toBe('stone:3')
-    expect([isStone('stone:0'), isStone('seat:0'), isStone(null)]).toEqual([true, false, false])
   })
 })
