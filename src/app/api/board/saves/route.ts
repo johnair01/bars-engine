@@ -15,6 +15,7 @@ import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/store'
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
 import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
+import { ticketFromSave } from '@/lib/work/from-save'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -65,5 +66,7 @@ export async function POST(req: NextRequest) {
       })
     : await db.boardSave.create({ data: { ...data, data: doc as object }, select: { receivedAt: true } })
   if (RECORD_KINDS.has(collection)) await dispatchBoardPull().catch(() => undefined)
-  return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt }, { headers: NO_STORE })
+  // Push from the board: his answer to a council question goes to the work lanes as it is saved (work queues, slice 1).
+  const work = await ticketFromSave(db, board, collection, docId, doc)
+  return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt, ...(work ? { work } : {}) }, { headers: NO_STORE })
 }
