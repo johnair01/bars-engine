@@ -349,7 +349,7 @@ export function mount(B, opts = {}) {
     }
     const m = s.move, suit = SUITS[m.suit];
     const head = `${m.n}. ${m.name}`;
-    const heading = m.becomes ? ` Lines ${m.changing.join(" and ")} are moving: it is becoming ${m.becomes.name}. ${m.heading}` : "";
+    const heading = m.becomes ? ` ${m.changing.length > 1 ? "Lines " + m.changing.join(" and ") + " are" : "Line " + m.changing[0] + " is"} moving: it is becoming ${m.becomes.name}. ${m.heading}` : "";
     if (s.did) {
       const said = { kept: `Kept. It waits in ${MOVE_LANES[keptEntry(m, 0).lane]} among your next moves for a week.`, let: "Let go. The coins are back on the table.", faceup: `Left face up. ${m.who.name} sees its lines on the table and can answer it with a turn.` }[s.did];
       const again = m.invite && !s.sent ? [{ label: "Copy or share the link", sub: "You send it yourself, when it feels right", on: sendLink }] : [];
