@@ -29,7 +29,7 @@ const css = `
 #voice .vl div { display: grid; grid-template-columns: 96px 1fr; gap: 10px; font: 400 15px/1.3 var(--body); text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.85); }
 #voice .vl b { font: 400 15px var(--display); color: #ffd08a; }
 #voice .vl span { padding-left: 12px; border-left: 2px solid #ffd08a; color: #fff3df; }
-body.voiced .hud .bottom, body.voiced .hud .top, body.voiced #shared-pick { visibility: hidden; }
+body.voiced .hud .bottom, body.voiced .hud .top, body.voiced #labels, body.voiced .ctw-label, body.voiced .hint, body.voiced .near { visibility: hidden; }
 `;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -60,7 +60,7 @@ export function createVoice() {
     const H = innerHeight, W = innerWidth, box = cur.subject && cur.subject();
     const vw = root.querySelector(".vw"), va = root.querySelector(".va"), vl = root.querySelector(".vl"), vf = root.querySelector(".vf");
     const wordsH = vw ? vw.getBoundingClientRect().height : 0, actH = va ? va.getBoundingClientRect().height : 0;
-    const floorTaken = (vl ? vl.getBoundingClientRect().height + 24 : 0) + (vf ? 40 : 0);
+    const floorTaken = (vl ? vl.getBoundingClientRect().height + 40 : 0) + (vf ? 40 : 0);
     const safeTop = Math.max(16, H * 0.07), floorTop = H - floorTaken - Math.max(18, H * 0.04);
     let top = safeTop, actTop = floorTop - actH;
     if (box && box.b > box.t && box.r > box.l && box.l < W && box.r > 0) {

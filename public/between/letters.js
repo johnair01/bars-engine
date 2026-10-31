@@ -30,8 +30,9 @@ import { HAND, ENCOUNTERS, NOOK, ORDER, elementOf, lineFor, encounterState, curr
 const STAND_IN = "stand-in";
 const EL = { wood: "#7fae5a", water: "#5a8fc4", fire: "#e0703a", metal: "#c9c3b5" };
 const KEY = "between.letters.rehearsal";
+// the obstacle's box is the two cards and the two parts they drew; the fog around them is ground, not subject
 // the grey edge each room looks out on: the hollow's open side, the nook's window (room-kit.js: the valley lies toward -z)
-const EDGE = { hollow: { at: [0.2, 1.45, -6.4], cam: [0.2, 2.2, 4.6, 0.2, 1.35, -6], size: 1 }, nook: { at: [0.3, 1.35, -3.9], cam: [-0.15, 1.8, 2.2, 0.3, 1.25, -3.5], size: 0.55 } };
+const EDGE = { hollow: { at: [0.2, 1.75, -4.4], cam: [0.2, 2.2, 4.6, 0.2, 1.35, -6], size: 1.7 }, nook: { at: [0.3, 1.4, -3.2], cam: [-0.15, 1.8, 2.2, 0.3, 1.25, -3.5], size: 0.7 } };
 
 const css = `
 #letters-hand { position: fixed; left: 0; right: 0; bottom: 0; height: 30%; z-index: 41; pointer-events: none; }
@@ -176,7 +177,7 @@ export function mount(B, opts = {}) {
   const group = new THREE.Group(); group.visible = false; B.scene.add(group);
   const soft = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
   const fog = [[-1.4, 0.2, 0, 3.2], [0.4, 0.6, -0.2, 3.6], [1.6, 0.1, 0, 3.0], [-0.5, -0.4, 0.2, 3.4], [0.9, 1.1, -0.3, 2.8]].map(([x, y, z, s]) => {
-    const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: 0x5d6276, transparent: true, depthWrite: false, opacity: 0.85 }));
+    const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: 0x8a90a8, transparent: true, depthWrite: false, opacity: 0.85 }));
     m.position.set(x, y, z); m.scale.setScalar(s); m.userData.base = [x, y, z]; group.add(m); return m;
   });
   const parts = [0, 1].map(i => {
@@ -226,7 +227,7 @@ export function mount(B, opts = {}) {
     const xs = q.map(v => v[0]), ys = q.map(v => v[1]);
     return { l: Math.max(0, Math.min(...xs)), r: Math.min(innerWidth, Math.max(...xs)), t: Math.max(0, Math.min(...ys)), b: Math.min(innerHeight, Math.max(...ys)) };
   }
-  const obstacleBox = () => { group.updateMatrixWorld(); return boxOf([[-2.2, -0.7, 1.5], [2.2, -0.7, 1.5], [-2.2, 1.6, 0], [2.2, 1.6, 0]].map(a => new THREE.Vector3(...a))); };
+  const obstacleBox = () => { group.updateMatrixWorld(); return boxOf([[-1.3, -0.6, 1.4], [1.3, -0.6, 1.4], [-1.3, 0.95, 0.3], [1.3, 0.95, 0.3]].map(a => new THREE.Vector3(...a))); };
   const myPlaneBox = view => { const i = view.order.indexOf(view.me); group.updateMatrixWorld(); const p = planes[Math.max(0, i)].position; return boxOf([[-0.22, -0.32], [0.22, -0.32], [-0.22, 0.32], [0.22, 0.32]].map(([dx, dy]) => new THREE.Vector3(p.x + dx, p.y + dy, p.z))); };
 
   /* ---------- the camera is attention: compose the edge, push into the card ---------- */
