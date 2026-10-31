@@ -114,6 +114,139 @@
     return y - 0.16 * cut * cut;
   }
 
+  // ---- the rock ---------------------------------------------------------------------------------------------------------------
+  // Wendell carried the council's rock study into the game (cb-material-look-5, 2026-10-31: "Carry this into the game"). The
+  // study is Six-faces-council council/callsheets/stills/2026-10-31-bodymap-rock-1/ (make/rocks.py); its forms are ported here at
+  // the game's scale. A rock is an icosphere pushed out by three octaves of noise (the lump), then split by planes (where a rock
+  // broke, it is flat), its foot flat and sunk into the ground. The rim's ridge carries broken wall: a spire, a shorter one leaning
+  // on it, a boulder at its foot and rubble round it. Each pool is ringed by rock, open where a watercourse comes in, with rubble
+  // outside the ring; the crown has a split standing stone; pebbles lie on the floor, off the courses; crystal clusters grow at the
+  // far and side spires and light the rock behind them violet; a lantern stands by the crown's pool. All of it is fixed by one seed.
+  var ROCK_SEED = 20261032, ROCK_AO_FOOT = 0.42;
+  // The light's numbers, set in a browser against the basin's floor (body-map-basin in the council's council/look/floors.json).
+  var ROCK_TINT = [0.80, 0.76, 1.0], LAND_TILE = 1.9;
+  var EXPOSURE = 1.0, HAZE = 0.021, HEMI_I = 0.3, KEY_I = 0.45, LAMP_I = 4.0, LAMP_REACH = 14, CRYSTAL_I = 2.6, LANTERN_I = 3.4;
+  var LANTERN_AT = { x: -1.55 * SCALE, z: 9.05 * SCALE };
+  function rockField() {
+    var rnd = window.__oagCave.kit.rngOf(ROCK_SEED), R = function (a, b) { return a + (b - a) * rnd(); }, pick = function (a) { return a[Math.floor(rnd() * a.length)]; };
+    var stones = [], crystals = [], stamps = [];
+    function stone(x, z, rx, ry, rz, o) {
+      o = o || {}; var s = { x: x, z: z, rx: rx, ry: ry, rz: rz, yaw: R(0, Math.PI), sub: o.sub == null ? 1 : o.sub, cleaves: o.cleaves || 2, vertical: !!o.vertical,
+        taper: o.taper || 0, sink: o.sink == null ? 0.25 : o.sink, amp: o.amp || 0.16, freq: o.freq || 2.4, tone: o.tone || pick([0.8, 0.9, 1.0, 1.08]), seed: Math.floor(rnd() * 1e9) };
+      stones.push(s); if (Math.max(rx, rz) > 0.3) stamps.push({ x: x, z: z, r: Math.max(rx, rz) }); return s;
+    }
+    var nearCourse = function (x, z, gap) { return courses().some(function (c) { return distToCourse(c, x, z) < gap; }); };
+    var nearSpring = function (x, z, k) { return Object.keys(SPRING).some(function (s) { return Math.hypot(x - SEAT_AT[s].x, z - SEAT_AT[s].z) < SPRING[s].r * k + (POOL[s] || 0) * 0.4; }); };
+    // the rim: fifteen spires on the ridge where the land ends, none on the near arc between the camera and the heart's ledge
+    for (var i = 0; i < 15; i++) {
+      var ang = 2 * Math.PI * i / 15 + R(-0.12, 0.12), e = R(1.0, 1.12), x = LAND.cx + Math.cos(ang) * LAND.rx * e, z = LAND.cz + Math.sin(ang) * LAND.rz * e;
+      if (Math.sin(ang) < -0.55) continue;
+      var h = R(1.4, 2.8) * SCALE, r = R(0.5, 1.15) * SCALE, tx = LAND.cx - x, tz = LAND.cz - z, m = Math.hypot(tx, tz) || 1; tx /= m; tz /= m;
+      stone(x, z, r * 0.8, h * 0.56, r * 0.7, { sub: 2, cleaves: 6, vertical: true, taper: 0.3, sink: 0.12, amp: 0.22, freq: 3.0 });
+      stone(x - tz * r * pick([-0.9, 0.9]), z + tx * r * R(-0.2, 0.2), r * 0.55, h * R(0.25, 0.4), r * 0.5, { sub: 2, cleaves: 5, vertical: true, taper: 0.25, sink: 0.12, amp: 0.22, freq: 3.0 });
+      for (var b = pick([1, 2]); b > 0; b--) { var off = r * R(0.75, 1.05), sd = R(-0.9, 0.9), s_ = r * R(0.45, 0.75); stone(x + tx * off - tz * sd * r, z + tz * off + tx * sd * r, s_, s_ * R(0.6, 0.9), s_ * R(0.7, 1.0), { sub: 2, cleaves: 4, amp: 0.2, freq: 3.0 }); }
+      for (var q = 3 + Math.floor(rnd() * 4); q > 0; q--) { var o2 = r * R(1.0, 1.9), sd2 = R(-1.4, 1.4), s2 = R(0.07, 0.18) * SCALE; stone(x + tx * o2 - tz * sd2 * r, z + tz * o2 + tx * sd2 * r, s2, s2 * 0.7, s2 * R(0.7, 1.1), { sink: 0.2 }); }
+      if (Math.sin(ang) > -0.1 && (i % 2 === 0)) crystals.push({ x: x + tx * r * 0.8, z: z + tz * r * 0.8, tx: tx, tz: tz });
+    }
+    // the springs: a ring of rock round each, open where a course comes in, and rubble outside it
+    Object.keys(SPRING).forEach(function (k) {
+      var c = SEAT_AT[k], rr = (POOL[k] ? POOL[k] + 0.55 : SPRING[k].r * 0.95), mouths = [];
+      courses().forEach(function (cc) { cc.pts.forEach(function (p) { var d = Math.hypot(p.x - c.x, p.z - c.z); if (d < rr * 1.6) mouths.push(Math.atan2(p.z - c.z, p.x - c.x)); }); });
+      if (k === "heart") mouths.push(Math.atan2(LEDGE.z - c.z, LEDGE.x - c.x)); // the figure's way down to its own spring
+      var n = Math.max(8, Math.round(rr * 2 * Math.PI / 0.85));
+      for (var j = 0; j < n; j++) {
+        var a = 2 * Math.PI * j / n + R(-0.12, 0.12);
+        if (mouths.some(function (mo) { return Math.abs(((a - mo + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < 0.42; })) continue;
+        var rad = rr * R(0.98, 1.12), s3 = R(0.26, 0.48) * R(0.75, 1.25);
+        stone(c.x + Math.cos(a) * rad, c.z + Math.sin(a) * rad, s3, s3 * R(0.55, 0.85), s3 * 0.85, { sink: 0.3 });
+      }
+      for (var p2 = Math.round(14 + 6 * rr); p2 > 0; p2--) {
+        var a2 = R(0, 2 * Math.PI), rad2 = rr * R(1.25, 2.0), px = c.x + Math.cos(a2) * rad2, pz = c.z + Math.sin(a2) * rad2;
+        if (nearCourse(px, pz, 0.5)) continue;
+        var s4 = R(0.1, 0.36); stone(px, pz, s4, s4 * 0.7, s4, { sink: 0.25 });
+      }
+    });
+    // the crown's standing stone, split rock, on the far side of its pool from the heart
+    var cr = SEAT_AT.crown, hd = Math.hypot(cr.x - SEAT_AT.heart.x, cr.z - SEAT_AT.heart.z), ux = (cr.x - SEAT_AT.heart.x) / hd, uz = (cr.z - SEAT_AT.heart.z) / hd;
+    stone(cr.x + ux * (POOL.crown + 1.5), cr.z + uz * (POOL.crown + 1.5), 1.2, 2.46, 0.78, { sub: 2, cleaves: 3, vertical: true, taper: 0.3, sink: 0.08, amp: 0.12, tone: 1.12 });
+    // pebbles on the walked floor, off the courses and the springs, and a few boulders toward the walls
+    for (var pb = 0; pb < 420; pb++) {
+      var bx = R(-0.95, 0.95) * LAND.rx + LAND.cx, bz = R(-0.95, 0.95) * LAND.rz + LAND.cz;
+      if (Math.hypot((bx - LAND.cx) / LAND.rx, (bz - LAND.cz) / LAND.rz) > 0.95 || nearSpring(bx, bz, 1.2) || nearCourse(bx, bz, 0.6) || Math.hypot(bx - MOUTH.x, bz - MOUTH.z) < 2.2) continue;
+      var s5 = R(0.1, 0.32); stone(bx, bz, s5, s5 * 0.65, s5 * R(0.7, 1.2), { sub: pick([0, 1]), cleaves: 1, sink: 0.25 });
+    }
+    for (var bd = 0; bd < 16; bd++) {
+      var ea = R(0, 2 * Math.PI), ee = R(0.72, 0.9), wx = LAND.cx + Math.cos(ea) * LAND.rx * ee, wz = LAND.cz + Math.sin(ea) * LAND.rz * ee;
+      if (Math.sin(ea) < -0.5 || nearSpring(wx, wz, 1.6) || nearCourse(wx, wz, 1.2)) continue;
+      var s6 = R(0.55, 1.0); stone(wx, wz, s6, s6 * 0.7, s6 * 0.9, { sub: 2, cleaves: 3 });
+    }
+    // the mouth back to the room sits in a low lip of rock
+    [[-1.6, 0.9, 0.7], [1.7, 0.5, 0.55], [0.2, -1.5, 0.8], [-1.0, -1.1, 0.5]].forEach(function (q) { stone(MOUTH.x + q[0], MOUTH.z + q[1], q[2], q[2] * 0.9, q[2] * 0.85, { sub: 2, cleaves: 3 }); });
+    stamps.push({ x: LANTERN_AT.x, z: LANTERN_AT.z, r: 0.45 });
+    return { stones: stones, crystals: crystals, stamps: stamps, rnd: rnd };
+  }
+  // A shade on the ground round a rock's foot, as a factor on the land's colour.
+  function footShade(stamps, x, z) {
+    var g = 0; for (var i = 0; i < stamps.length; i++) { var s = stamps[i], dx = x - s.x, dz = z - s.z, w = 1.25 * s.r; if (Math.abs(dx) < 3 * s.r && Math.abs(dz) < 3 * s.r) g += 0.55 * Math.exp(-(dx * dx + dz * dz) / (w * w)); }
+    return 1 - Math.min(0.62, g);
+  }
+  // One rock's triangles, in place, appended to out (positions, colours, uvs). The tile goes on by the face's own axis, so a steep
+  // face takes the stone's grain and not a stretched stripe (what the study still showed).
+  var ICO = {};
+  function rockInto(THREE, s, out) {
+    var det = s.sub === 2 ? 3 : s.sub, base = ICO[det] || (ICO[det] = new THREE.IcosahedronGeometry(1, det).attributes.position.array);
+    var rnd = window.__oagCave.kit.rngOf(s.seed), gauss = function () { return Math.sqrt(-2 * Math.log(rnd() + 1e-9)) * Math.cos(2 * Math.PI * rnd()); };
+    var K3 = [], ph = [];
+    for (var o = 0; o < 3; o++) { var f = s.freq * Math.pow(2, o); K3.push([gauss() * f, gauss() * f, gauss() * f]); ph.push(rnd() * Math.PI * 2); }
+    var planes = [];
+    for (var c = 0; c < s.cleaves; c++) {
+      var m = [gauss(), gauss(), gauss()]; if (s.vertical) m[1] *= 0.25; else m[1] = Math.abs(m[1]) * 0.8;
+      var ml = Math.hypot(m[0], m[1], m[2]) || 1; planes.push([m[0] / ml, m[1] / ml, m[2] / ml, 0.5 + 0.32 * rnd()]);
+    }
+    // the foot stands on the lowest ground under it, so a rock on the rim's slope is buried uphill, never floating downhill
+    var cy = Math.cos(s.yaw), sy = Math.sin(s.yaw), rr = Math.max(s.rx, s.rz) * 0.8, low = groundY(s.x, s.z);
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (q) { low = Math.min(low, groundY(s.x + q[0] * rr, s.z + q[1] * rr)); });
+    var gy = low + 0.72 * s.ry - s.sink * s.ry;
+    var n = base.length / 3, P = new Float32Array(base.length), FOOT = new Float32Array(n);
+    for (var i = 0; i < n; i++) {
+      var x = base[i * 3], y = base[i * 3 + 1], z = base[i * 3 + 2], d = 0;
+      for (o = 0; o < 3; o++) d += [1, 0.5, 0.25][o] * Math.sin(x * K3[o][0] + y * K3[o][1] + z * K3[o][2] + ph[o]);
+      var k = 1 + s.amp * d; x *= k; y *= k; z *= k;
+      planes.forEach(function (pl) { var dd = x * pl[0] + y * pl[1] + z * pl[2] - pl[3]; if (dd > 0) { x -= dd * pl[0]; y -= dd * pl[1]; z -= dd * pl[2]; } });
+      if (y < -0.72) y = -0.72;
+      var yn = Math.max(0, Math.min(1, (y + 0.72) / 1.72)); FOOT[i] = yn;
+      if (s.taper) { x *= 1 - s.taper * yn; z *= 1 - s.taper * yn; }
+      x *= s.rx; y *= s.ry; z *= s.rz;
+      P[i * 3] = s.x + x * cy - z * sy; P[i * 3 + 1] = gy + y; P[i * 3 + 2] = s.z + x * sy + z * cy;
+    }
+    for (var t = 0; t < n; t += 3) {
+      var ax = P[t * 3], ay = P[t * 3 + 1], az = P[t * 3 + 2], e1 = [P[t * 3 + 3] - ax, P[t * 3 + 4] - ay, P[t * 3 + 5] - az], e2 = [P[t * 3 + 6] - ax, P[t * 3 + 7] - ay, P[t * 3 + 8] - az];
+      var nx = Math.abs(e1[1] * e2[2] - e1[2] * e2[1]), ny = Math.abs(e1[2] * e2[0] - e1[0] * e2[2]), nz = Math.abs(e1[0] * e2[1] - e1[1] * e2[0]);
+      for (var v = 0; v < 3; v++) {
+        var vi = t + v, px = P[vi * 3], py = P[vi * 3 + 1], pz = P[vi * 3 + 2];
+        out.p.push(px, py, pz);
+        if (ny >= nx && ny >= nz) out.u.push(px / 3.2, pz / 3.2); else if (nx >= nz) out.u.push(pz / 3.2, py / 3.2); else out.u.push(px / 3.2, py / 3.2);
+        var tone = s.tone * (ROCK_AO_FOOT + (1 - ROCK_AO_FOOT) * FOOT[vi]); out.c.push(tone * ROCK_TINT[0], tone * ROCK_TINT[1], tone * ROCK_TINT[2]);
+      }
+    }
+  }
+  // One six-sided crystal growing from base along dir, with a pointed tip (the study's crystal()).
+  function crystalInto(base, dir, len, rad, out) {
+    var dl = Math.hypot(dir[0], dir[1], dir[2]), d = [dir[0] / dl, dir[1] / dl, dir[2] / dl];
+    var up = Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0], a = [d[1] * up[2] - d[2] * up[1], d[2] * up[0] - d[0] * up[2], d[0] * up[1] - d[1] * up[0]], al = Math.hypot(a[0], a[1], a[2]);
+    a = [a[0] / al, a[1] / al, a[2] / al]; var b = [d[1] * a[2] - d[2] * a[1], d[2] * a[0] - d[0] * a[2], d[0] * a[1] - d[1] * a[0]];
+    var p0 = [base[0] - d[0] * rad, base[1] - d[1] * rad, base[2] - d[2] * rad], p1 = [p0[0] + d[0] * len, p0[1] + d[1] * len, p0[2] + d[2] * len], tip = [p1[0] + d[0] * rad * 2.2, p1[1] + d[1] * rad * 2.2, p1[2] + d[2] * rad * 2.2];
+    var lo = [], hi = [];
+    for (var k = 0; k < 6; k++) { var cx = Math.cos(Math.PI * k / 3 + 0.3), cz = Math.sin(Math.PI * k / 3 + 0.3); lo.push([0, 1, 2].map(function (j) { return p0[j] + (a[j] * cx + b[j] * cz) * rad; })); hi.push([0, 1, 2].map(function (j) { return p1[j] + (a[j] * cx + b[j] * cz) * rad * 0.92; })); }
+    for (k = 0; k < 6; k++) { var j2 = (k + 1) % 6; [[lo[k], lo[j2], hi[j2]], [lo[k], hi[j2], hi[k]], [hi[k], hi[j2], tip]].forEach(function (tr) { tr.forEach(function (pt) { out.push(pt[0], pt[1], pt[2]); }); }); }
+  }
+  // A soft round glow, for the halo a bright thing bleeds into the air round it.
+  function haloTexture(THREE) {
+    var cv = document.createElement("canvas"); cv.width = cv.height = 64; var g = cv.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.25, "rgba(255,255,255,0.45)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(cv);
+  }
+
   // ---- the page ---------------------------------------------------------------------------------------------------------------
   var CSS = ".oagb{z-index:950}.oagb-line{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(420px,calc(100vw - 32px));" +
     "padding:.5rem .8rem;background:rgba(12,12,24,.72);border:1px solid rgba(220,230,255,.35);border-radius:12px;color:#eef0f8;font-size:15px;line-height:1.35;text-align:center;" +
@@ -164,40 +297,72 @@
       try { renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); stage.appendChild(renderer.domElement); }
       catch (e) { renderer = null; } // no WebGL: the words still come
       if (renderer) K.holdArea(renderer.domElement);
-      // The cave's fog family (the room's warm dark), thin enough that the far ledge reads from the heart's.
-      var scene = new THREE.Scene(); scene.background = new THREE.Color(0x16121c); scene.fog = new THREE.FogExp2(0x16121c, 0.011);
+      if (renderer) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = EXPOSURE; }
+      // The study's air (cb-material-look-3, his A, "Aim at the direction frames"): no roof, the dark above the rim falls to near
+      // black, and the far rim sinks into a lilac haze lighter than that dark, so the rock stands in layers. The study's haze
+      // density per study unit, over the game's three.
+      var scene = new THREE.Scene(); scene.background = new THREE.Color(0x0c0a12); scene.fog = new THREE.FogExp2(0x26203a, HAZE);
       var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
-      var rock = K.stoneOf(THREE, null, 0x6a5c54);
-      K.loadTiles(THREE).then(function (tiles) { K.tileStone(rock, tiles); }); // the cave's own stone, once its tiles are in
-      var ground = rock.userData.floor; ground.vertexColors = true; ground.needsUpdate = true;
+      var rock = K.stoneOf(THREE, null, 0x5a5068); // the springs' own stone (the bowl, the vent, the slab, the lip), as cool as the rock round them
+      // the land and every rock on it: the cave's wet stone (the study's floor and wall tile), shaded by vertex
+      var ground = K.stoneOf(THREE, null, 0x6a5c54); ground.vertexColors = true; ground.side = THREE.FrontSide; ground.flatShading = false; ground.needsUpdate = true;
+      K.loadTiles(THREE).then(function (tiles) { K.tileStone(rock, tiles); K.tileStone(ground, tiles); }); // the cave's own stone, once its tiles are in
+      var RF = rockField();
 
       // The land: one sheet of the cave's dry stone, lifted into ledges and rims, the hollows and beds carved in, and tinted by
       // vertex: ridges paler, hollows darker, the course beds mossy (dry, but never darker than readable).
       var SX = 2 * (LAND.rx + 8), SZ = 2 * (LAND.rz + 8), NX = 110, NZ = 130;
       var geo = new THREE.PlaneGeometry(SX, SZ, NX, NZ); geo.rotateX(-Math.PI / 2); geo.translate(LAND.cx, 0, LAND.cz);
       var pos = geo.attributes.position, uv = geo.attributes.uv, col = new Float32Array(pos.count * 3);
-      var moss = new THREE.Color(0x5f6e52), pale = new THREE.Color(0xd8ccc0), deep = new THREE.Color(0x6e6470), base = new THREE.Color(0xb4a89c), c = new THREE.Color();
+      var moss = new THREE.Color(0x5f6e52), pale = new THREE.Color(0xc4bce0), deep = new THREE.Color(0x4e4668), base = new THREE.Color(0x9a90b8), c = new THREE.Color();
       for (var i = 0; i < pos.count; i++) {
         var x = pos.getX(i), z = pos.getZ(i), y = groundY(x, z), b = baseY(x, z);
-        pos.setY(i, y); uv.setXY(i, x / 3.2, z / 3.2);
+        pos.setY(i, y); uv.setXY(i, x / LAND_TILE, z / LAND_TILE);
         var near = Infinity; courses().forEach(function (cc) { near = Math.min(near, distToCourse(cc, x, z)); });
         c.copy(base).lerp(pale, Math.max(0, Math.min(1, (y - ledgeY(z)) / 3)) * 0.6).lerp(deep, Math.max(0, Math.min(1, (b - y) * 1.2)) * 0.7);
         if (near < 0.75) c.lerp(moss, 0.35 * (1 - near / 0.75));
+        c.multiplyScalar(footShade(RF.stamps, x, z)); // darker where a rock stands on it
         col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
       }
       geo.setAttribute("color", new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
       var land = new THREE.Mesh(geo, ground); scene.add(land);
 
+      // ---- the rock: every stone of the field as one mesh, the crystals as another, the lantern by the crown's pool ------------
+      var RK = { p: [], u: [], c: [] };
+      RF.stones.forEach(function (s0) { rockInto(THREE, s0, RK); });
+      var rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.Float32BufferAttribute(RK.p, 3)); rg.setAttribute("uv", new THREE.Float32BufferAttribute(RK.u, 2));
+      rg.setAttribute("color", new THREE.Float32BufferAttribute(RK.c, 3)); rg.computeVertexNormals();
+      var rocks = new THREE.Mesh(rg, ground); scene.add(rocks);
+      var CP = [], halo = haloTexture(THREE), violet = 0x8f84ff;
+      RF.crystals.forEach(function (cs) {
+        var y = groundY(cs.x, cs.z), rr = RF.rnd;
+        for (var q = 4 + Math.floor(rr() * 4); q > 0; q--) crystalInto([cs.x + (rr() - 0.5) * 1.1, y - 0.05, cs.z + (rr() - 0.5) * 1.1], [cs.tx * (0.1 + rr() * 0.5) + (rr() - 0.5) * 0.8, 1, cs.tz * (0.1 + rr() * 0.5) + (rr() - 0.5) * 0.8], (0.22 + rr() * 0.4) * SCALE, (0.035 + rr() * 0.04) * SCALE, CP);
+        var cl = new THREE.PointLight(violet, CRYSTAL_I, 15, K.LAMP.decay); cl.position.set(cs.x + cs.tx * 1.0, y + 1.2, cs.z + cs.tz * 1.0); scene.add(cl);
+        var hs = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: 0x9a8cff, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+        hs.position.set(cs.x, y + 1.0, cs.z); hs.scale.setScalar(4.5); scene.add(hs);
+      });
+      var cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.Float32BufferAttribute(CP, 3)); cg.computeVertexNormals();
+      scene.add(new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ color: violet, emissive: violet, emissiveIntensity: 0.75, roughness: 0.25, flatShading: true, side: THREE.DoubleSide })));
+      // the lantern set down by the crown's pool: a stone foot, four posts, a cap, a lit core; warm, and lighting the far side
+      var lan = new THREE.Group(), iron = new THREE.MeshStandardMaterial({ color: 0x1e1a1e, roughness: 0.8 }), LS = 1.15 * SCALE * 0.9;
+      function bx(px, py, pz, hx, hy, hz, mat) { var b0 = new THREE.Mesh(new THREE.BoxGeometry(hx * 2, hy * 2, hz * 2), mat); b0.position.set(px, py, pz); lan.add(b0); }
+      bx(0, 0.02, 0, 0.11, 0.03, 0.11, iron); [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(function (q) { bx(q[0] * 0.085, 0.2, q[1] * 0.085, 0.012, 0.16, 0.012, iron); });
+      bx(0, 0.375, 0, 0.115, 0.018, 0.115, iron);
+      var lcap = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.09, 4), iron); lcap.position.y = 0.435; lcap.rotation.y = Math.PI / 4; lan.add(lcap);
+      bx(0, 0.2, 0, 0.07, 0.13, 0.07, new THREE.MeshBasicMaterial({ color: 0xffc480 }));
+      var lgy = groundY(LANTERN_AT.x, LANTERN_AT.z); lan.scale.setScalar(LS); lan.position.set(LANTERN_AT.x, lgy, LANTERN_AT.z); lan.rotation.y = 0.4; scene.add(lan);
+      var lantern = new THREE.PointLight(0xffe0b0, LANTERN_I, 20, K.LAMP.decay); lantern.position.set(LANTERN_AT.x, lgy + 0.3 * LS, LANTERN_AT.z); scene.add(lantern);
+      var lh = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: 0xffc890, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      lh.position.copy(lantern.position); lh.scale.setScalar(2.6); scene.add(lh);
+
       // ---- the springs ----------------------------------------------------------------------------------------------------------
       var still = new THREE.MeshStandardMaterial({ color: 0x2c4256, roughness: 0.12, metalness: 0.25, emissive: 0x0e1a26, emissiveIntensity: 0.6 });
       function water(k, r) { var m = new THREE.Mesh(new THREE.CircleGeometry(r, 48), still); m.rotation.x = -Math.PI / 2; m.position.set(SEAT_AT[k].x, springY(k) - 0.12, SEAT_AT[k].z); scene.add(m); return m; }
-      function stone(r, x, z, sy) { var s = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), rock); s.position.set(x, groundY(x, z) + r * 0.25, z); s.scale.y = sy || 0.6; s.rotation.y = x * 1.7 + z; scene.add(s); return s; }
-      function ringStones(k, R, n, r) { var s = SEAT_AT[k]; for (var j = 0; j < n; j++) { var a = j / n * Math.PI * 2 + 0.3; stone(r * (0.8 + 0.4 * ((j * 7) % 5) / 5), s.x + Math.cos(a) * R, s.z + Math.sin(a) * R, 0.5); } }
       var S = {};
       // the heart: the low spring, the largest, its stones round the rim
-      S.heart = water("heart", POOL.heart + 0.4); ringStones("heart", POOL.heart + 0.9, 11, 0.38);
+      S.heart = water("heart", POOL.heart + 0.4);
       // the crown: a still pool on the high ledge; at the third floor it answers once, a ripple and a held line of light
-      S.crown = water("crown", POOL.crown + 0.3); ringStones("crown", POOL.crown + 0.6, 9, 0.32);
+      S.crown = water("crown", POOL.crown + 0.3);
       var cr = SEAT_AT.crown, cy = springY("crown") - 0.1;
       var ripple = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 64), new THREE.MeshBasicMaterial({ color: 0xe8eeff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
       ripple.rotation.x = -Math.PI / 2; ripple.position.set(cr.x, cy, cr.z); ripple.visible = false; scene.add(ripple);
@@ -223,7 +388,6 @@
       for (var m = 0; m < MN; m++) moteBase.push({ a: m * 2.399, r: 0.3 + 1.0 * ((m * 37) % 11) / 11, y: 0.3 + 1.9 * ((m * 53) % 17) / 17, v: 0.5 + ((m * 29) % 7) / 10 });
       var moteGeo = new THREE.BufferGeometry(); moteGeo.setAttribute("position", new THREE.BufferAttribute(motePos, 3));
       var motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xe8f0d8, size: 0.09, transparent: true, opacity: 0.7, depthWrite: false })); motes.position.set(th.x, ty, th.z); scene.add(motes);
-      ringStones("throat", 1.3, 6, 0.26);
       // the brow: a wet seam across a low slab; at the first floor it runs with light and moves
       var bw = SEAT_AT.brow, by = groundY(bw.x, bw.z), seamYaw = 0.5;
       var slab = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.35, 1.3), rock); slab.position.set(bw.x, by + 0.08, bw.z); slab.rotation.y = seamYaw; scene.add(slab);
@@ -266,13 +430,16 @@
       var hole = new THREE.Mesh(new THREE.CircleGeometry(MOUTH_R, 36), new THREE.MeshBasicMaterial({ map: mouthTex(THREE), transparent: true, depthWrite: false }));
       hole.rotation.x = -Math.PI / 2; hole.position.y = 0.06; hole.scale.set(1.25, 1, 1); mouthG.add(hole);
       var lip = new THREE.Mesh(new THREE.TorusGeometry(MOUTH_R * 1.05, 0.2, 8, 28), rock); lip.rotation.x = -Math.PI / 2; lip.scale.set(1.25, 1, 0.6); lip.position.y = 0.05; mouthG.add(lip);
-      [[-1.6, 0.9, 0.7], [1.7, 0.5, 0.55], [0.2, -1.5, 0.8], [-1.0, -1.1, 0.5]].forEach(function (q) { var s = stone(q[2], MOUTH.x + q[0], MOUTH.z + q[1], 0.9); s.scale.y = 1.1; });
       var mouthLight = new THREE.PointLight(0xffc890, 0.5, 4, K.LAMP.decay); mouthLight.position.set(MOUTH.x, my + 0.3, MOUTH.z); scene.add(mouthLight);
 
       // ---- light: the cave's lamp over the figure and its carried light at the chest, and enough sky that nothing goes unreadable
-      var hemi = new THREE.HemisphereLight(0xdcd6ff, 0x3a3028, 0.95); scene.add(hemi);
-      var sky = new THREE.DirectionalLight(0xfff0dc, 0.35); sky.position.set(-6, 20, 4); scene.add(sky);
-      var lamp = new THREE.PointLight(0xffe0b0, K.LAMP.power, K.LAMP.reach, K.LAMP.decay); scene.add(lamp);
+      // The study's light (material-3, kept in rock-1): the even sky is gone; a low violet cave air is left, a faint silver key gives
+      // the rock its shape, and the warm lamp over the figure owns the near ground, then falls to shade.
+      var hemi = new THREE.HemisphereLight(0x6a5cb8, 0x1a1424, HEMI_I); scene.add(hemi);
+      var sky = new THREE.DirectionalLight(0xc7d6ff, KEY_I); sky.position.set(-6, 20, 4); scene.add(sky);
+      var lamp = new THREE.PointLight(0xffe0b0, LAMP_I, LAMP_REACH, K.LAMP.decay); scene.add(lamp);
+      var lampHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: 0xffd8a0, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      lampHalo.scale.setScalar(2.2); scene.add(lampHalo);
 
       // ---- the figure ---------------------------------------------------------------------------------------------------------
       var avatar = K.buildAvatar(THREE, "self", true); avatar.scale.setScalar(FIG_K); scene.add(avatar);
@@ -426,7 +593,7 @@
         var gy = groundY(fig.x, fig.z);
         avatar.position.set(fig.x, gy, fig.z); avatar.rotation.y = fig.yaw;
         K.poseAvatar(avatar, fig.clk, moving, dt, br.b, WALK / K.STEPS_PER_S * FIG_K, reduced); K.loosenAvatar(avatar, 0, br.b);
-        lamp.position.set(fig.x, gy + K.LAMP.above + 2.4, fig.z); carried.position.set(fig.x + Math.sin(fig.yaw) * 0.3, gy + 1.4, fig.z + Math.cos(fig.yaw) * 0.3);
+        lamp.position.set(fig.x, gy + K.LAMP.above + 2.4, fig.z); carried.position.set(fig.x + Math.sin(fig.yaw) * 0.3, gy + 1.4, fig.z + Math.cos(fig.yaw) * 0.3); lampHalo.position.copy(carried.position);
         // the springs at rest move as still things do: the motes hang and drift, the vent's air wavers
         var ts = reduced ? 0 : t - t0;
         for (var i = 0; i < MN; i++) { var mb = moteBase[i], a = mb.a + ts * 0.12 * mb.v; motePos[i * 3] = Math.cos(a) * mb.r; motePos[i * 3 + 1] = mb.y + 0.15 * Math.sin(ts * 0.4 + i); motePos[i * 3 + 2] = Math.sin(a) * mb.r; }
