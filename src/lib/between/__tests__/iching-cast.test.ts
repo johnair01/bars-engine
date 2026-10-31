@@ -25,7 +25,7 @@ describe('three-coin cast (port of council/iching/cast.py)', () => {
     const c = castFromTosses([[2, 3, 3], [3, 3, 2], [2, 2, 3], [2, 3, 3], [3, 2, 2], [3, 3, 2]], table)
     expect(c.n).toBe(39)
     expect(c.shows).toBe('The direct route is closed and you have asked nobody.')
-    expect(c.becomes).toBeUndefined()
+    expect('becomes' in c).toBe(false)
   })
 
   it('marks old lines as changing and young lines as still', () => {
