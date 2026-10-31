@@ -101,7 +101,7 @@ export default defineConfig({
       'src/lib/between/__tests__/focus-sit.test.ts',
       'src/lib/between/__tests__/episode-sheet.test.ts',
       'src/lib/between/__tests__/iching-cast.test.ts',
-      'src/lib/between/__tests__/coin-table.test.ts',
+      'src/lib/between/__tests__/coin-connection.test.ts',
       'src/lib/between/__tests__/land-place.test.ts',
     'src/lib/between/__tests__/pick.test.ts',
       'src/lib/board/__tests__/outreach.test.ts',

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-// BAR intake, build 1 (Six-faces-council pass bar-intake-1): the page's port of council/iching/cast.py.
+// The coin table (Six-faces-council passes bar-intake-1 and -2): the page's port of council/iching/cast.py, kept from build 1.
 import { castFromTosses, lineOf } from '../../../../public/between/iching/cast.js'
 
 const root = join(__dirname, '../../../..')
@@ -21,7 +21,7 @@ describe('three-coin cast (port of council/iching/cast.py)', () => {
     expect(casts.some((c: { changing_lines: number[] }) => c.changing_lines.length > 1)).toBe(true)
   })
 
-  it('reads the first workorder\'s cast: Impasse, no changing lines', () => {
+  it('reads Impasse with no changing lines (the cast build 1 checked)', () => {
     const c = castFromTosses([[2, 3, 3], [3, 3, 2], [2, 2, 3], [2, 3, 3], [3, 2, 2], [3, 3, 2]], table)
     expect(c.n).toBe(39)
     expect(c.shows).toBe('The direct route is closed and you have asked nobody.')
