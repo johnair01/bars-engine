@@ -135,7 +135,7 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
               </button>
             )}
             <a
-              href="https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho#morning"
+              href="/board/council#morning"
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center"
