@@ -24,14 +24,24 @@ export function batchIds(heads: { id: string; bytes: number }[], maxBytes = BATC
   return out
 }
 
-/** The latest document per (collection, docId): what the claude.ai store used to hold. */
-export async function latestDocs(board: string): Promise<Docs> {
-  const heads = await db.$queryRaw<{ id: string; bytes: number }[]>`
-    SELECT id, bytes FROM (
-      SELECT DISTINCT ON (collection, doc_id) id, octet_length(data::text)::int AS bytes
+/** Heads to read: a posted row that board-pull has recorded is on main and the board page skips it, so the page's
+ * read can leave it out (council pass board-store-size-1, 2026-10-31). Exported for the test. */
+export function readableHeads<T extends { collection: string; recorded: boolean }>(heads: T[], leaveOutRecordedRows: boolean): T[] {
+  return leaveOutRecordedRows ? heads.filter((h) => !(h.collection === 'rows' && h.recorded)) : heads
+}
+
+/** The latest document per (collection, docId): what the claude.ai store used to hold. With leaveOutRecordedRows, the
+ * `rows` documents main already records are left out (the page's read, GET /api/board/saves); board-pull and the
+ * other routes read everything. */
+export async function latestDocs(board: string, opts: { leaveOutRecordedRows?: boolean } = {}): Promise<Docs> {
+  const all = await db.$queryRaw<{ id: string; bytes: number; collection: string; recorded: boolean }[]>`
+    SELECT id, bytes, collection, recorded FROM (
+      SELECT DISTINCT ON (collection, doc_id) id, collection, octet_length(data::text)::int AS bytes,
+        recorded_at IS NOT NULL AS recorded
       FROM board_saves WHERE board = ${board}
       ORDER BY collection, doc_id, received_at DESC, id DESC
     ) h`
+  const heads = readableHeads<(typeof all)[number]>(all, !!opts.leaveOutRecordedRows)
   const out: Docs = {}
   for (const ids of batchIds(heads)) {
     const rows = await db.boardSave.findMany({ where: { id: { in: ids } }, select: { collection: true, docId: true, data: true } })
