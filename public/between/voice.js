@@ -10,14 +10,21 @@
      actions  [{ label, sub?, on, quiet? }]: seals you press, in the floor band (or under the headline when the subject
               holds the floor)
      foot     a line at the very bottom, italic        landed  [[who, what]]: what two people did, beside each other
-   quiet()  releases the screen.  marks()  the boxes of the words on the glass, for the stills check. */
+   quiet()  releases the screen.  marks()  the boxes of the words on the glass, for the stills check.
+
+   Build 2 (hollow interface build 2): more than one part of the room speaks through it, so each speaks as an owner and
+   the screen goes to the one that matters most; the others wait and come back when it lets go.
+     say(m, owner = "moment", rank = 3)   quiet(owner = "moment")
+   rank 3 is a moment that holds the screen (the letters); rank 1 and 2 are what you stand near (garden.js's near card,
+   the map stand), said with m.soft: the standing row stays, the words sit above it, and only the old pinned card and the
+   room's hint step aside (body.voiced-soft). */
 
 const css = `
 #voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: #f6ecdc; --display: "Marcellus", Georgia, serif; --body: "Alegreya Sans", system-ui, sans-serif; }
 #voice[hidden] { display: none; }
 #voice .vw { position: absolute; left: max(16px, 7%); right: max(16px, 7%); transition: top .5s ease, bottom .5s ease, opacity .4s ease; }
 #voice .vh { font: 400 24px/1.2 var(--display); text-shadow: 0 1px 3px #000, 0 0 18px rgba(0,0,0,.7); }
-#voice .vs { margin-top: 10px; max-width: 34em; font: 400 15.5px/1.35 var(--body); opacity: .88; text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.8); }
+#voice .vs { margin-top: 10px; max-width: 34em; max-height: 8.2em; overflow: auto; pointer-events: auto; font: 400 15.5px/1.35 var(--body); opacity: .88; text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.8); }
 #voice .va { position: absolute; left: max(16px, 7%); right: max(16px, 7%); display: grid; gap: 10px; pointer-events: auto; }
 #voice .seal { display: flex; align-items: center; gap: 14px; background: none; border: 0; padding: 4px 0; color: #ffd9a3; text-align: left; font: 400 19px var(--display); cursor: pointer; text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.8); min-height: 48px; }
 #voice .seal i { flex: none; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #f39a62, #b9481f 72%); box-shadow: 0 0 0 3px rgba(120,40,10,.4), 0 0 22px rgba(255,150,80,.55), inset 0 -4px 6px rgba(0,0,0,.35); }
@@ -29,21 +36,42 @@ const css = `
 #voice .vl div { display: grid; grid-template-columns: 96px 1fr; gap: 10px; font: 400 15px/1.3 var(--body); text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.85); }
 #voice .vl b { font: 400 15px var(--display); color: #ffd08a; }
 #voice .vl span { padding-left: 12px; border-left: 2px solid #ffd08a; color: #fff3df; }
+body.voiced-soft .hud .near, body.voiced-soft .hud .hint, body.voiced-soft .hud .next, body.voiced-soft #labels, body.voiced-soft .ctw-card, body.voiced-soft .ctw-label { visibility: hidden; }
 body.voiced .hud .bottom, body.voiced .hud .top, body.voiced #labels, body.voiced .ctw-label, body.voiced .hint, body.voiced .near { visibility: hidden; }
 `;
+/* A pinned panel's words as a moment for the screen owner: its first bold is the headline, its line and any small notes
+   the line under it, its buttons the seals (each presses the panel's own button, so every action keeps its handler).
+   `live` finds the panel again when a seal is pressed, since the room may have redrawn it. */
+export function panelMoment(el, live) {
+  if (!el) return null;
+  const b = el.querySelector("b"); if (!b) return null;
+  const what = b.parentElement, tt = el.querySelector(".t");
+  const extra = [...what.childNodes].filter(n => n !== b && n !== tt && !(n.nodeType === 1 && n.classList && n.classList.contains("t"))).map(n => n.textContent).join("").replace(/^\s*·\s*/, "").trim();
+  const smalls = [...el.querySelectorAll(".row .small")].map(e => e.textContent.trim());
+  const sub = [extra && extra.charAt(0).toUpperCase() + extra.slice(1) + (/[.!?]$/.test(extra) ? "" : "."), tt && tt.textContent.trim(), ...smalls].filter(Boolean).join(" ");
+  const actions = [...el.querySelectorAll(".row button")].map((x, i) => ({ label: x.textContent.trim(), quiet: x.classList.length > 0,
+    on: () => { const l = (live ? live() : el); const y = l && l.querySelectorAll(".row button")[i]; if (y) y.click(); } }));
+  return { head: b.textContent.trim(), sub, actions };
+}
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 export function createVoice() {
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
   const root = document.createElement("div"); root.id = "voice"; root.hidden = true; document.body.appendChild(root);
-  let cur = null, key = "";
+  const owners = new Map(); // owner -> { m, rank, at }
+  let cur = null, curOwner = null, key = "";
   root.addEventListener("click", e => {
     const b = e.target.closest("button[data-i]"); if (!b || !cur) return;
     const a = (cur.actions || [])[+b.dataset.i]; if (a && a.on) a.on();
   });
-  function say(m) {
-    const k = JSON.stringify([m.head, m.sub, (m.actions || []).map(a => [a.label, a.sub, a.quiet]), m.foot, m.landed]);
-    cur = m; document.body.classList.add("voiced"); root.hidden = false;
+  const top = () => { let best = null; for (const [o, c] of owners) if (!best || c.rank > best[1].rank || (c.rank === best[1].rank && c.at > best[1].at)) best = [o, c]; return best; };
+  function show() {
+    const t = top();
+    if (!t) { cur = null; curOwner = null; key = ""; root.hidden = true; root.innerHTML = ""; document.body.classList.remove("voiced", "voiced-soft"); return; }
+    const [o, { m }] = t;
+    const k = o + JSON.stringify([m.head, m.sub, (m.actions || []).map(a => [a.label, a.sub, a.quiet]), m.foot, m.landed, !!m.soft]);
+    cur = m; curOwner = o; root.hidden = false;
+    document.body.classList.toggle("voiced", !m.soft); document.body.classList.toggle("voiced-soft", !!m.soft);
     if (k !== key) {
       key = k;
       root.innerHTML = `<div class="vw">${m.head ? `<div class="vh">${esc(m.head)}</div>` : ""}${m.sub ? `<div class="vs">${esc(m.sub)}</div>` : ""}</div>`
@@ -53,15 +81,28 @@ export function createVoice() {
     }
     place();
   }
+  function say(m, owner = "moment", rank = 3) {
+    const was = owners.get(owner);
+    owners.set(owner, { m, rank, at: was && was.rank === rank ? was.at : performance.now() });
+    show();
+  }
   /* The largest quiet area: above the subject or below it. The headline takes it; the actions take the floor band
-     unless the subject holds the floor, and then sit under the headline. */
+     unless the subject holds the floor, and then sit under the headline. A soft voice keeps the standing row, so its
+     floor band ends where the row begins. */
   function place() {
     if (!cur) return;
     const H = innerHeight, W = innerWidth, box = cur.subject && cur.subject();
     const vw = root.querySelector(".vw"), va = root.querySelector(".va"), vl = root.querySelector(".vl"), vf = root.querySelector(".vf");
     const wordsH = vw ? vw.getBoundingClientRect().height : 0, actH = va ? va.getBoundingClientRect().height : 0;
     const floorTaken = (vl ? vl.getBoundingClientRect().height + 40 : 0) + (vf ? 40 : 0);
-    const safeTop = Math.max(16, H * 0.07), floorTop = H - floorTaken - Math.max(18, H * 0.04);
+    let floorTop = H - floorTaken - Math.max(18, H * 0.04), safeTop = Math.max(16, H * 0.07);
+    if (cur.soft) {
+      const row = document.querySelector(".hud .tools"), bar = document.querySelector(".hud .top");
+      const shown = e => e && e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
+      const r = shown(row) && row.getBoundingClientRect(), b = shown(bar) && [...bar.children].reduce((m, c) => Math.max(m, c.getBoundingClientRect().bottom), bar.getBoundingClientRect().bottom);
+      if (r && r.height) floorTop = Math.min(floorTop, r.top - 10);
+      if (b) safeTop = Math.max(safeTop, b + 12);
+    }
     let top = safeTop, actTop = floorTop - actH;
     if (box && box.b > box.t && box.r > box.l && box.l < W && box.r > 0) {
       const above = Math.max(0, box.t - safeTop), below = Math.max(0, floorTop - box.b);
@@ -76,8 +117,8 @@ export function createVoice() {
     if (vw) vw.style.top = Math.round(top) + "px";
     if (va) va.style.top = Math.round(actTop) + "px";
   }
-  function quiet() { cur = null; key = ""; root.hidden = true; root.innerHTML = ""; document.body.classList.remove("voiced"); }
+  function quiet(owner = "moment") { if (owners.delete(owner)) show(); }
   function marks() { return [...root.querySelectorAll(".vh, .vs, .seal, .vf, .vl b, .vl span")].map(e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; }); }
   addEventListener("resize", place);
-  return { say, quiet, place, marks, holding: () => !!cur };
+  return { say, quiet, place, marks, holding: () => !!cur && !cur.soft, owner: () => curOwner, owners: () => [...owners.keys()] };
 }

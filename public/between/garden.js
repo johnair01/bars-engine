@@ -1618,6 +1618,7 @@ function frameBody() {
   // what is near you
   const nk = nearest();
   if (nk !== nearKey) { nearKey = nk; refreshHud(); }
+  if (window.__between && window.__between.voice) { if (nearHushed()) window.__between.voice.quiet("near"); else if (nearKey) { const vo = window.__between.voice, ne = $("#near"); if (!vo.owners().includes("near") && ne._h) nearVoice(ne, ne._h); vo.place(); } }
   if (shotWanted) takeShot();
 }
 function nearest() {
@@ -1726,6 +1727,7 @@ function refreshHud() {
   const key = nearKey;
   let html = ""; try { html = key && !minuteOn() ? nearHtml(key, V, g) : ""; } catch (e) { noteError(e, "near " + key); } // a broken card shows nothing, never stops the room
   near.hidden = !html || satchelOpen; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
+  nearVoice(near, html);
 
   // tools
   const tools = [];
@@ -1802,6 +1804,24 @@ function freeSeatCard(i) {
   const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : "A cushion";
   if (!here) return `<div class="what"><b>${name}</b><span class="t">${st.hearth ? "Worn flat from sitting by the fire." : "Set down here for sitting."}</span></div><div class="row"><button type="button" data-act="${st.hearth ? "sitHearth" : "sit"}">Sit here</button></div>`;
   return `<div class="what"><b>${name}</b><span class="t">${fire ? "Sitting by the fire." : "Sitting."}</span></div><div class="row">${fire && (hearthOpen() || storeDown) && sheetName !== "hearth" ? `<button type="button" data-act="sitHearth">Sit with what stirs you</button>` : ""}<button class="glassbtn" type="button" data-act="stand">Stand up</button></div>`;
+}
+/* What you stand near speaks through the one screen owner (voice.js, hi-screen-owner; hollow interface build 2): the
+   card's name is the headline, its line under it, its buttons the seals over the standing row, placed clear of the thing
+   itself. The pinned card stays in the page, hidden, so every button keeps its own handler. */
+let voiceMod = null;
+function nearVoice(el, html) {
+  const vo = window.__between && window.__between.voice; if (!vo || !voiceMod) return;
+  const m = html && !satchelOpen && !nearHushed() ? voiceMod.panelMoment(el, () => $("#near")) : null;
+  if (!m) { vo.quiet("near"); return; }
+  vo.say({ ...m, soft: true, subject: nearBox }, "near", 1);
+}
+const nearHushed = () => !!sheetName || !!hm || ["mirroring", "seatedmoment", "quiethud"].some(c => document.body.classList.contains(c)) || !$("#hud") || $("#hud").hidden;
+const NB = new THREE.Vector3();
+function nearBox() {
+  const p = nearKey && posOf(nearKey); if (!p) return null;
+  const [x0, y0] = window.__between.screenOf(NB.set(p.x, 0, p.z)), [, y1] = window.__between.screenOf(NB.set(p.x, 1.7, p.z));
+  const h = Math.abs(y0 - y1), w = Math.max(40, h * 0.6);
+  return { l: x0 - w / 2, r: x0 + w / 2, t: Math.min(y0, y1), b: Math.max(y0, y1) };
 }
 function nearHtml(key, V, g) {
   if (key && key.startsWith("spot:")) return spotNear(key.slice(5), g);
@@ -3930,5 +3950,5 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
-import("./voice.js").then(v => { window.__between.voice = v.createVoice(); return import("./letters.js"); })
+import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.createVoice(); refreshHud(); return import("./letters.js"); })
   .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
