@@ -10,6 +10,7 @@
 
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
+import { HOLLOW_CARD, lettersWrite } from './shared-pick'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -95,6 +96,13 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if ('looks' in data) { const v = looksWrite(me, data.looks); if (!v.ok) return v }
       if ('invitations' in data) { const v = invitationsWrite(me, garden, data.invitations); if (!v.ok) return v }
       if ('room' in data) { const v = roomWrite(me, garden, data.room); if (!v.ok) return v }
+      if ('pick' in data) return no(400, 'The shared pick became letters from the nook.')
+      if ('letters' in data) {
+        if (home) return no(400, 'A homeroom is held by one person.')
+        const l = data.letters, was = garden.letters
+        const v = lettersWrite(me, garden, was, isObj(l) && isObj(was) ? merge(was, l) : l)
+        if (!v.ok) return v
+      }
       if ('members' in data) {
         const add = isObj(data.members) ? Object.keys(data.members) : []
         const jr = isObj(garden.joinRequest) ? garden.joinRequest : null
@@ -155,7 +163,11 @@ const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFin
 
 /** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
 export function pouchWrite(pouch: Doc): Verdict {
-  for (const k of Object.keys(pouch)) if (k !== 'embers') return no(400, 'The pouch holds embers only.')
+  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
+  // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
+  const h = pouch.hollow
+  if (h != null && !(isObj(h) && Object.keys(h).every(k => k === 'card' || k === 'at') && h.card === HOLLOW_CARD && isNum(h.at)))
+    return no(400, 'The hollow keeps one card of your own.')
   const embers = pouch.embers ?? {}
   if (!isObj(embers)) return no(400, 'The pouch holds embers only.')
   for (const e of Object.values(embers)) {

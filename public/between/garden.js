@@ -9,6 +9,7 @@ import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satche
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
+import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the spark over it (pt1-cushion-first)
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
@@ -347,7 +348,7 @@ function loadModel(name) {
     let box = new THREE.Box3();
     root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); const b = o.boundingBox.clone().applyMatrix4(o.matrixWorld); box.union(b); } else box.expandByObject(o); } });
     return { scene: root, anims: g.animations, box };
-  });
+  }, e => { delete templates[name]; throw e; });
   return templates[name];
 }
 
@@ -1166,9 +1167,13 @@ async function ensurePeerBody(p) {
   const hue = hueOf(p.uid, view().g), lk = lookOf(p.uid);
   if (p.body && p.hue === hue && p.look === lk) return;
   if (p.loading) return; p.loading = true;
-  const b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
-  p.loading = false;
-  if (!peers.has(p.peer)) return;
+  /* A load that fails (a dropped fetch on a phone) is tried again at the next poll, never left loading (playtest 1,
+     2026-10-28: the partner's figure hung on loading); the model caches let go of a failed fetch for the same reason. */
+  let b = null;
+  try { b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) }); }
+  catch (e) { noteError(e, "peer figure"); }
+  finally { p.loading = false; }
+  if (!b || peers.get(p.peer) !== p) return;
   if (p.body) scene.remove(p.body.holder);
   p.body = b; p.hue = hue; p.look = lk; scene.add(b.holder);
 }
@@ -1276,9 +1281,11 @@ function tapAt(cx, cy) {
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
-  // things first: the nearest one whose sphere the ray passes through
-  let best = null, bestD = Infinity;
-  const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { const along = ray.ray.origin.distanceTo(pos); if (along < bestD) { bestD = along; best = { key, pos }; } } };
+  // the cards at the grey edge take the tap first, and bring the encounter back after "Walk on" (letters.js)
+  if (!placing && !satchelOpen && window.__between && window.__between.letters && window.__between.letters.tap(ray.ray)) return;
+  // things first: the nearest one whose sphere the ray passes through, a seat ahead of anything over it (pick.js)
+  const hits = []; let best = null;
+  const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { hits.push({ key, pos, along: ray.ray.origin.distanceTo(pos) }); best = pickTap(hits); } };
   if (placing) { placeAt(); return; }
   // the room kit: with the satchel open, a glowing spot that fits takes the armed item, and a placed item goes back
   if (hollow) for (const h of Object.values(hollow.handles.spots)) {
@@ -1708,7 +1715,7 @@ function refreshHud() {
   else if (isHome(g)) hintText = "Your own room. Walk up to the mirror to change how you look. Tap the window to change the light. The doorway opens when your first minute here is complete.";
   else if (g.phase === "closed") hintText = "The garden is closed. Its history is yours to keep from More.";
   else if (!isMember(g)) hintText = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
-  else if (g.phase === "spark") hintText = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
+  else if (g.phase === "spark") hintText = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap your cushion to sit, the floor to walk.`;
   else if (placing) hintText = placing.ask ? "Tap the floor where you would like it. It moves there when they say yes." : "Tap the floor where it should stand, or drag it there, or set it down where you are.";
   else if (others.length) hintText = `${nameOf(others[0].uid, g)} is here with you now.` + (bothSitting() ? " You are sitting together." : meState.sitting ? "" : " Tap your cushion to sit with them.");
   else hintText = `${nameOf(other(g), g)} is not here right now. What you do waits for them.`;
@@ -2567,7 +2574,7 @@ function roomsSheet() {
     const where = r.phase === "spark" ? `A spark, waiting for ${esc(r.who || "them")} to join` : `You and ${esc(roomName(r))}`;
     return `<div class="roomrow"><div><b>${esc(roomName(r))}</b><span class="small muted">${where} · ${esc(r.relKind || r.kind || "")} · ${esc(styleOf(r.style).name)}</span>
       ${m ? `<span class="small">Next: ${esc(m.title)}</span>` : `<span class="small muted">Nothing waits here.</span>`}</div>
-      <button type="button" data-act="goRoom" data-id="${esc(r.id)}">Go in</button></div>`;
+      <div class="row"><button type="button" data-act="goRoom" data-id="${esc(r.id)}">Go in</button>${r.phase === "spark" ? `<button class="ghost" type="button" data-act="sparkAgain" data-id="${esc(r.id)}">Send the link again</button>` : ""}</div></div>`;
   };
   return `<div class="stack"><h2>Your rooms</h2>
     <p class="small muted">One room for each relationship. Each starts as a spark you tend alone, and becomes your Between once they join.</p>
@@ -2748,7 +2755,7 @@ function invitationsSheet() {
     ${asks.length ? asks.map(({ r, inv }) => `<div class="roomrow"><div><b>${esc(roomName(r))} asks you to come and sit</b><span class="small muted">${inv.when ? "At " + fmt(inv.when) : "Whenever you can"}${inv.note ? ` · <i>${esc(inv.note)}</i>` : ""}</span></div>
       <div class="row">${answerBtns(r.id, inv.id)}</div></div>`).join("") : `<p class="muted">No invitations wait for you.</p>`}
     ${joins.map(r => `<div class="roomrow"><div><b>Someone asked to join your spark toward ${esc(r.who || "them")}</b><span class="small muted">Go in and welcome them at the spark.</span></div><button type="button" data-act="goRoom" data-id="${esc(r.id)}">Go in</button></div>`).join("")}
-    <p class="small muted">To invite someone, go into their room and use Invite.</p></div>`;
+    <p class="small muted">To invite someone, go into their room and use Invite. A spark's link can be sent again from Rooms.</p></div>`;
 }
 const answerBtns = (rid, iid) => `<button type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|yes">Yes</button><button class="ghost" type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|later">Another time</button><button class="quiet" type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|no">No</button>`;
 /* With two people in a room, a style change is an ask the other says yes to (his note on br-style-is-the-place,
@@ -3369,6 +3376,13 @@ document.addEventListener("click", async ev => {
   if (a === "goHome") { goRoom(null); return; }
   if (a === "goRoom") { goRoom(id); return; }
   if (a === "goDojo") { walkToTriangleWorkshop(); return; }
+  // a spark's link, found again from the homeroom (pt1-two-player-check: the link got lost after the first send)
+  if (a === "sparkAgain") {
+    const r = ((list && list.gardens) || []).find(x => x.id === id);
+    try { await sparkLink({ id, name: r ? roomName(r) : "them" }, ""); toast(navigator.share ? "The link is ready to send." : "The link is on your clipboard."); }
+    catch { toast("The link did not come. Go into the room and use Invite."); }
+    return;
+  }
   if (a === "through") { if (portalTo) walkThrough(portalTo.id, portalTo.invite); return; }
   if (a === "next") {
     if (id.startsWith("room:")) { goRoom(id.slice(5)); return; }
@@ -3805,6 +3819,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 /* ===================================================================================================
    Boot
    =================================================================================================== */
+let booted = false;
 (async function boot() {
   loadStep("building the hollow");
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
@@ -3817,7 +3832,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   });
   roomP.then(() => loadStep(roomOk = "hollow built"), () => {});
   const q = new URLSearchParams(location.search);
-  const want = q.get("g"), wantInvite = q.get("invite");
+  let want = q.get("g"), wantInvite = q.get("invite");
   // one walk through the doorway lets the next load open the room; a reload lands in the homeroom again
   let through = null; try { through = sessionStorage.getItem(THROUGH); sessionStorage.removeItem(THROUGH); } catch {}
   // previews only: ?skipHome=1 opens the room in the link straight away, for a test link that starts in the room
@@ -3829,6 +3844,13 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
+    /* An invitation you opened is kept until you are in its room, so the doorway still offers it when you come back to the
+       homeroom without the link (pt1-two-player-check: the link got lost later in the playtest). */
+    const keptKey = "between.invited." + me, kept = me ? ls.get(keptKey) : null;
+    const listed = id => ((list && list.gardens) || []).some(x => x.id === id);
+    if (kept && kept.id && listed(kept.id)) ls.del(keptKey);
+    else if (kept && kept.id && kept.invite && (!want || want === homeId)) { want = gardenId = kept.id; wantInvite = invite = kept.invite; }
+    if (me && want && wantInvite && homeId && want !== homeId && !listed(want)) ls.set(keptKey, { id: want, invite: wantInvite });
     // previews only: ?room=first opens your first shared room straight away (the room id is not in a link he can type)
     const firstRoom = PREVIEW_HOST && q.get("room") === "first" ? ((list && list.gardens) || []).find(x => x.phase !== "closed") : null;
     if (firstRoom) { gardenId = firstRoom.id; invite = null; try { const u = new URL(location.href); u.searchParams.delete("room"); u.searchParams.set("g", gardenId); u.searchParams.set("skipHome", "1"); history.replaceState(null, "", u); } catch {} }
@@ -3886,12 +3908,13 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   minuteStart();
   syncShelf();
   if (SCROLL_PREVIEW === "write" && inNook()) openPaper("write", { fromShelf: true });
+  booted = true;
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { tea: () => tea, outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -3904,3 +3927,8 @@ window.__between = { tea: () => tea, outbox, view, meState, peers, walkers, thin
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
+// letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
+// holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
+// opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
+import("./voice.js").then(v => { window.__between.voice = v.createVoice(); return import("./letters.js"); })
+  .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
