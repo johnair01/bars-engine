@@ -59,36 +59,9 @@ The project contains distinct narrative **voices** derived from the creator's ar
 
 The Portland community around this project has a strong allergy to AI. Design choices, documentation, and public-facing language should respect this. The non-AI version is not a fallback; it is a first-class delivery mode.
 
-## Active Technologies
-- TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK (main)
-- PostgreSQL (Prisma ORM) (main)
+## Stack
 
-- (main)
-
-## Project Structure
-
-```text
-src/
-tests/
-```
-
-## Commands
-
-# Add commands for 
-
-## Code Style
-
-: Follow standard conventions
-
-## Recent Changes
-- main: Added TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK
-- main: Added TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK
-
-- main: Added
-
-<!-- MANUAL ADDITIONS START -->
-
----
+TypeScript, Next.js 14+, Prisma (PostgreSQL), Tailwind CSS, AI SDK. Source in `src/`, tests in `tests/`.
 
 ## Spec Workflow
 
@@ -136,47 +109,7 @@ See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 
 <!-- ooo:START -->
 <!-- ooo:VERSION:0.14.0 -->
-# Ouroboros — Specification-First AI Development
 
-> Before telling AI what to build, define what should be built.
-> As Socrates asked 2,500 years ago — "What do you truly know?"
-> Ouroboros turns that question into an evolutionary AI workflow engine.
+## Ouroboros
 
-Most AI coding fails at the input, not the output. Ouroboros fixes this by
-**exposing hidden assumptions before any code is written**.
-
-1. **Socratic Clarity** — Question until ambiguity ≤ 0.2
-2. **Ontological Precision** — Solve the root problem, not symptoms
-3. **Evolutionary Loops** — Each evaluation cycle feeds back into better specs
-
-```
-Interview → Seed → Execute → Evaluate
-    ↑                           ↓
-    └─── Evolutionary Loop ─────┘
-```
-
-## ooo Commands
-
-Each command loads its agent/MCP on-demand. Details in each skill file.
-
-| Command | Loads |
-|---------|-------|
-| `ooo` | — |
-| `ooo interview` | `ouroboros:socratic-interviewer` |
-| `ooo seed` | `ouroboros:seed-architect` |
-| `ooo run` | MCP required |
-| `ooo evolve` | MCP: `evolve_step` |
-| `ooo evaluate` | `ouroboros:evaluator` |
-| `ooo unstuck` | `ouroboros:{persona}` |
-| `ooo status` | MCP: `session_status` |
-| `ooo setup` | — |
-| `ooo help` | — |
-
-## Agents
-
-Loaded on-demand — not preloaded.
-
-**Core**: socratic-interviewer, ontologist, seed-architect, evaluator,
-wonder, reflect, advocate, contrarian, judge
-**Support**: hacker, simplifier, researcher, architect
-<!-- ooo:END -->
+Specification-first `ooo` commands and agents: [docs/OUROBOROS.md](docs/OUROBOROS.md) (moved out of this file 2026-10-30 so every session that attaches this repo opens smaller).
