@@ -86,6 +86,8 @@ export default defineConfig({
       'src/app/board/__tests__/art.test.ts',
       'src/lib/board/__tests__/content-store.test.ts',
       'src/app/api/board/content/__tests__/route.test.ts',
+      'src/lib/work/__tests__/ticket.test.ts',
+      'src/lib/work/__tests__/queue.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',
       'src/lib/board/__tests__/council-page.test.ts',
       'src/lib/board/__tests__/session-write-rows.test.ts',
