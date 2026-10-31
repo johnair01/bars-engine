@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wendell-britt/Six-faces-council/blob/main/schema/board-save.schema.json",
   "title": "Board save",
-  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only.",
+  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only. A stores document is one placement in the Stores' move (bars-engine /board/studio?stores=1): a run's thing put on the shelf, in the seed basket, up the bell line or in the compost ring, or taken by the tide; board/pull.py records it with the steps.",
   "type": "object",
   "additionalProperties": false,
   "required": ["board", "collection", "docId", "data"],
   "properties": {
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
-                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows"]},
+                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores"]},
     "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\\\u0000-\\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}
@@ -68,6 +68,11 @@
       {"if": {"properties": {"collection": {"const": "seeds"}}},
        "then": {"properties": {"board": {"const": "council"}, "data": {"required": ["taskId", "savedAt"], "properties": {
          "taskId": {"type": "string", "minLength": 1, "pattern": "\\S"}, "savedAt": {"$ref": "#/$defs/iso"}}}}}},
+      {"if": {"properties": {"collection": {"const": "stores"}}},
+       "then": {"properties": {"board": {"const": "council"}, "data": {"required": ["run", "thing", "kind", "words", "to", "savedAt"],
+         "properties": {"run": {"$ref": "#/$defs/text"}, "thing": {"$ref": "#/$defs/text"}, "words": {"$ref": "#/$defs/text"},
+           "kind": {"enum": ["jar", "seed", "thread", "husk"]}, "to": {"enum": ["shelf", "seeds", "bell", "compost", "tide"]},
+           "savedAt": {"$ref": "#/$defs/iso"}}}}}},
       {"if": {"properties": {"collection": {"const": "morning"}, "docId": {"const": "menu"}}, "required": ["docId"]},
        "then": {"properties": {"data": {"required": ["menu", "savedAt"], "properties": {
          "menu": {"type": "string", "not": {"pattern": "\"rawEntry\""}}, "savedAt": {"$ref": "#/$defs/iso"}}}}}}

@@ -74,8 +74,9 @@ export type StoreCold = { at: string; why: string }
 export type PullCold = { at: string; url?: string }
 
 /** Which room a needs-work line is the crew's work for: an overrule still being made good is a falsify; a "yes" on a
- * step is a ship; a step laid down for compost is a close; everything else is a build. */
+ * step is a ship; a step laid down for compost, or anything the Stores' move left, is a close; everything else is a build. */
 export function needsWorkStage(row: string, what: string): Stage {
+  if (row.startsWith('stores/')) return 'close' // the Stores' move left it: a lesson to file, an intake to open, a compost entry
   if (row.startsWith('positions/') && /^overruled/i.test(what)) return 'falsify'
   if (row.startsWith('steps/')) {
     if (/^note\s+["“]?\s*yes/i.test(what) || /^yes/i.test(what)) return 'ship'
