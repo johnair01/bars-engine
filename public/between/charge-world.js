@@ -298,7 +298,7 @@ export function mount(B, opts = {}) {
       p.mat.opacity = e; p.frame.material.opacity = e * 0.9;
     }
     near = null;
-    if (dist < NEAR_R + 0.3) near = "stand";
+    if (dist < NEAR_R + 0.3 && !(B.meState.sitting && B.meState.seatWant === "coins")) near = "stand"; // sat at the coin table, a step away, you are not at the stand
     const door = episode && doorAt(); if (door && Math.hypot(me.x - door.at.x, me.z - door.at.z) < 1.25) near = "door";
     // at the stand, a step to one side is a step toward that side's pane
     const lateral = (me.x - STAND.x) * RIGHT.x + (me.z - STAND.z) * RIGHT.z;
