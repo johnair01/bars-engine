@@ -13,6 +13,7 @@ import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the s
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
+import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
 import { NEAR as TEA_NEAR } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
@@ -774,6 +775,8 @@ function stepBetween(t, dt) {
   const { phase, state, stale, sat } = look;
   const breath = (t % 10) < 4 ? Math.sin((t % 10) / 4 * Math.PI / 2) : Math.cos(((t % 10) - 4) / 6 * Math.PI / 2); // 4 s in, 6 s out
   const together = bothSitting();
+  // the music follows the room (music.js): standing about, sitting alone, sitting together, or close (the hearth moment, a cup in hand)
+  ambient.mood(moodOf({ sitting: !!meState.sitting, together, close: !!hm || !!(tea && tea.holding()) }));
   // sitting together, it turns to face you both (the cushions sit side by side behind it)
   creature.update(t, dt, { phase, state, stale, sat, target: together ? TOGETHER_FACE : creatureTarget(), together });
   const p = moteGeo.attributes.position.array;
@@ -3329,8 +3332,13 @@ function shelfTap(kind, i) {
 }
 
 /* ---------- sound: starts on the first tap, if it is on ---------- */
-const ambient = createAmbient();
-function soundLabel() { const b = $("#soundBtn"); if (!b) return; b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+// ?music=code|bed|both plays that version of the room's music, so he can hear them side by side and pick by ear (bt-music-form);
+// with no ?music the room has no music. E.g. ?nook=1&sit=hearth&music=code
+const ambient = createAmbient({ music: KQ.get("music") });
+function soundLabel() {
+  const b = $("#soundBtn"); if (b) { b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+  const mb = $("#musicBtn"); if (mb) { mb.hidden = !ambient.music; mb.textContent = ambient.musicOn ? "Music on" : "Music off"; mb.setAttribute("aria-pressed", ambient.musicOn ? "true" : "false"); }
+}
 addEventListener("pointerdown", () => ambient.wake(), { capture: true });
 document.addEventListener("visibilitychange", () => { document.hidden ? ambient.pause() : ambient.resume(); });
 soundLabel();
@@ -3350,6 +3358,7 @@ document.addEventListener("click", async ev => {
   if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
   if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
+  if (a === "music") { ambient.toggleMusic(); soundLabel(); return; }
   if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
