@@ -23,7 +23,7 @@ let parts = null;
 const getJson = u => fetch(u).then(r => r.ok ? r.json() : null).catch(() => null);
 export function loadParts(loadGltf, loadJson = getJson) {
   if (!parts) parts = Promise.all([...["average-dusk", "robe", "sash"].map(n => loadGltf(DIR + n + ".glb")), loadJson(DIR + "robe-cover.json")])
-    .then(([dusk, robe, sash, cover]) => ({ dusk, robe, sash, cover }));
+    .then(([dusk, robe, sash, cover]) => ({ dusk, robe, sash, cover }), e => { parts = null; throw e; }); // a failed fetch is tried again
   return parts;
 }
 

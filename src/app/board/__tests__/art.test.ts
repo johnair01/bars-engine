@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { describe, expect, it, vi } from 'vitest'
 import { artPath, lookPage, serveArt } from '../art'
 import { setBackend } from '@/lib/board/content-store'
@@ -41,5 +42,23 @@ describe('lookPage', () => {
     expect(html).toContain('src="/board/stills/94a1067981bd2ba3.jpg"')
     expect(html).not.toContain('council/x.png')
     expect(html).not.toContain('github.com')
+  })
+})
+
+describe('pictures by hash (the seal)', () => {
+  it('serves a stored object by its full hash with no manifest entry, and 404s one the store lacks', async () => {
+    const mem = memoryBackend()
+    const sha = createHash('sha256').update('png bytes').digest('hex')
+    mem.objects.set('sha/' + sha, { bytes: new TextEncoder().encode('png bytes'), type: 'image/png' })
+    setBackend(mem.backend)
+    expect(artPath(['sha', `${sha}.png`])).toBe(`sha/${sha}.png`)
+    expect(artPath(['sha', 'abc.png'])).toBeNull()
+    const r = await serveArt(['sha', `${sha}.png`])
+    expect(await r.text()).toBe('png bytes')
+    expect(r.headers.get('content-type')).toBe('image/png')
+    expect(r.headers.get('cache-control')).toContain('immutable')
+    expect((await serveArt(['sha', `${'0'.repeat(64)}.png`])).status).toBe(404)
+    expect(lookPage('t', [`sha/${sha}.png`])).toContain(`src="/board/stills/sha/${sha}.png"`)
+    setBackend(undefined)
   })
 })

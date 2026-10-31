@@ -4,26 +4,30 @@
  * there; the CDN holds each picture after its first request. /board/stills/<path> is the picture; /board/look is a page to
  * inspect a look's pictures at full size. Only image files under the two stills folders are passed, never the repo. */
 import { NextResponse } from 'next/server'
-import { readFile } from '@/lib/board/content-store'
+import { readFile, readObject } from '@/lib/board/content-store'
 
 const TYPES: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }
 
 /** The repo path a /board/stills/ request names, or null. A bare `<hash>.<ext>` is a board still (board/stills/,
- * named by its content, so it never changes); a longer path must sit under council/callsheets/stills/. */
+ * named by its content, so it never changes); `sha/<sha256>.<ext>` is a stored object by its full hash, pushed by
+ * board/post_rows.py from any branch before its row (the seal); a longer path must sit under council/callsheets/stills/. */
 export function artPath(parts: string[]): string | null {
   let p: string
   try { p = parts.map(decodeURIComponent).join('/') } catch { return null }
   if (!/\.(jpe?g|png|gif|webp)$/i.test(p) || p.includes('..') || p.includes('//') || /[^A-Za-z0-9._\/ -]/.test(p)) return null
   if (/^[0-9a-f]{16}\.[a-z]+$/.test(p)) return 'board/stills/' + p
+  if (p.startsWith('sha/')) return /^sha\/[0-9a-f]{64}\.[a-z]+$/.test(p) ? p : null
   return p.startsWith('council/callsheets/stills/') ? p : null
 }
 
 export async function serveArt(parts: string[]): Promise<NextResponse> {
   const p = artPath(parts)
   if (!p) return new NextResponse('Not a look picture.', { status: 404 })
-  const f = await readFile(p)
-  if (!f) return new NextResponse('That picture has not been pushed from six-faces-council main.', { status: 404 })
-  const hashed = p.startsWith('board/stills/')
+  const byHash = p.startsWith('sha/')
+  const f = byHash ? await readObject(p.slice(4, 68)) : await readFile(p)
+  if (!f) return new NextResponse(byHash ? 'That picture is not in the content store.'
+    : 'That picture has not been pushed from six-faces-council main.', { status: 404 })
+  const hashed = byHash || p.startsWith('board/stills/')
   return new NextResponse(f.body, {
     headers: {
       'Content-Type': TYPES[p.split('.').pop()!.toLowerCase()],
