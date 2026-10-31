@@ -16,8 +16,9 @@
 import * as THREE from "three";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { FACES, offers, workorder, sealSave, hand } from "./iching/workorder.js";
+import { SHELLS } from "../calrunia/room-kit.js";
 
-const TY = 0.32, TR = 0.34, SEAT_D = 0.62, PUSH_R = 0.5, NEAR_R = 1.25, BOOK_NEAR = 0.95;
+const TY = 0.32, TR = 0.34, SEAT_D = 0.62, PUSH_R = 0.5, NEAR_R = 1.25, BOOK_NEAR = 0.8;
 const SAMPLE = { id: "ttv-cmvvan71s001412hdijdu74gg", do: "Put an I Ching into the Between space and the Nook", ttvDate: "2026-10-30" };
 const BAR_TOSSES = [[2, 3, 3], [3, 3, 2], [2, 2, 3], [2, 3, 3], [3, 2, 2], [3, 3, 2]]; // hexagram 39, as the first workorder cast it
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -38,12 +39,13 @@ export function mount(B, opts = {}) {
     const perp = shell === "nook" ? V(-dir.z, 0, dir.x) : V(-dir.z, 0, dir.x);   // nook: the window side; hollow: the shelf side
     if (shell === "nook" && perp.z > 0) perp.negate();                          // the nook's window is toward -z
     if (shell !== "nook" && perp.x < 0) perp.negate();                          // the hollow's shelf is toward +x
-    const T = V(hx, 0, hz).addScaledVector(dir, shell === "nook" ? 1.35 : 1.3).addScaledVector(perp, shell === "nook" ? 0.75 : 0.85);
+    // clear of the hearth's cushion and the kettle on its stone (on the hearth line at 1.55 m in the nook, 1.85 m in the hollow)
+    const T = V(hx, 0, hz).addScaledVector(dir, shell === "nook" ? 1.25 : 1.3).addScaledVector(perp, shell === "nook" ? 1.1 : 0.95);
     const seat = T.clone().addScaledVector(dir, SEAT_D);
     const seatYaw = Math.atan2(T.x - seat.x, T.z - seat.z);
     let book, bookYaw, bookStand = null;
     if (shell === "nook") { // on the shelf, propped toward the room, as the still has it (fb-look-01, nook-book-coins)
-      const sh = V(...B.anchors().shelf), sy = 0.3, sr = V(Math.cos(sy), 0, -Math.sin(sy));
+      const sp = SHELLS.nook.spots.find(x => x.id === "shelf"), sh = V(...sp.at), sy = sp.face || 0.3, sr = V(Math.cos(sy), 0, -Math.sin(sy));
       book = sh.clone().addScaledVector(sr, -0.12).add(V(0, 0.05, 0.03)); bookYaw = sy;
       bookStand = sh.clone().setY(0).add(V(Math.sin(sy), 0, Math.cos(sy)).multiplyScalar(0.75));
     } else {                // the hollow's shelf unit is full of pots: a reading stand beside the table
@@ -108,8 +110,8 @@ export function mount(B, opts = {}) {
     const top = new THREE.Mesh(new THREE.CylinderGeometry(TR, TR + 0.03, 0.06, 28), wood); top.position.copy(T).setY(TY - 0.03); group.add(top);
     for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + 0.4, leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, TY - 0.06, 6), darkWood); leg.position.set(T.x + Math.cos(a) * TR * 0.65, (TY - 0.06) / 2, T.z + Math.sin(a) * TR * 0.65); group.add(leg); }
     table = top;
-    const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.5), new THREE.MeshStandardMaterial({ color: 0x8a3a70, roughness: 0.95 }));
-    cushion.position.copy(place.seat).setY(0.1); cushion.rotation.y = place.seatYaw; group.add(cushion);
+    const cushion = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.29, 0.14, 20), new THREE.MeshStandardMaterial({ color: 0x8a3a70, roughness: 0.95 }));
+    cushion.position.copy(place.seat).setY(0.07); cushion.scale.y = 1; cushion.rotation.y = place.seatYaw; group.add(cushion);
     coins.length = 0;
     [[-0.1, 0.05, 0.4], [0.06, 0.12, 1.1], [0.12, -0.06, 2.2]].forEach(([dx, dz, ry]) => { const c = coinMesh(); c.position.copy(T).add(V(dx, TY + 0.005, dz)); c.rotation.y = ry; group.add(c); coins.push({ m: c, rest: c.position.clone() }); });
     embers.length = 0;
@@ -333,20 +335,25 @@ export function mount(B, opts = {}) {
       if (k >= 1) { B.scene.remove(flying.m); flying = null; }
     }
     near = null;
-    if (dist < NEAR_R) near = "table";
-    else if (place.bookStand && Math.hypot(me.x - place.bookStand.x, me.z - place.bookStand.z) < BOOK_NEAR) near = "book";
+    const bookD = Math.hypot(me.x - place.bookStand.x, me.z - place.bookStand.z);
+    if (!sittingHere() && bookD < BOOK_NEAR && bookD < dist) near = "book";   // the book's stand is a step from the table in the nook
+    else if (dist < NEAR_R) near = "table";
     showUi();
     const v = T.clone().setY(0.8).project(B.camera), [sx, sy] = B.screenOf(T.clone().setY(0.85));
     label.hidden = !!dlg || v.z > 1 || !!near || sittingHere(); label.style.left = sx + "px"; label.style.top = sy + "px";
   }
 
-  B.addSeat(() => (place && builtFor === B.room().shell ? [{ id: "coins", coins: true, x: place.seat.x, z: place.seat.z, yaw: place.seatYaw, floor: 0, top: 0.2 }] : []));
+  B.addSeat(() => (place && builtFor === B.room().shell ? [{ id: "coins", coins: true, x: place.seat.x, z: place.seat.z, yaw: place.seatYaw, floor: 0, top: 0.14 }] : []));
   (async function start() {
     while (!B.room || !["nook", "hollow"].includes(B.room().shell)) await new Promise(r => setTimeout(r, 250));
     build(B.room().shell); requestAnimationFrame(frame);
     await loadTable();
     if (opts.open === "bar" || opts.open === "cast") {
+      while (!B.meState.placed) await new Promise(r => setTimeout(r, 250)); // the page sets you down where you wake first
+      await new Promise(r => setTimeout(r, 600));
+      B.meState.pos.copy(place.seat); // a preview opens at the table, not across the room
       lay({ ...SAMPLE });
+      setTimeout(() => { if (B.meState.seatWant !== "coins") { B.meState.pos.copy(place.seat); sit(); } }, 2500); // a skip that lands late can take the sit away
       if (opts.open === "cast") {
         const tb = await loadTable();
         tosses = BAR_TOSSES.map(x => [...x]); kept = tosses.map((_, i) => offers(card, i).options[0].text);
