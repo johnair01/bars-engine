@@ -251,7 +251,7 @@
   var CSS = ".oagb{z-index:950}.oagb-line{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(420px,calc(100vw - 32px));" +
     "padding:.5rem .8rem;background:rgba(12,12,24,.72);border:1px solid rgba(220,230,255,.35);border-radius:12px;color:#eef0f8;font-size:15px;line-height:1.35;text-align:center;" +
     "pointer-events:none;transition:opacity .6s;z-index:3}.oagb-line[hidden]{display:block;opacity:0}.oagb-how{position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);" +
-    "color:#c8cce0;font-size:13px;opacity:.85;pointer-events:none;transition:opacity 1.2s;white-space:nowrap;z-index:3}";
+    "color:#c8cce0;font-size:13px;opacity:.85;pointer-events:none;transition:opacity 1.2s;width:max-content;max-width:calc(100vw - 32px);text-align:center;z-index:3}";
 
   var api = { open: open, state: function () { return snapshot ? snapshot() : { open: false }; }, walkTo: function (id, o) { return walkToSeat ? walkToSeat(id, o) : false; },
     screenOf: function (id) { return screenOfSeat ? screenOfSeat(id) : null; }, WORDS: WORDS, SEAT_AT: SEAT_AT };
