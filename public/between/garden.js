@@ -1056,7 +1056,9 @@ function seatOf(uid) { const g = view().g; if (!g || !g.members || !g.members[ui
    the hollow's two. You walk to a seat and sit on it; the hearth moment opens once you are sat by the fire. */
 /* The first minute's cushion, where you wake in your homeroom (Still C), is a seat in the same list ("wake"), so the wake sits
    you the same way (Wendell, 2026-10-24, "The character spawns looks very weird"); it is there while the wake is on. */
-const seatsHere = () => !hollow ? [] : seatsNow(hollow.handles.spots).concat(wake.on ? [{ id: "wake", wake: true, x: wake.group.position.x, z: wake.group.position.z, yaw: wake.yaw, floor: 0, top: CUSHION_TOP }] : []);
+// seats a mounted piece draws for itself (the coin table's cushion), asked each time like the rest
+const seatExtras = [];
+const seatsHere = () => !hollow ? [] : seatsNow(hollow.handles.spots).concat(wake.on ? [{ id: "wake", wake: true, x: wake.group.position.x, z: wake.group.position.z, yaw: wake.yaw, floor: 0, top: CUSHION_TOP }] : [], ...seatExtras.map(f => f() || []));
 const seatBy = id => id == null ? null : seatsHere().find(s => s.id === id) || null;
 const seatId = k => /^\d+$/.test(k) ? +k : k;
 const seatPos = id => { const s = seatBy(id); return s ? new THREE.Vector3(s.x, 0, s.z) : meState.pos.clone().setY(0); };
@@ -1778,7 +1780,7 @@ function refreshHud() {
    homeroom, so checking in with yourself is part of the loop wherever you are. */
 function homeState() {
   const h = list && list.home;
-  return { lastCheckin: myHome.lastCheckin ?? (h && h.lastCheckin) ?? null, goals: myHome.goals ? Object.values(myHome.goals).filter(Boolean) : (h && h.goals) || [] };
+  return { lastCheckin: myHome.lastCheckin ?? (h && h.lastCheckin) ?? null, goals: myHome.goals ? Object.values(myHome.goals).filter(Boolean) : (h && h.goals) || [], casts: myHome.casts || {} };
 }
 function nextMoves(g) {
   const rooms = (list && list.gardens || []).filter(r => r.phase !== "closed");
@@ -1799,7 +1801,7 @@ function moveActs(id, it, g) {
 /* The card of the hearth's cushion, or of one you set down: anyone's to sit on (a store-down preview shows it too). */
 function freeSeatCard(i) {
   const st = seatBy(i); if (!st) return "";
-  const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : "A cushion";
+  const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : st.coins ? "The coin table's cushion" : "A cushion";
   if (!here) return `<div class="what"><b>${name}</b><span class="t">${st.hearth ? "Worn flat from sitting by the fire." : "Set down here for sitting."}</span></div><div class="row"><button type="button" data-act="${st.hearth ? "sitHearth" : "sit"}">Sit here</button></div>`;
   return `<div class="what"><b>${name}</b><span class="t">${fire ? "Sitting by the fire." : "Sitting."}</span></div><div class="row">${fire && (hearthOpen() || storeDown) && sheetName !== "hearth" ? `<button type="button" data-act="sitHearth">Sit with what stirs you</button>` : ""}<button class="glassbtn" type="button" data-act="stand">Stand up</button></div>`;
 }
@@ -3386,6 +3388,7 @@ document.addEventListener("click", async ev => {
   if (a === "through") { if (portalTo) walkThrough(portalTo.id, portalTo.invite); return; }
   if (a === "next") {
     if (id.startsWith("room:")) { goRoom(id.slice(5)); return; }
+    if (id === "coins") { closeSheet(); if (window.__between.coins) window.__between.coins.go(); return; } // a move kept at the coin table, or a cast left face up
     if (id === "tend") { closeSheet(); selected = "between"; meState.target = pushOut(BETWEEN_AT.clone().add(new THREE.Vector3(0, 0, 1.1))); standUp(); refreshHud(); return; }
     openSheet(id === "invitations" && !isHome(view().g) ? "invite" : id); return;
   }
@@ -3923,7 +3926,8 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
   anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
-  room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };
+  room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
+  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
@@ -3932,3 +3936,7 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
 import("./voice.js").then(v => { window.__between.voice = v.createVoice(); return import("./letters.js"); })
   .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
+// the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
+// Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
+// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST }); }).catch(e => noteError(e, "coins"));

@@ -1,0 +1,457 @@
+[
+ {
+  "agent": "bar-intake",
+  "method": "three coins",
+  "tosses": [
+   [
+    2,
+    2,
+    3
+   ],
+   [
+    2,
+    3,
+    3
+   ],
+   [
+    3,
+    3,
+    2
+   ],
+   [
+    2,
+    3,
+    2
+   ],
+   [
+    3,
+    3,
+    2
+   ],
+   [
+    3,
+    3,
+    2
+   ]
+  ],
+  "values": [
+   7,
+   8,
+   8,
+   7,
+   8,
+   8
+  ],
+  "changing_lines": [],
+  "n": 51,
+  "name": "Shock",
+  "cn": "震",
+  "pinyin": "zhèn",
+  "lines": [
+   1,
+   0,
+   0,
+   1,
+   0,
+   0
+  ],
+  "shows": "It went off, and it will go off again.",
+  "image": "☳ thunder beneath ☳ thunder. One firm line arriving at the bottom, and then arriving again above it.",
+  "situation": "The shock comes, and then it comes a second time. The old text keeps a wonderful detail through it: laughing words, ha ha, and the man who keeps the sacrificial wine in the cup. Terror arrives from a hundred miles off, and the one still holding the ladle is the one who inherits.",
+  "lower": {
+   "trigram": "thunder",
+   "symbol": "☳",
+   "name": "The Arousing",
+   "quality": "movement"
+  },
+  "upper": {
+   "trigram": "thunder",
+   "symbol": "☳",
+   "name": "The Arousing",
+   "quality": "movement"
+  }
+ },
+ {
+  "agent": "bar-intake",
+  "method": "three coins",
+  "tosses": [
+   [
+    3,
+    2,
+    3
+   ],
+   [
+    2,
+    2,
+    2
+   ],
+   [
+    3,
+    2,
+    2
+   ],
+   [
+    2,
+    2,
+    3
+   ],
+   [
+    3,
+    2,
+    2
+   ],
+   [
+    2,
+    3,
+    2
+   ]
+  ],
+  "values": [
+   8,
+   6,
+   7,
+   7,
+   7,
+   7
+  ],
+  "changing_lines": [
+   2
+  ],
+  "n": 33,
+  "name": "Retreat",
+  "cn": "遯",
+  "pinyin": "dùn",
+  "lines": [
+   0,
+   0,
+   1,
+   1,
+   1,
+   1
+  ],
+  "shows": "Leaving is available, and the timing decides what you keep.",
+  "image": "☶ mountain beneath ☰ heaven. Two yielding lines have come up underneath, and the firm lines are moving off.",
+  "situation": "Withdrawal in good order, at the moment that keeps it from becoming a rout. The old text calls it favourable and adds that the small is favourable too, which is the qualification: you keep something by leaving early with it.",
+  "lower": {
+   "trigram": "mountain",
+   "symbol": "☶",
+   "name": "Keeping Still",
+   "quality": "rest"
+  },
+  "upper": {
+   "trigram": "heaven",
+   "symbol": "☰",
+   "name": "The Creative",
+   "quality": "strong"
+  },
+  "becomes": {
+   "n": 44,
+   "name": "Serendipity",
+   "cn": "姤",
+   "pinyin": "gòu",
+   "lines": [
+    0,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "shows": "You are building on one piece of evidence.",
+   "image": "☴ wind beneath ☰ heaven. One soft line has entered beneath five hard ones.",
+   "situation": "Wind under heaven touches everything without choosing what it touches. The smallest possible arrival at the base of something large and already settled. It does not feel small. That is what makes it worth watching rather than seizing.",
+   "lower": {
+    "trigram": "wind",
+    "symbol": "☴",
+    "name": "The Gentle",
+    "quality": "penetrating"
+   },
+   "upper": {
+    "trigram": "heaven",
+    "symbol": "☰",
+    "name": "The Creative",
+    "quality": "strong"
+   }
+  }
+ },
+ {
+  "agent": "bar-intake",
+  "method": "three coins",
+  "tosses": [
+   [
+    2,
+    3,
+    3
+   ],
+   [
+    2,
+    2,
+    2
+   ],
+   [
+    3,
+    2,
+    3
+   ],
+   [
+    3,
+    2,
+    2
+   ],
+   [
+    3,
+    2,
+    3
+   ],
+   [
+    2,
+    2,
+    3
+   ]
+  ],
+  "values": [
+   8,
+   6,
+   8,
+   7,
+   8,
+   7
+  ],
+  "changing_lines": [
+   2
+  ],
+  "n": 35,
+  "name": "Sunrise",
+  "cn": "晉",
+  "pinyin": "jìn",
+  "lines": [
+   0,
+   0,
+   0,
+   1,
+   0,
+   1
+  ],
+  "shows": "This is becoming visible faster than you planned.",
+  "image": "☷ earth beneath ☲ fire. The sun clearing the horizon, with open ground under it.",
+  "situation": "Advance, and the light getting higher. The old text gives a prince horses in quantity and three audiences in a single day, so the figure is about recognition arriving quickly. Everything in it is going up.",
+  "lower": {
+   "trigram": "earth",
+   "symbol": "☷",
+   "name": "The Receptive",
+   "quality": "yielding"
+  },
+  "upper": {
+   "trigram": "fire",
+   "symbol": "☲",
+   "name": "The Clinging",
+   "quality": "light, and what it depends on"
+  },
+  "becomes": {
+   "n": 64,
+   "name": "Almost",
+   "cn": "未濟",
+   "pinyin": "wèi jì",
+   "lines": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    1
+   ],
+   "shows": "You are nearly there, and the last stride is where it gets wet.",
+   "image": "☵ water beneath ☲ fire. Every line sits in the wrong place, and the fire is climbing away from the water.",
+   "situation": "Before completion. Everything is out of position, and the figure is the last of the sixty-four, so the book ends one step short on purpose. The old image is a young fox crossing the ice and wetting its tail at the very end. Care is wanted exactly where the crossing looks finished.",
+   "lower": {
+    "trigram": "water",
+    "symbol": "☵",
+    "name": "The Abysmal",
+    "quality": "danger"
+   },
+   "upper": {
+    "trigram": "fire",
+    "symbol": "☲",
+    "name": "The Clinging",
+    "quality": "light, and what it depends on"
+   }
+  }
+ },
+ {
+  "agent": "bar-intake",
+  "method": "three coins",
+  "tosses": [
+   [
+    2,
+    3,
+    2
+   ],
+   [
+    2,
+    3,
+    3
+   ],
+   [
+    3,
+    2,
+    2
+   ],
+   [
+    2,
+    2,
+    3
+   ],
+   [
+    2,
+    3,
+    2
+   ],
+   [
+    3,
+    3,
+    2
+   ]
+  ],
+  "values": [
+   7,
+   8,
+   7,
+   7,
+   7,
+   8
+  ],
+  "changing_lines": [],
+  "n": 49,
+  "name": "Molting",
+  "cn": "革",
+  "pinyin": "gé",
+  "lines": [
+   1,
+   0,
+   1,
+   1,
+   1,
+   0
+  ],
+  "shows": "A skin is coming off you, and the new one is soft.",
+  "image": "☲ fire beneath ☱ lake. Fire underneath water, two things in one figure that undo each other.",
+  "situation": "The character means hide, the animal skin, and by extension the shedding of one. The old text ties the change to a named day and says belief arrives after the change has happened. A molt gets trusted in retrospect.",
+  "lower": {
+   "trigram": "fire",
+   "symbol": "☲",
+   "name": "The Clinging",
+   "quality": "light, and what it depends on"
+  },
+  "upper": {
+   "trigram": "lake",
+   "symbol": "☱",
+   "name": "The Joyous",
+   "quality": "joyful"
+  }
+ },
+ {
+  "agent": "bar-intake",
+  "method": "three coins",
+  "tosses": [
+   [
+    2,
+    3,
+    2
+   ],
+   [
+    3,
+    2,
+    2
+   ],
+   [
+    2,
+    2,
+    2
+   ],
+   [
+    2,
+    2,
+    2
+   ],
+   [
+    2,
+    2,
+    2
+   ],
+   [
+    3,
+    3,
+    2
+   ]
+  ],
+  "values": [
+   7,
+   7,
+   6,
+   6,
+   6,
+   8
+  ],
+  "changing_lines": [
+   3,
+   4,
+   5
+  ],
+  "n": 19,
+  "name": "Spring",
+  "cn": "臨",
+  "pinyin": "lín",
+  "lines": [
+   1,
+   1,
+   0,
+   0,
+   0,
+   0
+  ],
+  "shows": "This is rising, and the window has an edge on it.",
+  "image": "☱ lake beneath ☷ earth. Two firm lines rising at the base, with the ground open above them.",
+  "situation": "Something is coming up and there is room above it. The old text puts a date on it, saying trouble arrives in the eighth month, which turns the reading into a clock: this is favourable and it is favourable now. Spring approaches, and the approach is the whole of it.",
+  "lower": {
+   "trigram": "lake",
+   "symbol": "☱",
+   "name": "The Joyous",
+   "quality": "joyful"
+  },
+  "upper": {
+   "trigram": "earth",
+   "symbol": "☷",
+   "name": "The Receptive",
+   "quality": "yielding"
+  },
+  "becomes": {
+   "n": 43,
+   "name": "Unsaid",
+   "cn": "夬",
+   "pinyin": "guài",
+   "lines": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0
+   ],
+   "shows": "One sentence is still unsaid, and it is going anyway.",
+   "image": "☰ heaven beneath ☱ lake. Five firm lines have risen and a single yielding one is left at the top.",
+   "situation": "Resolution. The old counsel is precise and full of caution: announce it truthfully in the king's court, know the danger you are in, and reach for words well before weapons. The last soft thing is on its way out, and the manner of its going is the entire subject.",
+   "lower": {
+    "trigram": "heaven",
+    "symbol": "☰",
+    "name": "The Creative",
+    "quality": "strong"
+   },
+   "upper": {
+    "trigram": "lake",
+    "symbol": "☱",
+    "name": "The Joyous",
+    "quality": "joyful"
+   }
+  }
+ }
+]
