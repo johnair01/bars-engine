@@ -23,14 +23,21 @@
 
    The letters open only in a garden of two that holds them. Previews only: ?pick=a6 opens them in your Between of two
    (from the nook too); with no partner it plays on this page with a stand-in partner, and ?pick=a8 starts that
-   rehearsal at the hollow with A6 already overcome. The rehearsal writes nothing to the store. */
+   rehearsal at the hollow with A6 already overcome. The rehearsal writes nothing to the store.
+
+   Build 2 (hollow interface build 2, position hib2-beats-open-the-letters): in live rooms the beats open them. A6's
+   letter arrives the first time the two of you stand in your room of two together (a few breaths, so it never lands on
+   someone walking in); A8's arrives on a later visit, once A6's story is kept, again when you stand there together
+   (it stands in for A7, the oath, which is not built). Once a letter has arrived, either of you answers it from the
+   room or from your nook's window. */
 import * as THREE from "three";
+import { createObstacle } from "./obstacle.js";
 import { HAND, ENCOUNTERS, NOOK, ORDER, elementOf, lineFor, encounterState, currentEncounter, obstacleLine } from "./encounter-lines.js";
 
 const STAND_IN = "stand-in";
 const EL = { wood: "#7fae5a", water: "#5a8fc4", fire: "#e0703a", metal: "#c9c3b5" };
 const KEY = "between.letters.rehearsal";
-// the obstacle's box is the two cards and the two parts they drew; the fog around them is ground, not subject
+// the obstacle's box is the place, the parts the two cards drew, and the two cards
 // the grey edge each room looks out on: the hollow's open side, the nook's window (room-kit.js: the valley lies toward -z)
 const EDGE = { hollow: { at: [0.2, 1.75, -4.4], cam: [0.2, 2.2, 4.6, 0.2, 1.35, -6], size: 1.7 }, nook: { at: [0.3, 1.4, -3.2], cam: [-0.15, 1.8, 2.2, 0.3, 1.25, -3.5], size: 0.7 } };
 
@@ -145,7 +152,32 @@ export function mount(B, opts = {}) {
     }
     local = { me: u, at, L: R }; ss.set(KEY, local);
   }
+  /* ---------- the beats, in live rooms: both of you here, for a few breaths ---------- */
+  const VISIT = Date.now(), TOGETHER_MS = 6000;
+  let togetherSince = 0, beatWriting = false;
+  const partnerHere = room => { const o = Object.keys(room.members || {}).find(m => m !== ids().me); return !!o && [...(B.peers ? B.peers.values() : [])].some(p => p.uid === o); };
+  // A8 waits for a later visit than the one that kept A6's story, and (in the room) for the two of you together
+  function a8Waits(doc, inRoom) {
+    if (local || !doc || currentEncounter(doc) !== "a8") return false;
+    const E = doc.a8 || {}, any = Object.keys(E.sent || {}).length > 0;
+    if (any) return false;
+    const kept = doc.stories && doc.stories.a6, at = kept && kept.at;
+    if (typeof at === "number" && at >= VISIT - 1000) return true;
+    return inRoom ? !(togetherSince && performance.now() - togetherSince > TOGETHER_MS) : false;
+  }
+  function liveBeat() {
+    if (local || want || !B.ready || !B.ready() || inHome()) { togetherSince = 0; return; }
+    const room = pairRoom(); if (!room || room.phase === "closed" || room.phase === "spark") { togetherSince = 0; return; }
+    if (!partnerHere(room)) { togetherSince = 0; return; }
+    if (!togetherSince) togetherSince = performance.now();
+    if (room.letters || beatWriting || performance.now() - togetherSince < TOGETHER_MS) return;
+    // the A6 beat: the letters open, the one who started the room first (the server takes only this fresh doc)
+    beatWriting = true;
+    B.op("garden/main", "update", { letters: fresh(room.startedBy, Object.keys(room.members).find(m => m !== room.startedBy)) })
+      .then(() => B.poll()).catch(() => {}).finally(() => { setTimeout(() => { beatWriting = false; }, 4000); dirty(); });
+  }
   function maybeOpen() {
+    liveBeat();
     if (opened || !want) return;
     if (!B.ready || !B.ready()) return;
     opened = true;
@@ -173,17 +205,11 @@ export function mount(B, opts = {}) {
     standInT = setTimeout(() => { standInT = 0; write(act).then(dirty); }, 1600);
   }
 
-  /* ---------- the obstacle at the grey edge: fog, a part for each card, the two cards and their threads ---------- */
+  /* ---------- the obstacle at the grey edge: the place, a part for each card, the two cards and their threads ---------- */
   const group = new THREE.Group(); group.visible = false; B.scene.add(group);
-  const soft = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
-  const fog = [[-1.4, 0.2, 0, 3.2], [0.4, 0.6, -0.2, 3.6], [1.6, 0.1, 0, 3.0], [-0.5, -0.4, 0.2, 3.4], [0.9, 1.1, -0.3, 2.8]].map(([x, y, z, s]) => {
-    const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: 0x8a90a8, transparent: true, depthWrite: false, opacity: 0.85 }));
-    m.position.set(x, y, z); m.scale.setScalar(s); m.userData.base = [x, y, z]; group.add(m); return m;
-  });
-  const parts = [0, 1].map(i => {
-    const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: 0xffa050, transparent: true, depthWrite: false, opacity: 0.95 }));
-    m.position.set(i ? 0.9 : -0.8, 0.35, 0.3); m.scale.setScalar(0.7); group.add(m); return m;
-  });
+  // the obstacle itself: the place and the parts the two cards drew (obstacle.js; build 2 models round 4's drawing)
+  let obPreview = null; // the stills check's look at every part of an encounter at once (obstacleAll)
+  const ob = createObstacle(); ob.group.scale.setScalar(1.3); ob.group.position.set(0, 0.36, -0.2); group.add(ob.group);
   const cardTex = (id, mine) => {
     const c = document.createElement("canvas"); c.width = 256; c.height = 368; const x = c.getContext("2d");
     const gr = x.createLinearGradient(0, 0, 0, 368); gr.addColorStop(0, "#3a271c"); gr.addColorStop(1, "#1a120e"); x.fillStyle = gr; x.fillRect(0, 0, 256, 368);
@@ -199,24 +225,22 @@ export function mount(B, opts = {}) {
   };
   const planes = [0, 1].map(i => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.63), new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide }));
-    m.position.set(i ? 0.32 : -0.32, -0.25, 1.4); m.rotation.z = i ? -0.14 : 0.16; m.userData.card = null; group.add(m); return m;
+    m.position.set(i ? 0.66 : -0.66, -0.5, 1.45); m.rotation.z = i ? -0.14 : 0.16; m.userData.card = null; group.add(m); return m;
   });
   const threads = [0, 1].map(() => { const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]); const l = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffb46a, transparent: true, opacity: 0.85 })); group.add(l); return l; });
   function placeGroup(view) {
     const E = EDGE[shell()], [x, y, z] = E.at;
     group.position.set(x, y, z); group.scale.setScalar(E.size);
-    const t = performance.now() / 1000, done = view.overcome, given = new Set(view.given || []);
-    for (const f of fog) { const [bx, by, bz] = f.userData.base; f.position.set(bx + Math.sin(t * 0.3 + bx) * 0.08, by + Math.cos(t * 0.25 + by) * 0.06, bz); f.material.opacity = done ? 0.18 : 0.85; }
+    const done = view.overcome, given = new Set(view.given || []);
+    if (obPreview) { ob.update(obPreview); return; }
+    ob.update({ enc: view.enc, cards: view.cards, given: new Set(view.order.filter(u => given.has(u)).map(u => view.cards[view.order.indexOf(u)])), overcome: done });
     view.order.forEach((u, i) => {
-      const p = parts[i], ok = given.has(u);
-      p.material.color.setHex(ok ? 0xfff0c8 : 0xffa050); p.material.opacity = ok ? 0.55 : 0.95;
-      p.position.y = (ok ? 0.75 : 0.35) + Math.sin(t * 1.4 + i) * 0.03;
       const card = view.cards[i];
       if (card && planes[i].userData.card !== card + ":" + Object.keys(deck).length) {
         planes[i].material.map = cardTex(card, u === view.me); planes[i].material.needsUpdate = true; planes[i].userData.card = card + ":" + Object.keys(deck).length;
       }
       planes[i].visible = !!card;
-      const a = planes[i].position.clone().add(new THREE.Vector3(0, 0.32, 0)), b = done ? new THREE.Vector3(0.05, 0.9, 0.3) : p.position.clone();
+      const a = planes[i].position.clone().add(new THREE.Vector3(0, 0.32, 0)), b = ob.group.position.clone().add(ob.anchor(view.enc, card).clone().multiplyScalar(ob.group.scale.x));
       threads[i].geometry.setFromPoints([a, b]); threads[i].visible = !!card;
       threads[i].material.color.setHex(done ? 0xffd08a : 0xffb46a);
     });
@@ -227,7 +251,7 @@ export function mount(B, opts = {}) {
     const xs = q.map(v => v[0]), ys = q.map(v => v[1]);
     return { l: Math.max(0, Math.min(...xs)), r: Math.min(innerWidth, Math.max(...xs)), t: Math.max(0, Math.min(...ys)), b: Math.min(innerHeight, Math.max(...ys)) };
   }
-  const obstacleBox = () => { group.updateMatrixWorld(); return boxOf([[-1.3, -0.6, 1.4], [1.3, -0.6, 1.4], [-1.3, 0.95, 0.3], [1.3, 0.95, 0.3]].map(a => new THREE.Vector3(...a))); };
+  const obstacleBox = () => { group.updateMatrixWorld(); return boxOf([...ob.box.map(a => new THREE.Vector3(...a).multiplyScalar(ob.group.scale.x).add(ob.group.position)), ...planes.map(p => p.position.clone().add(new THREE.Vector3(0, -0.32, 0)))]); };
   const myPlaneBox = view => { const i = view.order.indexOf(view.me); group.updateMatrixWorld(); const p = planes[Math.max(0, i)].position; return boxOf([[-0.22, -0.32], [0.22, -0.32], [-0.22, 0.32], [0.22, 0.32]].map(([dx, dy]) => new THREE.Vector3(p.x + dx, p.y + dy, p.z))); };
 
   /* ---------- the camera is attention: compose the edge, push into the card ---------- */
@@ -330,6 +354,7 @@ export function mount(B, opts = {}) {
     const last = ORDER.filter(e => doc.stories && doc.stories[e]).pop();
     // an overcome encounter stays on screen until you walk on from it; then the next one's letter arrives
     const showEnc = enc === "done" || (last && !acked.has(ackKey(last))) ? last : enc;
+    if (showEnc === "a8" && a8Waits(doc, !inHome())) return null;
     const E = doc[showEnc] || {}, s = encounterState(doc, showEnc), i = doc.order.indexOf(u), other = doc.order[1 - i];
     const mineL = E.sent && E.sent[u], theirL = E.sent && E.sent[other];
     return { L: doc, enc: showEnc, done: enc === "done", me: u, other, order: doc.order, st: s, mine: mineL && mineL.card, theirsIn: !!theirL,
@@ -400,6 +425,6 @@ export function mount(B, opts = {}) {
     send: async card => { const v = state(); if (!v) return; await write({ [v.enc]: { sent: { [v.me]: { card, at: Date.now() } } } }); dirty(); },
     step: async i => { const v = state(); if (!v) return; await write({ [v.enc]: { tries: { [v.st.try]: { [v.me]: { i, at: Date.now() } } } } }); dirty(); },
     openHand: () => { handOpen = true; dismissed = ""; dirty(); }, pullUp: card => pullUp(card, null), choose: i => { chosen = i; dirty(); }, putDown,
-    pollNook, obstacleBox, refresh: dirty, walkOn: () => { const v = state(); if (v && v.overcome) ack(v.enc); dirty(); },
+    pollNook, obstacleBox, refresh: dirty, obstacleAll: (enc, given) => { obPreview = enc ? { enc, cards: HAND.slice(), given: new Set(given ? HAND : []), overcome: !!given } : null; for (const p of planes) p.visible = !enc; for (const t of threads) t.visible = !enc; }, walkOn: () => { const v = state(); if (v && v.overcome) ack(v.enc); dirty(); },
   };
 }

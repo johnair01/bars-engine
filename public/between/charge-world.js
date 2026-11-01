@@ -247,6 +247,28 @@ export function mount(B, opts = {}) {
     cardKey = key; card.hidden = !key || !!dlg; card.innerHTML = html;
   }
 
+  /* The stand's card speaks through the one screen owner (voice.js, hi-screen-owner; hollow interface build 2): its name
+     the headline, its line under it, its buttons the seals, clear of the stand or the pane you face. The pinned card stays
+     in the page, hidden, so the buttons keep their handler. */
+  let voiced = "";
+  function cardVoice() {
+    const vo = B.voice; if (!vo) return;
+    const k = cardKey && !dlg ? cardKey + ":" + card.innerHTML.length : "";
+    if (k === voiced) return; voiced = k;
+    if (!k) { vo.quiet("ctw"); return; }
+    import("./voice.js").then(v => {
+      if (voiced !== k) return;
+      const m = v.panelMoment(card, () => card); if (!m) { vo.quiet("ctw"); return; }
+      vo.say({ ...m, soft: true, subject: cardSubject }, "ctw", 2);
+    });
+  }
+  function cardSubject() {
+    const p = near && near.startsWith("pane:") ? paneWorld(panes[+near.slice(5)]) : STAND;
+    const [x0, y0] = B.screenOf(new THREE.Vector3(p.x, 0, p.z)), [, y1] = B.screenOf(new THREE.Vector3(p.x, episode ? 2.4 : 1.3, p.z));
+    const h = Math.abs(y0 - y1), w = Math.max(40, h * 0.8);
+    return { l: x0 - w / 2, r: x0 + w / 2, t: Math.min(y0, y1), b: Math.max(y0, y1) };
+  }
+
   /* ---------- the doorway: with an episode unrolled, it leads to the episode's first land ---------- */
   const firstLand = () => episode ? locations(charge, g).find(l => l.role === "encounter") : null;
   const grownOver = () => { const m = B.minute && B.minute(); return !!(m && m.started && m.oriented === false); };
@@ -288,7 +310,7 @@ export function mount(B, opts = {}) {
     requestAnimationFrame(frame);
     const inNook = B.room().shell === "nook";
     group.visible = inNook;
-    if (!inNook) { label.hidden = true; card.hidden = true; near = null; cardKey = ""; return; }
+    if (!inNook) { label.hidden = true; card.hidden = true; near = null; cardKey = ""; if (B.voice) B.voice.quiet("ctw"); return; }
     const me = B.meState.pos, dx = me.x - STAND.x, dz = me.z - STAND.z, dist = Math.hypot(dx, dz);
     if (dist < STAND_R + 0.25 && dist > 1e-4) { const k = (STAND_R + 0.25) / dist; me.x = STAND.x + dx * k; me.z = STAND.z + dz * k; }
     const t = performance.now() / 1000;
@@ -303,7 +325,7 @@ export function mount(B, opts = {}) {
     // at the stand, a step to one side is a step toward that side's pane
     const lateral = (me.x - STAND.x) * RIGHT.x + (me.z - STAND.z) * RIGHT.z;
     panes.forEach((p, i) => { const w = paneWorld(p); if (near === "stand" && Math.hypot(me.x - w.x, me.z - w.z) < PANE_NEAR && Math.abs(lateral) > 0.22 && Math.sign(lateral) === p.side) near = "pane:" + i; });
-    showCard();
+    showCard(); cardVoice();
     const [sx, sy] = B.screenOf(STAND.clone().setY(episode ? 2.5 : 1.35));
     const v = STAND.clone().setY(1.2).project(B.camera);
     label.hidden = !!dlg || v.z > 1 || !!near; label.style.left = sx + "px"; label.style.top = sy + "px";
