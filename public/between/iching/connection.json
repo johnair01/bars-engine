@@ -1,453 +1,709 @@
 {
- "about": "Readings for connection at the coin table in the nook and the hollow (Six-faces-council pass bar-intake-2, his note on bi-table-look-1: advice on how to connect with self or someone in a Between). One per hexagram, keyed by n to hexagrams.json. `reading` is about coming closer; `self` is the move when you toss for yourself, `them` when you toss for someone you share a Between with ({name} is theirs); `lane` is where a move for them goes (partner or between). Written by hand: no AI reads the coins.",
+ "about": "Readings for connection at the coin table in the nook and the hollow (Six-faces-council pass bar-intake-2, his note on bi-table-look-1: advice on how to connect with self or someone in a Between). One per hexagram, keyed by n to hexagrams.json. `reading` is about coming closer; `self` is the move when you toss for yourself, `them` when you toss for someone you share a Between with ({name} is theirs); `lane` is where a move for them goes (partner or between). Written by hand: no AI reads the coins. `drawn` (pass bar-intake-3, brief \"Coin table, build 3b\") is the move when you toss for someone you are drawn to who has not joined yet, one of your sparks: `yourself` for a Wake Up or Clean Up cast, `them` (learning them, by curiosity and never pursuit) for Grow Up. A Show Up cast is the invitation, and its line is in connection.js.",
  "readings": [
   {
    "n": 1,
    "lane": "partner",
    "reading": "You have been giving and giving, and nothing has had space to come back. Closeness needs a gap for the other side to fill.",
    "self": "Do one act today that asks nothing of you, and let it be enough.",
-   "them": "Ask {name} one question today and wait for the whole answer before you say anything."
+   "them": "Ask {name} one question today and wait for the whole answer before you say anything.",
+   "drawn": {
+    "yourself": "Notice how much you give in your head to {name}, and keep one hour today for yourself.",
+    "them": "Next time you are with {name}, ask one question and let the silence after it be theirs."
+   }
   },
   {
    "n": 2,
    "lane": "partner",
    "reading": "You are carrying the whole weight of this, and nobody asked you to. Receiving is also a way of coming closer.",
    "self": "Set down one weight today that you have been holding for someone else.",
-   "them": "Let {name} carry one small load for you this week, and thank them for it."
+   "them": "Let {name} carry one small load for you this week, and thank them for it.",
+   "drawn": {
+    "yourself": "Name what you hope {name} will carry for you, and carry it yourself for a day.",
+    "them": "Notice what {name} looks after, and ask them about it when it comes up."
+   }
   },
   {
    "n": 3,
    "lane": "partner",
    "reading": "This is early, and you are reading the mess as a verdict. New growth looks untidy before it takes root.",
    "self": "Write one sentence about what is growing in you, and leave out how it should look.",
-   "them": "Tell {name} you are glad it is still early between you."
+   "them": "Tell {name} you are glad it is still early between you.",
+   "drawn": {
+    "yourself": "Write down what is new in you since {name} caught your eye, untidy as it is.",
+    "them": "Learn one small, early fact about {name} and let it stay small."
+   }
   },
   {
    "n": 4,
    "lane": "partner",
    "reading": "You are guessing at what is felt where you could simply ask. Not knowing is a good place to start from.",
    "self": "Ask yourself one plain question today and answer it out loud.",
-   "them": "Ask {name} about one feeling you have been guessing at."
+   "them": "Ask {name} about one feeling you have been guessing at.",
+   "drawn": {
+    "yourself": "Ask yourself what you are drawn to in {name}, and answer without dressing it up.",
+    "them": "Next time {name} says something you do not follow, ask what they meant."
+   }
   },
   {
    "n": 5,
    "lane": "between",
    "reading": "You are ready and the ground is not. Waiting well is a kind of care.",
    "self": "Make yourself a cup of something warm and wait with it, without fixing anything.",
-   "them": "Make your Between ready for {name}: set something down there and let them find it."
+   "them": "Make your Between ready for {name}: set something down there and let them find it.",
+   "drawn": {
+    "yourself": "Warm the corner of your own nook where you would sit with {name}, for yourself first.",
+    "them": "Pay attention to what {name} is waiting on in their own life, and let it be theirs."
+   }
   },
   {
    "n": 6,
    "lane": "partner",
    "reading": "You are leaning in and holding back at once, and the two cancel. Choose one of them for today.",
    "self": "Let your leaning in and your holding back each say one line.",
-   "them": "Tell {name} which way you lean today, closer or a step back, and why."
+   "them": "Tell {name} which way you lean today, closer or a step back, and why.",
+   "drawn": {
+    "yourself": "Let your leaning toward {name} and your holding back each say one line.",
+    "them": "Notice whether {name} leans in or holds back with others, and stay curious about why."
+   }
   },
   {
    "n": 7,
    "lane": "partner",
    "reading": "Something would settle this, and you have not said it. A plain fact can gather what feelings scatter.",
    "self": "Write down the one fact about this you keep stepping around.",
-   "them": "Tell {name} the one fact you have not said yet."
+   "them": "Tell {name} the one fact you have not said yet.",
+   "drawn": {
+    "yourself": "Say the plain fact of your pull toward {name} to yourself, out loud, once.",
+    "them": "Notice what {name} does when plans scatter, and ask how they find their feet."
+   }
   },
   {
    "n": 8,
    "lane": "partner",
    "reading": "This bond is filling a hole you had before it began. That is not wrong, and it is worth knowing.",
    "self": "Name the old hole gently, and give it one kindness of its own today.",
-   "them": "Thank {name} for one gift they give you without knowing they give it."
+   "them": "Thank {name} for one gift they give you without knowing they give it.",
+   "drawn": {
+    "yourself": "Name what was missing in you before {name} came into view.",
+    "them": "Ask {name} who their people are, and listen for who they lean on."
+   }
   },
   {
    "n": 9,
    "lane": "between",
    "reading": "A small habit you never revisited is holding all of this. Small habits, tended, change the weather.",
    "self": "Find one small rule you keep with yourself and loosen it for a day.",
-   "them": "Ask {name} about one small habit between you, and whether it still fits."
+   "them": "Ask {name} about one small habit between you, and whether it still fits.",
+   "drawn": {
+    "yourself": "Notice one small habit you have kept since you met {name}, and choose it on purpose.",
+    "them": "Notice one small habit of {name}'s that you like, and ask where it comes from."
+   }
   },
   {
    "n": 10,
    "lane": "between",
    "reading": "You are stepping onto ground that matters, and play is what makes it safe.",
    "self": "Play at something today that has no point at all.",
-   "them": "Bring one game or one joke into your Between with {name}."
+   "them": "Bring one game or one joke into your Between with {name}.",
+   "drawn": {
+    "yourself": "Find one playful act you would do even if {name} never saw it, and do it.",
+    "them": "Notice what makes {name} laugh, and let that be what you learn next."
+   }
   },
   {
    "n": 11,
    "lane": "partner",
    "reading": "This is going well, and you should know why. Naming what is good helps it last.",
    "self": "Write down one part of you that has been going right, and why.",
-   "them": "Tell {name} what is good between you, and what you think makes it so."
+   "them": "Tell {name} what is good between you, and what you think makes it so.",
+   "drawn": {
+    "yourself": "Write down why it feels good to think of {name}.",
+    "them": "Ask {name} what has been going well for them lately."
+   }
   },
   {
    "n": 12,
    "lane": "partner",
    "reading": "You want one kind of closeness and you are showing the face of another. The gap shows.",
    "self": "Notice which face you wear around others today, and take it off once.",
-   "them": "Tell {name} what you actually want from your time together."
+   "them": "Tell {name} what you actually want from your time together.",
+   "drawn": {
+    "yourself": "Notice the face you show near {name}, and let it be closer to the one you feel.",
+    "them": "Watch for the gap between what {name} shows and what they might feel, and stay kind about it."
+   }
   },
   {
    "n": 13,
    "lane": "partner",
    "reading": "You are walking the same way and neither of you has said so. Saying it makes it shared.",
    "self": "Name the direction you are walking in, in one sentence.",
-   "them": "Tell {name} where you think the two of you are heading, and ask if they see it too."
+   "them": "Tell {name} where you think the two of you are heading, and ask if they see it too.",
+   "drawn": {
+    "yourself": "Name where you are headed in your own life, with or without {name}.",
+    "them": "Ask {name} where they are headed, and listen for where your ways meet."
+   }
   },
   {
    "n": 14,
    "lane": "partner",
    "reading": "There is plenty here, and all of it is in plain sight. Plenty asks to be shared, not guarded.",
    "self": "Spend one hour today on something you love, in plain sight.",
-   "them": "Share one good moment with {name} today, out of fullness."
+   "them": "Share one good moment with {name} today, out of fullness.",
+   "drawn": {
+    "yourself": "Write down three good gifts in your life that do not depend on {name}.",
+    "them": "Notice what {name} gives freely, and tell them you noticed."
+   }
   },
   {
    "n": 15,
    "lane": "partner",
    "reading": "You are playing down what you feel. Modesty only helps while the feeling is still there underneath.",
    "self": "Say out loud, alone, how much this matters to you.",
-   "them": "Let {name} see a little more of how much this matters to you."
+   "them": "Let {name} see a little more of how much this matters to you.",
+   "drawn": {
+    "yourself": "Let yourself feel the full size of your pull toward {name}, alone, for one minute.",
+    "them": "Notice what {name} plays down about themselves, and ask about it gently."
+   }
   },
   {
    "n": 16,
    "lane": "partner",
    "reading": "The best of it has already started, before anything happens. Looking forward together is closeness too.",
    "self": "Plan one small treat to look forward to this week.",
-   "them": "Plan one outing with {name} that you can both look forward to."
+   "them": "Plan one outing with {name} that you can both look forward to.",
+   "drawn": {
+    "yourself": "Enjoy looking forward to seeing {name}, without needing it to go any way.",
+    "them": "Ask {name} what they are looking forward to."
+   }
   },
   {
    "n": 17,
    "lane": "partner",
    "reading": "You opened something, and now you are inside what it opened. Let it lead for a while.",
    "self": "Follow one impulse today that you would usually talk yourself out of.",
-   "them": "Let {name} choose what the two of you do next time."
+   "them": "Let {name} choose what the two of you do next time.",
+   "drawn": {
+    "yourself": "Notice where your pull toward {name} is leading you, and follow it only as far as your own hearth.",
+    "them": "Let {name} lead the next talk, and see where they take it."
+   }
   },
   {
    "n": 18,
    "lane": "between",
    "reading": "This went stale from being left alone. Tending clears the air.",
    "self": "Go back to one habit you dropped for yourself and give it five minutes.",
-   "them": "Tend your Between with {name} today: open it, look around, and set one corner right."
+   "them": "Tend your Between with {name} today: open it, look around, and set one corner right.",
+   "drawn": {
+    "yourself": "Air out one old story you carry about people like {name}.",
+    "them": "Ask {name} about a love of theirs that has gone dormant, and listen without fixing it."
+   }
   },
   {
    "n": 19,
    "lane": "partner",
    "reading": "This is rising, and the season will not last forever. Warmth wants a reply while it is warm.",
    "self": "Act on one good feeling today before it cools.",
-   "them": "Reach out to {name} today while the warmth is fresh."
+   "them": "Reach out to {name} today while the warmth is fresh.",
+   "drawn": {
+    "yourself": "Let yourself be warm today, and notice who besides {name} feels it.",
+    "them": "Reply to the next warm word {name} says while it is still warm."
+   }
   },
   {
    "n": 20,
    "lane": "partner",
    "reading": "The place you watch from is itself in view. You are seen while you are seeing.",
    "self": "Look at yourself today the way a kind friend would, for one full minute.",
-   "them": "Tell {name} one kindness you have watched them do well."
+   "them": "Tell {name} one kindness you have watched them do well.",
+   "drawn": {
+    "yourself": "Notice how you watch {name}, and how it would feel to be watched that way.",
+    "them": "Ask {name} what they notice about the place you both spend time in."
+   }
   },
   {
    "n": 21,
    "lane": "partner",
    "reading": "Something is lodged between you, and nothing closes until it is said.",
    "self": "Write the words you have not said, and read them back to yourself.",
-   "them": "Tell {name} what has been in the way, kindly and plainly."
+   "them": "Tell {name} what has been in the way, kindly and plainly.",
+   "drawn": {
+    "yourself": "Name what in you keeps getting stuck when you think of {name}.",
+    "them": "Notice what {name} chews on, and ask about it when the moment is right."
+   }
   },
   {
    "n": 22,
    "lane": "between",
    "reading": "You have dressed this up, and the dressing is doing real good. Care in the small details is care.",
    "self": "Make one small corner of your space beautiful for no one but you.",
-   "them": "Set something beautiful in your Between for {name} to find."
+   "them": "Set something beautiful in your Between for {name} to find.",
+   "drawn": {
+    "yourself": "Take care of one small detail about yourself that has nothing to do with {name}.",
+    "them": "Notice one small detail {name} takes care with, and tell them you saw it."
+   }
   },
   {
    "n": 23,
    "lane": "partner",
    "reading": "The ground under this is wearing away, and you have not said so. Saying it is how the slide stops.",
    "self": "Notice one place you are running low, and give it rest today.",
-   "them": "Tell {name} gently that something between you feels thinner lately, and ask how it feels to them."
+   "them": "Tell {name} gently that something between you feels thinner lately, and ask how it feels to them.",
+   "drawn": {
+    "yourself": "Name what you are afraid you would lose if you opened up to {name}.",
+    "them": "Notice what {name} seems careful not to lose, and respect it."
+   }
   },
   {
    "n": 24,
    "lane": "partner",
    "reading": "Something came back, and it is still shallow. Let it return slowly.",
    "self": "Take up one small joy that is coming back to you, and keep it small.",
-   "them": "Send {name} one small sign that you are glad they are back."
+   "them": "Send {name} one small sign that you are glad they are back.",
+   "drawn": {
+    "yourself": "Let your pull toward {name} come back slowly today, without feeding it.",
+    "them": "Ask {name} one light question about something they came back to."
+   }
   },
   {
    "n": 25,
    "lane": "partner",
    "reading": "Your next move has no calculation in it, and that is the exposure. It is also the gift.",
    "self": "Say one true sentence to yourself without softening it.",
-   "them": "Tell {name} one honest sentence without planning how it lands."
+   "them": "Tell {name} one honest sentence without planning how it lands.",
+   "drawn": {
+    "yourself": "Do one kind act near {name} today with no plan behind it.",
+    "them": "Ask {name} one question you truly do not know the answer to."
+   }
   },
   {
    "n": 26,
    "lane": "partner",
    "reading": "You have been saving something up and never named the day. Care that is stored too long goes stale.",
    "self": "Spend something you have been saving on yourself today.",
-   "them": "Name a day to give {name} what you have been saving for them."
+   "them": "Name a day to give {name} what you have been saving for them.",
+   "drawn": {
+    "yourself": "Name what you have been saving up to say to {name}, and say it to yourself first.",
+    "them": "Ask {name} what they are saving up for."
+   }
   },
   {
    "n": 27,
    "lane": "between",
    "reading": "What this gives you is feeding you, uncounted. Notice what you take in.",
    "self": "Eat one meal today slowly, and notice what nourishes you.",
-   "them": "Share tea with {name}, in person or in your Between."
+   "them": "Share tea with {name}, in person or in your Between.",
+   "drawn": {
+    "yourself": "Notice what you take in when you think of {name}, and feed yourself something good besides.",
+    "them": "Ask {name} what feeds them on a hard day."
+   }
   },
   {
    "n": 28,
    "lane": "partner",
    "reading": "This is carrying more than what holds it up. Something needs to be set down before it bends.",
    "self": "Take one load off your plate today, and do not make it up later.",
-   "them": "Ask {name} what feels heavy between you, and offer to set one load down together."
+   "them": "Ask {name} what feels heavy between you, and offer to set one load down together.",
+   "drawn": {
+    "yourself": "Set down one hope about {name} that is more than this can carry yet.",
+    "them": "Notice what {name} is carrying, and ask if they want to talk about it."
+   }
   },
   {
    "n": 29,
    "lane": "partner",
    "reading": "There is a deeper layer under the deep one. Going down together needs a hand to hold.",
    "self": "Sit with the feeling under the feeling for three breaths.",
-   "them": "Ask {name} one question that goes one layer deeper than usual."
+   "them": "Ask {name} one question that goes one layer deeper than usual.",
+   "drawn": {
+    "yourself": "Go one layer down: what does your pull toward {name} want for you?",
+    "them": "Ask {name} about something that matters to them, and stay with the answer."
+   }
   },
   {
    "n": 30,
    "lane": "partner",
    "reading": "You keep saying the same true sentence, and it is burning up what it is about. A flame needs something to rest on.",
    "self": "Stop telling one story about yourself for a day.",
-   "them": "Say what you keep saying to {name} once more in new words, then let it rest."
+   "them": "Say what you keep saying to {name} once more in new words, then let it rest.",
+   "drawn": {
+    "yourself": "Say once what is true for you about {name}, and then rest from saying it.",
+    "them": "Notice what lights {name} up, and ask what keeps that going."
+   }
   },
   {
    "n": 31,
    "lane": "partner",
    "reading": "The movement came because you stopped pushing. Influence runs both ways when one of you waits.",
    "self": "Stop trying for one hour and see what comes to you.",
-   "them": "Wait for {name} to reach first this time, and answer warmly when they do."
+   "them": "Wait for {name} to reach first this time, and answer warmly when they do.",
+   "drawn": {
+    "yourself": "Stop leaning toward {name} for a day, and notice what moves in you.",
+    "them": "Wait for {name} to bring something up, and follow their lead."
+   }
   },
   {
    "n": 32,
    "lane": "between",
    "reading": "This exchange has happened before. A pattern that lasts can be kept on purpose.",
    "self": "Name one rhythm in your days you want to keep, and keep it today.",
-   "them": "Choose one ritual with {name} and do it again this week."
+   "them": "Choose one ritual with {name} and do it again this week.",
+   "drawn": {
+    "yourself": "Notice how your pull toward {name} echoes pulls you have felt before, and keep what you like in it.",
+    "them": "Notice what {name} keeps doing week after week, and ask what it means to them."
+   }
   },
   {
    "n": 33,
    "lane": "partner",
    "reading": "Stepping back is open to you, and the timing decides what you keep. A kind retreat is still contact.",
    "self": "Take one hour alone today, and call it rest rather than escape.",
-   "them": "Tell {name} you need a little space, and when you will be back."
+   "them": "Tell {name} you need a little space, and when you will be back.",
+   "drawn": {
+    "yourself": "Take one step back from thinking about {name}, kindly, and see what you keep.",
+    "them": "Notice when {name} steps back, and give them space."
+   }
   },
   {
    "n": 34,
    "lane": "partner",
    "reading": "There is force here, and it has no aim yet. Strength needs gentleness to arrive as care.",
    "self": "Put your energy into one movement your body enjoys.",
-   "them": "Do one strong, kind act for {name}, and ask first whether they want it."
+   "them": "Do one strong, kind act for {name}, and ask first whether they want it.",
+   "drawn": {
+    "yourself": "Put the strength of your pull toward {name} into one gentle act for yourself.",
+    "them": "Notice where {name} is strong, and ask how they grew it."
+   }
   },
   {
    "n": 35,
    "lane": "partner",
    "reading": "This is coming into view faster than you planned. Let it be seen.",
    "self": "Let one person see something you usually keep to yourself.",
-   "them": "Let {name} see how much you enjoy them."
+   "them": "Let {name} see how much you enjoy them.",
+   "drawn": {
+    "yourself": "Let yourself be seen a little more today, by {name} or by anyone.",
+    "them": "Notice what {name} lets people see, and ask about one piece of it."
+   }
   },
   {
    "n": 36,
    "lane": "between",
    "reading": "You are keeping a light covered, and it is still lit. Some warmth is kept safe by staying hidden for a while.",
    "self": "Keep one tender feeling to yourself today, and tend it in private.",
-   "them": "Leave a small light in your Between for {name}, without a word."
+   "them": "Leave a small light in your Between for {name}, without a word.",
+   "drawn": {
+    "yourself": "Keep the light you carry for {name} covered today, and notice that it stays lit.",
+    "them": "Notice what {name} keeps private, and leave it covered."
+   }
   },
   {
    "n": 37,
    "lane": "between",
    "reading": "An arrangement has formed between you without being talked about. Naming it lets you both choose it.",
    "self": "Name one arrangement you live by, and decide whether you still choose it.",
-   "them": "Ask {name} about one unspoken arrangement between you."
+   "them": "Ask {name} about one unspoken arrangement between you.",
+   "drawn": {
+    "yourself": "Name the small ritual that has grown in you since {name}, and choose it.",
+    "them": "Ask {name} how their days usually go."
+   }
   },
   {
    "n": 38,
    "lane": "partner",
    "reading": "You reached a conclusion from far away. Closeness starts by closing the distance.",
    "self": "Check one conclusion you have reached about yourself, close up.",
-   "them": "Ask {name} what they meant before you decide it for them."
+   "them": "Ask {name} what they meant before you decide it for them.",
+   "drawn": {
+    "yourself": "Notice one verdict you reached about {name} from far away, and set it down.",
+    "them": "Close a little distance: ask {name} about one guess you have only kept in your head."
+   }
   },
   {
    "n": 39,
    "lane": "partner",
    "reading": "The direct way is closed, and you have not asked for help. Asking is the way around.",
    "self": "Ask one friend for help with something small today.",
-   "them": "Ask {name} to help you find the way around what is stuck between you."
+   "them": "Ask {name} to help you find the way around what is stuck between you.",
+   "drawn": {
+    "yourself": "Ask a friend what they see in you, before you look to {name} for it.",
+    "them": "Ask {name} for help with one small question they know about."
+   }
   },
   {
    "n": 40,
    "lane": "partner",
    "reading": "The knot just loosened, and the opening is short. Ease is a time to move gently.",
    "self": "Make the gentle move you have been putting off, today, while it is easy.",
-   "them": "Reach out to {name} today, while it is easy between you."
+   "them": "Reach out to {name} today, while it is easy between you.",
+   "drawn": {
+    "yourself": "Loosen one knot in you about {name}, gently, today.",
+    "them": "Notice when {name} is at ease, and ask what helped."
+   }
   },
   {
    "n": 41,
    "lane": "partner",
    "reading": "This has a price, and you have not named it. Naming what you give keeps it a gift.",
    "self": "Write what you are giving up for this, and whether you still choose it.",
-   "them": "Tell {name} plainly what you have been giving, without asking for anything back."
+   "them": "Tell {name} plainly what you have been giving, without asking for anything back.",
+   "drawn": {
+    "yourself": "Name what thinking of {name} costs you, and what it gives.",
+    "them": "Ask {name} what they give their time to."
+   }
   },
   {
    "n": 42,
    "lane": "partner",
    "reading": "More is arriving than you put in. Let the extra flow outward.",
    "self": "Pass one gift you received today on to someone else.",
-   "them": "Give {name} something extra, with nothing tied to it."
+   "them": "Give {name} something extra, with nothing tied to it.",
+   "drawn": {
+    "yourself": "Let some of the warmth you feel for {name} go to someone else today.",
+    "them": "Notice what {name} is glad to share, and receive it."
+   }
   },
   {
    "n": 43,
    "lane": "partner",
    "reading": "One sentence is still unsaid, and it is leaking out anyway. Saying it cleanly is kinder.",
    "self": "Say the unsaid sentence to yourself, out loud.",
-   "them": "Say the one unsaid sentence to {name}, simply."
+   "them": "Say the one unsaid sentence to {name}, simply.",
+   "drawn": {
+    "yourself": "Write the one sentence you have not said to {name}, and keep it for yourself for now.",
+    "them": "Notice what {name} seems to almost say, and leave space for it."
+   }
   },
   {
    "n": 44,
    "lane": "partner",
    "reading": "You are building a lot on one moment. One moment is a beginning, not a proof.",
    "self": "Notice one story you built on one moment, and hold it lightly.",
-   "them": "Ask {name} for one more moment before you decide what the first one meant."
+   "them": "Ask {name} for one more moment before you decide what the first one meant.",
+   "drawn": {
+    "yourself": "Notice how much you are building on one moment with {name}, and let it be a beginning.",
+    "them": "Learn one more ordinary fact about {name} before you decide anything."
+   }
   },
   {
    "n": 45,
    "lane": "partner",
    "reading": "You came together, and you may have forgotten why. Remembering the reason renews it.",
    "self": "Write down why you began what you are in, and read it slowly.",
-   "them": "Remind {name} why you first wanted to be close."
+   "them": "Remind {name} why you first wanted to be close.",
+   "drawn": {
+    "yourself": "Remember why {name} caught your eye in the first place, and write it down.",
+    "them": "Ask {name} how they came to be where they are."
+   }
   },
   {
    "n": 46,
    "lane": "partner",
    "reading": "This is growing at a pace you cannot see day to day. Trust the slope.",
    "self": "Look back a month and name one way you have grown.",
-   "them": "Tell {name} one way you have grown closer since you began."
+   "them": "Tell {name} one way you have grown closer since you began.",
+   "drawn": {
+    "yourself": "Trust that your own growth is happening, with or without {name} in view.",
+    "them": "Notice one way {name} has grown since you first saw them."
+   }
   },
   {
    "n": 47,
    "lane": "between",
    "reading": "The explaining goes on and the basin is dry. Rest before you say more.",
    "self": "Stop explaining yourself for a day, even in your own head.",
-   "them": "Tell {name} you are tired of explaining, and ask to just sit together."
+   "them": "Tell {name} you are tired of explaining, and ask to just sit together.",
+   "drawn": {
+    "yourself": "Rest from explaining your pull toward {name}, even to yourself.",
+    "them": "Ask {name} what tires them out, and listen without advice."
+   }
   },
   {
    "n": 48,
    "lane": "partner",
    "reading": "What you want is right there, and your way of reaching it is broken. Mend the rope, and the water is still there.",
    "self": "Mend one small break that keeps you from what you need.",
-   "them": "Ask {name} how they would like you to reach them."
+   "them": "Ask {name} how they would like you to reach them.",
+   "drawn": {
+    "yourself": "Mend one way you reach for closeness that keeps breaking, before you reach toward {name}.",
+    "them": "Notice what {name} draws on when they need it, and ask about it."
+   }
   },
   {
    "n": 49,
    "lane": "partner",
    "reading": "You are shedding an old skin, and the new one is soft. Let yourself be seen tender.",
    "self": "Treat yourself today the way you would treat someone who is healing.",
-   "them": "Tell {name} you are changing, and that it makes you a little tender."
+   "them": "Tell {name} you are changing, and that it makes you a little tender.",
+   "drawn": {
+    "yourself": "Let yourself be tender about {name}, alone, for one minute.",
+    "them": "Notice something {name} is outgrowing, and be kind about it."
+   }
   },
   {
    "n": 50,
    "lane": "between",
    "reading": "Something is changing between you, and you are carrying it by the handles. Hold it steady while it cooks.",
    "self": "Give one change in you a day to settle before you judge it.",
-   "them": "Make something with {name}, together, in your Between."
+   "them": "Make something with {name}, together, in your Between.",
+   "drawn": {
+    "yourself": "Hold your pull toward {name} steady today, without stirring it.",
+    "them": "Ask {name} what is changing for them."
+   }
   },
   {
    "n": 51,
    "lane": "partner",
    "reading": "It went off, and it may go off again. After a shock, steadiness is the gift.",
    "self": "After a jolt today, take three slow breaths before you answer anything.",
-   "them": "Check on {name} after the last jolt between you, and ask how they are now."
+   "them": "Check on {name} after the last jolt between you, and ask how they are now.",
+   "drawn": {
+    "yourself": "After the jolt of seeing {name}, steady your breath and your feet.",
+    "them": "Notice how {name} steadies after a surprise."
+   }
   },
   {
    "n": 52,
    "lane": "between",
    "reading": "The move is to stop while the wanting is still running. Stillness can be shared.",
    "self": "Sit still for five minutes and let the wanting run without following it.",
-   "them": "Sit with {name} in your Between without needing anything to happen."
+   "them": "Sit with {name} in your Between without needing anything to happen.",
+   "drawn": {
+    "yourself": "Stop while the wanting for {name} is still running, and sit with it.",
+    "them": "Sit in stillness near {name} once, and notice what they are like when nothing is asked of them."
+   }
   },
   {
    "n": 53,
    "lane": "partner",
    "reading": "This has stages, and you are trying to skip one. Closeness comes at its own pace.",
    "self": "Name the stage you are in, and let it be enough for now.",
-   "them": "Ask {name} what the next small step between you might be."
+   "them": "Ask {name} what the next small step between you might be.",
+   "drawn": {
+    "yourself": "Name the stage you are at with {name}, and stay in it for now.",
+    "them": "Learn about {name} the way you would in an early stage of knowing someone."
+   }
   },
   {
    "n": 54,
    "lane": "partner",
    "reading": "You are following rules nobody told you. Ask how life goes in their world.",
    "self": "Notice one rule you follow that no one ever said out loud.",
-   "them": "Ask {name} how life goes in their world, and listen."
+   "them": "Ask {name} how life goes in their world, and listen.",
+   "drawn": {
+    "yourself": "Notice the rules you are following around {name} that nobody gave you.",
+    "them": "Ask {name} how life goes in their world."
+   }
   },
   {
    "n": 55,
    "lane": "partner",
    "reading": "This is at its peak, and you are holding some of it back. Enjoy it fully while it is full.",
    "self": "Let yourself enjoy one pleasure completely today.",
-   "them": "Show {name} all of your gladness this time, not just part of it."
+   "them": "Show {name} all of your gladness this time, not just part of it.",
+   "drawn": {
+    "yourself": "Enjoy how full you feel when {name} comes to mind, and let it be enough today.",
+    "them": "Notice what {name} enjoys most, and enjoy it with them."
+   }
   },
   {
    "n": 56,
    "lane": "partner",
    "reading": "You feel like a stranger here, and first impressions come fast. Be a gracious guest.",
    "self": "Be gentle with yourself somewhere new today.",
-   "them": "Ask {name} to show you something of theirs, and be a good guest."
+   "them": "Ask {name} to show you something of theirs, and be a good guest.",
+   "drawn": {
+    "yourself": "Be a gracious guest in your own feelings about {name}.",
+    "them": "Be curious about the places {name} calls home, and ask about one."
+   }
   },
   {
    "n": 57,
    "lane": "partner",
    "reading": "You are already having an effect, and you have not owned it. Gentle influence is safe once it is owned.",
    "self": "Notice one way you shape your own mood, and use it kindly.",
-   "them": "Ask {name} how you affect them lately, and listen."
+   "them": "Ask {name} how you affect them lately, and listen.",
+   "drawn": {
+    "yourself": "Own the effect {name} has on you, and the effect you might have.",
+    "them": "Notice the small ways {name} affects people around them, and ask what they care about."
+   }
   },
   {
    "n": 58,
    "lane": "partner",
    "reading": "The exchange is already the whole of it. Joy shared is the point.",
    "self": "Let yourself laugh today, on purpose.",
-   "them": "Trade one joke or one light moment with {name} today."
+   "them": "Trade one joke or one light moment with {name} today.",
+   "drawn": {
+    "yourself": "Enjoy the next exchange with {name} for what it is.",
+    "them": "Ask {name} what made them laugh this week."
+   }
   },
   {
    "n": 59,
    "lane": "partner",
    "reading": "What you held rigid is coming apart. Let it soften instead of holding it together.",
    "self": "Let go of one rigid plan for yourself today.",
-   "them": "Let one old stance with {name} soften, and tell them so."
+   "them": "Let one old stance with {name} soften, and tell them so.",
+   "drawn": {
+    "yourself": "Let one rigid idea of how this should go with {name} soften.",
+    "them": "Notice what {name} holds loosely, and ask about it."
+   }
   },
   {
    "n": 60,
    "lane": "partner",
    "reading": "You are past what you can hold, and you have not said where your edge is. Limits make closeness safe.",
    "self": "Name one limit for yourself today and keep it.",
-   "them": "Tell {name} where your edge is, kindly and clearly."
+   "them": "Tell {name} where your edge is, kindly and clearly.",
+   "drawn": {
+    "yourself": "Name your own edge: how much of yourself you want to spend thinking of {name}.",
+    "them": "Notice the limits {name} keeps, and respect them."
+   }
   },
   {
    "n": 61,
    "lane": "partner",
    "reading": "What is true here is still inside the shell. Warmth helps it hatch.",
    "self": "Keep one new feeling warm and private for a while longer.",
-   "them": "Give {name} warmth today without asking for what is not ready yet."
+   "them": "Give {name} warmth today without asking for what is not ready yet.",
+   "drawn": {
+    "yourself": "Keep what is true for you about {name} warm, and let it hatch in its own time.",
+    "them": "Ask {name} about something they care about without saying so."
+   }
   },
   {
    "n": 62,
    "lane": "partner",
    "reading": "You are doing slightly too much. Small and steady comes closer than grand.",
    "self": "Do one kindness for yourself today at half the size you planned.",
-   "them": "Do one small kindness for {name} instead of a big one."
+   "them": "Do one small kindness for {name} instead of a big one.",
+   "drawn": {
+    "yourself": "Do one small kindness for yourself today instead of a grand plan with {name} in your head.",
+    "them": "Ask {name} one small question, and let it stay small."
+   }
   },
   {
    "n": 63,
    "lane": "between",
    "reading": "Something is complete, and that is when it starts to move again. Tend what you have, so it stays.",
    "self": "Take care of one gift you already have, today.",
-   "them": "Tend your Between with {name}: keep up what is already good there."
+   "them": "Tend your Between with {name}: keep up what is already good there.",
+   "drawn": {
+    "yourself": "Tend what you already have in your life, so it stays, whatever happens with {name}.",
+    "them": "Notice what {name} has settled into, and ask how it came together."
+   }
   },
   {
    "n": 64,
    "lane": "partner",
    "reading": "You are nearly there, and the last stride is where you get wet. Go carefully at the end.",
    "self": "Finish one small promise to yourself, carefully.",
-   "them": "Take the last small step toward {name} you have been hovering before."
+   "them": "Take the last small step toward {name} you have been hovering before.",
+   "drawn": {
+    "yourself": "Go carefully with yourself at the edge of this, before any word to {name}.",
+    "them": "Learn one more fact about {name} before you take the last step."
+   }
   }
  ]
 }

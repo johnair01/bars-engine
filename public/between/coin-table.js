@@ -18,15 +18,27 @@
    Every word goes through the one screen owner (voice.js, hi-screen-owner) while you are at the table or the book.
    Previews (any host but bars-engine.vercel.app) write nothing, with a stand-in person when you share no Between:
    ?nook=1&coins=self sits you at the nook table with a cast for yourself, ?nook=1&coins=them with a cast for the stand-in,
-   and ?room=first&coins=faceup (the hollow) opens with the stand-in's cast face up on the table, ready to answer. */
+   and ?room=first&coins=faceup (the hollow) opens with the stand-in's cast face up on the table, ready to answer.
+
+   Build 3b, the spark at the table (pass bar-intake-3; his steer on bi-flirtcraft-door: "The work for flirtcraft starts in
+   the nook. They learn about themselves and then the other and they invite the other into playing"). The toss can also be
+   for someone you are drawn to: a spark you started, before they join. A Wake Up or Clean Up cast gives a move about
+   yourself, Grow Up a move to learn about them, Show Up the invitation: the spark's link with his words, "Let's play
+   together in this room I've made", and a button that copies or shares it. The table sends nothing. With no spark yet, the
+   last choice, "Someone you are drawn to", opens the built Plant a spark sheet. ?door=flirtcraft (any host) is the
+   Flirtcraft door: you land in the nook as everyone does and, once your first minute is done, walk to the table, whose
+   first line says it reads for you or for someone you are drawn to. Preview: ?nook=1&coins=spark casts Show Up for a
+   stand-in spark, so the invitation shows; ?nook=1&door=flirtcraft walks a newcomer with no spark to the table. */
 import * as THREE from "three";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
-import { SUITS, SELF, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
-import { LANE_NAMES } from "../calrunia/next-moves.js";
+import { SUITS, SELF, PLANT, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
 
 const TY = 0.32, TR = 0.34, SEAT_D = 0.62, PUSH_R = 0.5, NEAR_R = 1.25, BOOK_NEAR = 0.8, BOOK_LEAVE = 1.8;
 const STAND_IN = { kind: "them", room: "stand-in", person: "stand-in", name: "Sam", standIn: true };
+const STAND_IN_SPARK = { kind: "spark", room: "stand-in-spark", name: "Robin", standIn: true };
+// a preview's Show Up cast for the stand-in spark: only line 4 moving, so the move is the invitation
+const SPARK_TOSSES = [[2, 3, 3], [2, 2, 3], [2, 3, 3], [2, 2, 2], [2, 3, 3], [2, 2, 3]];
 // a preview's fixed cast: lines 2 and 5 moving, so the reading shows where it is heading and the suit is Grow Up
 const PREVIEW_TOSSES = [[2, 3, 3], [3, 3, 3], [2, 2, 3], [2, 3, 3], [2, 2, 2], [3, 3, 2]];
 const DEPTH_NAMES = { easy: "Easy", medium: "Deeper", hard: "Deepest" };
@@ -166,15 +178,19 @@ export function mount(B, opts = {}) {
   function rooms() { const l = B.list && B.list(); return (l && l.gardens) || []; }
   function choices() {
     const here = hereRoom();
-    if (here) { // inside a hollow: yourself, or this hollow's other person
+    if (here) { // inside a hollow: yourself, or this hollow's other person, or the one your spark is toward
       const g = B.view().g, me = ids().me, other = g && g.members && g.members[me] ? Object.keys(g.members).find(u => u !== me) : null;
       const r = rooms().find(x => x.id === here);
       const out = [SELF];
       if (other) out.push({ kind: "them", room: here, person: other, name: (r && r.who) || (B.nameOf ? B.nameOf(other) : "them") });
+      else if (g && g.phase === "spark" && g.startedBy === me && g.setup) out.push({ kind: "spark", room: here, name: String(g.setup.who || "them") });
       return out;
     }
-    const out = whoChoices(rooms());
-    return out.length > 1 || !preview ? out : [SELF, STAND_IN];
+    let out = whoChoices(rooms());
+    if (preview && out.length === 1) out = opts.door ? [SELF] : [SELF, STAND_IN, STAND_IN_SPARK];
+    // no spark yet: the last choice plants one (the built sheet), so someone you are drawn to is always one tap away
+    if (!out.some(w => w.kind === "spark")) out.push(PLANT);
+    return out;
   }
   function faceUp() { // the newest face-up cast on this hollow's table
     let best = null;
@@ -195,10 +211,12 @@ export function mount(B, opts = {}) {
   }
 
   /* ---------- the sitting ---------- */
-  function fresh(source) { return { source, who: null, tosses: [], cast: null, move: null, did: null, answering: null, card: null }; }
+  let doorWords = false; // the Flirtcraft door: the first sitting's first line names what the table is for
+  function fresh(source) { const d = doorWords; doorWords = false; return { source, who: null, tosses: [], cast: null, move: null, did: null, answering: null, card: null, door: d, link: null, sent: false }; }
   function choose(w) {
     if (!s || s.who) return;
-    if (!w.standIn && !mayAsk(w, w.kind === "them" && hereRoom() ? [{ id: w.room, phase: "between", person: w.person }] : rooms())) return;
+    if (w.kind === "plant") { B.standUp(); end(); if (B.openSheet) B.openSheet("setup"); return; }
+    if (!w.standIn && !mayAsk(w, w.kind !== "self" && hereRoom() ? [w.kind === "spark" ? { id: w.room, phase: "spark", who: w.name } : { id: w.room, phase: "between", person: w.person }] : rooms())) return;
     s.who = w; cardKey = "";
     if (s.source === "book") castAll();
   }
@@ -219,6 +237,24 @@ export function mount(B, opts = {}) {
     s.cast = castFromTosses(s.tosses, hexTable, "coin-table");
     s.move = moveOf(s.cast, s.who, readings);
     cardKey = "";
+    if (s.move.invite) layLink(s);
+  }
+  /* The invitation: the spark's own link, laid on the table with his words. Only you see it until you send it yourself. */
+  async function layLink(sit) {
+    const room = sit.move.invite.room;
+    try { sit.link = sit.who.standIn || down() ? location.origin + "/ontology-game/between?g=" + room + "&invite=preview" : await B.sparkUrl(room); }
+    catch { sit.link = ""; }
+    cardKey = "";
+  }
+  async function sendLink() {
+    if (!s || !s.move || !s.move.invite) return;
+    const text = INVITE_WORDS + "\n\n" + (s.link || "");
+    try {
+      if (!s.who.standIn && !down() && B.sparkLink) await B.sparkLink({ id: s.move.invite.room, name: s.who.name }, INVITE_WORDS); // the built "Send the link again" path
+      else { let shared = false; if (navigator.share) { try { await navigator.share({ title: "The Between", text }); shared = true; } catch {} } if (!shared) await navigator.clipboard.writeText(text).catch(() => {}); }
+      s.sent = true; cardKey = "";
+      if (B.toast) B.toast(navigator.share ? "The link is ready to send." : "The link and your words are on your clipboard.");
+    } catch { if (B.toast) B.toast("The link did not come. Go into the spark's room and use Invite."); }
   }
   async function keep() {
     if (!s || !s.move || s.did) return;
@@ -292,13 +328,18 @@ export function mount(B, opts = {}) {
       const fu = !atBook && faceUp(), me = ids().me || "you";
       const acts = [];
       if (fu && fu.it.by !== me && !(fu.it.answer && fu.it.answer[me])) acts.push({ label: `Answer ${theirName(fu)}'s cast`, sub: "They left it face up on the table", on: () => startAnswer(fu) });
-      for (const w of choices()) acts.push({ label: w.kind === "self" ? "For yourself" : `For ${w.name}`, sub: w.kind === "self" ? "How to come closer to yourself" : w.standIn ? "A stand-in, on a preview" : "Someone you share a Between with", on: () => choose(w) });
+      for (const w of choices()) {
+        if (w.kind === "plant") { acts.push({ label: "Someone you are drawn to", sub: "Plant a spark for them first", on: () => choose(w) }); continue; }
+        const sub = w.kind === "self" ? "How to come closer to yourself" : w.kind === "spark" ? "Someone you are drawn to" + (w.standIn ? ", a stand-in on a preview" : "") : w.standIn ? "A stand-in, on a preview" : "Someone you share a Between with";
+        acts.push({ label: w.kind === "self" ? "For yourself" : `For ${w.name}`, sub, on: () => choose(w) });
+      }
       if (fu && fu.it.by === me) {
         const ans = Object.entries(fu.it.answer || {}).find(([u]) => u !== me);
         acts.push({ label: "Take your face-up cast back", quiet: true, on: () => takeBack(fu.id) });
         return { subject, head: "Who is this toss for?", sub: ans ? `They answered your cast with a turn: ${cardTitle(ans[1].card)}, ${DEPTH_NAMES[ans[1].depth].toLowerCase()}. Ask them for it when you next sit together.` : "Your last cast lies face up. They see it when they sit here.", actions: [...acts, leave] };
       }
-      return { subject, head: "Who is this toss for?", sub: atBook ? "The book reads the whole cast at once." : "Only you see the coins. Nobody learns of a cast unless you show them.", actions: [...acts, leave] };
+      const first = s.door ? "The table reads for you, or for someone you are drawn to. " : "";
+      return { subject, head: "Who is this toss for?", sub: first + (atBook ? "The book reads the whole cast at once." : "Only you see the coins. Nobody learns of a cast unless you show them."), actions: [...acts, leave] };
     }
     if (!s.move || flipping) {
       const n = s.tosses.length;
@@ -308,12 +349,19 @@ export function mount(B, opts = {}) {
     }
     const m = s.move, suit = SUITS[m.suit];
     const head = `${m.n}. ${m.name}`;
-    const heading = m.becomes ? ` Lines ${m.changing.join(" and ")} are moving: it is becoming ${m.becomes.name}. ${m.heading}` : "";
+    const heading = m.becomes ? ` ${m.changing.length > 1 ? "Lines " + m.changing.join(" and ") + " are" : "Line " + m.changing[0] + " is"} moving: it is becoming ${m.becomes.name}. ${m.heading}` : "";
     if (s.did) {
-      const said = { kept: `Kept. It waits in ${LANE_NAMES[m.lane]} among your next moves for a week.`, let: "Let go. The coins are back on the table.", faceup: `Left face up. ${m.who.name} sees its lines on the table and can answer it with a turn.` }[s.did];
-      return { subject, head, sub: `${m.line} ${said}`, foot: atBook ? "" : "One cast a sitting. Stand and sit again to toss again.", actions: [leave] };
+      const said = { kept: `Kept. It waits in ${MOVE_LANES[keptEntry(m, 0).lane]} among your next moves for a week.`, let: "Let go. The coins are back on the table.", faceup: `Left face up. ${m.who.name} sees its lines on the table and can answer it with a turn.` }[s.did];
+      const again = m.invite && !s.sent ? [{ label: "Copy or share the link", sub: "You send it yourself, when it feels right", on: sendLink }] : [];
+      return { subject, head, sub: `${m.line} ${said}`, foot: atBook ? "" : "One cast a sitting. Stand and sit again to toss again.", actions: [...again, leave] };
     }
-    const acts = [{ label: m.line, sub: `Keep it · ${LANE_NAMES[m.lane]} · draw from ${suit.name} next`, on: keep }];
+    if (m.invite) { // Show Up for a spark: the invitation, laid with the link; nothing leaves the table unless you send it
+      const link = s.link === null ? "The link is coming." : s.link ? s.link : "The link did not come. Go into the spark's room and use Invite.";
+      return { subject, head, sub: `${m.reading}${heading} ${m.line}`, foot: `"${INVITE_WORDS}" ${link}`,
+        actions: [{ label: s.sent ? "Copy or share it again" : "Copy or share the link", sub: "Nothing is sent until you send it", on: sendLink },
+          { label: "Keep it for later", sub: `${MOVE_LANES.invite} · waits among your next moves`, on: keep }, { label: "Let it go", quiet: true, on: letGo }] };
+    }
+    const acts = [{ label: m.line, sub: `Keep it · ${MOVE_LANES[m.lane]} · draw from ${suit.name} next`, on: keep }];
     if (m.who.kind === "them" && (hereRoom() === m.who.room || (down() && s.who.standIn && !hereRoom() && builtFor === "hollow"))) acts.push({ label: "Leave it face up", sub: `${m.who.name} sees it when they sit here`, on: leaveFaceUp });
     acts.push({ label: "Let it go", quiet: true, on: letGo });
     return { subject, head, sub: m.reading + heading, actions: acts };
@@ -370,9 +418,10 @@ export function mount(B, opts = {}) {
     if (s) { const m = moment(); speak(m); if (voice()) voice().place(); } else hush();
     const fu = faceUp();
     const tableWords = near === "table" ? (fu ? "A cast lies face up · tap the table to sit" : "Tap the table to sit and toss") : fu ? "The coin table · a cast lies face up" : "The coin table";
+    const words = doorWords ? "The coin table · it reads for you, or for someone you are drawn to" : tableWords;
     const at = near === "book" ? place.book.clone().setY(place.book.y + 0.35) : T.clone().setY(0.85);
     const v = at.clone().project(B.camera), [sx, sy] = B.screenOf(at);
-    label.textContent = near === "book" ? "The book · tap it for a reading" : tableWords;
+    label.textContent = near === "book" ? "The book · tap it for a reading" : words;
     label.hidden = !!s || v.z > 1 || sittingHere(); label.style.left = sx + "px"; label.style.top = sy + "px";
   }
 
@@ -381,6 +430,7 @@ export function mount(B, opts = {}) {
     while (!B.room || !["nook", "hollow"].includes(B.room().shell)) await new Promise(r => setTimeout(r, 250));
     build(B.room().shell); requestAnimationFrame(frame);
     [hexTable, readings, deck] = await Promise.all([loadTable(), loadReadings(), loadDeck()]);
+    if (opts.door === "flirtcraft") door();
     if (!opts.open) return;
     while (!B.meState.placed) await new Promise(r => setTimeout(r, 250)); // the page sets you down where you wake first
     await new Promise(r => setTimeout(r, 600));
@@ -392,16 +442,26 @@ export function mount(B, opts = {}) {
     }
     B.meState.pos.copy(place.seat); sit(); // a preview opens at the table, not across the room
     setTimeout(() => { if (B.meState.seatWant !== "coins") { B.meState.pos.copy(place.seat); sit(); } }, 2500); // a skip that lands late can take the sit away
-    if (opts.open === "self" || opts.open === "them") {
+    if (opts.open === "self" || opts.open === "them" || opts.open === "spark") {
       while (!s) await new Promise(r => setTimeout(r, 200));
-      choose(opts.open === "self" ? SELF : (choices().find(w => w.kind === "them") || STAND_IN));
-      for (const tt of PREVIEW_TOSSES) { toss(tt); while (flipping) await new Promise(r => setTimeout(r, 120)); await new Promise(r => setTimeout(r, 250)); }
+      choose(opts.open === "self" ? SELF : opts.open === "spark" ? STAND_IN_SPARK : (choices().find(w => w.kind === "them") || STAND_IN));
+      for (const tt of opts.open === "spark" ? SPARK_TOSSES : PREVIEW_TOSSES) { toss(tt); while (flipping) await new Promise(r => setTimeout(r, 120)); await new Promise(r => setTimeout(r, 250)); }
     }
   })().catch(e => console.warn("coin table:", e));
+  /* The Flirtcraft door: you wake in the nook like everyone (the first minute is the one orientation), then walk to the
+     table, and its first line says what it is for. */
+  async function door() {
+    while (!B.meState.placed || builtFor !== "nook" || !place) await new Promise(r => setTimeout(r, 250));
+    while (B.minuteOn && B.minuteOn()) await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 700));
+    if (B.room().shell !== "nook") return;
+    doorWords = true; go();
+  }
   return {
     toss, keep, letGo, leaveFaceUp, answer, choose, sit, go, openBook, end, choices,
     view: () => ({ shell: builtFor, near, sitting: sittingHere(), source: s && s.source, who: s && s.who && { kind: s.who.kind, room: s.who.room || null },
       tosses: s ? s.tosses.map(x => [...x]) : [], move: s && s.move && { n: s.move.n, lane: s.move.lane, suit: s.move.suit, line: s.move.line, becomes: s.move.becomes && s.move.becomes.n },
+      invite: !!(s && s.move && s.move.invite), link: s && s.link, sent: !!(s && s.sent), door: !!(s && s.door) || doorWords,
       did: s && s.did, faceUp: (faceUp() || {}).id || null, answered: !!(s && s.answered), kept: { ...localKept }, table: place && place.T.toArray(), seat: place && place.seat.toArray() }),
   };
 }
