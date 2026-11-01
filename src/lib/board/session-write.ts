@@ -6,7 +6,7 @@ import { missingObjects } from './content-store'
 /** What a Claude session writes to the Council Board: the Your steps lists and steps, Outreach's contacts and shows,
  * and the council's rows (src/lib/board/rows.ts). His answers (positions, questions, ...) are his to save, never a
  * session's. */
-export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows'])
+export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws'])
 /** Collections whose session writes the board-pull Action lands on main, so they are born unrecorded: a posted row
  * waits for board-pull to put it in board_data.json and acknowledge it, and the staleness check alarms if it does not. */
 export const UNRECORDED_COLLECTIONS = new Set(['rows'])
