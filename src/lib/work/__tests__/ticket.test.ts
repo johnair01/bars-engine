@@ -14,7 +14,9 @@ describe('ticketFromAnswer', () => {
     expect(t.lanes).toEqual(['claude', 'freebuff'])
     expect(t.basis).toMatchObject({ rows: ['wq-look-3'], answer: 'A', label: 'Yes, build it this way' })
     expect(t.brief).toContain('Wendell answered wq-look-3 on the Council Board: Yes, build it this way.')
-    expect(t.brief).toContain('python3 board/gates.py wq-look-3 --line')
+    expect(t.brief).toContain('python3 board/gates.py wq-look-3 --line --live')
+    expect(t.brief).toContain('this ticket is the gate\'s claim')
+    expect(t.brief).not.toContain('--push')
     expect(t.title).toBe(row.q)
   })
   it("uses the chosen option's then, and keys a steer apart from the bare answer", () => {
