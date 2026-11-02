@@ -27,24 +27,30 @@
    the floor (Face it, Talk to it, Be it) that melt it to water, mist and a clearing (../block-room.js). ?block=ice|water|gas|clear
    opens it at that state with the sample's charge.
 
+   Build 5 (his A on ctw-walk-look-2, 2026-11-02): over the laid plank, the far bank's path leads to the episode's third land,
+   the Friends' Fire (?place=friends-fire, ./friends-fire.js): sit on the empty crate, play what you have so far, and Oriel
+   plays it on to its end. The clearing keeps the notes you gave the stump (sessionStorage "ctw-song") for Oriel to play.
+
    Previews: ?at=stump stands you at the stump, ?song=done opens with the song played to its end, ?paint=0 as the Between,
-   ?place=scale-house the second land (with ?at=balance, ?at=bridge, ?bag=pan, ?plank=laid). */
+   ?place=scale-house the second land (with ?at=balance, ?at=bridge, ?bag=pan, ?plank=laid), ?place=friends-fire the third
+   (with ?at=crate sat on your crate, ?song=played the song already played on). */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, mergeStatic, mergeByParent, rng, hash } from "../hollow.js";
 import { installPaint } from "../paint.js";
 import { loadParts, dressFigure } from "../wardrobe.js";
-import { stance, clipWeights, FADE } from "../stance.js";
+import { stance, clipWeights, FADE, CRATE_SIT, SEAT_PAD } from "../stance.js";
 import { parseLook } from "../../calrunia/look.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
-import { plan, strongStart, secretsHere } from "./place.js";
+import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
 import * as SH from "./scale-house.js";
+import * as FF from "./friends-fire.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
-const PLACE = Q.get("place") === "scale-house" ? "scale-house" : "clearing";
+const PLACE = ["scale-house", "friends-fire"].includes(Q.get("place")) ? Q.get("place") : "clearing";
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -323,10 +329,11 @@ async function episode() {
   if (g.errors) { charge = sample; g = await read(charge); }
   const md = sheet(charge, g);
   const locs = locations(charge, g), enc = locs.find(l => l.role === "encounter");
-  const loc = PLACE === "scale-house" ? (locs.find(l => l.role === "villain") || enc) : enc;
+  const role = { "scale-house": "villain", "friends-fire": "road-home" }[PLACE];
+  const loc = role ? (locs.find(l => l.role === role) || enc) : enc;
   const p = plan(loc, loc === enc ? g.weather : "");   // the week's weather is over the near land only
-  const next = locs.find(l => l.role === "villain");
-  return { charge, g, md, loc, p, next, start: PLACE === "clearing" ? strongStart(md) : [], secrets: secretsHere(md, p) };
+  const next = locs.find(l => l.role === (PLACE === "clearing" ? "villain" : "road-home"));
+  return { charge, g, md, loc, p, next, start: PLACE === "clearing" ? strongStart(md) : [], secrets: secretsHere(md, p), home: takeHome(md), friend: friendHere(md) };
 }
 
 /* ===================================================================================================
@@ -347,6 +354,48 @@ function toolbagGroup(M) {
   const coil = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.03, 8, 18), M.cable); coil.position.set(0, -0.36, 0.06); coil.rotation.x = Math.PI / 2; g.add(coil);
   g.scale.setScalar(0.82);
   return g;
+}
+/* Sitting on what is under you (the Friends' Fire's crates): stance.js's CRATE_SIT bent over whatever the clips left,
+   eased in by w, and the hips brought to rest SEAT_PAD over the seat's top, measured each frame as garden.js does, so any
+   build lands on the crate. `lean` tips the chest forward a little more (a laugh, a listen). */
+function seatPoser(obj, holder) {
+  const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "shoulderL", "shoulderR", "elbowL", "elbowR", "spine", "neck"]) { const b = obj.getObjectByName(n); if (b) bones[n] = { b, q: b.quaternion.clone() }; }
+  const hipsY = bones.hips ? bones.hips.b.position.y : 0;
+  const qe = new THREE.Quaternion(), tq = new THREE.Quaternion(), eu = new THREE.Euler(), sv = V(0, 0, 0);
+  let w = 0;
+  return {
+    bones,
+    get w() { return w; },
+    apply(dt, want, seatTop, T, lean = 0, strum = 0) {
+      w += ((want ? 1 : 0) - w) * Math.min(1, dt * 5); if (!want && w < 0.01) w = 0;
+      if (!bones.hipL || w <= 0) return;
+      for (const [n, x, y, z] of CRATE_SIT) { const B = bones[n]; if (!B) continue;
+        let bx = x; if (n === "spine") bx += lean + Math.sin(T * 1.4) * 0.025; if (n === "neck") bx -= lean * 0.6; if (n === "elbowR") bx += Math.sin(T * 14) * 0.18 * strum;
+        tq.copy(B.q).multiply(qe.setFromEuler(eu.set(bx, y, z, "XYZ"))); B.b.quaternion.slerp(tq, w); }
+      const hb = bones.hips.b, cur = hb.position.y; hb.position.y = hipsY; holder.updateMatrixWorld(true);
+      const hw = hb.getWorldPosition(sv).y - holder.position.y, sy = hb.parent.getWorldScale(sv).y || 1;
+      hb.position.y = cur + (hipsY - (hw - (seatTop + SEAT_PAD)) / sy - cur) * w;
+    },
+  };
+}
+/* The friends round the fire: Average Dusk in each seat's look, sat on their crates, breathing; Oriel holds the guitar. */
+async function makeFriends(ff) {
+  const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
+  const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
+  const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
+  const k = 1.7 / Math.max(box.getSize(V(0, 0, 0)).y, 0.01), P = await loadParts(u => loader.loadAsync(u));
+  const out = [];
+  for (const seat of FF.SEATS) { if (seat.who === "you") continue;
+    const obj = skClone(root); obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
+    const wardrobe = dressFigure(obj, P); wardrobe.set(parseLook(seat.look));
+    obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+    const c = FF.seatAt(seat), holder = new THREE.Group(); holder.add(obj); holder.position.set(c.x, groundH(c.x, c.z), c.z); holder.rotation.y = c.yaw; scene.add(holder);
+    const mixer = new THREE.AnimationMixer(obj), idle = gl.animations.find(a => a.name === "Idle"); if (idle) { const a = mixer.clipAction(idle); a.play(); a.setEffectiveWeight(0); }
+    const poser = seatPoser(obj, holder);
+    if (seat.who === "oriel") { const g = ff.guitar; holder.add(g); g.position.set(0.04, 0.64, 0.3); g.rotation.set(-0.15, 0.25, 1.05); }
+    out.push({ seat, holder, mixer, wardrobe, poser, oriel: seat.who === "oriel", phase: out.length * 1.7, laugh: 0 });
+  }
+  return out;
 }
 async function makeFigure(M) {
   const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
@@ -372,16 +421,18 @@ async function makeFigure(M) {
   // a plank carried on the shoulder, once taken out of the bag (the Scale-House)
   const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
   let bagOn = true;
+  const poser = seatPoser(obj, holder);
   return {
     holder, bag, plank,
     setBag(on) { bagOn = on; bag.visible = on; },
     get bagOn() { return bagOn; },
-    update(dt, moving) {
-      const s = stance({ moving }); if (s !== cur) { if (s === "walk" && w.Walk < 0.05 && acts.Walk) acts.Walk.time = 0; cur = s; }
+    update(dt, moving, sitting = false, seatTop = 0, T = 0) {
+      const s = stance({ moving, sitting }); if (s !== cur) { if (s === "walk" && w.Walk < 0.05 && acts.Walk) acts.Walk.time = 0; cur = s; }
       const want = clipWeights(cur), kk = 1 - Math.exp(-3 * dt / FADE[cur]);
       for (const n of ["Walk", "Idle"]) if (acts[n]) { w[n] += (want[n] - w[n]) * kk; acts[n].setEffectiveWeight(w[n]); }
       if (acts.Walk) acts.Walk.timeScale = bagOn ? 0.85 : 1.0;   // the bag is heavy: a slower stride; without it, lighter
       mixer.update(dt);
+      poser.apply(dt, sitting, seatTop, T);
       wardrobe.dress(dt);
       holder.updateMatrixWorld(true);
       if (spine && neck) {   // the bag rides the back, set from the spine each frame
@@ -445,7 +496,7 @@ let humAt = 3.5;
 /* ===================================================================================================
    Build
    =================================================================================================== */
-const state = { p: null, ep: null, sh: null, plank: false, laid: false, given: [], done: false, rainK: 1, captions: [], capUntil: 0, near: null, cardKey: "", told: new Set(), block: null };
+const state = { p: null, ep: null, sh: null, ff: null, friends: [], sat: false, played: false, playing: false, plank: false, laid: false, given: [], done: false, rainK: 1, captions: [], capUntil: 0, near: null, cardKey: "", told: new Set(), block: null };
 async function build() {
   step("reading the episode");
   const ep = await episode(); state.ep = ep; state.p = ep.p;
@@ -476,6 +527,11 @@ async function build() {
   M.darkWood = new THREE.MeshStandardMaterial({ color: 0x4f321e, roughness: 0.9 });
   M.rock = new THREE.MeshStandardMaterial({ color: 0x5a5448, roughness: 1, flatShading: true });
   M.plank = new THREE.MeshStandardMaterial({ color: 0xb08a58, roughness: 0.75 });
+  M.crate = new THREE.MeshStandardMaterial({ color: 0x9a7a52, roughness: 0.9 });
+  M.crateDark = new THREE.MeshStandardMaterial({ color: 0x6e5236, roughness: 0.9 });
+  M.plaster = new THREE.MeshStandardMaterial({ color: 0x8a7e6c, roughness: 1 });
+  M.thatch = new THREE.MeshStandardMaterial({ color: 0x5a4a30, roughness: 1, flatShading: true });
+  M.window = new THREE.MeshBasicMaterial({ color: 0xffc070 });
   M.pathM = new THREE.MeshStandardMaterial({ map: M.moss.map.clone(), color: 0xa89070, roughness: 1 }); M.pathM.map.repeat.set(0.6, 0.6); M.pathM.map.needsUpdate = true;
 
   const r = rng(hash(ep.p.seed + ":" + ep.p.id));
@@ -485,6 +541,15 @@ async function build() {
     step("raising the Scale-House");
     state.sh = SH.build({ THREE, V, add, scene, M, r, groundH, glowSprite, tree, grass, mist, fireflies, duskSky, ground, toolbagGroup, LOW });
     state.fog = state.sh.fog; state.flies = null; state.rain = null;
+  } else if (PLACE === "friends-fire") {
+    step("lighting the fire");
+    state.ff = FF.build({ THREE, V, add, scene, M, r, groundH, glowSprite, tree, grass, mist, fireflies, duskSky, ground, LOW });
+    state.fog = state.ff.fog; state.flies = null; state.rain = null;
+    step("the friends sit down");
+    state.friends = await makeFriends(state.ff).catch(e => { console.warn("friends", e); return []; });
+    state.bagDown = toolbagGroup(M); state.bagDown.visible = false; scene.add(state.bagDown);
+    { const c = FF.YOURS, side = V(Math.cos(c.yaw), 0, -Math.sin(c.yaw)); const x = c.x + side.x * 0.55, z = c.z + side.z * 0.55;
+      state.bagDown.position.set(x, groundH(x, z) + 0.24, z); state.bagDown.rotation.set(-0.25, c.yaw + 0.6, 0.1); }
   } else {
   // the forest (the Wood land) under the week's weather; dusk, green through the canopy
   state.fog = scene.fog = new THREE.FogExp2(0x4c5c58, 0.042); scene.background = new THREE.Color(0x4c5c58);
@@ -556,16 +621,18 @@ async function build() {
 /* ===================================================================================================
    Walking: tap the ground to walk there, drag to look round, or the arrow keys
    =================================================================================================== */
-const SHX = PLACE === "scale-house";
+const SHX = PLACE === "scale-house", FFX = PLACE === "friends-fire";
 const me = SHX ? { pos: V(SH.ARRIVE.x, 0, SH.ARRIVE.z), yaw: Math.atan2(-SH.ARRIVE.x, SH.BALANCE.z - SH.ARRIVE.z), target: null, keys: new Set() }
+  : FFX ? { pos: V(FF.ARRIVE.x, 0, FF.ARRIVE.z), yaw: Math.atan2(-FF.ARRIVE.x, -FF.ARRIVE.z), target: null, keys: new Set() }
   : { pos: V(0, 0, ARCH.z - 0.9), yaw: Math.PI, target: null, keys: new Set() };
 /* you arrive walking a few steps in, seen from in front, so you see yourself come through; then the camera settles
    behind you (his note on ctw-walk-look-1: you could not see yourself without turning the camera) */
-const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : V(0, 0, 4.9);
+const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : FFX ? V(FF.WALK_TO.x, 0, FF.WALK_TO.z) : V(0, 0, 4.9);
 const intro = { on: !Q.get("at"), t: 0, settling: false };
-const speed = () => (state.me && !state.me.bagOn ? 1.5 : 1.15);   // the bag is heavy; set down, you walk lighter
+const speed = () => (state.me && !state.me.bagOn ? 1.5 : FFX ? 1.3 : 1.15);   // the bag is lighter by the fire   // the bag is heavy; set down, you walk lighter
 function walkable(x, z) {
   if (SHX) return SH.walkable(x, z, state.laid);
+  if (FFX) return FF.walkable(x, z);
   if (Math.abs(x) < 0.9 && z < -CLR + 1.3 && z > -CLR - 0.6) return true;   // a step onto the path out
   const d = Math.hypot(x, z);
   if (d < STUMP_R + 0.32) return false;
@@ -588,12 +655,15 @@ function tap(cx, cy) {
   if (SHX) { const b = V(SH.BALANCE.x, 1.4, SH.BALANCE.z), e = V(SH.BRIDGE_END.x, 0.3, SH.BRIDGE_END.z);
     if (ray.ray.distanceToPoint(b) < 1.3) best = V(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05);
     else if (ray.ray.distanceToPoint(e) < 1.0) best = V(SH.BRIDGE_END.x + 0.5, 0, SH.BRIDGE_END.z); }
+  if (FFX) { if (ray.ray.distanceToPoint(V(FF.YOURS.x, 0.3, FF.YOURS.z)) < 0.7 || ray.ray.distanceToPoint(V(0, 0.4, 0)) < 1.0) best = V(FF.STAND.x, 0, FF.STAND.z); }
   if (stumpFx && ray.ray.distanceToPoint(V(0, 0.6, 0)) < 1.3) { const s = me.pos.clone().setY(0); if (s.length() < 0.1) s.set(0, 0, 1); best = s.setLength(STUMP_R + 0.55); }
   if (ray.ray.distanceToPoint(ARCH.clone().setY(1.3)) < 1.2) best = V(ARCH.x, 0, ARCH.z - 0.75);
+  if (state.sat) return;                               // sat on the crate: the card's Stand up gets you off it
   if (!best) { const hit = ray.intersectObject(groundMesh, false)[0]; if (!hit) return; best = hit.point.setY(0); }
   me.target = best;
 }
 function move(dt) {
+  if (state.sat) return false;
   let dir = null;
   const fwd = V(-Math.sin(camYaw), 0, -Math.cos(camYaw)), right = V(-fwd.z, 0, fwd.x);
   const k = me.keys, kd = V(0, 0, 0);
@@ -629,6 +699,14 @@ function nearNow() {
     if (Math.hypot(p.x - SH.BRIDGE_END.x, p.z - SH.BRIDGE_END.z) < 1.4) return "bridge";
     return null;
   }
+  if (FFX) {
+    if (state.sat) return "crate";
+    const dBack = Math.hypot(p.x - FF.PATH_BACK.x, p.z - FF.PATH_BACK.z);
+    if (dBack > 3) state.leftArch = true;
+    if (dBack < 1.8) return state.leftArch ? "ff-back" : null;
+    if (Math.hypot(p.x, p.z) < FF.RING_R + 3.0) return "fire";
+    return null;
+  }
   if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
@@ -646,7 +724,15 @@ function showCard() {
   const card = (title, text, ...btns) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${btns.join("")}</div>`;
   if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where the Weigher is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
   else if (n === "back") { key = "back"; html = card("The path back", "It runs back through the heavy trees to the clearing.", btn("go:clearing", "Walk back to the clearing")); }
-  else if (n === "far") { key = "far"; html = card("The far bank", "The path runs on toward the Friends' Fire. That land is not built yet.", btn("walk:bridge", "Back over the bridge")); }
+  else if (n === "far") { const there = state.ep.next ? esc(state.ep.next.location) : "the Friends' Fire"; key = "far"; html = card("The far bank", `Past the last trees, a fire is lit, and someone is tuning a guitar. The path runs on to ${there.replace(/^The /, "the ")}.`, btn("go:friends-fire", `Follow the path to ${there.replace(/^The /, "the ")}`), btn("walk:bridge", "Back over the bridge")); }
+  else if (n === "ff-back") { key = "ff-back"; html = card("The path back", "It runs back through the trees to the Scale-House and the bridge you mended.", btn("go:scale-house-far", "Walk back to the Scale-House")); }
+  else if (n === "fire") { const f = esc(state.ep.friend.name || "A friend"); key = "fire:" + state.played;
+    html = card("The fire", state.played ? `${f} is still turning the song over on the guitar. Your crate is where you left it.` : `${f} is tuning a guitar, a string at a time. One crate is empty, turned to the fire, left for you.`, btn("sit", "Sit on the empty crate")); }
+  else if (n === "crate") { const f = esc(state.ep.friend.name || "Your friend"), h = state.ep.home;
+    key = "crate:" + state.playing + state.played;
+    html = state.playing ? card(f, `${f} listens. The others have gone quiet.`)
+      : state.played ? card("This week", `${esc(h.capability || "Play one unfinished song for one person.")}${h.key ? ` The key you carry home says “${esc(h.key)}”` : ""}`, btn("home", "Take it home to your nook"), btn("play", "Play it again"), btn("stand", "Stand up"))
+      : card(f, `“${esc(state.ep.friend.line || "Play what you have so far?")}”`, btn("play", "Open the toolbag and play"), btn("stand", "Stand up")); }
   else if (n === "balance") {
     const inPan = state.me && !state.me.bagOn;
     key = "balance:" + inPan + state.plank + state.laid;
@@ -681,6 +767,7 @@ $("#card").addEventListener("click", e => {
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
     me.target = w === "balance" ? V(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05) : w === "bridge" ? V(SH.BRIDGE_END.x + 0.5, 0, SH.BRIDGE_END.z) : V(SH.FAR_BANK.x, 0, SH.FAR_BANK.z); }
   else if (b.dataset.act && SHX) shAct(b.dataset.act);
+  else if (b.dataset.act && FFX) ffAct(b.dataset.act);
   else if (b.dataset.act && b.dataset.act.startsWith("ins:")) { const ins = instruments[+b.dataset.act.slice(4)]; pluck(hz(ins.note, ins.sound === "drum" ? 110 : 220), { kind: ins.sound }); ins.flash = 1; }
 });
 function giveNote(deg) {
@@ -696,6 +783,7 @@ function giveNote(deg) {
 }
 function songToItsEnd() {
   state.done = true; state.cardKey = "";
+  try { sessionStorage.setItem("ctw-song", JSON.stringify(state.given)); } catch (e) { /* the bar's own cadence at the fire */ }
   playPhrase(true);
   setTimeout(() => { const s = secret(/played to its end/i); tell("end", s || "The song runs to its end.", 8); }, 3200);
   setTimeout(() => { const s = secret(/hum/i); if (s) tell("hum", s, 8); }, 11500);
@@ -731,9 +819,46 @@ function shAct(act) {
     setTimeout(() => { const s = secret(/Protector carries the bag/i); if (s) tell("protector", s, 8); }, 6500);
   }
 }
+/* a string tuned up to pitch: plucked a little flat and slid up (Oriel at the fire, between songs) */
+function tune(f, at = 0) {
+  const a = audio(); if (!a) return; const t = a.currentTime + at;
+  const g = a.createGain(); g.connect(master); const o = a.createOscillator(); o.type = "triangle";
+  o.frequency.setValueAtTime(f * 0.955, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.7); o.connect(g);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+  o.start(t); o.stop(t + 1.7);
+}
+/* your song, carried from the stump: the notes you gave it, or the bar's own cadence */
+function yourNotes() { try { const v = JSON.parse(sessionStorage.getItem("ctw-song") || "null"); if (Array.isArray(v) && v.length) return v.slice(0, 6).map(n => +n || 0); } catch (e) { /* the cadence */ } return CADENCE.slice(); }
+/* the Friends' Fire's moves: sit on your crate, play what you have so far, stand up */
+function ffAct(act) {
+  const f = state.me; if (!f) return; state.cardKey = "";
+  if (act === "sit") {
+    me.target = V(FF.STAND.x, 0, FF.STAND.z); state.sitWhenThere = true;
+  } else if (act === "stand") {
+    state.sat = false; f.setBag(true); state.bagDown.visible = false;
+    me.pos.set(FF.STAND.x, 0, FF.STAND.z); me.yaw = FF.YOURS.yaw;
+  } else if (act === "play" && !state.playing) {
+    state.playing = true;
+    const dt = 0.42, mine = PHRASE.slice(0, 8);
+    mine.forEach((d, i) => pluck(hz(d + 2, 220), { kind: "string", at: i * dt, dur: 0.9, vol: 0.24 }));   // you play the bar, and it stops where it always stops
+    const t1 = mine.length * dt + 1.3, notes = PHRASE.slice(0, 8).concat(yourNotes());
+    setTimeout(() => { const o = state.friends.find(x => x.oriel); if (o) o.strum = 1; }, t1 * 1000);
+    notes.forEach((d, i) => pluck(hz(d + 2, 220), { kind: "string", at: t1 + i * dt * 0.9, dur: 1.1, vol: 0.2 }));     // Oriel picks it up on the guitar where you stopped
+    const end = t1 + notes.length * dt * 0.9;
+    [0, 4, 7, 12].forEach((st, i) => pluck(110 * Math.pow(2, st / 12), { kind: "string", at: end + i * 0.04, dur: 2.6, vol: 0.18 }));   // and strums home
+    setTimeout(() => { state.playing = false; state.played = true; state.cardKey = "";
+      const o = state.friends.find(x => x.oriel); if (o) o.strum = 0;
+      for (const fr of state.friends) fr.laugh = 1;
+      tell("ff-laugh", "Round the fire they laugh, the way friends laugh when a song lands.", 5);
+      const a = secret(/recording/i); if (a) tell("ff-rec", a, 7);
+      const b = secret(/key to the garage/i); if (b) tell("ff-key", b, 7);
+    }, (end + 1.6) * 1000);
+  }
+}
 function goPlace(where) {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  const q = new URLSearchParams(); if (where === "scale-house") q.set("place", "scale-house"); if (Q.get("paint")) q.set("paint", Q.get("paint"));
+  const q = new URLSearchParams(); if (where === "scale-house" || where === "friends-fire") q.set("place", where);
+  if (where === "scale-house-far") { q.set("place", "scale-house"); q.set("at", "far"); } if (Q.get("paint")) q.set("paint", Q.get("paint"));
   setTimeout(() => { location.href = "/between/land.html" + (q.toString() ? "?" + q : ""); }, 700);
 }
 function goHome() {
@@ -756,13 +881,30 @@ function frame() {
   const moving = move(dt);
   me.pos.y = groundH(me.pos.x, me.pos.z);
   if (SHX) me.pos.y = SH.standH(me.pos.x, me.pos.z, state.laid, me.pos.y);   // the laid plank holds you over the gully
-  if (state.me) { state.me.holder.position.copy(me.pos); state.me.holder.rotation.y = me.yaw; state.me.update(dt, moving); }
+  if (FFX && state.sitWhenThere && !me.target && Math.hypot(me.pos.x - FF.STAND.x, me.pos.z - FF.STAND.z) < 0.3) {   // at your crate: sit
+    state.sitWhenThere = false; state.sat = true; state.cardKey = ""; if (state.me) state.me.setBag(false); state.bagDown.visible = true;
+    me.pos.set(FF.YOURS.x, 0, FF.YOURS.z); me.yaw = FF.YOURS.yaw; camYaw = FF.YOURS.yaw + Math.PI + 0.35; intro.on = false;
+  }
+  if (FFX && state.sat) me.pos.y = groundH(FF.YOURS.x, FF.YOURS.z);
+  if (state.me) { state.me.holder.position.copy(me.pos); state.me.holder.rotation.y = me.yaw; state.me.update(dt, moving, FFX && state.sat, FF.CRATE.h, T); }
+  if (state.ff) {
+    state.ff.frame(dt, T, state.sat);
+    for (const fr of state.friends) { fr.laugh *= 1 - dt * 0.6; fr.mixer.update(dt);
+      const bob = fr.laugh > 0.02 ? Math.abs(Math.sin(T * 9 + fr.phase)) * 0.12 * fr.laugh : 0, listen = state.playing ? 0.12 : 0;
+      fr.poser.apply(1, true, FF.CRATE.h, T + fr.phase, bob + listen, fr.oriel ? (fr.strum || (state.played || state.playing ? 0 : 0.25 * Math.max(0, Math.sin(T * 0.8)))) : 0);
+      fr.wardrobe.dress(dt); }
+    // between songs Oriel tunes a string at a time; now and then the others laugh at something said
+    if (!state.playing && T > (state.tuneAt || 2)) { const st = [82.4, 110, 146.8, 196, 246.9, 329.6][Math.floor(T * 7) % 6]; tune(st); if (!state.played) tune(st, 0.9);
+      state.tuneAt = T + (state.played ? 9 : 4.5);
+      if (!state.played && Math.floor(T) % 3 === 0) { const fr = state.friends[Math.floor(T) % Math.max(1, state.friends.length)]; if (fr && !fr.oriel) fr.laugh = 0.7; } }
+  }
   // camera: behind and above you, turned by a drag, never inside a trunk (it is held inside the ring and the way in)
   const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
   const want = me.pos.clone().add(off).add(V(0, 1.0, 0));
   if (intro.on) { intro.t += dt; if (!me.target || intro.t > 7) intro.settling = true;
     if (intro.settling) { camYaw += (0 - camYaw) * Math.min(1, dt * 1.4); if (Math.abs(camYaw) < 0.01) { camYaw = 0; intro.on = false; } } }
-  if (SHX) { const fh = Math.hypot(want.x, want.z), lim = SH.HUT_R + 0.7; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
+  if (FFX) { const fh = Math.hypot(want.x, want.z), lim = FF.FIRE_R + 0.5; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
+  else if (SHX) { const fh = Math.hypot(want.x, want.z), lim = SH.HUT_R + 0.7; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
   else { const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? ARCH.z - 0.3 : CLR - 0.6;   // never out past the arch, into the roots
     if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; } }
   want.y = Math.max(want.y, groundH(want.x, want.z) + 0.6);
@@ -784,7 +926,7 @@ function frame() {
   // the rain stops where a song is played to its end; the light warms a little
   const rk = Math.min(state.done ? 0 : 1, state.block ? state.block.rain() : 1); state.rainK += (rk - state.rainK) * Math.min(1, dt * 0.5);
   if (state.rain) { state.rain.mat.opacity = 0.32 * state.rainK; state.rain.lines.visible = state.rainK > 0.02; if (state.rain.lines.visible) state.rain.update(T, me.pos); }
-  if (state.fog && !SHX) { state.fog.density = 0.03 + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
+  if (state.fog && !SHX && !FFX) { state.fog.density = 0.03 + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
   if (state.block) state.block.frame(dt, T);
   if (state.flies) state.flies.material.opacity = 0.65 + Math.sin(T * 1.7) * 0.25;
   if (archFx) { archFx.sheetM.opacity = 0.6 + Math.sin(T * 1.3) * 0.12; archFx.light.intensity = 4 + Math.sin(T * 2.1) * 0.6; }
@@ -805,6 +947,9 @@ function frame() {
     if (SHX && Q.get("at") === "bridge") { me.pos.set(SH.BRIDGE_END.x + 0.6, 0, SH.BRIDGE_END.z + 0.2); me.yaw = -Math.PI / 2; camYaw = -1.0; }
     if (SHX && Q.get("bag") === "pan") { state.me.setBag(false); state.sh.setBag(true); }
     if (SHX && Q.get("plank") === "laid") { state.laid = true; state.sh.lay(); }
+    if (SHX && Q.get("at") === "far") { state.laid = true; state.sh.lay(); me.pos.set(SH.FAR_BANK.x, 0, SH.FAR_BANK.z); me.yaw = Math.PI / 2; camYaw = -Math.PI / 2; }
+    if (FFX && Q.get("at") === "crate") { state.sat = true; state.me.setBag(false); state.bagDown.visible = true; me.pos.set(FF.YOURS.x, 0, FF.YOURS.z); me.yaw = FF.YOURS.yaw; camYaw = FF.YOURS.yaw + Math.PI + 0.35; intro.on = false; }
+    if (FFX && Q.get("song") === "played") { state.played = true; }
     if (intro.on) { me.target = ARRIVE_AT.clone(); camYaw = me.yaw; }
     if (Q.get("song") === "done" && bar) { state.given = CADENCE.slice(); bar.more.forEach(m => { m.want = m.on = 1; }); for (const f of bar.falling) f.material.opacity = 0; state.done = true; state.rainK = 0; }
     // the block's room: a dense charge from the nook's doorway, or the ?block= preview with the sample's charge
@@ -827,9 +972,10 @@ function frame() {
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
+    if (FFX) { caption("The road home, at the homeroom's rim.", 5); caption("Round the fire, someone is tuning a guitar, and the others laugh at something said.", 6); }
     if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }
     caption("Tap the ground to walk. Drag to look around.", 5);
-    window.__land = { place: PLACE, plan: state.p, me, state, shAct, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, block: () => state.block, view: () => ({ near: state.near, block: state.block ? state.block.view() : null, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
+    window.__land = { place: PLACE, plan: state.p, me, state, shAct, ffAct, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, block: () => state.block, view: () => ({ near: state.near, block: state.block ? state.block.view() : null, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
     frame();
   } catch (e) {
     console.error(e); step("the land did not build: " + (e && e.message || e)); window.__landError = String(e && e.stack || e);

@@ -21,6 +21,10 @@ export const PIECES = [
   { id: "weight-hut", match: /stacked brass weights|weights beside a broken/i, what: "a round hut of stacked brass weights, and the footbridge beside it missing its middle planks" },
   { id: "amber-air", match: /amber|smelling of oil/i, what: "the forest's dusk gone thick and gold, lamps of oil at the door" },
   { id: "toolbag-balance", match: /balance/i, what: "a brass balance in the doorway, its pans free to take what you set in them" },
+  // the Friends' Fire (build 5, ./friends-fire.js)
+  { id: "fire-ring", match: /low fire|crates for seats/i, what: "a low fire of split logs, ringed with upturned crates, three friends sat on them" },
+  { id: "guitar-tuning", match: /guitar|laughter/i, what: "Oriel on a crate, tuning a guitar a string at a time, and the others laughing" },
+  { id: "empty-crate", match: /empty crate/i, what: "one crate empty, turned to the fire, left for you" },
 ];
 
 const WEATHER = [[/rain|storm/i, "rain"], [/fog|mist|haze/i, "mist"], [/snow/i, "snow"]];
@@ -75,8 +79,30 @@ export function secretsHere(sheetMd, p) {
   const m = String(sheetMd).match(/## 4\. Secrets[^\n]*\n([\s\S]*?)(\n## |$)/);
   if (!m) return [];
   const words = { "instrument-ring": /instrument|song/i, "music-bar": /hum|mid-bar|played to its end/i, "sounding-stump": /stump/i,
-    "weight-hut": /Scale-House|bridge/i, "toolbag-balance": /scale reads|toolbag|carries the bag/i };
+    "weight-hut": /Scale-House|bridge/i, "toolbag-balance": /scale reads|toolbag|carries the bag/i,
+    "fire-ring": /friends already|key to the garage/i, "guitar-tuning": /recording|played together/i };
   const ids = p.pieces.map(x => x.id);
   return m[1].split("\n").filter(l => l.startsWith("- ")).map(l => toYou(l.slice(2).replace(/\*\(drafted\)\*/g, "").trim()))
     .filter(s => ids.some(id => words[id] && words[id].test(s)));
+}
+
+/* What you take home (step 8): the capability on the episode's line to take back to life this week, and the key carved
+   from question 5. The Friends' Fire says both on its last card. */
+export function takeHome(sheetMd) {
+  const m = String(sheetMd).match(/## 8\. Treasure[^\n]*\n([\s\S]*?)(\n## |$)/);
+  if (!m) return { capability: "", key: "" };
+  const clean = s => toYou(String(s || "").replace(/\*\(drafted\)\*/g, "").replace(/\*/g, "").trim());
+  const cap = m[1].match(/capability to take back[^\n]*?:\*\*\s*([^\n]+)/);
+  const key = m[1].match(/The key[^\n]*?:\s*"([^"]+)"/);
+  return { capability: cap ? clean(cap[1]) : "", key: key ? key[1].trim() : "" };
+}
+
+/* The friend the road home is met with (step 6): the first NPC the sheet calls a friend, and their line. */
+export function friendHere(sheetMd) {
+  const m = String(sheetMd).match(/## 6\. Important NPCs[^\n]*\n([\s\S]*?)(\n## |$)/);
+  const rows = m ? m[1].split("\n").filter(l => l.startsWith("- ")) : [];
+  const row = rows.find(l => /\*\*,\s*friend\b/i.test(l)) || "";
+  const name = (row.match(/\*\*([^*]+)\*\*/) || [])[1] || "";
+  const line = (row.match(/"([^"]+)"/) || [])[1] || "";
+  return { name: name.trim(), line: line.trim() };
 }
