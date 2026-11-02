@@ -1,0 +1,40 @@
+/* Lantern Hall intake (brief "Lantern Hall, port 1"). Colors are the covenant's: SURFACE_TOKENS in
+   src/lib/ui/card-tokens.ts (mirrored here as hex, as `.card-table` does) and the element vars a card sets. */
+.lantern-hall { background: #0a0908; color: #e8e6e0; font-family: ui-rounded, 'Nunito', system-ui, sans-serif; }
+.lantern-hall ::selection { background: #1a7a8a; color: #e8e6e0; }
+.lantern-title { font-family: 'Futura PT', Futura, 'Century Gothic', sans-serif; font-weight: 700; font-size: 1.375rem; letter-spacing: 0.01em; }
+.lantern-sub, .lantern-small { color: #a09e98; font-size: 0.875rem; line-height: 1.35; }
+.lantern-cost { color: #a09e98; font-size: 0.875rem; }
+.lantern-cost b { color: #e8e6e0; font-family: 'Futura PT', Futura, sans-serif; font-variant-numeric: tabular-nums; }
+
+/* the well: the table's center, the stone under the keeps */
+.lantern-well { aspect-ratio: 1; justify-content: center; border-radius: 50%; padding: 0.5rem;
+  background: radial-gradient(circle at 40% 35%, #1d1f25, #15161a 60%, #0b0c0f); box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6); }
+.lantern-goal { font-size: 0.75rem; line-height: 1.25; color: #e8e6e0; }
+.lantern-gem { width: 0.625rem; height: 0.625rem; border-radius: 50%; background: var(--element-gem); box-shadow: 0 0 6px 1px var(--element-glow); }
+
+.lantern-keep-name { font-family: 'Futura PT', Futura, sans-serif; font-weight: 700; font-size: 0.8125rem; line-height: 1.15; }
+.lantern-fog { opacity: 0.45; filter: saturate(0.3); }
+.lantern-pip { min-width: 1.375rem; height: 1.375rem; padding: 0 0.25rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Futura PT', Futura, sans-serif; font-weight: 700; font-size: 0.75rem; font-variant-numeric: tabular-nums;
+  background: #111110; color: #e8e6e0;
+  box-shadow: 0 0 0 var(--border-width, 1px) color-mix(in srgb, var(--element-frame) calc(var(--border-opacity, 0.7) * 100%), transparent); }
+
+/* the hand: the chips under the thumb */
+.lantern-hand { background: #111110; border-top: 1px solid #242420; border-radius: 16px 16px 0 0; }
+.lantern-q { font-family: 'Futura PT', Futura, sans-serif; font-weight: 700; font-size: 1.0625rem; line-height: 1.25; }
+.lantern-chip { min-height: 44px; padding: 0.5rem 0.875rem; text-align: left; font-size: 0.9375rem; line-height: 1.25; color: #e8e6e0; display: inline-flex; align-items: center; gap: 0.4rem; }
+.lantern-chip[aria-pressed='false'] { color: #a09e98; }
+.lantern-chip--plain { --element-frame: #6b6965; --element-glow: transparent; }
+.lantern-sigil { font-size: 0.875rem; color: var(--element-gem); }
+.lantern-step { min-height: 44px; font-size: 0.75rem; color: #a09e98; border-radius: 8px; border-bottom: 2px solid transparent; }
+.lantern-step:disabled { color: #6b6965; }
+.lantern-step--now { color: #e8e6e0; border-bottom-color: #8e9aab; }
+.lantern-nav { min-height: 44px; min-width: 88px; padding: 0 1.125rem; border-radius: 12px; background: #242420; color: #e8e6e0; font-weight: 700; }
+.lantern-nav:disabled { opacity: 0.4; }
+.lantern-nav--go { background: #1a3a5c; box-shadow: 0 0 0 1px #2980b9; }
+.lantern-input { min-height: 44px; padding: 0.5rem 0.75rem; border-radius: 10px; background: #1a1a18; color: #e8e6e0; border: 1px solid #242420; font-size: 1rem; }
+.lantern-input:focus { outline: 2px solid rgba(255, 255, 255, 0.3); outline-offset: 2px; }
+.lantern-link { color: #e8e6e0; text-decoration: underline; text-underline-offset: 3px; }
+.lantern-hall button:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.3); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .lantern-hall .cultivation-card { transition: none; animation: none; } }
