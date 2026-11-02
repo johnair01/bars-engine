@@ -35,3 +35,34 @@
 ## Definition of done
 
 The Lab proves one person can see a player-authored thought string, intentionally confirm EA anchors, receive stable canonical movement frames, select an action grammar appropriate to a bounded gathering initiative, and leave with a readable—but unpersisted—BAR preview. It produces no game-world side effects.
+
+## Walkable first slice — player and wall
+
+Build on the early 3D arrival: a visible player enters, walks by tapping a floor target or using a keyboard, and can approach the wall using a clearly labelled equivalent action. Keep the camera and player visible at phone size, constrain movement within the room and around the central furniture, and stop movement when a practice choice is presented. On arrival the player deliberately projects the authored triangle; restart restores the starting state. Keep the demonstration local and non-persistent. Verify the rendered phone-sized scene, touch and keyboard movement, approach, projection, restart, and no unintended writes. This slice does not claim the anchor table or action loom is complete.
+
+## Wall screen and uninterrupted projection
+
+Place a framed constellation screen high on the dojo wall, with a full-screen phone-readable view. At the wall, open the view, select either authored example triangle, and project it onto the floor; the shared hope edge remains player language. Closing the view preserves the character's position. Projection must not trap the player: allow continued movement, reopening the wall, and restart. Show that later stations are unfinished rather than implying a frozen workflow. Keep choices accessible through labelled buttons and all sample state local.
+
+## Loop stations: browser grammar
+
+The prototype uses `src/lib/dojo-loop-lab/grammar.ts` as its authored action registry and adapter to the existing `deriveSupportedElementalTriads` implementation. Because the room is a plain browser module, `public/dojo/grammar.js` is a checked-in generated bundle. After changing the source or its imports, regenerate with:
+
+```sh
+./node_modules/.bin/esbuild src/lib/dojo-loop-lab/grammar.ts --bundle --format=esm --platform=browser --banner:js='// Generated from src/lib/dojo-loop-lab/grammar.ts; see dojo-loop-lab/plan.md.' --outfile=public/dojo/grammar.js
+node scripts/dojo/test-loop-grammar.mjs
+```
+
+The first room treatment uses labelled greybox stations and accessible station views; its visual fidelity and comprehension need phone and independent player review. The fixture has no server action or persistence path. The player can return to live practice deliberately without copying a payload.
+
+## Camera and triangle geometry
+
+A drag on the 3D scene orbits the camera around the character; a tap remains a walk or interaction command. Preserve the orbit when walking, and keep overlays from sending movement input to the room. The two wall triangles share one edge, and the wall and floor triangles use equilateral geometry. Test the three side lengths and the distinction between a tap and a drag at phone size.
+
+## Carrying and separate EA gestures
+
+The first embodied proof uses a dedicated authored `wonder / poignance / joy` equilateral triangle (distinct from the hope-sharing examples). Lift it from the wall, walk with it, and place it in the room. At the anchor table pick up one proposed Metal, Water, or Wood token, carry it to the triangle, and explicitly confirm its corresponding named line; a player may decline or remove it. The existing deterministic triad helper gates the available move. Pick up Deepen Value separately, carry it to the triangle, and intentionally apply it. Show a travelling light, then offer a player-controlled reflection; an unchanged read is valid. Lift the triangle and return it to the wall with approved in-memory anchors and reads. The prototype is ephemeral; it must never silently infer anchors or treat hope as an EA state. The existing action loom remains a separate optional continuation.
+
+## Walking around the central furniture
+
+Tap-to-walk and station travel share a planned route through the navigable annulus; a segment may not cross the bowl/stool exclusion. Use stable waypoints instead of recomputing a tangent every frame. Turn smoothly toward the current waypoint, stop the walk animation when blocked, and give a reachable-path message when no valid route exists. Verify the recorded opposite-side oscillation case, a sweep of routes, keyboard boundaries, touch-vs-orbit behavior, and the embodied practice flow.

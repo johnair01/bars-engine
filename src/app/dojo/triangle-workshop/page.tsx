@@ -36,6 +36,7 @@ export default async function TriangleWorkshopPage({
           <div className="px-3 pb-3"><TrianglePractice /></div>
         </details>
         <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/dojo/triangle-workshop/loop-lab" className="inline-flex min-h-11 items-center rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-600">Try the Loop Lab · early demo</Link>
           <Link href="/dojo/triangle-workshop/prototype" className="inline-flex rounded-lg border border-teal-300/40 px-4 py-2 text-sm font-medium text-teal-100 transition hover:bg-teal-400/10">Explore constellation-wall prototype</Link>
           <Link href={returnPath} className="inline-flex rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500">Return to Nook</Link>
         </div>
