@@ -18,7 +18,12 @@
    procgen.py's (forest-kit.glb, tools/blender-cloud/forest_kit.py); the ferns, grass clumps, mossy rocks and the one
    pitcher plant are the BlenderKit greenery picks (CC0, greenery/README.md).
 
-   Previews: ?at=stump stands you at the stump, ?song=done opens with the song played to its end, ?paint=0 as the Between. */
+   Build 4 (his B on ctw-walk-look-1, 2026-11-02): you arrive watching yourself step out of the arch, then the camera
+   settles behind you; the toolbag rides the back smoothed, not shaken by the walk's own noise; a path out of the far
+   side of the ring leads to the episode's second land, the Scale-House (?place=scale-house, ./scale-house.js).
+
+   Previews: ?at=stump stands you at the stump, ?song=done opens with the song played to its end, ?paint=0 as the Between,
+   ?place=scale-house the second land (with ?at=balance, ?at=bridge, ?bag=pan, ?plank=laid). */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
@@ -29,9 +34,11 @@ import { stance, clipWeights, FADE } from "../stance.js";
 import { parseLook } from "../../calrunia/look.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere } from "./place.js";
+import * as SH from "./scale-house.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
+const PLACE = Q.get("place") === "scale-house" ? "scale-house" : "clearing";
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -58,7 +65,11 @@ const CLR = 6.6;                     // the ring of trees
 const ARCH = V(0, 0, 9.6);           // the doorway's other side, at the gap in the ring
 const STUMP_R = 1.35;
 function n2(x, z) { return Math.sin(x * 0.37 + Math.sin(z * 0.23)) * 0.5 + Math.sin(z * 0.41 + x * 0.17) * 0.35 + Math.sin(x * 1.3 + z * 1.1) * 0.15; }
-function groundH(x, z) { const d = Math.hypot(x, z); return Math.max(0, d - 8) * 0.06 + n2(x, z) * 0.12 * Math.min(1, d / 6); }
+let groundExtra = () => 0;          // the Scale-House cuts its gully into the ground
+function groundH(x, z) { const d = Math.hypot(x, z); return Math.max(0, d - 8) * 0.06 + n2(x, z) * 0.12 * Math.min(1, d / 6) + groundExtra(x, z); }
+/* the trodden ways: in from the arch, and out of the far side of the ring toward the Scale-House */
+const OUT = V(0, 0, -CLR + 0.4);     // where the path out leaves the ring
+const clearingPath = (x, z) => (Math.abs(x) < 1.1 && z > CLR - 1 && z < ARCH.z + 0.5) || (Math.abs(x + Math.max(0, -z - CLR) * 0.25) < 1.0 && z < -CLR + 1.6 && z > -CLR - 9);
 let glowTex = null;
 function glowSprite(pos, size, color, opacity, normal = false, parent = scene) {
   if (!glowTex) { const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d"); const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
@@ -80,12 +91,12 @@ function duskSky(toward, low, hor, up, warm) {
   return mat;
 }
 let groundMesh = null;
-function ground(M, colA, colB, clearR) {
+function ground(M, colA, colB, clearR, trodden = clearingPath) {
   const N = LOW ? 140 : 220, G2 = new THREE.PlaneGeometry(160, 160, N, N); G2.rotateX(-Math.PI / 2);
   const p = G2.attributes.position, col = new Float32Array(p.count * 3), c = new THREE.Color(), A = new THREE.Color(colA), B = new THREE.Color(colB), CL = new THREE.Color(0x7c8a52);
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, groundH(x, z));
     const w = n2(x * 2.1, z * 2.1) * 0.5 + 0.5; c.copy(A).lerp(B, w * 0.8); const d = Math.hypot(x, z); if (d < clearR) c.lerp(CL, (1 - d / clearR) * 0.7);
-    const path = Math.abs(x) < 1.1 && z > CLR - 1 && z < ARCH.z + 0.5; if (path) c.lerp(new THREE.Color(0x5c5238), 0.45);   // the trodden way in from the arch
+    if (trodden(x, z)) c.lerp(new THREE.Color(0x5c5238), 0.45);   // the trodden ways
     col.set([c.r, c.g, c.b], i * 3); }
   G2.setAttribute("color", new THREE.BufferAttribute(col, 3)); G2.computeVertexNormals();
   const m = new THREE.MeshStandardMaterial({ map: M.moss.map.clone(), vertexColors: true, roughness: 1 }); m.map.repeat.set(50, 50); m.map.needsUpdate = true;
@@ -305,9 +316,11 @@ async function episode() {
   let g = await read(charge);
   if (g.errors) { charge = sample; g = await read(charge); }
   const md = sheet(charge, g);
-  const loc = locations(charge, g).find(l => l.role === "encounter");
-  const p = plan(loc, g.weather);
-  return { charge, g, md, loc, p, start: strongStart(md), secrets: secretsHere(md, p) };
+  const locs = locations(charge, g), enc = locs.find(l => l.role === "encounter");
+  const loc = PLACE === "scale-house" ? (locs.find(l => l.role === "villain") || enc) : enc;
+  const p = plan(loc, loc === enc ? g.weather : "");   // the week's weather is over the near land only
+  const next = locs.find(l => l.role === "villain");
+  return { charge, g, md, loc, p, next, start: PLACE === "clearing" ? strongStart(md) : [], secrets: secretsHere(md, p) };
 }
 
 /* ===================================================================================================
@@ -347,13 +360,21 @@ async function makeFigure(M) {
   const spine = obj.getObjectByName("spine"), neck = obj.getObjectByName("neck");
   const bag = toolbagGroup(M); scene.add(bag);
   const sv = V(0, 0, 0), nv = V(0, 0, 0), m4 = new THREE.Matrix4(), up = V(0, 0, 0), back = V(0, 0, 0), side = V(0, 0, 0);
+  /* the bag's place on the back is kept in the holder's own frame and eased there, so the walk's mocap noise in the
+     spine (the jitter he saw on ctw-walk-look-1) never reaches it; the stride's slow sway still does */
+  const lp = V(0, 0, 0), lq = new THREE.Quaternion(), tp = V(0, 0, 0), tq = new THREE.Quaternion(), inv = new THREE.Quaternion(); let settled = false;
+  // a plank carried on the shoulder, once taken out of the bag (the Scale-House)
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
+  let bagOn = true;
   return {
-    holder,
+    holder, bag, plank,
+    setBag(on) { bagOn = on; bag.visible = on; },
+    get bagOn() { return bagOn; },
     update(dt, moving) {
       const s = stance({ moving }); if (s !== cur) { if (s === "walk" && w.Walk < 0.05 && acts.Walk) acts.Walk.time = 0; cur = s; }
       const want = clipWeights(cur), kk = 1 - Math.exp(-3 * dt / FADE[cur]);
       for (const n of ["Walk", "Idle"]) if (acts[n]) { w[n] += (want[n] - w[n]) * kk; acts[n].setEffectiveWeight(w[n]); }
-      if (acts.Walk) acts.Walk.timeScale = 0.85;   // the bag is heavy: a slower stride
+      if (acts.Walk) acts.Walk.timeScale = bagOn ? 0.85 : 1.0;   // the bag is heavy: a slower stride; without it, lighter
       mixer.update(dt);
       wardrobe.dress(dt);
       holder.updateMatrixWorld(true);
@@ -361,8 +382,14 @@ async function makeFigure(M) {
         spine.getWorldPosition(sv); neck.getWorldPosition(nv); up.copy(nv).sub(sv).normalize();
         back.set(0, 0, -1).applyQuaternion(holder.quaternion); back.addScaledVector(up, -back.dot(up)).normalize();
         side.crossVectors(up, back).normalize();
-        bag.quaternion.setFromRotationMatrix(m4.makeBasis(side, up, back));
-        bag.position.copy(sv).addScaledVector(up, 0.08).addScaledVector(back, 0.2);
+        tq.setFromRotationMatrix(m4.makeBasis(side, up, back));
+        tp.copy(sv).addScaledVector(up, 0.08).addScaledVector(back, 0.2);
+        inv.copy(holder.quaternion).invert();
+        tp.sub(holder.position).applyQuaternion(inv); tq.premultiply(inv);        // into the holder's frame
+        const e = settled ? 1 - Math.exp(-dt * 9) : 1; settled = true;
+        lp.lerp(tp, e); lq.slerp(tq, e);
+        bag.position.copy(lp).applyQuaternion(holder.quaternion).add(holder.position);
+        bag.quaternion.copy(holder.quaternion).multiply(lq);
       }
     },
   };
@@ -375,9 +402,22 @@ let ac = null, master = null, soundOn = true;
 try { soundOn = localStorage.getItem("between-sound") !== "0"; } catch (e) { /* on */ }
 function audio() {
   if (!ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A(); master = ac.createGain(); master.gain.value = soundOn ? 0.5 : 0; master.connect(ac.destination); }
-  if (ac.state === "suspended") ac.resume();
+  if (ac.state !== "running") ac.resume().catch(() => {});
   return ac;
 }
+/* Phones keep audio locked until a gesture they count: iOS counts touchend and click but not pointerdown, and its silent
+   switch mutes Web Audio unless the page is playing media. So the first touch, click or key unlocks it (his note on
+   ctw-walk-look-2: "I can't hear the sound on mobile"): resume, play one silent sample, and claim the playback channel. */
+let unlocked = false;
+function unlockAudio() {
+  const a = audio(); if (!a) return;
+  try { const b = a.createBuffer(1, 1, 22050), n = a.createBufferSource(); n.buffer = b; n.connect(a.destination); n.start(0); } catch (e) { /* ignore */ }
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { /* ignore */ }
+  try { const m = document.createElement("audio"); m.setAttribute("playsinline", ""); m.loop = true; m.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="; const pr = m.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) { /* ignore */ }
+  if (a.state === "running") { unlocked = true; for (const ev of ["touchend", "click", "keydown", "pointerup"]) window.removeEventListener(ev, unlockAudio, true); }
+}
+for (const ev of ["touchend", "click", "keydown", "pointerup"]) window.addEventListener(ev, unlockAudio, true);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ac && ac.state !== "running") ac.resume().catch(() => {}); });
 const SCALE = [0, 2, 4, 7, 9, 12, 14];                 // a major pentatonic, two octaves: no note is wrong in it
 const hz = (deg, base = 220) => base * Math.pow(2, (SCALE[((deg % 7) + 7) % 7] + 12 * Math.floor(deg / 7)) / 12);
 function pluck(f, { at = 0, dur = 1.4, kind = "string", vol = 0.35 } = {}) {
@@ -399,7 +439,7 @@ let humAt = 3.5;
 /* ===================================================================================================
    Build
    =================================================================================================== */
-const state = { p: null, ep: null, given: [], done: false, rainK: 1, captions: [], capUntil: 0, near: null, cardKey: "", told: new Set() };
+const state = { p: null, ep: null, sh: null, plank: false, laid: false, given: [], done: false, rainK: 1, captions: [], capUntil: 0, near: null, cardKey: "", told: new Set() };
 async function build() {
   step("reading the episode");
   const ep = await episode(); state.ep = ep; state.p = ep.p;
@@ -425,9 +465,21 @@ async function build() {
   M.leather = new THREE.MeshStandardMaterial({ color: 0x5a3a24, roughness: 0.8 });
   M.cable = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.7 });
   M.wood = new THREE.MeshStandardMaterial({ color: 0x7a5032, roughness: 0.8 });
+  M.brassOld = new THREE.MeshStandardMaterial({ color: 0xa07a38, roughness: 0.55, metalness: 0.6 });
+  M.rope = new THREE.MeshStandardMaterial({ color: 0x9c7b52, roughness: 1 });
+  M.darkWood = new THREE.MeshStandardMaterial({ color: 0x4f321e, roughness: 0.9 });
+  M.rock = new THREE.MeshStandardMaterial({ color: 0x5a5448, roughness: 1, flatShading: true });
+  M.plank = new THREE.MeshStandardMaterial({ color: 0xb08a58, roughness: 0.75 });
+  M.pathM = new THREE.MeshStandardMaterial({ map: M.moss.map.clone(), color: 0xa89070, roughness: 1 }); M.pathM.map.repeat.set(0.6, 0.6); M.pathM.map.needsUpdate = true;
 
   const r = rng(hash(ep.p.seed + ":" + ep.p.id));
   const has = id => ep.p.pieces.some(x => x.id === id);
+  if (PLACE === "scale-house") {
+    groundExtra = (x, z) => SH.gullyH(x);
+    step("raising the Scale-House");
+    state.sh = SH.build({ THREE, V, add, scene, M, r, groundH, glowSprite, tree, grass, mist, fireflies, duskSky, ground, toolbagGroup, LOW });
+    state.fog = state.sh.fog; state.flies = null; state.rain = null;
+  } else {
   // the forest (the Wood land) under the week's weather; dusk, green through the canopy
   state.fog = scene.fog = new THREE.FogExp2(0x4c5c58, 0.042); scene.background = new THREE.Color(0x4c5c58);
   state.sky = duskSky(V(-0.4, 0.15, -1), 0x3a4440, 0x8a9888, 0x4a4660, 0x9ab890);
@@ -436,7 +488,7 @@ async function build() {
   const cool = new THREE.DirectionalLight(0x98a8d8, 0.7); cool.position.set(12, 6, 6); scene.add(cool);
   state.warm = new THREE.DirectionalLight(0xe8b888, 0.5); state.warm.position.set(-10, 3, 8); scene.add(state.warm);
   ground(M, 0x36402a, 0x262c1c, CLR + 0.5);
-  const path = (x, z) => Math.abs(x) < 1.2 && z > CLR - 1.5 && z < ARCH.z + 1.5;
+  const path = (x, z) => (Math.abs(x) < 1.2 && z > CLR - 1.5 && z < ARCH.z + 1.5) || clearingPath(x, z);
   grass(r, LOW ? 9000 : 22000, CLR, path);
   const kit = await loadKit(M).catch(e => { console.warn("forest kit", e); return {}; });
   // the ring: nine trees, an instrument grown into each that faces the middle (the gap is the way in from the arch)
@@ -460,7 +512,7 @@ async function build() {
   if (has("sounding-stump")) stump(M, V(0, groundH(0, 0), 0));
   if (has("music-bar")) musicBar();
   // the forest beyond, kept off the way in and the arch
-  const away = (x, z) => (Math.abs(x) < 3.2 && z > 4 && z < 14) || Math.hypot(x - ARCH.x, z - ARCH.z) < 3.5;
+  const away = (x, z) => (Math.abs(x) < 3.2 && z > 4 && z < 14) || Math.hypot(x - ARCH.x, z - ARCH.z) < 3.5 || (Math.abs(x + Math.max(0, -z - CLR) * 0.25) < 2.6 && z < -CLR + 2 && z > -CLR - 12);
   for (let i = 0, n = LOW ? 55 : 95; i < n; i++) { const a = r() * 6.28, d = CLR + 3.5 + Math.pow(r(), 0.8) * 30, x = Math.cos(a) * d, z = Math.sin(a) * d; if (away(x, z)) continue;
     tree(M, r, x, z, { h: 9 + r() * 6, rad: 0.35 + r() * 0.4, heavy: r() < 0.5 ? 1 : 0 }); }
   // the edge you come in by: two heavy trees framing the gap, their branches hanging low across it
@@ -486,7 +538,10 @@ async function build() {
   mist(r, LOW ? 14 : 26, 0xb8c8bc, 0.13, 5);
   state.flies = fireflies(r, LOW ? 90 : 160, 0xe8f0a0, 14);
   state.rain = ep.p.weather === "rain" ? rain(r, LOW ? 1200 : 2400) : null;
+  // the path out of the far side of the ring: the Scale-House's amber, far down it through the trees
+  if (ep.next) { glowSprite(V(-1.6, 1.4, -CLR - 8), 5, 0xffb050, 0.35); glowSprite(V(-1.2, 1.0, -CLR - 5), 2.2, 0xffc070, 0.18); }
   step("settling the clearing");
+  }
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
@@ -495,18 +550,25 @@ async function build() {
 /* ===================================================================================================
    Walking: tap the ground to walk there, drag to look round, or the arrow keys
    =================================================================================================== */
-const ARRIVE_Z = CLR - 2.6;   // you arrive just inside the ring, on the trodden way, facing the stump: open ground, no rock or trunk between you and the camera
-const me = { pos: V(0, 0, ARRIVE_Z), yaw: Math.PI, target: null, keys: new Set() };
-const SPEED = 1.15;
+const SHX = PLACE === "scale-house";
+const me = SHX ? { pos: V(SH.ARRIVE.x, 0, SH.ARRIVE.z), yaw: Math.atan2(-SH.ARRIVE.x, SH.BALANCE.z - SH.ARRIVE.z), target: null, keys: new Set() }
+  : { pos: V(0, 0, ARCH.z - 0.9), yaw: Math.PI, target: null, keys: new Set() };
+/* you arrive walking a few steps in, seen from in front, so you see yourself come through; then the camera settles
+   behind you (his note on ctw-walk-look-1: you could not see yourself without turning the camera) */
+const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : V(0, 0, 4.9);
+const intro = { on: !Q.get("at"), t: 0, settling: false };
+const speed = () => (state.me && !state.me.bagOn ? 1.5 : 1.15);   // the bag is heavy; set down, you walk lighter
 function walkable(x, z) {
+  if (SHX) return SH.walkable(x, z, state.laid);
+  if (Math.abs(x) < 0.9 && z < -CLR + 1.3 && z > -CLR - 0.6) return true;   // a step onto the path out
   const d = Math.hypot(x, z);
   if (d < STUMP_R + 0.32) return false;
   if (d < CLR - 1.2) return true;
   return Math.abs(x) < 1.35 && z > 0 && z < ARCH.z - 0.55;   // the way in, between the two heavy trees
 }
-let camYaw = 0, camPitch = 0.32, camDist = LOW ? 4.6 : 4.2, drag = null;
+let camYaw = intro.on ? Math.PI : 0, camPitch = 0.34, camDist = LOW ? 5.3 : 4.7, drag = null;
 const el = renderer.domElement, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-el.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: camYaw, pitch: camPitch, moved: false }; audio(); });
+el.addEventListener("pointerdown", e => { intro.on = false; drag = { x: e.clientX, y: e.clientY, yaw: camYaw, pitch: camPitch, moved: false }; audio(); });
 el.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 8) drag.moved = true;
   if (drag.moved) { camYaw = drag.yaw - dx * 0.006; camPitch = Math.max(0.08, Math.min(0.9, drag.pitch + dy * 0.004)); } });
 el.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.moved || !groundMesh) return; tap(e.clientX, e.clientY); });
@@ -517,6 +579,9 @@ function tap(cx, cy) {
   // an instrument, the stump or the arch: walk to where you would stand to use it
   let best = null, bd = 0.9;
   for (const ins of instruments) { const d = ray.ray.distanceToPoint(ins.at); if (d < bd) { bd = d; best = ins.stand.clone(); } }
+  if (SHX) { const b = V(SH.BALANCE.x, 1.4, SH.BALANCE.z), e = V(SH.BRIDGE_END.x, 0.3, SH.BRIDGE_END.z);
+    if (ray.ray.distanceToPoint(b) < 1.3) best = V(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05);
+    else if (ray.ray.distanceToPoint(e) < 1.0) best = V(SH.BRIDGE_END.x + 0.5, 0, SH.BRIDGE_END.z); }
   if (stumpFx && ray.ray.distanceToPoint(V(0, 0.6, 0)) < 1.3) { const s = me.pos.clone().setY(0); if (s.length() < 0.1) s.set(0, 0, 1); best = s.setLength(STUMP_R + 0.55); }
   if (ray.ray.distanceToPoint(ARCH.clone().setY(1.3)) < 1.2) best = V(ARCH.x, 0, ARCH.z - 0.75);
   if (!best) { const hit = ray.intersectObject(groundMesh, false)[0]; if (!hit) return; best = hit.point.setY(0); }
@@ -531,7 +596,7 @@ function move(dt) {
   if (kd.lengthSq() > 0) { dir = kd.normalize(); me.target = null; }
   else if (me.target) { const d = me.target.clone().sub(me.pos).setY(0); if (d.length() < 0.08) me.target = null; else dir = d.normalize(); }
   if (!dir) return false;
-  const s = Math.min(SPEED * dt, me.target ? me.target.distanceTo(me.pos.clone().setY(0)) : 9);
+  const s = Math.min(speed() * dt, me.target ? me.target.distanceTo(me.pos.clone().setY(0)) : 9);
   const nx = me.pos.x + dir.x * s, nz = me.pos.z + dir.z * s;
   if (walkable(nx, nz)) { me.pos.x = nx; me.pos.z = nz; }
   else if (walkable(nx, me.pos.z)) me.pos.x = nx;
@@ -549,6 +614,16 @@ function tell(key, text, secs) { if (state.told.has(key)) return; state.told.add
 function secret(re) { return (state.ep.secrets || []).find(s => re.test(s)); }
 function nearNow() {
   const p = me.pos;
+  if (SHX) {
+    const dBack = Math.hypot(p.x - SH.PATH_BACK.x, p.z - SH.PATH_BACK.z);
+    if (dBack > 3) state.leftArch = true;
+    if (dBack < 1.8) return state.leftArch ? "back" : null;
+    if (p.x < SH.GULLY.x - SH.GULLY.w) return "far";
+    if (Math.hypot(p.x - SH.BALANCE.x, p.z - SH.BALANCE.z) < 1.6) return "balance";
+    if (Math.hypot(p.x - SH.BRIDGE_END.x, p.z - SH.BRIDGE_END.z) < 1.4) return "bridge";
+    return null;
+  }
+  if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
   if (dArch < 1.6) return state.leftArch ? "arch" : null;
@@ -560,7 +635,25 @@ const NAMES = { lute: "A lute grown into the bark", harp: "A fork of the trunk, 
 const NOTE_NAMES = ["low", "", "", "", "high"];
 function showCard() {
   const n = state.near; let key = n || "", html = "";
-  if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
+  const btn = (act, label) => `<button type="button" data-act="${act}">${label}</button>`;
+  const card = (title, text, ...btns) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${btns.join("")}</div>`;
+  if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where the Weigher is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
+  else if (n === "back") { key = "back"; html = card("The path back", "It runs back through the heavy trees to the clearing.", btn("go:clearing", "Walk back to the clearing")); }
+  else if (n === "far") { key = "far"; html = card("The far bank", "The path runs on toward the Friends' Fire. That land is not built yet.", btn("walk:bridge", "Back over the bridge")); }
+  else if (n === "balance") {
+    const inPan = state.me && !state.me.bagOn;
+    key = "balance:" + inPan + state.plank + state.laid;
+    html = !inPan
+      ? card("The balance", state.laid ? "It still reads whatever is set in it." : "Its near pan hangs low and empty. The toolbag on your back pulls at your shoulders.", btn("set-bag", "Set the toolbag in the pan"))
+      : card("The balance", "The pan sank under the toolbag. The far pan rides high and empty.",
+          ...(state.plank || state.laid ? [] : [btn("plank", "Take the plank out of the bag")]), btn("shoulder", "Shoulder the toolbag again"),
+          ...(state.plank && !state.laid ? [btn("walk:bridge", "Walk to the bridge")] : []));
+  } else if (n === "bridge") {
+    key = "bridge:" + state.plank + state.laid;
+    html = state.laid ? card("The footbridge", "One plank, and it holds.", btn("walk:far", "Cross to the far bank"))
+      : state.plank ? card("The footbridge", "Its middle planks are gone. The plank you carry is long enough.", btn("lay", "Lay the plank across"))
+      : card("The footbridge", "Its middle planks are gone and the gully is deep. Your toolbag is heavy; the balance in the doorway would hold it.", btn("walk:balance", "Walk to the balance"));
+  } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
   else if (n === "stump") {
     const left = ADD - state.given.length;
     key = "stump:" + state.given.length + (state.done ? "d" : "");
@@ -575,6 +668,10 @@ $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.act === "home") goHome();
+  else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
+  else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
+    me.target = w === "balance" ? V(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05) : w === "bridge" ? V(SH.BRIDGE_END.x + 0.5, 0, SH.BRIDGE_END.z) : V(SH.FAR_BANK.x, 0, SH.FAR_BANK.z); }
+  else if (b.dataset.act && SHX) shAct(b.dataset.act);
   else if (b.dataset.act && b.dataset.act.startsWith("ins:")) { const ins = instruments[+b.dataset.act.slice(4)]; pluck(hz(ins.note, ins.sound === "drum" ? 110 : 220), { kind: ins.sound }); ins.flash = 1; }
 });
 function giveNote(deg) {
@@ -602,6 +699,34 @@ function playPhrase(full) {
   if (full) pluck(hz(0, 110), { kind: "hum", at: notes.length * dt, dur: 2.6, vol: 0.18 });   // home: the tonic, held
   bar.playing = { t0: performance.now() / 1000, dt, n: notes.length, full };
 }
+/* the Scale-House's moves: the bag into the pan and back, the plank out of it, the plank across the gap */
+function shAct(act) {
+  const sh = state.sh, f = state.me; if (!sh || !f) return;
+  if (act === "set-bag") {
+    f.setBag(false); sh.setBag(true); state.cardKey = "";
+    pluck(hz(0, 55), { kind: "brass", dur: 1.6, vol: 0.3 }); pluck(hz(-3, 55), { kind: "drum", at: 0.25, vol: 0.35 });
+    const a = secret(/scale reads the bag/i); if (a) tell("reads", a, 7);
+    const b = secret(/lighter than the toolbag/i); if (b) tell("lighter", b, 7);
+    tell("walk-light", "Without it, you walk lighter.", 4);
+  } else if (act === "shoulder") {
+    f.setBag(true); sh.setBag(false); state.cardKey = "";
+    pluck(hz(2, 110), { kind: "string", vol: 0.2 });
+  } else if (act === "plank") {
+    state.plank = true; f.plank.visible = true; state.cardKey = "";
+    pluck(hz(4, 220), { kind: "string", vol: 0.25 });
+    const s = secret(/one plank/i); tell("plank", s || "The bag held one plank all along.", 7);
+  } else if (act === "lay") {
+    state.plank = false; state.laid = true; f.plank.visible = false; sh.lay(); state.cardKey = "";
+    [0, 2, 4, 7].forEach((d, i) => pluck(hz(d, 220), { kind: "string", at: i * 0.18, vol: 0.22 }));
+    setTimeout(() => tell("amber", "The plank holds. The amber air thins.", 5), 900);
+    setTimeout(() => { const s = secret(/Protector carries the bag/i); if (s) tell("protector", s, 8); }, 6500);
+  }
+}
+function goPlace(where) {
+  const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
+  const q = new URLSearchParams(); if (where === "scale-house") q.set("place", "scale-house"); if (Q.get("paint")) q.set("paint", Q.get("paint"));
+  setTimeout(() => { location.href = "/between/land.html" + (q.toString() ? "?" + q : ""); }, 700);
+}
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
   let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
@@ -615,7 +740,6 @@ $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
 /* ===================================================================================================
    The frame
    =================================================================================================== */
-let arrive = null;
 const clock = new THREE.Clock(); let T = 0;
 function frame() {
   requestAnimationFrame(frame);
@@ -626,19 +750,13 @@ function frame() {
   // camera: behind and above you, turned by a drag, never inside a trunk (it is held inside the ring and the way in)
   const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
   const want = me.pos.clone().add(off).add(V(0, 1.0, 0));
-  const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? CLR + 5 : CLR - 0.6;
-  if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; }
+  if (intro.on) { intro.t += dt; if (!me.target || intro.t > 7) intro.settling = true;
+    if (intro.settling) { camYaw += (0 - camYaw) * Math.min(1, dt * 1.4); if (Math.abs(camYaw) < 0.01) { camYaw = 0; intro.on = false; } } }
+  if (SHX) { const fh = Math.hypot(want.x, want.z), lim = SH.HUT_R + 0.7; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
+  else { const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? ARCH.z - 0.3 : CLR - 0.6;   // never out past the arch, into the roots
+    if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; } }
   want.y = Math.max(want.y, groundH(want.x, want.z) + 0.6);
   camera.position.lerp(want, 1 - Math.exp(-dt * 6));
-  // arrival: the camera starts wide and high so you are the first thing you see, then settles to the walking frame; a ring of light marks you until you move
-  if (arrive) {
-    arrive.t += dt; if (me.target || me.keys.size || drag) arrive.moved = true;
-    const k = Math.min(1, arrive.t / 3), e = 1 - (1 - k) * (1 - k);
-    camDist = arrive.dist0 + (arrive.dist1 - arrive.dist0) * e; if (!drag) camPitch = arrive.pitch0 + (arrive.pitch1 - arrive.pitch0) * e;
-    const fade = arrive.moved ? Math.max(0, arrive.fade - dt * 1.2) : (arrive.t > 9 ? Math.max(0, arrive.fade - dt * 0.5) : 1); arrive.fade = fade;
-    arrive.ring.position.set(me.pos.x, me.pos.y + 0.04, me.pos.z); const pulse = 1 + Math.sin(arrive.t * 3) * 0.06; arrive.ring.scale.set(pulse, pulse, pulse); arrive.ring.material.opacity = 0.75 * fade;
-    if (fade <= 0) { scene.remove(arrive.ring); arrive = null; }
-  }
   camera.lookAt(me.pos.clone().add(V(0, 1.25, 0)));
   // the hum: every so often it starts, and stops mid-bar (until the song has been played to its end)
   if (bar && T > humAt) { playPhrase(state.done); humAt = T + (state.done ? 16 : 11); if (!state.done && T > 8 && Math.hypot(me.pos.x, me.pos.z) < CLR - 1) tell("bar", "Through the trees, the hum starts again, and stops mid-bar.", 5); }
@@ -651,11 +769,12 @@ function frame() {
     bar.cutGlow.material.opacity = 0.3 * (1 - (bar.more[0].on || 0));
     if (pl && at > pl.n + 6) bar.playing = null;
   }
+  if (state.sh) state.sh.frame(dt, T);
   if (stumpFx) { stumpFx.pulse *= 1 - dt * 2.2; stumpFx.topM.emissiveIntensity = 0.35 + stumpFx.pulse * 0.9; stumpFx.light.intensity = 9 + stumpFx.pulse * 16; stumpFx.glow.material.opacity = 0.45 + stumpFx.pulse * 0.35; }
   // the rain stops where a song is played to its end; the light warms a little
   const rk = state.done ? 0 : 1; state.rainK += (rk - state.rainK) * Math.min(1, dt * 0.5);
   if (state.rain) { state.rain.mat.opacity = 0.32 * state.rainK; state.rain.lines.visible = state.rainK > 0.02; if (state.rain.lines.visible) state.rain.update(T, me.pos); }
-  if (state.fog) { state.fog.density = 0.03 + 0.012 * state.rainK; if (state.warm) state.warm.intensity = 0.5 + (1 - state.rainK) * 0.9; }
+  if (state.fog && !SHX) { state.fog.density = 0.03 + 0.012 * state.rainK; if (state.warm) state.warm.intensity = 0.5 + (1 - state.rainK) * 0.9; }
   if (state.flies) state.flies.material.opacity = 0.65 + Math.sin(T * 1.7) * 0.25;
   if (archFx) { archFx.sheetM.opacity = 0.6 + Math.sin(T * 1.3) * 0.12; archFx.light.intensity = 4 + Math.sin(T * 2.1) * 0.6; }
   // near things, captions
@@ -670,20 +789,20 @@ function frame() {
     await build();
     // previews: stand at the stump, or open with the song done
     if (Q.get("at") === "stump") { me.pos.set(0, 0, STUMP_R + 0.6); me.yaw = Math.PI; camYaw = 0.35; }
+    if (Q.get("at") === "out") { me.pos.set(0, 0, -CLR + 1.6); me.yaw = Math.PI; camYaw = 0; }
+    if (SHX && Q.get("at") === "balance") { me.pos.set(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05); me.yaw = Math.PI; camYaw = 0.5; }
+    if (SHX && Q.get("at") === "bridge") { me.pos.set(SH.BRIDGE_END.x + 0.6, 0, SH.BRIDGE_END.z + 0.2); me.yaw = -Math.PI / 2; camYaw = -1.0; }
+    if (SHX && Q.get("bag") === "pan") { state.me.setBag(false); state.sh.setBag(true); }
+    if (SHX && Q.get("plank") === "laid") { state.laid = true; state.sh.lay(); }
+    if (intro.on) { me.target = ARRIVE_AT.clone(); camYaw = me.yaw; }
     if (Q.get("song") === "done" && bar) { state.given = CADENCE.slice(); bar.more.forEach(m => { m.want = m.on = 1; }); for (const f of bar.falling) f.material.opacity = 0; state.done = true; state.rainK = 0; }
-    if (!Q.get("at")) {
-      const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.0, 48), new THREE.MeshBasicMaterial({ color: 0xf3e2a0, transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide, fog: false }));
-      ring.rotation.x = -Math.PI / 2; ring.renderOrder = 5; scene.add(ring);
-      arrive = { t: 0, moved: false, fade: 1, ring, dist0: 5.6, dist1: camDist, pitch0: 0.5, pitch1: camPitch };
-      camDist = arrive.dist0; camPitch = arrive.pitch0;
-    }
-    { const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
-      camera.position.copy(me.pos).add(off).add(V(0, 1.0, 0)); const f = Math.hypot(camera.position.x, camera.position.z), l = CLR + 5; if (f > l) { camera.position.x *= l / f; camera.position.z *= l / f; } }
+    camera.position.copy(me.pos).add(V(-Math.sin(me.yaw) * -4.5, 2.2, -Math.cos(me.yaw) * -4.5));
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
+    if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }
     caption("Tap the ground to walk. Drag to look around.", 5);
-    window.__land = { plan: state.p, me, state, instruments, camera, scene, tap, giveNote, view: () => ({ near: state.near, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
+    window.__land = { place: PLACE, plan: state.p, me, state, shAct, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, view: () => ({ near: state.near, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
     frame();
   } catch (e) {
     console.error(e); step("the land did not build: " + (e && e.message || e)); window.__landError = String(e && e.stack || e);
