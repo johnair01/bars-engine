@@ -23,18 +23,23 @@ const WEATHER = [[/rain|storm/i, "rain"], [/fog|mist|haze/i, "mist"], [/snow/i, 
 
 export function slug(name) { return String(name || "").toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 
+const FALLBACK_NAME = "A clearing in the wood";
+const isDraftMarker = (t) => /\[to draft/i.test(String(t));
+
 /* loc: one entry of locations(charge, g); weather: g.weather (the week's, over the near land). */
 export function plan(loc, weather = "") {
   const pieces = [], unbuilt = [];
   for (const a of loc.aspects || []) {
     const p = PIECES.find(p => p.match.test(a));
     if (p && !pieces.some(q => q.id === p.id)) pieces.push({ id: p.id, aspect: a, what: p.what });
-    else unbuilt.push(a);
+    else if (!isDraftMarker(a)) unbuilt.push(a);
   }
+  // A place the sheet has not named yet reads "[to draft: encounter]"; players never see that marker.
+  const name = loc.location && !isDraftMarker(loc.location) ? loc.location : FALLBACK_NAME;
   const w = WEATHER.find(([re]) => re.test(weather));
   return {
-    id: slug(loc.location),
-    name: loc.location,
+    id: slug(name),
+    name,
     land: LANDS[loc.element] || null,
     element: loc.element,
     line: loc.line,
