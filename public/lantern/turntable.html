@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rig turntable</title>
+<!-- The eight-view turntable from the v6 reel (six-faces-council artifacts/lantern-hall/v6/turntable.html), on the kit's
+     rig module. Three rows: walking seen from 2.0 m, walking seen from table height, seated. Eight views each, 45° apart.
+     scripts/lantern-kit-check.mjs opens it, calls window.__frame(t) and fails if the canvas is blank or the page errors. -->
+<style>:root{color-scheme:dark} html,body{background:#100e13;margin:0} canvas{display:block;width:100%;max-width:540px;margin:0 auto}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import { RIG } from './rig.js'
+const cv=document.getElementById('c'), ctx=cv.getContext('2d'); let W=0,H=0,dpr=2,T=0;
+let COLS=4, ROWS=6, BIG=null;
+function cell(ix,iy){ return {x:ix*W/COLS,y:iy*H/ROWS,w:W/COLS,h:H/ROWS}; }
+function render(){ ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle='#120f15'; ctx.fillRect(0,0,W,H);
+  const blocks=[{label:'walk · eye 2.0 m',camh:2.0,seated:false},{label:'walk · eye 1.0 m (table)',camh:1.0,seated:false},{label:'seated · eye 1.0 m',camh:1.0,seated:true}];
+  blocks.forEach((b,bi)=>{ for(let v=0;v<8;v++){ if(BIG&&!(BIG[0]===bi&&BIG.slice(1).includes(v))) continue; const ix=BIG?BIG.slice(1).indexOf(v):v%4, iy=BIG?0:bi*2+(v>>2); const C=BIG?{x:ix*W/(BIG.length-1),y:0,w:W/(BIG.length-1),h:H}:cell(ix,iy); const ang=v*Math.PI/4, dist=3.2;
+      const cam={x:Math.sin(ang)*dist,z:Math.cos(ang)*dist,h:b.camh}; cam.yaw=Math.atan2(-cam.x,-cam.z);
+      const f=C.w*.95*1.25, midY=b.seated?.55:.85; const hz=C.y+C.h*.52-(cam.h-midY)*f/dist;
+      const proj=(x,y,z)=>{ const yw=cam.yaw, cy=Math.cos(yw), sy=Math.sin(yw), dx=x-cam.x, dz=z-cam.z; const xc=dx*cy-dz*sy, d=dx*sy+dz*cy; return {d,sx:C.x+C.w/2+xc*f/d,sy:hz+(cam.h-y)*f/d,sc:f/d}; };
+      ctx.save(); ctx.beginPath(); ctx.rect(C.x,C.y,C.w,C.h); ctx.clip(); ctx.fillStyle=(ix+iy)%2?'#16121a':'#1a1519'; ctx.fillRect(C.x,C.y,C.w,C.h);
+      const ph=T*1.15+v*0.0, P=b.seated?RIG.seatPose3(T):RIG.pose(ph,1,{t:T,lamp:true,cad:1.15});
+      RIG.draw3(ctx,{x:0,z:0,heading:0,h:1.7,who:b.seated?'k1':'you'},P,{proj,eye:{x:cam.x,y:cam.h,z:cam.z},yaw:cam.yaw},{lamp:!b.seated,t:T});
+      ctx.fillStyle='#a2988b'; ctx.font='10px Georgia'; ctx.fillText(v*45+'°',C.x+5,C.y+12); if(v===0) ctx.fillText(b.label,C.x+5,C.y+C.h-5); ctx.restore(); } }); }
+function resize(){ W=540; H=Math.round(W*1.9); cv.width=W*dpr; cv.height=H*dpr; render(); }
+window.__big=(a)=>{BIG=a; H=BIG?Math.round(W*1.9/ (BIG.length-1)*1.0):Math.round(W*1.9); cv.width=W*dpr; cv.height=H*dpr; render();};
+window.__reset=()=>{T=0;resize();}; window.__frame=(t)=>{T=t;render();return cv.toDataURL('image/jpeg',.9);};
+resize();
+window.__ready=true
+</script>
+</html>

@@ -13,6 +13,9 @@ import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the s
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
+import { moodOf } from "./music.js";
+import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
+import { NEAR as TEA_NEAR } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -111,7 +114,7 @@ function noteError(e, where) {
   if (last && last.msg === msg) { last.n++; return; }
   errLog.push({ at: new Date().toISOString(), where, msg, stack, n: 1 }); if (errLog.length > 12) errLog.shift();
   console.error("[between]", where, e);
-  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows it to Claude."); } catch {} }
+  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows us what you saw."); } catch {} }
 }
 addEventListener("error", ev => noteError(ev.error || ev.message, "window"));
 addEventListener("unhandledrejection", ev => noteError(ev.reason, "promise"));
@@ -552,6 +555,10 @@ const mirrorShown = () => inNook() ? !!mirrorSpot : isHome(garden);
    Placements live in garden/main as `room.placed` (rules.ts roomWrite), so a homeroom keeps them in its own doc and a shared
    room's show to both of you at the next poll. With the store down (a preview before its migration) they stay on this page. */
 const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
+/* The stand-in room (previews only, Six-faces-council hollow-interface, his note on hib2-look-1): a walkable room of two with a
+   stand-in partner already in it, so the partner's side can be tested alone. It opens from the nook's doorway ("Stand-in room")
+   or at once with ?room=standin. It reads and writes nothing in the store. */
+const STANDIN_ROOM = PREVIEW_HOST && new URLSearchParams(location.search).get("room") === "standin";
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
@@ -563,6 +570,9 @@ const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOS
 // previews: ?embers=demo puts four held embers in your pouch on this page only (never saved), so the seated hearth moment shows
 // with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
+// previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
+// E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
+const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
@@ -675,6 +685,7 @@ function renderSatchel() {
 }
 const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
 let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+const TEA_VIEW = { wide: [[0.69, 0.8, 0.98], [-0.12, 0.45, 0.15]], phone: [[0.8, 0.8, 1.15], [-0.1, 0.45, 0.15]] };   // camera, focus, in the seats frame (x left, z ahead)
 let seatK = 0, seatViewAt = null; // the low view of you sat on the hearth's cushion (or one you set down), eased in
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
 function setMirror(on) {
@@ -717,7 +728,9 @@ function portalTick(t) {
     const e = entering; entering = null;
     markSeen();
     $("#loadMsg").textContent = "Through the doorway"; $("#loadStep").textContent = ""; $("#loading").hidden = false;
-    if (e.kind === "dojo") {
+    if (e.kind === "standin") {
+      location.href = "/ontology-game/between?room=standin";
+    } else if (e.kind === "dojo") {
       location.href = "/dojo/triangle-workshop?returnTo=" + encodeURIComponent("/ontology-game/between");
     } else {
       try { sessionStorage.setItem(THROUGH, e.id); } catch {}
@@ -738,6 +751,15 @@ function walkThrough(id, inv) {
   meState.target = PORTAL_AT.clone().add(front.multiplyScalar(0.15));
   entering = { kind: "room", id, invite: portalTo.invite, t0: performance.now() };
   burst(PORTAL_AT.clone(), 0xffe2a8);
+  refreshHud();
+}
+function walkToStandInRoom() {
+  if (!portalOpen()) { toast("The doorway opens when your first minute here is complete."); return; }
+  closeSheet(); standUp(); selected = "portal";
+  const front = new THREE.Vector3(Math.sin(portal.rotation.y), 0, Math.cos(portal.rotation.y));
+  meState.target = PORTAL_AT.clone().add(front.multiplyScalar(0.15));
+  entering = { kind: "standin", t0: performance.now() };
+  burst(PORTAL_AT.clone(), 0xffd08a);
   refreshHud();
 }
 function walkToTriangleWorkshop() {
@@ -768,6 +790,8 @@ function stepBetween(t, dt) {
   const { phase, state, stale, sat } = look;
   const breath = (t % 10) < 4 ? Math.sin((t % 10) / 4 * Math.PI / 2) : Math.cos(((t % 10) - 4) / 6 * Math.PI / 2); // 4 s in, 6 s out
   const together = bothSitting();
+  // the music follows the room (music.js): standing about, sitting alone, sitting together, or close (the hearth moment, a cup in hand)
+  ambient.mood(moodOf({ sitting: !!meState.sitting, together, close: !!hm || !!(tea && tea.holding()) }));
   // sitting together, it turns to face you both (the cushions sit side by side behind it)
   creature.update(t, dt, { phase, state, stale, sat, target: together ? TOGETHER_FACE : creatureTarget(), together });
   const p = moteGeo.attributes.position.array;
@@ -1052,7 +1076,9 @@ function mySeat() {
    the hollow's two. You walk to a seat and sit on it; the hearth moment opens once you are sat by the fire. */
 /* The first minute's cushion, where you wake in your homeroom (Still C), is a seat in the same list ("wake"), so the wake sits
    you the same way (Wendell, 2026-10-24, "The character spawns looks very weird"); it is there while the wake is on. */
-const seatsHere = () => !hollow ? [] : seatsNow(hollow.handles.spots).concat(wake.on ? [{ id: "wake", wake: true, x: wake.group.position.x, z: wake.group.position.z, yaw: wake.yaw, floor: 0, top: CUSHION_TOP }] : []);
+// seats a mounted piece draws for itself (the coin table's cushion), asked each time like the rest
+const seatExtras = [];
+const seatsHere = () => !hollow ? [] : seatsNow(hollow.handles.spots).concat(wake.on ? [{ id: "wake", wake: true, x: wake.group.position.x, z: wake.group.position.z, yaw: wake.yaw, floor: 0, top: CUSHION_TOP }] : [], ...seatExtras.map(f => f() || []));
 const seatBy = id => id == null ? null : seatsHere().find(s => s.id === id) || null;
 const seatId = k => /^\d+$/.test(k) ? +k : k;
 const seatPos = id => { const s = seatBy(id); return s ? new THREE.Vector3(s.x, 0, s.z) : meState.pos.clone().setY(0); };
@@ -1074,6 +1100,51 @@ function sitOn(id, then = null) {
   selected = "seat:" + id; refreshHud();
 }
 function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
+/* Tea by the fire (between-tea-1 slice 1, the solo cup). The kettle is drawn by the scene at the hearth's seat, not placed
+   through the room kit (bt-tea-needs-a-spot), and stands there from the moment the room is up, with its cup on the stone; the cup
+   goes into the right hand of whoever is sat there (bt-cup-is-the-figure) and stays held in the lap until they stand.
+   "Pour a cup" is offered only to someone sat within NEAR of the kettle (tea-look-2, his note 2026-10-29: "the cup is offering
+   when they aren't near the teapot"). No qi, no shelf and no music yet: someone who has worked through nothing can sit and pour. */
+let tea = null, teaRoom = null, teaKey = "", teaWas = false, teaSkipped = false, teaK = 0;
+function teaNow() {
+  const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return null;
+  if (!tea) tea = buildTea({ THREE, scene, seat: s, groundY });
+  const key = `${s.id}:${s.x.toFixed(2)}:${s.z.toFixed(2)}:${s.yaw.toFixed(2)}:${s.top}`;
+  if ((teaRoom !== hollow || key !== teaKey) && !tea.holding()) { tea.place(s); teaRoom = hollow; teaKey = key; }
+  return tea;
+}
+/* Sat, and the kettle within reach of the seat. */
+function teaNear() {
+  if (!meState.sitting || !tea) return false;
+  const s = seatBy(meState.seatWant); if (!s) return false;
+  const k = tea.kettle.position;
+  return Math.hypot(s.x - k.x, s.z - k.z) <= TEA_NEAR;
+}
+function teaBtn() {
+  if (!teaNear()) return "";
+  if (tea.running()) return "";
+  return tea.holding() ? `<button type="button" class="hmlink" data-act="teaSip">Take a sip</button>`
+    : `<button type="button" class="hmlink" data-act="teaPour">Pour a cup</button>`;
+}
+function teaPour(skip = 0) {
+  if (!teaNear()) return;
+  const m = tea; if (m.running() || m.holding()) return;
+  if (!m.attach(meState.body)) return;
+  m.pour(performance.now() / 1000, skip);   // skip: seconds in, or "sip" (tea.js knows where each drink's first sip is)
+  toast("A cup, by the fire."); hmHud();
+}
+function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
+function teaFrame(t) {
+  if (hollow) teaNow();
+  if (TEA_SKIP && !teaSkipped && tea && !tea.holding() && teaNear() && meState.body) {
+    teaSkipped = true; teaPour(TEA_SKIP === "sip" ? "sip" : 0);
+  }
+  if (!tea || !tea.holding()) return;
+  if (!meState.sitting || !teaNear()) { tea.stop(); teaWas = false; return; }   // standing up puts the cup back on the stone
+  tea.tick(t);
+  const r = tea.running(); if (r !== teaWas) { teaWas = r; hmHud(); }
+}
+function teaStop() { if (tea) tea.stop(); teaWas = false; }
 const seatedAtHearth = () => { const s = meState.sitting && seatBy(meState.seatWant); return !!s && (s.hearth || (!!s.spot && inNook() && s.id === hearthSeatId())); };
 const othersHere = () => [...peers.values()].filter(p => p.uid !== me);
 function ownerSeatNow(uid) {
@@ -1083,6 +1154,7 @@ function ownerSeatNow(uid) {
 }
 function standUp() {
   const wasHearth = sheetName === "hearth" && seatedAtHearth();
+  teaStop();
   meState.seatWant = null; meState.onSeated = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); }
   if (wasHearth) closeSheet(); // the hearth moment is had sitting; getting up ends it
   if (hm) hmEnd();
@@ -1232,6 +1304,8 @@ function tapAt(cx, cy) {
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
+  // the cards at the grey edge take the tap first, and bring the encounter back after "Walk on" (letters.js)
+  if (!placing && !satchelOpen && window.__between && window.__between.letters && window.__between.letters.tap(ray.ray)) return;
   // things first: the nearest one whose sphere the ray passes through, a seat ahead of anything over it (pick.js)
   const hits = []; let best = null;
   const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { hits.push({ key, pos, along: ray.ray.origin.distanceTo(pos) }); best = pickTap(hits); } };
@@ -1401,6 +1475,7 @@ function frameBody() {
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
     meState.body.pose(t, dt, meState.sitting, false, mySeatAt);
+    teaFrame(t);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
     meState.wasWalking = walking;
   }
@@ -1545,6 +1620,19 @@ function frameBody() {
     clampCamera(p, f);
     const k = hmK * hmK * (3 - 2 * hmK); cp.lerp(p, k); focus.lerp(f, k);
   }
+  /* Tea in your hand (tea-cup-look-3, his note 2026-10-29: when you sit to drink, the camera should move so you see yourself
+     drinking): the view comes round in front of you, a little to your left and level with your face, so the cup coming up to
+     your mouth, your hand on it and the kettle on its stone are all in sight. It eases back behind you when you stand. */
+  const teaOn = !!(tea && tea.holding() && meState.sitting && seatViewAt && !mirrorOn);
+  teaK += ((teaOn ? 1 : 0) - teaK) * Math.min(1, dt * 1.1);
+  if (teaK < 0.002 && !teaOn) teaK = 0;
+  if (teaK > 0 && seatViewAt) {
+    const S = seatViewAt, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), lx = fz, lz = -fx, tall = innerWidth < innerHeight;
+    const at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
+    const V = tall ? TEA_VIEW.phone : TEA_VIEW.wide, p = at(...V[0]), f = at(...V[1]);
+    clampCamera(p, f);
+    const k = teaK * teaK * (3 - 2 * teaK); cp.lerp(p, k); focus.lerp(f, k);
+  }
   const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
@@ -1564,6 +1652,7 @@ function frameBody() {
   // what is near you
   const nk = nearest();
   if (nk !== nearKey) { nearKey = nk; refreshHud(); }
+  if (window.__between && window.__between.voice) { if (nearHushed()) window.__between.voice.quiet("near"); else if (nearKey) { const vo = window.__between.voice, ne = $("#near"); if (!vo.owners().includes("near") && ne._h) nearVoice(ne, ne._h); vo.place(); } }
   if (shotWanted) takeShot();
 }
 function nearest() {
@@ -1649,7 +1738,8 @@ function refreshHud() {
 
   const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
+  if (STANDIN_ROOM) hintText = "A stand-in room: your partner is here to rehearse with, and nothing is saved. Walk to them, or wait a few breaths for the letter. Tap the floor to walk; drag to look around.";
+  else if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
   else if (isHome(g) && satchelOpen && minuteOn()) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap the mirror in your satchel, then a glowing spot on the floor.";
   else if (minuteOn()) hintText = minuteHint();
@@ -1672,6 +1762,7 @@ function refreshHud() {
   const key = nearKey;
   let html = ""; try { html = key && !minuteOn() ? nearHtml(key, V, g) : ""; } catch (e) { noteError(e, "near " + key); } // a broken card shows nothing, never stops the room
   near.hidden = !html || satchelOpen; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
+  nearVoice(near, html);
 
   // tools
   const tools = [];
@@ -1724,7 +1815,7 @@ function refreshHud() {
    homeroom, so checking in with yourself is part of the loop wherever you are. */
 function homeState() {
   const h = list && list.home;
-  return { lastCheckin: myHome.lastCheckin ?? (h && h.lastCheckin) ?? null, goals: myHome.goals ? Object.values(myHome.goals).filter(Boolean) : (h && h.goals) || [] };
+  return { lastCheckin: myHome.lastCheckin ?? (h && h.lastCheckin) ?? null, goals: myHome.goals ? Object.values(myHome.goals).filter(Boolean) : (h && h.goals) || [], casts: myHome.casts || {} };
 }
 function nextMoves(g) {
   const rooms = (list && list.gardens || []).filter(r => r.phase !== "closed");
@@ -1745,9 +1836,27 @@ function moveActs(id, it, g) {
 /* The card of the hearth's cushion, or of one you set down: anyone's to sit on (a store-down preview shows it too). */
 function freeSeatCard(i) {
   const st = seatBy(i); if (!st) return "";
-  const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : "A cushion";
+  const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : st.coins ? "The coin table's cushion" : "A cushion";
   if (!here) return `<div class="what"><b>${name}</b><span class="t">${st.hearth ? "Worn flat from sitting by the fire." : "Set down here for sitting."}</span></div><div class="row"><button type="button" data-act="${st.hearth ? "sitHearth" : "sit"}">Sit here</button></div>`;
   return `<div class="what"><b>${name}</b><span class="t">${fire ? "Sitting by the fire." : "Sitting."}</span></div><div class="row">${fire && (hearthOpen() || storeDown) && sheetName !== "hearth" ? `<button type="button" data-act="sitHearth">Sit with what stirs you</button>` : ""}<button class="glassbtn" type="button" data-act="stand">Stand up</button></div>`;
+}
+/* What you stand near speaks through the one screen owner (voice.js, hi-screen-owner; hollow interface build 2): the
+   card's name is the headline, its line under it, its buttons the seals over the standing row, placed clear of the thing
+   itself. The pinned card stays in the page, hidden, so every button keeps its own handler. */
+let voiceMod = null;
+function nearVoice(el, html) {
+  const vo = window.__between && window.__between.voice; if (!vo || !voiceMod) return;
+  const m = html && !satchelOpen && !nearHushed() ? voiceMod.panelMoment(el, () => $("#near")) : null;
+  if (!m) { vo.quiet("near"); return; }
+  vo.say({ ...m, soft: true, subject: nearBox }, "near", 1);
+}
+const nearHushed = () => !!sheetName || !!hm || ["mirroring", "seatedmoment", "quiethud"].some(c => document.body.classList.contains(c)) || !$("#hud") || $("#hud").hidden;
+const NB = new THREE.Vector3();
+function nearBox() {
+  const p = nearKey && posOf(nearKey); if (!p) return null;
+  const [x0, y0] = window.__between.screenOf(NB.set(p.x, 0, p.z)), [, y1] = window.__between.screenOf(NB.set(p.x, 1.7, p.z));
+  const h = Math.abs(y0 - y1), w = Math.max(40, h * 0.6);
+  return { l: x0 - w / 2, r: x0 + w / 2, t: Math.min(y0, y1), b: Math.max(y0, y1) };
 }
 function nearHtml(key, V, g) {
   if (key && key.startsWith("spot:")) return spotNear(key.slice(5), g);
@@ -2122,7 +2231,7 @@ function hmHud() {
   const h = `<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
     ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
     ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
-    <button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
+    ${teaBtn()}<button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
   if (hmEl._h === h) return; hmEl._h = h; hmEl.innerHTML = h;
 }
 // breathing by keyboard or on the button: held down, as a press on the ember is
@@ -2540,6 +2649,7 @@ function destinationsSheet() {
   return `<div class="stack"><h2>The doorway</h2>
     <p class="muted">Choose where to go. You always return to your Nook.</p>
     ${invited}
+    ${PREVIEW_HOST ? `<div class="roomrow"><div><b>Stand-in room</b><span class="small muted">A rehearsal room of two, with a partner already there. Nothing is saved.</span></div><button type="button" data-act="goStandIn">Enter</button></div>` : ""}
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
@@ -3164,11 +3274,15 @@ async function sealScroll() {
   }, 1350);
 }
 /* A spark's person has no shelf yet: the scroll's line goes with the room's link, the way an invitation always has. */
-async function sparkLink(to, note) {
-  let token = to.id === gardenId ? myInvite : null;
-  if (!token) { const j = await api("/api/between/" + to.id + "/poll", {}); token = j.invite || null; }
+/** A spark's invitation link, from its own invite token (the coin table lays it for a Show Up cast, build 3b). */
+async function sparkUrl(id) {
+  let token = id === gardenId ? myInvite : null;
+  if (!token) { const j = await api("/api/between/" + id + "/poll", {}); token = j.invite || null; }
   if (!token) throw fail("unavailable", "no link");
-  const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(to.id) + "&invite=" + encodeURIComponent(token);
+  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token);
+}
+async function sparkLink(to, note) {
+  const link = await sparkUrl(to.id);
   const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
   let shared = false;
   if (navigator.share) { try { await navigator.share({ title: "The Between", text }); shared = true; } catch {} }
@@ -3273,8 +3387,13 @@ function shelfTap(kind, i) {
 }
 
 /* ---------- sound: starts on the first tap, if it is on ---------- */
-const ambient = createAmbient();
-function soundLabel() { const b = $("#soundBtn"); if (!b) return; b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+// ?music=code|bed|both plays that version of the room's music, so he can hear them side by side and pick by ear (bt-music-form);
+// with no ?music the room has no music. E.g. ?nook=1&sit=hearth&music=code
+const ambient = createAmbient({ music: KQ.get("music") });
+function soundLabel() {
+  const b = $("#soundBtn"); if (b) { b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+  const mb = $("#musicBtn"); if (mb) { mb.hidden = !ambient.music; mb.textContent = ambient.musicOn ? "Music on" : "Music off"; mb.setAttribute("aria-pressed", ambient.musicOn ? "true" : "false"); }
+}
 addEventListener("pointerdown", () => ambient.wake(), { capture: true });
 document.addEventListener("visibilitychange", () => { document.hidden ? ambient.pause() : ambient.resume(); });
 soundLabel();
@@ -3294,6 +3413,7 @@ document.addEventListener("click", async ev => {
   if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
   if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
+  if (a === "music") { ambient.toggleMusic(); soundLabel(); return; }
   if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
@@ -3302,6 +3422,8 @@ document.addEventListener("click", async ev => {
   if (a === "hmLantern") { hmLight(); return; }
   if (a === "hmHang") { const h = hm && hm.hooks && hm.hooks.find(x => x.id === id); if (h) hmSend(h); return; }
   if (a === "hmStand") { hmStand(); return; }
+  if (a === "teaPour") { teaPour(); return; }
+  if (a === "teaSip") { teaSip(); return; }
   if (a === "fsLay") { fsLay(); return; }
   if (a === "fsStay") { fsStay(); return; }
   if (a === "hmBreathe") return; // a press held on it, not a click (hmEl's own listeners)
@@ -3317,6 +3439,7 @@ document.addEventListener("click", async ev => {
   if (a === "emberKeep") { closeSheet(); toast("Kept. It waits under Spirits, in your homeroom, until you give it."); return; }
   if (a === "goHome") { goRoom(null); return; }
   if (a === "goRoom") { goRoom(id); return; }
+  if (a === "goStandIn") { walkToStandInRoom(); return; }
   if (a === "goDojo") { walkToTriangleWorkshop(); return; }
   // a spark's link, found again from the homeroom (pt1-two-player-check: the link got lost after the first send)
   if (a === "sparkAgain") {
@@ -3328,6 +3451,7 @@ document.addEventListener("click", async ev => {
   if (a === "through") { if (portalTo) walkThrough(portalTo.id, portalTo.invite); return; }
   if (a === "next") {
     if (id.startsWith("room:")) { goRoom(id.slice(5)); return; }
+    if (id === "coins") { closeSheet(); if (window.__between.coins) window.__between.coins.go(); return; } // a move kept at the coin table, or a cast left face up
     if (id === "tend") { closeSheet(); selected = "between"; meState.target = pushOut(BETWEEN_AT.clone().add(new THREE.Vector3(0, 0, 1.1))); standUp(); refreshHud(); return; }
     openSheet(id === "invitations" && !isHome(view().g) ? "invite" : id); return;
   }
@@ -3761,12 +3885,13 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 /* ===================================================================================================
    Boot
    =================================================================================================== */
+let booted = false;
 (async function boot() {
   loadStep("building the hollow");
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
   let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
   // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
-  const guessShell = (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const guessShell = STANDIN_ROOM || (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
   const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
@@ -3784,6 +3909,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   try {
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
+    if (STANDIN_ROOM) throw { code: "standin" };
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
     /* An invitation you opened is kept until you are in its room, so the doorway still offers it when you come back to the
        homeroom without the link (pt1-two-player-check: the link got lost later in the playtest). */
@@ -3849,12 +3975,14 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   minuteStart();
   syncShelf();
   if (SCROLL_PREVIEW === "write" && inNook()) openPaper("write", { fromShelf: true });
+  if (STANDIN_ROOM) { names["stand-in"] = "Your stand-in partner"; onPeers([{ uid: "stand-in", x: 0.9, z: 1.4, h: Math.PI + 0.4, w: false }]); }
+  booted = true;
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -3863,7 +3991,19 @@ window.__between = { outbox, view, meState, peers, walkers, things, look: () => 
   anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
-  room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };
+  room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
+  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data),
+  openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
+// letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
+// holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
+// opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
+import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.createVoice(); refreshHud(); return import("./letters.js"); })
+  .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") || (STANDIN_ROOM ? "a6" : null) : null }); }).catch(e => noteError(e, "letters"));
+// the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
+// Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
+// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation)
+// ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));

@@ -1,7 +1,7 @@
 /**
  * @route GET /board/council
  * @entity SYSTEM
- * @description The Council Board, served from six-faces-council main and saving to bars-engine as board=council
+ * @description The Council Board, pushed from six-faces-council main and saving to bars-engine as board=council
  * @permissions owner (BOARD_OWNER_PLAYER_ID); others are sent to /login
  * @agentDiscoverable false
  */

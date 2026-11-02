@@ -10,6 +10,7 @@
 
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
+import { HOLLOW_CARD, lettersWrite } from './shared-pick'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -95,6 +96,13 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if ('looks' in data) { const v = looksWrite(me, data.looks); if (!v.ok) return v }
       if ('invitations' in data) { const v = invitationsWrite(me, garden, data.invitations); if (!v.ok) return v }
       if ('room' in data) { const v = roomWrite(me, garden, data.room); if (!v.ok) return v }
+      if ('pick' in data) return no(400, 'The shared pick became letters from the nook.')
+      if ('letters' in data) {
+        if (home) return no(400, 'A homeroom is held by one person.')
+        const l = data.letters, was = garden.letters
+        const v = lettersWrite(me, garden, was, isObj(l) && isObj(was) ? merge(was, l) : l)
+        if (!v.ok) return v
+      }
       if ('members' in data) {
         const add = isObj(data.members) ? Object.keys(data.members) : []
         const jr = isObj(garden.joinRequest) ? garden.joinRequest : null
@@ -111,6 +119,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op === 'update' && data && 'by' in data && data.by !== cur!.by) return no(400, 'Who made it does not change.')
       if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
+      if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
       return yes
     case 'spirits':
     case 'daemons':
@@ -155,7 +164,11 @@ const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFin
 
 /** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
 export function pouchWrite(pouch: Doc): Verdict {
-  for (const k of Object.keys(pouch)) if (k !== 'embers') return no(400, 'The pouch holds embers only.')
+  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
+  // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
+  const h = pouch.hollow
+  if (h != null && !(isObj(h) && Object.keys(h).every(k => k === 'card' || k === 'at') && h.card === HOLLOW_CARD && isNum(h.at)))
+    return no(400, 'The hollow keeps one card of your own.')
   const embers = pouch.embers ?? {}
   if (!isObj(embers)) return no(400, 'The pouch holds embers only.')
   for (const e of Object.values(embers)) {
@@ -324,7 +337,52 @@ function roomWrite(me: string, garden: Doc, room: Json): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts'])
+
+/* ---------- the coin table (Six-faces-council pass bar-intake-2, brief "Coin table, build 2") ----------
+ * Keep writes the move a cast gave you to your homeroom's private doc (`casts`): the hexagram, its lane and suit, the
+ * room it is for (null for yourself) and the move's words; never the person's name. A cast left face up in a hollow is a
+ * room item of kind `cast` that only its tosser sets, changes or takes back; the other person can only add their own
+ * answer, a card of the cast's suit at a depth they choose (bi-cast-private). */
+export const CAST_LANES = ['yourself', 'between', 'partner'] as const
+export const CAST_SUITS = ['WU', 'CU', 'GU', 'SU'] as const
+const hexN = (v: unknown) => isNum(v) && Number.isInteger(v) && v >= 1 && v <= 64
+const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'line', 'at', 'done'])
+function homeCastOk(c: Doc): boolean {
+  if (!Object.keys(c).every(k => HOME_CAST_KEYS.has(k))) return false
+  if (!hexN(c.n) || (c.becomes != null && !hexN(c.becomes))) return false
+  if (!(CAST_LANES as readonly string[]).includes(c.lane as string) || !(CAST_SUITS as readonly string[]).includes(c.suit as string)) return false
+  if (c.lane === 'yourself' ? c.room != null : !isId(c.room)) return false
+  return typeof c.line === 'string' && c.line.length > 0 && isNote(c.line) && isNum(c.at) && (c.done == null || isNum(c.done))
+}
+const CAST_ITEM_KEYS = new Set(['kind', 'by', 'at', 'status', 'n', 'becomes', 'changing', 'suit', 'line', 'answer', 'history'])
+const ANSWER_KEYS = new Set(['card', 'depth', 'at'])
+function castWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+  const tosser = cur ? cur.by : data?.by
+  if (op === 'delete') return tosser === me ? yes : no(403, 'Only the one who tossed takes a cast back.')
+  if (tosser !== me) {
+    const keys = Object.keys(data!)
+    if (!keys.every(k => k === 'answer' || k === 'history')) return no(400, 'A cast stays its tosser\'s; you can answer it.')
+    const a = data!.answer
+    if (a !== undefined) {
+      if (!isObj(a) || !Object.keys(a).every(k => k === me)) return no(400, 'You can only answer for yourself.')
+      const v = a[me]
+      if (v !== null && !(isObj(v) && Object.keys(v).every(k => ANSWER_KEYS.has(k)) && typeof v.card === 'string' && ID.test(v.card)
+        && ['easy', 'medium', 'hard'].includes(v.depth as string) && isNum(v.at))) return no(400, 'An answer is a card and a depth.')
+    }
+    return logOk(data!.history, me) ? yes : no(400, 'The log names acts, nothing more.')
+  }
+  const next = op === 'set' ? data! : merge(cur ?? {}, data!)
+  for (const k of Object.keys(next)) if (!CAST_ITEM_KEYS.has(k)) return no(400, 'A cast on the table carries its reading and its move, nothing more.')
+  if (next.kind !== 'cast' || next.status !== 'face-up') return no(400, 'A cast on the table lies face up.')
+  if (!hexN(next.n) || (next.becomes != null && !hexN(next.becomes))) return no(400, 'That is not a hexagram.')
+  if (!(CAST_SUITS as readonly string[]).includes(next.suit as string)) return no(400, 'That is not a suit.')
+  if (!Array.isArray(next.changing) || !next.changing.every(i => isNum(i) && Number.isInteger(i) && i >= 1 && i <= 6)) return no(400, 'Moving lines are one to six.')
+  if (!(typeof next.line === 'string' && next.line.length > 0 && isNote(next.line))) return no(400, 'A move is a short line.')
+  if (op === 'set' && isObj(next.answer) && Object.keys(next.answer).length) return no(400, 'Only the other person answers.')
+  if (op !== 'set' && data && 'answer' in data) return no(400, 'Only the other person answers.')
+  return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
+}
 const MINUTE_KEYS = new Set(['ember', 'mirror', 'hope', 'vine', 'skip'])
 const MINUTE_SKIPS = new Set(['ember', 'mirror', 'hope'])
 
@@ -375,6 +433,7 @@ export function homeWrite(doc: Doc): Verdict {
     ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)
       && (c.wave == null || (isNum(c.wave) && Number.isInteger(c.wave) && c.wave >= 0 && c.wave <= 7))],
     ['embers', homeEmberOk],
+    ['casts', homeCastOk],
   ] as const) {
     const all = doc[field]
     if (all == null) continue
@@ -401,7 +460,7 @@ const GONE = new Set(['retired', 'composted', 'withdrawn'])
 
 export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
-  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' }[]
+  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' }[]
   revisit: string[]; invitations: { id: string; when: number | null; note: string; at: number | null }[]; lastSatTogether: number | null
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
   keptAgreement: boolean
@@ -424,6 +483,7 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     if (GONE.has(it.status as string)) continue
     const yesMe = isObj(it.yes) ? it.yes[me] : undefined
     if (it.kind === 'lantern') { if (it.by !== me && !isNum(yesMe)) waiting.push({ id: iid, what: 'lantern' }); continue }
+    if (it.kind === 'cast') { if (it.by !== me && !(isObj(it.answer) && isObj(it.answer[me]))) waiting.push({ id: iid, what: 'cast' }); continue }
     if (isObj(it.pending) && it.pending.by !== me) waiting.push({ id: iid, what: 'ask' })
     else if (it.kind === 'agreement' && it.status === 'proposed' && !yesMe) waiting.push({ id: iid, what: 'agreement' })
     else if (it.kind !== 'agreement' && it.status === 'offered' && it.by !== me) waiting.push({ id: iid, what: 'offer' })

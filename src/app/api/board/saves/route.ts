@@ -15,6 +15,7 @@ import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/store'
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
 import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
+import { ticketFromSave } from '@/lib/work/from-save'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -22,7 +23,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 export async function GET(req: NextRequest) {
   if (!(await isBoardOwner())) return NextResponse.json({ error: 'Sign in as the board owner' }, { status: 401 })
   const board = req.nextUrl.searchParams.get('board') || 'nonprofit'
-  const [docs, pull, waiting] = await Promise.all([latestDocs(board), lastPull(board), unrecordedSaves(board)])
+  const [docs, pull, waiting] = await Promise.all([latestDocs(board, { leaveOutRecordedRows: true }), lastPull(board), unrecordedSaves(board)])
   return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting }, { headers: NO_STORE })
 }
 
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
   const v = validateSave(body)
   if (!v.ok) return NextResponse.json({ error: 'Not a board save', details: v.errors }, { status: 422 })
   const { board, collection, docId } = v.save
+  if (collection === 'rows')  // rows are the council's, posted by sessions (/api/board/session-writes); his saves are answers
+    return NextResponse.json({ error: 'Rows are posted by sessions, not saved from the page' }, { status: 403 })
   const doc = applyWrite(v.save.mode === 'update' ? await latestDoc(board, collection, docId) : null, v.save)
   const data = { board, collection, docId, recordedAt: RECORD_KINDS.has(collection) ? null : new Date(),
                  record: RECORD_KINDS.has(collection) ? null : 'board state; not recorded on main' }
@@ -63,5 +66,7 @@ export async function POST(req: NextRequest) {
       })
     : await db.boardSave.create({ data: { ...data, data: doc as object }, select: { receivedAt: true } })
   if (RECORD_KINDS.has(collection)) await dispatchBoardPull().catch(() => undefined)
-  return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt }, { headers: NO_STORE })
+  // Push from the board: his answer to a council question goes to the work lanes as it is saved (work queues, slice 1).
+  const work = await ticketFromSave(db, board, collection, docId, doc)
+  return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt, ...(work ? { work } : {}) }, { headers: NO_STORE })
 }

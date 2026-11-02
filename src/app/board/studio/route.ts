@@ -1,7 +1,7 @@
 /**
  * @route GET /board/studio
  * @entity SYSTEM
- * @description The studio game's boat: the Clockwork Orrery's run, dock, intake and launch loop, and behind ?fleet=1 the six face ships in convoy with each ship's own loop; learning seeds read from the board's ledger (read-only). Behind ?shaman=1 the Shaman's loop: the Gourd Star's eight rooms, whose cards save through POST /api/board/saves
+ * @description The studio game's boat: the Clockwork Orrery's run, dock, intake and launch loop, and behind ?fleet=1 the six face ships in convoy with each ship's own loop; learning seeds read from the board's ledger (read-only). Behind ?shaman=1 the Shaman's loop: the Gourd Star's eight rooms, whose cards save through POST /api/board/saves. Behind ?stores=1 the Stores' move: the keeper closes a past run by placing its things, each placement a stores save
  * @permissions owner (BOARD_OWNER_PLAYER_ID); others are sent to /login. Vercel preview deployments, already behind Vercel's own login, open without it
  * @agentDiscoverable false
  */
@@ -11,6 +11,8 @@ import { loadFleet } from '@/lib/studio/fleet'
 import { studioPage } from '@/lib/studio/page'
 import { loadShaman, type StepDoc, type StoreCold } from '@/lib/studio/shaman'
 import { shamanPage } from '@/lib/studio/shaman-page'
+import { demoStores, loadStores, type Placement } from '@/lib/studio/stores'
+import { storesPage } from '@/lib/studio/stores-page'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +21,7 @@ export async function GET(req: NextRequest) {
   if (!preview && !(await isBoardOwner()))
     return NextResponse.redirect(new URL('/login?returnTo=' + encodeURIComponent('/board/studio' + req.nextUrl.search), req.url))
   if (req.nextUrl.searchParams.get('shaman') === '1') return shaman()
+  if (req.nextUrl.searchParams.get('stores') === '1') return stores(req.nextUrl.searchParams.get('demo') === '1')
   const world = await loadFleet()
   if (!world) return new NextResponse('The board ledger could not be loaded from GitHub. Try again in a minute.', { status: 503 })
   return new NextResponse(studioPage(world), {
@@ -44,4 +47,18 @@ async function shaman() {
   const world = await loadShaman(steps, new Date(), storeCold)
   if (!world) return new NextResponse('The board ledger could not be loaded from GitHub. Try again in a minute.', { status: 503 })
   return new NextResponse(shamanPage(world), { headers: HEADERS })
+}
+
+/** The Stores' move. Placements already saved come from the board store; with no store (local, CI) none are. A ledger
+ * that can't be read, or &demo=1, plays the round's mock run, which saves nothing. */
+async function stores(demo: boolean) {
+  if (demo) return new NextResponse(storesPage(demoStores()), { headers: HEADERS })
+  let placed: Record<string, Placement> = {}
+  try {
+    const { latestDocs } = await import('@/lib/board/store')
+    placed = ((await latestDocs('council')).stores ?? {}) as Record<string, Placement>
+  } catch { placed = {} }
+  const world = await loadStores(placed)
+  if (!world) return new NextResponse('The board ledger could not be loaded. Try again in a minute.', { status: 503 })
+  return new NextResponse(storesPage(world), { headers: HEADERS })
 }

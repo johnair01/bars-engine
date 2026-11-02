@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wendell-britt/Six-faces-council/blob/main/schema/card.schema.json",
+  "title": "Council Board card",
+  "description": "One card on the Council Board (docs/specs/council-board-v2.md section 1). A card rides on a board row as its `card` object; rows without one are the older kinds and are not cards. The front is what Wendell reads in five seconds, the back shows only deck and face (drawn with no words, his B on bv2-look-1), and the inside holds the machinery, the only place agent vocabulary may appear. The shapes are BARs Engine objects (x-engine below); bars-engine keeps an identical copy at fixtures/council-card/card.schema.json with the type in src/lib/board/card.ts (position bv2-home). The schema checks shape; board/card_check.py adds the spec's validation rules (a why naming a person, no paths or ids on the front, the missing thing named) that a schema cannot say.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project", "face", "front", "back", "inside"],
+  "x-engine": {
+    "State": "project, face, standard and front.why: where the project stands and who it is for",
+    "Transition": "front.next_step: the one step that moves the State",
+    "Move": "front.moves: the three offered moves, never more (the engine's rule of three)",
+    "Commitment": "commitment: written when a move is pressed, due in one round",
+    "Outcome": "outcome: what came back from the Commitment",
+    "BAR": "bar: what a composted card leaves (tried, stall, salvage, lesson)",
+    "Ruling": "inside.rulings: his answers applied to this card"
+  },
+  "properties": {
+    "project": {"$ref": "#/$defs/text", "description": "State: the project, which is also the deck"},
+    "face": {"$ref": "#/$defs/face", "description": "State: the game master holding the card"},
+    "standard": {"type": "string", "description": "State: the project's Standard, what a player can do and feel when this stage is done"},
+    "front": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["why", "why_person", "next_step", "missing", "moves"],
+      "properties": {
+        "why": {"$ref": "#/$defs/text", "description": "One plain sentence: what this step unlocks for a real person"},
+        "why_person": {"$ref": "#/$defs/text", "description": "Who that person is: a player, a client, a collaborator, Wendell"},
+        "next_step": {"$ref": "#/$defs/text", "description": "Transition: one sentence, verb first, naming who does what"},
+        "missing": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/missing"}],
+                    "description": "Why this is not automated: null when the card does not need him"},
+        "moves": {"$ref": "#/$defs/moves"}
+      }
+    },
+    "back": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deck", "face"],
+      "properties": {"deck": {"$ref": "#/$defs/text"}, "face": {"$ref": "#/$defs/face"}},
+      "description": "Deck and face only. Drawn with no words: the deck's own pattern and colour, the face's gold hull form, altitude trim on the edges"
+    },
+    "inside": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spec": {"type": "string"},
+        "files": {"type": "array", "items": {"type": "string"}},
+        "acceptance": {"type": "array", "items": {"type": "string"}},
+        "receipt": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/receipt"}]},
+        "rulings": {"type": "array", "items": {"$ref": "#/$defs/ruling"}},
+        "charge": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/charge"}]},
+        "tokens": {"type": "object", "additionalProperties": false, "required": ["spent"],
+                   "properties": {"spent": {"type": "integer", "minimum": 0},
+                                  "budget": {"type": ["integer", "null"], "minimum": 1}}},
+        "source": {"type": "string", "description": "Where the card was drawn from in the record"}
+      }
+    },
+    "commitment": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/commitment"}]},
+    "outcome": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/outcome"}]},
+    "bar": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/bar"}]}
+  },
+  "$defs": {
+    "text": {"type": "string", "pattern": "\\S"},
+    "face": {"enum": ["shaman", "architect", "challenger", "regent", "diplomat", "sage"]},
+    "channel": {"enum": ["wood", "fire", "earth", "metal", "water"]},
+    "move_name": {"enum": ["claude_takes_it", "steer", "compost"]},
+    "missing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "text"],
+      "properties": {"kind": {"enum": ["decision", "reference", "feeling", "approval"]}, "text": {"$ref": "#/$defs/text"}}
+    },
+    "move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["move", "label", "recommended"],
+      "properties": {
+        "move": {"$ref": "#/$defs/move_name"},
+        "label": {"$ref": "#/$defs/text"},
+        "recommended": {"type": "boolean"},
+        "mechanic": {"enum": ["dispatch-lever", "steer-helm", "compost-hatch"]}
+      }
+    },
+    "moves": {
+      "description": "Move: exactly the three, in this order, exactly one recommended",
+      "type": "array",
+      "minItems": 3,
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/move"}, {"properties": {"move": {"const": "claude_takes_it"}}}]},
+        {"allOf": [{"$ref": "#/$defs/move"}, {"properties": {"move": {"const": "steer"}}}]},
+        {"allOf": [{"$ref": "#/$defs/move"}, {"properties": {"move": {"const": "compost"}}}]}
+      ],
+      "items": false,
+      "contains": {"properties": {"recommended": {"const": true}}, "required": ["recommended"]},
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "receipt": {
+      "description": "Spec section 2: written inside the card before any work",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read", "acceptance", "standard", "not_understood", "at"],
+      "properties": {
+        "read": {"type": "array", "items": {"type": "string"}},
+        "acceptance": {"type": "string"},
+        "standard": {"type": "string"},
+        "not_understood": {"type": "array", "items": {"type": "string"}},
+        "at": {"type": "string"},
+        "by": {"type": "string"}
+      }
+    },
+    "ruling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "answer", "date"],
+      "properties": {
+        "question": {"type": "string"}, "answer": {"type": "string"}, "project": {"type": "string"},
+        "date": {"type": "string"}, "rule": {"type": "string"}, "id": {"type": "string"}
+      }
+    },
+    "charge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channels"],
+      "properties": {"channels": {"type": "array", "items": {"$ref": "#/$defs/channel"}}, "at": {"type": "string"},
+                     "satisfied": {"enum": ["satisfied", "dissatisfied", "neutral"]}}
+    },
+    "commitment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["move", "at", "due"],
+      "properties": {"move": {"$ref": "#/$defs/move_name"}, "at": {"type": "string"}, "due": {"const": "one round"},
+                     "receipt_required": {"type": "boolean"}}
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "result"],
+      "properties": {"at": {"type": "string"}, "result": {"enum": ["shipped", "stopped", "steered", "composted"]},
+                     "text": {"type": "string"}}
+    },
+    "bar": {
+      "description": "Spec section 5: the compost BAR",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tried", "stall"],
+      "properties": {
+        "tried": {"type": "string"},
+        "stall": {"enum": ["missing_context", "wrong_mechanic", "lost_charge", "superseded", "too_big", "blocked_outside"]},
+        "salvage": {"type": "string"},
+        "feeds": {"type": "string"},
+        "lesson": {"type": "string"}
+      }
+    }
+  }
+}

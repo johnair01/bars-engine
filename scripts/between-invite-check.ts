@@ -11,6 +11,8 @@
  *   5. the partner's figure loads on each screen (a dressed body, not left loading), even when the phone's first fetch of
  *      the figures' robe drops, as a phone on a weak signal drops one;
  *   6. anyone can sit on any cushion: the partner sits on the planter's teal cushion, the planter takes the plum one;
+ *   7. letters from the nook (Six-faces-council hollow-interface rounds 3 and 4): the planter sends a card from the room,
+ *      the phone sees it sealed and sends its own from its nook, both open together, and both steps landing keep the story;
  *   7. the link is findable again from the homeroom: the planter's Rooms sheet sends a spark's link again, and the
  *      partner, back in their homeroom without the link, still finds the doorway to the room they were invited to.
  * The real route is not started: it sits behind the sign-in and `next build` needs the deployment's env, so this serves
@@ -27,6 +29,7 @@ import { execFileSync } from 'child_process'
 import { extname, join, normalize } from 'path'
 import { randomBytes } from 'crypto'
 import { BETWEEN_PAGE } from '../src/lib/between/page'
+import { settle, viewGarden } from '../src/lib/between/shared-pick'
 import { invitedView, itemFor, mayWrite, merge, parsePath, plantedGarden, plantedHome, roomSummary, type Doc, type Op, type Target, type Who } from '../src/lib/between/rules'
 
 /* ---------- the store, in memory, answering as store.ts does ---------- */
@@ -58,7 +61,7 @@ function snapshot(gardenId: string, who: Who) {
   if (!who.member) return { member: false, garden: invitedView(data), items: {}, spirits: {}, daemons: {}, shown: {}, mine: {}, names, peers }
   const obj = (table: string) => Object.fromEntries(inTable(table, gardenId).map(([k, r]) => [k, r.data]))
   return {
-    member: true, invite: g.inviteToken, garden: data, names, peers,
+    member: true, invite: g.inviteToken, garden: viewGarden(data, who.playerId), names, peers,
     items: Object.fromEntries(inTable('items', gardenId).map(([k, r]) => [k, itemFor(who.playerId, r.data)])),
     spirits: obj('spirits'), daemons: obj('daemons'), shown: obj('shown'),
     mine: Object.fromEntries(inTable('privates', gardenId).filter(([k]) => k.startsWith(who.playerId + '/')).map(([k, r]) => [k.split('/')[1], r.data])),
@@ -71,11 +74,12 @@ function write(gardenId: string, who: Who, t: Target, op: Op, data: Doc | null) 
   const cur = t.table === 'garden' ? g.data : (k && rows.get(k)?.data) ?? null
   const verdict = mayWrite(who, g.data, t, op, data, cur)
   if (!verdict.ok) return verdict
-  const next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
+  let next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
+  if (t.table === 'garden' && next && data && 'letters' in data && next.letters && typeof next.letters === 'object') next = { ...next, letters: settle(next.letters as Doc) }
   if (t.table === 'garden') { g.data = next!; g.updatedAt = Date.now() } else if (next) rows.set(k!, { data: next, at: Date.now() }); else rows.delete(k!)
   if (t.table === 'garden' && data && data.members && typeof data.members === 'object')
     for (const p of Object.keys(data.members as Doc)) if (!members.get(gardenId)!.has(p)) members.get(gardenId)!.set(p, Date.now())
-  return { ok: true as const, doc: next }
+  return { ok: true as const, doc: t.table === 'garden' && next ? viewGarden(next, who.playerId) : next }
 }
 function plant(playerId: string, data: Doc) {
   const id = newId()
@@ -413,6 +417,37 @@ async function main() {
       if (process.env.BETWEEN_CHECK_SHOTS) { await A.waitForTimeout(1_500); await A.screenshot({ path: join(process.env.BETWEEN_CHECK_SHOTS, 'both-sitting.png'), timeout: 120_000 }).catch(e => console.log('  (no still: ' + (e as Error).message.split('\n')[0] + ')')) }
       for (const p of [A, Bp]) await p.evaluate(() => (window as unknown as { __between: { standUp(): void } }).__between.standUp())
       return 'the partner sat on the teal cushion, the planter could not sit on them there, and sat on the plum one'
+    })
+
+    await step('letters from the nook: sealed until both are in, the obstacle drawn, both steps land and the story is kept', async () => {
+      type LT = { state(): Doc | null; send(card: string): Promise<void>; step(i: number): Promise<void>; pollNook(): Promise<void> }
+      const lt = (p: Page) => p.waitForFunction(() => !!(window as unknown as { __between: { letters?: LT } }).__between.letters, undefined, { polling: 250, timeout: 15_000 })
+      const state = (p: Page) => p.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.state())
+      const until = (p: Page, what: string, f: string) => p.waitForFunction(new Function('return (function(){ const s = window.__between.letters.state(); return !!s && (' + f + ') })()') as () => boolean, undefined, { polling: 250, timeout: 20_000 })
+        .catch(async () => { throw new Error(what + ' did not happen; the page holds ' + JSON.stringify(await state(p).catch(e => String(e))).slice(0, 400)) })
+      // the planter opens the letters from the room; a garden of two opens real letters, not the rehearsal
+      A = await reopen(A, `${base}/ontology-game/between?g=${roomId}&skipHome=1&pick=a6`, watch('pl-planter')); await lt(A)
+      await until(A, 'the letters opening', "!s.local && s.enc === 'a6'")
+      await A.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.send('WAKE-DA-REGENT'))
+      // the phone, in its nook, sees only that a letter is sealed (the server keeps the card) and sends its own from there
+      await pollNow(Bp); await lt(Bp)
+      const sealed = await Bp.evaluate(async g => { const r = await fetch('/api/between/' + g + '/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); const j = await r.json(); return j.garden.letters.a6.sent['pl-planter'] }, roomId)
+      if (!sealed || sealed.card || !sealed.sealed) throw new Error('the partner could read a letter before both were in: ' + JSON.stringify(sealed))
+      await Bp.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.pollNook())
+      await until(Bp, "the phone's nook finding the letters", "s.enc === 'a6' && !s.mine")
+      await Bp.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.send('WAKE-DA-DIPLOMAT'))
+      await pollNow(A); await until(A, 'both letters opening together', "s.both && s.theirs === 'WAKE-DA-DIPLOMAT'")
+      // a card sent stays in the Between: the phone cannot send another at A6
+      const again = await Bp.evaluate(async g => (await fetch('/api/between/' + g + '/doc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'garden/main', op: 'update', data: { letters: { a6: { sent: { 'pl-partner': { card: 'WAKE-GR-SAGE', at: Date.now() } } } } } }) })).status, roomId)
+      if (again !== 409) throw new Error('a second letter answered ' + again + ', not 409')
+      // both steps: the planter stands on the path, the phone knocks twice; the server keeps the story
+      await A.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.step(0))
+      await Bp.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.pollNook())
+      await Bp.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.step(0))
+      await pollNow(A); await until(A, 'the obstacle overcome on the planter\'s screen', "s.overcome && s.story === \"The two on the path, the knock at Pip's door.\"")
+      const shots = process.env.BETWEEN_CHECK_SHOTS
+      if (shots) await A.screenshot({ path: join(shots, 'letters-overcome-planter.png'), timeout: 90_000 }).catch(e => console.log('  shot: ' + (e as Error).message.split('\n')[0]))
+      return 'the planter sent Which Fight Is Yours from the room, the phone saw it sealed and sent Who\'s at Risk from its nook, both opened together, a second letter was refused (409), and both steps landing kept "The two on the path, the knock at Pip\'s door."'
     })
 
     await step('the link is findable again from the homeroom', async () => {

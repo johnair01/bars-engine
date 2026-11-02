@@ -5428,3 +5428,42 @@ model DojoEmber {
   @@index([playerId, status])
   @@map("dojo_embers")
 }
+
+/// Work queues, slice 1 (six-faces-council council/callsheets/work-queues.md): one row per piece of work his board
+/// answers send. A lane (claude, freebuff, ...) pulls its own queue over HTTP and claims a ticket with a lease; the
+/// ticket carries his answer itself, so the worker never looks for the right store. Decisions stay in BoardSave.
+model WorkTicket {
+  id         String    @id @default(cuid())
+  /// The save that sent it, as board/collection/docId@answer; one ticket per answer, so a re-save sends nothing new.
+  sourceKey  String    @unique @map("source_key")
+  title      String
+  brief      String
+  /// The board row ids and his answer text it rests on: {rows: string[], answer: string, steer: string, savedAt: string}
+  basis      Json
+  /// The lanes in order, for example ["claude", "freebuff"]; a dry lane passes its ready tickets to the next one.
+  lanes      String[]
+  lane       String
+  /// ready | claimed | done | failed | held
+  state      String    @default("ready")
+  claimedBy  String?   @map("claimed_by")
+  leaseUntil DateTime? @map("lease_until")
+  attempts   Int       @default(0)
+  result     String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  doneAt     DateTime? @map("done_at")
+
+  @@index([lane, state, createdAt])
+  @@map("work_tickets")
+}
+
+/// A lane's lamp: dry while its environment has no usage left (a worker calls dry, or he taps the lamp).
+model WorkLane {
+  lane      String   @id
+  dry       Boolean  @default(false)
+  dryUntil  DateTime? @map("dry_until")
+  note      String?
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("work_lanes")
+}

@@ -8,7 +8,11 @@
 
    It stands in every nook (garden.js mounts it; his yes on ctw-nook-look-1, 2026-10-29). Previews only: ?nook=1&ctw=episode
    brings the sample charge and walks you to the stand with the episode unrolled; ?ctw=sheet opens the six questions.
-   Nothing is saved: the charge lives on this page. A real player's charge never goes into the repo (ctw-pilot). */
+   Nothing is saved: the charge lives on this page. A real player's charge never goes into the repo (ctw-pilot).
+
+   Build 3 (his yes on ctw-locations-look-1 and ctw-nook-look-2): once the episode is unrolled, the doorway leads to its
+   first land. Walk to the doorway and step through, and /between/land.html builds the encounter location (the sample's
+   Unfinished Clearing) from the sheet; the charge and your look ride over in this tab's sessionStorage, nowhere else. */
 import * as THREE from "three";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
 
@@ -211,7 +215,7 @@ export function mount(B, opts = {}) {
     const d = openDlg(`<h2>${esc(l.location)}</h2>${p.src ? `<img src="${p.src}" alt="${esc(l.location)}: ${esc(l.aspects.join("; "))}">` : `<p class="muted">Not drawn yet: this place is a brief until a stills round draws it.</p>`}
       <p class="muted">${esc(l.land)}. ${esc(l.purpose[0].toUpperCase() + l.purpose.slice(1))}.</p>
       <ul>${l.aspects.map(a => `<li>${esc(a)}</li>`).join("")}</ul>
-      <p class="muted">This place is an asset brief on the ${esc(l.line)} line. ${p.src ? "The frame is the round 1 blockout (look ctw-locations-look-1); on a yes the place generator builds it as a place you walk into." : ""}</p>
+      <p class="muted">This place is an asset brief on the ${esc(l.line)} line. ${l.role === "encounter" ? "It is the episode's first land: walk through the doorway to stand in it." : p.src ? "The frame is the round 1 blockout (look ctw-locations-look-1)." : ""}</p>
       <div class="foot"><button type="button" data-ctw="sheet">The episode sheet</button><button type="button" class="q" data-ctw="close">Close</button></div>`);
     d.querySelector('[data-ctw="sheet"]').onclick = openSheet; d.querySelector('[data-ctw="close"]').onclick = closeDlg;
   }
@@ -219,20 +223,71 @@ export function mount(B, opts = {}) {
     const b = e.target.closest("[data-ctw]"); if (!b) return;
     const k = b.dataset.ctw;
     if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
+    else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough();
   });
   function showCard() {
     let key = "", html = "";
     if (near === "stand") {
       key = "stand" + (episode ? "1" : "0");
       html = episode
-        ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line.</div></div><div class="row"><button type="button" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button></div>`
+        ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button></div>`
         : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button></div>`;
     } else if (near && near.startsWith("pane:")) {
       const p = panes[+near.slice(5)];
       key = near; html = `<div><b>${esc(p.loc.location)}</b><div class="t">${esc(p.loc.aspects[0])}</div></div><div class="row"><button type="button" data-ctw="${near}">Look into it</button></div>`;
     }
+    else if (near === "door") {
+      const first = firstLand(), shut = grownOver();
+      key = "door" + (shut ? "0" : "1");
+      html = shut
+        ? `<div><b>The doorway, grown over</b><div class="t">It opens at the end of your first minute here. Then it leads to ${esc(first ? first.location : "the episode's first land")}.</div></div>`
+        : `<div><b>The doorway</b><div class="t">Through it, the episode's first land: ${esc(first ? first.location : "the place the map took")}, ${esc(first ? first.land : "")}.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
+    }
     if (key === cardKey) return;
     cardKey = key; card.hidden = !key || !!dlg; card.innerHTML = html;
+  }
+
+  /* The stand's card speaks through the one screen owner (voice.js, hi-screen-owner; hollow interface build 2): its name
+     the headline, its line under it, its buttons the seals, clear of the stand or the pane you face. The pinned card stays
+     in the page, hidden, so the buttons keep their handler. */
+  let voiced = "";
+  function cardVoice() {
+    const vo = B.voice; if (!vo) return;
+    const k = cardKey && !dlg ? cardKey + ":" + card.innerHTML.length : "";
+    if (k === voiced) return; voiced = k;
+    if (!k) { vo.quiet("ctw"); return; }
+    import("./voice.js").then(v => {
+      if (voiced !== k) return;
+      const m = v.panelMoment(card, () => card); if (!m) { vo.quiet("ctw"); return; }
+      vo.say({ ...m, soft: true, subject: cardSubject }, "ctw", 2);
+    });
+  }
+  function cardSubject() {
+    const p = near && near.startsWith("pane:") ? paneWorld(panes[+near.slice(5)]) : STAND;
+    const [x0, y0] = B.screenOf(new THREE.Vector3(p.x, 0, p.z)), [, y1] = B.screenOf(new THREE.Vector3(p.x, episode ? 2.4 : 1.3, p.z));
+    const h = Math.abs(y0 - y1), w = Math.max(40, h * 0.8);
+    return { l: x0 - w / 2, r: x0 + w / 2, t: Math.min(y0, y1), b: Math.max(y0, y1) };
+  }
+
+  /* ---------- the doorway: with an episode unrolled, it leads to the episode's first land ---------- */
+  const firstLand = () => episode ? locations(charge, g).find(l => l.role === "encounter") : null;
+  const grownOver = () => { const m = B.minute && B.minute(); return !!(m && m.started && m.oriented === false); };
+  function doorAt() {
+    const a = B.anchors && B.anchors(); if (!a || !a.portal) return null;
+    const at = new THREE.Vector3().fromArray(a.portal).setY(0), front = at.clone().multiplyScalar(0.72);   // a step in from it, toward the room's middle
+    return { at, front };
+  }
+  function stepThrough() {
+    if (!episode || grownOver()) return;
+    try {
+      sessionStorage.setItem("ctw-charge", JSON.stringify(charge));
+      const home = B.home && B.home(); if (home && home.look) sessionStorage.setItem("ctw-look", home.look);   // the figure's look text (look.js), as the mirror kept it
+      sessionStorage.setItem("ctw-back", location.pathname + location.search);
+    } catch (e) { /* the land falls back to the sample's charge */ }
+    closeDlg(); card.hidden = true;
+    const fade = document.createElement("div"); fade.style.cssText = "position:fixed;inset:0;z-index:90;background:#1a1210;opacity:0;transition:opacity .6s";
+    document.body.appendChild(fade); requestAnimationFrame(() => { fade.style.opacity = "1"; });
+    setTimeout(() => { location.href = "/between/land.html"; }, 650);
   }
 
   /* ---------- walking: a tap on the stand or a pane walks you there; you stand at the stand, never inside it ---------- */
@@ -255,7 +310,7 @@ export function mount(B, opts = {}) {
     requestAnimationFrame(frame);
     const inNook = B.room().shell === "nook";
     group.visible = inNook;
-    if (!inNook) { label.hidden = true; card.hidden = true; near = null; cardKey = ""; return; }
+    if (!inNook) { label.hidden = true; card.hidden = true; near = null; cardKey = ""; if (B.voice) B.voice.quiet("ctw"); return; }
     const me = B.meState.pos, dx = me.x - STAND.x, dz = me.z - STAND.z, dist = Math.hypot(dx, dz);
     if (dist < STAND_R + 0.25 && dist > 1e-4) { const k = (STAND_R + 0.25) / dist; me.x = STAND.x + dx * k; me.z = STAND.z + dz * k; }
     const t = performance.now() / 1000;
@@ -265,11 +320,12 @@ export function mount(B, opts = {}) {
       p.mat.opacity = e; p.frame.material.opacity = e * 0.9;
     }
     near = null;
-    if (dist < NEAR_R + 0.3) near = "stand";
+    if (dist < NEAR_R + 0.3 && !(B.meState.sitting && B.meState.seatWant === "coins")) near = "stand"; // sat at the coin table, a step away, you are not at the stand
+    const door = episode && doorAt(); if (door && Math.hypot(me.x - door.at.x, me.z - door.at.z) < 1.25) near = "door";
     // at the stand, a step to one side is a step toward that side's pane
     const lateral = (me.x - STAND.x) * RIGHT.x + (me.z - STAND.z) * RIGHT.z;
     panes.forEach((p, i) => { const w = paneWorld(p); if (near === "stand" && Math.hypot(me.x - w.x, me.z - w.z) < PANE_NEAR && Math.abs(lateral) > 0.22 && Math.sign(lateral) === p.side) near = "pane:" + i; });
-    showCard();
+    showCard(); cardVoice();
     const [sx, sy] = B.screenOf(STAND.clone().setY(episode ? 2.5 : 1.35));
     const v = STAND.clone().setY(1.2).project(B.camera);
     label.hidden = !!dlg || v.z > 1 || !!near; label.style.left = sx + "px"; label.style.top = sy + "px";
@@ -284,5 +340,5 @@ export function mount(B, opts = {}) {
     if (opts.open === "episode") await unroll(JSON.parse(JSON.stringify(sample)), null);
     else if (opts.open === "sheet") { walkTo(STAND.clone().addScaledVector(FRONT, 0.85)); openCharge(); }
   })().catch(e => console.warn("charge to world:", e));
-  return { stand: STAND, view: () => ({ near, episode: !!episode, sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null }) };
+  return { stand: STAND, stepThrough, door: () => doorAt(), view: () => ({ near, episode: !!episode, sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
 }

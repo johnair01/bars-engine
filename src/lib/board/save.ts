@@ -1,3 +1,5 @@
+import { rowErrors } from './rows'
+
 /**
  * The board-save contract, mirrored from six-faces-council schema/board-save.schema.json. Both repos check the same
  * fixtures (fixtures/board-saves here, tests/fixtures/board-saves there), so a change to one without the other fails
@@ -6,13 +8,13 @@
 export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
-  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds',
+  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws',
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
  * aside (src/lib/tap-the-vein/board-set-aside.ts). */
 export const RECORD_KINDS = new Set<string>([
-  'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv',
+  'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv', 'stores', 'draws',
 ])
 /** The `board` of a request: absent means the nonprofit board; anything not in BOARDS is null. */
 export function parseBoard(v: unknown): (typeof BOARDS)[number] | null {
@@ -53,6 +55,11 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
   if (errors.length) return { ok: false, errors }
 
   const data = d as Record<string, unknown>
+  if (s.collection === 'rows') {
+    if (s.board !== 'council') errors.push('rows are the Council Board\'s')
+    if (s.mode === 'update') errors.push('a row is posted whole: mode set (a revision is a new id)')
+    errors.push(...rowErrors(data))
+  }
   if (s.mode !== 'update') {
     const c = s.collection as string
     if (['positions', 'questions', 'terms', 'causes', 'picks', 'blockers'].includes(c) && !(str(data.savedAt) && ISO.test(data.savedAt)))
@@ -72,6 +79,17 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
       if (s.board !== 'council') errors.push('the seed library is the Council Board\'s')
       if (!nonBlank(data.taskId) || data.taskId !== s.docId) errors.push('a seed lives at seeds/<taskId> and names its taskId')
       if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
+    }
+    if (c === 'stores') { // the Stores' move: one placement of a run's thing (src/lib/studio/stores.ts)
+      if (s.board !== 'council') errors.push('the Stores are the Council Board\'s')
+      if (!nonBlank(data.run) || !nonBlank(data.thing) || !nonBlank(data.words)) errors.push('a placement names its run, thing and words')
+      if (!['jar', 'seed', 'thread', 'husk'].includes(data.kind as string)) errors.push('a placement\'s kind is jar, seed, thread or husk')
+      if (!['shelf', 'seeds', 'bell', 'compost', 'tide'].includes(data.to as string)) errors.push('a placement goes to shelf, seeds, bell, compost or tide')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
+    }
+    if (c === 'draws') { // the draw: a project deck's top card turned up, at <deck>--<card id>
+      if (s.board !== 'council') errors.push('the draws are the Council Board\'s')
+      if (!nonBlank(data.deck) || !nonBlank(data.card) || !(str(data.at) && ISO.test(data.at))) errors.push('a draw names its deck, card and at')
     }
     if (c === 'morning' && s.docId === 'menu') {
       if (!str(data.menu) || !(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('the menu needs menu and savedAt')

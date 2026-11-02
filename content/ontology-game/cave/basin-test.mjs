@@ -81,6 +81,18 @@ await page.evaluate(() => window.__oagBasin.walkTo('crown', { now: true }));
 await page.waitForTimeout(800);
 w = await words();
 ok(/holds the whole of the stone/.test(w.live), 'at the crown, the answered pool\'s line');
+// the camera: the arrival view is the close follow camera; the wide view is one press (or C) away and shows every spring
+s = await basinState();
+ok(s.view === 'near', 'the basin opens on the close follow camera: ' + s.view);
+ok(await page.evaluate(() => document.querySelector('[data-basin-view]') && document.querySelector('button[data-basin-view]').getAttribute('aria-pressed') === 'false'), 'the view button is there, not pressed');
+await page.click('button[data-basin-view]');
+s = await basinState(); ok(s.view === 'far', 'pressing it gives the wide view');
+await page.waitForTimeout(1500);
+await page.keyboard.press('c');
+s = await basinState(); ok(s.view === 'near', 'C goes back to the close view');
+await page.keyboard.press('c');
+await page.waitForTimeout(1500);
+
 // trace: standing at the low spring, a tap on the seam lights the water between; a second tap walks there
 await page.evaluate(() => window.__oagBasin.walkTo('heart', { now: true }));
 await page.waitForTimeout(1500);

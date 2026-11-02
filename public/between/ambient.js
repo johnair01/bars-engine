@@ -1,8 +1,13 @@
 /* The hollow's quiet sound: a crackling fire, running water and night insects, made in Web Audio (no sound files).
    Browsers only allow sound after a tap, so it starts on the first one; the mute choice is kept on this device. */
-export function createAmbient() {
-  let ctx = null, master = null, on = true, wg = null, hushed = false;
-  try { on = localStorage.getItem("between.sound") !== "off"; } catch {}
+import { createMusic, MUSIC_VERSIONS } from "./music.js";
+
+/* music: "code", "bed" or "both" plays that version of the room's music (music.js) on its own gain inside this one context,
+   with its own remembered on/off under between.music; anything else, no music at all (bt-music-bus). */
+export function createAmbient({ music: version = null } = {}) {
+  let ctx = null, master = null, on = true, wg = null, hushed = false, music = null, musicOn = true, mood = "away";
+  if (!MUSIC_VERSIONS.includes(version)) version = null;
+  try { on = localStorage.getItem("between.sound") !== "off"; musicOn = localStorage.getItem("between.music") !== "off"; } catch {}
 
   function noiseBuffer(c, seconds, brown) {
     const b = c.createBuffer(1, c.sampleRate * seconds, c.sampleRate), d = b.getChannelData(0);
@@ -52,6 +57,7 @@ export function createAmbient() {
       setTimeout(chirp, 700 + Math.random() * 2600);
     };
     chirp();
+    if (version) { music = createMusic(ctx, master, version); music.follow(mood); music.level(musicOn); }
     apply();
   }
   function apply() {
@@ -68,6 +74,12 @@ export function createAmbient() {
     pause() { if (ctx && ctx.state === "running") ctx.suspend(); },
     resume() { if (ctx && on) ctx.resume(); },
     /* Sat by the fire: the water and the insects thin away and the crackle carries the room. */
+    /* The music's own switch, kept on this device apart from the room's sound. */
+    get music() { return version; },
+    get musicOn() { return musicOn; },
+    toggleMusic() { musicOn = !musicOn; try { localStorage.setItem("between.music", musicOn ? "on" : "off"); } catch {} if (music) music.level(musicOn); return musicOn; },
+    /* The room's state, read every frame (music.js moodOf); the music only moves when it changes. */
+    mood(m) { mood = m; if (music) music.follow(m); },
     hush(h) { hushed = !!h; if (wg) wg.gain.linearRampToValueAtTime(hushed ? 0.08 : 0.35, ctx.currentTime + 2); },
   };
 }
