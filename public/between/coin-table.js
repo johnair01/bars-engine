@@ -461,7 +461,7 @@ export function mount(B, opts = {}) {
     }
     B.meState.pos.copy(place.seat); sit(); // a preview opens at the table, not across the room
     setTimeout(() => { if (B.meState.seatWant !== "coins") { B.meState.pos.copy(place.seat); sit(); } }, 2500); // a skip that lands late can take the sit away
-    if (opts.open === "spark") tableGame = "flirtcraft";
+    if (opts.open === "spark" || opts.open === "who") tableGame = "flirtcraft"; // ?coins=who stops at "Who is this toss for?"
     if (opts.open === "self" || opts.open === "them" || opts.open === "spark") {
       while (!s) await new Promise(r => setTimeout(r, 200));
       choose(opts.open === "self" ? SELF : opts.open === "spark" ? STAND_IN_SPARK : (choices().find(w => w.kind === "them") || STAND_IN));
