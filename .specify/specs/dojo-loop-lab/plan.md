@@ -43,3 +43,14 @@ Build on the early 3D arrival: a visible player enters, walks by tapping a floor
 ## Wall screen and uninterrupted projection
 
 Place a framed constellation screen high on the dojo wall, with a full-screen phone-readable view. At the wall, open the view, select either authored example triangle, and project it onto the floor; the shared hope edge remains player language. Closing the view preserves the character's position. Projection must not trap the player: allow continued movement, reopening the wall, and restart. Show that later stations are unfinished rather than implying a frozen workflow. Keep choices accessible through labelled buttons and all sample state local.
+
+## Loop stations: browser grammar
+
+The prototype uses `src/lib/dojo-loop-lab/grammar.ts` as its authored action registry and adapter to the existing `deriveSupportedElementalTriads` implementation. Because the room is a plain browser module, `public/dojo/grammar.js` is a checked-in generated bundle. After changing the source or its imports, regenerate with:
+
+```sh
+./node_modules/.bin/esbuild src/lib/dojo-loop-lab/grammar.ts --bundle --format=esm --platform=browser --banner:js='// Generated from src/lib/dojo-loop-lab/grammar.ts; see dojo-loop-lab/plan.md.' --outfile=public/dojo/grammar.js
+node scripts/dojo/test-loop-grammar.mjs
+```
+
+The first room treatment uses labelled greybox stations and accessible station views; its visual fidelity and comprehension need phone and independent player review. The fixture has no server action or persistence path. The player can return to live practice deliberately without copying a payload.

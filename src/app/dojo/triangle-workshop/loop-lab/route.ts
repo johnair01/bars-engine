@@ -25,6 +25,8 @@ const PAGE = `<!doctype html>
 <button id="approach" type="button" hidden>Walk to the triangle</button>
 <button id="project" type="button" hidden>Open the constellation wall</button>
 <button id="resume" type="button" hidden>Continue exploring</button>
+<button id="next-station" type="button" hidden>Go to the anchor table</button>
+<button id="use-station" type="button" hidden>Use this station</button>
 <button id="restart" type="button" hidden>Try again</button>
 <p id="status" role="status"></p>
 <a href="/ontology-game/between">Return to the Nook</a>
@@ -36,6 +38,16 @@ const PAGE = `<!doctype html>
   <div class="wall-choices" role="group" aria-label="Choose an example triangle"><button id="choose-one" type="button" aria-pressed="true">Excitement · possibility · hope</button><button id="choose-two" type="button" aria-pressed="false">Wonder · poignance · hope</button></div>
   <button id="wall-project" class="wall-project" type="button">Bring this triangle to the floor</button>
   <p class="wall-note">These are examples. Nothing is saved.</p>
+</section>
+<section id="station-view" class="wall-view station-view" aria-label="Practice station" aria-hidden="true" hidden>
+<div class="wall-header"><div><p id="station-eyebrow" class="eyebrow">ANCHOR TABLE</p><h2 id="station-title">Try the connections</h2></div><button id="station-close" class="wall-close" type="button">Close ✕</button></div>
+<div id="anchors-panel">
+<p>The sample proposes three Emotional Alchemy connections. Choose what fits for this demonstration; these are not readings of you. <strong>Hope stays your word.</strong> Joy is an additional example word for the teaching triangle.</p>
+<details class="reads"><summary>Optional: describe how these words feel</summary><p>Activation and orientation are your sample reads. They never decide an EA anchor.</p><div id="word-reads"></div></details><div id="anchor-list"></div><p id="anchor-result" class="result" role="status"></p>
+<button id="to-loom" type="button" hidden>Continue to the action loom</button><button id="revise-wall" class="secondary" type="button">Return to the room</button>
+</div>
+<div id="loom-panel" hidden><p>Choose which kind of work to practice with a small dojo gathering. The example uses Career as its life lens and Activate Hope as its EA move.</p><label for="phase">Current work and personal move</label><select id="phase"></select><div id="form-detail" class="result"></div><label for="next-step">Your next-step sentence</label><textarea id="next-step" rows="3"></textarea><button id="preview" type="button">Preview the BAR</button><button id="back-to-anchors" class="secondary" type="button">Revisit anchor choices</button></div>
+<div id="preview-panel" hidden><p>This is a preview, not a saved BAR. You can change it or leave without taking anything with you.</p><div id="bar-detail" class="result"></div><button id="another-phase" type="button">Try another phase</button><button id="finish" class="secondary" type="button">Return to the room</button><a class="live-link" href="/dojo/triangle-workshop">Take this idea to live practice</a></div>
 </section><script type="module" src="/dojo/lab.js"></script></body></html>`
 
 export function GET() {
