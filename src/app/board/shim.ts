@@ -114,6 +114,17 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
   };
   const mcp = {
     async callTool(server, tool, input){
+      // Send to Claude on a berth card: save a ticket in the Claude lane (POST /api/work/send); the hourly pickup runs it.
+      // No Claude Code Remote connector or page permission is involved.
+      if (server === 'Claude Code Remote' && tool === 'fire_trigger'){
+        const m = /harbour:([A-Za-z0-9_-]+)/.exec((input && input.text) || '');
+        if (m){
+          const r = await fetch('/api/work/send', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({berth: m[1]})});
+          if (!r.ok) throw Object.assign(new Error('send ' + r.status), {code: 'upstream_error'});
+          return {payload: await r.json()};
+        }
+      }
       if (server !== 'Vercel' || tool !== 'web_fetch_vercel_url')
         throw Object.assign(new Error(server + ' ' + tool + ' is not available on bars-engine'), {code: 'capability_disabled'});
       const u = new URL(input.url);
