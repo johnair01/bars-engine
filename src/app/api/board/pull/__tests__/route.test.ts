@@ -66,6 +66,13 @@ describe('/api/board/pull', () => {
     expect(dbm.boardPull.create.mock.calls[0][0].data.board).toBe('council')
   })
 
+  it('holds saves on purpose without recording them or logging a pull', async () => {
+    const res = await POST(post({ board: 'council', ids: ['s1', 's2'], record: 'pull held', held: true }))
+    expect(await res.json()).toEqual({ recorded: 0, held: 2 })
+    expect(dbm.boardSave.updateMany.mock.calls[0][0].data).toEqual({ record: 'pull held' })
+    expect(dbm.boardPull.create).not.toHaveBeenCalled()
+  })
+
   it('still acknowledges the nonprofit board when no board is named', async () => {
     await POST(post({ ids: ['s1'], record: 'r' }))
     expect(dbm.boardSave.updateMany.mock.calls[0][0].where.board).toBe('nonprofit')
