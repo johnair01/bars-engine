@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest'
 // in your homeroom; a cast left face up in a hollow, answered by the other person with a turn.
 import { castFromTosses } from '../../../../public/between/iching/cast.js'
 import {
-  answerOf, cardFor, faceUpItem, keptEntry, mayAsk, moveOf, openCasts, SELF, suitOf, SUITS, whoChoices, WORK_WORDS, workFree,
+  answerOf, cardFor, faceUpItem, INVITE_WORDS, keptEntry, mayAsk, MOVE_LANES, moveOf, nextLaneOf, openCasts, PLANT, PURSUIT_WORDS,
+  pursuitFree, SELF, SPARK_LANE, suitOf, SUITS, whoChoices, WORK_WORDS, workFree,
 } from '../../../../public/between/iching/connection.js'
 import { suggest } from '../../../../public/calrunia/next-moves.js'
 import { homeWrite, mayWrite, roomSummary, type Doc } from '@/lib/between/rules'
@@ -75,9 +76,9 @@ describe('a cast to a move in a lane and a suit', () => {
     expect(moveOf(castFromTosses(BOTH, table), w, readings)).toEqual(moveOf(castFromTosses(BOTH, table), w, readings))
   })
 
-  it('offers yourself and only the people you share an open Between with', () => {
+  it('offers yourself, the people you share an open Between with, and (build 3b) your sparks as someone you are drawn to', () => {
     const rooms = [room, { id: 'r2', phase: 'spark', person: null, who: 'Cleo' }, { id: 'r3', phase: 'closed', person: 'dan', who: 'Dan' }]
-    expect(whoChoices(rooms)).toEqual([SELF, { kind: 'them', room: 'r1', person: B, name: 'Bob' }])
+    expect(whoChoices(rooms)).toEqual([SELF, { kind: 'them', room: 'r1', person: B, name: 'Bob' }, { kind: 'spark', room: 'r2', name: 'Cleo' }])
     expect(whoChoices(rooms, 'r9')).toEqual([SELF])
     expect(mayAsk({ kind: 'them', room: 'r1', person: B }, rooms)).toBe(true)
     expect(mayAsk({ kind: 'them', room: 'r1', person: 'eve' }, rooms)).toBe(false)
@@ -172,5 +173,102 @@ describe('a cast left face up in a hollow', () => {
     expect(summary(B, item)).toEqual([{ id: 'k1', what: 'cast' }])
     expect(summary(A, item)).toEqual([])
     expect(summary(B, { ...item, answer: { [B]: { card: 'WU-A', depth: 'easy', at: 1 } } })).toEqual([])
+  })
+})
+
+// Build 3b, the spark at the table (pass bar-intake-3; his steer on bi-flirtcraft-door: "They learn about themselves and
+// then the other and they invite the other into playing"; positions bi-door-is-a-spark, bi-door-order, bi-door-invite-by-hand).
+describe('the spark at the table', () => {
+  const spark = { id: 's1', phase: 'spark', person: null, who: 'Robin', personStarted: false }
+  const theirSpark = { id: 's2', phase: 'spark', person: B, who: 'Bob', personStarted: true }
+  const robin = { kind: 'spark', room: 's1', name: 'Robin' }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cast = (t: number[][]) => castFromTosses(t, table) as any
+
+  it('offers each spark you started as someone you are drawn to, after your Betweens', () => {
+    expect(whoChoices([room, spark, theirSpark])).toEqual([SELF, { kind: 'them', room: 'r1', person: B, name: 'Bob' }, robin])
+    expect(whoChoices([spark], 'r1'), 'inside a room, only that room').toEqual([SELF])
+    expect(mayAsk(robin, [spark])).toBe(true)
+    expect(mayAsk({ ...robin, room: 's2' }, [spark, theirSpark]), 'not a spark someone else started').toBe(false)
+    expect(mayAsk({ ...robin, room: 'nope' }, [spark])).toBe(false)
+    expect(PLANT.kind).toBe('plant')
+  })
+
+  it('has a line about yourself and one about learning them for every hexagram, by hand', () => {
+    for (const r of readings.readings) {
+      expect(r.drawn.yourself, `${r.n}`).toContain('{name}')
+      expect(r.drawn.them, `${r.n}`).toContain('{name}')
+      expect(r.drawn.yourself).not.toEqual(r.drawn.them)
+      for (const t of [r.drawn.yourself, r.drawn.them]) expect(t.replace('{name}', 'Someone With A Long Name').length).toBeLessThanOrEqual(280)
+    }
+    expect(new Set(readings.readings.map((r: { drawn: { them: string } }) => r.drawn.them)).size).toBe(64)
+  })
+
+  it('never reads as pursuit or as work', () => {
+    for (const r of readings.readings) for (const t of [r.drawn.yourself, r.drawn.them]) {
+      expect(pursuitFree(t), `${r.n}: ${t}`).toBe(true)
+      expect(workFree(t), `${r.n}: ${t}`).toBe(true)
+    }
+    for (const n of [1, 26, 64]) { const m = moveOf(cast(OUTER), robin, readings); expect(pursuitFree(m.line), `${n}`).toBe(true) }
+    for (const bad of ['make them notice you', 'get {name} to reply', 'convince her', 'win them over', 'chase him', 'pressure them', 'persuade {name}', 'keep chasing'])
+      expect(PURSUIT_WORDS.test(bad), bad).toBe(true)
+    for (const ok of ['Make yourself a cup of tea', 'a window', 'Let {name} lead', 'Persuasion']) expect(PURSUIT_WORDS.test(ok), ok).toBe(false)
+  })
+
+  it('follows his order by suit: yourself, then them, then the invitation', () => {
+    expect(SPARK_LANE).toEqual({ WU: 'yourself', CU: 'yourself', GU: 'them', SU: 'invite' })
+    const still = moveOf(cast(STILL), robin, readings), inner = moveOf(cast(INNER), robin, readings)
+    const both = moveOf(cast(BOTH), robin, readings), outer = moveOf(cast(OUTER), robin, readings)
+    const r39 = readings.readings.find((r: { n: number }) => r.n === 39)
+    expect([still.suit, still.lane, still.line]).toEqual(['WU', 'yourself', r39.drawn.yourself.replace('{name}', 'Robin')])
+    expect([inner.suit, inner.lane]).toEqual(['CU', 'yourself'])
+    expect([both.suit, both.lane]).toEqual(['GU', 'them'])
+    expect(both.line).toContain('Robin')
+    expect([outer.suit, outer.lane]).toEqual(['SU', 'invite'])
+    expect(outer.invite).toEqual({ room: 's1', words: INVITE_WORDS })
+    expect(still.invite).toBeNull()
+    expect(outer.who).toEqual(robin)
+    for (const m of [still, inner, both, outer]) expect(MOVE_LANES[m.lane as keyof typeof MOVE_LANES]).toBeTruthy()
+  })
+
+  it('lays the invitation in his words, and the table itself sends nothing', () => {
+    expect(INVITE_WORDS).toBe("Let's play together in this room I've made")
+    const m = moveOf(cast(OUTER), robin, readings)
+    expect(m.line).toContain(INVITE_WORDS)
+    expect(m.line).toContain('Robin')
+    const src = readFileSync(join(root, 'public/between/coin-table.js'), 'utf8')
+    // the only way the link leaves is the button you press: share or clipboard, through the built sparkLink path
+    expect(src).toMatch(/label: s\.sent \? "Copy or share it again" : "Copy or share the link"/)
+    expect(src).not.toMatch(/api\(["'`]\/api\/between\/[^"'`]*\/(invite|send|mail)/)
+  })
+
+  it('keeps a spark move in your homeroom with the room and never the name, and the store takes it', () => {
+    for (const [t, lane, hasRoom] of [[STILL, 'yourself', false], [BOTH, 'between', true], [OUTER, 'between', true]] as const) {
+      const k = keptEntry(moveOf(cast(t as unknown as number[][]), robin, readings), 5)
+      expect(k.lane).toBe(lane)
+      expect(k.room).toBe(hasRoom ? 's1' : null)
+      expect(JSON.stringify(k)).not.toContain('"Robin"')
+      expect(homeWrite({ casts: { c1: k } }).ok, `${lane}`).toBe(true)
+    }
+    expect(nextLaneOf('them')).toBe('between')
+    expect(nextLaneOf('partner')).toBe('partner')
+  })
+
+  it('a kept invitation waits in the Between lane and takes you back to the spark', () => {
+    const now = Date.UTC(2026, 9, 31, 18)
+    const k = keptEntry(moveOf(cast(OUTER), robin, readings), now - 1000)
+    const m = suggest({ home: { lastCheckin: now, goals: [{}], casts: { c1: k } }, rooms: [spark] }, now)
+    const b = m.find((x: { lane: string }) => x.lane === 'between')
+    expect(b && b.act).toBe('room:s1')
+    expect(b && b.line).toContain(INVITE_WORDS)
+  })
+
+  it('opens the door at ?door=flirtcraft on any host, in the nook, after the first minute', () => {
+    const page = readFileSync(join(root, 'public/between/garden.js'), 'utf8')
+    expect(page).toMatch(/door: KQ\.get\("door"\)/)
+    const src = readFileSync(join(root, 'public/between/coin-table.js'), 'utf8')
+    expect(src).toMatch(/opts\.door === "flirtcraft"/)
+    expect(src).toMatch(/B\.minuteOn && B\.minuteOn\(\)/)
+    expect(src).toContain('The table reads for you, or for someone you are drawn to.')
   })
 })
