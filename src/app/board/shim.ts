@@ -74,7 +74,7 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
     if (waiting && wait > 60){
       el.textContent = 'Warning: ' + waiting.count + (waiting.count === 1 ? ' save has' : ' saves have') + ' waited for main '
         + (wait < 120 ? wait + ' min' : Math.round(wait / 60) + ' h') + ' (the oldest). ' + pulled
-        + ' Run board-pull by hand from the Actions tab of six-faces-council.';
+        + ' Your answers are safe in the board database. Claude lands them on main at the next hourly pickup; there is nothing for you to run.';
       el.style.color = 'var(--warn, #b45309)';
     } else { el.textContent = pulled; el.style.color = ''; }
   }
