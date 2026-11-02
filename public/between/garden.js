@@ -3965,4 +3965,4 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
 // ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation)
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door") }); }).catch(e => noteError(e, "coins"));
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));

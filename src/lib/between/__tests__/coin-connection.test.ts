@@ -271,4 +271,23 @@ describe('the spark at the table', () => {
     expect(src).toMatch(/B\.minuteOn && B\.minuteOn\(\)/)
     expect(src).toContain('The table reads for you, or for someone you are drawn to.')
   })
+
+  // His note on bi-door-look-1/-2 (2026-11-02): "The I ching should be general and should be able to be steered toward one of
+  // the games that the player is playing." The spark and the door belong to a player enrolled in Flirtcraft.
+  it('starts general for everyone: no spark, no plant, no door unless enrolled and steered', () => {
+    const src = readFileSync(join(root, 'public/between/coin-table.js'), 'utf8')
+    expect(src).toContain('let tableGame = "general"')
+    expect(src).toMatch(/tableGame === "flirtcraft" && enrolled\(\)\.includes\("flirtcraft"\)/)
+    expect(src).toMatch(/opts\.door === "flirtcraft" && enrolled\(\)\.includes\("flirtcraft"\)/)
+    expect(src).toContain('Steer the table to')
+    const page = readFileSync(join(root, 'public/between/garden.js'), 'utf8')
+    expect(page).toMatch(/games: PREVIEW_HOST \? KQ\.get\("games"\) : null/)
+  })
+
+  it('reads enrolment from the memberships the player already holds, not a new store', () => {
+    const store = readFileSync(join(root, 'src/lib/between/store.ts'), 'utf8')
+    expect(store).toContain('db.instanceMembership.findMany')
+    const route = readFileSync(join(root, 'src/app/api/between/route.ts'), 'utf8')
+    expect(route).toContain('games')
+  })
 })

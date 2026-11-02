@@ -175,8 +175,19 @@ export function mount(B, opts = {}) {
 
   /* ---------- what the room knows: your Betweens, this hollow's face-up casts, your kept moves ---------- */
   let hexTable = null, readings = null, deck = null;
+  /* The game the table plays (bi-door-look-1/-2, his note 2026-11-02): everyone starts at the general table; Flirtcraft's spark
+     and door belong to a player enrolled in Flirtcraft, who can steer the same table toward any game they are enrolled in.
+     The enrolment is the one /api/between already hands the page (`games`); a preview says it with &games=flirtcraft. */
+  const GAME_NAMES = { general: "General", flirtcraft: "Flirtcraft", friendcraft: "Friendcraft", allyship: "Allyship" };
+  function enrolled() { const l = B.list && B.list(); const g = preview ? (opts.games ? String(opts.games).split(",") : []) : (l && l.games) || []; return g.filter(x => GAME_NAMES[x] && x !== "general"); }
+  let tableGame = "general";
+  function steerTo(g) { tableGame = g === "general" || enrolled().includes(g) ? g : "general"; if (s && !s.who) cardKey = ""; }
   function rooms() { const l = B.list && B.list(); return (l && l.gardens) || []; }
-  function choices() {
+  function choices() { // the spark is Flirtcraft's: it shows only when the table is steered to a game you are enrolled in
+    const all = rawChoices();
+    return tableGame === "flirtcraft" && enrolled().includes("flirtcraft") ? all : all.filter(w => w.kind !== "spark" && w.kind !== "plant");
+  }
+  function rawChoices() {
     const here = hereRoom();
     if (here) { // inside a hollow: yourself, or this hollow's other person, or the one your spark is toward
       const g = B.view().g, me = ids().me, other = g && g.members && g.members[me] ? Object.keys(g.members).find(u => u !== me) : null;
@@ -338,6 +349,9 @@ export function mount(B, opts = {}) {
         acts.push({ label: "Take your face-up cast back", quiet: true, on: () => takeBack(fu.id) });
         return { subject, head: "Who is this toss for?", sub: ans ? `They answered your cast with a turn: ${cardTitle(ans[1].card)}, ${DEPTH_NAMES[ans[1].depth].toLowerCase()}. Ask them for it when you next sit together.` : "Your last cast lies face up. They see it when they sit here.", actions: [...acts, leave] };
       }
+      const games = enrolled(); // steer the same table toward a game you are enrolled in; nothing shows if you are in none
+      for (const g of games) if (g !== tableGame) acts.push({ label: `Steer the table to ${GAME_NAMES[g]}`, sub: g === "flirtcraft" ? "Someone you are drawn to, a spark first" : `The ${GAME_NAMES[g]} table`, quiet: true, on: () => steerTo(g) });
+      if (tableGame !== "general") acts.push({ label: "Back to the general table", quiet: true, on: () => steerTo("general") });
       const first = s.door ? "The table reads for you, or for someone you are drawn to. " : "";
       return { subject, head: "Who is this toss for?", sub: first + (atBook ? "The book reads the whole cast at once." : "Only you see the coins. Nobody learns of a cast unless you show them."), actions: [...acts, leave] };
     }
@@ -430,7 +444,7 @@ export function mount(B, opts = {}) {
     while (!B.room || !["nook", "hollow"].includes(B.room().shell)) await new Promise(r => setTimeout(r, 250));
     build(B.room().shell); requestAnimationFrame(frame);
     [hexTable, readings, deck] = await Promise.all([loadTable(), loadReadings(), loadDeck()]);
-    if (opts.door === "flirtcraft") door();
+    if (opts.door === "flirtcraft" && enrolled().includes("flirtcraft")) door(); // the door is for the enrolled only
     if (!opts.open) return;
     while (!B.meState.placed) await new Promise(r => setTimeout(r, 250)); // the page sets you down where you wake first
     await new Promise(r => setTimeout(r, 600));
@@ -442,6 +456,7 @@ export function mount(B, opts = {}) {
     }
     B.meState.pos.copy(place.seat); sit(); // a preview opens at the table, not across the room
     setTimeout(() => { if (B.meState.seatWant !== "coins") { B.meState.pos.copy(place.seat); sit(); } }, 2500); // a skip that lands late can take the sit away
+    if (opts.open === "spark") tableGame = "flirtcraft";
     if (opts.open === "self" || opts.open === "them" || opts.open === "spark") {
       while (!s) await new Promise(r => setTimeout(r, 200));
       choose(opts.open === "self" ? SELF : opts.open === "spark" ? STAND_IN_SPARK : (choices().find(w => w.kind === "them") || STAND_IN));
@@ -455,12 +470,13 @@ export function mount(B, opts = {}) {
     while (B.minuteOn && B.minuteOn()) await new Promise(r => setTimeout(r, 500));
     await new Promise(r => setTimeout(r, 700));
     if (B.room().shell !== "nook") return;
-    doorWords = true; go();
+    tableGame = "flirtcraft"; doorWords = true; go();
   }
   return {
     toss, keep, letGo, leaveFaceUp, answer, choose, sit, go, openBook, end, choices,
     view: () => ({ shell: builtFor, near, sitting: sittingHere(), source: s && s.source, who: s && s.who && { kind: s.who.kind, room: s.who.room || null },
       tosses: s ? s.tosses.map(x => [...x]) : [], move: s && s.move && { n: s.move.n, lane: s.move.lane, suit: s.move.suit, line: s.move.line, becomes: s.move.becomes && s.move.becomes.n },
+      game: tableGame, enrolled: enrolled(),
       invite: !!(s && s.move && s.move.invite), link: s && s.link, sent: !!(s && s.sent), door: !!(s && s.door) || doorWords,
       did: s && s.did, faceUp: (faceUp() || {}).id || null, answered: !!(s && s.answered), kept: { ...localKept }, table: place && place.T.toArray(), seat: place && place.seat.toArray() }),
   };
