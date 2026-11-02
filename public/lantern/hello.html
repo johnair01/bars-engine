@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hello walker</title>
+<style>:root{color-scheme:dark} html,body{background:#100e13;margin:0} canvas{display:block;width:100%;max-width:720px;margin:0 auto}</style>
+<canvas id="c" width="720" height="405"></canvas>
+<script type="module">
+// Hello walker: one figure walks around one table and back on the kit's modules (docs/satisfaction-reel.md, council).
+import { RIG, PROJ } from './rig.js'
+import { NAV, PATH } from './nav.js'
+const cv = document.getElementById('c'), c = cv.getContext('2d'), W = cv.width, H = cv.height
+const table = { x: 0, z: 6, r: 1.35 }, h = 1.7, speed = 1.4, stride = RIG.stride(h)
+const out = NAV.plan({ x: 0, z: 2.5 }, { x: 0, z: 9.5 }, [table], { clear: 0.35 }), back = PATH.reverse(out)
+const cam = { x: 7.5, z: 6, h: 3.0, yaw: -Math.PI / 2, fov: 0.9, hz: 0.3 }
+const proj = (x, y, z) => PROJ(x, y, z, cam, W, H)
+const tOut = PATH.travel(0, out.len, speed).T, tBack = PATH.travel(0, back.len, speed).T
+function frame(t) {
+  const leg = t < tOut ? out : back, tr = PATH.travel(t < tOut ? t : t - tOut, leg.len, speed)
+  const p = NAV.sample(leg, tr.s), walked = (t < tOut ? 0 : out.len) + tr.s
+  c.fillStyle = '#120f15'; c.fillRect(0, 0, W, H)
+  c.strokeStyle = 'rgba(242,181,82,.35)'; c.beginPath(); out.pts.forEach((q, i) => { const s = proj(q.x, 0, q.z); i ? c.lineTo(s.sx, s.sy) : c.moveTo(s.sx, s.sy) }); c.stroke()
+  const hex = y => { c.beginPath(); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, q = proj(table.x + Math.cos(a) * table.r, y, table.z + Math.sin(a) * table.r); i ? c.lineTo(q.sx, q.sy) : c.moveTo(q.sx, q.sy) } c.fill() }
+  const drawTable = () => { c.fillStyle = '#1c1512'; hex(0); c.fillStyle = '#3a2c22'; hex(0.75) } // shadow, then the top
+  const P = RIG.pose(walked / stride, tr.v / speed, { t })
+  const drawFig = () => RIG.draw3(c, { x: p.x, z: p.z, heading: p.heading, h, who: 'you' }, P, { proj, eye: { x: cam.x, y: cam.h, z: cam.z }, yaw: cam.yaw }, { t })
+  if (proj(p.x, 0, p.z).d > proj(table.x, 0, table.z).d) { drawFig(); drawTable() } else { drawTable(); drawFig() } // far first
+}
+let t0 = null
+const loop = now => { t0 ??= now; frame(((now - t0) / 1000) % (tOut + tBack)); requestAnimationFrame(loop) }
+window.__still = t => { frame(t); return cv.toDataURL('image/png') }
+window.__ready = true
+if (!new URLSearchParams(location.search).has('still')) requestAnimationFrame(loop)
+</script>
+</html>
