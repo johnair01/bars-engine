@@ -746,6 +746,7 @@ function frame() {
   const dt = Math.min(0.05, clock.getDelta()); T += dt;
   const moving = move(dt);
   me.pos.y = groundH(me.pos.x, me.pos.z);
+  if (SHX) me.pos.y = SH.standH(me.pos.x, me.pos.z, state.laid, me.pos.y);   // the laid plank holds you over the gully
   if (state.me) { state.me.holder.position.copy(me.pos); state.me.holder.rotation.y = me.yaw; state.me.update(dt, moving); }
   // camera: behind and above you, turned by a drag, never inside a trunk (it is held inside the ring and the way in)
   const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
