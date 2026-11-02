@@ -44,3 +44,14 @@ describe('lanes', () => {
     expect(firstLitLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']))).toBe('freebuff')
   })
 })
+
+describe('pull now', () => {
+  it('makes one claude-lane ticket per minute with the pull:now row', async () => {
+    const { ticketFromPullNow } = await import('../harbour-send')
+    const a = ticketFromPullNow(new Date('2026-11-02T22:30:05Z'))
+    const b = ticketFromPullNow(new Date('2026-11-02T22:30:50Z'))
+    expect(a.sourceKey).toBe(b.sourceKey)
+    expect(a.basis.rows).toEqual(['pull:now'])
+    expect(a.lanes).toEqual(['claude'])
+  })
+})
