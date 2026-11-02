@@ -8,3 +8,4 @@ body.entered .panel>h1,body.entered .panel>.sample,body.entered .panel>p:not(#in
 .reads{border:1px solid #789f8c;border-radius:10px;padding:12px;margin:12px 0}.reads summary{cursor:pointer;color:#d3f6e6;font-weight:650;min-height:36px}.read-row{padding:8px 0;border-top:1px solid #557b69}.read-row input[type=range]{width:100%;accent-color:#a6e2cf}.read-row output{float:right;color:#d3f6e6}.live-link{color:#d7f8e7}
 #scene canvas{touch-action:none;cursor:grab}#scene canvas:active{cursor:grabbing}
 .wall-art{height:min(42vh,350px)}.wall-art text{font-size:17px}
+#teaching-art[hidden],#constellation-art[hidden]{display:none}#place-triangle,#lift-floor,#return-triangle{margin-top:8px}#reflection-view button{max-width:520px}#reflection-view select{max-width:520px}body.reflection-open .panel{visibility:hidden}

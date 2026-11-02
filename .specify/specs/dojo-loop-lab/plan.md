@@ -58,3 +58,7 @@ The first room treatment uses labelled greybox stations and accessible station v
 ## Camera and triangle geometry
 
 A drag on the 3D scene orbits the camera around the character; a tap remains a walk or interaction command. Preserve the orbit when walking, and keep overlays from sending movement input to the room. The two wall triangles share one edge, and the wall and floor triangles use equilateral geometry. Test the three side lengths and the distinction between a tap and a drag at phone size.
+
+## Carrying and separate EA gestures
+
+The first embodied proof uses a dedicated authored `wonder / poignance / joy` equilateral triangle (distinct from the hope-sharing examples). Lift it from the wall, walk with it, and place it in the room. At the anchor table pick up one proposed Metal, Water, or Wood token, carry it to the triangle, and explicitly confirm its corresponding named line; a player may decline or remove it. The existing deterministic triad helper gates the available move. Pick up Deepen Value separately, carry it to the triangle, and intentionally apply it. Show a travelling light, then offer a player-controlled reflection; an unchanged read is valid. Lift the triangle and return it to the wall with approved in-memory anchors and reads. The prototype is ephemeral; it must never silently infer anchors or treat hope as an EA state. The existing action loom remains a separate optional continuation.
