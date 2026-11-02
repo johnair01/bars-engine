@@ -1602,8 +1602,16 @@ function frameBody() {
   if (seatK < 0.002 && !lowView) seatK = 0;
   if (seatK > 0 && seatViewAt) {
     const S = seatViewAt, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), tall = innerWidth < innerHeight, back = tall ? 2.0 : 1.6, side = tall ? 0.45 : 0.6;
-    const sp = new THREE.Vector3(S.x - fx * back - fz * side, S.top + (tall ? 0.95 : 0.8), S.z - fz * back + fx * side);
-    const sf = new THREE.Vector3(S.x + fx * 1.0, S.top + 0.4, S.z + fz * 1.0);
+    let sp = new THREE.Vector3(S.x - fx * back - fz * side, S.top + (tall ? 0.95 : 0.8), S.z - fz * back + fx * side);
+    let sf = new THREE.Vector3(S.x + fx * 1.0, S.top + 0.4, S.z + fz * 1.0);
+    /* The coin table (bi-door-look-3, his note 2026-11-02: "The camera needs to move so we can actually see the coins being
+       flipped. The player back blocks the way"): the view stands off your right shoulder, high, looking across the table at the
+       coins with you sitting beside them. The far side put the camera inside the hollow's wall (his phone shot 2026-11-02: a dark
+       slab over the toss); ray-checked from every seat-frame spot in both rooms, this side has nothing between camera and coins. */
+    if (S.coins) {
+      const lx = fz, lz = -fx, at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
+      sp = tall ? at(-1.15, 1.45, 0.35) : at(-1.3, 1.15, 0.4); sf = at(0, 0.1, 0.62);                                           // the table is 0.62 ahead of the cushion
+    }
     clampCamera(sp, sf);
     const k = seatK * seatK * (3 - 2 * seatK); cp.lerp(sp, k); focus.lerp(sf, k);
   }
