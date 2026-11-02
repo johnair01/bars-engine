@@ -23,11 +23,20 @@ const PAGE = `<!doctype html>
 <p id="instruction" aria-live="polite">Enter the room, then tap the floor to walk. Tap the triangle to approach it.</p>
 <button id="enter" type="button">Enter the dojo</button>
 <button id="approach" type="button" hidden>Walk to the triangle</button>
-<button id="project" type="button" hidden>Bring the triangle to the floor</button>
+<button id="project" type="button" hidden>Open the constellation wall</button>
+<button id="resume" type="button" hidden>Continue exploring</button>
 <button id="restart" type="button" hidden>Try again</button>
 <p id="status" role="status"></p>
 <a href="/ontology-game/between">Return to the Nook</a>
-</section></main><script type="module" src="/dojo/lab.js"></script></body></html>`
+</section></main>
+<section id="wall-view" class="wall-view" aria-label="Constellation wall" aria-hidden="true" hidden>
+  <div class="wall-header"><div><p class="eyebrow">CONSTELLATION WALL · SAMPLE</p><h2>Your thought, in triangles</h2></div><button id="close-wall" class="wall-close" type="button" aria-label="Close constellation wall">Close ✕</button></div>
+  <p class="wall-help">Choose a triangle to bring into the room. The shared word <strong>hope</strong> connects them.</p>
+  <div class="wall-art" aria-hidden="true"><svg viewBox="0 0 360 300" role="presentation"><polygon id="triangle-one" points="180,24 45,235 315,235"/><polygon id="triangle-two" points="45,235 315,235 180,285"/><path d="M180 24 L45 235 L315 235 Z" class="line-one"/><path d="M45 235 L315 235 L180 285 Z" class="line-two"/><text x="78" y="116" transform="rotate(-57 78 116)">excitement</text><text x="260" y="116" transform="rotate(57 260 116)">possibility</text><text x="180" y="225" text-anchor="middle">hope</text><text x="86" y="275" transform="rotate(20 86 275)">wonder</text><text x="257" y="284" transform="rotate(-20 257 284)">poignance</text></svg></div>
+  <div class="wall-choices" role="group" aria-label="Choose an example triangle"><button id="choose-one" type="button" aria-pressed="true">Excitement · possibility · hope</button><button id="choose-two" type="button" aria-pressed="false">Wonder · poignance · hope</button></div>
+  <button id="wall-project" class="wall-project" type="button">Bring this triangle to the floor</button>
+  <p class="wall-note">These are examples. Nothing is saved.</p>
+</section><script type="module" src="/dojo/lab.js"></script></body></html>`
 
 export function GET() {
   return new NextResponse(PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin' } })

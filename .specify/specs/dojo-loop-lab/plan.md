@@ -39,3 +39,7 @@ The Lab proves one person can see a player-authored thought string, intentionall
 ## Walkable first slice — player and wall
 
 Build on the early 3D arrival: a visible player enters, walks by tapping a floor target or using a keyboard, and can approach the wall using a clearly labelled equivalent action. Keep the camera and player visible at phone size, constrain movement within the room and around the central furniture, and stop movement when a practice choice is presented. On arrival the player deliberately projects the authored triangle; restart restores the starting state. Keep the demonstration local and non-persistent. Verify the rendered phone-sized scene, touch and keyboard movement, approach, projection, restart, and no unintended writes. This slice does not claim the anchor table or action loom is complete.
+
+## Wall screen and uninterrupted projection
+
+Place a framed constellation screen high on the dojo wall, with a full-screen phone-readable view. At the wall, open the view, select either authored example triangle, and project it onto the floor; the shared hope edge remains player language. Closing the view preserves the character's position. Projection must not trap the player: allow continued movement, reopening the wall, and restart. Show that later stations are unfinished rather than implying a frozen workflow. Keep choices accessible through labelled buttons and all sample state local.

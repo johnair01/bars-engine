@@ -9,6 +9,12 @@ const project = document.getElementById('project')
 const restart = document.getElementById('restart')
 const status = document.getElementById('status')
 const instruction = document.getElementById('instruction')
+const resume = document.getElementById('resume')
+const wallView = document.getElementById('wall-view')
+const closeWall = document.getElementById('close-wall')
+const choices = [document.getElementById('choose-one'), document.getElementById('choose-two')]
+const wallProject = document.getElementById('wall-project')
+let selection = 0, wallOpen = false
 let renderer
 try {
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
@@ -31,10 +37,16 @@ camera.lookAt(0, 0.9, -1)
 const dojo = renderer ? buildDojo(scene) : null
 const wall = new THREE.Group()
 wall.name = 'constellation-wall'
+// A framed screen gives the constellation a stable place above the room.
+const frame = new THREE.Mesh(new THREE.BoxGeometry(3.9, 2.05, .13), new THREE.MeshStandardMaterial({color:0x785538, roughness:.8}))
+frame.position.set(0,2.18,-4.62); wall.add(frame)
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.68,1.84), new THREE.MeshBasicMaterial({color:0x0c2927,side:THREE.DoubleSide}))
+screen.position.set(0,2.18,-4.54); wall.add(screen)
 // A single example is deliberately authored rather than inferred from the player.
-const points = [new THREE.Vector3(0, 2.8, -4.5), new THREE.Vector3(-1.05, 1.4, -4.5), new THREE.Vector3(1.05, 1.4, -4.5)]
+const points = [new THREE.Vector3(0, 2.8, -4.5), new THREE.Vector3(-1.05, 1.65, -4.5), new THREE.Vector3(1.05, 1.65, -4.5)]
 const material = new THREE.LineBasicMaterial({ color: 0x85f4de })
 wall.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), material))
+wall.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([points[1], new THREE.Vector3(0,1.28,-4.5),points[2]]),new THREE.LineBasicMaterial({color:0xddbf83})))
 const hit = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }))
 hit.position.set(0, 2.1, -4.46); wall.add(hit)
 points.forEach(p => { const sphere = new THREE.Mesh(new THREE.SphereGeometry(.105, 16, 12), new THREE.MeshBasicMaterial({ color: 0xb2ffeb })); sphere.position.copy(p); wall.add(sphere) })
@@ -42,9 +54,9 @@ const labelCanvas = document.createElement('canvas')
 labelCanvas.width = 1024; labelCanvas.height = 128
 const labelContext = labelCanvas.getContext('2d')
 labelContext.fillStyle = '#e7fff5'; labelContext.font = 'bold 54px sans-serif'; labelContext.textAlign = 'center'
-labelContext.fillText('excitement  ·  possibility  ·  hope', 512, 78)
+labelContext.fillText('TAP TO EXPLORE', 512, 78)
 const label = new THREE.Mesh(new THREE.PlaneGeometry(3.2, .4), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(labelCanvas), transparent:true, side:THREE.DoubleSide, depthWrite:false}))
-label.position.set(0, 1.06, -4.44); wall.add(label)
+label.position.set(0, 1.18, -4.44); wall.add(label)
 scene.add(wall)
 const floor = new THREE.Group(); floor.name = 'floor-triangle'; floor.visible = false
 const floorPoints = [new THREE.Vector3(0,.035,1.75),new THREE.Vector3(-.75,.035,3.15),new THREE.Vector3(.75,.035,3.15)]
@@ -97,7 +109,8 @@ function destination(point) {
   return new THREE.Vector3(point.x*k,0,point.z*k)
 }
 function goToWall() {
-  if (!entered || projected) return
+  if (!entered || wallOpen) return
+  resumeRoom()
   keys.clear(); target = wallTarget.clone(); arriving = true
   approach.disabled = true
   instruction.textContent = 'Walking to the wall…'
@@ -105,24 +118,58 @@ function goToWall() {
 function setProjected(value) {
   clearKeys(); projected = value; floor.visible = value
   document.body.classList.toggle('projected', value)
-  project.hidden = true; project.disabled = true
+  project.hidden = true; project.disabled = false
   approach.hidden = value; approach.disabled = false
   restart.hidden = !value
+  resume.hidden = !value
   camera.position.set(0, value ? 2.8 : 3, value ? 5.2 : 5.1)
   camera.lookAt(0, value ? 0 : .9, value ? 2.2 : -1)
   instruction.textContent = value ? 'The triangle is on the floor. Its words remain yours.' : 'Tap the floor to walk, or tap the glowing triangle to approach it.'
-  status.textContent = value ? 'Excitement · possibility · hope. The next practice is still being built; nothing has been saved.' : ''
+  status.textContent = value ? `${selection === 0 ? 'Excitement · possibility · hope' : 'Wonder · poignance · hope'}. The next practice is still being built; nothing has been saved.` : ''
 }
+function resumeRoom() {
+  if (wallOpen) return
+  document.body.classList.remove('projected')
+  camera.position.set(0,3,5.1); camera.lookAt(0,.9,-1)
+  if (projected) {
+    instruction.textContent = 'You can keep walking or return to the constellation wall.'
+    status.textContent = 'The projected triangle remains on the floor. Nothing is saved.'
+    approach.hidden = false; approach.disabled = false; resume.hidden = true
+  }
+}
+function openWall() {
+  clearKeys(); wallOpen = true
+  wallView.hidden = false; wallView.setAttribute('aria-hidden','false')
+  document.body.classList.add('wall-open')
+  closeWall.focus()
+}
+function hideWall() {
+  wallOpen = false; wallView.hidden = true; wallView.setAttribute('aria-hidden','true')
+  document.body.classList.remove('wall-open')
+  project.focus()
+}
+choices.forEach((button,index)=>button.addEventListener('click',()=>{
+  selection=index
+  wallView.dataset.selected = String(index)
+  choices.forEach((choice,i)=>choice.setAttribute('aria-pressed',String(i===index)))
+}))
+document.getElementById('triangle-one').addEventListener('click',()=>choices[0].click())
+document.getElementById('triangle-two').addEventListener('click',()=>choices[1].click())
+closeWall.addEventListener('click',hideWall)
+wallProject.addEventListener('click',()=>{ hideWall(); setProjected(true); resume.focus() })
+resume.addEventListener('click',resumeRoom)
 enter.addEventListener('click',()=>{
   entered = true; document.body.classList.add('entered'); enter.hidden = true
   approach.hidden = false
   instruction.textContent = 'Tap the floor to walk, or tap the glowing triangle to approach it.'
 })
 approach.addEventListener('click',goToWall)
-project.addEventListener('click',()=>{ if (entered && !project.disabled) setProjected(true) })
+project.addEventListener('click',()=>{ if (entered && !project.disabled) openWall() })
 restart.addEventListener('click',()=>{ setProjected(false); player.position.set(1.25,.04,-2); approach.hidden = false })
 addEventListener('keydown', e=>{
-  if (!entered || projected || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return
+  if (e.code === 'Escape' && wallOpen) { hideWall(); return }
+  if (!entered || wallOpen || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return
+  if (projected) resumeRoom()
   if (['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) { e.preventDefault(); target=null;arriving=false;approach.hidden=false;approach.disabled=false;project.hidden=true;keys.add(e.code) }
 })
 addEventListener('keyup',e=>keys.delete(e.code))
@@ -130,10 +177,11 @@ addEventListener('blur',clearKeys)
 window.__dojoLabState = () => ({ x: player.position.x, z: player.position.z, entered, projected, walking: Boolean(target) || keys.size > 0 })
 if (renderer) {
   renderer.domElement.addEventListener('pointerup', e=>{
-    if (!entered || projected) return
+    if (!entered || wallOpen) return
+    if (projected) resumeRoom()
     pointer.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1)
     raycaster.setFromCamera(pointer,camera)
-    if (raycaster.intersectObject(hit).length) { if (!project.hidden && !project.disabled) setProjected(true); else goToWall(); return }
+    if (raycaster.intersectObject(hit).length) { if (!project.hidden && !project.disabled) openWall(); else goToWall(); return }
     if (raycaster.ray.intersectPlane(floorPlane,tmp)) {
       target = destination(tmp); arriving = false; keys.clear()
       approach.disabled = false; project.hidden = true
@@ -145,14 +193,14 @@ if (renderer) {
   renderer.setAnimationLoop(()=>{
     const dt = Math.min(clock.getDelta(),.05)
     let dx = 0, dz = 0
-    if (entered && !projected) {
+    if (entered && !wallOpen) {
       dx = Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft'))
       dz = Number(keys.has('KeyS') || keys.has('ArrowDown')) - Number(keys.has('KeyW') || keys.has('ArrowUp'))
       if (target) {
         const delta = target.clone().sub(player.position); delta.y=0
         if (delta.length() < .12) {
           target = null
-          if (arriving) { arriving = false; approach.hidden = true; approach.disabled = false; project.hidden = false; project.disabled = false; instruction.textContent = 'You are at the wall. Bring the triangle to the floor.' }
+          if (arriving) { arriving = false; approach.hidden = true; approach.disabled = false; project.hidden = false; project.disabled = false; instruction.textContent = 'You are at the wall. Open the constellation to choose a triangle.' }
         } else {
           // Steer tangentially around the bowl if a straight step would enter it.
           const ahead = player.position.clone().addScaledVector(delta.clone().normalize(), .35)
