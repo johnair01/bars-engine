@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/board/owner', () => ({ isBoardOwner: async () => true }))
 
-import { pageUrl, serveBoard, streamed } from '../serve'
+import { pageUrl, serveBoard, streamed, wrap } from '../serve'
 import { setBackend } from '@/lib/board/content-store'
 import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 
@@ -37,6 +37,19 @@ describe('serveBoard', () => {
     expect(pageUrl('council', '../../evil', 'preview')).toBe(main)
     expect(pageUrl('council', null, 'preview')).toBe(main)
     expect(pageUrl('nonprofit', 'claude/x-1', 'preview')).not.toContain('claude/x-1')
+  })
+})
+
+describe('wrap', () => {
+  it('links the shared --ui-* tokens and lets them follow the device (unified UI build 2)', () => {
+    const council = wrap('<p>board</p>', 'council')
+    expect(council).toContain('<html lang="en" data-theme="auto">')
+    expect(council).toContain('<link rel="stylesheet" href="/ui/tokens.css">')
+    expect(council).toContain('family=Atkinson+Hyperlegible')
+    const whole = wrap('<!doctype html><html lang="en"><head><title>t</title></head><body></body></html>', 'nonprofit')
+    expect(whole).toContain('<html lang="en" data-theme="auto">')
+    expect(whole).toContain('href="/ui/tokens.css"')
+    expect(wrap('<!doctype html><html data-theme="light"><head></head></html>', 'nonprofit')).toContain('<html data-theme="light">')
   })
 })
 
