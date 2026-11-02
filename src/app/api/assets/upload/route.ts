@@ -28,8 +28,10 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { db } from '@/lib/db'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf']
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB
-const MAX_PDF_BYTES = 10 * 1024 * 1024 // 10 MB
+// The token's size cap is the PDF limit for every file type, images included. The 5 MB image limit is checked
+// client-side in the attachment and swap forms only. It is not enforced here on purpose: BarPhotoForm and
+// CreateBarForm have no size check, so a 5 MB cap here would reject phone photos of 5 to 10 MB. Decide before changing.
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 // 10 MB
 
 async function requirePlayerId(): Promise<string> {
   const cookieStore = await cookies()
@@ -106,7 +108,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         return {
           allowedContentTypes: ALLOWED_TYPES,
-          maximumSizeInBytes: MAX_PDF_BYTES,
+          maximumSizeInBytes: MAX_UPLOAD_BYTES,
           tokenPayload: clientPayload,
         }
       },
