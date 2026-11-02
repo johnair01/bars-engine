@@ -74,9 +74,33 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
     if (waiting && wait > 60){
       el.textContent = 'Warning: ' + waiting.count + (waiting.count === 1 ? ' save has' : ' saves have') + ' waited for main '
         + (wait < 120 ? wait + ' min' : Math.round(wait / 60) + ' h') + ' (the oldest). ' + pulled
-        + ' Your answers are safe in the board database. Claude lands them on main at the next pickup; there is nothing for you to run.';
+        + ' Your answers are safe in the board database. Claude lands them on main at the next pickup. Pull now asks for it sooner.';
       el.style.color = 'var(--warn, #b45309)';
     } else { el.textContent = pulled + heldNote(); el.style.color = ''; }
+    pullButton(el);
+  }
+  // "Pull now": save a Send ticket (row pull:now) in the Claude lane. The next pickup hands it to a session that runs
+  // board/live_pull.py and lands his saves on main; it is not instant, so the line under the button says when.
+  function pullButton(note){
+    let box = document.getElementById('board-pull-ask');
+    if (box) return;
+    box = document.createElement('div'); box.id = 'board-pull-ask';
+    box.style.cssText = 'text-align:center;font-size:.8rem;padding:0 8px 4px';
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Pull now';
+    b.style.cssText = 'font:inherit;padding:6px 14px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
+    const m = document.createElement('div'); m.style.cssText = 'opacity:.75;padding-top:4px';
+    b.onclick = async () => {
+      b.disabled = true; m.textContent = 'Asking…';
+      try {
+        const r = await fetch('/api/work/send', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pull: true})});
+        if (!r.ok) throw new Error(String(r.status));
+        m.textContent = 'Asked. Claude lands your saves on main at the next pickup, within the hour.';
+      } catch (e){ m.textContent = 'The ask did not save (' + (e && e.message || 'error') + '). Press again.'; }
+      setTimeout(() => { b.disabled = false; }, 60000);
+    };
+    box.appendChild(b); box.appendChild(m);
+    note.parentNode.insertBefore(box, note);
+    note.style.paddingTop = '0';
   }
   // Saves the pull holds on purpose (a Tap the Vein menu waits for the morning read) are not late; say so, once.
   function heldNote(){ const n = unrecorded && unrecorded.held; return n ? ' ' + n + (n === 1 ? ' save is' : ' saves are') + ' held for a Claude read.' : ''; }
