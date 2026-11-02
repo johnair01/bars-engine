@@ -107,6 +107,7 @@ export default defineConfig({
       'src/lib/between/__tests__/coin-connection.test.ts',
       'src/lib/between/__tests__/land-place.test.ts',
     'src/lib/between/__tests__/pick.test.ts',
+      'src/lib/between/__tests__/music.test.ts',
       'src/lib/board/__tests__/outreach.test.ts',
       'src/lib/studio/__tests__/deck.test.ts',
       'src/lib/studio/__tests__/fleet.test.ts',

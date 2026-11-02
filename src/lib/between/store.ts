@@ -192,3 +192,15 @@ export async function ensureHome(playerId: string) {
   await plant(playerId, plantedHome(playerId))
   return gardensOf(playerId)
 }
+
+/** The games the coin table can be steered toward (his note 2026-11-02: everyone starts with general). */
+export const TABLE_GAMES = ['flirtcraft', 'friendcraft', 'allyship'] as const
+
+/** The games the player is enrolled in, read from the memberships they already hold (an instance whose slug is the game). */
+export async function enrolledGames(playerId: string): Promise<string[]> {
+  const rows = await db.instanceMembership.findMany({
+    where: { playerId, instance: { slug: { in: [...TABLE_GAMES] } } },
+    select: { instance: { select: { slug: true } } },
+  }).catch(() => [])
+  return [...new Set(rows.map(r => r.instance.slug))].filter(g => (TABLE_GAMES as readonly string[]).includes(g))
+}

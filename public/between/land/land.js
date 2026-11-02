@@ -520,7 +520,7 @@ async function build() {
     for (let i = 0, n = LOW ? 26 : 44; i < n; i++) { const a = r() * 6.28, d = CLR - 0.6 + r() * 2.2, x = Math.cos(a) * d, z = Math.sin(a) * d; if (path(x, z)) continue; plant(ferns[i % ferns.length], x, z, 0.55 + r() * 0.5, r() * 6.28); }
     for (const sx of [-1.7, 1.6, -2.3, 2.2]) plant(ferns[(sx > 0 ? 1 : 2) % ferns.length], ARCH.x + sx, ARCH.z - 0.3 + Math.abs(sx) * 0.2, 0.7, r() * 6.28); }
   if (clump) for (let i = 0, n = LOW ? 20 : 40; i < n; i++) { const a = r() * 6.28, d = 1.8 + r() * (CLR - 2.2), x = Math.cos(a) * d, z = Math.sin(a) * d; if (path(x, z) || d < 1.9) continue; plant(clump, x, z, 0.3 + r() * 0.25, r() * 6.28); }
-  if (rock) for (const [x, z, s] of [[-4.2, 3.6, 0.8], [4.6, 2.4, 0.6], [2.1, -4.8, 0.7], [-1.6, 7.6, 0.45], [1.9, 8.9, 0.5]]) plant(rock, x, z, s, r() * 6.28);
+  if (rock) for (const [x, z, s] of [[-4.2, 3.6, 0.8], [4.6, 2.4, 0.6], [2.1, -4.8, 0.7], [-3.1, 7.6, 0.45], [3.2, 8.9, 0.5]]) plant(rock, x, z, s, r() * 6.28);
   if (pitcher) plant(pitcher, -3.9, -3.1, 0.75, 0.8);
   mist(r, LOW ? 14 : 26, 0xb8c8bc, 0.13, 5);
   state.flies = fireflies(r, LOW ? 90 : 160, 0xe8f0a0, 14);

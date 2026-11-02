@@ -13,6 +13,7 @@ import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the s
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
+import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
 import { NEAR as TEA_NEAR } from "./tea-pose.js";
 import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
@@ -113,7 +114,7 @@ function noteError(e, where) {
   if (last && last.msg === msg) { last.n++; return; }
   errLog.push({ at: new Date().toISOString(), where, msg, stack, n: 1 }); if (errLog.length > 12) errLog.shift();
   console.error("[between]", where, e);
-  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows it to Claude."); } catch {} }
+  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows us what you saw."); } catch {} }
 }
 addEventListener("error", ev => noteError(ev.error || ev.message, "window"));
 addEventListener("unhandledrejection", ev => noteError(ev.reason, "promise"));
@@ -774,6 +775,8 @@ function stepBetween(t, dt) {
   const { phase, state, stale, sat } = look;
   const breath = (t % 10) < 4 ? Math.sin((t % 10) / 4 * Math.PI / 2) : Math.cos(((t % 10) - 4) / 6 * Math.PI / 2); // 4 s in, 6 s out
   const together = bothSitting();
+  // the music follows the room (music.js): standing about, sitting alone, sitting together, or close (the hearth moment, a cup in hand)
+  ambient.mood(moodOf({ sitting: !!meState.sitting, together, close: !!hm || !!(tea && tea.holding()) }));
   // sitting together, it turns to face you both (the cushions sit side by side behind it)
   creature.update(t, dt, { phase, state, stale, sat, target: together ? TOGETHER_FACE : creatureTarget(), together });
   const p = moteGeo.attributes.position.array;
@@ -3242,11 +3245,15 @@ async function sealScroll() {
   }, 1350);
 }
 /* A spark's person has no shelf yet: the scroll's line goes with the room's link, the way an invitation always has. */
-async function sparkLink(to, note) {
-  let token = to.id === gardenId ? myInvite : null;
-  if (!token) { const j = await api("/api/between/" + to.id + "/poll", {}); token = j.invite || null; }
+/** A spark's invitation link, from its own invite token (the coin table lays it for a Show Up cast, build 3b). */
+async function sparkUrl(id) {
+  let token = id === gardenId ? myInvite : null;
+  if (!token) { const j = await api("/api/between/" + id + "/poll", {}); token = j.invite || null; }
   if (!token) throw fail("unavailable", "no link");
-  const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(to.id) + "&invite=" + encodeURIComponent(token);
+  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token);
+}
+async function sparkLink(to, note) {
+  const link = await sparkUrl(to.id);
   const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
   let shared = false;
   if (navigator.share) { try { await navigator.share({ title: "The Between", text }); shared = true; } catch {} }
@@ -3351,8 +3358,13 @@ function shelfTap(kind, i) {
 }
 
 /* ---------- sound: starts on the first tap, if it is on ---------- */
-const ambient = createAmbient();
-function soundLabel() { const b = $("#soundBtn"); if (!b) return; b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+// ?music=code|bed|both plays that version of the room's music, so he can hear them side by side and pick by ear (bt-music-form);
+// with no ?music the room has no music. E.g. ?nook=1&sit=hearth&music=code
+const ambient = createAmbient({ music: KQ.get("music") });
+function soundLabel() {
+  const b = $("#soundBtn"); if (b) { b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+  const mb = $("#musicBtn"); if (mb) { mb.hidden = !ambient.music; mb.textContent = ambient.musicOn ? "Music on" : "Music off"; mb.setAttribute("aria-pressed", ambient.musicOn ? "true" : "false"); }
+}
 addEventListener("pointerdown", () => ambient.wake(), { capture: true });
 document.addEventListener("visibilitychange", () => { document.hidden ? ambient.pause() : ambient.resume(); });
 soundLabel();
@@ -3372,6 +3384,7 @@ document.addEventListener("click", async ev => {
   if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
   if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
+  if (a === "music") { ambient.toggleMusic(); soundLabel(); return; }
   if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
@@ -3947,7 +3960,8 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
-  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data) };
+  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data),
+  openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
@@ -3958,5 +3972,6 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
   .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
 // the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
-// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST }); }).catch(e => noteError(e, "coins"));
+// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation)
+// ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));
