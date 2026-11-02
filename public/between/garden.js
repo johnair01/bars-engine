@@ -3366,6 +3366,7 @@ function soundLabel() {
   const mb = $("#musicBtn"); if (mb) { mb.hidden = !ambient.music; mb.textContent = ambient.musicOn ? "Music on" : "Music off"; mb.setAttribute("aria-pressed", ambient.musicOn ? "true" : "false"); }
 }
 addEventListener("pointerdown", () => ambient.wake(), { capture: true });
+for (const ev of ["touchend", "click", "keydown", "pointerup"]) addEventListener(ev, () => ambient.unlock(), { capture: true });
 document.addEventListener("visibilitychange", () => { document.hidden ? ambient.pause() : ambient.resume(); });
 soundLabel();
 

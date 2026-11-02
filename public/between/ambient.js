@@ -5,7 +5,7 @@ import { createMusic, MUSIC_VERSIONS } from "./music.js";
 /* music: "code", "bed" or "both" plays that version of the room's music (music.js) on its own gain inside this one context,
    with its own remembered on/off under between.music; anything else, no music at all (bt-music-bus). */
 export function createAmbient({ music: version = null } = {}) {
-  let ctx = null, master = null, on = true, wg = null, hushed = false, music = null, musicOn = true, mood = "away";
+  let ctx = null, master = null, on = true, wg = null, hushed = false, music = null, musicOn = true, mood = "away", primed = false;
   if (!MUSIC_VERSIONS.includes(version)) version = null;
   try { on = localStorage.getItem("between.sound") !== "off"; musicOn = localStorage.getItem("between.music") !== "off"; } catch {}
 
@@ -70,6 +70,17 @@ export function createAmbient({ music: version = null } = {}) {
     get on() { return on; },
     /* Call from a tap: the first one starts the sound if it is on. */
     wake() { if (on) start(); else if (ctx && ctx.state === "suspended") ctx.resume(); },
+    /* Phones keep audio locked until a gesture they count: iOS counts touchend and click but not pointerdown, and its silent
+       switch mutes Web Audio unless the page is playing media (his note: "I can't hear the sound on mobile"). Call from
+       touchend, click, keydown and pointerup: start if on, resume, play one silent sample, claim the playback channel. */
+    unlock() {
+      if (on) start(); if (!ctx) return;
+      if (ctx.state !== "running") ctx.resume().catch(() => {});
+      try { const n = ctx.createBufferSource(); n.buffer = ctx.createBuffer(1, 1, 22050); n.connect(ctx.destination); n.start(0); } catch {}
+      try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
+      if (primed) return; primed = true;
+      try { const m = document.createElement("audio"); m.setAttribute("playsinline", ""); m.loop = true; m.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="; const pr = m.play(); if (pr && pr.catch) pr.catch(() => {}); } catch {}
+    },
     toggle() { on = !on; try { localStorage.setItem("between.sound", on ? "on" : "off"); } catch {} if (on) start(); apply(); return on; },
     pause() { if (ctx && ctx.state === "running") ctx.suspend(); },
     resume() { if (ctx && on) ctx.resume(); },
