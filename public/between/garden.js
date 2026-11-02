@@ -24,6 +24,7 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
+import { makeQiSky, qiOf } from "./sky-qi.js";
 import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
@@ -320,7 +321,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1018);
 scene.fog = new THREE.Fog(0x24161a, 10, 30);
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
-let hollow = null;
+let hollow = null, qiSky = null; // qiSky: the Between's one sky, lit by its health and no clock (sky-qi.js)
 const betweenLight = new THREE.PointLight(0x9ad8cf, 5, 6, 1.5); betweenLight.position.set(BETWEEN_AT.x, DAIS_Y + 1.1, BETWEEN_AT.z + 0.3); scene.add(betweenLight);
 let lightScale = 1;
 /* The light that travels with you (round 3 build): a narrow soft key from over your shoulder on the camera's side, aimed at
@@ -469,7 +470,7 @@ let roomReady = false;
 let builtShell = null;
 function buildRoom(shell = "hollow") {
   if (hollow) scene.remove(hollow.root);
-  hollow = buildHollow(scene, { lowPower: LOW_POWER, shell });
+  hollow = buildHollow(scene, { lowPower: LOW_POWER, shell }); qiSky = makeQiSky(hollow.handles);
   builtShell = hollow.layout.shell; roomSig = ""; styleNow = null;
   relayout();
   wake.group.clear(); wake.group.visible = false; wake.on = false; wake.k = 1; wake.group.scale.setScalar(1);
@@ -575,6 +576,8 @@ const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
+// previews: ?qi=0..1 holds the sky at one health (0 neglected, 1 tended and fed) to see both ends without tending a room
+const QI_PREVIEW = PREVIEW_HOST && KQ.get("qi") != null && Number.isFinite(+KQ.get("qi")) ? Math.max(0, Math.min(1, +KQ.get("qi"))) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
 const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands further back and higher to fit the hook and the floor
   wide: [new THREE.Vector3(0.35, 2.35, 3.55), new THREE.Vector3(-0.25, 0.85, -0.9)],
@@ -607,6 +610,7 @@ function syncRoom() {
   roomSig = sig;
   const res = applyRoom({ ...hollow.handles, scene, make: makeItem }, r.style ? r : { ...r, style: undefined });
   styleNow = res.style && res.style.id;
+  if (res.style && qiSky) qiSky.rebase(); // the agreed style is the sky's colour; qi lifts or lowers it (sky-qi.js)
   figLight = figureLightOf(res.style); probeDirty = true;
   const ms = inNook() ? Object.entries(res.placed).find(([, e]) => e.item === "mirror") : null;
   mirrorSpot = ms ? ms[0] : null;
@@ -811,6 +815,7 @@ function stepBetween(t, dt) {
   betweenLight.intensity = (phase === "spark" ? 3 : 5) * (stale ? 0.3 : 1) * (0.85 + 0.15 * breath) * (together ? 2.2 : 1);
   betweenLight.color.setHex(phase === "spark" ? 0xd48bc0 : state === "charged" ? 0xd9a0c8 : 0x9ad8cf);
   if (hollow) hollow.update(t, dt, lightScale, camera.position, lastFocus);
+  if (qiSky) qiSky.step(dt, QI_PREVIEW != null ? QI_PREVIEW : qiOf(look));
 }
 
 /* ===================================================================================================
