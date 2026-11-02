@@ -72,6 +72,10 @@ describe('the first land (place.js)', () => {
     const mid = { x: sh.GULLY.x, z: sh.BRIDGE_Z }
     expect(sh.walkable(mid.x, mid.z, false)).toBe(false)
     expect(sh.walkable(mid.x, mid.z, true)).toBe(true)
+    // laid plank: you stand at deck height over the gully instead of sinking to its floor
+    expect(sh.gullyH(mid.x)).toBeLessThan(-1)
+    expect(sh.standH(mid.x, mid.z, true, sh.gullyH(mid.x))).toBeGreaterThan(-0.05)
+    expect(sh.standH(mid.x, mid.z, false, sh.gullyH(mid.x))).toBe(sh.gullyH(mid.x))
     expect(sh.walkable(sh.ARRIVE.x, sh.ARRIVE.z, false)).toBe(true)
     expect(sh.walkable(0, 0, true)).toBe(false)
     const land = readFileSync(join(root, 'public/between/land/land.js'), 'utf8')
