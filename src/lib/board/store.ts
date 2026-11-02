@@ -61,12 +61,17 @@ export async function lastPull(board: string) {
   return db.boardPull.findFirst({ where: { board }, orderBy: { at: 'desc' }, select: { at: true, record: true } })
 }
 
-/** Saves still waiting for the pull to record them: the earliest one's receivedAt and how many there are. */
+/**
+ * Saves still waiting for the pull to record them: the earliest one's receivedAt and how many there are. A save the
+ * pull held on purpose (POST with held: true leaves recordedAt empty and writes a record) waits for a session's own
+ * step, not for the next pull, so it is counted apart and never makes the board's "waited for main" warning.
+ */
 export async function unrecordedSaves(board: string) {
-  const where = { board, recordedAt: null }
-  const [oldest, count] = await Promise.all([
+  const where = { board, recordedAt: null, record: null }
+  const [oldest, count, held] = await Promise.all([
     db.boardSave.findFirst({ where, orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } }),
     db.boardSave.count({ where }),
+    db.boardSave.count({ where: { board, recordedAt: null, record: { not: null } } }),
   ])
-  return { oldestReceivedAt: oldest?.receivedAt ?? null, count }
+  return { oldestReceivedAt: oldest?.receivedAt ?? null, count, held }
 }
