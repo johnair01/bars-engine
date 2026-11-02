@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/board/owner', () => ({ isBoardOwner: async () => true }))
 
-import { pageUrl, serveBoard, streamed, wrap } from '../serve'
+import { pageUrl, sameHost, serveBoard, streamed, wrap } from '../serve'
 import { setBackend } from '@/lib/board/content-store'
 import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 
@@ -57,5 +57,12 @@ describe('streamed', () => {
   it('sends a page over 4.5 MB, multi-byte text included, unchanged', async () => {
     const html = '<p>é—</p>'.repeat(600_000)
     expect(await new Response(streamed(html)).text()).toBe(html)
+  })
+})
+
+describe('sameHost', () => {
+  it('keeps board links on the host the page is opened from, and leaves other addresses alone', () => {
+    const out = sameHost('a https://bars-engine.vercel.app/board/look?t=x b https://bars-engine.vercel.app/board/council#open c https://bars-engine.vercel.app/tap-the-vein')
+    expect(out).toBe('a /board/look?t=x b /board/council#open c https://bars-engine.vercel.app/tap-the-vein')
   })
 })
