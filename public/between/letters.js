@@ -58,7 +58,14 @@ const css = `
 #letters-hand .lc::before { content: ""; position: absolute; left: 12px; right: 12px; top: 8px; height: 3px; border-radius: 2px; background: var(--el); box-shadow: 0 0 calc(4px + 6px * var(--ui-loud, .92)) var(--el); }
 #letters-hand .lc::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: calc((1 - var(--ui-paper, .17)) * .5); mix-blend-mode: soft-light;
   background: repeating-linear-gradient(115deg, rgba(255,240,210,.05) 0 2px, transparent 2px 5px), radial-gradient(90% 60% at 70% 90%, rgba(255,220,170,.06), transparent); }
-#letters-hand .lc small { position: absolute; left: 12px; right: 10px; bottom: 11px; font: italic 400 14px/1.15 var(--ui-body, system-ui, sans-serif); color: #ffd08a; opacity: .9; }
+/* spine titles (Wendell on uu-fan-titles, 2026-11-02: "Claude takes it: spine titles"): seven cards 100 px wide sit
+   about 52 px apart at 390 wide, so the next card hides the right half of each. The title runs up the left edge, inside
+   the strip that stays in sight, reading bottom to top like a book on a shelf; the pulled card shows it whole. */
+#letters-hand .lc .sp { position: absolute; left: 7px; top: 138px; width: 122px; transform-origin: 0 0; transform: rotate(-90deg);
+  font: 400 14px/1.12 var(--ui-display, "Marcellus", Georgia, serif); color: #f6ecdc; text-shadow: 0 1px 2px rgba(0,0,0,.7);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+#letters-hand .lc small { position: absolute; left: 38px; top: 138px; width: 122px; transform-origin: 0 0; transform: rotate(-90deg);
+  font: italic 400 14px/1.12 var(--ui-body, system-ui, sans-serif); color: #ffd08a; white-space: nowrap; }
 #letters-hand .lc:focus-visible { outline: 3px solid var(--ui-accent, #5fc2ba); outline-offset: 3px; }
 #letters-hand .lc.gone { filter: brightness(.5) saturate(.6); cursor: default; }
 #letters-hand.down .lc { transform: translateY(160%) !important; }
@@ -300,7 +307,7 @@ export function mount(B, opts = {}) {
     const used = view ? sentBy(view.L, view.me) : [];
     handEl.innerHTML = HAND.map((c, i) => {
       const t = (i - 3) / 3, gone = used.includes(c);
-      return `<button type="button" class="lc${gone ? " gone" : ""}" data-card="${c}" style="${elVars(elementOf(c))};left:${50 + t * 40}%;transform:translateY(${Math.abs(t) * 12}px) rotate(${t * 13}deg)">${esc(title(c))}${gone ? "<small>in the Between</small>" : ""}</button>`;
+      return `<button type="button" class="lc${gone ? " gone" : ""}" data-card="${c}" aria-label="${esc(title(c))}${gone ? ", in the Between" : ""}" style="${elVars(elementOf(c))};left:${50 + t * 40}%;transform:translateY(${Math.abs(t) * 12}px) rotate(${t * 13}deg)"><span class="sp">${esc(title(c))}</span>${gone ? "<small>in the Between</small>" : ""}</button>`;
     }).join("");
   }
   handEl.addEventListener("click", e => {
