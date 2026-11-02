@@ -26,6 +26,7 @@
     arrive: "Inside. Every water here runs down to this spring.",
     howTo: "Tap the ground to walk. At a spring, tap another to see the water between; tap it again to go there.",
     mouth: "The way back to the room.",
+    viewFar: "See the whole basin", viewNear: "Stay close",
     trace: "The water between here and there shows its way, then rests.",
     seats: {
       brow: { rest: "A seam, wet from the stone.", run1: "The seam runs. Light goes out along it.", run2: "The seam runs. A pale light goes out along the water to the high pool." },
@@ -35,7 +36,7 @@
       dantian: { rest: "A stone basin, holding still water." },
       heart: { rest: "The low spring. Every water here comes down to it." },
     },
-    sr: { mouthLabel: "The way back to the room", stage: "The basin. Tap the ground to walk." },
+    sr: { mouthLabel: "The way back to the room", stage: "The basin. Tap the ground to walk.", viewFar: "Switch to the wide view of the whole basin", viewNear: "Switch to the close view behind the figure" },
   };
 
   var K = null, O = null;
@@ -250,8 +251,9 @@
   // ---- the page ---------------------------------------------------------------------------------------------------------------
   var CSS = ".oagb{z-index:950}.oagb-line{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(420px,calc(100vw - 32px));" +
     "padding:.5rem .8rem;background:rgba(12,12,24,.72);border:1px solid rgba(220,230,255,.35);border-radius:12px;color:#eef0f8;font-size:15px;line-height:1.35;text-align:center;" +
-    "pointer-events:none;transition:opacity .6s;z-index:3}.oagb-line[hidden]{display:block;opacity:0}.oagb-how{position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);" +
-    "color:#c8cce0;font-size:13px;opacity:.85;pointer-events:none;transition:opacity 1.2s;width:max-content;max-width:calc(100vw - 32px);text-align:center;z-index:3}";
+    "pointer-events:none;transition:opacity .6s;z-index:3}.oagb-line[hidden]{display:block;opacity:0}.oagb-how{position:absolute;left:50%;top:calc(64px + env(safe-area-inset-top));transform:translateX(-50%);" +
+    "color:#c8cce0;font-size:13px;opacity:.85;pointer-events:none;transition:opacity 1.2s;width:max-content;max-width:calc(100vw - 32px);text-align:center;z-index:3}" +
+    ".oagb-view{position:absolute;right:10px;top:calc(10px + env(safe-area-inset-top));min-width:44px;min-height:44px;padding:0 .9rem;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);border-radius:12px;color:#e8e8f0;font-size:14px;font-weight:500;z-index:4;cursor:pointer}.oagb-view:focus-visible{outline:2px solid #fff1b0;outline-offset:2px}";
 
   var api = { open: open, state: function () { return snapshot ? snapshot() : { open: false }; }, walkTo: function (id, o) { return walkToSeat ? walkToSeat(id, o) : false; },
     screenOf: function (id) { return screenOfSeat ? screenOfSeat(id) : null; }, WORDS: WORDS, SEAT_AT: SEAT_AT };
@@ -269,9 +271,10 @@
     var stage = el("div", { class: "oagc-stage", "aria-label": WORDS.sr.stage, role: "img" }), fade = el("div", { class: "oagc-fade" });
     var line = el("div", { class: "oagb-line", "data-basin-line": "" });
     var how = el("div", { class: "oagb-how", "data-basin-how": "", text: WORDS.howTo });
+    var viewBtn = el("button", { class: "oagb-view", type: "button", "data-basin-view": "" });
     var sr = el("div", { class: "oagc-sr", "data-basin-text": "", "aria-live": "polite" });
     var mouthBtn = el("div", { class: "oagc-sr", "data-basin-mouth": "", text: WORDS.sr.mouthLabel }); // read, not pressed: the mouth is walked into
-    [stage, line, how, sr, mouthBtn, fade].forEach(function (n) { wrap.appendChild(n); });
+    [stage, line, how, viewBtn, sr, mouthBtn, fade].forEach(function (n) { wrap.appendChild(n); });
     wrap.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     document.body.appendChild(wrap);
     fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30);
@@ -281,9 +284,21 @@
     wrap.setAttribute("data-basin-runs", String(runs.brow ? "lit" : "rest")); // a word, not a number: the page carries no digit
     snapshot = function () {
       return { open: B.open, at: B.at, runs: { brow: runs.brow }, answered: B.answered, seats: O.SEATS.map(function (s) { return s.id; }),
-        edges: O.EDGES.map(function (e) { return { from: e.from, to: e.to, kind: e.kind }; }), figure: fig ? { x: fig.x, z: fig.z } : null, tracing: B.trace.map(function (t) { return t.c.from + ">" + t.c.to; }) };
+        edges: O.EDGES.map(function (e) { return { from: e.from, to: e.to, kind: e.kind }; }), view: viewMode, figure: fig ? { x: fig.x, z: fig.z } : null, tracing: B.trace.map(function (t) { return t.c.from + ">" + t.c.to; }) };
     };
     var fig = null;
+    // The arrival view is the close one: a third-person-limited follow camera just behind the figure. The wide view that shows
+    // the whole basin at once stays one press (or the C key) away, and the choice holds for the visit.
+    var viewMode = "near";
+    function paintView() {
+      var far = viewMode === "far";
+      viewBtn.textContent = far ? WORDS.viewNear : WORDS.viewFar; viewBtn.setAttribute("aria-label", far ? WORDS.sr.viewNear : WORDS.sr.viewFar);
+      viewBtn.setAttribute("aria-pressed", far ? "true" : "false"); wrap.setAttribute("data-basin-view", viewMode);
+    }
+    function setView(m) { viewMode = m === "far" ? "far" : "near"; paintView(); }
+    api.setView = setView;
+    viewBtn.addEventListener("click", function () { setView(viewMode === "near" ? "far" : "near"); });
+    paintView();
     function say(text, toPane) {
       if (B.said === text) return; B.said = text;
       sr.textContent = text;
@@ -445,11 +460,11 @@
       var avatar = K.buildAvatar(THREE, "self", true); avatar.scale.setScalar(FIG_K); scene.add(avatar);
       var carried = new THREE.PointLight(0xffd9a0, 0.6, 6, K.LAMP.decay); scene.add(carried);
       fig = { x: LEDGE.x, z: LEDGE.z, yaw: 0, clk: 0, to: null, moving: false };
-      var keys = {}, camYaw = 0, PITCH = 0.78, camD = 18, zoom = 1, br = { t0: performance.now() / 1000, b: 0.5 };
+      var keys = {}, camYaw = 0, PITCH = 0.78, NEAR_D = 5, NEAR_PITCH = 0.42, camD = 18, zoom = 1, br = { t0: performance.now() / 1000, b: 0.5 };
 
-      function camFor(x, z, yaw, D, out) {
-        var y = groundY(x, z), tx = x + Math.sin(yaw) * 1.5, tz = z + Math.cos(yaw) * 1.5;
-        out.position.set(tx - Math.sin(yaw) * D * Math.cos(PITCH), y + 1 + D * Math.sin(PITCH), tz - Math.cos(yaw) * D * Math.cos(PITCH));
+      function camFor(x, z, yaw, D, out, pitch) {
+        var P = pitch == null ? PITCH : pitch, y = groundY(x, z), tx = x + Math.sin(yaw) * 1.5, tz = z + Math.cos(yaw) * 1.5;
+        out.position.set(tx - Math.sin(yaw) * D * Math.cos(P), y + 1 + D * Math.sin(P), tz - Math.cos(yaw) * D * Math.cos(P));
         out.lookAt(tx, y + 1, tz); out.updateMatrixWorld(true);
       }
       // The vantage: from the heart's ledge every seat, every course and the mouth must be in the one look, on any screen. The
@@ -540,7 +555,7 @@
         ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) { if (n === "pointerup" && ptr && !ptr.moved) tapAt(e.clientX, e.clientY); ptr = null; drag = null; }); });
         dom.addEventListener("wheel", function (e) { e.preventDefault(); zoom = Math.max(0.35, Math.min(1.4, zoom * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
       }
-      function keyDown(e) { var k = e.key; if (/^(Arrow(Up|Down|Left|Right)|[wasdWASD])$/.test(k)) { keys[k.toLowerCase()] = true; fig.to = null; e.preventDefault(); } }
+      function keyDown(e) { var k = e.key; if (/^[cC]$/.test(k) && !e.repeat && !e.metaKey && !e.ctrlKey) { setView(viewMode === "near" ? "far" : "near"); return; } if (/^(Arrow(Up|Down|Left|Right)|[wasdWASD])$/.test(k)) { keys[k.toLowerCase()] = true; fig.to = null; e.preventDefault(); } }
       function keyUp(e) { delete keys[e.key.toLowerCase()]; }
       window.addEventListener("keydown", keyDown); window.addEventListener("keyup", keyUp);
 
@@ -620,7 +635,7 @@
           var hk = Math.min(1, ka / 1.8); held.material.opacity = 0.95 * hk; heldGlow.material.opacity = 0.32 * hk; crownLight.intensity = 0.7 * hk;
         }
         // the one camera: behind and above the figure, standing back as far as the vantage needs
-        camFor(fig.x, fig.z, camYaw, camD * zoom, probeCam);
+        if (viewMode === "near") camFor(fig.x, fig.z, camYaw, NEAR_D * zoom, probeCam, NEAR_PITCH); else camFor(fig.x, fig.z, camYaw, camD * zoom, probeCam);
         if (snapCam) { camPos.copy(probeCam.position); camAim.set(fig.x + Math.sin(camYaw) * 1.5, gy + 1, fig.z + Math.cos(camYaw) * 1.5); snapCam = false; }
         else { var ce = 1 - Math.exp(-dt * 3); camPos.lerp(probeCam.position, ce); camAim.lerp(new THREE.Vector3(fig.x + Math.sin(camYaw) * 1.5, gy + 1, fig.z + Math.cos(camYaw) * 1.5), ce); }
         camera.position.copy(camPos); camera.lookAt(camAim);
