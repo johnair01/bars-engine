@@ -31,7 +31,7 @@
    stand-in spark, so the invitation shows; ?nook=1&door=flirtcraft walks a newcomer with no spark to the table. */
 import * as THREE from "three";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
-import { SUITS, SELF, PLANT, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
+import { SUITS, SELF, PLANT, withPlant, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
 
 const TY = 0.32, TR = 0.34, SEAT_D = 0.62, PUSH_R = 0.5, NEAR_R = 1.25, BOOK_NEAR = 0.8, BOOK_LEAVE = 1.8;
@@ -199,9 +199,8 @@ export function mount(B, opts = {}) {
     }
     let out = whoChoices(rooms());
     if (preview && out.length === 1) out = opts.door ? [SELF] : [SELF, STAND_IN, STAND_IN_SPARK];
-    // no spark yet: the last choice plants one (the built sheet), so someone you are drawn to is always one tap away
-    if (!out.some(w => w.kind === "spark")) out.push(PLANT);
-    return out;
+    // the last choice always plants one (the built sheet), so a toss can be for anyone you are drawn to, not only the first
+    return withPlant(out);
   }
   function faceUp() { // the newest face-up cast on this hollow's table
     let best = null;
@@ -346,7 +345,7 @@ export function mount(B, opts = {}) {
       const acts = [];
       if (fu && fu.it.by !== me && !(fu.it.answer && fu.it.answer[me])) acts.push({ label: `Answer ${theirName(fu)}'s cast`, sub: "They left it face up on the table", on: () => startAnswer(fu) });
       for (const w of choices()) {
-        if (w.kind === "plant") { acts.push({ label: "Someone you are drawn to", sub: "Plant a spark for them first", on: () => choose(w) }); continue; }
+        if (w.kind === "plant") { acts.push(w.fresh ? { label: "Someone you are drawn to", sub: "Plant a spark for them first", on: () => choose(w) } : { label: "Someone else you are drawn to", sub: "Plant a spark for them, then toss", on: () => choose(w) }); continue; }
         const sub = w.kind === "self" ? "How to come closer to yourself" : w.kind === "spark" ? "Someone you are drawn to" + (w.standIn ? ", a stand-in on a preview" : "") : w.standIn ? "A stand-in, on a preview" : "Someone you share a Between with";
         acts.push({ label: w.kind === "self" ? "For yourself" : `For ${w.name}`, sub, on: () => choose(w) });
       }
