@@ -112,6 +112,8 @@ export default defineConfig({
       'src/lib/studio/__tests__/deck.test.ts',
       'src/lib/studio/__tests__/fleet.test.ts',
       'src/lib/studio/__tests__/shaman.test.ts',
+      'src/lib/lantern/__tests__/engine.test.ts',
+      'src/lib/lantern/__tests__/kit.test.ts',
     ],
   },
   resolve: {
