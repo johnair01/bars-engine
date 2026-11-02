@@ -27,8 +27,17 @@ export const SUITS = {
   SU: { code: "SU", name: "Show Up", domain: "Do it together" },
 };
 export const SELF = { kind: "self" };
-/** The table's last choice when you have no spark yet: it opens the built Plant a spark sheet (garden.js "setup"). */
+/** The table's last choice: it opens the built Plant a spark sheet (garden.js "setup"). It stays on the table after your
+    first spark, so a toss can be for anyone you are drawn to, chosen each time (his note 2026-11-02: "One should be able to
+    do this for multiple people and choose each time"). */
 export const PLANT = { kind: "plant" };
+/** Adds the plant choice at the end of the table's choices, always, and says whether it is a first spark or a new one.
+    @param {any[]} choices */
+export function withPlant(choices) {
+  const out = (choices || []).filter(w => w && w.kind !== "plant");
+  out.push({ ...PLANT, fresh: !out.some(w => w.kind === "spark") });
+  return out;
+}
 /** His words on the invitation (bi-flirtcraft-door, 2026-10-31). The table lays them with the link; you send it by hand. */
 export const INVITE_WORDS = "Let's play together in this room I've made";
 /** Where a spark's move goes, by suit (bi-door-order): yourself, then them, then the invitation. */
