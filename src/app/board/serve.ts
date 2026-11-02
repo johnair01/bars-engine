@@ -8,6 +8,7 @@ import { patchCouncilPage } from '@/lib/board/council-page'
 import { readText } from '@/lib/board/content-store'
 import { boardShim } from './shim'
 import { UI_TOKENS } from '@/lib/ui/tokens-link'
+import { CHALK_TAG } from '@/lib/marks/chalk'
 
 const PAGES: Record<string, string> = {
   nonprofit: process.env.BOARD_PAGE_URL
@@ -54,7 +55,9 @@ async function page(board: string, url = PAGES[board]): Promise<string | null> {
 /** The built page is a fragment (claude.ai supplies the document around it): no doctype, head, charset or viewport.
  * Served raw it would render in quirks mode, so it gets the document shell here, with the store shim first. */
 export function wrap(html: string, board: string): string {
+  // The chalk ring rides on the Council Board always (it is his page), so a hold on a card can mark what he saw there.
   const shim = boardShim(board, board === 'nonprofit' ? '/board' : `/board/${board}`) + '\n' + UI_TOKENS
+    + (board === 'council' ? '\n' + CHALK_TAG : '')
   if (/<!doctype/i.test(html)) return html.replace(/<html(?![^>]*data-theme)([^>]*)>/i, '<html$1 data-theme="auto">')
     .replace(/<head[^>]*>/i, m => `${m}\n${shim}`)
   return `<!doctype html>\n<html lang="en" data-theme="auto"><head>\n<meta charset="utf-8">\n`
