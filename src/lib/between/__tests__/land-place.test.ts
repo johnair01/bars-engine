@@ -51,4 +51,31 @@ describe('the first land (place.js)', () => {
     const page = readFileSync(join(root, 'public/between/land.html'), 'utf8')
     expect(page).toMatch(/\/between\/land\/land\.js/)
   })
+
+  it('builds every aspect of the Scale-House, the second land, under no weather of its own', async () => {
+    const charge = sample()
+    const g = await read(charge)
+    const md = sheet(charge, g)
+    const loc = locations(charge, g).find((l: { role: string }) => l.role === 'villain')
+    const p = plan(loc, '')
+    expect(p.name).toBe('The Scale-House')
+    expect(p.land).toBe('forest')
+    expect(p.pieces.map((x: { id: string }) => x.id)).toEqual(['weight-hut', 'amber-air', 'toolbag-balance'])
+    expect(p.unbuilt).toEqual([])
+    const secrets = secretsHere(md, p)
+    expect(secrets.some((s: string) => /scale reads the bag/.test(s))).toBe(true)
+    expect(secrets.some((s: string) => /needs one plank/.test(s))).toBe(true)
+  })
+
+  it('the bridge is a wall until the plank is laid, and the path out of the clearing leads there', async () => {
+    const sh = await import('../../../../public/between/land/scale-house.js')
+    const mid = { x: sh.GULLY.x, z: sh.BRIDGE_Z }
+    expect(sh.walkable(mid.x, mid.z, false)).toBe(false)
+    expect(sh.walkable(mid.x, mid.z, true)).toBe(true)
+    expect(sh.walkable(sh.ARRIVE.x, sh.ARRIVE.z, false)).toBe(true)
+    expect(sh.walkable(0, 0, true)).toBe(false)
+    const land = readFileSync(join(root, 'public/between/land/land.js'), 'utf8')
+    expect(land).toMatch(/data-act="\$\{act\}"/)
+    expect(land).toMatch(/go:scale-house/)
+  })
 })
