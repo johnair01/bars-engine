@@ -209,7 +209,7 @@ function goTo(place) {
     const r=Math.hypot(p.x,p.z);if(r>5.2){p.x*=5.2/r;p.z*=5.2/r}
     camera.position.copy(p);camera.lookAt(floorCenter)
   }
-  else if(place!=='wall') camera.lookAt(place==='anchors'?-1.5:1.5,1,-1)
+  else if(place!=='wall') camera.lookAt(place==='anchors'?-3:3,1,-.8)
   approach.disabled=true; nextStation.disabled=true
   instruction.textContent = place === 'wall' ? 'Walking to the wall…' : place === 'anchors' ? 'Walking to the anchor table…' : place === 'floor' ? 'Carrying this to the triangle…' : 'Walking to the action loom…'
 }
