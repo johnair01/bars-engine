@@ -36,17 +36,19 @@ export async function returnLapsed(db: Db, now = new Date()): Promise<number> {
 }
 
 /**
- * Claim the oldest ready ticket in a lane, inside one UPDATE ... WHERE id = (SELECT ... FOR UPDATE SKIP LOCKED), so two
+ * Claim the oldest ready ticket in a lane (or the one named by `id`, if it is ready in that lane), inside one UPDATE ... WHERE id = (SELECT ... FOR UPDATE SKIP LOCKED), so two
  * workers in one lane never take the same ticket. Null when the lane's deck is empty.
  */
-export async function claimTicket(db: Db, lane: string, by: string, now = new Date()): Promise<ClaimedTicket | null> {
+export async function claimTicket(db: Db, lane: string, by: string, now = new Date(), id?: string): Promise<ClaimedTicket | null> {
   await returnLapsed(db, now)
   const until = new Date(now.getTime() + LEASE_MS)
+  // With an id, only that ticket may be taken (still ready, still in this lane); otherwise the lane's oldest.
   const rows = await db.$queryRaw<ClaimedTicket[]>`
     UPDATE "work_tickets" SET "state" = 'claimed', "claimed_by" = ${by}, "lease_until" = ${until},
       "attempts" = "attempts" + 1, "updated_at" = ${now}
     WHERE "id" = (
       SELECT "id" FROM "work_tickets" WHERE "lane" = ${lane} AND "state" = 'ready'
+        AND (${id ?? null}::text IS NULL OR "id" = ${id ?? null}::text)
       ORDER BY "created_at" ASC LIMIT 1 FOR UPDATE SKIP LOCKED)
     RETURNING "id", "title", "brief", "basis", "lanes", "lane", "claimed_by" AS "claimedBy",
       "lease_until" AS "leaseUntil", "attempts"`

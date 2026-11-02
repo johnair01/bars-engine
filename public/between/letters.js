@@ -35,7 +35,13 @@ import { createObstacle } from "./obstacle.js";
 import { HAND, ENCOUNTERS, NOOK, ORDER, elementOf, lineFor, encounterState, currentEncounter, obstacleLine } from "./encounter-lines.js";
 
 const STAND_IN = "stand-in";
-const EL = { wood: "#7fae5a", water: "#5a8fc4", fire: "#e0703a", metal: "#c9c3b5" };
+/* the element colours are card-tokens.ts's, through /ui/tokens.css (--ui-<el> the frame, --ui-<el>-glow the light);
+   the hexes here are the same values, for a page that has not linked the token file */
+const EL_FALLBACK = { wood: ["#4a7c59", "#27ae60"], water: ["#1a3a5c", "#1a7a8a"], fire: ["#c1392b", "#e8671a"], metal: ["#8e9aab", "#bdc3c7"], earth: ["#b5651d", "#d4a017"] };
+const tok = (name, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fb; } catch { return fb; } };
+const elFrame = el => tok(`--ui-${el}`, (EL_FALLBACK[el] || EL_FALLBACK.fire)[0]);
+const elGlow = el => tok(`--ui-${el}-glow`, (EL_FALLBACK[el] || EL_FALLBACK.fire)[1]);
+const elVars = el => `--el:${elGlow(el)};--elf:${elFrame(el)}`;
 const KEY = "between.letters.rehearsal";
 // the obstacle's box is the place, the parts the two cards drew, and the two cards
 // the grey edge each room looks out on: the hollow's open side, the nook's window (room-kit.js: the valley lies toward -z)
@@ -43,44 +49,59 @@ const EDGE = { hollow: { at: [0.2, 1.75, -4.4], cam: [0.2, 2.2, 4.6, 0.2, 1.35, 
 
 const css = `
 #letters-hand { position: fixed; left: 0; right: 0; bottom: 0; height: 30%; z-index: 41; pointer-events: none; }
-#letters-hand .lc { position: absolute; bottom: 4%; width: 96px; height: 138px; margin-left: -48px; border-radius: 10px; transform-origin: 50% 170%;
-  background: linear-gradient(170deg, #2a1d17, #17110e); border: 1.5px solid rgba(255,214,160,.6); box-shadow: 0 6px 18px rgba(0,0,0,.6);
-  padding: 12px 9px; box-sizing: border-box; font: 400 14px/1.2 "Marcellus", Georgia, serif; color: #f6ecdc; pointer-events: auto; cursor: pointer;
-  transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease, filter .3s ease; text-align: left; }
-#letters-hand .lc::before { content: ""; position: absolute; left: 9px; right: 9px; top: 6px; height: 3px; border-radius: 2px; background: var(--el); }
-#letters-hand .lc small { position: absolute; left: 9px; right: 9px; bottom: 8px; font: italic 400 11px "Alegreya Sans", system-ui, sans-serif; color: #ffd08a; opacity: .85; }
-#letters-hand .lc.gone { filter: brightness(.45) saturate(.6); cursor: default; }
+/* a hand card: dark card stock in a brass bezel (his note on uu1-look-1), matte and paper-toned at Paper 17 */
+#letters-hand .lc { position: absolute; bottom: 4%; width: 100px; height: 144px; margin-left: -50px; border-radius: var(--ui-r-card, 10px); transform-origin: 50% 170%;
+  background: radial-gradient(130% 80% at 22% 8%, #3a271c 0%, #241811 55%, #17100c 100%); border: 0;
+  box-shadow: inset 0 0 0 3px var(--ui-brass, #b8914a), inset 0 0 0 4px var(--ui-brass-lo, #5e4520), inset 0 0 0 5px rgba(255,230,180,.14), 0 1px 0 4px rgba(94,69,32,.35), 0 8px 20px rgba(0,0,0,.6);
+  padding: 15px 12px; box-sizing: border-box; font: 400 15px/1.18 var(--ui-display, "Marcellus", Georgia, serif); color: #f6ecdc; pointer-events: auto; cursor: pointer;
+  transition: transform .45s var(--ui-ease, cubic-bezier(.2,.8,.2,1)), opacity .3s ease, filter .3s ease; text-align: left; }
+#letters-hand .lc::before { content: ""; position: absolute; left: 12px; right: 12px; top: 8px; height: 3px; border-radius: 2px; background: var(--el); box-shadow: 0 0 calc(4px + 6px * var(--ui-loud, .92)) var(--el); }
+#letters-hand .lc::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: calc((1 - var(--ui-paper, .17)) * .5); mix-blend-mode: soft-light;
+  background: repeating-linear-gradient(115deg, rgba(255,240,210,.05) 0 2px, transparent 2px 5px), radial-gradient(90% 60% at 70% 90%, rgba(255,220,170,.06), transparent); }
+#letters-hand .lc small { position: absolute; left: 12px; right: 10px; bottom: 11px; font: italic 400 14px/1.15 var(--ui-body, system-ui, sans-serif); color: #ffd08a; opacity: .9; }
+#letters-hand .lc:focus-visible { outline: 3px solid var(--ui-accent, #5fc2ba); outline-offset: 3px; }
+#letters-hand .lc.gone { filter: brightness(.5) saturate(.6); cursor: default; }
 #letters-hand.down .lc { transform: translateY(160%) !important; }
 body.letters-dim #stage canvas { filter: brightness(var(--dimb, .4)) saturate(.8) blur(2.5px); transition: filter .5s ease; }
 #letters-card { position: fixed; z-index: 42; left: 6%; right: 6%; top: var(--bt, 7%); bottom: var(--bb, 12%); perspective: 900px; pointer-events: none;
-  --display: "Marcellus", Georgia, serif; --body: "Alegreya Sans", system-ui, sans-serif; color: #f6ecdc; }
+  --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); color: #f6ecdc; }
 #letters-card[hidden] { display: none; }
-#letters-card .face { position: absolute; inset: 0; border-radius: 18px; transform: rotateX(4deg) rotateZ(-1.2deg); transform-origin: 50% 100%; pointer-events: auto;
-  background: radial-gradient(120% 70% at 18% 6%, #4a3020 0%, #2a1c15 45%, #160f0c 100%); border: 2px solid rgba(255,214,160,.7);
-  box-shadow: 0 0 0 6px rgba(20,12,8,.55), 0 0 60px rgba(255,170,90,.28), 0 24px 50px rgba(0,0,0,.75); padding: 30px 26px 20px; box-sizing: border-box;
-  display: flex; flex-direction: column; overflow: hidden; transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .35s ease; }
-#letters-card .face::before { content: ""; position: absolute; left: 22px; right: 22px; top: 14px; height: 5px; border-radius: 3px; background: var(--el); box-shadow: 0 0 12px var(--el); }
-#letters-card .face::after { content: ""; position: absolute; inset: 9px; border-radius: 12px; border: 1px solid rgba(255,214,160,.18); pointer-events: none; }
-#letters-card .kind { font: 600 11px var(--body); letter-spacing: .16em; text-transform: uppercase; opacity: .62; margin-top: 4px; }
-#letters-card h2 { margin: 6px 0 0; font: 400 clamp(26px, 8vw, 33px)/1.08 var(--display); color: #fff3e2; }
+#letters-card .face { position: absolute; inset: 0; border-radius: var(--ui-r-face, 18px); transform: rotateX(4deg) rotateZ(-1.2deg); transform-origin: 50% 100%; pointer-events: auto;
+  background: radial-gradient(120% 70% at 18% 6%, #4a3020 0%, #2a1c15 45%, #160f0c 100%); border: 0;
+  box-shadow: inset 0 0 0 4px var(--ui-brass, #b8914a), inset 0 0 0 5px var(--ui-brass-lo, #5e4520), inset 0 0 0 6px rgba(255,230,180,.14), 0 0 0 6px rgba(20,12,8,.55), 0 0 60px rgba(255,170,90,.28), 0 24px 50px rgba(0,0,0,.75);
+  padding: 30px 26px 20px; box-sizing: border-box;
+  display: flex; flex-direction: column; overflow: hidden; transition: transform .55s var(--ui-ease, cubic-bezier(.2,.8,.2,1)), opacity .35s ease; }
+#letters-card .face::before { content: ""; position: absolute; left: 22px; right: 22px; top: 14px; height: 5px; border-radius: 3px; background: var(--el); box-shadow: 0 0 calc(6px + 10px * var(--ui-loud, .92)) var(--el); }
+#letters-card .face::after { content: ""; position: absolute; inset: 11px; border-radius: 10px; border: 1px solid rgba(255,214,160,.16); pointer-events: none; }
+#letters-card .kind { font: 400 15px/1.3 var(--body); color: #d9c3a6; margin-top: 6px; }
+#letters-card h2 { margin: 8px 0 0; font: 400 clamp(26px, 8vw, 33px)/1.08 var(--display); color: #fff3e2; }
 #letters-card .q { margin-top: 12px; font: italic 400 clamp(16px, 4.8vw, 19px)/1.32 var(--body); color: #f1dcc0; }
-#letters-card .against { margin-top: 14px; font: 400 14px/1.3 var(--body); color: #ffcf8f; }
-#letters-card .lbl { margin-top: 14px; font: 600 11px var(--body); letter-spacing: .16em; text-transform: uppercase; opacity: .6; }
+#letters-card .against { margin-top: 14px; font: 400 15px/1.3 var(--body); color: #ffcf8f; }
+#letters-card .lbl { margin-top: 16px; font: 400 15px/1.3 var(--body); color: #d9c3a6; }
 #letters-card .steps { margin-top: 8px; display: grid; gap: 2px; }
-#letters-card .st { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; padding: 10px 0; border: 0; border-top: 1px solid rgba(255,214,160,.14);
-  background: none; text-align: left; font: 500 clamp(15px, 4.4vw, 17.5px)/1.28 var(--body); color: #fff1de; cursor: pointer; }
-#letters-card .st i { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #f6b27a, #a9461f 70%); box-shadow: 0 0 0 2px rgba(255,214,160,.35), 0 3px 6px rgba(0,0,0,.6), inset 0 -3px 5px rgba(0,0,0,.35); }
-#letters-card.preview .st { color: #e9d6bd; font-weight: 400; cursor: default; }
-#letters-card.preview .st i { background: radial-gradient(circle at 38% 32%, #8a6a52, #4a3326 70%); box-shadow: 0 0 0 2px rgba(255,214,160,.2), inset 0 -3px 5px rgba(0,0,0,.35); }
-#letters-card .st.up i { box-shadow: 0 0 0 2px #ffd08a, 0 0 18px rgba(255,180,100,.85), inset 0 -3px 5px rgba(0,0,0,.3); }
+#letters-card .st { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; padding: 10px 0; min-height: 48px; border: 0; border-top: 1px solid rgba(255,214,160,.14);
+  background: none; text-align: left; font: 400 clamp(15px, 4.4vw, 17.5px)/1.28 var(--body); color: #fff1de; cursor: pointer; }
+/* the seals take the card's element: wax at the paper end, a glow ring as loud as --ui-loud */
+#letters-card .st i, #letters-card .send i { position: relative; border-radius: 50%; }
+#letters-card .st i { width: 30px; height: 30px; }
+#letters-card .st i::before, #letters-card .send i::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, color-mix(in oklab, var(--el) 78%, #fff) 0%, var(--el) 24%, var(--elf) 62%, color-mix(in oklab, var(--elf) 55%, #000) 100%);
+  box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 -3px 5px rgba(0,0,0,.35);
+  clip-path: polygon(98% 50%, 95% 63%, 91% 74%, 83% 84%, 73% 91%, 62% 96%, 50% 98%, 37% 96%, 26% 91%, 16% 84%, 8% 74%, 3% 63%, 2% 50%, 4% 37%, 9% 26%, 17% 16%, 26% 8%, 38% 3%, 50% 2%, 63% 4%, 74% 9%, 84% 17%, 92% 26%, 96% 38%); }
+#letters-card .st i::after, #letters-card .send i::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 calc(2px + 3px * var(--ui-loud, .92)) color-mix(in oklab, var(--el) 70%, transparent), 0 0 calc(8px + 18px * var(--ui-loud, .92)) var(--el); transition: opacity .3s ease; }
+#letters-card .send i::after { opacity: var(--ui-glow, .67); }
+#letters-card.preview .st { color: #e9d6bd; cursor: default; }
+#letters-card.preview .st i::before { filter: saturate(.35) brightness(.7); }
+#letters-card .st.up i::after { opacity: var(--ui-glow, .67); }
 #letters-card .st.up { color: #fff; }
-#letters-card .note { margin-top: auto; margin-bottom: 14px; font: italic 400 15px/1.35 var(--body); color: #cdb59a; }
-#letters-card .send { margin-top: auto; display: flex; align-items: center; gap: 14px; font: 400 19px var(--display); color: #ffd9a3; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; min-height: 48px; }
+#letters-card .note { margin-top: auto; margin-bottom: 14px; font: italic 400 15px/1.35 var(--body); color: #d9c3a6; }
+#letters-card .send { margin-top: auto; display: flex; align-items: center; gap: 16px; font: 400 19px/1.15 var(--display); color: #ffd9a3; background: none; border: 0; padding: 0 0 0 6px; text-align: left; cursor: pointer; min-height: 52px; }
 #letters-card .note + .send { margin-top: 0; }
-#letters-card .send i { flex: none; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #f39a62, #b9481f 72%); box-shadow: 0 0 0 3px rgba(120,40,10,.4), 0 0 22px rgba(255,150,80,.55), inset 0 -4px 6px rgba(0,0,0,.35); }
+#letters-card .send i { flex: none; width: 46px; height: 46px; }
 #letters-card .send[disabled] { opacity: .45; cursor: default; }
-#letters-card .send small { display: block; font: 400 13px/1.3 var(--body); color: #cdb59a; margin-top: 2px; }
-#letters-card .back { position: absolute; right: 14px; top: 20px; background: none; border: 0; color: #cdb59a; font: 400 13px var(--body); padding: 8px; cursor: pointer; }
+#letters-card .send[disabled] i::after { opacity: 0; }
+#letters-card .send small { display: block; font: 400 14px/1.3 var(--body); color: #d9c3a6; margin-top: 3px; }
 #letters-card.folding .face { transform: translateY(-38%) rotateX(70deg) scale(.18); opacity: 0; }
 `;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -214,7 +235,7 @@ export function mount(B, opts = {}) {
     const c = document.createElement("canvas"); c.width = 256; c.height = 368; const x = c.getContext("2d");
     const gr = x.createLinearGradient(0, 0, 0, 368); gr.addColorStop(0, "#3a271c"); gr.addColorStop(1, "#1a120e"); x.fillStyle = gr; x.fillRect(0, 0, 256, 368);
     x.strokeStyle = "#ffd08a"; x.lineWidth = 6; x.strokeRect(5, 5, 246, 358);
-    x.fillStyle = EL[elementOf(id)]; x.fillRect(22, 18, 212, 9);
+    x.fillStyle = elGlow(elementOf(id)); x.fillRect(22, 18, 212, 9);
     x.fillStyle = "#fff1de"; x.font = "34px Marcellus, Georgia, serif";
     const words = title(id).split(" "); let line = "", y = 82;
     for (const w of words) { if (x.measureText(line + w).width > 210 && line) { x.fillText(line.trim(), 22, y); y += 40; line = ""; } line += w + " "; }
@@ -279,7 +300,7 @@ export function mount(B, opts = {}) {
     const used = view ? sentBy(view.L, view.me) : [];
     handEl.innerHTML = HAND.map((c, i) => {
       const t = (i - 3) / 3, gone = used.includes(c);
-      return `<button type="button" class="lc${gone ? " gone" : ""}" data-card="${c}" style="--el:${EL[elementOf(c)]};left:${50 + t * 40}%;transform:translateY(${Math.abs(t) * 12}px) rotate(${t * 13}deg)">${esc(title(c))}${gone ? "<small>in the Between</small>" : ""}</button>`;
+      return `<button type="button" class="lc${gone ? " gone" : ""}" data-card="${c}" style="${elVars(elementOf(c))};left:${50 + t * 40}%;transform:translateY(${Math.abs(t) * 12}px) rotate(${t * 13}deg)">${esc(title(c))}${gone ? "<small>in the Between</small>" : ""}</button>`;
     }).join("");
   }
   handEl.addEventListener("click", e => {
@@ -305,9 +326,11 @@ export function mount(B, opts = {}) {
     dirty();
   }
   function putDown() { up = null; chosen = null; cardEl.hidden = true; document.body.classList.remove("letters-dim"); dirty(); }
+  /* "Put it down" (the screen owner's one back move, top right; Escape and a swipe down too): the card goes back where
+     it came from, into the hand from the nook, or to the grey edge in the Between */
+  const putBack = () => { const view = state(); if (!up || folding) return; putDown(); if (view && !view.mine) { handOpen = true; handEl.classList.remove("down"); dirty(); } };
   cardEl.addEventListener("click", async e => {
     const view = state(); if (!view || !up) return;
-    if (e.target.closest(".back")) { putDown(); if (!view.mine) { handOpen = true; handEl.classList.remove("down"); } return; }
     const s = e.target.closest(".st[data-i]");
     if (s && !cardEl.classList.contains("preview")) { chosen = +s.dataset.i; renderCard(view); return; }
     if (!e.target.closest(".send") || sending) return;
@@ -335,17 +358,18 @@ export function mount(B, opts = {}) {
     if (!force && cardEl.dataset.key === key) return;
     cardEl.dataset.key = key; cardEl.hidden = false;
     cardEl.className = between ? "" : "preview";
-    cardEl.style.setProperty("--el", EL[elementOf(card)]);
+    cardEl.style.setProperty("--el", elGlow(elementOf(card))); cardEl.style.setProperty("--elf", elFrame(elementOf(card)));
     cardEl.style.setProperty("--bt", between ? "21%" : "6%"); cardEl.style.setProperty("--bb", between ? "9%" : "12%");
     const foot = between
       ? `<button type="button" class="send" ${chosen == null ? "disabled" : ""}><i></i><div>Take this step<small>It lands when your partner takes theirs.</small></div></button>`
       : `<div class="note">Your partner sends one of theirs. Where the two cards meet, the Between draws what you face together.</div><button type="button" class="send"><i></i><div>Seal it and send<small>It opens in the Between beside your partner's card.</small></div></button>`;
-    cardEl.innerHTML = `<div class="face"><button type="button" class="back">Put it down</button><div class="kind">Wake Up · ${esc(faceOf(card))}</div><h2>${esc(title(card))}</h2>`
+    cardEl.innerHTML = `<div class="face"><h2>${esc(title(card))}</h2><div class="kind">Wake Up · ${esc(faceOf(card))}</div>`
       + `<div class="q">${esc(question(card))}</div>`
       + (between ? `<div class="against">Against ${esc(l ? l.part : "the obstacle")}</div>` : `<div class="lbl">What it can do</div><div class="against">Written when the Between opens. You and your partner learn it together.</div>`)
       + `<div class="steps">${steps.map((s, i) => `<button type="button" class="st${i === chosen ? " up" : ""}" data-i="${i}"><i></i><span>${esc(s)}</span></button>`).join("")}</div>${foot}</div>`;
-    if (between && theirs) voice.say({ subject: () => rectOf(cardEl.querySelector(".face")), foot: view.partnerStepped ? "Your partner has taken their step." : `Your partner is choosing a step from ${title(theirs)}.` });
-    else voice.say({ subject: () => rectOf(cardEl.querySelector(".face")) });
+    const down = { on: putBack };
+    if (between && theirs) voice.say({ subject: () => rectOf(cardEl.querySelector(".face")), down, foot: view.partnerStepped ? "Your partner has taken their step." : `Your partner is choosing a step from ${title(theirs)}.` });
+    else voice.say({ subject: () => rectOf(cardEl.querySelector(".face")), down });
   }
   const rectOf = e => { if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
 
@@ -372,13 +396,13 @@ export function mount(B, opts = {}) {
       return { key: "overcome:" + v.enc, cam: "edge", obstacle: true, say: { head: (v.story && v.story.name) || v.st.story, sub: `${ENCOUNTERS[v.enc].overcome} A story you can both name; told over tea, it mints a vibeulon.`, landed, actions: [{ label: "Walk on", quiet: true, on: () => { ack(v.enc); dirty(); } }] } };
     }
     if (!v.mine) {
-      if (handOpen) return { key: "hand", hand: true, say: { head: "Send a question to the Between.", sub: v.theirsIn ? "Your partner's letter is already there. Yours opens beside it." : "Your partner sends one of theirs. You open them together.", actions: [{ label: "Close your hand", quiet: true, on: () => { handOpen = false; dirty(); } }] } };
-      return { key: "arrived:" + v.enc, say: { head: sit, sub: v.theirsIn ? "Your partner has sent a card. Send one of yours, and the Between opens them together." : "Send a question to the Between, as a letter. Your partner sends one of theirs.", actions: [{ label: "Open your hand", on: () => { handOpen = true; dirty(); } }, { label: "Not now", quiet: true, on: () => { dismissed = "arrived:" + v.enc; dirty(); } }] } };
+      if (handOpen) return { key: "hand", hand: true, say: { head: "Send a question to the Between.", sub: v.theirsIn ? "Your partner's letter is already there. Yours opens beside it." : "Your partner sends one of theirs. You open them together.", actions: [], down: { on: () => { handOpen = false; dirty(); } } } };
+      return { key: "arrived:" + v.enc, say: { head: sit, sub: v.theirsIn ? "Your partner has sent a card. Send one of yours, and the Between opens them together." : "Send a question to the Between, as a letter. Your partner sends one of theirs.", actions: [{ label: "Open your hand", on: () => { handOpen = true; dirty(); } }], down: { on: () => { dismissed = "arrived:" + v.enc; dirty(); } } } };
     }
     if (!v.st.both) return { key: "sent:" + v.enc, say: { head: `${title(v.mine)} is on its way.`, sub: "It opens in the Between beside your partner's card, when theirs is in.", actions: [{ label: "Walk on", quiet: true, on: () => { dismissed = "sent:" + v.enc; dirty(); } }] } };
     const lastTry = v.st.log[v.st.log.length - 1], needMe = v.st.need.includes(v.me);
     const part = u => { const l = lineFor(v.enc, v.cards[v.order.indexOf(u)]); return l ? l.part : "its part"; };
-    const pull = { label: "Pull your card up", on: () => pullUp(v.mine, myPlaneBox(v) && toRect(myPlaneBox(v))) };
+    const pull = { label: "Pull your card up", el: elementOf(v.mine), on: () => pullUp(v.mine, myPlaneBox(v) && toRect(myPlaneBox(v))) };
     const quietOn = k => ({ label: "Walk on", quiet: true, on: () => { dismissed = k; dirty(); } });
     if (v.stepped) return { key: "stepped:" + v.enc + v.st.try, cam: "edge", obstacle: true, say: { head: "Your step is taken.", sub: "It lands when your partner takes theirs.", actions: [quietOn("stepped:" + v.enc + v.st.try)] } };
     if (lastTry) {

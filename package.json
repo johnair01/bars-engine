@@ -100,6 +100,8 @@
     "test:chapter-one-lead": "tsx src/lib/mastering-allyship/__tests__/chapter-one-lead.test.ts",
     "test:list-contract": "tsx src/lib/esp/__tests__/list-contract.test.ts",
     "test:footer-surfaces": "tsx src/lib/ui/__tests__/footer-surfaces.test.ts",
+    "test:ui-tokens": "tsx src/lib/ui/__tests__/ui-tokens.test.ts",
+    "ui:tokens": "node scripts/ui-tokens.mjs",
     "test:build-log": "tsx src/lib/build-log/__tests__/posts.test.ts",
     "test:go-audiences": "tsx src/lib/go/__tests__/audiences.test.ts",
     "test:corridor": "tsx src/lib/tour-leads/__tests__/corridor.test.ts",

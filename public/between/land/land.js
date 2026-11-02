@@ -481,7 +481,7 @@ async function build() {
     for (let i = 0, n = LOW ? 26 : 44; i < n; i++) { const a = r() * 6.28, d = CLR - 0.6 + r() * 2.2, x = Math.cos(a) * d, z = Math.sin(a) * d; if (path(x, z)) continue; plant(ferns[i % ferns.length], x, z, 0.55 + r() * 0.5, r() * 6.28); }
     for (const sx of [-1.7, 1.6, -2.3, 2.2]) plant(ferns[(sx > 0 ? 1 : 2) % ferns.length], ARCH.x + sx, ARCH.z - 0.3 + Math.abs(sx) * 0.2, 0.7, r() * 6.28); }
   if (clump) for (let i = 0, n = LOW ? 20 : 40; i < n; i++) { const a = r() * 6.28, d = 1.8 + r() * (CLR - 2.2), x = Math.cos(a) * d, z = Math.sin(a) * d; if (path(x, z) || d < 1.9) continue; plant(clump, x, z, 0.3 + r() * 0.25, r() * 6.28); }
-  if (rock) for (const [x, z, s] of [[-4.2, 3.6, 0.8], [4.6, 2.4, 0.6], [2.1, -4.8, 0.7], [-1.6, 7.6, 0.45], [1.9, 8.9, 0.5]]) plant(rock, x, z, s, r() * 6.28);
+  if (rock) for (const [x, z, s] of [[-4.2, 3.6, 0.8], [4.6, 2.4, 0.6], [2.1, -4.8, 0.7], [-3.1, 7.6, 0.45], [3.2, 8.9, 0.5]]) plant(rock, x, z, s, r() * 6.28);
   if (pitcher) plant(pitcher, -3.9, -3.1, 0.75, 0.8);
   mist(r, LOW ? 14 : 26, 0xb8c8bc, 0.13, 5);
   state.flies = fireflies(r, LOW ? 90 : 160, 0xe8f0a0, 14);
@@ -495,7 +495,8 @@ async function build() {
 /* ===================================================================================================
    Walking: tap the ground to walk there, drag to look round, or the arrow keys
    =================================================================================================== */
-const me = { pos: V(0, 0, ARCH.z - 0.9), yaw: Math.PI, target: null, keys: new Set() };
+const ARRIVE_Z = CLR - 2.6;   // you arrive just inside the ring, on the trodden way, facing the stump: open ground, no rock or trunk between you and the camera
+const me = { pos: V(0, 0, ARRIVE_Z), yaw: Math.PI, target: null, keys: new Set() };
 const SPEED = 1.15;
 function walkable(x, z) {
   const d = Math.hypot(x, z);
@@ -614,6 +615,7 @@ $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
 /* ===================================================================================================
    The frame
    =================================================================================================== */
+let arrive = null;
 const clock = new THREE.Clock(); let T = 0;
 function frame() {
   requestAnimationFrame(frame);
@@ -628,6 +630,15 @@ function frame() {
   if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; }
   want.y = Math.max(want.y, groundH(want.x, want.z) + 0.6);
   camera.position.lerp(want, 1 - Math.exp(-dt * 6));
+  // arrival: the camera starts wide and high so you are the first thing you see, then settles to the walking frame; a ring of light marks you until you move
+  if (arrive) {
+    arrive.t += dt; if (me.target || me.keys.size || drag) arrive.moved = true;
+    const k = Math.min(1, arrive.t / 3), e = 1 - (1 - k) * (1 - k);
+    camDist = arrive.dist0 + (arrive.dist1 - arrive.dist0) * e; if (!drag) camPitch = arrive.pitch0 + (arrive.pitch1 - arrive.pitch0) * e;
+    const fade = arrive.moved ? Math.max(0, arrive.fade - dt * 1.2) : (arrive.t > 9 ? Math.max(0, arrive.fade - dt * 0.5) : 1); arrive.fade = fade;
+    arrive.ring.position.set(me.pos.x, me.pos.y + 0.04, me.pos.z); const pulse = 1 + Math.sin(arrive.t * 3) * 0.06; arrive.ring.scale.set(pulse, pulse, pulse); arrive.ring.material.opacity = 0.75 * fade;
+    if (fade <= 0) { scene.remove(arrive.ring); arrive = null; }
+  }
   camera.lookAt(me.pos.clone().add(V(0, 1.25, 0)));
   // the hum: every so often it starts, and stops mid-bar (until the song has been played to its end)
   if (bar && T > humAt) { playPhrase(state.done); humAt = T + (state.done ? 16 : 11); if (!state.done && T > 8 && Math.hypot(me.pos.x, me.pos.z) < CLR - 1) tell("bar", "Through the trees, the hum starts again, and stops mid-bar.", 5); }
@@ -660,7 +671,14 @@ function frame() {
     // previews: stand at the stump, or open with the song done
     if (Q.get("at") === "stump") { me.pos.set(0, 0, STUMP_R + 0.6); me.yaw = Math.PI; camYaw = 0.35; }
     if (Q.get("song") === "done" && bar) { state.given = CADENCE.slice(); bar.more.forEach(m => { m.want = m.on = 1; }); for (const f of bar.falling) f.material.opacity = 0; state.done = true; state.rainK = 0; }
-    camera.position.copy(me.pos).add(V(0, 2.2, 4.2));
+    if (!Q.get("at")) {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.0, 48), new THREE.MeshBasicMaterial({ color: 0xf3e2a0, transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+      ring.rotation.x = -Math.PI / 2; ring.renderOrder = 5; scene.add(ring);
+      arrive = { t: 0, moved: false, fade: 1, ring, dist0: 5.6, dist1: camDist, pitch0: 0.5, pitch1: camPitch };
+      camDist = arrive.dist0; camPitch = arrive.pitch0;
+    }
+    { const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
+      camera.position.copy(me.pos).add(off).add(V(0, 1.0, 0)); const f = Math.hypot(camera.position.x, camera.position.z), l = CLR + 5; if (f > l) { camera.position.x *= l / f; camera.position.z *= l / f; } }
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
