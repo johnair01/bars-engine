@@ -35,3 +35,7 @@
 ## Definition of done
 
 The Lab proves one person can see a player-authored thought string, intentionally confirm EA anchors, receive stable canonical movement frames, select an action grammar appropriate to a bounded gathering initiative, and leave with a readable—but unpersisted—BAR preview. It produces no game-world side effects.
+
+## Walkable first slice — player and wall
+
+Build on the early 3D arrival: a visible player enters, walks by tapping a floor target or using a keyboard, and can approach the wall using a clearly labelled equivalent action. Keep the camera and player visible at phone size, constrain movement within the room and around the central furniture, and stop movement when a practice choice is presented. On arrival the player deliberately projects the authored triangle; restart restores the starting state. Keep the demonstration local and non-persistent. Verify the rendered phone-sized scene, touch and keyboard movement, approach, projection, restart, and no unintended writes. This slice does not claim the anchor table or action loom is complete.
