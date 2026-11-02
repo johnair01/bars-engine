@@ -21,3 +21,19 @@ export function ticketFromHarbourSend(berth: string, now = new Date()): TicketDr
     lanes: [...DEFAULT_LANES],
   }
 }
+
+/**
+ * The ticket the board's "Pull now" button makes: a request to land his saved answers on main without a board read.
+ * The pickup claims it like any Send; its row `pull:now` tells the thread to run `python3 board/live_pull.py` and close
+ * the ticket (docs/pickup.md, "A pull request"). One ticket per minute, so a double tap makes one.
+ */
+export function ticketFromPullNow(now = new Date()): TicketDraft {
+  const minute = now.toISOString().slice(0, 16)
+  return {
+    sourceKey: `pull-now@${minute}`,
+    title: 'Pull his saved answers onto main',
+    brief: 'In wendell-britt/six-faces-council on main, run `python3 board/live_pull.py`, then close this ticket with `python3 board/work_pickup.py done <id>`. Do not start a board read.',
+    basis: { rows: ['pull:now'], answer: '', label: 'Pull now on the board', steer: '', savedAt: now.toISOString() },
+    lanes: ['claude'],  // the pull needs a session with the council token, not a freebuff lane,
+  }
+}
