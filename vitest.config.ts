@@ -114,6 +114,7 @@ export default defineConfig({
       'src/lib/studio/__tests__/shaman.test.ts',
       'src/lib/lantern/__tests__/engine.test.ts',
       'src/lib/lantern/__tests__/kit.test.ts',
+      'src/lib/lantern/__tests__/intake.test.ts',
     ],
   },
   resolve: {
