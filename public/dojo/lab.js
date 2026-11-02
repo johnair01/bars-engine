@@ -60,10 +60,12 @@ frame.position.set(0,2.18,-4.62); wall.add(frame)
 const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.68,1.84), new THREE.MeshBasicMaterial({color:0x0c2927,side:THREE.DoubleSide}))
 screen.position.set(0,2.18,-4.54); wall.add(screen)
 // A single example is deliberately authored rather than inferred from the player.
-const points = [new THREE.Vector3(0, 2.8, -4.5), new THREE.Vector3(-1.05, 1.65, -4.5), new THREE.Vector3(1.05, 1.65, -4.5)]
+const wallSide = 1.02, wallHeight = wallSide * Math.sqrt(3) / 2, wallMid = 2.17
+const points = [new THREE.Vector3(0, wallMid + wallHeight, -4.5), new THREE.Vector3(-wallSide/2, wallMid, -4.5), new THREE.Vector3(wallSide/2, wallMid, -4.5)]
 const material = new THREE.LineBasicMaterial({ color: 0x85f4de })
 wall.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), material))
-wall.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([points[1], new THREE.Vector3(0,1.28,-4.5),points[2]]),new THREE.LineBasicMaterial({color:0xddbf83})))
+const lowerPoint = new THREE.Vector3(0,wallMid-wallHeight,-4.5)
+wall.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([points[1],lowerPoint,points[2]]),new THREE.LineBasicMaterial({color:0xddbf83})))
 const hit = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }))
 hit.position.set(0, 2.1, -4.46); wall.add(hit)
 points.forEach(p => { const sphere = new THREE.Mesh(new THREE.SphereGeometry(.105, 16, 12), new THREE.MeshBasicMaterial({ color: 0xb2ffeb })); sphere.position.copy(p); wall.add(sphere) })
@@ -73,10 +75,11 @@ const labelContext = labelCanvas.getContext('2d')
 labelContext.fillStyle = '#e7fff5'; labelContext.font = 'bold 54px sans-serif'; labelContext.textAlign = 'center'
 labelContext.fillText('TAP TO EXPLORE', 512, 78)
 const label = new THREE.Mesh(new THREE.PlaneGeometry(3.2, .4), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(labelCanvas), transparent:true, side:THREE.DoubleSide, depthWrite:false}))
-label.position.set(0, 1.18, -4.44); wall.add(label)
+label.scale.set(.42,.75,1);label.position.set(1.12, 1.48, -4.44); wall.add(label)
 scene.add(wall)
 const floor = new THREE.Group(); floor.name = 'floor-triangle'; floor.visible = false
-const floorPoints = [new THREE.Vector3(0,.035,1.75),new THREE.Vector3(-.75,.035,3.15),new THREE.Vector3(.75,.035,3.15)]
+const floorSide=1.5, floorHeight=floorSide*Math.sqrt(3)/2
+const floorPoints = [new THREE.Vector3(0,.035,3.15-floorHeight),new THREE.Vector3(-floorSide/2,.035,3.15),new THREE.Vector3(floorSide/2,.035,3.15)]
 floor.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(floorPoints), new THREE.LineBasicMaterial({color:0xffcf81})))
 floorPoints.forEach(p=>{const disc=new THREE.Mesh(new THREE.CircleGeometry(.15,24),new THREE.MeshBasicMaterial({color:0xffd79c,side:THREE.DoubleSide}));disc.rotation.x=-Math.PI/2;disc.position.copy(p);floor.add(disc)})
 const teachingOverlay=new THREE.Group();teachingOverlay.name='ea-teaching-overlay';teachingOverlay.visible=false
@@ -126,7 +129,7 @@ new GLTFLoader().load('/between/m/player.glb', gltf => {
   if (clip) { walkAction = mixer.clipAction(clip); walkAction.play(); walkAction.paused = true }
 }, undefined, () => { status.textContent = 'Using a simple traveller while the character model is unavailable.' })
 
-let entered = false, projected = false, arriving = false, target = null, route = []
+let entered = false, projected = false, arriving = false, target = null, route = [], orbitActive = false, viewingProjection = false
 const wallTarget = new THREE.Vector3(1.5, 0, -3.1)
 const stationTargets = { wall:wallTarget, anchors:new THREE.Vector3(-2.45,0,-1.15), loom:new THREE.Vector3(2.45,0,-1.15) }
 const keys = new Set()
@@ -147,7 +150,7 @@ function destination(point) {
 }
 function goTo(place) {
   if (!entered || wallOpen || stationOpen) return
-  resumeRoom(); clearKeys(); arrivingAt=place
+  resumeRoom(); clearKeys(); orbitActive=false; arrivingAt=place
   const dest=stationTargets[place].clone()
   // Cross behind the central furniture instead of oscillating against its boundary.
   if (player.position.x * dest.x < 0) {
@@ -162,6 +165,7 @@ function goTo(place) {
 function goToWall() { goTo('wall') }
 function setProjected(value) {
   clearKeys(); projected = value; floor.visible = value
+  orbitActive=false;viewingProjection=value
   document.body.classList.toggle('projected', value)
   project.hidden = true; project.disabled = false
   approach.hidden = value; approach.disabled = false
@@ -171,15 +175,15 @@ function setProjected(value) {
   if (value) { stage='anchors'; nextStation.textContent='Go to the anchor table' }
   camera.position.set(0, value ? 2.8 : 3, value ? 5.2 : 5.1)
   camera.lookAt(0, value ? 0 : .9, value ? 2.2 : -1)
-  instruction.textContent = value ? 'The triangle is on the floor. Its words remain yours.' : 'Tap the floor to walk, or tap the glowing triangle to approach it.'
+  instruction.textContent = value ? 'The triangle is on the floor. Drag to look around your character.' : 'Tap the floor to walk. Drag to look around your character.'
   status.textContent = value ? `${selection === 0 ? 'Excitement · possibility · hope' : 'Wonder · poignance · hope'}. The next practice is still being built; nothing has been saved.` : ''
 }
 function resumeRoom() {
   if (wallOpen) return
   document.body.classList.remove('projected')
-  camera.position.set(0,3,5.1); camera.lookAt(0,.9,-1)
+  if(viewingProjection) {camera.position.set(0,3,5.1);camera.lookAt(0,.9,-1);viewingProjection=false;orbitActive=false}
   if (projected) {
-    instruction.textContent = 'You can keep walking or return to the constellation wall.'
+    instruction.textContent = 'Tap the floor to walk. Drag to look around your character.'
     status.textContent = 'The projected triangle remains on the floor. Nothing is saved.'
     approach.hidden = false; approach.disabled = false; resume.hidden = true
     nextStation.hidden = false; nextStation.disabled = false
@@ -293,7 +297,7 @@ useStation.addEventListener('click',()=>openStation(stage === 'loom' ? 'loom' : 
 enter.addEventListener('click',()=>{
   entered = true; document.body.classList.add('entered'); enter.hidden = true
   approach.hidden = false
-  instruction.textContent = 'Tap the floor to walk, or tap the glowing triangle to approach it.'
+  instruction.textContent = 'Tap the floor to walk. Drag to look around your character. Tap the screen to approach it.'
 })
 approach.addEventListener('click',goToWall)
 project.addEventListener('click',()=>{ if (entered && !project.disabled) openWall() })
@@ -312,11 +316,38 @@ addEventListener('keydown', e=>{
 })
 addEventListener('keyup',e=>keys.delete(e.code))
 addEventListener('blur',clearKeys)
-window.__dojoLabState = () => ({ x: player.position.x, z: player.position.z, entered, projected, walking: Boolean(target) || keys.size > 0 })
+window.__dojoLabState = () => ({ x: player.position.x, z: player.position.z, entered, projected, walking: Boolean(target) || keys.size > 0, camera:camera.position.toArray(), floorSides:floorPoints.map((p,i)=>p.distanceTo(floorPoints[(i+1)%3])), wallSides:points.map((p,i)=>p.distanceTo(points[(i+1)%3])), lowerSides:[points[1].distanceTo(points[2]),points[1].distanceTo(lowerPoint),points[2].distanceTo(lowerPoint)] })
 if (renderer) {
+  const canvas=renderer.domElement
+  let gesture=null
+  canvas.addEventListener('pointerdown', e=>{
+    if(!entered || wallOpen || stationOpen || gesture) return
+    gesture={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,dragged:false}
+    canvas.setPointerCapture(e.pointerId)
+  })
+  canvas.addEventListener('pointermove', e=>{
+    if(!gesture || gesture.id!==e.pointerId) return
+    const dx=e.clientX-gesture.lastX,dy=e.clientY-gesture.lastY
+    if(Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y)>8) gesture.dragged=true
+    gesture.lastX=e.clientX;gesture.lastY=e.clientY
+    if(!gesture.dragged) return
+    const focus=player.position.clone().add(new THREE.Vector3(0,.7,0))
+    const orbit=new THREE.Spherical().setFromVector3(camera.position.clone().sub(focus))
+    orbit.radius=THREE.MathUtils.clamp(orbit.radius,2.5,7)
+    orbit.theta-=dx*.008;orbit.phi=THREE.MathUtils.clamp(orbit.phi+dy*.006,.35,1.42)
+    const next=focus.clone().add(new THREE.Vector3().setFromSpherical(orbit))
+    const r=Math.hypot(next.x,next.z)
+    if(r>5.3){next.x*=5.3/r;next.z*=5.3/r}
+    next.y=THREE.MathUtils.clamp(next.y,1.1,4)
+    camera.position.copy(next);camera.lookAt(focus);orbitActive=true;viewingProjection=false
+  })
+  canvas.addEventListener('pointercancel',()=>{gesture=null})
   renderer.domElement.addEventListener('pointerup', e=>{
+    const dragged=gesture?.id===e.pointerId && gesture.dragged
+    gesture=null
+    if(dragged) return
     if (!entered || wallOpen || stationOpen) return
-    if (projected) resumeRoom()
+    if (projected && viewingProjection) resumeRoom()
     pointer.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1)
     raycaster.setFromCamera(pointer,camera)
     if (raycaster.intersectObject(anchorTable,true).length && projected) { goTo('anchors'); return }
@@ -325,7 +356,7 @@ if (renderer) {
     if (raycaster.ray.intersectPlane(floorPlane,tmp)) {
       target = destination(tmp); route=[]; arriving = false; keys.clear()
       approach.disabled = false; project.hidden = true
-      instruction.textContent = 'Tap the floor to walk, or tap the glowing triangle to approach it.'
+      instruction.textContent = 'Tap the floor to walk. Drag to look around your character.'
     }
   })
   addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight) })
@@ -360,7 +391,11 @@ if (renderer) {
     if (moving) {
       const len=Math.hypot(dx,dz), step=1.6*dt
       const next = player.position.clone().add(new THREE.Vector3(dx/len*step,0,dz/len*step))
-      if (inRoom(next)) player.position.copy(next)
+      if (inRoom(next)) {
+        if(orbitActive) camera.position.add(next.clone().sub(player.position))
+        player.position.copy(next)
+        if(orbitActive) camera.lookAt(player.position.clone().add(new THREE.Vector3(0,.7,0)))
+      }
       player.rotation.y=Math.atan2(dx,dz)
     }
     if (walkAction) walkAction.paused = !moving

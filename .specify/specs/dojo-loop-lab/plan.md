@@ -54,3 +54,7 @@ node scripts/dojo/test-loop-grammar.mjs
 ```
 
 The first room treatment uses labelled greybox stations and accessible station views; its visual fidelity and comprehension need phone and independent player review. The fixture has no server action or persistence path. The player can return to live practice deliberately without copying a payload.
+
+## Camera and triangle geometry
+
+A drag on the 3D scene orbits the camera around the character; a tap remains a walk or interaction command. Preserve the orbit when walking, and keep overlays from sending movement input to the room. The two wall triangles share one edge, and the wall and floor triangles use equilateral geometry. Test the three side lengths and the distinction between a tap and a drag at phone size.
