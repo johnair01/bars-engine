@@ -554,6 +554,10 @@ const mirrorShown = () => inNook() ? !!mirrorSpot : isHome(garden);
    Placements live in garden/main as `room.placed` (rules.ts roomWrite), so a homeroom keeps them in its own doc and a shared
    room's show to both of you at the next poll. With the store down (a preview before its migration) they stay on this page. */
 const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
+/* The stand-in room (previews only, Six-faces-council hollow-interface, his note on hib2-look-1): a walkable room of two with a
+   stand-in partner already in it, so the partner's side can be tested alone. It opens from the nook's doorway ("Stand-in room")
+   or at once with ?room=standin. It reads and writes nothing in the store. */
+const STANDIN_ROOM = PREVIEW_HOST && new URLSearchParams(location.search).get("room") === "standin";
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
@@ -723,7 +727,9 @@ function portalTick(t) {
     const e = entering; entering = null;
     markSeen();
     $("#loadMsg").textContent = "Through the doorway"; $("#loadStep").textContent = ""; $("#loading").hidden = false;
-    if (e.kind === "dojo") {
+    if (e.kind === "standin") {
+      location.href = "/ontology-game/between?room=standin";
+    } else if (e.kind === "dojo") {
       location.href = "/dojo/triangle-workshop?returnTo=" + encodeURIComponent("/ontology-game/between");
     } else {
       try { sessionStorage.setItem(THROUGH, e.id); } catch {}
@@ -744,6 +750,15 @@ function walkThrough(id, inv) {
   meState.target = PORTAL_AT.clone().add(front.multiplyScalar(0.15));
   entering = { kind: "room", id, invite: portalTo.invite, t0: performance.now() };
   burst(PORTAL_AT.clone(), 0xffe2a8);
+  refreshHud();
+}
+function walkToStandInRoom() {
+  if (!portalOpen()) { toast("The doorway opens when your first minute here is complete."); return; }
+  closeSheet(); standUp(); selected = "portal";
+  const front = new THREE.Vector3(Math.sin(portal.rotation.y), 0, Math.cos(portal.rotation.y));
+  meState.target = PORTAL_AT.clone().add(front.multiplyScalar(0.15));
+  entering = { kind: "standin", t0: performance.now() };
+  burst(PORTAL_AT.clone(), 0xffd08a);
   refreshHud();
 }
 function walkToTriangleWorkshop() {
@@ -1706,7 +1721,8 @@ function refreshHud() {
 
   const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
+  if (STANDIN_ROOM) hintText = "A stand-in room: your partner is here to rehearse with, and nothing is saved. Walk to them, or wait a few breaths for the letter. Tap the floor to walk; drag to look around.";
+  else if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
   else if (isHome(g) && satchelOpen && minuteOn()) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap the mirror in your satchel, then a glowing spot on the floor.";
   else if (minuteOn()) hintText = minuteHint();
@@ -2618,6 +2634,7 @@ function destinationsSheet() {
   return `<div class="stack"><h2>The doorway</h2>
     <p class="muted">Choose where to go. You always return to your Nook.</p>
     ${invited}
+    ${PREVIEW_HOST ? `<div class="roomrow"><div><b>Stand-in room</b><span class="small muted">A rehearsal room of two, with a partner already there. Nothing is saved.</span></div><button type="button" data-act="goStandIn">Enter</button></div>` : ""}
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
@@ -3397,6 +3414,7 @@ document.addEventListener("click", async ev => {
   if (a === "emberKeep") { closeSheet(); toast("Kept. It waits under Spirits, in your homeroom, until you give it."); return; }
   if (a === "goHome") { goRoom(null); return; }
   if (a === "goRoom") { goRoom(id); return; }
+  if (a === "goStandIn") { walkToStandInRoom(); return; }
   if (a === "goDojo") { walkToTriangleWorkshop(); return; }
   // a spark's link, found again from the homeroom (pt1-two-player-check: the link got lost after the first send)
   if (a === "sparkAgain") {
@@ -3848,7 +3866,7 @@ let booted = false;
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
   let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
   // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
-  const guessShell = (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const guessShell = STANDIN_ROOM || (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
   const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
@@ -3866,6 +3884,7 @@ let booted = false;
   try {
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
+    if (STANDIN_ROOM) throw { code: "standin" };
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
     /* An invitation you opened is kept until you are in its room, so the doorway still offers it when you come back to the
        homeroom without the link (pt1-two-player-check: the link got lost later in the playtest). */
@@ -3931,6 +3950,7 @@ let booted = false;
   minuteStart();
   syncShelf();
   if (SCROLL_PREVIEW === "write" && inNook()) openPaper("write", { fromShelf: true });
+  if (STANDIN_ROOM) { names["stand-in"] = "Your stand-in partner"; onPeers([{ uid: "stand-in", x: 0.9, z: 1.4, h: Math.PI + 0.4, w: false }]); }
   booted = true;
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
@@ -3955,7 +3975,7 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
 import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.createVoice(); refreshHud(); return import("./letters.js"); })
-  .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") : null }); }).catch(e => noteError(e, "letters"));
+  .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") || (STANDIN_ROOM ? "a6" : null) : null }); }).catch(e => noteError(e, "letters"));
 // the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
 // ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up

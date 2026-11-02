@@ -327,7 +327,9 @@ export function mount(B, opts = {}) {
   });
   function renderCard(view, force) {
     const card = up.card, enc = view.enc, l = lineFor(enc, card), between = !!view.mine;
-    const steps = between ? (l ? l.steps.map(s => s[0]) : []) : NOOK[card] || [];
+    // hib2-options-learned-together: before the letter is sent the card shows only its question; what it can do is written on
+    // its face when the Between opens both letters, so you and your partner learn the options at the same moment
+    const steps = between ? (l ? l.steps.map(s => s[0]) : []) : [];
     const theirs = view.theirCard;
     const key = JSON.stringify([card, enc, between, chosen, Object.keys(deck).length, view.partnerStepped]);
     if (!force && cardEl.dataset.key === key) return;
@@ -340,7 +342,7 @@ export function mount(B, opts = {}) {
       : `<div class="note">Your partner sends one of theirs. Where the two cards meet, the Between draws what you face together.</div><button type="button" class="send"><i></i><div>Seal it and send<small>It opens in the Between beside your partner's card.</small></div></button>`;
     cardEl.innerHTML = `<div class="face"><button type="button" class="back">Put it down</button><div class="kind">Wake Up · ${esc(faceOf(card))}</div><h2>${esc(title(card))}</h2>`
       + `<div class="q">${esc(question(card))}</div>`
-      + (between ? `<div class="against">Against ${esc(l ? l.part : "the obstacle")}</div>` : `<div class="lbl">In the Between, you can</div>`)
+      + (between ? `<div class="against">Against ${esc(l ? l.part : "the obstacle")}</div>` : `<div class="lbl">What it can do</div><div class="against">Written when the Between opens. You and your partner learn it together.</div>`)
       + `<div class="steps">${steps.map((s, i) => `<button type="button" class="st${i === chosen ? " up" : ""}" data-i="${i}"><i></i><span>${esc(s)}</span></button>`).join("")}</div>${foot}</div>`;
     if (between && theirs) voice.say({ subject: () => rectOf(cardEl.querySelector(".face")), foot: view.partnerStepped ? "Your partner has taken their step." : `Your partner is choosing a step from ${title(theirs)}.` });
     else voice.say({ subject: () => rectOf(cardEl.querySelector(".face")) });
