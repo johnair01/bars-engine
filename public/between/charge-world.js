@@ -14,6 +14,7 @@
    first land. Walk to the doorway and step through, and /between/land.html builds the encounter location (the sample's
    Unfinished Clearing) from the sheet; the charge and your look ride over in this tab's sessionStorage, nowhere else. */
 import * as THREE from "three";
+import { densityOf } from "./block-room.js";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
 
 const STAND = new THREE.Vector3(0.95, 0, -2.0);
@@ -238,9 +239,11 @@ export function mount(B, opts = {}) {
     }
     else if (near === "door") {
       const first = firstLand(), shut = grownOver();
-      key = "door" + (shut ? "0" : "1");
+      key = "door" + (shut ? "0" : "1") + (dense() ? "c" : "");
       html = shut
         ? `<div><b>The doorway, grown over</b><div class="t">It opens at the end of your first minute here. Then it leads to ${esc(first ? first.location : "the episode's first land")}.</div></div>`
+        : dense()
+        ? `<div><b>The doorway runs cold</b><div class="t">Past it, ${esc(first ? first.location : "the episode's first land")} has filled with the weather of feeling ${esc(dense().feeling)}. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`
         : `<div><b>The doorway</b><div class="t">Through it, the episode's first land: ${esc(first ? first.location : "the place the map took")}, ${esc(first ? first.land : "")}.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
     }
     if (key === cardKey) return;
@@ -270,6 +273,9 @@ export function mount(B, opts = {}) {
   }
 
   /* ---------- the doorway: with an episode unrolled, it leads to the episode's first land ---------- */
+  // the block's room (block-room.js): a charge whose weather is a storm or a season fills the first land with it, and the
+  // nook's doorway shows the signs (garden.js mounts them; they read view().block)
+  const dense = () => { if (!episode || !charge) return null; const d = densityOf(charge); return d.dense ? d : null; };
   const firstLand = () => episode ? locations(charge, g).find(l => l.role === "encounter") : null;
   const grownOver = () => { const m = B.minute && B.minute(); return !!(m && m.started && m.oriented === false); };
   function doorAt() {
@@ -340,5 +346,5 @@ export function mount(B, opts = {}) {
     if (opts.open === "episode") await unroll(JSON.parse(JSON.stringify(sample)), null);
     else if (opts.open === "sheet") { walkTo(STAND.clone().addScaledVector(FRONT, 0.85)); openCharge(); }
   })().catch(e => console.warn("charge to world:", e));
-  return { stand: STAND, stepThrough, door: () => doorAt(), view: () => ({ near, episode: !!episode, sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
+  return { stand: STAND, stepThrough, door: () => doorAt(), view: () => ({ near, episode: !!episode, block: dense(), sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
 }

@@ -22,6 +22,11 @@
    settles behind you; the toolbag rides the back smoothed, not shaken by the walk's own noise; a path out of the far
    side of the ring leads to the episode's second land, the Scale-House (?place=scale-house, ./scale-house.js).
 
+   The block's room, slice 1 (his A on bm-room-look-2, 2026-11-02): when the charge that came through the doorway is dense
+   (its weather a storm or a season), the clearing is the block's room: ice at the foot of what stands, and three stands on
+   the floor (Face it, Talk to it, Be it) that melt it to water, mist and a clearing (../block-room.js). ?block=ice|water|gas|clear
+   opens it at that state with the sample's charge.
+
    Previews: ?at=stump stands you at the stump, ?song=done opens with the song played to its end, ?paint=0 as the Between,
    ?place=scale-house the second land (with ?at=balance, ?at=bridge, ?bag=pan, ?plank=laid). */
 import * as THREE from "three";
@@ -35,6 +40,7 @@ import { parseLook } from "../../calrunia/look.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere } from "./place.js";
 import * as SH from "./scale-house.js";
+import { mountRoom, densityOf, STATES } from "../block-room.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
@@ -439,7 +445,7 @@ let humAt = 3.5;
 /* ===================================================================================================
    Build
    =================================================================================================== */
-const state = { p: null, ep: null, sh: null, plank: false, laid: false, given: [], done: false, rainK: 1, captions: [], capUntil: 0, near: null, cardKey: "", told: new Set() };
+const state = { p: null, ep: null, sh: null, plank: false, laid: false, given: [], done: false, rainK: 1, captions: [], capUntil: 0, near: null, cardKey: "", told: new Set(), block: null };
 async function build() {
   step("reading the episode");
   const ep = await episode(); state.ep = ep; state.p = ep.p;
@@ -627,6 +633,7 @@ function nearNow() {
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
   if (dArch < 1.6) return state.leftArch ? "arch" : null;
+  const bs = state.block && state.block.near(p); if (bs) return bs;
   if (stumpFx && Math.hypot(p.x, p.z) < STUMP_R + 1.1) return "stump";
   let bi = -1, bd = 1.5; instruments.forEach((ins, i) => { const d = Math.hypot(p.x - ins.stand.x, p.z - ins.stand.z); if (d < bd) { bd = d; bi = i; } });
   return bi >= 0 ? "ins:" + bi : null;
@@ -654,6 +661,7 @@ function showCard() {
       : state.plank ? card("The footbridge", "Its middle planks are gone. The plank you carry is long enough.", btn("lay", "Lay the plank across"))
       : card("The footbridge", "Its middle planks are gone and the gully is deep. Your toolbag is heavy; the balance in the doorway would hold it.", btn("walk:balance", "Walk to the balance"));
   } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
+  else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
   else if (n === "stump") {
     const left = ADD - state.given.length;
     key = "stump:" + state.given.length + (state.done ? "d" : "");
@@ -666,7 +674,8 @@ function showCard() {
 }
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
-  if (b.dataset.note != null) giveNote(+b.dataset.note);
+  if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
+  else if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
@@ -773,9 +782,10 @@ function frame() {
   if (state.sh) state.sh.frame(dt, T);
   if (stumpFx) { stumpFx.pulse *= 1 - dt * 2.2; stumpFx.topM.emissiveIntensity = 0.35 + stumpFx.pulse * 0.9; stumpFx.light.intensity = 9 + stumpFx.pulse * 16; stumpFx.glow.material.opacity = 0.45 + stumpFx.pulse * 0.35; }
   // the rain stops where a song is played to its end; the light warms a little
-  const rk = state.done ? 0 : 1; state.rainK += (rk - state.rainK) * Math.min(1, dt * 0.5);
+  const rk = Math.min(state.done ? 0 : 1, state.block ? state.block.rain() : 1); state.rainK += (rk - state.rainK) * Math.min(1, dt * 0.5);
   if (state.rain) { state.rain.mat.opacity = 0.32 * state.rainK; state.rain.lines.visible = state.rainK > 0.02; if (state.rain.lines.visible) state.rain.update(T, me.pos); }
-  if (state.fog && !SHX) { state.fog.density = 0.03 + 0.012 * state.rainK; if (state.warm) state.warm.intensity = 0.5 + (1 - state.rainK) * 0.9; }
+  if (state.fog && !SHX) { state.fog.density = 0.03 + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
+  if (state.block) state.block.frame(dt, T);
   if (state.flies) state.flies.material.opacity = 0.65 + Math.sin(T * 1.7) * 0.25;
   if (archFx) { archFx.sheetM.opacity = 0.6 + Math.sin(T * 1.3) * 0.12; archFx.light.intensity = 4 + Math.sin(T * 2.1) * 0.6; }
   // near things, captions
@@ -797,13 +807,29 @@ function frame() {
     if (SHX && Q.get("plank") === "laid") { state.laid = true; state.sh.lay(); }
     if (intro.on) { me.target = ARRIVE_AT.clone(); camYaw = me.yaw; }
     if (Q.get("song") === "done" && bar) { state.given = CADENCE.slice(); bar.more.forEach(m => { m.want = m.on = 1; }); for (const f of bar.falling) f.material.opacity = 0; state.done = true; state.rainK = 0; }
+    // the block's room: a dense charge from the nook's doorway, or the ?block= preview with the sample's charge
+    if (!SHX) {
+      let fromNook = false; try { fromNook = !!sessionStorage.getItem("ctw-charge"); } catch (e) { /* the sample */ }
+      const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1;
+      let d = densityOf(state.ep.charge);
+      if (qb && !d.dense) d = densityOf({ q4: { weather: [{ feeling: "disappointed", strength: "a storm" }] } });
+      if (d.dense && (fromNook || qb)) {
+        step("the cold comes through with you");
+        state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
+          exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95,
+          say: (t, secs) => { if (t) caption(t, secs); },
+          sound: k => { if (k === "take" || k === "keep") [0, 2, 4].forEach((dd, i) => pluck(hz(dd, 220), { kind: "string", at: i * 0.16, vol: 0.2 }));
+            else if (k === "pass") pluck(hz(0, 110), { kind: "hum", dur: 1.6, vol: 0.14 }); else pluck(hz(4, 440), { kind: "string", vol: 0.15 }); } });
+        if (startK === 1) caption(`The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. Three stands wait in the frost, and the nearest one glows.`, 7);
+      }
+    }
     camera.position.copy(me.pos).add(V(-Math.sin(me.yaw) * -4.5, 2.2, -Math.cos(me.yaw) * -4.5));
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
     if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }
     caption("Tap the ground to walk. Drag to look around.", 5);
-    window.__land = { place: PLACE, plan: state.p, me, state, shAct, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, view: () => ({ near: state.near, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
+    window.__land = { place: PLACE, plan: state.p, me, state, shAct, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, block: () => state.block, view: () => ({ near: state.near, block: state.block ? state.block.view() : null, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
     frame();
   } catch (e) {
     console.error(e); step("the land did not build: " + (e && e.message || e)); window.__landError = String(e && e.stack || e);
