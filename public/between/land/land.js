@@ -402,9 +402,22 @@ let ac = null, master = null, soundOn = true;
 try { soundOn = localStorage.getItem("between-sound") !== "0"; } catch (e) { /* on */ }
 function audio() {
   if (!ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A(); master = ac.createGain(); master.gain.value = soundOn ? 0.5 : 0; master.connect(ac.destination); }
-  if (ac.state === "suspended") ac.resume();
+  if (ac.state !== "running") ac.resume().catch(() => {});
   return ac;
 }
+/* Phones keep audio locked until a gesture they count: iOS counts touchend and click but not pointerdown, and its silent
+   switch mutes Web Audio unless the page is playing media. So the first touch, click or key unlocks it (his note on
+   ctw-walk-look-2: "I can't hear the sound on mobile"): resume, play one silent sample, and claim the playback channel. */
+let unlocked = false;
+function unlockAudio() {
+  const a = audio(); if (!a) return;
+  try { const b = a.createBuffer(1, 1, 22050), n = a.createBufferSource(); n.buffer = b; n.connect(a.destination); n.start(0); } catch (e) { /* ignore */ }
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { /* ignore */ }
+  try { const m = document.createElement("audio"); m.setAttribute("playsinline", ""); m.loop = true; m.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="; const pr = m.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) { /* ignore */ }
+  if (a.state === "running") { unlocked = true; for (const ev of ["touchend", "click", "keydown", "pointerup"]) window.removeEventListener(ev, unlockAudio, true); }
+}
+for (const ev of ["touchend", "click", "keydown", "pointerup"]) window.addEventListener(ev, unlockAudio, true);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ac && ac.state !== "running") ac.resume().catch(() => {}); });
 const SCALE = [0, 2, 4, 7, 9, 12, 14];                 // a major pentatonic, two octaves: no note is wrong in it
 const hz = (deg, base = 220) => base * Math.pow(2, (SCALE[((deg % 7) + 7) % 7] + 12 * Math.floor(deg / 7)) / 12);
 function pluck(f, { at = 0, dur = 1.4, kind = "string", vol = 0.35 } = {}) {
