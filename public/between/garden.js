@@ -3358,9 +3358,10 @@ function shelfTap(kind, i) {
 }
 
 /* ---------- sound: starts on the first tap, if it is on ---------- */
-// ?music=code|bed|both plays that version of the room's music, so he can hear them side by side and pick by ear (bt-music-form);
-// with no ?music the room has no music. E.g. ?nook=1&sit=hearth&music=code
-const ambient = createAmbient({ music: KQ.get("music") });
+// The room's music is "both" (the recording under the pad), his pick by ear on tea-music-look-3 (bt-music-form).
+// ?music=code or ?music=bed still plays one version alone for comparing; ?music=off plays none. E.g. ?nook=1&sit=hearth&music=code
+const musicPick = KQ.get("music");
+const ambient = createAmbient({ music: musicPick === "off" ? null : (musicPick || "both") });
 function soundLabel() {
   const b = $("#soundBtn"); if (b) { b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
   const mb = $("#musicBtn"); if (mb) { mb.hidden = !ambient.music; mb.textContent = ambient.musicOn ? "Music on" : "Music off"; mb.setAttribute("aria-pressed", ambient.musicOn ? "true" : "false"); }
