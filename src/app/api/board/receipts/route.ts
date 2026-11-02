@@ -25,7 +25,7 @@ export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
 export const RECEIPT_BOARD = 'browser-receipts'
 const SHA = /^[0-9a-f]{40}$/
-const count = (v: unknown) => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 1_000_000
+const count = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 1_000_000
 
 function refused(req: NextRequest, write = false) {
   const secret = process.env.COUNCIL_MENU_TOKEN
