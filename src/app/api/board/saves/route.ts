@@ -16,6 +16,7 @@ import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/st
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
 import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
 import { ticketFromSave } from '@/lib/work/from-save'
+import { readyDraftsAfterSave } from '@/lib/board/ready-drafts'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -68,5 +69,7 @@ export async function POST(req: NextRequest) {
   if (RECORD_KINDS.has(collection)) await dispatchBoardPull().catch(() => undefined)
   // Push from the board: his answer to a council question goes to the work lanes as it is saved (work queues, slice 1).
   const work = await ticketFromSave(db, board, collection, docId, doc)
+  // His plain yes on a look readies the drafts that waited on it, after this answers (writers-api FR-004).
+  readyDraftsAfterSave(board, collection, docId, doc)
   return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt, ...(work ? { work } : {}) }, { headers: NO_STORE })
 }

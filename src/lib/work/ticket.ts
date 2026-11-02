@@ -55,10 +55,10 @@ export function ticketFromAnswer(board: string, collection: string, docId: strin
   const said = `Wendell answered ${docId} on the Council Board: ${label}` + (steer ? `, with the note: "${steer}"` : '') + '.'
   const brief = picked?.then || row?.then
     ? `${said}\n\n${picked?.then || row?.then}`
-    : `${said}\n\nIn ${COUNCIL}, claim the gate first: python3 board/gates.py ${docId} --claim "<this thread's title>" --push `
-      + `(if it says "already claimed", another thread has it: release nothing, call done with that line as the result). `
-      + `Then follow the line python3 board/gates.py ${docId} --line prints. His answer above is the ruling; `
-      + `board-pull lands it on main within fifteen minutes, so do not wait for it to start reading.`
+    : `${said}\n\nIn ${COUNCIL}, this ticket is the gate's claim: no other thread takes ${docId} while you hold it, `
+      + `and nothing is claimed on main. Follow the line python3 board/gates.py ${docId} --line --live prints. His answer `
+      + `above is the ruling and main may not have it yet; read the board with python3 board/read.py --live, never wait `
+      + `for a board-pull run.`
   const key = answer + (steer ? '+' + createHash('sha1').update(steer).digest('hex').slice(0, 8) : '')
   const q = (row?.q ?? '').trim()
   return {
