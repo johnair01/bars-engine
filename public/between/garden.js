@@ -3965,6 +3965,10 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
 import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
+// the block's room (Six-faces-council block-metabolize, his A on bm-room-look-2): a charge on the map stand whose weather is a
+// storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
+// Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
+import("./block-room.js").then(m => { window.__between.block = m.mountSigns(window.__between); }).catch(e => noteError(e, "block"));
 // letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
