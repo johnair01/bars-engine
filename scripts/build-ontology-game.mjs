@@ -218,6 +218,10 @@ for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damag
 // The player's own figure: Average Dusk walking a CMU mocap clip (rig_mocap, bake_daemons.py --walker), worn over the avatar.
 mkdirSync(path.join(outDir, 'cave', 'player'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'player', 'walker.glb'), path.join(outDir, 'cave', 'player', 'walker.glb'));
+// The standard character in the basin: the Between's figure read through r128 (cave/dusk-figure.js; cave/vendor/README.md).
+mkdirSync(path.join(outDir, 'cave', 'vendor'), { recursive: true });
+copyFileSync(path.join(srcDir, 'cave', 'dusk-figure.js'), path.join(outDir, 'cave', 'dusk-figure.js'));
+for (const f of ['GLTFLoader.js', 'SkeletonUtils.js', 'three-shim.js', 'skeleton-utils-shim.js']) copyFileSync(path.join(srcDir, 'cave', 'vendor', f), path.join(outDir, 'cave', 'vendor', f));
 // The spirits' core and hologram per family (cave/bake_spirits.py, from the spirit page's GLBs), fetched by spirit-forms.js
 // only when a spirit first unfolds into one (board sic-unfold-by-sitting).
 mkdirSync(path.join(outDir, 'cave', 'spirits'), { recursive: true });
