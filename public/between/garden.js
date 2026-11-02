@@ -114,7 +114,7 @@ function noteError(e, where) {
   if (last && last.msg === msg) { last.n++; return; }
   errLog.push({ at: new Date().toISOString(), where, msg, stack, n: 1 }); if (errLog.length > 12) errLog.shift();
   console.error("[between]", where, e);
-  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows it to Claude."); } catch {} }
+  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows us what you saw."); } catch {} }
 }
 addEventListener("error", ev => noteError(ev.error || ev.message, "window"));
 addEventListener("unhandledrejection", ev => noteError(ev.reason, "promise"));
