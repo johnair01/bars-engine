@@ -5,6 +5,7 @@
  * inspect a look's pictures at full size. Only image files under the two stills folders are passed, never the repo. */
 import { NextResponse } from 'next/server'
 import { readFile, readObject } from '@/lib/board/content-store'
+import { UI_TOKENS } from '@/lib/ui/tokens-link'
 
 const TYPES: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }
 
@@ -45,15 +46,16 @@ export function lookPage(title: string, paths: string[]): string {
   const pics = paths.map(p => artPath(p.replace(/^board\/stills\//, '').split('/'))).filter((p): p is string => !!p).slice(0, 24)
   const src = (p: string) => '/board/stills/' + (p.startsWith('board/stills/') ? p.slice(13) : p)
   const figs = pics.map(p => `<figure><a href="${esc(src(p))}" target="_blank" rel="noopener"><img src="${esc(src(p))}" alt="${esc(p.split('/').pop()!)}"></a><figcaption>${esc(p.split('/').pop()!)} · tap to zoom, or open it alone</figcaption></figure>`).join('')
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title || 'A look')}</title><style>
-:root{--bg:#f6f5f1;--fg:#1d1f1e;--muted:#5d625f;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#17191a;--fg:#ece9e1;--muted:#a4a8a3;color-scheme:dark}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;padding:16px}
-h1{font-size:1.25rem;margin:0 0 4px}p{color:var(--muted);margin:0 0 16px;font-size:.9rem}
+  return `<!doctype html><html lang="en" data-theme="auto"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title || 'A look')}</title>
+${UI_TOKENS}<style>
+/* --ui-* from /ui/tokens.css (data-theme="auto" follows the device); each fallback is the value it had before */
+:root{--bg:var(--ui-bg,#f6f5f1);--fg:var(--ui-ink,#1d1f1e);--muted:var(--ui-muted,#5d625f)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--ui-body,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif);padding:16px}
+h1{font:400 1.5rem/1.2 var(--ui-display,Georgia,serif);margin:0 0 6px;text-wrap:balance}p{color:var(--muted);margin:0 0 16px;font-size:.9rem}
 figure{margin:0 0 24px}figure img{display:block;width:100%;height:auto;cursor:zoom-in;border-radius:6px;background:#fff}
 figure.big{overflow:auto}figure.big img{width:auto;max-width:none;cursor:zoom-out}
-figcaption{font-size:.8rem;color:var(--muted);margin-top:4px}
+figcaption{font-size:.875rem;color:var(--muted);margin-top:4px}
 </style></head><body><h1>${esc(title || 'A look')}</h1>
 <p>${pics.length ? 'Tap a picture to see it at full size and pan around it; tap again to fit. Answer on the Council Board.' : 'This link names no pictures.'}</p>
 ${figs}<script>

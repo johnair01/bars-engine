@@ -42,6 +42,8 @@ describe('lookPage', () => {
     expect(html).toContain('src="/board/stills/94a1067981bd2ba3.jpg"')
     expect(html).not.toContain('council/x.png')
     expect(html).not.toContain('github.com')
+    expect(html).toContain('<html lang="en" data-theme="auto">')
+    expect(html).toContain('href="/ui/tokens.css"')
   })
 })
 

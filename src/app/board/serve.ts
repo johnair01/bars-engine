@@ -7,6 +7,7 @@ import { isBoardOwner } from '@/lib/board/owner'
 import { patchCouncilPage } from '@/lib/board/council-page'
 import { readText } from '@/lib/board/content-store'
 import { boardShim } from './shim'
+import { UI_TOKENS } from '@/lib/ui/tokens-link'
 
 const PAGES: Record<string, string> = {
   nonprofit: process.env.BOARD_PAGE_URL
@@ -53,11 +54,13 @@ async function page(board: string, url = PAGES[board]): Promise<string | null> {
 /** The built page is a fragment (claude.ai supplies the document around it): no doctype, head, charset or viewport.
  * Served raw it would render in quirks mode, so it gets the document shell here, with the store shim first. */
 export function wrap(html: string, board: string): string {
-  const shim = boardShim(board, board === 'nonprofit' ? '/board' : `/board/${board}`)
-  if (/<!doctype/i.test(html)) return html.replace(/<head[^>]*>/i, m => `${m}\n${shim}`)
-  return `<!doctype html>\n<html lang="en"><head>\n<meta charset="utf-8">\n`
+  const shim = boardShim(board, board === 'nonprofit' ? '/board' : `/board/${board}`) + '\n' + UI_TOKENS
+  if (/<!doctype/i.test(html)) return html.replace(/<html(?![^>]*data-theme)([^>]*)>/i, '<html$1 data-theme="auto">')
+    .replace(/<head[^>]*>/i, m => `${m}\n${shim}`)
+  return `<!doctype html>\n<html lang="en" data-theme="auto"><head>\n<meta charset="utf-8">\n`
     + `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${shim}\n${html}`
 }
+
 
 /** Vercel refuses a buffered function response over 4.5 MB, and the Council Board page passed that on 2026-10-27 (its
  * look stills ride inside it). A streamed body is not held to the cap, so the page goes out in 256 KB pieces. */
