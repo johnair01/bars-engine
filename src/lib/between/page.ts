@@ -27,6 +27,7 @@ export const BETWEEN_PAGE = `<!doctype html>
     <div class="namecard" id="namecard"></div>
     <div class="topbtns">
       <button class="glassbtn" type="button" data-act="sound" id="soundBtn" aria-pressed="true">Sound on</button>
+      <button class="glassbtn" type="button" data-act="music" id="musicBtn" aria-pressed="true" hidden>Music on</button>
       <button class="glassbtn" type="button" data-open="away" id="awayBtn">While you were away</button>
       <button class="glassbtn" type="button" data-open="menu">More</button>
     </div>
