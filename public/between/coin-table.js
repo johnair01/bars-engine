@@ -260,7 +260,11 @@ export function mount(B, opts = {}) {
   const voice = () => B.voice || null;
   function speak(m) {
     const v = voice();
-    if (v) { if (v.holding() && !mine) return; mine = true; v.say(m); return; }
+    if (v) {
+      if (v.holding() && !mine) return; mine = true;
+      const down = (m.actions || []).find(a => a === close || a.label === "Not now");
+      v.say(down ? { ...m, actions: m.actions.filter(a => a !== down), down: { on: down.on } } : m); return;
+    }
     fallback.hidden = false; mine = true;
     const k = JSON.stringify([m.head, m.sub, m.foot, (m.actions || []).map(a => a.label)]); if (k === fallback._k) return; fallback._k = k;
     fallback.innerHTML = ""; const h = document.createElement("b"); h.textContent = m.head || ""; fallback.append(h);
@@ -279,6 +283,8 @@ export function mount(B, opts = {}) {
   const forName = w => w.kind === "self" ? "yourself" : w.name;
   const stand = { label: "Stand up", quiet: true, on: () => { B.standUp(); end(); } };
   const close = { label: "Close the book", quiet: true, on: () => { s.closed = true; cardKey = ""; } };
+  /* one way back (Six-faces-council uu1-one-grammar): closing the book is putting it down, top right, so the screen
+     owner draws it as m.down; the voiceless fallback keeps it as a button */
   function moment() {
     const atBook = s.source === "book", subject = atBook ? bookBox : tableBox, leave = atBook ? close : stand;
     if (s.answered) return { subject, head: "Answered", sub: `You drew ${s.answered.card.title} from ${s.answered.card.suit.name}: "${s.answered.card.prompts[s.answered.depth]}" Say it aloud to them when you next sit together.`, actions: [leave] };
