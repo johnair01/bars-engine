@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { buildDojo } from './dojo.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { deriveExample, forms, resolveForm } from './grammar.js'
+import { planRoute, clampDestination } from './navigation.mjs'
 
 const host = document.getElementById('scene')
 const enter = document.getElementById('enter')
@@ -187,10 +188,13 @@ function inRoom(p) {
   return r < 5.1 && r > 1.7
 }
 function destination(point) {
-  const r = Math.hypot(point.x, point.z)
-  if (!r) return null
-  const k = THREE.MathUtils.clamp(r,1.75,4.8)/r
-  return new THREE.Vector3(point.x*k,0,point.z*k)
+  const p=clampDestination(point)
+  return p ? new THREE.Vector3(p.x,0,p.z) : null
+}
+function startRoute(dest) {
+  const waypoints=planRoute(player.position,dest)
+  if(!waypoints) { target=null;route=[];arriving=false;instruction.textContent='That spot is not reachable. Tap another place on the floor.';return false }
+  route=waypoints.map(p=>new THREE.Vector3(p.x,0,p.z));target=route.shift();return true
 }
 function goTo(place) {
   if (!entered || wallOpen || stationOpen || reflectionOpen) return
@@ -198,12 +202,8 @@ function goTo(place) {
   const floorCenter=new THREE.Vector3(floor.position.x,0,floor.position.z+3.15-floorHeight/3)
   const dest=place==='floor' ? destination(floorCenter.clone().add(new THREE.Vector3(1.1,0,.35))) : stationTargets[place].clone()
   if(!dest) return
-  // Cross behind the central furniture instead of oscillating against its boundary.
-  if (player.position.x * dest.x < 0) {
-    const side=Math.sign(player.position.x)
-    route=[new THREE.Vector3(side*2.35,0,-2.35),new THREE.Vector3(-side*2.35,0,-2.35)]
-  }
-  route.push(dest);target=route.shift();arriving=true
+  if(!startRoute(dest)) return
+  arriving=true
   if(place==='floor') {
     const p=floorCenter.clone().add(new THREE.Vector3(1.5,2.7,3))
     const r=Math.hypot(p.x,p.z);if(r>5.2){p.x*=5.2/r;p.z*=5.2/r}
@@ -502,7 +502,8 @@ if (renderer) {
     if (raycaster.intersectObject(actionLoom,true).length && deriveExample(decisions) && moveDone) { stage='loom'; goTo('loom'); return }
     if (raycaster.intersectObject(hit).length) { if (!project.hidden && !project.disabled) openWall(); else goToWall(); return }
     if (raycaster.ray.intersectPlane(floorPlane,tmp)) {
-      target = destination(tmp); route=[]; arriving = false; keys.clear()
+      const dest=destination(tmp);keys.clear();arriving=false
+      if(!dest || !startRoute(dest)) return
       approach.disabled = false; project.hidden = true
       instruction.textContent = 'Tap the floor to walk. Drag to look around your character.'
     }
@@ -517,7 +518,7 @@ if (renderer) {
       dz = Number(keys.has('KeyS') || keys.has('ArrowDown')) - Number(keys.has('KeyW') || keys.has('ArrowUp'))
       if (target) {
         const delta = target.clone().sub(player.position); delta.y=0
-        if (delta.length() < .12) {
+        if (delta.length() < .01) {
           target = route.shift() ?? null
           if (!target && arriving) {
             arriving=false;approach.disabled=false;nextStation.disabled=false
@@ -531,29 +532,29 @@ if (renderer) {
               instruction.textContent='You are beside the triangle. Choose whether to apply what you carry.'
             } else { stage=arrivingAt;useStation.hidden=false;useStation.textContent=stage==='anchors'?'Use the anchor table':'Use the action loom';nextStation.hidden=true;instruction.textContent=stage==='anchors'?'Tap an energy orb, or use the table for named choices.':'You are at the action loom.' }
           }
-        } else {
-          // Steer tangentially around the bowl if a straight step would enter it.
-          const ahead = player.position.clone().addScaledVector(delta.clone().normalize(), .35)
-          if (Math.hypot(ahead.x,ahead.z) < 1.8) {
-            const side = player.position.x >= 0 ? 1 : -1
-            dx = side * Math.abs(player.position.z); dz = -side * player.position.x
-            if (dx * delta.x + dz * delta.z < 0) { dx=-dx; dz=-dz }
-          } else { dx=delta.x; dz=delta.z }
-        }
+        } else { dx=delta.x; dz=delta.z }
       }
     }
-    const moving = Math.hypot(dx,dz) > .001
-    if (moving) {
-      const len=Math.hypot(dx,dz), step=1.6*dt
+    const wantsMove = Math.hypot(dx,dz) > .001
+    let moved=false
+    if (wantsMove) {
+      const len=Math.hypot(dx,dz), step=Math.min(1.6*dt,target ? len : Infinity)
       const next = player.position.clone().add(new THREE.Vector3(dx/len*step,0,dz/len*step))
       if (inRoom(next)) {
         if(orbitActive) camera.position.add(next.clone().sub(player.position))
         player.position.copy(next)
         if(orbitActive) camera.lookAt(player.position.clone().add(new THREE.Vector3(0,.7,0)))
+        moved=step>0
+      } else if(target) {
+        clearKeys();approach.disabled=false;nextStation.disabled=false
+        instruction.textContent='That path is blocked. Tap another place on the floor.'
       }
-      player.rotation.y=Math.atan2(dx,dz)
+      if(moved) {
+        const desired=Math.atan2(dx,dz),diff=Math.atan2(Math.sin(desired-player.rotation.y),Math.cos(desired-player.rotation.y))
+        player.rotation.y+=diff*Math.min(1,dt*9)
+      }
     }
-    if (walkAction) walkAction.paused = !moving
+    if (walkAction) walkAction.paused = !moved
     if (mixer) mixer.update(dt)
     if(moveSpark.visible){const t=Math.min((performance.now()-moveStart)/2200,1);moveSpark.position.lerpVectors(anchorMarkers.wonder.position,anchorMarkers.poignance.position,t);moveSpark.position.y=.2+Math.sin(t*Math.PI)*.22;if(t>=1)moveSpark.visible=false}
     dojo.update(clock.elapsedTime); renderer.render(scene,camera)
