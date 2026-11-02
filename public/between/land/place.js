@@ -10,13 +10,17 @@
 
 /* Each land's environment, from its element (world grammar: forest for Wood, mountain for Fire, plains for Earth, cave
    for Metal, sea for Water). Only the forest is built so far. */
-export const LANDS = { wood: "forest" };
+export const LANDS = { wood: "forest" };   // the Scale-House stands on the forest's edge, so it is a Wood land too
 
 /* Pieces the land page can build, and the words in an aspect that ask for each. First match wins. */
 export const PIECES = [
   { id: "instrument-ring", match: /instrument/i, what: "nine trees in a ring, an instrument grown into each" },
   { id: "music-bar", match: /bar of music|music that loops|loops and stops/i, what: "a staff hung in the air, looping round the clearing and stopping mid-phrase" },
   { id: "sounding-stump", match: /stump/i, what: "the wide stump at the middle, which answers a note" },
+  // the Scale-House (build 4, ./scale-house.js)
+  { id: "weight-hut", match: /stacked brass weights|weights beside a broken/i, what: "a round hut of stacked brass weights, and the footbridge beside it missing its middle planks" },
+  { id: "amber-air", match: /amber|smelling of oil/i, what: "the forest's dusk gone thick and gold, lamps of oil at the door" },
+  { id: "toolbag-balance", match: /balance/i, what: "a brass balance in the doorway, its pans free to take what you set in them" },
 ];
 
 const WEATHER = [[/rain|storm/i, "rain"], [/fog|mist|haze/i, "mist"], [/snow/i, "snow"]];
@@ -65,7 +69,8 @@ export function toYou(s) {
 export function secretsHere(sheetMd, p) {
   const m = String(sheetMd).match(/## 4\. Secrets[^\n]*\n([\s\S]*?)(\n## |$)/);
   if (!m) return [];
-  const words = { "instrument-ring": /instrument|song/i, "music-bar": /hum|mid-bar|played to its end/i, "sounding-stump": /stump/i };
+  const words = { "instrument-ring": /instrument|song/i, "music-bar": /hum|mid-bar|played to its end/i, "sounding-stump": /stump/i,
+    "weight-hut": /Scale-House|bridge/i, "toolbag-balance": /scale reads|toolbag|carries the bag/i };
   const ids = p.pieces.map(x => x.id);
   return m[1].split("\n").filter(l => l.startsWith("- ")).map(l => toYou(l.slice(2).replace(/\*\(drafted\)\*/g, "").trim()))
     .filter(s => ids.some(id => words[id] && words[id].test(s)));
