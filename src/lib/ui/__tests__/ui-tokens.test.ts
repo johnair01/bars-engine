@@ -6,8 +6,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ELEMENT_TOKENS } from '../card-tokens'
-// @ts-expect-error a plain .mjs script, no types
-import { render, readElements, SCHEMES } from '../../../../scripts/ui-tokens.mjs'
+import { render, readElements as readElementsRaw, SCHEMES } from '../../../../scripts/ui-tokens.mjs'
 
 const root = join(__dirname, '../../../..')
 const css = readFileSync(join(root, 'public/ui/tokens.css'), 'utf8')
@@ -16,7 +15,7 @@ const css = readFileSync(join(root, 'public/ui/tokens.css'), 'utf8')
 assert.equal(css, render(), 'public/ui/tokens.css is out of step: run node scripts/ui-tokens.mjs')
 
 // ── Every element's frame and glow come from card-tokens.ts ─────────────────
-const els = readElements()
+const els = readElementsRaw() as Record<string, { frame: string; glow: string }>
 for (const [k, t] of Object.entries(ELEMENT_TOKENS)) {
   assert.equal(els[k].frame, t.frame.toLowerCase(), `${k} frame`)
   assert.equal(els[k].glow, t.glow.toLowerCase(), `${k} glow`)
