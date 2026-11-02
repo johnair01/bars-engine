@@ -575,7 +575,7 @@
       setTimeout(function () { how.style.opacity = 0; }, 9000);
       function frame() {
         running = requestAnimationFrame(frame);
-        var t = now(), dt = Math.min(0.05, t - last); last = t;
+        var t = now(), raw = t - last, dt = Math.min(0.05, raw); last = t;
         // the breath, as the cave counts it
         var T = K.BREATH.inS + K.BREATH.outS, tm = ((t - br.t0) % T + T) % T;
         br.b = reduced ? 0.5 : tm < K.BREATH.inS ? 0.5 - 0.5 * Math.cos(Math.PI * tm / K.BREATH.inS) : 0.5 + 0.5 * Math.cos(Math.PI * (tm - K.BREATH.inS) / K.BREATH.outS);
@@ -627,8 +627,9 @@
         });
         B.trace = B.trace.filter(function (q) { return t - q.t0 < 3.8; });
         // the third floor: the crown's pool answers once a visit, when the light has had time to reach it; then it holds still
-        // seen counts the time the land has been on screen, so a slow first draw does not answer unseen
-        if (runs.brow >= 3 && !B.answered && (B.seen += dt) > 2.6) { B.answered = true; B.answerT = t; crownAnswered(); }
+        // seen counts the time the land has been on screen, so a slow first draw does not answer unseen; it takes the real frame
+        // time (a gap over half a second is a stall, not time seen), so a slow machine answers late instead of never
+        if (runs.brow >= 3 && !B.answered && (B.seen += Math.min(0.5, raw)) > 2.6) { B.answered = true; B.answerT = t; crownAnswered(); }
         if (B.answerT >= 0) {
           var ka = t - B.answerT, rk = Math.min(1, ka / 2.6);
           ripple.visible = !reduced && rk < 1; ripple.scale.setScalar(0.2 + POOL.crown * 1.05 * rk); ripple.material.opacity = 0.7 * (1 - rk);
