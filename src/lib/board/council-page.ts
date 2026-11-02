@@ -10,8 +10,8 @@ const PATCHES: [string, string][] = [
   ['btn.hidden = !mcp || !n;', 'btn.hidden = true;'],
   ['else msg.textContent = mcp ? `', 'else msg.textContent = false ? `'],
   ['`${what} saved. This view cannot reach Claude, so tell Claude in chat that you saved.`',
-   "`${what} saved and waiting for the board pull, which records ${n === 1 ? 'it' : 'them'} on main within a few "
-   + "minutes. Nobody needs telling.`"],
+   "`${what} saved and waiting to land on main, which Claude does at the next hourly pickup. "
+   + "Nobody needs telling.`"],
   ["const PICKUP_TRIGGER = 'trig_01L138vKTaN9MSJoFKRmaBNx'", "const PICKUP_TRIGGER = ''"],
 ]
 
