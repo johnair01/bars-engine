@@ -10,7 +10,8 @@
  *   4. both reach the same spark: one garden id, both members, the phase now "between";
  *   5. the partner's figure loads on each screen (a dressed body, not left loading), even when the phone's first fetch of
  *      the figures' robe drops, as a phone on a weak signal drops one;
- *   6. letters from the nook (Six-faces-council hollow-interface rounds 3 and 4): the planter sends a card from the room,
+ *   6. anyone can sit on any cushion: the partner sits on the planter's teal cushion, the planter takes the plum one;
+ *   7. letters from the nook (Six-faces-council hollow-interface rounds 3 and 4): the planter sends a card from the room,
  *      the phone sees it sealed and sends its own from its nook, both open together, and both steps landing keep the story;
  *   7. the link is findable again from the homeroom: the planter's Rooms sheet sends a spark's link again, and the
  *      partner, back in their homeroom without the link, still finds the doorway to the room they were invited to.
@@ -211,7 +212,7 @@ function captureSends() {
 type B = {
   ids(): { gardenId: string | null; me: string | null; invite: string | null; homeId: string | null; portalTo: { id: string; invite: string | null } | null }
   view(): { g: Doc | null }; meState: { sitting: boolean; seatWant: unknown }; peers: Map<string, { body?: unknown; loading?: boolean }>
-  seats(): { id: unknown; x: number; z: number; top: number }[]; setCam(a: number[] | null): void; screenOf(v: unknown): number[]; sheet(): string | null
+  seats(): { id: unknown; x: number; z: number; top: number; yaw: number }[]; setCam(a: number[] | null): void; screenOf(v: unknown): number[]; sheet(): string | null
   anchors(): { mirror: number[] }; scene: { getObjectByName(n: string): unknown }
 }
 const ready = (p: Page) => p.waitForFunction(() => { const b = (window as unknown as { __between?: B }).__between; const l = document.getElementById('loading'); return !!b && !!l && l.hidden }, undefined, { polling: 250, timeout: 60_000 })
@@ -240,6 +241,21 @@ const act = (p: Page, a: string, id?: string) => p.evaluate(([a, id]) => {
 const openSheet = (p: Page, name: string) => p.evaluate(n => {
   const b = document.createElement('button'); b.dataset.open = n; b.hidden = true; document.body.appendChild(b); b.click(); b.remove()
 }, name)
+/* Taps a seat on the screen as a thumb would: the camera looks down on it from above (so a figure standing near it is
+   not in the way), and the tap lands where it shows. */
+async function tapSeat(p: Page, id: number) {
+  const at = await p.evaluate(i => {
+    const b = (window as unknown as { __between: B }).__between
+    const seat = b.seats().find(s => s.id === i)!, cy = seat.top - 0.1
+    b.setCam([seat.x + Math.sin(seat.yaw) * 0.4, cy + 2.6, seat.z + Math.cos(seat.yaw) * 0.4, seat.x, cy, seat.z])
+    return [seat.x, cy, seat.z]
+  }, id)
+  await p.waitForTimeout(400)
+  const xy = await p.evaluate(s => { const b = (window as unknown as { __between: B & { camera: { position: { constructor: new (x: number, y: number, z: number) => unknown } } } }).__between; const V = b.camera.position.constructor; return b.screenOf(new V(s[0], s[1], s[2])) }, at)
+  await p.mouse.click(xy[0], xy[1])
+  await p.evaluate(() => (window as unknown as { __between: B }).__between.setCam(null))
+}
+const sittingOn = (p: Page, id: number, ms = 60_000) => p.waitForFunction(i => { const b = (window as unknown as { __between: B }).__between; return b.meState.sitting && b.meState.seatWant === i }, id, { polling: 250, timeout: ms })
 const pollNow = (p: Page) => p.evaluate(() => (window as unknown as { __between: { poll(): Promise<void> } }).__between.poll())
 
 async function main() {
@@ -375,6 +391,34 @@ async function main() {
       return "the planter sees the partner's dressed figure, and the phone sees the planter's" + (dropped.length ? ', after the phone\'s dropped fetch of ' + dropped.map(d => d.split(' ')[1]).join(', ') : '')
     })
 
+    await step('anyone can sit on any cushion', async () => {
+      // pt1-cushion-look-1: each cushion was coded to one person. The partner takes the planter's teal cushion; the
+      // planter, finding it taken, cannot sit on top of them, and sits on the plum one instead.
+      await tapSeat(Bp, 0)
+      await sittingOn(Bp, 0).catch(() => { throw new Error("the partner's tap on the teal cushion did not sit them on it") })
+      // the phone's sitting goes out with its next poll, and the planter's screen reads it with its own
+      const seesIt = () => A.evaluate(() => { const e = (window as unknown as { __between: { peers: Map<string, { uid: string; sitting?: boolean; seat?: unknown }> } }).__between; return [...e.peers.values()].some(p => p.uid === 'pl-partner' && p.sitting && p.seat === 0) })
+      for (let i = 0; i < 20 && !(await seesIt()); i++) { await pollNow(Bp); await pollNow(A); await A.waitForTimeout(1_000) }
+      if (!(await seesIt())) throw new Error("the planter's screen never showed the partner sitting on the teal cushion")
+      // both keep polling meanwhile, as two open screens do, so the partner stays in the planter's room
+      const keepPolling = async (ms: number) => { for (const end = Date.now() + ms; Date.now() < end;) { await pollNow(Bp); await pollNow(A); await A.waitForTimeout(500) } }
+      await tapSeat(A, 0)
+      await keepPolling(2_500)
+      if (await A.evaluate(() => { const b = (window as unknown as { __between: B }).__between; return b.meState.sitting && b.meState.seatWant === 0 })) throw new Error('the planter sat on the teal cushion while the partner was on it')
+      await tapSeat(A, 1)
+      // the plum cushion sits behind the Between and the card table from the teal side: the walk goes round them, and two
+      // figures in software WebGL can draw under one frame a second here (each frame's step is capped), so the walk is
+      // given two minutes; a walk that stopped is told apart from a slow one by how far it moved in the last few seconds
+      await sittingOn(A, 1, 120_000).catch(async () => { throw new Error("the planter's tap on the plum cushion did not sit them on it (" + JSON.stringify(await A.evaluate(async () => {
+        const m = (window as unknown as { __between: { meState: { pos: { x: number; z: number }; target: unknown; sitting: boolean } } }).__between.meState
+        const p0 = { x: m.pos.x, z: m.pos.z }; await new Promise(r => setTimeout(r, 4000))
+        return { at: m.pos, movedIn4s: +Math.hypot(m.pos.x - p0.x, m.pos.z - p0.z).toFixed(2), target: m.target, sitting: m.sitting }
+      })) + ')') })
+      if (process.env.BETWEEN_CHECK_SHOTS) { await A.waitForTimeout(1_500); await A.screenshot({ path: join(process.env.BETWEEN_CHECK_SHOTS, 'both-sitting.png'), timeout: 120_000 }).catch(e => console.log('  (no still: ' + (e as Error).message.split('\n')[0] + ')')) }
+      for (const p of [A, Bp]) await p.evaluate(() => (window as unknown as { __between: { standUp(): void } }).__between.standUp())
+      return 'the partner sat on the teal cushion, the planter could not sit on them there, and sat on the plum one'
+    })
+
     await step('letters from the nook: sealed until both are in, the obstacle drawn, both steps land and the story is kept', async () => {
       type LT = { state(): Doc | null; send(card: string): Promise<void>; step(i: number): Promise<void>; pollNook(): Promise<void> }
       const lt = (p: Page) => p.waitForFunction(() => !!(window as unknown as { __between: { letters?: LT } }).__between.letters, undefined, { polling: 250, timeout: 15_000 })
@@ -417,7 +461,9 @@ async function main() {
       const again = await A.evaluate(id => !!document.querySelector(`#sheetInner [data-act="sparkAgain"][data-id="${id}"]`), second)
       if (!again) throw new Error("the homeroom's Rooms sheet has no Send the link again for a waiting spark")
       await act(A, 'sparkAgain', second)
-      await A.waitForFunction(() => (window as unknown as { __sent: string[] }).__sent.length > 0, undefined, { polling: 250, timeout: 5_000 })
+      // the homeroom asks the store for the spark's invitation first: on a page drawing slowly in software WebGL, give it time
+      await A.waitForFunction(() => (window as unknown as { __sent: string[] }).__sent.length > 0, undefined, { polling: 250, timeout: 20_000 })
+        .catch(async () => { throw new Error('Send the link again sent nothing: ' + await A.evaluate(() => document.getElementById('toast')?.textContent ?? '')) })
       const sent = await A.evaluate(() => (window as unknown as { __sent: string[] }).__sent[0])
       if (!sent.includes('g=' + second) || !/invite=/.test(sent)) throw new Error('the link sent again is not the spark\'s: ' + sent)
       // the partner, invited to that spark, comes back to the homeroom later with no link in hand: the doorway still offers it
