@@ -56,7 +56,7 @@ describe('the first land (place.js)', () => {
     const charge = sample()
     const g = await read(charge)
     const md = sheet(charge, g)
-    const loc = locations(charge, g).find((l: { role: string }) => l.role === 'villain')
+    const loc = locations(charge, g).find((l: { role: string | number }) => l.role === 'villain')
     const p = plan(loc, '')
     expect(p.name).toBe('The Scale-House')
     expect(p.land).toBe('forest')
