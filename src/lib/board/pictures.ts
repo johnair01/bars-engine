@@ -93,7 +93,7 @@ export function restorePictures<T>(data: T, ref: DocRef, latest: unknown): T {
 
 /** A data URI's bytes and type, for the picture route. */
 export function decodePicture(uri: string): { type: string; bytes: Buffer } | null {
-  const m = /^data:(image\/(?:png|jpe?g|gif|webp));base64,(.*)$/is.exec(uri)
+  const m = /^data:(image\/(?:png|jpe?g|gif|webp));base64,([\s\S]*)$/i.exec(uri)
   return m ? { type: m[1].toLowerCase(), bytes: Buffer.from(m[2], 'base64') } : null
 }
 
