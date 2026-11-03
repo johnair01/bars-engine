@@ -38,7 +38,8 @@ describe('board shim', () => {
     const shim = boardShim('council', '/board/council', 'abc123')
     expect(shim).toContain('PAGE = "abc123"')
     expect(boardShim('council')).toContain('PAGE = null')
-    expect(shim).toContain('j.page !== PAGE')
+    expect(shim).toContain('p !== PAGE')
+    expect(shim).toContain('seePage(j.page)')
     expect(shim).toContain("id = 'board-stale'")
   })
 
@@ -47,5 +48,16 @@ describe('board shim', () => {
     expect(shim).toContain('const asked = wrote;')
     expect(shim).toContain('if (asked !== wrote || writing) return;')
     expect(shim).toContain('writing++; wrote++;')
+  })
+
+  it('stays live through the change log every 5 seconds, and falls back to the whole store without it (live board)', () => {
+    const shim = boardShim('council')
+    expect(shim).toContain("CHANGES = '/api/board/changes'")
+    expect(shim).toContain("'&after=' + cursor")
+    expect(shim).toContain('LIVE_MS = 5000')
+    expect(shim).toContain("if (typeof j.cursor === 'number') cursor = j.cursor;")
+    expect(shim).toContain('if (++misses >= 3) live = false;')
+    // a row the page shows is kept when a later whole read leaves it out (recorded on main since)
+    expect(shim).toContain('if (docs.rows) for (const id in docs.rows)')
   })
 })

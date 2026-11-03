@@ -5218,8 +5218,11 @@ model BoardSave {
   recordedAt DateTime? @map("recorded_at")
   record     String?
   source     String    @default("board")
+  /// The change log's number (live board step 2, 2026-11-03): only goes up, so a page holding N asks for what came after.
+  seq        BigInt    @unique @default(autoincrement())
 
   @@index([board, collection, docId, receivedAt])
+  @@index([board, seq])
   @@index([board, recordedAt])
   @@map("board_saves")
 }
