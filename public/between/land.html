@@ -21,6 +21,9 @@
   .land-card b { font-family: var(--display); } .land-card .t { font-size: .88rem; color: var(--glass-muted); }
   .land-card .row { display: flex; gap: 8px; flex-wrap: wrap; }
   .land-card .notes button { min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: #3f6a3a; border-color: rgba(255,255,255,.3); font-family: Marcellus, serif; font-size: 1rem; }
+  .land-card .notes button.lit { box-shadow: 0 0 0 2px #f3d27a inset, 0 0 10px rgba(243,210,122,.45); }
+  .land-card .blocks button { min-height: 44px; }
+  .land-card .blocks button[aria-pressed="true"] { background: #f3ece2; color: #2a332f; border-color: #f3ece2; }
   .land-cap { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); width: min(90vw, 560px); text-align: center;
     font: 1.02rem/1.45 Marcellus, serif; color: #f3ece2; text-shadow: 0 1px 4px rgba(0,0,0,.85), 0 0 18px rgba(0,0,0,.5); opacity: 0; transition: opacity .9s; pointer-events: none; }
   .land-cap.on { opacity: 1; }
