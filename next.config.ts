@@ -71,7 +71,10 @@ const nextConfig: NextConfig = {
       // The Cave of Lessons: the block work walked inside the body map.
       { source: '/ontology-game/cave', destination: '/ontology-game/cave/index.html' },
       // Chapter 1's arrival aboard the ship (scripts/build-calrunia-arrive.mjs). The passport rides in the #p= fragment.
+      // The living ship's trade deck (scripts/build-calrunia-deck.mjs); /calrunia/arrive?deck=trade opens it too.
+      { source: '/calrunia/arrive', has: [{ type: 'query', key: 'deck', value: 'trade' }], destination: '/calrunia/deck/index.html' },
       { source: '/calrunia/arrive', destination: '/calrunia/arrive/index.html' },
+      { source: '/calrunia/deck', destination: '/calrunia/deck/index.html' },
     ];
   },
 };
