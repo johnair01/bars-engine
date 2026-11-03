@@ -9,14 +9,19 @@
 
    The move that lowers the charge is ReleaseResidue played as the melt stand (canon/mechanics/melt-stand.yaml): three stands
    on the floor, Face it, Talk to it, Be it (the 3-2-1). Each stand taken melts the room one state; "Not now" melts it too,
-   more slowly. At the clearing the charge's keepsake is offered (kept or let go) and the compost record is written to this
-   tab's sessionStorage ("block-residue"), nowhere else.
+   more slowly. At the clearing the charge's keepsake is offered (kept or let go) and the compost record is kept.
+
+   Slice 2 (his steer on bm-chamber-look-3, 2026-11-02 20:12Z, "Mix of a and b"): the record is kept in the spirit store
+   (./kept.js, `oag.spirits.v1`), not the tab, and the keeping chamber under the nook's shelf (land/chamber.js) stands every
+   piece on its own stone. A storm still fills the land; a season, the densest weather, fills the keeping chamber itself,
+   over what is kept there (densityOf().where), and its signs show at the chamber's arch rather than the doorway.
 
    Ported from the stills round's make/room-weather.js (2026-11-02-block-room-2), with his dials (s 0.72, w 0.74, c 0.75):
    the props are the same, the small lights are point batches so the room runs live, and the light warms as the charge
    lessens instead of being set once. The daemons' gas is the cave's own (content/ontology-game/cave/spirit-forms.js, served
    at /ontology-game/cave/spirit-forms.js by scripts/build-ontology-game.mjs). */
 import * as THREE from "three";
+import { keep as keepRecord } from "./kept.js";
 
 export const DIALS = { s: 0.72, w: 0.74, c: 0.75 };           // his, from the round 1 pick page (2026-11-01 21:29Z)
 const DENSE = ["a storm", "a season"];                         // episode-sheet.js STRENGTH: the two dense steps of three
@@ -38,7 +43,7 @@ export function densityOf(charge) {
   const dense = w.find(x => DENSE.includes(x && x.strength));
   if (!dense) return { dense: false };
   const emotion = FEEL[dense.feeling] || "sadness", element = ELEMENT[emotion] || "water";
-  return { dense: true, feeling: dense.feeling || "heavy", strength: dense.strength, emotion, element, tint: TINT[element],
+  return { dense: true, feeling: dense.feeling || "heavy", strength: dense.strength, where: dense.strength === "a season" ? "chamber" : "land", emotion, element, tint: TINT[element],
     keepsake: KEEPSAKE[element], loudest: charge.q6 && charge.q6.loudest || "", voice: charge.q6 && charge.q6.voice || "" };
 }
 
@@ -86,7 +91,7 @@ export function mountSigns(B) {
   let G = null, key = "", fade = 0, snow = null, setF = null;
   const shelfBook = () => { const a = B.anchors && B.anchors(); return a && a.shelf ? V(a.shelf[0], 1.32, a.shelf[2]) : null; };
   function build(d) {
-    const a = B.anchors(), P = V(a.portal[0], 0, a.portal[2]), Hh = a.hearth ? V(a.hearth[0], 0, a.hearth[2]) : null, book = shelfBook();
+    const a = B.anchors(), arch = d.where === "chamber" && B.chamberArch && B.chamberArch.at(), P = arch ? V(arch[0], 0, arch[1]) : V(a.portal[0], 0, a.portal[2]), Hh = a.hearth ? V(a.hearth[0], 0, a.hearth[2]) : null, book = shelfBook();
     G = new THREE.Group(); G.name = "block-signs"; B.scene.add(G);
     const { rnd, glow, dots } = kit(G, 23), toRoom = V(-P.x, 0, -P.z).normalize();
     // the doorway glows cold, with the room behind it
@@ -247,7 +252,7 @@ export async function mountRoom(o) {
   let cur = buildState(STATES[idx]), prev = null, xf = 1, xfDur = 2.6;
   cur.set(1); light(STATES[idx]);
   for (let i = 0; i < idx; i++) STANDS[i].done = "taken";
-  const record = { element: d.element, feeling: d.feeling, strength: d.strength, stands: [], keepsake: null, at: null };
+  const record = { id: "k" + Date.now().toString(36), element: d.element, feeling: d.feeling, strength: d.strength, stands: [], keepsake: null, where: o.where || "the land", at: null };
   let keep = null, keptState = null;    // the keepsake: shown at the clearing, kept or let go
   function toState(i, slow) {
     if (i === idx) return; idx = i; if (prev) dispose(prev.G); prev = cur; cur = buildState(STATES[i]); cur.set(STILL ? 1 : 0); xf = STILL ? 1 : 0; xfDur = slow ? 5 : 2.6;
@@ -266,7 +271,8 @@ export async function mountRoom(o) {
     g.position.copy(at).setY((o.keepY || 0.95)); scene.add(g); keep = { g, t0: performance.now() / 1000, y: g.position.y, gone: 0 };
     o.say && o.say(`Where the cold was thickest, it left ${d.keepsake}.`, 6);
   }
-  function write() { record.at = new Date().toISOString(); try { sessionStorage.setItem("block-residue", JSON.stringify(record)); } catch (e) { /* this page only */ } }
+  // the record is kept once the keepsake is carried or let go (kept.js); a preview (o.dry) keeps nothing
+  function write() { record.at = new Date().toISOString(); if (!record.keepsake || o.dry) return; keepRecord({ ...record, keepsake: d.keepsake, let: record.keepsake === "let go" }); }
 
   /* the stands' cards: the 3-2-1, in the charge's own words */
   const next = () => STANDS.findIndex(x => !x.done);
@@ -291,7 +297,8 @@ export async function mountRoom(o) {
   }
   function act(a) {
     if (a === "keep" || a === "letgo") { keptState = a; record.keepsake = a === "keep" ? d.keepsake : "let go"; write();
-      o.say && o.say(a === "keep" ? `You carry ${d.keepsake} back with you.` : "It goes up with the rest of the light.", 5); o.sound && o.sound(a); return; }
+      o.say && o.say(a === "keep" ? (o.keepSay || `You carry ${d.keepsake} back with you.`) : "It goes up with the rest of the light.", 5); o.sound && o.sound(a);
+      o.onKeep && o.onKeep({ ...record, keepsake: d.keepsake, let: a === "letgo" }); return; }
     const [verb, si] = a.split(":"), i = +si, st = STANDS[i]; if (!st || st.done || i !== next()) return;
     st.done = verb === "take" ? "taken" : "passed"; record.stands.push({ stand: st.id, [st.done]: true }); st.fx.want = st.done === "taken" ? 1 : 0.5;
     o.sound && o.sound(verb); toState(Math.min(3, idx + 1), verb === "pass"); write();
