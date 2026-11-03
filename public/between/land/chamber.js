@@ -29,7 +29,7 @@ const EL = { water: { hex: "#bfe0ff", em: "#7fc0ff" }, metal: { hex: "#d8d2c0", 
 const NAME = { water: "A small vessel", metal: "A key", fire: "An ember", earth: "A stone" };
 
 /* where the i-th piece stands: a spiral from the portal round the pool, so the room reads in the order the blocks cleared */
-export function spot(i) { const a = Math.PI * 0.18 + i * 0.62, r = R * (0.68 - Math.min(i, 20) * 0.012); return { x: Math.sin(a) * r, z: -Math.cos(a) * r, a }; }
+export function spot(i) { const a = Math.PI * 0.18 + i * 0.62, r = R * 0.68 - Math.min(i, 17) * 0.12; return { x: Math.sin(a) * r, z: -Math.cos(a) * r, a }; }
 export function walkable(x, z) {
   const d = Math.hypot(x, z);
   if (d > R - 0.75 && !(Math.abs(x - PORTAL.x) < 0.9 && z > 0 && d < R - 0.35)) return false;
@@ -65,7 +65,7 @@ export async function build(k) {
   put("portal_arch", new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.7 }), P_L.x, DH - DW / 2, P_L.z - 0.3, DW / 2 + 0.1);
   { const sh = new THREE.Shape(), r = DW / 2; sh.moveTo(-r, 0); sh.lineTo(r, 0); sh.lineTo(r, DH - r); sh.absarc(0, DH - r, r, 0, Math.PI, false); sh.lineTo(-r, 0);
     const beyond = new THREE.Mesh(new THREE.ShapeGeometry(sh, 16), new THREE.MeshBasicMaterial({ color: 0xd8904a, transparent: true, opacity: 0.7 })); beyond.position.set(P_L.x, 0.01, P_L.z - 0.34); G.add(beyond); }
-  const home = new THREE.PointLight("#ffb062", 14, 9, 1.6); home.position.set(P_L.x, 1.6, P_L.z + 0.6); G.add(home);
+  const home = new THREE.PointLight("#ffb062", 5, 9, 1.6); home.position.set(P_L.x, 1.6, P_L.z + 0.6); G.add(home);
   const deep = new THREE.PointLight(0xffc890, 1.4, 30, 2); deep.position.set(0, 2.2, -2); G.add(deep);
   glowSprite(V(POOL_L.x, 0.1, POOL_L.z), 2.4, 0xffd9a0, 0.18, false, G);
 
@@ -84,7 +84,7 @@ export async function build(k) {
   const GROW = {
     water: p => { put("crystal_cluster_bed", rock, 0, 0, 0, 0.7, 0.7, 0.7, 0, p); put("crystal_cluster", tint("#cfe8ff", "#5fa8ff", 0.7), 0, 0.08, 0, 1.05, 1.05, 1.05, 0, p); },
     metal: p => put("stone_spire", tint("#b8b4aa", "#fff0c8", 0.12), 0, 0, 0, 0.55, 1.5, 0.55, 0, p),
-    fire: p => put("glow_cap", tint("#ffb070", "#ff7a2a", 0.9), 0, 0, 0, 0.8, 0.8, 0.8, 0, p),
+    fire: p => put("glow_cap", tint("#e8935a", "#ff7a2a", 0.4), 0, 0, 0, 0.8, 0.8, 0.8, 0, p),
     earth: p => put("mush_clump", tint("#c8b08a", "#ffcf80", 0.45), 0, 0, 0, 0.9, 0.9, 0.9, 0, p),
   };
 

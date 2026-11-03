@@ -13,8 +13,11 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 export function mount(B) {
   let G = null, at = null, veilM = null, light = null, card = null, cardKey = "", motes = [];
   function build() {
-    const a = B.anchors(); if (!a || !a.hearth || !a.shelf) return false;
-    const P = V(a.shelf[0], 0, a.shelf[2]), out = P.clone().normalize(); at = out.clone().multiplyScalar(P.length() + 0.15);
+    const a = B.anchors(); if (!a || !a.hearth) return false;
+    // the shelf's anchor is (0,0,0) until the store has answered and the shelf is mounted (or for good with the store down), which
+    // stood the arch in the middle of the nook; the nook's own shelf spot (calrunia/room-kit.js SHELLS.nook) stands in until then
+    const sh = a.shelf && (a.shelf[0] || a.shelf[2]) ? a.shelf : [-1.08, 0, -3.5];
+    const P = V(sh[0], 0, sh[2]), out = P.clone().normalize(); at = out.clone().multiplyScalar(P.length() + 0.15);
     G = new THREE.Group(); G.name = "chamber-arch"; B.scene.add(G);
     const t = new THREE.TextureLoader().load("/ontology-game/cave/textures/wet_stone.jpg"); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 1);
     const stone = new THREE.MeshStandardMaterial({ color: "#8a7a6e", map: t, roughness: 0.95 });
