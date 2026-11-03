@@ -10,6 +10,8 @@ vi.mock('@/lib/board/owner', () => owner)
 vi.mock('@/lib/board/store', () => store)
 
 import { GET } from '../route'
+import { setBackend } from '@/lib/board/content-store'
+import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 
 const req = (q = '') => ({ nextUrl: { searchParams: new URLSearchParams(q) } }) as never
 
@@ -40,6 +42,16 @@ describe('GET /api/board/saves', () => {
     store.unrecordedSaves.mockResolvedValue({ oldestReceivedAt: null, count: 0 })
     await GET(req('board=council'))
     expect(store.latestDocs).toHaveBeenCalledWith('council', { leaveOutRecordedRows: true })
+  })
+
+  it('names the page build main last pushed, so an older open page can reload (board-reverts)', async () => {
+    store.unrecordedSaves.mockResolvedValue({ oldestReceivedAt: null, count: 0 })
+    const m = memoryBackend({ 'board/council-board.html': '<p>page</p>' })
+    setBackend(m.backend)
+    const body = await (await GET(req('board=council'))).json()
+    expect(body.page).toMatch(/^[0-9a-f]{64}$/)
+    expect((await (await GET(req('board=other'))).json()).page).toBeNull()
+    setBackend(undefined)
   })
 
   it('refuses a visitor who is not the owner', async () => {

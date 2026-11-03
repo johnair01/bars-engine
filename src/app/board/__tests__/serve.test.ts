@@ -20,6 +20,17 @@ describe('serveBoard', () => {
     setBackend(undefined)
   })
 
+  it('tells the shim which build it serves, so an open page knows when the board moved on (board-reverts)', async () => {
+    vi.stubGlobal('fetch', async () => { throw new Error('the repo is private: nothing may fetch it') })
+    const page = '<p>council</p>'
+    setBackend(memoryBackend({ 'board/council-board.html': page }).backend)
+    const req = { url: 'https://bars-engine.vercel.app/board/council' } as never
+    const html = await (await serveBoard(req, 'council')).text()
+    const { createHash } = await import('crypto')
+    expect(html).toContain(`PAGE = "${createHash('sha256').update(page).digest('hex')}"`)
+    setBackend(undefined)
+  })
+
   it('answers 503, not a GitHub fetch, before anything was pushed', async () => {
     vi.stubGlobal('fetch', async () => { throw new Error('the repo is private: nothing may fetch it') })
     vi.resetModules()

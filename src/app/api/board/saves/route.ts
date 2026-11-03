@@ -17,6 +17,7 @@ import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
 import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
 import { ticketFromSave } from '@/lib/work/from-save'
 import { readyDraftsAfterSave } from '@/lib/board/ready-drafts'
+import { PAGE_PATHS, pushedSha } from '@/lib/board/content-store'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -24,8 +25,11 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 export async function GET(req: NextRequest) {
   if (!(await isBoardOwner())) return NextResponse.json({ error: 'Sign in as the board owner' }, { status: 401 })
   const board = req.nextUrl.searchParams.get('board') || 'nonprofit'
-  const [docs, pull, waiting] = await Promise.all([latestDocs(board, { leaveOutRecordedRows: true }), lastPull(board), unrecordedSaves(board)])
-  return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting }, { headers: NO_STORE })
+  // page: the board's current build, so a page open since an older build reloads instead of losing the rows main has
+  // recorded since (they leave this read once recorded; board-reverts, 2026-11-03).
+  const [docs, pull, waiting, page] = await Promise.all([latestDocs(board, { leaveOutRecordedRows: true }), lastPull(board),
+    unrecordedSaves(board), PAGE_PATHS[board] && !(board === 'nonprofit' && process.env.BOARD_PAGE_URL) ? pushedSha(PAGE_PATHS[board]) : null])
+  return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting, page }, { headers: NO_STORE })
 }
 
 export async function POST(req: NextRequest) {
