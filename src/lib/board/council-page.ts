@@ -10,8 +10,9 @@ const PATCHES: [string, string][] = [
   ['btn.hidden = !mcp || !n;', 'btn.hidden = true;'],
   ['else msg.textContent = mcp ? `', 'else msg.textContent = false ? `'],
   ['`${what} saved. This view cannot reach Claude, so tell Claude in chat that you saved.`',
-   "`${what} saved and waiting to land on main, which Claude does at the next hourly pickup. "
-   + "Nobody needs telling.`"],
+   // His answer is live the moment it saves; main only keeps a record of rulings (Wendell, 2026-11-03: "The answers
+   // aren't supposed to land of main for any reason aside from a record of decisions"). The bar says what happens next.
+   "`${what} saved. Claude starts the work within the hour. Nobody needs telling.`"],
   ["const PICKUP_TRIGGER = 'trig_01L138vKTaN9MSJoFKRmaBNx'", "const PICKUP_TRIGGER = ''"],
 ]
 
