@@ -83,6 +83,10 @@ let tex = null;
 function glowTex() { if (tex) return tex; const cv = document.createElement("canvas"); cv.width = cv.height = 64; const x = cv.getContext("2d");
   const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.3, "rgba(255,255,255,.5)"); g.addColorStop(0.7, "rgba(255,255,255,.1)"); g.addColorStop(1, "rgba(255,255,255,0)");
   x.fillStyle = g; x.fillRect(0, 0, 64, 64); tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; return tex; }
+let rtex = null;   // a thin ring of light: the mark round a thing that can be taken
+function ringTex() { if (rtex) return rtex; const cv = document.createElement("canvas"); cv.width = cv.height = 128; const x = cv.getContext("2d");
+  const g = x.createRadialGradient(64, 64, 34, 64, 64, 62); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.45, "rgba(255,255,255,.35)"); g.addColorStop(0.62, "rgba(255,255,255,1)"); g.addColorStop(0.78, "rgba(255,255,255,.3)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128); rtex = new THREE.CanvasTexture(cv); rtex.colorSpace = THREE.SRGBColorSpace; return rtex; }
 function kit(G, seed) {
   let sd = seed; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const glow = (p, size, color, opacity, add = true) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color, transparent: true, opacity, depthWrite: false,
@@ -245,15 +249,42 @@ export async function mountRoom(o) {
         for (let i = 0; i < 4; i++) { const h = (0.15 + rnd() * 0.4) * melt, a = rnd() * 6.28, m = new THREE.Mesh(new THREE.ConeGeometry(0.03 + rnd() * 0.02, h, 5), iceM);
           m.rotation.x = Math.PI; m.position.copy(t.p).add(V(Math.cos(a) * (t.r + 0.4 + rnd() * 0.8), Math.min(t.h, top) * (0.55 + rnd() * 0.3), Math.sin(a) * (t.r + 0.4 + rnd() * 0.8))); G.add(m); } });
     }
-    // water: pools at the foot of things, drops falling
+    /* the flowing element (slice 2d, his B on bm-build-look-4, 2026-11-03 18:49Z: "The magma doesn't look natural and the
+       intuition of the player would be to avoid it on the ground. We need to have that be in the environment in a way that
+       makes sense"). What the ice melts to gathers where a melt would gather: in the place's own basin (o.basins, the
+       chamber's pool) and tight at the foot of what stands, where the ice was. None of it lies on the open floor the
+       player walks. Fire runs as fire runs in rock: a bed of hot stones banked at the foot of what stands, glowing from
+       inside, sparks going up from them; water, metal and earth seep into small pools hugging the same feet. */
     if (water > 0.2) {
-      const pool = new THREE.MeshStandardMaterial({ color: H.flow, roughness: 0.05, metalness: d.element === "metal" ? 0.9 : 0.6, emissive: H.flowGlow, emissiveIntensity: d.element === "fire" ? 0.55 : 0.3, transparent: true, opacity: 0.85 });
-      for (let i = 0, np = Math.round(14 * water); i < np; i++) { const t = roots.length && rnd() < 0.6 ? roots[Math.floor(rnd() * roots.length)] : null, a = rnd() * 6.28;
-        const q = t ? t.p.clone().add(V(Math.cos(a) * (t.r + 0.5), 0, Math.sin(a) * (t.r + 0.5))) : inRoom(0.8);
-        const m = new THREE.Mesh(new THREE.CircleGeometry(0.3 + rnd() * 0.7 * water, 18), pool); m.rotation.x = -Math.PI / 2; m.scale.set(1, 0.6 + rnd() * 0.7, 1); m.position.copy(q).add(V(0, 0.025, 0)); G.add(m);
-        glow(q.clone().add(V(0, 0.05, 0)), 0.9, H.flowGlow, 0.16 * water); }
-      const drops = dots(Math.round(60 * water), () => { const q = inRoom(0.9); q.y += 0.3 + rnd() * top * 0.7; return q; }, H.flowGlow, 0.07, 0.7);
-      if (drops) anim.push(fall(drops, 1.6, top));
+      const fire = d.element === "fire", flowT = 0.55 + 0.45 * water;
+      const pool = new THREE.MeshStandardMaterial({ color: H.flow, roughness: 0.05, metalness: d.element === "metal" ? 0.9 : 0.6, emissive: H.flowGlow, emissiveIntensity: fire ? 0.9 : 0.3, transparent: true, opacity: 0.85 });
+      const crust = new THREE.MeshStandardMaterial({ color: "#1c1512", roughness: 0.95, flatShading: true });
+      const hot = new THREE.MeshStandardMaterial({ color: "#2a1a12", emissive: H.flowGlow, emissiveIntensity: 0.6, roughness: 0.9, flatShading: true });   // a stone with the heat in it
+      // the basin: the place's own hollow fills first (the chamber's pool), its rim crusted where the melt is fire
+      for (const b of (o.basins || [])) { const q = V(b.x, C.y + 0.03, b.z);
+        const m = new THREE.Mesh(new THREE.CircleGeometry(b.r * 0.92, 32), pool); m.rotation.x = -Math.PI / 2; m.position.copy(q); G.add(m);
+        if (fire) for (let i = 0, n = 14; i < n; i++) { const a = i / n * 6.28 + rnd() * 0.3, rr = b.r * (0.86 + rnd() * 0.12), c0 = new THREE.Mesh(new THREE.DodecahedronGeometry(0.1 + rnd() * 0.12, 0), crust);
+          c0.position.set(q.x + Math.cos(a) * rr, q.y + 0.02, q.z + Math.sin(a) * rr); c0.scale.y = 0.45; G.add(c0); }
+        glow(q.clone().add(V(0, 0.1, 0)), b.r * 2.4, H.flowGlow, (fire ? 0.3 : 0.14) * water); }
+      const feet = roots.slice().sort(() => rnd() - 0.5).slice(0, Math.round(Math.min(roots.length, 10) * flowT));
+      for (const t of feet) {
+        if (fire) {
+          // coals: hot stones banked at the foot, the glow showing between them, never past an arm's width from it
+          for (let j = 0, n = 5 + Math.floor(rnd() * 4); j < n; j++) { const a = rnd() * 6.28, rr = t.r + 0.05 + rnd() * 0.22;
+            const c0 = new THREE.Mesh(new THREE.DodecahedronGeometry(0.07 + rnd() * 0.09, 0), j % 3 ? hot : crust); c0.position.set(t.p.x + Math.cos(a) * rr, C.y + 0.05, t.p.z + Math.sin(a) * rr); c0.rotation.set(rnd() * 3, rnd() * 3, 0); G.add(c0); }
+          glow(t.p.clone().add(V(0, 0.12, 0)), t.r * 2 + 0.7, H.flowGlow, 0.28 * water);
+        } else {
+          // a small seep against the foot, where the ice stood
+          const a = rnd() * 6.28, rr = t.r + 0.12, q = V(t.p.x + Math.cos(a) * rr, C.y + 0.025, t.p.z + Math.sin(a) * rr);
+          const m = new THREE.Mesh(new THREE.CircleGeometry(0.22 + rnd() * 0.25 * water, 18), pool); m.rotation.x = -Math.PI / 2; m.scale.set(1, 0.6 + rnd() * 0.4, 1); m.position.copy(q); G.add(m);
+          glow(q.clone().add(V(0, 0.05, 0)), 0.7, H.flowGlow, 0.14 * water);
+        }
+      }
+      // what moves in the air: drops falling from what stands, or, for fire, sparks going up from the coals
+      const src = () => { const t = feet.length ? feet[Math.floor(rnd() * feet.length)] : null; if (!t) { const q = inRoom(0.9); q.y += rnd() * top * 0.7; return q; }
+        const a = rnd() * 6.28; return V(t.p.x + Math.cos(a) * t.r, C.y + rnd() * Math.min(t.h, top) * 0.8, t.p.z + Math.sin(a) * t.r); };
+      const drops = dots(Math.round((fire ? 70 : 50) * water), src, fire ? "#ffb060" : H.flowGlow, fire ? 0.06 : 0.07, 0.7);
+      if (drops) anim.push(fall(drops, fire ? -0.5 : 1.6, top));
     }
     // the air: mist low while dense, columns at the gas stand, snow at the ice stand
     for (let i = 0, mist = Math.round((4 + 24 * s) * Math.max(ice * 0.8, water * 0.6) * (LOW ? 0.5 : 1)); i < mist; i++) { const q = inRoom(1.0); q.y += 0.15 + rnd() * top * 0.35; glow(q, 1.4 + rnd() * 2 * Math.min(1.5, R / 3.5), ice >= 1 ? "#c4dbef" : H.gas, 0.05 + 0.12 * s, false); }
@@ -318,7 +349,22 @@ export async function mountRoom(o) {
     else if (el === "fire") g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.09, 0), warmM));
     else g.add(new THREE.Mesh(new THREE.DodecahedronGeometry(0.1, 0), warmM));
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: "#ffd27a", transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending })); sp.scale.set(0.8, 0.8, 1); sp.position.y = 0.15; g.add(sp);
-    g.position.copy(at).setY((o.keepY || 0.95)); scene.add(g); keep = { g, t0: performance.now() / 1000, y: g.position.y, gone: 0 };
+    g.position.copy(at).setY((o.keepY || 0.95)); g.scale.setScalar(1.4); scene.add(g);   // larger than the pieces kept on the stones, so it is the one you see
+    /* the mark that says it can be taken (slice 2d, his B on bm-build-look-4: "The ember made by doing the inner work isn't
+       obvious enough as an object to be interacted with ... we'll need an effect in the game's UI language"). It wears what
+       the game already uses for "this is yours to use": the amber spot ring of the hollow's kit (hollow.js ringMat, the
+       rings that show where a thing can be set) and the live stand's breathing ring and column. A ring of light stands
+       round the piece and faces you, a second ring runs out from it like a beckon, and a ring lies on the floor under it
+       with a column of light up to it. Nothing else in the room wears these, and they go when it is carried or let go. */
+    const AMB = "#ffcf86", mk = new THREE.Group(); mk.name = "keepsake-mark"; scene.add(mk);
+    const add = mat => { mat.transparent = true; mat.depthWrite = false; mat.fog = false; mat.blending = THREE.AdditiveBlending; return mat; };
+    const halo = new THREE.Sprite(add(new THREE.SpriteMaterial({ map: ringTex(), color: AMB, opacity: 0.9 }))); halo.scale.set(0.85, 0.85, 1); halo.position.copy(g.position).add(V(0, 0.18, 0)); halo.renderOrder = 4; mk.add(halo);
+    const beck = new THREE.Sprite(add(new THREE.SpriteMaterial({ map: ringTex(), color: AMB, opacity: 0 }))); beck.position.copy(halo.position); beck.renderOrder = 4; mk.add(beck);
+    const fy = C.y + 0.04, floor = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.56, 40), add(new THREE.MeshBasicMaterial({ color: AMB, opacity: 0.8, side: THREE.DoubleSide })));
+    floor.rotation.x = -Math.PI / 2; floor.position.set(g.position.x, fy, g.position.z); mk.add(floor);
+    const fdisc = new THREE.Mesh(new THREE.CircleGeometry(0.42, 40), add(new THREE.MeshBasicMaterial({ color: "#ffb050", opacity: 0.18 }))); fdisc.rotation.x = -Math.PI / 2; fdisc.position.set(g.position.x, fy - 0.005, g.position.z); mk.add(fdisc);
+    const colH = Math.max(0.6, g.position.y - fy), col = new THREE.Sprite(add(new THREE.SpriteMaterial({ map: glowTex(), color: AMB, opacity: 0.3 }))); col.scale.set(0.5, colH * 1.4, 1); col.position.set(g.position.x, fy + colH / 2, g.position.z); mk.add(col);
+    keep = { g, t0: performance.now() / 1000, y: g.position.y, gone: 0, mk: { G: mk, halo, beck, floor, fdisc, col } };
     o.say && o.say(`Where the cold was thickest, it left ${d.keepsake}.`, 6);
   }
   // the record is kept once the keepsake is carried or let go (kept.js); a preview (o.dry) keeps nothing
@@ -379,9 +425,14 @@ export async function mountRoom(o) {
       if (f.waveT >= 0) { f.waveT += dt / (STILL ? 0.01 : 1.6); const r = 0.5 + f.waveT * R * 1.1; f.wave.scale.set(r, r, 1); f.wave.material.opacity = 0.55 * (1 - f.waveT); if (f.waveT >= 1) { f.waveT = -1; f.wave.material.opacity = 0; } }
       f.ring.material.color.set("#cfe6ff").lerp(new THREE.Color("#ffc46a"), f.warm); f.disc.material.color.set("#9cc4ff").lerp(new THREE.Color("#ffb050"), f.warm);
       f.ring.material.opacity = br; f.disc.material.opacity = 0.12 + 0.12 * br; f.col.material.opacity = live ? 0.3 + Math.sin(T * 2.2) * 0.1 : 0.1 + 0.1 * f.warm; f.col.material.color.copy(f.ring.material.color); });
+    if (keep && keep.mk) { const m = keep.mk, live = !keptState, br = live ? 0.75 + Math.sin(T * 2.2) * 0.2 : 0, ph = STILL ? 0 : (T * 0.6) % 1;
+      m.halo.position.y = keep.g.position.y + 0.18; m.halo.material.opacity = 0.9 * br; m.halo.scale.setScalar(0.85 + Math.sin(T * 2.2) * 0.04);
+      m.beck.position.copy(m.halo.position); m.beck.scale.setScalar(0.85 + ph * 1.1); m.beck.material.opacity = live && !STILL ? 0.7 * (1 - ph) : 0;
+      m.floor.material.opacity = br; m.fdisc.material.opacity = 0.12 + 0.12 * br; m.col.material.opacity = live ? 0.3 + Math.sin(T * 2.2) * 0.1 : 0;
+      if (!live) { dispose(m.G); keep.mk = null; } }
     if (keep) { keep.g.position.y = keep.y + Math.sin(T * 1.4) * 0.05; keep.g.rotation.y += dt * 0.6;
       if (keptState === "letgo") { keep.gone = Math.min(1, keep.gone + dt * 0.5); keep.g.position.y += keep.gone * 1.2; keep.g.traverse(n => { if (n.material) n.material.opacity = 1 - keep.gone; }); if (keep.gone >= 1) keep.g.visible = false; }
-      if (keptState === "keep") { keep.gone = Math.min(1, keep.gone + dt * 0.8); keep.g.scale.setScalar(1 - keep.gone); if (keep.gone >= 1) keep.g.visible = false; } }
+      if (keptState === "keep") { keep.gone = Math.min(1, keep.gone + dt * 0.8); keep.g.scale.setScalar(1.4 * (1 - keep.gone)); if (keep.gone >= 1) keep.g.visible = false; } }
   }
   return {
     near, card, act, frame, stands: STANDS,

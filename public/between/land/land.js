@@ -1002,7 +1002,7 @@ function frame() {
       // the chamber resets each time someone enters it (his B on bm-build-look-3, 2026-11-03): the frost is back, the stands are fresh
       if (d.dense && d.where === here && (fromNook || qb)) {
         step("the cold comes through with you");
-        const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6,
+        const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6, basins: [CH.POOL],
           where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "It goes onto the next stone, and the cave's kit grows beside it.",
           onKeep: rec => { setTimeout(() => state.ch.add(rec), 1200); } } : {};
         state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
