@@ -13,17 +13,3 @@ function spirit(x, y, z, color, s = 1, ry = 0) {
   g.rotation.y = ry || 0;
   return g;
 }
-// Part: the spirit on the hatch, the voice that leaves when money comes up (mb-spirit-on-the-hatch). It sits with its back
-// to the crate while it waits, turns toward you when the crate shows its spirit side, watches the boat go, and rests warm
-// once the tide turns. Its placings are round 3's three stills.
-PART("spirit", "The spirit on the hatch", "Still B's spirit, placed as round 3", () => {
-  const s = spirit(1.75, DY + 1.45, HZ + 0.2, 0x9ff6e4, 1.0, -2.3);
-  const body = s.children.filter((c) => c.isMesh).map((c) => c.material)[0];
-  const at = { waiting: [1.75, DY + 1.45, HZ + 0.2, -2.3], facing: [1.6, DY + 1.45, HZ + 0.6, -0.6], watching: [-1.0, DY + 1.6, HZ - 0.2, 2.6], resting: [0.4, DY + 1.35, HZ, -1.8] };
-  return { update(st) {
-    const p = at[st.sending != null ? "watching" : st.turned ? "resting" : st.spiritSide ? "facing" : "waiting"];
-    s.position.x += (p[0] - s.position.x) * 0.05; s.position.z += (p[2] - s.position.z) * 0.05;
-    s.position.y = p[1] + Math.sin(st.t * 1.6) * 0.06; s.rotation.y += (p[3] - s.rotation.y) * 0.05;
-    body.color.set(st.turned ? 0xffd27a : 0x9ff6e4); body.emissive.copy(body.color);
-  }, hit: [{ pos: s.position, kind: "spirit" }] };
-});

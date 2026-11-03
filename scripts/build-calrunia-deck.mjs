@@ -10,7 +10,7 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(root, p), 'utf8');
 const inline = (code) => code.replace(/<\/script/gi, '<\\/script');
-export const PARTS = ['sky', 'ring', 'water', 'ports', 'deck', 'crate', 'boat', 'hatch', 'gangway', 'bell', 'studio', 'spirit', 'tidepost', 'lectern'];
+export const PARTS = ['sky', 'ring', 'water', 'ports', 'crate', 'boat', 'spirit', 'pier', 'studio', 'tidepost', 'lectern', 'bell'];
 const scene = [read('content/calrunia/deck/kit.js'), ...PARTS.map((p) => read(`content/calrunia/deck/parts/${p}.js`)), read('content/calrunia/deck/deck-page.js')].join('\n');
 const chart = JSON.parse(read('fixtures/trade-deck/player-zero.json'));
 delete chart.note;
@@ -44,8 +44,8 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>The trade deck · Calrunia</title>
-<meta name="description" content="Your living ship's trade deck at dawn: one crate on the hatch each morning. Saved on your device only.">
+<title>The money boat · Calrunia</title>
+<meta name="description" content="The money boat at its pier at dawn: one crate on its hatch each morning. Saved on your device only.">
 <style>${css}</style>
 <script type="importmap">
 { "imports": {
@@ -55,7 +55,7 @@ const html = `<!doctype html>
 </script>
 </head>
 <body>
-<div id="deck-root"><canvas id="deck-scene" aria-label="Your ship's trade deck at dawn. A crate waits on the hatch with a spirit beside it. Tap where to walk; tap the crate, the spirit, the gangway, the crew bell or a boat to go to it. Drag to turn the view."></canvas></div>
+<div id="deck-root"><canvas id="deck-scene" aria-label="The money boat at its pier at dawn. A crate waits on the boat's hatch with a spirit beside it. Tap where to walk; tap the plank to go aboard; tap the crate, the spirit, the crew bell or a boat to go to it. Drag to turn the view."></canvas></div>
 <script>
 window.__tradeDeckChart = ${inline(JSON.stringify(chart))};
 </script>
