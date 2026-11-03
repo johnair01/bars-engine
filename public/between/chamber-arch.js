@@ -50,7 +50,7 @@ export function mount(B) {
     requestAnimationFrame(frame);
     const inNook = B.room && B.room().shell === "nook";
     if (!G) { if (inNook && B.anchors && build()) seen = 1; else return; }
-    G.visible = inNook; if (!inNook) { card.hidden = true; cardKey = ""; return; }
+    G.visible = inNook; if (!inNook) { card.hidden = true; cardKey = ""; cardVoice(""); return; }
     const T = performance.now() / 1000;
     if ((seen++ % 30) === 1 || !m) m = mood();
     const [veil, glow, li, mo] = COL[m];
@@ -59,11 +59,27 @@ export function mount(B) {
     const me = B.meState && B.meState.pos, near = me && Math.hypot(me.x - at.x, me.z - at.z) < 1.5;
     const key = near ? m : "";
     if (key === cardKey) return; cardKey = key; card.hidden = !key;
-    if (!key) return;
+    if (!key) { cardVoice(""); return; }
     const text = m === "cold" ? "The cold comes from behind it: a season of it. It has filled the keeping chamber, over what you keep there."
       : m === "warm" ? "Behind it is the keeping chamber. What the cold left when your blocks cleared stands there, each on its own stone."
       : "Behind it is the keeping chamber, still bare. What the cold leaves when a block clears will stand there.";
     card.innerHTML = `<div><b>The arch of cave stone</b><div class="t">${text}</div></div><div class="row"><button type="button">Step through</button></div>`;
+    cardVoice(key + ":" + card.innerHTML.length);
+  }
+  /* The card speaks through the one screen owner (voice.js; charge-world.js does the same for the map stand): a card of its own
+     under the nook's near card and the map stand's was hidden by body.voiced-soft whenever one of them spoke, so standing at
+     the arch showed nothing. Its name is the headline, its line sits under it, "Step through" is the seal. */
+  let voiced = "";
+  function cardVoice(k) {
+    const vo = B.voice; if (!vo) return;
+    if (k === voiced) return; voiced = k;
+    if (!k) { vo.quiet("arch"); return; }
+    import("./voice.js").then(v => {
+      if (voiced !== k) return;
+      const mo = v.panelMoment(card, () => card); if (!mo) { vo.quiet("arch"); return; }
+      const [x0, y0] = B.screenOf(V(at.x, 0, at.z)), [, y1] = B.screenOf(V(at.x, 1.45, at.z)), h = Math.abs(y0 - y1), w = Math.max(40, h * 0.9);
+      vo.say({ ...mo, soft: true, subject: () => ({ l: x0 - w / 2, r: x0 + w / 2, t: Math.min(y0, y1), b: Math.max(y0, y1) }) }, "arch", 2);
+    });
   }
   requestAnimationFrame(frame);
   return { at: () => at ? [at.x, at.z] : null, view: () => ({ built: !!G, mood: m, near: !!cardKey }) };
