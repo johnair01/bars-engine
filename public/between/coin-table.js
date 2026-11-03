@@ -134,6 +134,7 @@ export function mount(B, opts = {}) {
     coins.length = 0;
     [[-0.1, 0.05, 0.4], [0.06, 0.12, 1.1], [0.12, -0.06, 2.2]].forEach(([dx, dz, ry]) => { const c = coinMesh(); c.position.copy(T).add(V(dx, TY + 0.005, dz)); c.rotation.y = ry; group.add(c); coins.push({ m: c, rest: c.position.clone(), home: c.position.clone(), ry }); });
     const bk = book(place.book, place.bookYaw); group.add(bk); group.userData.book = bk;
+    const hitBox = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.55), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); bk.add(hitBox); // a tap near the book counts
     if (shell !== "nook") { // the reading stand
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.07, 0.95, 8), darkWood); post.position.copy(place.book).setY(0.47); group.add(post);
       const lip = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.03, 0.3), wood); lip.position.copy(place.book).setY(0.96); lip.rotation.y = place.bookYaw; lip.rotation.x = 0.4; group.add(lip);
@@ -389,7 +390,15 @@ export function mount(B, opts = {}) {
   function sittingHere() { const st = B.meState; return st.sitting && st.seatWant === "coins"; }
   function sit() { B.sitOn("coins"); }
   let bookUsed = false; // one reading a visit: the book reads again once you have walked away from it
-  function openBook() { if ((s && s.source === "table") || bookUsed) return; s = fresh("book"); cardKey = ""; }
+  let bookWant = false; // a tap on the book while you are across the room: it opens when you have walked up to it
+  /* A tap on the book is you asking for a reading: it puts down whatever sitting is open (the last person tossed for
+     stays with that sitting, never with the book), and opens a fresh visit that asks who the reading is for. */
+  function openBook() {
+    if (s && s.source === "book" && !s.closed) return;
+    if (sittingHere()) B.standUp();
+    if (s) end();
+    bookWant = false; bookUsed = false; s = fresh("book"); cardKey = "";
+  }
   /** A next move's "coins" walks you to the table and sits you. */
   function go() { if (place) { B.meState.target = place.seat.clone(); sit(); } }
 
@@ -402,7 +411,12 @@ export function mount(B, opts = {}) {
     ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), B.camera);
     const hits = ray.intersectObjects([group], true); if (!hits.length) return;
     let o = hits[0].object, isBook = false; while (o) { if (o === group.userData.book) isBook = true; o = o.parent; }
-    setTimeout(() => { if (isBook) { B.meState.target = place.bookStand.clone(); B.meState.keys.clear(); openBook(); } else sit(); }, 0); // after the room's own tap
+    setTimeout(() => {
+      if (!isBook) { bookWant = false; sit(); return; }
+      if (sittingHere()) B.standUp();
+      B.meState.target = place.bookStand.clone(); B.meState.keys.clear();
+      if (Math.hypot(B.meState.pos.x - place.bookStand.x, B.meState.pos.z - place.bookStand.z) < BOOK_NEAR) openBook(); else bookWant = true; // opens on arrival, frame()
+    }, 0); // after the room's own tap
   });
 
   /* ---------- each frame ---------- */
@@ -428,6 +442,10 @@ export function mount(B, opts = {}) {
     const awayFromBook = Math.hypot(me.x - place.bookStand.x, me.z - place.bookStand.z) > BOOK_LEAVE;
     if (s && s.source === "book" && (s.closed || awayFromBook)) { if (s.move) bookUsed = true; end(); }
     if (awayFromBook) bookUsed = false;
+    if (bookWant) { // walking up to the book after a tap on it
+      if (B.meState.keys && B.meState.keys.size) bookWant = false; // you steered elsewhere
+      else if (Math.hypot(me.x - place.bookStand.x, me.z - place.bookStand.z) < BOOK_NEAR) openBook();
+    }
     if (s && s.who && s.tosses.length === 6 && !s.move) settle();
     layMarks();
     near = null;
