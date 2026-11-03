@@ -5,10 +5,14 @@
    intake and the board itself for the play. Every control is an object on the table: there is no card, chip, tray or
    panel. The rules are engine.js, built from src/lib/lantern/engine.ts by scripts/build-lantern-engine.mjs.
 
-   Order of play (lh-intake-order): sit on the stool; stamp the goal plate; turn the well's ring to the feeling walked
-   toward (gold); turn the lever's foot to the feeling lived now and pull it to how heavy it is (lead); flip the five rim
-   toggles, each engraved with its channel; press the cells so the stones rise; click each stone's collar up a notch
-   (foot Minor, belly Medium, shoulder Major). Tap the well to deal: the camera rises from the seat to straight down in
+   Order of play (lh-intake-order, and his note on lh-brass-look-2: "the table is an interpreter compiler of the 6
+   unpacking questions"): sit on the stool; the plate engraves the six Unpacking Questions one at a time, with three stock
+   answers engraved under each. The player types an answer (the one text field) or taps a stock answer, and the table
+   reads it (interpret.js, built from src/lib/lantern/interpret.ts) and moves its own brass: q1 stamps the goal, q2 turns
+   the well's ring to the feeling walked toward (gold), q3 sets the hung lantern's flame, q4 turns the lever's foot to the
+   feeling lived now and drops its lead weight to how heavy it is, q5 flips the rim toggles one by one, q6 presses the
+   cells so the stones rise and slides each collar (foot Minor, belly Medium, shoulder Major). The hand still works every
+   piece, and a piece the hand set is never moved by the table again. After q6, tap the well to deal: the camera rises from the seat to straight down in
    about 1.2 s with no cut (a cut under reduced motion). Then a stone tap is a basic move (1 oil), the seal pressed on a
    stone is your BAR, the hourglass turns the watch, and a vibeulon from the stack buys a basic move once the oil is out.
    ?view=seat|top|stand and ?still=1 are for stills (scripts/lantern-table-stills.mjs). */
@@ -18,6 +22,7 @@ import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, paperLantern, groundY } from "../../between/hollow.js";
 import { loadParts, dressFigure } from "../../between/wardrobe.js";
 import { init, apply, payout, payoutShare, blockLeft, KEEPS, CHANNELS, CHANNEL_NAME, STATE, lvl, CMD, nHeld, cmdNeed } from "./engine.js";
+import { interpret, QUESTIONS, STOCK } from "./interpret.js";
 
 const q = new URLSearchParams(location.search);
 const STILL = q.has("still");
@@ -94,21 +99,28 @@ const plateMat = tex => new THREE.MeshStandardMaterial({ map: tex, metalness: 0.
 /* ---------- the intake, held as the reel's intake/game shape (src/lib/lantern/engine.ts Intake) ---------- */
 /* lh-first-block: the first table is dealt from the TDT director application block (council money-block.md, mb-first-coin). */
 const DIRECTOR_GOAL = "Send the TDT director application";
-/* ?goal= letters another goal on the plate (an invitation can carry it); the player can also type their own on the plate */
-const GOAL_IN = (q.get("goal") || "").replace(/\s+/g, " ").trim().slice(0, 80) || DIRECTOR_GOAL;
+/* ?goal= carries another goal (an invitation can): it waits on the plate as the answer to the first question */
+const GOAL_IN = (q.get("goal") || "").replace(/\s+/g, " ").trim().slice(0, 80);
 const intake = { goal: "", want: [], now: {}, truth: {}, truthCtx: {}, res: [false, false, false, false, false, false], tags: KEEPS.map(() => ({})) };
 const sliders = { size: 2, charge: 2, deadline: 2 };
 let state = null, firstMove = false, tableId = null;
 let overcome = 0;   // refinements struck off the goal's block since the deal: the lit studs on the plate
 const ringAt = { i: -1 }, leverAt = { ch: 0, pull: 0 };
+/* the six questions: qAt is the one on the plate (7 once all six are answered); draft is the answer as it is typed */
+let qAt = 1, draft = GOAL_IN, goalKind = "", life = "", busy = false, typing = false;
+/* the pieces the hand has set: the table reads answers onto every other piece, and never moves these again */
+const handSet = new Set();
 
-/* 1. The goal: a brass plate standing at the far edge, leaned back so the seat and the risen camera both read it. Stamped,
-   it carries the goal's words and, under them, one stud for each refinement of the block between the player and the goal.
-   A struck refinement lights its stud, so the plate fills with light as the stones dissolve: the goal is what the machine
-   works on, and the plate is where the player watches it come within reach. */
+/* 1. The goal: a brass plate standing at the far edge, leaned back so the seat and the risen camera both read it. While the
+   six questions are asked, it engraves the question on the plate, the player's answer as it is typed in a sunk groove, and
+   three stock answers under it, each a line the finger can press. Once the six are answered, it carries the goal's words
+   and, under them, one stud for each refinement of the block between the player and the goal. A struck refinement lights
+   its stud, so the plate fills with light as the stones dissolve: the goal is what the machine works on, and the plate is
+   where the player watches it come within reach. */
 const [c0x, c0z] = at(0);
 const plateZ = c0z - cellR * 1.12;
-const plateCan = document.createElement("canvas"); plateCan.width = 1024; plateCan.height = 300;
+const PW = 0.6, PH = 0.27, PCW = 1024, PCH = Math.round(1024 * PH / PW);
+const plateCan = document.createElement("canvas"); plateCan.width = PCW; plateCan.height = PCH;
 const plateTex = new THREE.CanvasTexture(plateCan); plateTex.colorSpace = THREE.SRGBColorSpace; plateTex.anisotropy = 8;
 const plateFace = new THREE.MeshStandardMaterial({ map: plateTex, metalness: 0.55, roughness: 0.42, emissive: 0xffd88a, emissiveMap: plateTex, emissiveIntensity: 0 });
 function wrapWords(x, text, maxW) {
@@ -116,20 +128,54 @@ function wrapWords(x, text, maxW) {
   for (const w of text.split(" ")) { const cur = lines[lines.length - 1], t = cur ? cur + " " + w : w; if (cur && x.measureText(t).width > maxW) lines.push(w); else lines[lines.length - 1] = t; }
   return lines;
 }
-const studRow = total => { const r = Math.min(22, (1024 * 0.8) / Math.max(1, total) / 2.6), gap = r * 2.6; return { r, gap, x0: 512 - (total - 1) * gap / 2, y: 300 - 50 }; };
+/* the largest size at which text fits in maxLines lines of width maxW */
+function fit(x, text, size, min, maxW, maxLines, weight = 700) {
+  let lines;
+  for (;;) { x.font = `${weight} ${size}px Marcellus, Georgia, serif`; lines = wrapWords(x, text, maxW); if ((lines.length <= maxLines && lines.every(l => x.measureText(l).width <= maxW)) || size <= min) return { size, lines: lines.slice(0, maxLines) }; size -= 2; }
+}
+const studRow = total => { const r = Math.min(26, (PCW * 0.8) / Math.max(1, total) / 2.6), gap = r * 2.6; return { r, gap, x0: PCW / 2 - (total - 1) * gap / 2, y: PCH - 64 }; };
 /* where stud k sits in the world, for the spark that flies to it */
-function studWorld(k, total) { const { gap, x0, y } = studRow(total); return plate.localToWorld(new THREE.Vector3((((x0 + k * gap) / 1024) - 0.5) * 0.46, (0.5 - y / 300) * 0.135, 0.008)); }
+function studWorld(k, total) { const { gap, x0, y } = studRow(total); return plate.localToWorld(new THREE.Vector3((((x0 + k * gap) / PCW) - 0.5) * PW, (0.5 - y / PCH) * PH, 0.008)); }
+/* the stock answers' rows on the plate, in canvas pixels: the finger's press is read against these */
+const STOCK_ROW = { y0: 268, h: 58 };
+let caretOn = true;
 function drawPlate() {
-  const x = plateCan.getContext("2d"), W = plateCan.width, H = plateCan.height;
+  const x = plateCan.getContext("2d"), W = PCW, H = PCH, ink = "#2a1c0c";
   x.fillStyle = "#a4823a"; x.fillRect(0, 0, W, H);
   x.strokeStyle = "#6e5420"; x.lineWidth = 10; x.strokeRect(14, 14, W - 28, H - 28);
-  if (intake.goal) {
-    /* the goal, struck deep: as large as two lines allow */
-    x.fillStyle = "#2a1c0c"; x.textAlign = "center"; x.textBaseline = "middle";
-    let size = 94, lines;
-    for (;;) { x.font = `700 ${size}px Marcellus, Georgia, serif`; lines = wrapWords(x, intake.goal, W * 0.86); if ((lines.length <= 2 && lines.every(l => x.measureText(l).width <= W * 0.86)) || size <= 30) break; size -= 2; }
-    const top = lines.length === 1 ? 112 : 112 - size * 0.53;
-    lines.forEach((l, k) => x.fillText(l, W / 2, top + k * size * 1.06));
+  x.textAlign = "center"; x.textBaseline = "middle";
+  if (qAt <= 6) {
+    /* the question, struck deep, with its number */
+    x.fillStyle = "#5a4218"; x.font = "700 28px Marcellus, Georgia, serif"; x.fillText(`Question ${qAt} of 6`, W / 2, 46);
+    const qf = fit(x, QUESTIONS[qAt - 1], 52, 30, W * 0.88, 2);
+    x.fillStyle = ink; qf.lines.forEach((l, k) => x.fillText(l, W / 2, (qf.lines.length === 1 ? 122 : 98) + k * qf.size * 1.05));
+    /* the answer's groove: the typed words as the plate takes them */
+    const gy = 222, gh = 54;
+    x.fillStyle = "#8a6c2c"; x.fillRect(60, gy - gh / 2, W - 120, gh);
+    x.strokeStyle = "#5e4618"; x.lineWidth = 3; x.beginPath(); x.moveTo(60, gy - gh / 2); x.lineTo(W - 60, gy - gh / 2); x.stroke();
+    x.strokeStyle = "#c9a65a"; x.beginPath(); x.moveTo(60, gy + gh / 2); x.lineTo(W - 60, gy + gh / 2); x.stroke();
+    if (draft) {
+      const af = fit(x, draft, 38, 20, W - 160, 1, 400); x.fillStyle = "#1e1408"; x.fillText(af.lines[0] + (typing && caretOn ? "|" : ""), W / 2, gy + 2);
+    } else {
+      x.font = "400 30px Marcellus, Georgia, serif"; x.fillStyle = "#4e3a16";
+      x.fillText(typing ? "Type your answer, then press Enter." : "Tap here to type your answer, or press one below.", W / 2, gy + 2);
+    }
+    /* three stock answers, each a line with a sunk dot the finger presses */
+    STOCK[qAt].forEach((a, k) => {
+      const y = STOCK_ROW.y0 + STOCK_ROW.h * (k + 0.5);
+      if (k) { x.strokeStyle = "#7e6224"; x.lineWidth = 2; x.beginPath(); x.moveTo(120, y - STOCK_ROW.h / 2); x.lineTo(W - 120, y - STOCK_ROW.h / 2); x.stroke(); }
+      const sf = fit(x, a, 38, 22, W - 220, 1, 700);
+      const tw = x.measureText(sf.lines[0]).width;
+      x.beginPath(); x.arc(W / 2 - tw / 2 - 26, y, 9, 0, Math.PI * 2); x.fillStyle = "#3a2a12"; x.fill();
+      x.fillStyle = ink; x.fillText(sf.lines[0], W / 2 + 0, y + 1);
+    });
+  } else if (intake.goal) {
+    /* the goal, struck deep: as large as three lines allow */
+    x.fillStyle = ink;
+    const y0 = goalKind ? 76 : 24, gf = fit(x, intake.goal, goalKind ? 84 : 100, 34, W * 0.86, 3);
+    const top = (y0 + H - 110) / 2 - (gf.lines.length - 1) * gf.size * 0.53;
+    gf.lines.forEach((l, k) => x.fillText(l, W / 2, top + k * gf.size * 1.06));
+    if (goalKind) { x.fillStyle = "#5a4218"; x.font = "700 30px Marcellus, Georgia, serif"; x.fillText(goalKind, W / 2, 50); }
     /* the block's studs: dark and sunk while a refinement stands, lit gold once it is struck */
     const left = state ? blockLeft(state) : payout(sliders).blockSize, total = overcome + left;
     const { r, gap, x0, y } = studRow(total);
@@ -142,25 +188,31 @@ function drawPlate() {
   }
   plateTex.needsUpdate = true;
 }
-const plate = mesh(new THREE.BoxGeometry(0.46, 0.135, 0.012), [brass, brass, brass, brass, plateFace, brass], c0x, T.y + 0.07, plateZ);
-plate.rotation.x = -0.72;
+const plate = mesh(new THREE.BoxGeometry(PW, PH, 0.012), [brass, brass, brass, brass, plateFace, brass], c0x, T.y + 0.135, plateZ);
+plate.rotation.x = -0.62;
 /* two short brass posts hold it */
-[-0.19, 0.19].forEach(px => mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.05, 8), darkBrass, c0x + px, T.y + 0.025, plateZ - 0.02));
+[-0.25, 0.25].forEach(px => mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.1, 8), darkBrass, c0x + px, T.y + 0.05, plateZ - 0.03));
 /* the stamp: a brass die on a short post beside the plate, which comes down on it when tapped */
-const die = new THREE.Group(); die.position.set(c0x + 0.3, T.y + 0.02, plateZ + 0.07); table.add(die);
+const die = new THREE.Group(); die.position.set(c0x + 0.36, T.y + 0.02, plateZ + 0.09); table.add(die);
 mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.015, 12), darkBrass, 0, 0, 0, die);
 const dieHead = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 12), brass, 0, 0.045, 0, die);
 mesh(new THREE.SphereGeometry(0.02, 12, 8), darkBrass, 0, 0.085, 0, die);
-grip(plate, "stamp", 0.13); grip(die, "stamp", 0.06);
-/* typing your own goal: the plate takes the words as they are typed; Enter or a tap elsewhere sets them */
-function letterGoal() {
+/* the plate itself is the grip, so a press lands on the line under the finger */
+plate.userData.act = "plate"; picks.push(plate); grip(die, "stamp", 0.06);
+/* typing: the one text field, out of sight; the plate shows the words as they are typed. During the six questions it is the
+   answer to the question on the plate; afterward it is the goal itself, and the goal is then the hand's. */
+function letter() {
   if (firstMove) { say("The table is in play. The goal stays as it was stamped."); return; }
-  goalInput.value = intake.goal; goalInput.focus(); goalInput.select();
-  say("Type your own goal and the plate takes it. Press Enter when it reads right.");
+  goalInput.value = qAt <= 6 ? draft : intake.goal; typing = true; goalInput.focus(); goalInput.select(); drawPlate();
+  say(qAt <= 6 ? "Type your answer and the plate takes it. Press Enter, or tap the stamp, when it reads right." : "Type your goal and the plate takes it. Press Enter when it reads right.");
 }
-goalInput.addEventListener("input", () => { intake.goal = goalInput.value.replace(/\s+/g, " ").slice(0, 80) || GOAL_IN; drawPlate(); drawGoal(); });
-goalInput.addEventListener("keydown", e => { if (e.key === "Enter") goalInput.blur(); });
-goalInput.addEventListener("blur", () => { intake.goal = intake.goal.trim() || GOAL_IN; drawPlate(); drawGoal(); say(`Your goal reads: ${intake.goal}. ` + hint()); if (state) save(); });
+goalInput.addEventListener("input", () => {
+  const v = goalInput.value.replace(/\s+/g, " ");
+  if (qAt <= 6) draft = v; else { intake.goal = v.slice(0, 80) || intake.goal; handSet.add("goal"); drawGoal(); }
+  drawPlate();
+});
+goalInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); if (qAt <= 6) submit(draft); goalInput.blur(); } });
+goalInput.addEventListener("blur", () => { typing = false; drawPlate(); if (qAt > 6) { intake.goal = intake.goal.trim() || DIRECTOR_GOAL; drawGoal(); if (state) save(); } });
 
 /* lh-payout-sliders A: three brass sliders beside the director block, on a bracket off the far rim. Each has three detents;
    together they set the block's starting size and the vibeulon payout, shown as the purse of coins beside them. */
@@ -298,10 +350,17 @@ let glassTurn = 0, glassTo = 0;
 /* ---------- the lantern: hung over the board as the seat sees it (round 2's P1), its light the oil ---------- */
 const LAN = W2(0.0, 1.2, 0.0);
 const lan = paperLantern("#c9a27a", 1); lan.position.copy(LAN); lan.scale.setScalar(0.5); scene.add(lan);
+/* q3 sets the flame: Flowing burns high and steady, Stalled gutters low and red, Neutral holds an even light. The paper's
+   glow is this lantern's own, so the hall's other lanterns keep theirs. */
+const lanBody = lan.children[0]; lanBody.material = lanBody.material.clone();
+const FLAME = { "": { k: 1, glow: 1.1, c: 0xffc27a, gutter: 0 }, Flowing: { k: 1.3, glow: 1.6, c: 0xffd08a, gutter: 0 }, Stalled: { k: 0.45, glow: 0.45, c: 0xff7a3a, gutter: 1 }, Neutral: { k: 0.85, glow: 0.9, c: 0xf2dcc0, gutter: 0 } };
+Object.values(FLAME).forEach(f => { f.col = new THREE.Color(f.c); });
+const lanC0 = lanBody.material.emissive.clone(), flame = { k: 1, glow: 1.1, mix: 0, c: new THREE.Color(0xffc27a) };
+lanBody.userData.act = "flame"; picks.push(lanBody);
 const cordM = new THREE.MeshStandardMaterial({ color: 0x2a2018, roughness: 0.9 });
 const cord = (a, b, r = 0.0028, m = cordM, par = scene) => { const len = a.distanceTo(b); const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 5), m); c.position.copy(a).lerp(b, 0.5); c.lookAt(b); c.rotateX(Math.PI / 2); par.add(c); return c; };
 const lanCord = cord(new THREE.Vector3(LAN.x, LAN.y + 0.39, LAN.z), new THREE.Vector3(LAN.x, 4.4, LAN.z), 0.004);
-const pl = new THREE.PointLight(0xffc27a, 4.2, 6, 1.6); pl.position.set(LAN.x, LAN.y + 0.22, LAN.z); pl.castShadow = true; pl.shadow.mapSize.set(1024, 1024); scene.add(pl);
+const pl = new THREE.PointLight(0xffc27a, 4.2, 6, 1.6); let plBase = 4.2; pl.position.set(LAN.x, LAN.y + 0.22, LAN.z); pl.castShadow = true; pl.shadow.mapSize.set(1024, 1024); scene.add(pl);
 
 /* ---------- lh-hall-company: stand-ins at two other tables, plainly marked ---------- */
 /* A stand-in is a pale, undressed figure of unglazed clay, and a paper tag on its lantern says so in words. */
@@ -387,25 +446,32 @@ function stepCamera(dt) {
 /* ---------- drawing the machine from the intake, and the board from the engine ---------- */
 function drawIntake() {
   drawPlate(); drawGoal();
-  notch.visible = ringAt.i >= 0; ring.rotation.y = ringAt.i >= 0 ? -ringAt.i / 5 * Math.PI * 2 : 0;
+  notch.visible = ringAt.i >= 0; to.ring = near(to.ring, ringAt.i >= 0 ? -ringAt.i / 5 * Math.PI * 2 : 0);
   wellGlow.material.emissiveIntensity = intake.want.length ? 0.7 : 0; wellLight.intensity = intake.want.length ? 0.6 : 0;
   const lc = CHANNELS[leverAt.ch]; footMark.material.color.set(EL[lc][1]); footMark.material.emissive.set(EL[lc][1]);
-  levFoot.rotation.y = -0.8 + leverAt.ch * 0.35;
-  toggles.forEach(t => { const on = !!intake.truth[t.c]; t.st.material = on ? t.on : t.off; t.stick.rotation.x = on ? -0.45 : 0.55; });
+  to.foot = -0.8 + leverAt.ch * 0.35;
+  toggles.forEach(t => { const on = !!intake.truth[t.c]; t.st.material = on ? t.on : t.off; t.to = on ? -0.45 : 0.55; });
   if (state) return;
   stones.forEach((s, i) => {
     s.riseTo = intake.res[i] ? 1 : 0;
-    const str = intake.tags[i][KEEPS[i].pred] || 0;
-    s.dome.material = intake.res[i] && str ? glazeMat[KEEPS[i].pred] : bisque;
+    const [tc, str] = topTag(i);
+    s.dome.material = intake.res[i] && str ? glazeMat[tc] : bisque;
     setCollar(s, str);
     s.heldRing.visible = false;
     s.fog = intake.res[i] && !str ? 0.45 : 0;   // on but untagged: its channel still in fog (a cell left down is dealt in fog)
   });
 }
+/* a stone's strongest tag: its channel and strength (the predominant channel when it has none) */
+function topTag(i) { const e = Object.entries(intake.tags[i]).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])[0]; return e || [KEEPS[i].pred, 0]; }
+/* the collar slides to its groove: foot, belly or shoulder (frame() eases it there) */
 function setCollar(s, n) {
-  s.collar.visible = n > 0; if (!n) return;
-  const th = COLLAR[n], r = stoneR * 1.04 * Math.sin(th); s.collar.position.y = SY * stoneR * 1.0 * Math.cos(th); s.collar.scale.set(r, 0.05, r);
+  if (!n) { s.collar.visible = false; s.collarN = 0; return; }
+  if (!s.collar.visible) { s.collar.visible = true; const th = COLLAR[1], r = stoneR * 1.04 * Math.sin(th); s.collar.position.y = SY * stoneR * Math.cos(th); s.collar.scale.set(r, 0.05, r); }
+  s.collarN = n;
 }
+/* the pieces ease to where they are set, so a piece the table moves is seen to move (at once under reduced motion) */
+const to = { ring: 0, foot: -0.8 };
+const near = (cur, a) => a + Math.round((cur - a) / (Math.PI * 2)) * Math.PI * 2;
 function drawBoard() {
   if (!state) return;
   state.keeps.forEach((k, i) => {
@@ -419,7 +485,7 @@ function drawBoard() {
   });
   lamps.forEach((f, k) => { f.visible = k < state.oil; });
   purseMine.clear(); for (let c = 0; c < state.vibeulons; c++) { const m = new THREE.Mesh(coinGeo, coinMat); m.position.y = c * 0.0038; purseMine.add(m); }
-  pl.intensity = 2.6 + 0.4 * state.oil;
+  plBase = 2.6 + 0.4 * state.oil;
   drawPlate(); drawGoal();
 }
 /* the goal's line under the table, and the plate's glow: how much of the block still stands between the player and the goal */
@@ -428,7 +494,7 @@ function drawGoal() {
   goalEl.hidden = false; goalName.textContent = intake.goal;
   const left = state ? blockLeft(state) : payout(sliders).blockSize, total = overcome + left;
   goalLeft.textContent = state && state.done ? "Your goal. Nothing stands in its way now."
-    : !state ? `Your goal. The stones you raise become the block in its way: ${left} refinements.`
+    : !state ? `Your goal${goalKind ? `, a piece of ${goalKind}` : ""}. The stones you raise become the block in its way: ${left} refinements.`
     : `Your goal. ${left} of ${total} refinements still stand in its way.`;
   plateFace.emissiveIntensity = state && state.done ? 0.55 : total ? 0.28 * overcome / total : 0;
 }
@@ -456,16 +522,10 @@ function stepSparks(dt) {
 }
 
 /* ---------- what each object does ---------- */
-const ORDER_HINT = [
-  [() => !intake.goal, "Tap the brass plate to stamp your goal on it."],
-  [() => !intake.want.length, "Turn the ring round the well to how you want to feel once the goal is done."],
-  [() => !Object.keys(intake.now).length, "Turn the lever's foot to how the goal feels now, then pull it for how heavy."],
-  [() => !Object.keys(intake.truth).length, "Flip a toggle for each feeling already true of this goal."],
-  [() => !intake.res.some(Boolean), "Press a cell to raise a stone for each doubt you hold about the goal."],
-  [() => !intake.tags.some(t => Object.keys(t).length), "Tap a stone to set how loud that doubt is: foot, belly or shoulder."],
-  [() => true, "Tap the well to deal. The stones become the block between you and your goal."],
-];
-const hint = () => ORDER_HINT.find(([f]) => f())[1];
+const hint = () => qAt <= 6
+  ? `Question ${qAt} is on the plate. Type your answer, or press one of the three engraved under it, and the table sets its own brass.`
+  : !intake.goal ? "Tap the brass plate to type your goal on it."
+  : "Every piece still turns by hand. Tap the well to deal, and the stones become the block between you and your goal.";
 const sliderLine = () => { const p = payout(sliders); return `The block in front of your goal starts at ${p.blockSize} refinements and pays ${p.vibeulons} vibeulons.`; };
 const sitting = () => view !== "stand";
 const chFor = i => { const k = state.keeps[i], l = k.loops.filter(x => x.g > 0).sort((a, b) => b.g - a.g)[0]; return l ? l.ch : KEEPS[i].pred; };
@@ -483,14 +543,59 @@ function play(m) {
   } else if (state.oil === 0 && m.type !== "tick") line += state.vibeulons > 0 ? " The oil is out. Tap a stone to spend a vibeulon on a basic move, or turn the hourglass." : " The oil is out. Turn the hourglass to start the next watch.";
   say(line); drawBoard();
 }
+/* ---------- the six questions: the table reads an answer and moves its own brass ---------- */
+const FLAME_SAYS = { Flowing: "burns high and steady", Stalled: "gutters low", Neutral: "holds still" };
+const PIECE = k => k === "lever" ? "lever" : k === "ring" ? "ring" : k === "flame" ? "lantern's flame" : k.startsWith("truth:") ? `${CHANNEL_NAME[k.slice(6)]} toggle` : k.startsWith("cell:") ? `${KEEPS[+k.slice(5)].b} stone` : k;
+/* the table's own hand: steps a beat apart, each easing its piece into place over most of a second */
+const BEAT = REDUCED ? 0 : 0.8;
+const queue = [];
+const drain = () => { while (queue.length) queue.shift().fn(); };
+function submit(text) {
+  if (busy || qAt > 6) return;
+  const qn = qAt, r = interpret(qn, text || "", intake);
+  if (!(text || "").trim()) { say(r.line); return; }
+  busy = true; typing = false;
+  const kept = [], step = (fn, wait = BEAT) => queue.push({ wait, fn });
+  const mine = (key, fn, wait) => { if (handSet.has(key)) kept.push(PIECE(key)); else step(fn, wait); };
+  say(r.line);
+  step(() => { die.userData.press = 1; }, 0.1);
+  if (qn === 1) step(() => { intake.goal = r.goal; goalKind = r.kind || ""; drawIntake(); }, 0.25);
+  if (qn === 2 && r.want) mine("ring", () => { intake.want = r.want; ringAt.i = CHANNELS.indexOf(r.want[0]); drawIntake(); }, 0.25);
+  if (qn === 3 && r.life) mine("flame", () => { life = r.life; }, 0.25);
+  if (qn === 4 && r.now) {
+    const { ch, n } = r.now;
+    if (handSet.has("lever")) kept.push("lever");
+    else {
+      step(() => { leverAt.ch = CHANNELS.indexOf(ch); drawIntake(); }, 0.25);
+      step(() => { leverAt.pull = n; intake.now = { [ch]: n }; swing.v += REDUCED ? 0 : 3; drawIntake(); });
+    }
+  }
+  if (qn === 5) {
+    Object.assign(intake.truthCtx, r.truthCtx || {});
+    (r.truth || []).forEach((c, k) => mine("truth:" + c, () => { intake.truth[c] = true; drawIntake(); }, k ? BEAT * 0.75 : 0.25));
+  }
+  if (qn === 6) (r.keeps || []).forEach(({ i, tags }, k) => {
+    if (handSet.has("cell:" + i)) { kept.push(PIECE("cell:" + i)); return; }
+    step(() => { intake.res[i] = true; drawIntake(); }, k ? BEAT : 0.25);
+    if (Object.keys(tags).length) step(() => { intake.tags[i] = { ...tags }; drawIntake(); });
+  });
+  step(() => {
+    qAt++; draft = ""; busy = false; drawIntake();
+    const keptLine = kept.length ? ` Your hand set the ${kept.join(" and the ")}, so the table left ${kept.length === 1 ? "it" : "them"} as you set ${kept.length === 1 ? "it" : "them"}.` : "";
+    say(r.line + keptLine + (qAt > 6 ? " The six questions are answered. " + hint() : ""));
+    if (qAt > 6) save();
+  });
+}
+
 function deal() {
-  if (!intake.goal) { say("Stamp your goal on the brass plate first."); return; }
+  if (qAt <= 6) { say(`The plate still asks question ${qAt} of 6. Answer it, and the rest, before the deal.`); return; }
+  if (!intake.goal) { say("Tap the brass plate to type your goal on it first."); return; }
   state = apply(init(intake, { blockSize: payout(sliders).blockSize }), { w: 1, type: "intake" }); overcome = 0;
   const up = state.keeps.filter(k => !k.fog).length;
   say(`${up} stone${up === 1 ? " stands" : "s stand"} between you and your goal. Tap one to strike it, or lift the seal to play a story on it.`);
   drawBoard(); goTo("top", 1.2); save();
 }
-function act(a) {
+function act(a, hit) {
   if (a === "sit") { if (!sitting()) { me.pose(true); me.holder.position.set(stools[0][0], 0, stools[0][1]); goTo("seat", 1.0); say(hint()); } else if (view === "top") { goTo("seat", 1.2); say("You look up from the board. Tap the well to look down again."); } return; }
   if (!sitting()) { say("Tap the stool to sit at the empty table."); return; }
   const [kind, arg] = a.split(":");
@@ -507,21 +612,27 @@ function act(a) {
   if (state && kind === "watch") { glassTo += Math.PI; const w = state.w; play({ w, type: "tick" }); const tickLine = state.fx; state = apply(state, { w: w + 1, type: "read" }); drawBoard(); return say(`${tickLine} Watch ${w + 1} begins with 4 oil.`); }
   if (state && kind === "coins") return say(`You hold ${state.vibeulons} vibeulon${state.vibeulons === 1 ? "" : "s"}. Each buys a basic move once the oil is out, up to 4 a watch.`);
   if (state && firstMove) return say("The table is in play. The intake stays as you set it.");
-  if (state && !["stamp", "ring", "leverFoot", "leverPull", "truth", "cell"].includes(kind)) return;
+  if (state && !["stamp", "plate", "ring", "leverFoot", "leverPull", "truth", "cell"].includes(kind)) return;
   /* the intake: any piece can be picked up again and changed until the first move */
   let line = "";
-  if (kind === "stamp") {
-    die.userData.press = 1;
-    if (!intake.goal) { intake.goal = GOAL_IN; line = "Your goal is on the plate. Tap it again to type your own."; }
-    else { letterGoal(); return; }
+  if (kind === "stamp") { die.userData.press = 1; if (qAt <= 6) { goalInput.blur(); return submit(draft); } letter(); return; }
+  if (kind === "plate") {
+    /* a press on a stock answer's line answers with it; anywhere else on the plate opens the typing */
+    const y = hit && hit.uv && hit.face && hit.face.materialIndex === 4 ? (1 - hit.uv.y) * PCH : -1;
+    const k = Math.floor((y - STOCK_ROW.y0) / STOCK_ROW.h);
+    if (qAt <= 6 && k >= 0 && k < 3) { goalInput.blur(); draft = STOCK[qAt][k]; die.userData.press = 1; return submit(draft); }
+    letter(); return;
   }
+  if (kind === "flame") { life = { "": "Flowing", Flowing: "Stalled", Stalled: "Neutral", Neutral: "Flowing" }[life]; handSet.add("flame"); return say(`The lantern's flame ${FLAME_SAYS[life]}: ${life}. Your hand set it, so the table leaves it.`); }
+  if (busy) return say("The table is still moving its brass. Give it a moment.");
+  if (["ring", "leverFoot", "leverPull", "truth", "cell"].includes(kind)) handSet.add(kind === "leverFoot" || kind === "leverPull" ? "lever" : kind === "truth" || kind === "cell" ? a : kind);
   if (kind === "ring") { ringAt.i = (ringAt.i + 1) % 5; intake.want = [CHANNELS[ringAt.i]]; line = `The ring turns to ${STATE[CHANNELS[ringAt.i]][2]}.`; }
   if (kind === "leverFoot") { const old = CHANNELS[leverAt.ch], v = intake.now[old]; leverAt.ch = (leverAt.ch + 1) % 5; const c = CHANNELS[leverAt.ch]; if (v) { delete intake.now[old]; intake.now[c] = v; } line = `The lever's foot turns to ${STATE[c][0]}.`; }
   if (kind === "leverPull") { const c = CHANNELS[leverAt.ch]; leverAt.pull = (leverAt.pull + 1) % 4; intake.now = leverAt.pull ? { [c]: leverAt.pull } : {}; if (leverAt.pull && intake.truth[c] === undefined) intake.truth[c] = true; swing.v += REDUCED ? 0 : 3; line = leverAt.pull ? `The lead weighs ${["", "a little", "a fair amount", "a great deal"][leverAt.pull]}: ${STATE[c][0]}.` : "The lever springs back up."; }
   if (kind === "truth") { intake.truth[arg] = !intake.truth[arg]; line = `${CHANNEL_NAME[arg]}: ${intake.truth[arg] ? "it is so." : "it is not so."}`; }
   if (kind === "cell") {
     /* an empty cell: press it and the stone rises; a risen stone: its collar clicks up foot, belly, shoulder, then the stone sinks back */
-    const i = +arg, c = KEEPS[i].pred, v = intake.tags[i][c] || 0;
+    const i = +arg, [c, v] = topTag(i);
     if (!intake.res[i]) { intake.res[i] = true; line = `A stone rises: ${KEEPS[i].b}. Its channel stays in fog until its collar is set.`; }
     else if (v < 3) { intake.tags[i] = { [c]: v + 1 }; line = `${KEEPS[i].b}: the collar clicks to the ${["", "foot, Minor", "belly, Medium", "shoulder, Major"][v + 1]}, in ${CHANNEL_NAME[c]}.`; }
     else { intake.res[i] = false; intake.tags[i] = {}; line = `${KEEPS[i].b} sinks back into its cell, and will be dealt in fog.`; }
@@ -555,15 +666,26 @@ renderer.domElement.addEventListener("pointerdown", e => { down = [e.clientX, e.
 renderer.domElement.addEventListener("pointerup", e => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 12) return;
   ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, cam);
-  const hit = ray.intersectObjects(picks, false)[0]; if (hit) act(hit.object.userData.act);
+  const hit = ray.intersectObjects(picks, false)[0]; if (hit) act(hit.object.userData.act, hit);
 });
 addEventListener("resize", () => renderer.setSize(innerWidth, innerHeight));
 
 /* ---------- once a frame ---------- */
 const clock = new THREE.Clock(); let tAll = 0;
 function frame() {
-  const dt = Math.min(0.05, clock.getDelta()); tAll += dt;
+  const dt = Math.min(0.05, clock.getDelta()); tAll += dt; window.__frames = (window.__frames || 0) + 1;
   stepCamera(dt); stepSparks(dt);
+  if (queue.length) { queue[0].wait -= dt; if (queue[0].wait <= 0) queue.shift().fn(); }
+  if (typing && Math.floor(tAll * 2) % 2 !== (caretOn ? 0 : 1)) { caretOn = !caretOn; drawPlate(); }
+  /* the pieces ease to where the hand or the table set them */
+  const ek = REDUCED ? 1 : Math.min(1, dt * 5);
+  ring.rotation.y += (to.ring - ring.rotation.y) * ek; levFoot.rotation.y += (to.foot - levFoot.rotation.y) * ek;
+  toggles.forEach(t => { if (t.to !== undefined) t.stick.rotation.x += (t.to - t.stick.rotation.x) * ek; });
+  stones.forEach(s => { if (!s.collarN) return; const th = COLLAR[s.collarN], r = stoneR * 1.04 * Math.sin(th); s.collar.position.y += (SY * stoneR * Math.cos(th) - s.collar.position.y) * ek; const sr = s.collar.scale.x + (r - s.collar.scale.x) * ek; s.collar.scale.set(sr, 0.05, sr); });
+  /* the lantern's flame: q3's life state */
+  const F = FLAME[life]; flame.k += (F.k - flame.k) * ek; flame.glow += (F.glow - flame.glow) * ek; flame.c.lerp(F.col, ek); flame.mix += ((life ? 1 : 0) - flame.mix) * ek;
+  const gut = F.gutter && !REDUCED ? 0.82 + 0.18 * Math.sin(tAll * 13) * Math.sin(tAll * 7.3) : 1;
+  pl.intensity = plBase * flame.k * gut; pl.color.copy(flame.c); lanBody.material.emissiveIntensity = flame.glow * gut; lanBody.material.emissive.copy(lanC0).lerp(flame.c, 0.6 * flame.mix);
   stones.forEach(s => {
     s.rise += (s.riseTo - s.rise) * (REDUCED ? 1 : Math.min(1, dt * 6));
     s.body.position.y = stoneY - 0.03 + s.rise * 0.03; s.body.visible = s.rise > 0.02 || (state && !state.keeps[stones.indexOf(s)].fog);
@@ -591,17 +713,22 @@ const me = figure(parts, { dressed: true });
 me.holder.rotation.y = Math.PI * 1.1; me.holder.position.set(stools[0][0] + 0.5, 0, stools[0][1] + 0.3); me.pose(false);
 STANDIN_AT.forEach(([x, z, a]) => { const f = figure(parts, { dressed: false }); const [sx, sz] = stoolAt(x, z, a); f.holder.position.set(sx, groundY(x, z), sz); f.holder.rotation.y = Math.atan2(x - sx, z - sz); f.pose(true, groundY(x, z)); });
 await loadSaved();
+if (tableId) qAt = 7;   /* a saved table was answered already: its pieces stand as they were dealt */
 drawSliders(); drawIntake(); drawSeal();
 loadEl.classList.add("gone"); setTimeout(() => loadEl.remove(), 900);
-say("An empty table waits under its lantern for your goal. Tap the stool to sit.");
+say("An empty table waits under its lantern for your goal. Tap the stool to sit, and it will ask you six questions.");
 
 /* stills: ?view=seat sits and sets a sample intake mid-way; ?view=top deals it and rises */
 const V = q.get("view");
 if (V === "seat" || V === "top") {
   act("sit"); goTo("seat", 0);
-  for (const a of ["stamp", "ring", "ring", "leverFoot", "leverFoot", "leverFoot", "leverPull", "leverPull", "truth:fire", "truth:water", "truth:metal", "cell:0", "cell:0", "cell:0", "cell:1", "cell:1", "cell:1", "cell:1", "cell:2", "cell:2", "cell:4", "cell:4", "cell:4", "cell:5"]) act(a);
+  /* the six questions answered as a player might, read by the table at once */
+  for (const a of [DIRECTOR_GOAL, "Proud and free", "I'm stuck and putting it off", "I'm really scared", "There's an obstacle, and I'd have to fear being judged",
+    "I'm not ready and I'm scared. I'm really angry that I'm not good enough! I don't belong there, and it is a bit sad. It won't matter to anyone."]) { submit(a); drain(); }
   if (V === "top") { deal(); goTo("top", 0); act("cell:3"); act("cell:2"); }
   for (let k = 0; k < 90; k++) { stones.forEach(s => { s.rise = s.riseTo; }); frame(); }
 }
+/* stills and checks: answer the question on the plate as if typed, and finish the table's moves at once */
+window.__answer = submit; window.__drain = drain; window.__act = act; window.__idle = () => !busy && !queue.length;
 window.__ready = true;
 if (STILL) frame(); else renderer.setAnimationLoop(frame);
