@@ -30,6 +30,7 @@ const ALLOWED = [
   /^board\/council-board\.html$/,
   /^board\/nonprofit\/nonprofit-board\.html$/,
   /^board\/board_data\.json$/,
+  /^board\/council-board-decided\.json$/,
   /^board\/stills\/[0-9a-f]{16}\.(jpe?g|png|gif|webp)$/,
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp)$/i,
   /^council\/callsheets\/INDEX\.md$/,
