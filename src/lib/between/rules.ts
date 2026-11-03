@@ -337,7 +337,7 @@ function roomWrite(me: string, garden: Doc, room: Json): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt'])
 
 /* ---------- the coin table (Six-faces-council pass bar-intake-2, brief "Coin table, build 2") ----------
  * Keep writes the move a cast gave you to your homeroom's private doc (`casts`): the hexagram, its lane and suit, the
@@ -347,12 +347,25 @@ const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers',
 export const CAST_LANES = ['yourself', 'between', 'partner'] as const
 export const CAST_SUITS = ['WU', 'CU', 'GU', 'SU'] as const
 const hexN = (v: unknown) => isNum(v) && Number.isInteger(v) && v >= 1 && v <= 64
-const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'line', 'at', 'done'])
-function homeCastOk(c: Doc): boolean {
+const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'page', 'line', 'at', 'done'])
+/* The record book (Six-faces-council spec .specify/specs/record-book; his A on rb-new-page and on rb-ad-look-1): one page
+ * per person you toss for. A name you write on the blank page lives here only, in `pages` (a name, the spark planted for it
+ * later or null, when it was written); `bookAt` is the page the book opens to. A kept cast never carries a name: it names
+ * the room it is for, or a page, never both when it is about them; a move about yourself names no room, and may name the
+ * page it was tossed on. */
+const HOME_PAGE_KEYS = new Set(['name', 'room', 'at'])
+function homePageOk(p: Doc): boolean {
+  if (!Object.keys(p).every(k => HOME_PAGE_KEYS.has(k))) return false
+  return typeof p.name === 'string' && p.name.trim().length > 0 && p.name.length <= 40 && isNote(p.name)
+    && (p.room == null || isId(p.room)) && isNum(p.at)
+}
+function homeCastOk(c: Doc, pages: Doc = {}): boolean {
   if (!Object.keys(c).every(k => HOME_CAST_KEYS.has(k))) return false
   if (!hexN(c.n) || (c.becomes != null && !hexN(c.becomes))) return false
   if (!(CAST_LANES as readonly string[]).includes(c.lane as string) || !(CAST_SUITS as readonly string[]).includes(c.suit as string)) return false
-  if (c.lane === 'yourself' ? c.room != null : !isId(c.room)) return false
+  if (c.page != null && !isId(c.page)) return false
+  if (c.lane === 'yourself') { if (c.room != null) return false }
+  else if (c.page != null ? c.room != null || !isObj(pages[c.page as string]) : !isId(c.room)) return false
   return typeof c.line === 'string' && c.line.length > 0 && isNote(c.line) && isNum(c.at) && (c.done == null || isNum(c.done))
 }
 const CAST_ITEM_KEYS = new Set(['kind', 'by', 'at', 'status', 'n', 'becomes', 'changing', 'suit', 'line', 'answer', 'history'])
@@ -428,19 +441,21 @@ export function homeWrite(doc: Doc): Verdict {
   if (doc.lastCheckin != null && !isNum(doc.lastCheckin)) return no(400, 'A check-in has a time.')
   if (doc.oriented != null && !isNum(doc.oriented)) return no(400, 'Your first minute here has a time.')
   if (!minuteOk(doc.minute)) return no(400, 'Your first minute here keeps times, nothing more.')
+  if (doc.bookAt != null && !(doc.bookAt === 'self' || isId(doc.bookAt))) return no(400, 'The book opens at a page.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
     ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)
       && (c.wave == null || (isNum(c.wave) && Number.isInteger(c.wave) && c.wave >= 0 && c.wave <= 7))],
     ['embers', homeEmberOk],
-    ['casts', homeCastOk],
+    ['casts', (c: Doc) => homeCastOk(c, isObj(doc.pages) ? doc.pages : {})],
+    ['pages', homePageOk],
   ] as const) {
     const all = doc[field]
     if (all == null) continue
     if (!isObj(all)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
     for (const [id, v] of Object.entries(all)) {
       if (!ID.test(id)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
-      if (v !== null && !(isObj(v) && ok(v))) return no(400, field === 'goals' ? 'A hope is a short line, maybe tied to one room.' : field === 'embers' ? 'An ember is a feeling and where it went, nothing more.' : 'A check-in is a feeling and a short line.')
+      if (v !== null && !(isObj(v) && ok(v))) return no(400, field === 'goals' ? 'A hope is a short line, maybe tied to one room.' : field === 'embers' ? 'An ember is a feeling and where it went, nothing more.' : field === 'pages' ? 'A page in your book is a name, nothing more.' : field === 'casts' ? 'A kept cast is its hexagram and its move, nothing more.' : 'A check-in is a feeling and a short line.')
     }
   }
   return yes

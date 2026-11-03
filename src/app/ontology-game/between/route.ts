@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentPlayer } from '@/lib/between/store'
 import { BETWEEN_PAGE } from '@/lib/between/page'
+import { withChalk } from '@/lib/marks/chalk'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const back = req.nextUrl.pathname + req.nextUrl.search
     return NextResponse.redirect(new URL('/login?returnTo=' + encodeURIComponent(back), req.url))
   }
-  return new NextResponse(BETWEEN_PAGE, {
+  return new NextResponse(withChalk(BETWEEN_PAGE), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin' },
   })
 }

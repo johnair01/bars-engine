@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/board/owner', () => ({ isBoardOwner: async () => true }))
 
-import { pageUrl, serveBoard, streamed, wrap } from '../serve'
+import { pageUrl, sameHost, serveBoard, streamed, wrap } from '../serve'
 import { setBackend } from '@/lib/board/content-store'
 import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 
@@ -17,6 +17,17 @@ describe('serveBoard', () => {
     expect(council).toContain('btn.hidden = true;')
     expect(council).toContain("const BOARD = \"council\"")
     expect(await (await serveBoard(req, 'nonprofit')).text()).toContain('btn.hidden = !mcp || !n;')
+    setBackend(undefined)
+  })
+
+  it('tells the shim which build it serves, so an open page knows when the board moved on (board-reverts)', async () => {
+    vi.stubGlobal('fetch', async () => { throw new Error('the repo is private: nothing may fetch it') })
+    const page = '<p>council</p>'
+    setBackend(memoryBackend({ 'board/council-board.html': page }).backend)
+    const req = { url: 'https://bars-engine.vercel.app/board/council' } as never
+    const html = await (await serveBoard(req, 'council')).text()
+    const { createHash } = await import('crypto')
+    expect(html).toContain(`PAGE = "${createHash('sha256').update(page).digest('hex')}"`)
     setBackend(undefined)
   })
 
@@ -57,5 +68,12 @@ describe('streamed', () => {
   it('sends a page over 4.5 MB, multi-byte text included, unchanged', async () => {
     const html = '<p>é—</p>'.repeat(600_000)
     expect(await new Response(streamed(html)).text()).toBe(html)
+  })
+})
+
+describe('sameHost', () => {
+  it('keeps board links on the host the page is opened from, and leaves other addresses alone', () => {
+    const out = sameHost('a https://bars-engine.vercel.app/board/look?t=x b https://bars-engine.vercel.app/board/council#open c https://bars-engine.vercel.app/tap-the-vein')
+    expect(out).toBe('a /board/look?t=x b /board/council#open c https://bars-engine.vercel.app/tap-the-vein')
   })
 })

@@ -61,12 +61,60 @@ export async function lastPull(board: string) {
   return db.boardPull.findFirst({ where: { board }, orderBy: { at: 'desc' }, select: { at: true, record: true } })
 }
 
-/** Saves still waiting for the pull to record them: the earliest one's receivedAt and how many there are. */
+/**
+ * Saves still waiting for the pull to record them: the earliest one's receivedAt and how many there are. A save the
+ * pull held on purpose (POST with held: true leaves recordedAt empty and writes a record) waits for a session's own
+ * step, not for the next pull, so it is counted apart and never makes the board's "waited for main" warning.
+ */
 export async function unrecordedSaves(board: string) {
-  const where = { board, recordedAt: null }
-  const [oldest, count] = await Promise.all([
+  const where = { board, recordedAt: null, record: null }
+  const [oldest, count, held] = await Promise.all([
     db.boardSave.findFirst({ where, orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } }),
     db.boardSave.count({ where }),
+    db.boardSave.count({ where: { board, recordedAt: null, record: { not: null } } }),
   ])
-  return { oldestReceivedAt: oldest?.receivedAt ?? null, count }
+  return { oldestReceivedAt: oldest?.receivedAt ?? null, count, held }
+}
+
+/** Saves still within this many ms of arriving are sent again on the next ask: a save whose transaction began earlier
+ * can commit after a later number is read, and a cursor that skipped past it would lose it. The page applies a save
+ * only when its number is newer than what it holds for that document, so sending one twice changes nothing. */
+export const SETTLE_MS = 10_000
+export const CHANGES_LIMIT = 200
+
+export type Change = { seq: number; collection: string; docId: string; data: Record<string, unknown> }
+
+/**
+ * The change log (live board step 2): every save on a board after number `after`, oldest first, at most `limit`, and
+ * the number to ask from next. `next` moves past a save only once it has settled (SETTLE_MS), so recent saves come again
+ * until then; `more` says the limit cut the answer and the caller should ask again at once.
+ */
+export async function changesAfter(board: string, after: number, opts: { limit?: number; now?: number } = {}) {
+  const limit = opts.limit ?? CHANGES_LIMIT, now = opts.now ?? Date.now()
+  const rows = await db.boardSave.findMany({
+    where: { board, seq: { gt: BigInt(after) } }, orderBy: { seq: 'asc' }, take: limit,
+    select: { seq: true, collection: true, docId: true, data: true, receivedAt: true },
+  })
+  return foldChanges(rows, after, limit, now)
+}
+
+/** The pure half of changesAfter, exported for the test. */
+export function foldChanges(rows: { seq: bigint | number; collection: string; docId: string; data: unknown; receivedAt: Date }[],
+                            after: number, limit: number, now: number) {
+  let next = after, settled = true
+  const changes: Change[] = rows.map((r) => {
+    const seq = Number(r.seq)
+    if (settled && now - r.receivedAt.getTime() >= SETTLE_MS) next = seq
+    else settled = false
+    return { seq, collection: r.collection, docId: r.docId, data: r.data as Record<string, unknown> }
+  })
+  return { changes, next, more: rows.length >= limit && settled }
+}
+
+/** Where a full read starts the log (0 when empty): the newest number that has settled (SETTLE_MS), taken before the
+ * documents are read, so the changes after it cover every save the read could have missed. */
+export async function settledSeq(board: string, now = Date.now()): Promise<number> {
+  const r = await db.boardSave.findFirst({ where: { board, receivedAt: { lt: new Date(now - SETTLE_MS) } },
+    orderBy: { seq: 'desc' }, select: { seq: true } })
+  return r ? Number(r.seq) : 0
 }

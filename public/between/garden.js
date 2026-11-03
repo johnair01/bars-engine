@@ -24,6 +24,7 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
+import { makeQiSky, qiOf } from "./sky-qi.js";
 import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
@@ -320,7 +321,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1018);
 scene.fog = new THREE.Fog(0x24161a, 10, 30);
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
-let hollow = null;
+let hollow = null, qiSky = null; // qiSky: the Between's one sky, lit by its health and no clock (sky-qi.js)
 const betweenLight = new THREE.PointLight(0x9ad8cf, 5, 6, 1.5); betweenLight.position.set(BETWEEN_AT.x, DAIS_Y + 1.1, BETWEEN_AT.z + 0.3); scene.add(betweenLight);
 let lightScale = 1;
 /* The light that travels with you (round 3 build): a narrow soft key from over your shoulder on the camera's side, aimed at
@@ -469,7 +470,7 @@ let roomReady = false;
 let builtShell = null;
 function buildRoom(shell = "hollow") {
   if (hollow) scene.remove(hollow.root);
-  hollow = buildHollow(scene, { lowPower: LOW_POWER, shell });
+  hollow = buildHollow(scene, { lowPower: LOW_POWER, shell }); qiSky = makeQiSky(hollow.handles);
   builtShell = hollow.layout.shell; roomSig = ""; styleNow = null;
   relayout();
   wake.group.clear(); wake.group.visible = false; wake.on = false; wake.k = 1; wake.group.scale.setScalar(1);
@@ -575,6 +576,8 @@ const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
+// previews: ?qi=0..1 holds the sky at one health (0 neglected, 1 tended and fed) to see both ends without tending a room
+const QI_PREVIEW = PREVIEW_HOST && KQ.get("qi") != null && Number.isFinite(+KQ.get("qi")) ? Math.max(0, Math.min(1, +KQ.get("qi"))) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
 const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands further back and higher to fit the hook and the floor
   wide: [new THREE.Vector3(0.35, 2.35, 3.55), new THREE.Vector3(-0.25, 0.85, -0.9)],
@@ -607,6 +610,7 @@ function syncRoom() {
   roomSig = sig;
   const res = applyRoom({ ...hollow.handles, scene, make: makeItem }, r.style ? r : { ...r, style: undefined });
   styleNow = res.style && res.style.id;
+  if (res.style && qiSky) qiSky.rebase(); // the agreed style is the sky's colour; qi lifts or lowers it (sky-qi.js)
   figLight = figureLightOf(res.style); probeDirty = true;
   const ms = inNook() ? Object.entries(res.placed).find(([, e]) => e.item === "mirror") : null;
   mirrorSpot = ms ? ms[0] : null;
@@ -811,6 +815,7 @@ function stepBetween(t, dt) {
   betweenLight.intensity = (phase === "spark" ? 3 : 5) * (stale ? 0.3 : 1) * (0.85 + 0.15 * breath) * (together ? 2.2 : 1);
   betweenLight.color.setHex(phase === "spark" ? 0xd48bc0 : state === "charged" ? 0xd9a0c8 : 0x9ad8cf);
   if (hollow) hollow.update(t, dt, lightScale, camera.position, lastFocus);
+  if (qiSky) qiSky.step(dt, QI_PREVIEW != null ? QI_PREVIEW : qiOf(look));
 }
 
 /* ===================================================================================================
@@ -1602,8 +1607,16 @@ function frameBody() {
   if (seatK < 0.002 && !lowView) seatK = 0;
   if (seatK > 0 && seatViewAt) {
     const S = seatViewAt, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), tall = innerWidth < innerHeight, back = tall ? 2.0 : 1.6, side = tall ? 0.45 : 0.6;
-    const sp = new THREE.Vector3(S.x - fx * back - fz * side, S.top + (tall ? 0.95 : 0.8), S.z - fz * back + fx * side);
-    const sf = new THREE.Vector3(S.x + fx * 1.0, S.top + 0.4, S.z + fz * 1.0);
+    let sp = new THREE.Vector3(S.x - fx * back - fz * side, S.top + (tall ? 0.95 : 0.8), S.z - fz * back + fx * side);
+    let sf = new THREE.Vector3(S.x + fx * 1.0, S.top + 0.4, S.z + fz * 1.0);
+    /* The coin table (bi-door-look-3, his note 2026-11-02: "The camera needs to move so we can actually see the coins being
+       flipped. The player back blocks the way"): the view stands off your right shoulder, high, looking across the table at the
+       coins with you sitting beside them. The far side put the camera inside the hollow's wall (his phone shot 2026-11-02: a dark
+       slab over the toss); ray-checked from every seat-frame spot in both rooms, this side has nothing between camera and coins. */
+    if (S.coins) {
+      const lx = fz, lz = -fx, at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
+      sp = tall ? at(-1.15, 1.45, 0.35) : at(-1.3, 1.15, 0.4); sf = at(0, 0.1, 0.62);                                           // the table is 0.62 ahead of the cushion
+    }
     clampCamera(sp, sf);
     const k = seatK * seatK * (3 - 2 * seatK); cp.lerp(sp, k); focus.lerp(sf, k);
   }
@@ -4001,6 +4014,9 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
 // Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
 import("./block-room.js").then(m => { window.__between.block = m.mountSigns(window.__between); }).catch(e => noteError(e, "block"));
+// the keeping chamber (block-metabolize slice 2, his "Mix of a and b" on bm-chamber-look-3): an arch of the cave's stone under the
+// shelf leads to /between/land.html?place=chamber, where what the charge left is kept and a season's weather fills the room
+import("./chamber-arch.js").then(m => { window.__between.chamberArch = m.mount(window.__between); }).catch(e => noteError(e, "chamber arch"));
 // letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
@@ -4008,6 +4024,7 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
   .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") || (STANDIN_ROOM ? "a6" : null) : null }); }).catch(e => noteError(e, "letters"));
 // the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
-// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation)
+// ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation); ?nook=1&coins=who&games=flirtcraft sits at the table and stops at who the toss is for
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));
+// ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));

@@ -197,6 +197,17 @@ def vercel_ok(sha):
     return r.returncode == 0 and json.loads(r.stdout).get("state") == "success"
 
 
+def queue_note_exists(num, body):
+    """True when this pull request already carries the steward's ready note (or the lookup failed, so it stays quiet)."""
+    r = sh("gh", "api", f"repos/{REPO}/issues/{num}/comments", "--paginate", check=False)
+    if r.returncode:
+        return True
+    try:
+        return any((c.get("body") or "").strip() == body for c in json.loads(r.stdout))
+    except ValueError:
+        return True
+
+
 def tend(pr):
     """Classify one pull request and act on its state. Returns True if merged."""
     num = pr["number"]
@@ -209,8 +220,11 @@ def tend(pr):
     if MODE == "queue":
         # bars-engine: no merge, no push. A finished draft with a green deployment becomes ready; the queue lists it.
         if state == "ready-to-promote" and vercel_ok(pr["headRefOid"]):
-            sh("gh", "pr", "ready", str(num), check=False)
-            sh("gh", "pr", "comment", str(num), "--body", f"The steward marked this ready: {why}, and the deployment is green. It waits for your merge.", check=False)
+            ready = sh("gh", "pr", "ready", str(num), check=False)
+            # Say it once. If marking ready failed, or the same note is already there, a later run stays quiet.
+            body = f"The steward marked this ready: {why}, and the deployment is green. It waits for your merge."
+            if ready.returncode == 0 and not queue_note_exists(num, body):
+                sh("gh", "pr", "comment", str(num), "--body", body, check=False)
         return False
     head = pr["headRefName"]
     sh("git", "reset", "-q", "--hard")

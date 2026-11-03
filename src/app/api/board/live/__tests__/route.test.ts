@@ -42,6 +42,17 @@ describe('/api/board/live', () => {
     expect(dbm.boardSave.findMany.mock.calls[0][0].where).toEqual({ board: 'council', recordedAt: null })
   })
 
+  it('reads and acknowledges the nonprofit board when asked, and refuses an unknown board', async () => {
+    const req = (board: string) => ({ nextUrl: { searchParams: new URLSearchParams({ board }) }, headers: new Headers({ authorization: 'menu' }) }) as never
+    expect((await (await GET(req('nonprofit'))).json()).board).toBe('nonprofit')
+    expect(dbm.boardSave.findMany.mock.calls[0][0].where).toEqual({ board: 'nonprofit', recordedAt: null })
+    expect((await GET(req('other'))).status).toBe(400)
+    dbm.boardSave.updateMany.mockResolvedValue({ count: 1 })
+    expect((await POST(post('menu', { board: 'nonprofit', ids: ['s1'], record: 'r' }))).status).toBe(200)
+    expect(dbm.boardSave.updateMany.mock.calls[0][0].where.board).toBe('nonprofit')
+    expect((await POST(post('menu', { board: 'other', ids: ['s1'], record: 'r' }))).status).toBe(400)
+  })
+
   it('acknowledges council saves for the menu token and logs the pull', async () => {
     dbm.boardSave.updateMany.mockResolvedValue({ count: 2 })
     const res = await POST(post('menu', { ids: ['s1', 's2'], record: 'session read' }))

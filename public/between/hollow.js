@@ -611,8 +611,9 @@ export function buildHollow(scene, opts = {}) {
         }`,
     });
     const skyM = new THREE.Mesh(new THREE.SphereGeometry(95, 32, 16), sky); skyM.renderOrder = -2; root.add(skyM);
-    sunM = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), new THREE.MeshBasicMaterial({ color: 0xffcf86, fog: false }));
+    sunM = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), new THREE.MeshBasicMaterial({ color: 0xffcf86, fog: false, toneMapped: false }));
     sunM.position.set(0.18, 0.05, -1).normalize().multiplyScalar(88); sunM.position.y = 3.4; sunM.lookAt(0, 0, 0); root.add(sunM);
+    sunM.userData.keep = true; // the sun climbs and sinks with the Between's qi (sky-qi.js), so it is not folded into the static batch
     // mountain ranges, far to near
     const range = (dist, base, amp, col, seed, peaks) => {
       const rr = rng(seed), pos = [], idx = [], n = 70;

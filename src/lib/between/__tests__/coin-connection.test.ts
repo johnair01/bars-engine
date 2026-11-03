@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { castFromTosses } from '../../../../public/between/iching/cast.js'
 import {
   answerOf, cardFor, faceUpItem, INVITE_WORDS, keptEntry, mayAsk, MOVE_LANES, moveOf, nextLaneOf, openCasts, PLANT, PURSUIT_WORDS,
-  pursuitFree, SELF, SPARK_LANE, suitOf, SUITS, whoChoices, WORK_WORDS, workFree,
+  pursuitFree, SELF, SPARK_LANE, suitOf, SUITS, whoChoices, withPlant, WORK_WORDS, workFree,
 } from '../../../../public/between/iching/connection.js'
 import { suggest } from '../../../../public/calrunia/next-moves.js'
 import { homeWrite, mayWrite, roomSummary, type Doc } from '@/lib/between/rules'
@@ -192,6 +192,23 @@ describe('the spark at the table', () => {
     expect(mayAsk({ ...robin, room: 's2' }, [spark, theirSpark]), 'not a spark someone else started').toBe(false)
     expect(mayAsk({ ...robin, room: 'nope' }, [spark])).toBe(false)
     expect(PLANT.kind).toBe('plant')
+  })
+
+  // His note 2026-11-02: "For someone else is being locked to the first person someone puts in there. One should be able
+  // to do this for multiple people and choose each time."
+  it('keeps the plant choice after the first spark, so a toss can be for anyone, chosen each time', () => {
+    const second = { id: 's3', phase: 'spark', who: 'Sam' }
+    const none = withPlant(whoChoices([room]))
+    expect(none[none.length - 1]).toEqual({ kind: 'plant', fresh: true })
+    const one = withPlant(whoChoices([room, spark]))
+    expect(one[one.length - 1], 'still there after the first spark').toEqual({ kind: 'plant', fresh: false })
+    const two = withPlant(whoChoices([room, spark, second]))
+    expect(two.filter(w => w.kind === 'spark').map(w => w.name)).toEqual(['Robin', 'Sam'])
+    expect(two.filter(w => w.kind === 'plant')).toHaveLength(1)
+    expect(withPlant(two).filter(w => w.kind === 'plant'), 'never twice').toHaveLength(1)
+    const src = readFileSync(join(root, 'public/between/coin-table.js'), 'utf8')
+    expect(src).toContain('return withPlant(out)')
+    expect(src).toContain('Someone else you are drawn to')
   })
 
   it('has a line about yourself and one about learning them for every hexagram, by hand', () => {

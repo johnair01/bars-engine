@@ -30,6 +30,7 @@ const ALLOWED = [
   /^board\/council-board\.html$/,
   /^board\/nonprofit\/nonprofit-board\.html$/,
   /^board\/board_data\.json$/,
+  /^board\/council-board-decided\.json$/,
   /^board\/stills\/[0-9a-f]{16}\.(jpe?g|png|gif|webp)$/,
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp)$/i,
   /^council\/callsheets\/INDEX\.md$/,
@@ -154,6 +155,18 @@ export async function readFile(path: string): Promise<{ body: ReadableStream<Uin
     const r = await fetch(RAW + path.split('/').map(encodeURIComponent).join('/'), { cache: 'no-store' })
     return r.ok && r.body ? { body: r.body, type: r.headers.get('content-type') ?? '', sha: null } : null
   } catch { return null }
+}
+
+/** The repo path each board's page is pushed under. */
+export const PAGE_PATHS: Record<string, string> = {
+  nonprofit: 'board/nonprofit/nonprofit-board.html',
+  council: 'board/council-board.html',
+}
+
+/** The content hash a pushed path points at now, or null. The board's store read answers its page's hash with it, so
+ * a page open since an older build can tell (board-reverts, 2026-11-03). */
+export async function pushedSha(path: string): Promise<string | null> {
+  return (await manifest().catch(() => null))?.files[path]?.sha ?? null
 }
 
 const texts = new Map<string, string>()
