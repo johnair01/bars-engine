@@ -12,11 +12,12 @@ import { db } from '@/lib/db'
 import { boardOwnerId, isBoardOwner } from '@/lib/board/owner'
 import { applyWrite, MAX_SAVE_BYTES, RECORD_KINDS, validateSave } from '@/lib/board/save'
 import { dispatchBoardPull } from '@/lib/board/dispatch'
-import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/store'
+import { lastPull, latestDoc, latestDocs, settledSeq, unrecordedSaves } from '@/lib/board/store'
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
 import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
 import { ticketFromSave } from '@/lib/work/from-save'
 import { readyDraftsAfterSave } from '@/lib/board/ready-drafts'
+import { wakePickupAfter } from '@/lib/work/wake'
 import { PAGE_PATHS, pushedSha } from '@/lib/board/content-store'
 
 export const dynamic = 'force-dynamic'
@@ -27,9 +28,12 @@ export async function GET(req: NextRequest) {
   const board = req.nextUrl.searchParams.get('board') || 'nonprofit'
   // page: the board's current build, so a page open since an older build reloads instead of losing the rows main has
   // recorded since (they leave this read once recorded; board-reverts, 2026-11-03).
-  const [docs, pull, waiting, page] = await Promise.all([latestDocs(board, { leaveOutRecordedRows: true }), lastPull(board),
+  // cursor: the change-log number this read covers, so the page asks GET /api/board/changes for what came after it
+  // (live board step 3). Null where the log is not numbered yet; the page then keeps its whole-store refresh.
+  const [cursor, docs, pull, waiting, page] = await Promise.all([Promise.resolve().then(() => settledSeq(board)).catch(() => null),
+    latestDocs(board, { leaveOutRecordedRows: true }), lastPull(board),
     unrecordedSaves(board), PAGE_PATHS[board] && !(board === 'nonprofit' && process.env.BOARD_PAGE_URL) ? pushedSha(PAGE_PATHS[board]) : null])
-  return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting, page }, { headers: NO_STORE })
+  return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting, page, cursor }, { headers: NO_STORE })
 }
 
 export async function POST(req: NextRequest) {
@@ -73,6 +77,8 @@ export async function POST(req: NextRequest) {
   if (RECORD_KINDS.has(collection)) await dispatchBoardPull().catch(() => undefined)
   // Push from the board: his answer to a council question goes to the work lanes as it is saved (work queues, slice 1).
   const work = await ticketFromSave(db, board, collection, docId, doc)
+  // His answer starts the work: a new Claude-lane ticket wakes the pickup now, not at the next hourly run.
+  if (work?.created && work.lane === 'claude') wakePickupAfter(`answer to ${docId}`)
   // His plain yes on a look readies the drafts that waited on it, after this answers (writers-api FR-004).
   readyDraftsAfterSave(board, collection, docId, doc)
   return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt, ...(work ? { work } : {}) }, { headers: NO_STORE })

@@ -12,6 +12,7 @@ import { db } from '@/lib/db'
 import { isBoardOwner } from '@/lib/board/owner'
 import { ticketFromHarbourSend, ticketFromPullNow } from '@/lib/work/harbour-send'
 import { pushTicket } from '@/lib/work/queue'
+import { wakePickupAfter } from '@/lib/work/wake'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
     : typeof b?.berth === 'string' ? ticketFromHarbourSend(b.berth.trim()) : null
   if (!draft) return NextResponse.json({ error: 'Expected {berth} or {pull:true}' }, { status: 400 })
   const r = await pushTicket(db, draft)
+  if (r.created && r.ticket.lane === 'claude') wakePickupAfter(draft.title)
   return NextResponse.json({ created: r.created, ticket: { id: r.ticket.id, lane: r.ticket.lane, state: r.ticket.state } },
     { status: r.created ? 201 : 200, headers: NO_STORE })
 }
