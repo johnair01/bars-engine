@@ -112,6 +112,7 @@ export default defineConfig({
     'src/lib/between/__tests__/pick.test.ts',
       'src/lib/between/__tests__/iching-cast.test.ts',
       'src/lib/between/__tests__/coin-connection.test.ts',
+      'src/lib/between/__tests__/record-book.test.ts',
       'src/lib/between/__tests__/land-place.test.ts',
       'src/lib/between/__tests__/music.test.ts',
       'src/lib/between/__tests__/sky-qi.test.ts',
