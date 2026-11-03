@@ -37,7 +37,18 @@ const DENSE = ["a storm", "a season"];                         // episode-sheet.
 const FEEL = { scared: "fear", anxious: "fear", worried: "fear", frustrated: "anger", stuck: "anger", disappointed: "sadness",
   isolated: "sadness", empty: "sadness", overwhelmed: "neutrality_numb", numb: "neutrality_numb" };   // episode-sheet.js DISSATISFACTION
 const ELEMENT = { sadness: "water", fear: "metal", anger: "fire", neutrality_numb: "earth" };
-const TINT = { water: "#9cc4ff", metal: "#c9d6e6", fire: "#c4c8ff", earth: "#b8cce0" };           // ice is density: every tint stays cold
+const TINT = { water: "#9cc4ff", metal: "#c9d6e6", fire: "#c4c8ff", earth: "#b8cce0" };           // the room's cold light: frozen first
+/* Slice 2c (his B on bm-build-look-3, 2026-11-03 17:31Z: "make the ice elemental colored with the idea that blocked charge
+   manifests as frozen first and then it can have accents connected with the element as it moves from ice to flowing element
+   to elemental gas color to pure spirit as a sign of having been worked through"). Each element's colours are the card
+   tokens' (src/lib/ui/card-tokens.ts): `ice` lights the ice from inside, `flow` is the element running free at the water
+   stand, `gas` is its vapour at the gas stand, and the clearing stays the spirit's gold for every element. */
+const HUE = {
+  fire:  { ice: "#e8671a", flow: "#c1392b", flowGlow: "#e8671a", gas: "#f2a06a" },   // ember-ochre in the ice, then molten, then ember smoke
+  water: { ice: "#2980b9", flow: "#1a3a5c", flowGlow: "#1a7a8a", gas: "#9cc4ff" },   // ocean blue, then deep water, then blue vapour
+  metal: { ice: "#bdc3c7", flow: "#8e9aab", flowGlow: "#bdc3c7", gas: "#dde3ea" },   // chrome, then quicksilver, then silver haze
+  earth: { ice: "#d4a017", flow: "#b5651d", flowGlow: "#d4a017", gas: "#e0c080" },   // ochre-amber, then running clay, then dust
+};
 const KEEPSAKE = { water: "a small vessel", metal: "a key", fire: "an ember", earth: "a stone" }; // pass block-metabolize-1, Shaman
 export const STATES = [1, 0.66, 0.33, 0];                      // ice, water, gas, the clearing (spirit-dissolve's ladder)
 const STATE_NAME = ["ice", "water", "gas", "clear"];
@@ -91,7 +102,8 @@ function fader(G) { const mats = []; G.traverse(n => { const ms = n.material ? (
   const lights = []; G.traverse(n => { if (n.isLight) lights.push({ l: n, i: n.intensity }); });
   return f => { for (const x of mats) x.m.opacity = x.o * f; for (const x of lights) x.l.intensity = x.i * f; G.visible = f > 0.003; }; }
 function dispose(G) { G.traverse(n => { if (n.geometry) n.geometry.dispose(); const ms = n.material ? (Array.isArray(n.material) ? n.material : [n.material]) : []; ms.forEach(m => m.dispose()); }); if (G.parent) G.parent.remove(G); }
-const iceMat = () => new THREE.MeshStandardMaterial({ color: "#d3e8fb", emissive: "#5d9bd2", emissiveIntensity: 0.28, roughness: 0.1, transparent: true, opacity: 0.86, flatShading: true });
+// the ice is ice first: pale and clear, its element showing as the light inside it (slice 2c)
+const iceMat = el => new THREE.MeshStandardMaterial({ color: "#d3e8fb", emissive: el ? HUE[el].ice : "#5d9bd2", emissiveIntensity: el ? 0.4 : 0.28, roughness: 0.1, transparent: true, opacity: 0.86, flatShading: true });
 
 /* ===================================================================================================
    The signs in the nook (garden.js mounts this; charge-world.js says whether the charge on the map is dense)
@@ -206,7 +218,7 @@ export async function mountRoom(o) {
   /* one state of the room: the round 2 props at charge k, built into their own group */
   function buildState(k) {
     const G = new THREE.Group(); G.name = "block-room-" + k; scene.add(G);
-    const { rnd, glow, dots } = kit(G, 23), anim = [], iceM = iceMat();
+    const { rnd, glow, dots } = kit(G, 23), anim = [], H = HUE[d.element] || HUE.water, iceM = iceMat(d.element);
     const inRoom = (kk = 0.92) => { const a = rnd() * Math.PI * 2, dd = Math.sqrt(rnd()) * R * kk; return V(C.x + Math.cos(a) * dd, C.y, C.z + Math.sin(a) * dd); };
     const ice = k >= 0.8 ? 1 : k >= 0.5 ? 0.35 : 0, water = k >= 0.8 ? 0.15 : k >= 0.5 ? 1 : k >= 0.2 ? 0.35 : 0, gas = k >= 0.8 ? 0.35 : k >= 0.5 ? 0.6 : k >= 0.2 ? 1 : 0, clear = 1 - k;
     const sky = new THREE.HemisphereLight(clear > 0.9 ? "#ffe2b8" : "#bcd6f0", "#3a4654", 0.35 + 0.4 * k + 0.35 * clear); G.add(sky);
@@ -221,7 +233,7 @@ export async function mountRoom(o) {
         const m = new THREE.Mesh(new THREE.OctahedronGeometry(r, 0).scale(1, h / r / 2, 1), iceM);
         const a = rnd() * 6.28, dd = rnd() * big * 0.45; m.position.set(Math.cos(a) * dd, h * (0.25 - 0.2 * rnd()), Math.sin(a) * dd);
         m.rotation.z = (rnd() - 0.5) * 1.1 + lean.x; m.rotation.x = (rnd() - 0.5) * 1.1 + lean.z; cl.add(m); }
-      glow(at.clone().add(V(0, big * 0.4, 0)), big * 1.4, "#9cc9f0", 0.18); };
+      glow(at.clone().add(V(0, big * 0.4, 0)), big * 1.4, H.ice, 0.2); };
     const melt = ice < 1 ? 0.55 : 1, amt = (1 - 0.45 * s) * ice, rs = roots.slice().sort(() => rnd() - 0.5);
     if (ice > 0) {
       rs.slice(0, Math.round(rs.length * 0.7 * amt)).forEach(t => { const n = 1 + Math.floor(rnd() * 3);
@@ -235,17 +247,17 @@ export async function mountRoom(o) {
     }
     // water: pools at the foot of things, drops falling
     if (water > 0.2) {
-      const pool = new THREE.MeshStandardMaterial({ color: "#2c4a63", roughness: 0.05, metalness: 0.6, emissive: "#36608a", emissiveIntensity: 0.25, transparent: true, opacity: 0.85 });
+      const pool = new THREE.MeshStandardMaterial({ color: H.flow, roughness: 0.05, metalness: d.element === "metal" ? 0.9 : 0.6, emissive: H.flowGlow, emissiveIntensity: d.element === "fire" ? 0.55 : 0.3, transparent: true, opacity: 0.85 });
       for (let i = 0, np = Math.round(14 * water); i < np; i++) { const t = roots.length && rnd() < 0.6 ? roots[Math.floor(rnd() * roots.length)] : null, a = rnd() * 6.28;
         const q = t ? t.p.clone().add(V(Math.cos(a) * (t.r + 0.5), 0, Math.sin(a) * (t.r + 0.5))) : inRoom(0.8);
         const m = new THREE.Mesh(new THREE.CircleGeometry(0.3 + rnd() * 0.7 * water, 18), pool); m.rotation.x = -Math.PI / 2; m.scale.set(1, 0.6 + rnd() * 0.7, 1); m.position.copy(q).add(V(0, 0.025, 0)); G.add(m);
-        glow(q.clone().add(V(0, 0.05, 0)), 0.9, "#7fb6e8", 0.12 * water); }
-      const drops = dots(Math.round(60 * water), () => { const q = inRoom(0.9); q.y += 0.3 + rnd() * top * 0.7; return q; }, "#cfe6ff", 0.07, 0.7);
+        glow(q.clone().add(V(0, 0.05, 0)), 0.9, H.flowGlow, 0.16 * water); }
+      const drops = dots(Math.round(60 * water), () => { const q = inRoom(0.9); q.y += 0.3 + rnd() * top * 0.7; return q; }, H.flowGlow, 0.07, 0.7);
       if (drops) anim.push(fall(drops, 1.6, top));
     }
     // the air: mist low while dense, columns at the gas stand, snow at the ice stand
-    for (let i = 0, mist = Math.round((4 + 24 * s) * Math.max(ice * 0.8, water * 0.6) * (LOW ? 0.5 : 1)); i < mist; i++) { const q = inRoom(1.0); q.y += 0.15 + rnd() * top * 0.35; glow(q, 1.4 + rnd() * 2 * Math.min(1.5, R / 3.5), "#c4dbef", 0.05 + 0.12 * s, false); }
-    if (gas > 0.5) for (let col = 0; col < 3; col++) { const b = inRoom(0.8); for (let j = 0; j < 9; j++) glow(b.clone().add(V(Math.sin(j * 0.9 + col) * 0.25, 0.3 + j * top * 0.09, Math.cos(j * 0.7) * 0.25)), 0.9 + j * 0.18, "#d8e6f4", 0.1 * gas * (1 - j / 10), false); }
+    for (let i = 0, mist = Math.round((4 + 24 * s) * Math.max(ice * 0.8, water * 0.6) * (LOW ? 0.5 : 1)); i < mist; i++) { const q = inRoom(1.0); q.y += 0.15 + rnd() * top * 0.35; glow(q, 1.4 + rnd() * 2 * Math.min(1.5, R / 3.5), ice >= 1 ? "#c4dbef" : H.gas, 0.05 + 0.12 * s, false); }
+    if (gas > 0.5) for (let col = 0; col < 3; col++) { const b = inRoom(0.8); for (let j = 0; j < 9; j++) glow(b.clone().add(V(Math.sin(j * 0.9 + col) * 0.25, 0.3 + j * top * 0.09, Math.cos(j * 0.7) * 0.25)), 0.9 + j * 0.18, H.gas, 0.14 * gas * (1 - j / 10), false); }
     const snow = dots(Math.round((60 + 180 * s) * ice), () => { const q = inRoom(1.05); q.y += rnd() * top; return q; }, "#ffffff", 0.07, 0.7);
     if (snow) anim.push(fall(snow, 0.45, top));
     // the daemons' spirit energy: held dim in the ice, free as it melts, gone up as gold motes at the clearing
@@ -337,7 +349,8 @@ export async function mountRoom(o) {
   }
   // act(a, text): "say:i" with the line written, "finish:i", "keep", "letgo"
   function act(a, text) {
-    if (a === "keep" || a === "letgo") { keptState = a; record.keepsake = a === "keep" ? d.keepsake : "let go"; write();
+    // one keepsake a visit: once it is carried or let go, the card is gone and a second press does nothing (his B on bm-build-look-3)
+    if (a === "keep" || a === "letgo") { if (!keep || keptState) return; keptState = a; record.keepsake = a === "keep" ? d.keepsake : "let go"; write();
       o.say && o.say(a === "keep" ? (o.keepSay || `You carry ${d.keepsake} back with you.`) : "It goes up with the rest of the light.", 5); o.sound && o.sound(a);
       o.onKeep && o.onKeep({ ...record, keepsake: d.keepsake, let: a === "letgo" }); return; }
     const [verb, si] = a.split(":"), i = +si, st = STANDS[i]; if (!st || st.done || i !== next()) return;

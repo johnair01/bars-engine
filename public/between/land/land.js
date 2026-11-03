@@ -999,13 +999,12 @@ function frame() {
       const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1, here = CHX ? "chamber" : "land";
       let d = densityOf(state.ep.charge);
       if (qb && !(d.dense && d.where === here)) d = densityOf({ q4: { weather: [{ feeling: CHX ? "frustrated" : "disappointed", strength: CHX ? "a season" : "a storm" }] } });
-      // a season cleared here stays cleared for this charge: coming back through the arch finds the chamber warm
-      let cleared = ""; try { cleared = sessionStorage.getItem("ctw-cleared") || ""; } catch (e) { /* none */ }
-      if (d.dense && d.where === here && (fromNook || qb) && !(CHX && !qb && cleared === d.feeling + d.strength)) {
+      // the chamber resets each time someone enters it (his B on bm-build-look-3, 2026-11-03): the frost is back, the stands are fresh
+      if (d.dense && d.where === here && (fromNook || qb)) {
         step("the cold comes through with you");
         const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6,
           where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "It goes onto the next stone, and the cave's kit grows beside it.",
-          onKeep: rec => { try { sessionStorage.setItem("ctw-cleared", d.feeling + d.strength); } catch (e) { /* once */ } setTimeout(() => state.ch.add(rec), 1200); } } : {};
+          onKeep: rec => { setTimeout(() => state.ch.add(rec), 1200); } } : {};
         state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
           exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95, ...chRoom,
           say: (t, secs) => { if (t) caption(t, secs); },
