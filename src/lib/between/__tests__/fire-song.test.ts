@@ -53,8 +53,8 @@ describe('fire-song', () => {
   })
   it('R6 R7 Oriel enters one beat after the hand-over; a quicker player gets a quicker Oriel', () => {
     const tlA = E.timeline(A)!, tlD = E.timeline(D)!
-    expect(tlA.notes[0].t).toBeCloseTo(A.handedAt + tlA.beat, 9)
-    expect(tlD.notes[0].t).toBeCloseTo(D.handedAt + tlD.beat, 9)
+    expect(tlA.notes[0].t).toBeCloseTo(A.handedAt! + tlA.beat, 9)
+    expect(tlD.notes[0].t).toBeCloseTo(D.handedAt! + tlD.beat, 9)
     expect(E.ending(A)).toEqual(E.ending(D))
     expect(tlD.beat).toBeLessThan(tlA.beat)
   })
