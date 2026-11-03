@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ticketFromAnswer } from '../ticket'
+import { ticketFromAnswer, ticketFromStep } from '../ticket'
 import { cleanLanes, firstLitLane } from '../lanes'
 
 const row = {
@@ -53,5 +53,33 @@ describe('pull now', () => {
     expect(a.sourceKey).toBe(b.sourceKey)
     expect(a.basis.rows).toEqual(['pull:now'])
     expect(a.lanes).toEqual(['claude'])
+  })
+})
+
+describe('ticketFromStep', () => {
+  const card = { title: 'Spec out a way to translate Self-Help and Therapy books into game content and quests' }
+  it('makes a Claude-lane Shaman intake ticket carrying the step id and his note', () => {
+    const t = ticketFromStep('council', 'steps', 'st-21', { ...card, grow: { kind: 'grow', face: 'Shaman', text: 'start with CBT', at: '2026-11-03T19:00:00Z' } })!
+    expect(t.title).toBe(('Shaman intake: ' + card.title).slice(0, 89) + '…')
+    expect(t.lanes).toEqual(['claude'])
+    expect(t.sourceKey).toBe('council/steps/st-21@grow:2026-11-03T19:00:00Z')
+    expect(t.brief).toContain('steps/st-21')
+    expect(t.brief).toContain('"start with CBT"')
+  })
+  it('titles a fit read by face and a council read plainly', () => {
+    expect(ticketFromStep('council', 'steps', 's', { title: 'X', grow: { kind: 'fit', face: 'Architect', at: 'a' } })!.title).toBe('Architect read: X')
+    expect(ticketFromStep('council', 'steps', 's', { title: 'X', grow: { kind: 'council', at: 'a' } })!.title).toBe('Council read: X')
+  })
+  it('makes nothing once a reading at or after grow.at exists, or without grow, or on another board', () => {
+    const grow = { face: 'Shaman', at: '2026-11-03T19:00:00Z' }
+    expect(ticketFromStep('council', 'steps', 's', { ...card, grow, grown: [{ at: '2026-11-03T19:05:00Z' }] })).toBeNull()
+    expect(ticketFromStep('council', 'steps', 's', { ...card, grow, grown: [{ at: '2026-11-02T10:00:00Z' }] })).not.toBeNull()
+    expect(ticketFromStep('council', 'steps', 's', { ...card, grow: null })).toBeNull()
+    expect(ticketFromStep('nonprofit', 'steps', 's', { ...card, grow })).toBeNull()
+  })
+  it('keys a resave to the same ticket and a second hand-off to a new one', () => {
+    const k = (at: string) => ticketFromStep('council', 'steps', 's', { ...card, grow: { face: 'Shaman', at } })!.sourceKey
+    expect(k('t1')).toBe(k('t1'))
+    expect(k('t1')).not.toBe(k('t2'))
   })
 })

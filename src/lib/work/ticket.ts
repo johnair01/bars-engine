@@ -69,3 +69,45 @@ export function ticketFromAnswer(board: string, collection: string, docId: strin
     lanes: row?.lanes ? cleanLanes(row.lanes) : [...DEFAULT_LANES],
   }
 }
+
+/** A card on Your steps (steps collection) as the board saves it: `grow` is the hand-off Wendell made (Grow Up, Call
+ * all six, Take it to the Shaman) and `grown[]` is the record of the faces' readings, written back by the read. */
+export interface StepDoc {
+  title?: string
+  text?: string
+  name?: string
+  grow?: { kind?: string; face?: string; text?: string; at?: string } | null
+  grown?: { at?: string }[]
+}
+
+const stepTitle = (d: StepDoc, id: string) => (d.title || d.text || d.name || id).replace(/\s+/g, ' ').trim()
+
+/**
+ * The ticket a card sent to a face makes (`sdm-shaman-route`): a `grow` with no `grown[]` entry at or after `grow.at`
+ * is a card the face has not read yet. The key holds the step id and `grow.at`, so a resave never makes two and a
+ * second hand-off of the same card (a later `at`) makes a new one. Null when the card holds nothing to read.
+ */
+export function ticketFromStep(board: string, collection: string, docId: string, doc: StepDoc): TicketDraft | null {
+  const g = doc.grow
+  if (board !== 'council' || collection !== 'steps' || !g || typeof g !== 'object') return null
+  const at = String(g.at ?? '')
+  if (at && (doc.grown ?? []).some(r => r?.at && r.at >= at)) return null
+  const face = (g.face ?? '').trim()
+  const kind = g.kind === 'council' ? 'council' : g.kind === 'fit' || (!g.kind && !face) ? 'fit' : 'grow'
+  const who = kind === 'council' ? 'Council' : face || 'Face'
+  const card = stepTitle(doc, docId)
+  const title = kind === 'council' ? `Council read: ${card}` : kind === 'fit' ? `${who} read: ${card}` : `${who} intake: ${card}`
+  const note = (g.text ?? '').trim()
+  const brief = `Wendell sent a card on Your steps to ${kind === 'council' ? 'the whole council' : `the ${who}`}: "${card}"`
+    + (note ? `, with the note: "${note}"` : '') + `.\n\nIn ${COUNCIL}, read the card live with GET /api/board/session-writes?ids=steps/${docId}, `
+    + `run the ${kind === 'council' ? 'six faces' : `${who}'s`} intake from council/faces.yaml and the six-faces skill, and write back on that step: `
+    + `level 1, one grown[] entry {face, reading, next, at} where next is a verb-first first step he can start, and grow: null. `
+    + `No other thread takes steps/${docId} while you hold this ticket.`
+  return {
+    sourceKey: `${board}/${collection}/${docId}@grow:${at || createHash('sha1').update(note + who).digest('hex').slice(0, 8)}`,
+    title: title.length > 90 ? title.slice(0, 89) + '…' : title,
+    brief,
+    basis: { rows: [docId], answer: `grow:${kind}:${who}`, label: title, steer: note, savedAt: at },
+    lanes: ['claude'],
+  }
+}
