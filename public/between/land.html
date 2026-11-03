@@ -47,5 +47,9 @@
 </div>
 <div class="land-fade" id="fade" hidden></div>
 <script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="the 3D library did not load";}},20000);</script>
-<script type="module" src="/between/land/land.js"></script>
+<!-- The Infinite Arcade hall (?place=arcade) and the ask cabinet's desk (?place=ask-desk) are their own scene, arcade/arcade.js. -->
+<script type="module">
+  const p = new URLSearchParams(location.search).get("place");
+  import(p === "arcade" || p === "ask-desk" ? "/between/arcade/arcade.js" : "/between/land/land.js");
+</script>
 </body></html>
