@@ -10,7 +10,7 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(root, p), 'utf8');
 const inline = (code) => code.replace(/<\/script/gi, '<\\/script');
-export const PARTS = ['sky', 'ring', 'water', 'ports', 'deck', 'crate', 'hatch', 'gangway', 'bell', 'studio', 'spirit', 'tidepost', 'lectern'];
+export const PARTS = ['sky', 'ring', 'water', 'ports', 'deck', 'crate', 'boat', 'hatch', 'gangway', 'bell', 'studio', 'spirit', 'tidepost', 'lectern'];
 const scene = [read('content/calrunia/deck/kit.js'), ...PARTS.map((p) => read(`content/calrunia/deck/parts/${p}.js`)), read('content/calrunia/deck/deck-page.js')].join('\n');
 const chart = JSON.parse(read('fixtures/trade-deck/player-zero.json'));
 delete chart.note;
