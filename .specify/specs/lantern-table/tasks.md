@@ -15,6 +15,7 @@ There are none: his look on the preview is on the board.
 ## Build
 
 - [ ] T004 [claude] FR-004 FR-005 FR-006 FR-007 FR-008 Engine: `basic`, `buy`, `vibeulons`, weighted `share`, `payoutShare()`; T001 passes.
+- [ ] T016 [claude] FR-017 Engine: the purchase cap of 4 a watch and the spendable BAR mint; vitest from `falsify-sim.ts` runs D, E and C.
 - [ ] T005 [claude] FR-009 Minor wins on finding and on dissolving a block; the round ends when every emerged block has dissolved.
 - [ ] T006 [claude] FR-001 The hall, the sit, the 1.2 s camera rise with no cut, reduced motion.
 - [ ] T007 [claude] FR-002 FR-003 The brass machine: goal plate, well ring, weighted lever, five toggles, pressed cells, three-notch collars; fog as fog.

@@ -57,7 +57,8 @@ lever, flip a toggle, press each cell so a stone rises, click a three-notch coll
 | Oil | 4 a watch, refilled when the watch turns | engine.ts (#505); Game frame |
 | Basic move | costs 1 oil, strikes for 1, whatever its kind | `lh-hand-basic` |
 | BAR (the player's own) | costs 1 oil, strikes for 2 when its kind matches the keep, 1 when it does not | `lh-hand-basic` |
-| Vibeulon purchase | 1 vibeulon buys one basic move, only when oil is 0 | `lh-hand-basic` |
+| Vibeulon purchase | 1 vibeulon buys one basic move, only when oil is 0, at most 4 a watch | `lh-hand-basic`, `lh-buy-cap` |
+| BAR mint | a BAR mints 1 vibeulon, spendable at the same table | engine.ts `story`, `lh-bar-mint` |
 | Growth | an untouched keep's loops grow by 1 each watch, to 3 at most | engine.ts `tick` |
 | Block cost | the sum of loop strengths; its starting size comes from the goal's size, charge and deadline | `lh-block-size` |
 | Payout share | by refinement dealt; a BAR refinement weighs 2, a basic refinement weighs 1 | `lh-hand-share` |
@@ -159,6 +160,8 @@ names each contributor's weighted share.
 - **FR-014** The #513 files listed above are cherry-picked from f3eb129, and `LanternIntake.tsx` and `lantern.css` are not.
 - **FR-015** A signed-in player's table saves through `POST /api/lantern/table` and reloads through GET.
 - **FR-016** The verification quest `cert-lantern-table-v1` is seeded and plays through on the preview.
+- **FR-017** The engine refuses a fifth vibeulon purchase in one watch (`lh-buy-cap`), and a BAR's minted vibeulon can
+  buy a basic move at the same table (`lh-bar-mint`).
 
 ## Non-functional requirements
 
@@ -198,7 +201,7 @@ names each contributor's weighted share.
 - `provenance_effects`: keeps hex tables, the table as the board, walks with no cuts, the intake order and fog rule, the Average Dusk walker, #505's engine and #513's non-UI files; retires #513's card intake with his note as the reason (Regent)
 - `risks_and_tests`: the machine drifting back into a panel of controls; a basic move whose strike still depends on its kind; test below (Challenger)
 - `implementation_translation`: three.js scene at `/lantern` on the Between's kit, ported from ad2 dir B's `scene.html`; engine additions in `src/lib/lantern/engine.ts` with vitest; #513's route, intake, pg-store, model and migration cherry-picked (Architect)
-- `decision_or_open_authority`: positions lh-hand-basic, lh-hand-share, lh-block-victory, lh-block-size; answers lh-intake-look-1 B, lh-payout-sliders A, lh-first-block A, lh-hall-company A; his look on the built table decides, and the payout sum stays open until that look (Regent)
+- `decision_or_open_authority`: positions lh-hand-basic, lh-hand-share, lh-block-victory, lh-block-size, lh-buy-cap, lh-bar-mint; answers lh-intake-look-1 B, lh-payout-sliders A, lh-first-block A, lh-hall-company A; his look on the built table decides, and the payout sum stays open until that look (Regent)
 
 ## Reserved items
 
@@ -212,13 +215,38 @@ Every open point is answered by a position or a ruling on the record: the hand (
 
 ## How we will know it failed
 
-- **The cheap test, run before the scene:** vitest on the engine additions with three cases from `lh-hand`: a basic
-  move strikes for 1 whatever its kind; a vibeulon buys a basic move only when oil is 0; a BAR refinement weighs 2 in
-  the payout share and a basic refinement weighs 1. Then a still from the seat and one from above, checked for any
-  card, chip, tray or panel.
-- **The result that stops the work:** any of the three cases fails and cannot be fixed without changing a position;
-  or either still shows a card, chip, tray or panel, or collars that read as buttons. Then the scene is not built
-  further until an art direction round fixes the still.
+- **The cheap test, run before the build (run 2026-11-03):** `falsify-sim.ts` in this folder plays the hand positions
+  on the merged engine's own `strike` and `tick` (#505), on a block of 12 refinements (six untagged keeps at strength
+  2). Run with `node --experimental-strip-types .specify/specs/lantern-table/falsify-sim.ts`. Results:
+
+  | Run | Watches to clear | Oil | Bought | Strikes a oil |
+  |---|---|---|---|---|
+  | A matched-BAR player, no purchases | 2 | 8 | 0 | 2 |
+  | B basic player, no purchases | 4 | 16 | 0 | 1 |
+  | C matched-BAR player spending its minted vibeulons | 1 | 4 | 4 | 3 |
+  | D basic player with 8 saved vibeulons, no cap | 1 | 4 | 8 | 3 |
+  | E basic player with 8 saved vibeulons, cap 4 a watch | 2 | 8 | 6 | 1.75 |
+  | F matched-BAR player spending its mint, cap 4 a watch | 1 | 4 | 4 | 3 |
+
+  The BAR's edge over a basic move is 2 to 1 in strikes a oil without the mint, and drifts to 3 to 1 when the minted
+  vibeulon is spent at the same table (C). In weight a oil, a matched BAR earns 4 (two refinements at 2 each) against a
+  basic move's 1, and 5 with its mint spent. Basic-only play takes twice the watches and pays growth: B dealt 16
+  refinements on a 12 block.
+- **The result that stops the work:** purchases let one player clear a block in one watch on banked vibeulons. Run D
+  shows exactly that: 4 oil and 8 bought basic moves clear 12 in one watch, and growth never bites. So the stop result
+  fired, and the build carries position `lh-buy-cap` (below): purchases a watch are capped at the oil, 4. Run E shows
+  the cap holds the same player to two watches. Run F shows the cap leaves a matched-BAR player's one-watch clear
+  intact, because it earned those vibeulons on the table, which is what `lh-hand` asks for.
+
+## Positions from the falsify run
+
+Both stand unless Wendell flips them; both are tuned after two real tables, as `lh-block-size` and `lh-hand-share` say.
+
+- `lh-buy-cap` (position): a player buys at most 4 basic moves with vibeulons a watch, equal to the oil. Without it, a
+  player with banked vibeulons clears a 12-refinement block in one watch (run D); with it, that player needs two (run E).
+- `lh-bar-mint` (position): a BAR keeps the vibeulon mint #505 gives it, and that vibeulon may buy a basic move at the
+  same table. The BAR's edge then reads 3 to 1 in strikes a oil (run C) rather than 2 to 1; the council keeps it,
+  because his note on `lh-hand` asks that the BAR "sweeten the pot", and the look shows the ratio.
 
 ## Definition of done
 
@@ -253,6 +281,6 @@ Six-faces-council: `council/callsheets/lantern-hall.md` (rulings lh-block-cost a
 - intake: shaman, diplomat (2026-11-03, from council/callsheets/lantern-hall.md `## Intake`)
 - spec: architect, regent (2026-11-03)
 - clarify: sage (2026-11-03; every point answered by a position or ruling, no board question)
-- falsify: challenger (2026-11-03; the three engine cases and the two stills, not yet run)
+- falsify: challenger (2026-11-03; falsify-sim.ts run: the stop result fired on run D, answered by lh-buy-cap)
 - plan: architect, regent (2026-11-03)
 - analyze: sage, challenger (2026-11-03; contract_check.py exits 0)
