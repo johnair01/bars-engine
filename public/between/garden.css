@@ -225,6 +225,12 @@ body.quiethud .hud .bottom { display: none; }
 .satitem svg { width: 26px; height: 26px; flex: none; }
 .hud .satitem[aria-pressed="true"] { border-color: #ffcf86; box-shadow: 0 0 0 1px #ffcf86, 0 0 14px rgba(255,207,134,.4); }
 .satnone { color: var(--glass-muted); font-size: .875rem; padding: 0 6px; }
+.satpouch { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.12); }
+.satlab { display: block; color: var(--glass-muted); font-size: .8125rem; letter-spacing: .02em; padding: 0 2px 6px; }
+.satpouch ul.satrow { list-style: none; margin: 0; padding: 0; }
+.satkeep { flex: none; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 4px 12px 4px 6px; border-radius: 12px;
+  background: rgba(255,207,134,.08); color: var(--glass-ink); border: 1px solid rgba(255,207,134,.28); font-size: .88rem; white-space: nowrap; }
+.satkeep svg { width: 24px; height: 24px; flex: none; }
 .satrow .glassbtn { flex: none; margin-left: auto; }
 
 /* ---------- room kit, part 2: the first minute's captions and the scroll (homeroom kit, Stills B and C) ---------- */
