@@ -46,11 +46,13 @@ import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
 import * as SH from "./scale-house.js";
 import * as FF from "./friends-fire.js";
+import * as CH from "./chamber.js";
+import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
-const PLACE = ["scale-house", "friends-fire"].includes(Q.get("place")) ? Q.get("place") : "clearing";
+const PLACE = ["scale-house", "friends-fire", "chamber"].includes(Q.get("place")) ? Q.get("place") : "clearing";
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -500,9 +502,10 @@ const state = { p: null, ep: null, sh: null, ff: null, friends: [], sat: false, 
 async function build() {
   step("reading the episode");
   const ep = await episode(); state.ep = ep; state.p = ep.p;
-  $("#placeName").textContent = ep.p.name;
-  $("#placeLand").textContent = `${ep.loc.land}, on the ${ep.p.line} line`;
-  document.title = ep.p.name;
+  const chName = "The keeping chamber";
+  $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
+  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}, on the ${ep.p.line} line`;
+  document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
   const M = {}, h = buildHollow(new THREE.Scene(), { lowPower: LOW, shell: "hollow" });   // built only to lend its materials
   h.root.traverse(o => { if (!o.isMesh || Array.isArray(o.material) || !o.material.isMeshStandardMaterial) return; const m = o.material, hex = m.color.getHex();
@@ -550,6 +553,16 @@ async function build() {
     state.bagDown = toolbagGroup(M); state.bagDown.visible = false; scene.add(state.bagDown);
     { const c = FF.YOURS, side = V(Math.cos(c.yaw), 0, -Math.sin(c.yaw)); const x = c.x + side.x * 0.55, z = c.z + side.z * 0.55;
       state.bagDown.position.set(x, groundH(x, z) + 0.24, z); state.bagDown.rotation.set(-0.25, c.yaw + 0.6, 0.1); }
+  } else if (PLACE === "chamber") {
+    // the keeping chamber under the nook's shelf (./chamber.js): the floor is the land's own ground, flattened and laid with the cave's dry stone
+    step("opening the chamber");
+    groundExtra = (x, z) => -n2(x, z) * 0.12 * Math.min(1, Math.hypot(x, z) / 6);
+    ground(M, 0x5e4e44, 0x4a3e36, CH.R + 0.5);
+    { const t = new THREE.TextureLoader().load("/ontology-game/cave/textures/dry_stone.jpg"); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 8);
+      groundMesh.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x5e4e44).multiplyScalar(1.35), map: t, roughness: 0.95 }); }
+    state.kept = Q.get("kept") === "sample" ? KEPT_SAMPLE.map(x => ({ ...x })) : keptPieces();
+    state.ch = await CH.build({ THREE, V, scene, glowSprite, LOW, pieces: state.kept });
+    state.fog = state.ch.fog; state.flies = null; state.rain = null;
   } else {
   // the forest (the Wood land) under the week's weather; dusk, green through the canopy
   state.fog = scene.fog = new THREE.FogExp2(0x4c5c58, 0.042); scene.background = new THREE.Color(0x4c5c58);
@@ -621,18 +634,20 @@ async function build() {
 /* ===================================================================================================
    Walking: tap the ground to walk there, drag to look round, or the arrow keys
    =================================================================================================== */
-const SHX = PLACE === "scale-house", FFX = PLACE === "friends-fire";
+const SHX = PLACE === "scale-house", FFX = PLACE === "friends-fire", CHX = PLACE === "chamber";
 const me = SHX ? { pos: V(SH.ARRIVE.x, 0, SH.ARRIVE.z), yaw: Math.atan2(-SH.ARRIVE.x, SH.BALANCE.z - SH.ARRIVE.z), target: null, keys: new Set() }
   : FFX ? { pos: V(FF.ARRIVE.x, 0, FF.ARRIVE.z), yaw: Math.atan2(-FF.ARRIVE.x, -FF.ARRIVE.z), target: null, keys: new Set() }
+  : CHX ? { pos: V(CH.ARRIVE.x, 0, CH.ARRIVE.z), yaw: Math.PI, target: null, keys: new Set() }
   : { pos: V(0, 0, ARCH.z - 0.9), yaw: Math.PI, target: null, keys: new Set() };
 /* you arrive walking a few steps in, seen from in front, so you see yourself come through; then the camera settles
    behind you (his note on ctw-walk-look-1: you could not see yourself without turning the camera) */
-const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : FFX ? V(FF.WALK_TO.x, 0, FF.WALK_TO.z) : V(0, 0, 4.9);
+const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : FFX ? V(FF.WALK_TO.x, 0, FF.WALK_TO.z) : CHX ? V(CH.WALK_TO.x, 0, CH.WALK_TO.z) : V(0, 0, 4.9);
 const intro = { on: !Q.get("at"), t: 0, settling: false };
 const speed = () => (state.me && !state.me.bagOn ? 1.5 : FFX ? 1.3 : 1.15);   // the bag is lighter by the fire   // the bag is heavy; set down, you walk lighter
 function walkable(x, z) {
   if (SHX) return SH.walkable(x, z, state.laid);
   if (FFX) return FF.walkable(x, z);
+  if (CHX) return CH.walkable(x, z);
   if (Math.abs(x) < 0.9 && z < -CLR + 1.3 && z > -CLR - 0.6) return true;   // a step onto the path out
   const d = Math.hypot(x, z);
   if (d < STUMP_R + 0.32) return false;
@@ -645,7 +660,7 @@ el.addEventListener("pointerdown", e => { intro.on = false; drag = { x: e.client
 el.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 8) drag.moved = true;
   if (drag.moved) { camYaw = drag.yaw - dx * 0.006; camPitch = Math.max(0.08, Math.min(0.9, drag.pitch + dy * 0.004)); } });
 el.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.moved || !groundMesh) return; tap(e.clientX, e.clientY); });
-addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button")) return; me.keys.add(e.key.toLowerCase()); });
+addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button, input, textarea")) return; me.keys.add(e.key.toLowerCase()); });
 addEventListener("keyup", e => me.keys.delete(e.key.toLowerCase()));
 function tap(cx, cy) {
   ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
@@ -707,6 +722,13 @@ function nearNow() {
     if (Math.hypot(p.x, p.z) < FF.RING_R + 3.0) return "fire";
     return null;
   }
+  if (CHX) {
+    const dBack = Math.hypot(p.x - CH.PORTAL.x, p.z - CH.PORTAL.z);
+    if (dBack > 2.6) state.leftArch = true;
+    if (dBack < 1.6) return state.leftArch ? "ch-home" : null;
+    const bs = state.block && state.block.near(p); if (bs) return bs;
+    const st = state.ch && state.ch.near(p); return st ? "kept:" + state.ch.stones.indexOf(st) : null;
+  }
   if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
@@ -748,6 +770,9 @@ function showCard() {
       : card("The footbridge", "Its middle planks are gone and the gully is deep. Your toolbag is heavy; the balance in the doorway would hold it.", btn("walk:balance", "Walk to the balance"));
   } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
   else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
+  else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
+  else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
+    html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
   else if (n === "stump") {
     const left = ADD - state.given.length;
     key = "stump:" + state.given.length + (state.done ? "d" : "");
@@ -756,8 +781,18 @@ function showCard() {
       : `<div><b>The stump</b><div class="t">Sound a note, any note. ${left === ADD ? "The bar stops where it always stops." : `${left} more and the bar can run on.`}</div></div><div class="row notes">${[0, 1, 2, 3, 4].map(d => `<button type="button" data-note="${d}" aria-label="note ${d + 1}${NOTE_NAMES[d] ? ", " + NOTE_NAMES[d] : ""}">${d + 1}</button>`).join("")}</div>`;
   } else if (n && n.startsWith("ins:")) { const ins = instruments[+n.slice(4)]; key = n; html = `<div><b>${NAMES[ins.kind]}</b><div class="t">It faces the stump, like the others.</div></div><div class="row"><button type="button" data-act="${n}">Play it</button></div>`; }
   if (key === state.cardKey) return;
+  const had = document.activeElement && document.activeElement.closest && document.activeElement.closest("#card input");
   state.cardKey = key; const c = $("#card"); c.hidden = !key; c.innerHTML = html;
+  // a stand's line field takes the keys once you have started writing there, and keeps them line after line
+  const inp = c.querySelector("input"); if (!inp) state.melting = false; else if (had || state.melting) inp.focus({ preventScroll: true });
 }
+// a line written at a stand (block-room.js): Enter or "Say it" sends it; the walk keys stay with the field while it has them
+$("#card").addEventListener("submit", e => { const f = e.target.closest("form[data-melt-form]"); if (!f) return; e.preventDefault(); audio();
+  const inp = f.querySelector("input"), t = inp.value.trim(); if (!t) return; me.keys.clear(); state.melting = true;
+  state.block.act("say:" + f.dataset.meltForm, t); state.cardKey = ""; });
+$("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
+$("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
+$("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
@@ -904,6 +939,10 @@ function frame() {
   if (intro.on) { intro.t += dt; if (!me.target || intro.t > 7) intro.settling = true;
     if (intro.settling) { camYaw += (0 - camYaw) * Math.min(1, dt * 1.4); if (Math.abs(camYaw) < 0.01) { camYaw = 0; intro.on = false; } } }
   if (FFX) { const fh = Math.hypot(want.x, want.z), lim = FF.FIRE_R + 0.5; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
+  else if (CHX) {   // inside the chamber's wall: come in along the line to you rather than slide round the wall
+    const base = me.pos.clone().add(V(0, 1.0, 0)), lim = CH.R - 0.6; let t = 1;
+    for (let i = 0; i < 12 && Math.hypot(base.x + off.x * t, base.z + off.z * t) > lim; i++) t *= 0.86;
+    want.copy(base).addScaledVector(off, Math.max(0.3, t)); want.y = Math.min(want.y, CH.TOP - 0.4); }
   else if (SHX) { const fh = Math.hypot(want.x, want.z), lim = SH.HUT_R + 0.7; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
   else { const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? ARCH.z - 0.3 : CLR - 0.6;   // never out past the arch, into the roots
     if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; } }
@@ -928,6 +967,7 @@ function frame() {
   if (state.rain) { state.rain.mat.opacity = 0.32 * state.rainK; state.rain.lines.visible = state.rainK > 0.02; if (state.rain.lines.visible) state.rain.update(T, me.pos); }
   if (state.fog && !SHX && !FFX) { state.fog.density = 0.03 + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
   if (state.block) state.block.frame(dt, T);
+  if (state.ch) state.ch.frame(dt, T);
   if (state.flies) state.flies.material.opacity = 0.65 + Math.sin(T * 1.7) * 0.25;
   if (archFx) { archFx.sheetM.opacity = 0.6 + Math.sin(T * 1.3) * 0.12; archFx.light.intensity = 4 + Math.sin(T * 2.1) * 0.6; }
   // near things, captions
@@ -953,25 +993,32 @@ function frame() {
     if (intro.on) { me.target = ARRIVE_AT.clone(); camYaw = me.yaw; }
     if (Q.get("song") === "done" && bar) { state.given = CADENCE.slice(); bar.more.forEach(m => { m.want = m.on = 1; }); for (const f of bar.falling) f.material.opacity = 0; state.done = true; state.rainK = 0; }
     // the block's room: a dense charge from the nook's doorway, or the ?block= preview with the sample's charge
+    // slice 2: a storm fills the land, a season fills the keeping chamber (densityOf().where); ?block= previews either
     if (!SHX) {
       let fromNook = false; try { fromNook = !!sessionStorage.getItem("ctw-charge"); } catch (e) { /* the sample */ }
-      const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1;
+      const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1, here = CHX ? "chamber" : "land";
       let d = densityOf(state.ep.charge);
-      if (qb && !d.dense) d = densityOf({ q4: { weather: [{ feeling: "disappointed", strength: "a storm" }] } });
-      if (d.dense && (fromNook || qb)) {
+      if (qb && !(d.dense && d.where === here)) d = densityOf({ q4: { weather: [{ feeling: CHX ? "frustrated" : "disappointed", strength: CHX ? "a season" : "a storm" }] } });
+      // the chamber resets each time someone enters it (his B on bm-build-look-3, 2026-11-03): the frost is back, the stands are fresh
+      if (d.dense && d.where === here && (fromNook || qb)) {
         step("the cold comes through with you");
+        const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6, basins: [CH.POOL],
+          where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "It goes onto the next stone, and the cave's kit grows beside it.",
+          onKeep: rec => { setTimeout(() => state.ch.add(rec), 1200); } } : {};
         state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
-          exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95,
+          exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95, ...chRoom,
           say: (t, secs) => { if (t) caption(t, secs); },
           sound: k => { if (k === "take" || k === "keep") [0, 2, 4].forEach((dd, i) => pluck(hz(dd, 220), { kind: "string", at: i * 0.16, vol: 0.2 }));
             else if (k === "pass") pluck(hz(0, 110), { kind: "hum", dur: 1.6, vol: 0.14 }); else pluck(hz(4, 440), { kind: "string", vol: 0.15 }); } });
-        if (startK === 1) caption(`The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. Three stands wait in the frost, and the nearest one glows.`, 7);
+        if (startK === 1) caption(CHX ? `A season of it came through the arch with you: feeling ${d.feeling}. The frost has set on what you keep here. One stand glows on the floor: what you write there melts it.`
+          : `The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. One stand glows in the frost: what you write there melts it.`, 7);
       }
     }
     camera.position.copy(me.pos).add(V(-Math.sin(me.yaw) * -4.5, 2.2, -Math.cos(me.yaw) * -4.5));
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
+    if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);
     if (FFX) { caption("The road home, at the homeroom's rim.", 5); caption("Round the fire, someone is tuning a guitar, and the others laugh at something said.", 6); }
     if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }
     caption("Tap the ground to walk. Drag to look around.", 5);

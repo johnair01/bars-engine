@@ -283,17 +283,18 @@ export function mount(B, opts = {}) {
     const at = new THREE.Vector3().fromArray(a.portal).setY(0), front = at.clone().multiplyScalar(0.72);   // a step in from it, toward the room's middle
     return { at, front };
   }
-  function stepThrough() {
-    if (!episode || grownOver()) return;
+  // href: another place behind the nook (the keeping chamber's arch, chamber-arch.js); it opens with or without an episode
+  function stepThrough(href) {
+    if (grownOver() || (!href && !episode)) return;
     try {
-      sessionStorage.setItem("ctw-charge", JSON.stringify(charge));
+      if (episode && charge) sessionStorage.setItem("ctw-charge", JSON.stringify(charge)); else sessionStorage.removeItem("ctw-charge");
       const home = B.home && B.home(); if (home && home.look) sessionStorage.setItem("ctw-look", home.look);   // the figure's look text (look.js), as the mirror kept it
       sessionStorage.setItem("ctw-back", location.pathname + location.search);
     } catch (e) { /* the land falls back to the sample's charge */ }
     closeDlg(); card.hidden = true;
     const fade = document.createElement("div"); fade.style.cssText = "position:fixed;inset:0;z-index:90;background:#1a1210;opacity:0;transition:opacity .6s";
     document.body.appendChild(fade); requestAnimationFrame(() => { fade.style.opacity = "1"; });
-    setTimeout(() => { location.href = "/between/land.html"; }, 650);
+    setTimeout(() => { location.href = href || "/between/land.html"; }, 650);
   }
 
   /* ---------- walking: a tap on the stand or a pane walks you there; you stand at the stand, never inside it ---------- */
