@@ -3,7 +3,8 @@
 
    One chamber that holds both of round 3's options. It is reached from the nook through an arch of the cave's stone under
    the shelf (../chamber-arch.js) and opens at ../land.html?place=chamber.
-   - B, what the charge left: every piece carried home from a block's room stands on its own stone, in the order the blocks
+   - B, what the charge left: every piece carried home from a block's room stands on its own stone (since the satchel slice the
+     piece itself goes into the pouch and its stone keeps a light where it lay), in the order the blocks
      cleared, spiralling from the portal round the pool. Beside each the cave's kit grows one structure in the piece's
      element: a crystal bed for water, a spire for metal, a glow cap for fire, a mushroom clump for earth. A piece let go
      stays as one gold light under the dome. The record is the spirit store's `kept` list (../kept.js).
@@ -98,7 +99,11 @@ export async function build(k) {
     const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.27, 0.55, 7), rock); plinth.position.y = 0.275; plinth.rotation.y = s.a; g.add(plinth);
     const gw = new THREE.Group(); gw.position.set(Math.sin(s.a + 0.5) * 0.5 + Math.cos(s.a) * 0.45, 0, -Math.cos(s.a + 0.5) * 0.5 + Math.sin(s.a) * 0.45); gw.rotation.y = s.a * 2.1; g.add(gw);
     (GROW[pc.element] || GROW.water)(gw);
-    const piece = keepsake(pc.element, V(0, 0.57, 0), 2.0, g);
+    // since the satchel slice a carried piece is in the pouch at your satchel (../pouch-keepsake.js): its stone keeps the growth
+    // and a small light in its element where it lay; pieces kept before that still stand on their stones
+    let piece;
+    if (pc.pouch) { piece = new THREE.Group(); piece.position.set(0, 0.57, 0); g.add(piece); glowSprite(V(0, 0.06, 0), 0.5, new THREE.Color((EL[pc.element] || EL.water).em).getHex(), 0.7, false, piece); }
+    else piece = keepsake(pc.element, V(0, 0.57, 0), 2.0, g);
     const pl = new THREE.PointLight((EL[pc.element] || EL.water).em, 1.6, 3.2, 1.8); pl.position.set(0, 1.15, 0); g.add(pl);
     stones.push({ pc, g, gw, piece, pl, at: V(-x, 0, -z), born: grow ? 0 : 1 });   // world position: the chamber is turned half round
   }
