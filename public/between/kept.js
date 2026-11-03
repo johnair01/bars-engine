@@ -4,9 +4,9 @@
    Slice 1 wrote the block's compost record to the tab's sessionStorage, so closing the tab forgot it. This keeps it in the
    spirit store the caves already share (`oag.spirits.v1`, content/ontology-game/cave/spirit-store.js; cave compost
    capacity 6), as one more list beside the spirits and the purse:
-     kept: [{ id, element, feeling, strength, keepsake, let, stands: [{ stand, taken|passed }], where, at }]
+     kept: [{ id, element, feeling, strength, keepsake, let, stands: [{ stand, taken|passed, lines }], where, at }]
    `let` is true for a piece let go (it stays in the chamber as one gold light). The record holds the block's element, its
-   feeling word and its size, and which stands were taken; never the charge's own sentences, and never a count shown to the
+   feeling word and its size, which stands were taken and how many lines were written at each (slice 2b); never the charge's own sentences or the player's lines, and never a count shown to the
    player. The keeping chamber (land/chamber.js) reads it; block-room.js writes it at the clearing. Other fields in the
    store are kept as they are, so the caves' spirits and vibeulons are never touched. */
 const KEY = "oag.spirits.v1", MAX = 60;

@@ -16,6 +16,15 @@
    piece on its own stone. A storm still fills the land; a season, the densest weather, fills the keeping chamber itself,
    over what is kept there (densityOf().where), and its signs show at the chamber's arch rather than the doorway.
 
+   Slice 2b (his B on bm-build-look-2, 2026-11-03 10:50Z: "break down what those actions actually are versus metaphors ...
+   A bit busy and it's not as clear that the actions are a result of doing the work"): each stand is the 3-2-1's real steps,
+   the ones Clean321Flow and the cave's talk321 run, and the player writes every line. Face it, three lines about "it"; Talk to
+   it, two questions asked and answered in its voice (the voice turns over after each line); Be it, three lines spoken as it,
+   the last the gift it gives back. Each line sent sends a warm wave over the floor from the stand and melts the room that
+   part of the way to its next state, so the melt is the writing. Nothing melts without a line; walking away keeps the lines
+   and holds the room. The room is quieter: one stand lit at a time, two daemons, fewer flakes and columns, and the six
+   lights arrive only at the clearing, to witness what the work made.
+
    Ported from the stills round's make/room-weather.js (2026-11-02-block-room-2), with his dials (s 0.72, w 0.74, c 0.75):
    the props are the same, the small lights are point batches so the room runs live, and the light warms as the charge
    lessens instead of being set once. The daemons' gas is the cave's own (content/ontology-game/cave/spirit-forms.js, served
@@ -162,8 +171,26 @@ export async function mountRoom(o) {
   const cand = []; for (let a = 0; a < 48; a++) { const t = a / 48 * Math.PI * 2, p = V(Math.sin(t) * R * 0.52, 0, Math.cos(t) * R * 0.52); if ((o.avoid || []).every(q => Math.hypot(q.x - p.x, q.z - p.z) > 1.7) && !(Math.abs(p.x) < 1.2 && p.z > 0)) cand.push(p); }
   const pick = (want, used) => cand.filter(p => used.every(u => u.distanceTo(p) > 2.4)).sort((a, b) => a.distanceTo(want) - b.distanceTo(want))[0] || want;
   const at0 = pick(V(2.2, 0, 2.6), []), at1 = pick(V(-3.0, 0, 0.4), [at0]), at2 = pick(V(0.6, 0, -3.3), [at0, at1]);
+  /* each stand's steps, the 3-2-1 as Clean321Flow and the cave's talk321 run it: the player writes every line; the voice is
+     whose words the line is ("you" the player, "it" the block); ask is the step in plain words, hint the field's start */
+  const IT = d.loudest ? `It says${d.voice ? ", in " + esc(d.voice) : ""}: “${esc(d.loudest)}.” ` : "";
+  const STEPS = {
+    face: [
+      { voice: "you", ask: `Say where it is: in this room, or in your body.`, hint: "It is in…" },
+      { voice: "you", ask: `Say what it looks like. Its size, its colour, its weight. It feels ${esc(d.feeling)}.`, hint: "It looks…" },
+      { voice: "you", ask: `Say what it is doing.`, hint: "It is…" }],
+    talk: [
+      { voice: "you", ask: `${IT}Ask it what it wants.`, hint: "What do you want?" },
+      { voice: "it", ask: `Answer as it would.`, hint: "I want…" },
+      { voice: "you", ask: `Ask it what it needs from you.`, hint: "What do you need from me?" },
+      { voice: "it", ask: `Answer as it would.`, hint: "I need…" }],
+    be: [
+      { voice: "it", ask: `Stand where it stood and say what you are.`, hint: "I am…" },
+      { voice: "it", ask: `As it, say what you have been trying to do for this person.`, hint: "I have been trying to…" },
+      { voice: "it", ask: `As it, say what you give back now.`, hint: "What I give you is…" }] };
   const STANDS = [
     { id: "face", name: "Face it", at: at0 }, { id: "talk", name: "Talk to it", at: at1 }, { id: "be", name: "Be it", at: at2 }];
+  STANDS.forEach(st => { st.steps = STEPS[st.id]; st.lines = []; });
   const SG = new THREE.Group(); SG.name = "melt-stands"; scene.add(SG);
   for (const st of STANDS) { const g = new THREE.Group(); g.position.copy(st.at); SG.add(g);
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.56, 40), new THREE.MeshBasicMaterial({ color: "#cfe6ff", transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
@@ -171,7 +198,10 @@ export async function mountRoom(o) {
     const disc = new THREE.Mesh(new THREE.CircleGeometry(0.42, 40), new THREE.MeshBasicMaterial({ color: "#9cc4ff", transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending }));
     disc.rotation.x = -Math.PI / 2; disc.position.y = 0.035; g.add(disc);
     const col = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: "#bcdcff", transparent: true, opacity: 0.25, depthWrite: false, blending: THREE.AdditiveBlending })); col.scale.set(0.9, 2.4, 1); col.position.y = 1.1; g.add(col);
-    st.fx = { ring, disc, col, warm: 0, want: 0 }; st.done = null; }
+    // the wave a line sends: a warm ring that runs out over the floor from the stand
+    const wave = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.0, 64), new THREE.MeshBasicMaterial({ color: "#ffc46a", transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+    wave.rotation.x = -Math.PI / 2; wave.position.y = 0.05; g.add(wave);
+    st.fx = { ring, disc, col, wave, waveT: -1, warm: 0, want: 0 }; st.done = null; }
 
   /* one state of the room: the round 2 props at charge k, built into their own group */
   function buildState(k) {
@@ -214,12 +244,12 @@ export async function mountRoom(o) {
       if (drops) anim.push(fall(drops, 1.6, top));
     }
     // the air: mist low while dense, columns at the gas stand, snow at the ice stand
-    for (let i = 0, mist = Math.round((6 + 50 * s) * Math.max(ice * 0.8, water * 0.6) * (LOW ? 0.5 : 1)); i < mist; i++) { const q = inRoom(1.0); q.y += 0.15 + rnd() * top * 0.35; glow(q, 1.4 + rnd() * 2 * Math.min(1.5, R / 3.5), "#c4dbef", 0.05 + 0.12 * s, false); }
-    if (gas > 0.5) for (let col = 0; col < 7; col++) { const b = inRoom(0.8); for (let j = 0; j < 9; j++) glow(b.clone().add(V(Math.sin(j * 0.9 + col) * 0.25, 0.3 + j * top * 0.09, Math.cos(j * 0.7) * 0.25)), 0.9 + j * 0.18, "#d8e6f4", 0.1 * gas * (1 - j / 10), false); }
-    const snow = dots(Math.round((80 + 380 * s) * ice), () => { const q = inRoom(1.05); q.y += rnd() * top; return q; }, "#ffffff", 0.07, 0.7);
+    for (let i = 0, mist = Math.round((4 + 24 * s) * Math.max(ice * 0.8, water * 0.6) * (LOW ? 0.5 : 1)); i < mist; i++) { const q = inRoom(1.0); q.y += 0.15 + rnd() * top * 0.35; glow(q, 1.4 + rnd() * 2 * Math.min(1.5, R / 3.5), "#c4dbef", 0.05 + 0.12 * s, false); }
+    if (gas > 0.5) for (let col = 0; col < 3; col++) { const b = inRoom(0.8); for (let j = 0; j < 9; j++) glow(b.clone().add(V(Math.sin(j * 0.9 + col) * 0.25, 0.3 + j * top * 0.09, Math.cos(j * 0.7) * 0.25)), 0.9 + j * 0.18, "#d8e6f4", 0.1 * gas * (1 - j / 10), false); }
+    const snow = dots(Math.round((60 + 180 * s) * ice), () => { const q = inRoom(1.05); q.y += rnd() * top; return q; }, "#ffffff", 0.07, 0.7);
     if (snow) anim.push(fall(snow, 0.45, top));
     // the daemons' spirit energy: held dim in the ice, free as it melts, gone up as gold motes at the clearing
-    if (SF && clear < 0.9) for (let i = 0, nFam = Math.round(2 + 4 * c); i < nFam; i++) { const [fam, hex] = FAM[i];
+    if (SF && clear < 0.9) for (let i = 0, nFam = 2; i < nFam; i++) { const [fam, hex] = FAM[i];
       const held = k >= 0.8, t = roots.length ? roots[(i * 5) % roots.length] : null;
       const at = held && t ? t.p.clone().add(V(0.3, 0.45, 0.3)) : inRoom(0.7).add(V(0, 0.8 + rnd() * Math.min(2.2, top * 0.6) * (0.5 + c), 0));
       const g = SF.buildGas(THREE, fam, hex, {}); g.position.copy(at); g.scale.setScalar(held ? 1.3 : 1.8 + 1.2 * c);
@@ -228,7 +258,7 @@ export async function mountRoom(o) {
       if (!held && !STILL) { const y0 = at.y, ph = rnd() * 6.28; anim.push((dt, T) => { g.position.y = y0 + Math.sin(T * 0.6 + ph) * 0.25; g.position.x += Math.sin(T * 0.3 + ph) * dt * 0.15; }); } }
     if (clear > 0.9) { const motes = dots(160, () => { const q = inRoom(0.85); q.y += 0.2 + Math.pow(rnd(), 0.7) * top * 1.1; return q; }, "#ffd27a", 0.1, 0.85); if (motes) anim.push(fall(motes, -0.35, top * 1.6)); }
     // witnessed (his dial): the six lights along the far edge, and a patron's light close, dim while the charge is dense
-    if (w > 0.25) { const SIX = ["#ff9b5e", "#7fd0ff", "#ff6b6b", "#ffd36b", "#9be38a", "#c9a6ff"], b = 0.3 + 0.7 * (w - 0.25) / 0.75, side = V(viewer.z, 0, -viewer.x);
+    if (w > 0.25 && clear > 0.9) { const SIX = ["#ff9b5e", "#7fd0ff", "#ff6b6b", "#ffd36b", "#9be38a", "#c9a6ff"], b = 0.3 + 0.7 * (w - 0.25) / 0.75, side = V(viewer.z, 0, -viewer.x);
       for (let i = 0; i < 6; i++) { const a = (i - 2.5) * 0.3, dir = viewer.clone().multiplyScalar(-Math.cos(a)).add(side.clone().multiplyScalar(Math.sin(a)));
         const q = C.clone().add(dir.multiplyScalar(R * 0.78)).add(V(0, Math.min(top * 0.7, 1.9) + Math.sin(i * 1.7) * 0.15, 0));
         const orb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 8), new THREE.MeshBasicMaterial({ color: SIX[i] })); orb.position.copy(q); G.add(orb); glow(q, 0.5 + 0.8 * b, SIX[i], 0.3 + 0.45 * b); }
@@ -250,15 +280,23 @@ export async function mountRoom(o) {
 
   let idx = Math.max(0, STATES.indexOf(o.startK ?? 1)); if (idx < 0) idx = 0;
   let cur = buildState(STATES[idx]), prev = null, xf = 1, xfDur = 2.6;
+  let pend = null, pf = 0, pWant = 0;   // the next state, part way in: each line written at a stand brings it further
   cur.set(1); light(STATES[idx]);
   for (let i = 0; i < idx; i++) STANDS[i].done = "taken";
   const record = { id: "k" + Date.now().toString(36), element: d.element, feeling: d.feeling, strength: d.strength, stands: [], keepsake: null, where: o.where || "the land", at: null };
   let keep = null, keptState = null;    // the keepsake: shown at the clearing, kept or let go
-  function toState(i, slow) {
-    if (i === idx) return; idx = i; if (prev) dispose(prev.G); prev = cur; cur = buildState(STATES[i]); cur.set(STILL ? 1 : 0); xf = STILL ? 1 : 0; xfDur = slow ? 5 : 2.6;
-    if (STILL) { dispose(prev.G); prev = null; }
-    o.say && o.say(["", "The ice runs to water.", "The water rises as mist. The daemons' spirit energy plays free.", "The air clears. What was held goes up as light."][i], 6);
-    if (i === 3) setTimeout(() => offerKeepsake(), STILL ? 0 : xfDur * 1000);
+  // melt(f): the stand's lines so far carry the room f of the way (0 to 1) toward its next state; at 1 the state is the room's
+  function melt(f) {
+    if (pend && pWant >= 1) arrive();      // the last stand's melt is still running: it lands now, and this stand starts its own
+    const i = Math.min(3, idx + 1); if (i === idx) return;
+    if (!pend) { pend = buildState(STATES[i]); pend.set(0); pf = 0; }
+    pWant = Math.max(pWant, Math.min(1, f)); if (STILL) pf = pWant;
+  }
+  function arrive() {
+    const i = Math.min(3, idx + 1); dispose(cur.G); cur = pend; cur.set(1); pend = null; pf = pWant = 0; idx = i;
+    // the lines are what the player does; the room says one thing, at the clearing, so a caption never runs behind the melt
+    if (i === 3) o.say && o.say("The air clears. What was held goes up as light.", 6);
+    if (i === 3) setTimeout(() => offerKeepsake(), STILL ? 0 : 1800);
   }
   function offerKeepsake() {
     if (keep) return; const g = new THREE.Group(), el = d.element, at = (o.keepAt || V(0, 0, 0)).clone();
@@ -274,44 +312,58 @@ export async function mountRoom(o) {
   // the record is kept once the keepsake is carried or let go (kept.js); a preview (o.dry) keeps nothing
   function write() { record.at = new Date().toISOString(); if (!record.keepsake || o.dry) return; keepRecord({ ...record, keepsake: d.keepsake, let: record.keepsake === "let go" }); }
 
-  /* the stands' cards: the 3-2-1, in the charge's own words */
+  /* the stands' cards: the 3-2-1's real steps, one line at a time, in the player's own words */
   const next = () => STANDS.findIndex(x => !x.done);
   function near(p) {
     if (keep && !keptState && Math.hypot(p.x - keep.g.position.x, p.z - keep.g.position.z) < 2.5) return "melt:keep";
     let bi = -1, bd = 0.95; STANDS.forEach((st, i) => { const dd = Math.hypot(p.x - st.at.x, p.z - st.at.z); if (dd < bd) { bd = dd; bi = i; } });
     return bi >= 0 ? "melt:" + bi : null;
   }
+  const gift = () => { const b = STANDS[2].lines; return b.length === STANDS[2].steps.length ? b[b.length - 1].text : ""; };
   function card(n) {
-    const btn = (act, label) => `<button type="button" data-melt="${act}">${label}</button>`;
-    const box = (title, text, ...b) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${b.join("")}</div>`;
-    if (n === "melt:keep") return { key: "melt:keep", html: box(d.keepsake.replace(/^./, ch => ch.toUpperCase()), `What the cold left when it cleared. It is yours to carry, or to let go.`, btn("keep", "Carry it"), btn("letgo", "Let it go")) };
+    const btn = (act, label, alt) => `<button type="button" data-melt="${act}"${alt ? ' class="alt"' : ""}>${label}</button>`;
+    const box = (title, text, ...b) => `<div><b>${title}</b><div class="t">${text}</div></div>${b.length ? `<div class="row">${b.join("")}</div>` : ""}`;
+    if (n === "melt:keep") { const g = gift();
+      return { key: "melt:keep", html: box(d.keepsake.replace(/^./, ch => ch.toUpperCase()), `What the cold left when it cleared${g ? `, and the gift it gave: “${esc(g)}”` : ""}. It is yours to carry, or to let go.`, btn("keep", "Carry it"), btn("letgo", "Let it go", 1)) }; }
     const i = +n.slice(5), st = STANDS[i], nx = next();
-    if (st.done) return { key: n + ":done", html: box(st.name, st.done === "taken" ? "The stand is warm where you stood." : "You passed this stand. The cold here went anyway, more slowly.") };
-    if (i !== nx) return { key: n + ":wait", html: box(st.name, `The cold here holds until you have stood at ${esc(STANDS[nx].name)}. That stand glows.`) };
-    const lines = {
-      face: `Walk round the cold and look at it from where you stand. It is ${esc(d.feeling)}, the size of ${esc(d.strength)}. Say what it looks like, out loud or to yourself.`,
-      talk: d.loudest ? `It speaks${d.voice ? ", in " + esc(d.voice) : ""}: “${esc(d.loudest)}.” Answer it, and let it answer you back.` : "It has something to say to you. Ask it what it wants, and answer what it says.",
-      be: `Stand where it stands and speak as it: “I am what feels ${esc(d.feeling)} in you. I am here to…” Finish the line as it would.` };
-    const done = { face: "I said what I see", talk: "We spoke", be: "I spoke as it" };
-    return { key: n, html: box(st.name, lines[st.id], btn("take:" + i, done[st.id]), btn("pass:" + i, "Not now")) };
+    if (st.done) return { key: n + ":done", html: box(st.name, `You wrote ${st.lines.length === 1 ? "one line" : st.lines.length + " lines"} here. The ice went where your words went.`) };
+    if (i !== nx) return { key: n + ":wait", html: box(st.name, `This stand waits. Start at ${esc(STANDS[nx].name)}, the one that glows.`) };
+    const k = st.lines.length, step = st.steps[Math.min(k, st.steps.length - 1)];
+    const log = st.lines.map(l => `<div class="ml ${l.voice}"><small>${l.voice === "it" ? "It" : "You"}</small> ${esc(l.text)}</div>`).join("");
+    const head = `${st.name} <small class="mn">${Math.min(k + 1, st.steps.length)} of ${st.steps.length}</small>`;
+    const field = `<form class="mw" data-melt-form="${i}"><input type="text" name="line" autocomplete="off" enterkeyhint="send" maxlength="240" placeholder="${esc(step.hint)}" aria-label="${esc(step.ask.replace(/<[^>]+>/g, ""))}"><button type="submit">Say it</button></form>`;
+    const enough = k > 0 ? [btn("finish:" + i, "That is enough here", 1)] : [];
+    return { key: n + ":" + k, focus: true, html: `<div><b>${head}</b>${log ? `<div class="mlog">${log}</div>` : ""}<div class="t">${step.ask}</div></div>${field}${enough.length ? `<div class="row">${enough.join("")}</div>` : ""}` };
   }
-  function act(a) {
+  // act(a, text): "say:i" with the line written, "finish:i", "keep", "letgo"
+  function act(a, text) {
     if (a === "keep" || a === "letgo") { keptState = a; record.keepsake = a === "keep" ? d.keepsake : "let go"; write();
       o.say && o.say(a === "keep" ? (o.keepSay || `You carry ${d.keepsake} back with you.`) : "It goes up with the rest of the light.", 5); o.sound && o.sound(a);
       o.onKeep && o.onKeep({ ...record, keepsake: d.keepsake, let: a === "letgo" }); return; }
     const [verb, si] = a.split(":"), i = +si, st = STANDS[i]; if (!st || st.done || i !== next()) return;
-    st.done = verb === "take" ? "taken" : "passed"; record.stands.push({ stand: st.id, [st.done]: true }); st.fx.want = st.done === "taken" ? 1 : 0.5;
-    o.sound && o.sound(verb); toState(Math.min(3, idx + 1), verb === "pass"); write();
+    if (verb === "say") { const t = String(text || "").trim().slice(0, 240); if (!t) return;
+      const step = st.steps[Math.min(st.lines.length, st.steps.length - 1)]; st.lines.push({ voice: step.voice, text: t });
+      st.fx.waveT = 0; st.fx.want = Math.max(st.fx.want, st.lines.length / st.steps.length); o.sound && o.sound("take");
+      if (st.lines.length < st.steps.length) { melt(st.lines.length / st.steps.length); return; } }
+    else if (verb !== "finish" || !st.lines.length) return;
+    st.done = "taken"; st.fx.want = 1; record.stands.push({ stand: st.id, taken: true, lines: st.lines.length });   // how many lines, never the words (kept.js)
+    if (verb === "finish") o.sound && o.sound("take");
+    melt(1); write();
   }
 
   function frame(dt, T) {
     // the crossfade from the last state to this one, and the light warming with it
     if (xf < 1) { xf = Math.min(1, xf + dt / xfDur); const e = xf * xf * (3 - 2 * xf); cur.set(e); if (prev) prev.set(1 - e); if (xf >= 1 && prev) { dispose(prev.G); prev = null; } }
-    const kT = STATES[idx]; kVis += (kT - kVis) * Math.min(1, dt / (xfDur * 0.5)); light(kVis);
-    for (const a of cur.anim) a(dt, T); if (prev) for (const a of prev.anim) a(dt, T);
-    // the stands: the next one glows and breathes; a taken one warms to amber, a passed one half way
+    if (pend) { pf = Math.min(pWant, pf + dt * 0.55); const e = pf * pf * (3 - 2 * pf); pend.set(e); cur.set(1 - e);
+      if (pWant >= 1 && pf >= 1) arrive(); }
+    const kT = pend ? STATES[idx] + (STATES[Math.min(3, idx + 1)] - STATES[idx]) * pf : STATES[idx]; kVis += (kT - kVis) * Math.min(1, dt / (xfDur * 0.5)); light(kVis);
+    for (const a of cur.anim) a(dt, T); if (prev) for (const a of prev.anim) a(dt, T); if (pend) for (const a of pend.anim) a(dt, T);
+    // the stands: only the next one shows and breathes, warming as its lines are written; a finished one keeps a small amber ring;
+    // one not reached yet does not show. A line sent runs a warm wave out over the floor.
     const nx = next();
-    STANDS.forEach((st, i) => { const f = st.fx; f.warm += (f.want - f.warm) * Math.min(1, dt * 1.5); const live = i === nx, br = live ? 0.75 + Math.sin(T * 2.2) * 0.2 : st.done ? 0.6 : 0.3;
+    STANDS.forEach((st, i) => { const f = st.fx; f.warm += (f.want - f.warm) * Math.min(1, dt * 1.5); const live = i === nx, br = live ? 0.75 + Math.sin(T * 2.2) * 0.2 : st.done ? 0.45 : 0;
+      f.ring.visible = f.disc.visible = live || !!st.done; f.col.visible = live;
+      if (f.waveT >= 0) { f.waveT += dt / (STILL ? 0.01 : 1.6); const r = 0.5 + f.waveT * R * 1.1; f.wave.scale.set(r, r, 1); f.wave.material.opacity = 0.55 * (1 - f.waveT); if (f.waveT >= 1) { f.waveT = -1; f.wave.material.opacity = 0; } }
       f.ring.material.color.set("#cfe6ff").lerp(new THREE.Color("#ffc46a"), f.warm); f.disc.material.color.set("#9cc4ff").lerp(new THREE.Color("#ffb050"), f.warm);
       f.ring.material.opacity = br; f.disc.material.opacity = 0.12 + 0.12 * br; f.col.material.opacity = live ? 0.3 + Math.sin(T * 2.2) * 0.1 : 0.1 + 0.1 * f.warm; f.col.material.color.copy(f.ring.material.color); });
     if (keep) { keep.g.position.y = keep.y + Math.sin(T * 1.4) * 0.05; keep.g.rotation.y += dt * 0.6;
@@ -324,6 +376,6 @@ export async function mountRoom(o) {
     rain: () => [0, 0.6, 0.2, 0][idx],                 // the land's own rain: snow takes its place at the ice stand
     fogAdd: () => 0.015 * s * kVis + 0.01 * s * kVis,  // the mist a dense charge adds to the land's own fog
     lightK: () => 1 - (0.45 + 0.1 * (1 - s)) * kVis,    // for a light the land sets itself each frame
-    view: () => ({ state: STATE_NAME[idx], k: STATES[idx], stands: STANDS.map(st => ({ id: st.id, done: st.done, at: [+st.at.x.toFixed(2), +st.at.z.toFixed(2)] })), keepsake: keep ? (keptState || "offered") : null, record: { ...record } }),
+    view: () => ({ state: STATE_NAME[idx], k: STATES[idx], melt: +pf.toFixed(2), stands: STANDS.map(st => ({ id: st.id, done: st.done, lines: st.lines.length, of: st.steps.length, at: [+st.at.x.toFixed(2), +st.at.z.toFixed(2)] })), keepsake: keep ? (keptState || "offered") : null, record: { ...record } }),
   };
 }

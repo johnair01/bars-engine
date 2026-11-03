@@ -660,7 +660,7 @@ el.addEventListener("pointerdown", e => { intro.on = false; drag = { x: e.client
 el.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 8) drag.moved = true;
   if (drag.moved) { camYaw = drag.yaw - dx * 0.006; camPitch = Math.max(0.08, Math.min(0.9, drag.pitch + dy * 0.004)); } });
 el.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.moved || !groundMesh) return; tap(e.clientX, e.clientY); });
-addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button")) return; me.keys.add(e.key.toLowerCase()); });
+addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button, input, textarea")) return; me.keys.add(e.key.toLowerCase()); });
 addEventListener("keyup", e => me.keys.delete(e.key.toLowerCase()));
 function tap(cx, cy) {
   ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
@@ -781,8 +781,18 @@ function showCard() {
       : `<div><b>The stump</b><div class="t">Sound a note, any note. ${left === ADD ? "The bar stops where it always stops." : `${left} more and the bar can run on.`}</div></div><div class="row notes">${[0, 1, 2, 3, 4].map(d => `<button type="button" data-note="${d}" aria-label="note ${d + 1}${NOTE_NAMES[d] ? ", " + NOTE_NAMES[d] : ""}">${d + 1}</button>`).join("")}</div>`;
   } else if (n && n.startsWith("ins:")) { const ins = instruments[+n.slice(4)]; key = n; html = `<div><b>${NAMES[ins.kind]}</b><div class="t">It faces the stump, like the others.</div></div><div class="row"><button type="button" data-act="${n}">Play it</button></div>`; }
   if (key === state.cardKey) return;
+  const had = document.activeElement && document.activeElement.closest && document.activeElement.closest("#card input");
   state.cardKey = key; const c = $("#card"); c.hidden = !key; c.innerHTML = html;
+  // a stand's line field takes the keys once you have started writing there, and keeps them line after line
+  const inp = c.querySelector("input"); if (!inp) state.melting = false; else if (had || state.melting) inp.focus({ preventScroll: true });
 }
+// a line written at a stand (block-room.js): Enter or "Say it" sends it; the walk keys stay with the field while it has them
+$("#card").addEventListener("submit", e => { const f = e.target.closest("form[data-melt-form]"); if (!f) return; e.preventDefault(); audio();
+  const inp = f.querySelector("input"), t = inp.value.trim(); if (!t) return; me.keys.clear(); state.melting = true;
+  state.block.act("say:" + f.dataset.meltForm, t); state.cardKey = ""; });
+$("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
+$("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
+$("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
@@ -1001,8 +1011,8 @@ function frame() {
           say: (t, secs) => { if (t) caption(t, secs); },
           sound: k => { if (k === "take" || k === "keep") [0, 2, 4].forEach((dd, i) => pluck(hz(dd, 220), { kind: "string", at: i * 0.16, vol: 0.2 }));
             else if (k === "pass") pluck(hz(0, 110), { kind: "hum", dur: 1.6, vol: 0.14 }); else pluck(hz(4, 440), { kind: "string", vol: 0.15 }); } });
-        if (startK === 1) caption(CHX ? `A season of it came through the arch with you: feeling ${d.feeling}. The frost has set on what you keep here. Three stands wait on the floor, and the nearest one glows.`
-          : `The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. Three stands wait in the frost, and the nearest one glows.`, 7);
+        if (startK === 1) caption(CHX ? `A season of it came through the arch with you: feeling ${d.feeling}. The frost has set on what you keep here. One stand glows on the floor: what you write there melts it.`
+          : `The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. One stand glows in the frost: what you write there melts it.`, 7);
       }
     }
     camera.position.copy(me.pos).add(V(-Math.sin(me.yaw) * -4.5, 2.2, -Math.cos(me.yaw) * -4.5));
