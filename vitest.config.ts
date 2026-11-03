@@ -123,6 +123,8 @@ export default defineConfig({
       'src/lib/lantern/__tests__/kit.test.ts',
       'src/lib/lantern/__tests__/intake.test.ts',
       'src/lib/lantern/__tests__/engine-hand.test.ts',
+      'src/lib/lantern/__tests__/engine-bundle.test.ts',
+      'src/app/api/lantern/table/__tests__/route.test.ts',
     ],
   },
   resolve: {

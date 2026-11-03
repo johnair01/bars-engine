@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0908">
+<title>Lantern Hall</title>
+<!-- The lantern table (bars-engine .specify/specs/lantern-table/spec.md). The scene is table.js; /lantern frames this page.
+     Nothing on the page is a control: every step is an object in the scene. The one line of text is the table speaking. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #0a0908; overflow: hidden; }
+  #stage, #stage canvas { position: fixed; inset: 0; display: block; touch-action: manipulation; }
+  /* the table's voice: a line of lettering in the air of the hall, with no box behind it */
+  .cap { position: fixed; z-index: 5; left: 50%; transform: translateX(-50%); top: calc(14px + env(safe-area-inset-top, 0px));
+    width: min(88vw, 620px); text-align: center; font: 1.02rem/1.45 Marcellus, Georgia, serif; color: #f3ece2;
+    text-shadow: 0 1px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.6); pointer-events: none; margin: 0; }
+  @media (max-width: 600px) { .cap { font-size: .96rem; } }
+  .loading { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; background: #0a0908; color: #e8dcc8;
+    font: 1rem/1.4 Marcellus, Georgia, serif; text-align: center; transition: opacity .8s; }
+  .loading.gone { opacity: 0; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .loading { transition: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head><body>
+<div id="stage" role="img" aria-label="Lantern Hall: an empty hex table with a brass machine set into it, under a hanging lantern. Tap an object on the table to work it."></div>
+<p class="cap" id="caption" aria-live="polite"></p>
+<div class="loading" id="loading"><div><p>The lantern hall is lighting its lanterns.</p><p id="loadStep" style="font-size:.8rem;opacity:.6">starting</p></div></div>
+<script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="The 3D library did not load. Check the connection and reload.";}},20000);</script>
+<script type="module" src="./table.js"></script>
+</body></html>
