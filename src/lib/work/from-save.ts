@@ -1,7 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { latestDoc } from '@/lib/board/store'
 import { pushTicket } from './queue'
-import { ticketFromAnswer, type AnswerDoc, type RowDoc } from './ticket'
+import { ticketFromAnswer, ticketFromStep, type AnswerDoc, type RowDoc, type StepDoc } from './ticket'
 
 /**
  * Push from the board: his answer to a council question becomes a ticket in the default lanes as it is saved, so the
@@ -10,10 +10,13 @@ import { ticketFromAnswer, type AnswerDoc, type RowDoc } from './ticket'
  */
 export async function ticketFromSave(db: PrismaClient, board: string, collection: string, docId: string,
                                      doc: Record<string, unknown>) {
-  if (board !== 'council' || collection !== 'questions') return null
+  if (board !== 'council' || (collection !== 'questions' && collection !== 'steps')) return null
   try {
-    const row = (await latestDoc(board, 'rows', docId)) as RowDoc | null
-    const draft = ticketFromAnswer(board, collection, docId, doc as AnswerDoc, row)
+    // A card he sent to a face (Grow Up, Take it to the Shaman) is read by Claude as an answer is: same lane, same wake.
+    const row = collection === 'steps' ? null : (await latestDoc(board, 'rows', docId)) as RowDoc | null
+    const draft = collection === 'steps'
+      ? ticketFromStep(board, collection, docId, doc as StepDoc)
+      : ticketFromAnswer(board, collection, docId, doc as AnswerDoc, row)
     if (!draft) return null
     const r = await pushTicket(db, draft)
     return { id: r.ticket.id, lane: r.ticket.lane, created: r.created }
