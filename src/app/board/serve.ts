@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isBoardOwner } from '@/lib/board/owner'
 import { getCurrentPlayer } from '@/lib/auth'
 import { patchCouncilPage } from '@/lib/board/council-page'
-import { readText } from '@/lib/board/content-store'
+import { PAGE_PATHS, pushedSha, readText } from '@/lib/board/content-store'
 import { boardShim } from './shim'
 import { UI_TOKENS } from '@/lib/ui/tokens-link'
 import { CHALK_TAG } from '@/lib/marks/chalk'
@@ -16,11 +16,7 @@ const PAGES: Record<string, string> = {
     || 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/board/nonprofit/nonprofit-board.html',
   council: 'https://raw.githubusercontent.com/wendell-britt/Six-faces-council/main/board/council-board.html',
 }
-/** The repo path each board's page is pushed under. */
-export const PAGE_PATHS: Record<string, string> = {
-  nonprofit: 'board/nonprofit/nonprofit-board.html',
-  council: 'board/council-board.html',
-}
+export { PAGE_PATHS }
 const caches = new Map<string, { html: string; at: number }>()
 const patched = new Map<string, { raw: string; html: string }>()
 
@@ -53,11 +49,19 @@ async function page(board: string, url = PAGES[board]): Promise<string | null> {
   return hit?.html ?? null
 }
 
+/** The content hash of the page main last pushed for this board, or null for a branch preview or BOARD_PAGE_URL page
+ * (those have no pushed build to compare). The board's store read (GET /api/board/saves) answers the same hash, so an
+ * open page can tell it is older than the board. */
+export async function pageSha(board: string, url = PAGES[board]): Promise<string | null> {
+  if (url !== PAGES[board] || (board === 'nonprofit' && process.env.BOARD_PAGE_URL) || !PAGE_PATHS[board]) return null
+  return pushedSha(PAGE_PATHS[board])
+}
+
 /** The built page is a fragment (claude.ai supplies the document around it): no doctype, head, charset or viewport.
  * Served raw it would render in quirks mode, so it gets the document shell here, with the store shim first. */
-export function wrap(html: string, board: string): string {
+export function wrap(html: string, board: string, pageSha: string | null = null): string {
   // The chalk ring rides on the Council Board always (it is his page), so a hold on a card can mark what he saw there.
-  const shim = boardShim(board, board === 'nonprofit' ? '/board' : `/board/${board}`) + '\n' + UI_TOKENS
+  const shim = boardShim(board, board === 'nonprofit' ? '/board' : `/board/${board}`, pageSha) + '\n' + UI_TOKENS
     + (board === 'council' ? '\n' + CHALK_TAG : '')
   if (/<!doctype/i.test(html)) return html.replace(/<html(?![^>]*data-theme)([^>]*)>/i, '<html$1 data-theme="auto">')
     .replace(/<head[^>]*>/i, m => `${m}\n${shim}`)
@@ -97,9 +101,13 @@ export async function serveBoard(req: NextRequest, board: string): Promise<NextR
     if (await getCurrentPlayer()) return new NextResponse(notOwnerPage(), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } })
     return NextResponse.redirect(new URL(`/login?returnTo=${encodeURIComponent(`/board${board === 'nonprofit' ? '' : '/' + board}${req.nextUrl?.search ?? ''}`)}`, req.url))
   }
-  const html = await page(board, pageUrl(board, req.nextUrl?.searchParams.get('page') ?? null))
+  const url = pageUrl(board, req.nextUrl?.searchParams.get('page') ?? null)
+  // The build this page is, read before the page itself: a push landing between the two reads makes the shim see a
+  // newer build and offer a reload, never the reverse (board-reverts, 2026-11-03).
+  const sha = await pageSha(board, url)
+  const html = await page(board, url)
   if (!html) return new NextResponse('The board page has not been pushed here yet. Try again in a minute.', { status: 503 })
-  return new NextResponse(streamed(sameHost(wrap(html, board))), {
+  return new NextResponse(streamed(sameHost(wrap(html, board, sha))), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY',
                'Referrer-Policy': 'same-origin' },
   })

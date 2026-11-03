@@ -6,13 +6,15 @@
  * marks the host, so the Council Board offers "Set aside" only where the save reaches bars-engine (seeds collection).
  * boardHome names the board the page saves as (`nonprofit` on /board, `council` on /board/council).
  * Typed words survive the 30-second refresh, a re-render and a reload (board-drafts, 2026-10-31): see DRAFTS below.
+ * pageSha names the page build this shim rides on, so an open page can tell when it is older than the board
+ * (board-reverts, 2026-11-03): see STALE PAGE below.
  */
-export function boardShim(boardHome: string, returnTo = '/board'): string {
-  const board = JSON.stringify(boardHome), back = JSON.stringify(returnTo)
+export function boardShim(boardHome: string, returnTo = '/board', pageSha: string | null = null): string {
+  const board = JSON.stringify(boardHome), back = JSON.stringify(returnTo), built = JSON.stringify(pageSha)
   return `<script>
 (() => {
-  const BOARD = ${board}, API = '/api/board/saves';
-  let docs = {}, sig = '', ready = false, lastPull = null, unrecorded = null;
+  const BOARD = ${board}, API = '/api/board/saves', PAGE = ${built};
+  let docs = {}, sig = '', ready = false, lastPull = null, unrecorded = null, wrote = 0;
   const subs = [];
   const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
   const snapDoc = (c, id) => { const d = (docs[c] || {})[id]; return {id, exists: !!d, data: () => clone(d)}; };
@@ -113,16 +115,40 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
     el.style.color = 'var(--warn, #b45309)';
     el.textContent = 'Saving is off: the board store did not load (' + (e && e.message || 'error') + '). Reload; if it stays, tell Claude this line.';
   }
+  // STALE PAGE. The page carries the board's cards as it was built; the store only adds rows main has not recorded.
+  // A page left open for hours (a phone tab) kept its old build after main recorded new rows, so those rows vanished
+  // from it and it looked like the board had gone back (Wendell, 2026-11-03: "The page keeps refreshing to an earlier
+  // state"). When the store names a newer build, the page reloads itself the next time it comes back into view, or
+  // says so with a button while it stays open. Typed words survive the reload (DRAFTS).
+  let stale = false;
+  const reloadNow = () => { if (typing()) staleNote(); else location.reload(); };
+  function staleNote(){
+    if (document.getElementById('board-stale')) return;
+    const el = document.createElement('div'); el.id = 'board-stale'; el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:16px;right:16px;top:calc(12px + env(safe-area-inset-top));z-index:9999;margin:0 auto;max-width:28rem;justify-content:space-between;'
+      + 'display:flex;gap:12px;align-items:center;padding:10px 10px 10px 16px;border-radius:999px;font:14px/1.3 system-ui,sans-serif;'
+      + 'background:#1f2937;color:#f9fafb;box-shadow:0 4px 16px rgba(0,0,0,.3)';
+    const t = document.createElement('span'); t.textContent = 'The board has changed since you opened it.';
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Show it';
+    b.style.cssText = 'flex:none;font:inherit;font-weight:600;padding:8px 14px;border-radius:999px;border:0;background:#f9fafb;color:#1f2937;cursor:pointer';
+    b.onclick = () => location.reload();
+    el.appendChild(t); el.appendChild(b); document.body.appendChild(el);
+  }
   async function refresh(){
+    // A save made while this read was out wins over it: the read may have left before the save landed and would put
+    // the old answer back on screen until the next refresh (board-reverts, 2026-11-03).
+    const asked = wrote;
     const r = await fetch(API + '?board=' + BOARD, {credentials: 'same-origin', cache: 'no-store'});
     if (r.status === 401){ location.href = '/login?returnTo=' + ${back}; return; }
     if (!r.ok) throw new Error('board load ' + r.status);
     const j = await r.json(); lastPull = j.lastPull; unrecorded = j.unrecorded; pullNote();
+    if (PAGE && j.page && j.page !== PAGE && !stale){ stale = true; if (document.hidden) return; staleNote(); }
+    if (asked !== wrote || writing) return;
     const s = JSON.stringify(j.docs || {});
     if (s !== sig){ sig = s; docs = j.docs || {}; if (ready) show(); }
   }
   async function write(c, id, data, mode){
-    writing++;
+    writing++; wrote++;
     try {
       const r = await fetch(API, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({board: BOARD, collection: c, docId: id, mode, data})});
@@ -161,7 +187,8 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
   };
   const dbReady = refresh().then(() => { ready = true; setTimeout(() => { notify(); refill(); }, 0);
     setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) return;
+      if (stale) return reloadNow(); refresh().then(() => { if (stale) reloadNow(); }).catch(() => {}); });
     return db; }, e => { showFault(e); return null; });
   // barsEngine tells the page its saves reach bars-engine, so a Council Board "Set aside" can rest the task here.
   window.claude = {barsEngine: true, use: name => name === 'db' ? dbReady : name === 'mcp' ? Promise.resolve(mcp) : Promise.resolve(null)};

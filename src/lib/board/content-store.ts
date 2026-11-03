@@ -156,6 +156,18 @@ export async function readFile(path: string): Promise<{ body: ReadableStream<Uin
   } catch { return null }
 }
 
+/** The repo path each board's page is pushed under. */
+export const PAGE_PATHS: Record<string, string> = {
+  nonprofit: 'board/nonprofit/nonprofit-board.html',
+  council: 'board/council-board.html',
+}
+
+/** The content hash a pushed path points at now, or null. The board's store read answers its page's hash with it, so
+ * a page open since an older build can tell (board-reverts, 2026-11-03). */
+export async function pushedSha(path: string): Promise<string | null> {
+  return (await manifest().catch(() => null))?.files[path]?.sha ?? null
+}
+
 const texts = new Map<string, string>()
 /** A pushed text file. Each hash is read from the store once per instance, so a page load after a quiet minute costs
  * one manifest read. */
