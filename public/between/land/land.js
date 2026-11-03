@@ -867,12 +867,27 @@ function shAct(act) {
   }
 }
 /* a string tuned up to pitch: plucked a little flat and slid up (Oriel at the fire, between songs) */
-function tune(f, at = 0) {
+function tune(f, at = 0, vol = 0.16) {
   const a = audio(); if (!a) return; const t = a.currentTime + at;
   const g = a.createGain(); g.connect(master); const o = a.createOscillator(); o.type = "triangle";
   o.frequency.setValueAtTime(f * 0.955, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.7); o.connect(g);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
   o.start(t); o.stop(t + 1.7);
+}
+/* The fire's crackle (spec ctw-friends-fire FR-007): filtered noise with random pops, always under the scene, ducked about
+   6 dB (x0.5) while either you or Oriel is playing. Built once, on the first frame after audio is unlocked. */
+function crackle(playing, dt) {
+  const a = audio(); if (!a || a.state !== "running") return;
+  if (!state.crk) {
+    const buf = a.createBuffer(1, a.sampleRate * 2, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.002 ? 1 : 0.15);
+    const src = a.createBufferSource(); src.buffer = buf; src.loop = true;
+    const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900;
+    const g = a.createGain(); g.gain.value = 0.05; src.connect(hp); hp.connect(g); g.connect(master); src.start();
+    state.crk = { g, duck: 1 };
+  }
+  const c = state.crk, want = playing ? 0.5 : 1;
+  c.duck += (want - c.duck) * Math.min(1, dt * 4); c.g.gain.value = 0.05 * c.duck;
 }
 /* your song, carried from the stump: the notes you gave it, or the bar's own cadence */
 function yourNotes() { try { const v = JSON.parse(sessionStorage.getItem("ctw-song") || "null"); if (Array.isArray(v) && v.length) return v.slice(0, 6).map(n => +n || 0); } catch (e) { /* the cadence */ } return CADENCE.slice(); }
@@ -909,6 +924,8 @@ function orielPlays() {
   const fs = fireSong(), tl = FS.timeline(fs.song); if (!tl) return;
   fs.tl = tl; fs.step = "oriel"; fs.lit = -1; state.playing = true; state.cardKey = "";
   const t0 = now(), o = state.friends.find(x => x.oriel);
+  tune(hz(0, 220), 0, 0.1);   // Oriel's last tuned string lands on the home note before the first one of yours
+
   tl.notes.forEach((n, i) => pluck(hz(n.degree, 220), { kind: "string", at: Math.max(0, n.t - t0), dur: i === tl.notes.length - 1 ? 2.6 : 1.1, vol: 0.22 }));
   setTimeout(() => { if (o) o.strum = 1; }, Math.max(0, tl.notes[0].t - t0) * 1000);
   setTimeout(() => { if (o) o.strum = 0; fs.step = "after"; state.cardKey = ""; }, (tl.end - t0) * 1000);
@@ -1020,12 +1037,14 @@ function frame() {
   }
   if (FFX && state.sat) me.pos.y = groundH(FF.YOURS.x, FF.YOURS.z);
   if (state.me) { state.me.holder.position.copy(me.pos); state.me.holder.rotation.y = me.yaw; state.me.update(dt, moving, FFX && state.sat, FF.CRATE.h, T); }
+  if (SHX && state.me && me.pos.x < SH.GULLY.x - 1 && T > (state.farTuneAt || 0)) { tune([110, 146.8, 196, 246.9][Math.floor(T) % 4], 0, 0.05); state.farTuneAt = T + 5; }   // heard from the far bank
   if (state.ff) {
     state.ff.frame(dt, T, state.sat);
     for (const fr of state.friends) { fr.laugh *= 1 - dt * 0.6; fr.mixer.update(dt);
       const bob = fr.laugh > 0.02 ? Math.abs(Math.sin(T * 9 + fr.phase)) * 0.12 * fr.laugh : 0, listen = state.playing ? 0.12 : 0;
       fr.poser.apply(1, true, FF.CRATE.h, T + fr.phase, bob + listen, fr.oriel ? (fr.strum || (state.played || state.playing ? 0 : 0.25 * Math.max(0, Math.sin(T * 0.8)))) : 0);
       fr.wardrobe.dress(dt); }
+    crackle(!!state.playing || (state.fs && state.fs.step === "seals" && state.fs.song.played.length > 0), dt);
     // between songs Oriel tunes a string at a time; now and then the others laugh at something said
     if (!state.playing && !(state.sat && state.fs && state.fs.step !== "card") && T > (state.tuneAt || 2)) { const st = [82.4, 110, 146.8, 196, 246.9, 329.6][Math.floor(T * 7) % 6]; tune(st); if (!state.played) tune(st, 0.9);
       state.tuneAt = T + (state.played ? 9 : 4.5);
