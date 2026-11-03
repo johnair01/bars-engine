@@ -66,6 +66,11 @@ describe('ticketFromStep', () => {
     expect(t.brief).toContain('steps/st-21')
     expect(t.brief).toContain('"start with CBT"')
   })
+  it('names the card by the words Your steps saves under do, never by its id', () => {
+    const t = ticketFromStep('council', 'steps', 'ttv-cmvykjlie000fxpmg793m9w6r', { do: 'Spec out a way to translate books', grow: { face: 'Shaman', at: 'a' } })!
+    expect(t.title).toBe('Shaman intake: Spec out a way to translate books')
+    expect(t.brief).toContain('"Spec out a way to translate books"')
+  })
   it('titles a fit read by face and a council read plainly', () => {
     expect(ticketFromStep('council', 'steps', 's', { title: 'X', grow: { kind: 'fit', face: 'Architect', at: 'a' } })!.title).toBe('Architect read: X')
     expect(ticketFromStep('council', 'steps', 's', { title: 'X', grow: { kind: 'council', at: 'a' } })!.title).toBe('Council read: X')

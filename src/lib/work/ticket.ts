@@ -73,6 +73,8 @@ export function ticketFromAnswer(board: string, collection: string, docId: strin
 /** A card on Your steps (steps collection) as the board saves it: `grow` is the hand-off Wendell made (Grow Up, Call
  * all six, Take it to the Shaman) and `grown[]` is the record of the faces' readings, written back by the read. */
 export interface StepDoc {
+  /** The card's words: Your steps saves them as `do` (board/template.html stSteps). */
+  do?: string
   title?: string
   text?: string
   name?: string
@@ -80,7 +82,7 @@ export interface StepDoc {
   grown?: { at?: string }[]
 }
 
-const stepTitle = (d: StepDoc, id: string) => (d.title || d.text || d.name || id).replace(/\s+/g, ' ').trim()
+const stepTitle = (d: StepDoc, id: string) => (d.do || d.title || d.text || d.name || id).replace(/\s+/g, ' ').trim()
 
 /**
  * The ticket a card sent to a face makes (`sdm-shaman-route`): a `grow` with no `grown[]` entry at or after `grow.at`
