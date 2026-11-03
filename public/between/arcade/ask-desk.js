@@ -43,11 +43,26 @@ export function buildDesk(scene) {
   const papers = [];
   for (let i = 0; i < 7; i++) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.16), new THREE.MeshBasicMaterial({ color: 0xfffaf4, transparent: true, opacity: 0.6, side: THREE.DoubleSide, fog: true }));
     p.position.set(-3 + i, 1 + (i % 3) * 0.7, -2.5 - (i % 2)); p.userData.ph = i * 1.3; scene.add(p); papers.push(p); }
+  // the way back (his note, 2026-11-03 19:44Z): the screen the player came through, standing in the mist with the hall's
+  // dusk glowing in it and its name over it; a tap on it walks back out to the hall (./arcade.js)
+  const door = new THREE.Group(); door.position.set(-1.35, 0, -1.5); door.rotation.y = 0.55; scene.add(door);
+  const tex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const hallGlow = tex(256, 320, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#9a7ad0"); g.addColorStop(0.6, "#4a2f66"); g.addColorStop(1, "#1a1626"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 6; i++) { const s = 1 - i * 0.14; x.fillStyle = ["#3fd6c4", "#e0569a", "#f0a640"][i % 3]; x.globalAlpha = 0.75; x.fillRect(w * (0.5 - 0.42 * s), h * (0.52 - 0.1 * s), w * 0.06 * s, h * 0.12 * s); x.fillRect(w * (0.5 + 0.36 * s), h * (0.52 - 0.1 * s), w * 0.06 * s, h * 0.12 * s); }
+    x.globalAlpha = 1; x.fillStyle = "rgba(0,0,0,.16)"; for (let y = 0; y < h; y += 4) x.fillRect(0, y, w, 1); });
+  const sign = tex(512, 112, (x, w, h) => { x.fillStyle = "#f6d5e2"; x.fillRect(0, 0, w, h); x.fillStyle = "#3a1e36"; x.textAlign = "center"; x.textBaseline = "middle"; x.font = `${Math.round(h * 0.46)}px Marcellus, serif`; x.fillText("BACK TO THE HALL", w / 2, h / 2 + 2); });
+  const frameM = std(0x2e2240, { roughness: 0.5 });
+  const fb = new THREE.Mesh(new THREE.BoxGeometry(0.98, 1.36, 0.08), frameM); fb.position.y = 0.95; door.add(fb);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 1.08), new THREE.MeshBasicMaterial({ map: hallGlow, fog: false })); scr.position.set(0, 0.92, 0.045); door.add(scr);
+  const mq = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.2), new THREE.MeshBasicMaterial({ map: sign, fog: false })); mq.position.set(0, 1.78, 0.02); door.add(mq);
+  const mqb = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.26, 0.06), frameM); mqb.position.set(0, 1.78, -0.02); door.add(mqb);
   let pull = 0, want = 0;
   return {
+    door,
     pullLever() { want = 1; },
     frame(dt, T, still) {
       pull += (want - pull) * Math.min(1, dt * 6); arm.rotation.x = -0.5 + pull * 1.0;
+      if (!still) scr.material.color.setScalar(0.9 + 0.1 * Math.sin(T * 2));
       if (!still) for (const p of papers) { p.position.y += dt * 0.08; p.rotation.y += dt * 0.3; p.rotation.z = Math.sin(T + p.userData.ph) * 0.4; if (p.position.y > 3.4) p.position.y = 0.6; }
     },
   };

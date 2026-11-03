@@ -137,6 +137,22 @@ function controls(panel, w, players, buttons) {
   }
 }
 
+/* what tells a player a cabinet takes a coin now (his note, 2026-11-03 19:44Z: "it should be obvious it can be interacted
+   with"): its own lit coin slots, kept out of the merge so a drop can light them, and an INSERT COIN plate over the coin
+   door that blinks in the cabinet's colour. A "lit soon" cabinet gets neither. */
+const insertArt = hue => (x, w, h) => {
+  x.fillStyle = "#140c1c"; x.fillRect(0, 0, w, h); x.strokeStyle = hue; x.lineWidth = 4; x.strokeRect(3, 3, w - 6, h - 6);
+  x.fillStyle = hue; x.textAlign = "center"; x.textBaseline = "middle"; x.font = `${Math.round(h * 0.5)}px Marcellus, serif`; x.fillText("INSERT COIN", w / 2, h / 2 + 2);
+};
+function playCues(out, g, lit, y, w) {
+  if (!lit || !out.slots) return;
+  out.slotMat = glow(lit.route ? 0xffb347 : 0x5a3a30, lit.route ? 1.8 : 1);
+  for (const s of out.slots) { s.material = out.slotMat; s.userData.keep = true; }
+  if (!lit.route) return;
+  out.insert = quad(Math.min(0.5, w * 0.72), 0.11, new THREE.MeshBasicMaterial({ map: canvasTex(256, 56, insertArt(lit.colour)), color: new THREE.Color(1.5, 1.5, 1.5), fog: false }), g, V(0, y, 0.018), new THREE.Euler(0, 0, 0));
+  out.insert.userData.keep = true;
+}
+
 /* one cabinet, built in its own frame: the front at z = 0 facing +z (the aisle), the body behind it, x along the
    corridor. arrival.py's cabinet(), with its numbers. Returns the screen's world centre and normal, and its parts. */
 function cabinet({ side, z, kind, lit = null, ch1 = false }) {
@@ -149,9 +165,13 @@ function cabinet({ side, z, kind, lit = null, ch1 = false }) {
   const hue = lit ? lit.colour : pick(SCREEN_HUES);
   let sMat;
   if (ch1) sMat = screenMat(canvasTex(256, 192, roadMist), 1.1);
-  else if (lit) sMat = screenMat(canvasTex(lit.id === "ask" ? 192 : 256, 256, { ask: askArt, lantern: lanternArt, between: betweenArt }[lit.id]), 1.25);
+  else if (lit) sMat = screenMat(canvasTex(lit.id === "ask" ? 192 : 256, 256, { ask: askArt, lantern: lanternArt, between: betweenArt }[lit.id]), lit.route ? 1.25 : 0.6);   // a "lit soon" screen glows at half
   else sMat = ATTRACT[Math.floor(R() * ATTRACT.length)];
   const out = { group: g, hue, lit };
+  if (lit) {   // the whole cabinet takes a tap (his note, 2026-11-03 19:44Z): one unseen box, kept out of the merge
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(w + 0.1, (top || base) + marq + 0.1, d + 0.3), new THREE.MeshBasicMaterial());
+    hit.position.set(0, ((top || base) + marq) / 2, -d / 2 + 0.15); hit.visible = false; hit.userData.keep = true; hit.userData.cabinet = lit.id; g.add(hit); out.hit = hit;
+  }
   const sRot = new THREE.Euler(-tr, 0, 0);
   const n = V(0, 0, 1).applyEuler(sRot);
   if (kind === "cocktail") {
@@ -165,7 +185,8 @@ function cabinet({ side, z, kind, lit = null, ch1 = false }) {
       if (lit) cyl(0.17, 0.46, e * (w / 2 + 0.42), 0, -d / 2, M.stool, g, 10);       // played seated, a stool at each end
     }
     box(0.18, 0.22, 0.02, 0, 0.36, 0.005, M.trim, g);
-    for (const dx of [-0.04, 0.04]) box(0.02, 0.04, 0.012, dx, 0.4, 0.016, M.coin, g);
+    out.slots = [-0.04, 0.04].map(dx => box(0.02, 0.04, 0.012, dx, 0.4, 0.016, M.coin, g));
+    playCues(out, g, lit, 0.55, w);
     if (lit) { // its name on the aisle-facing apron (a cocktail table has no marquee)
       out.marquee = quad(w * 0.86, 0.11, new THREE.MeshBasicMaterial({ map: canvasTex(512, 64, marqueeArt(lit.name, hue)) }), g, V(0, base - 0.1, 0.004), new THREE.Euler(0, 0, 0));
     }
@@ -184,6 +205,7 @@ function cabinet({ side, z, kind, lit = null, ch1 = false }) {
   const doorY = Math.min(0.42, base * 0.45);
   box(0.22, 0.28, 0.02, 0, doorY, 0.005, M.trim, g);                                         // coin door
   out.slots = [-0.05, 0.05].map(dx => box(0.024, 0.045, 0.012, dx, doorY + 0.06, 0.016, M.coin, g));
+  playCues(out, g, lit, doorY + 0.22, w);
   // the screen, leaning back by its type's tilt and standing proud of the body
   const round = lit && lit.round;
   let c;
@@ -296,6 +318,8 @@ export async function build({ today = "ask", still = false } = {}) {
     x.fillStyle = "rgba(160,210,240,.7)"; x.beginPath(); x.ellipse(w * 0.5, h * 0.8, w * 0.3, h * 0.05, 0, 0, 7); x.fill(); });   // the block, and its meltwater
   quad(0.5, 0.5, new THREE.MeshBasicMaterial({ map: win, color: new THREE.Color(1.2, 1.2, 1.2) }), cm, V(0, 1.32, 0.195), new THREE.Euler(0, 0, 0));
   box(0.58, 0.58, 0.04, 0, 1.32, 0.18, M.brass, cm);
+  // its sign, so a player finds where coins come from (his note, 2026-11-03 19:44Z)
+  quad(0.74, 0.2, new THREE.MeshBasicMaterial({ map: canvasTex(512, 140, marqueeArt("Change", "#f0a640", "rest here, the purse fills")) }), cm, V(0, 1.78, 0.2), new THREE.Euler(0, 0, 0));
   box(0.5, 0.12, 0.2, 0, 0.62, 0.24, M.trim, cm);                                                    // the coin tray
   for (const dx of [-0.12, 0, 0.1]) cyl(0.028, 0.01, dx, 0.68, 0.26, M.coin, cm, 14);               // coins in it
   const hop = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.1, 0.32, 16, 1, true), M.brass); hop.position.set(0, 2.14, -0.12); cm.add(hop); // the hopper
@@ -331,6 +355,7 @@ export async function build({ today = "ask", still = false } = {}) {
   built.mist = [];
   scene.children.forEach(o => { if (o.isSprite && o.material.color && o.material.color.getHex() === MIST) built.mist.push(o); });
   built.lit = ["ask", "lantern", "between"].map(id => built[id]);
+  built.hits = built.lit.map(b => b.hit).filter(Boolean);
   mergeStatic(G);
   return built;
 }

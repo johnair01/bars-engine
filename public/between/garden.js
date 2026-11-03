@@ -4024,3 +4024,15 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation); ?nook=1&coins=who&games=flirtcraft sits at the table and stops at who the toss is for
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));
+
+/* The way back to the Infinite Arcade (his note on bars-engine #559, 2026-11-03 19:44Z: a player can always leave a game
+   and come back to the hall). A player who came in through The Between's cabinet carries the hall's return address in
+   ctw-back (public/between/arcade/arcade.js); the garden shows a "Back to the hall" button beside Sound for them only. */
+(() => {
+  let back = null; try { back = sessionStorage.getItem("ctw-back"); } catch { back = null; }
+  if (!back || !/[?&]place=arcade\b/.test(back)) return;
+  const bar = document.querySelector("#hud .topbtns"); if (!bar) return;
+  const b = document.createElement("button"); b.className = "glassbtn"; b.type = "button"; b.id = "arcadeBackBtn"; b.textContent = "Back to the hall";
+  b.addEventListener("click", e => { e.stopPropagation(); location.href = back; });
+  bar.prepend(b);
+})();

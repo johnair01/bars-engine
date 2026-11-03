@@ -867,6 +867,8 @@ function goHome() {
   setTimeout(() => { location.href = back; }, 700);
 }
 $("#homeBtn").onclick = goHome;
+// a player sent here from the Infinite Arcade's change machine sees where the button goes (his note on #559, 2026-11-03)
+try { if (/[?&]place=arcade\b/.test(sessionStorage.getItem("ctw-back") || "")) $("#homeBtn").textContent = "Back to the hall"; } catch (e) { /* plain */ }
 $("#soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("between-sound", soundOn ? "1" : "0"); } catch (e) { /* this page only */ }
   $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off"; $("#soundBtn").setAttribute("aria-pressed", String(soundOn)); if (audio()) master.gain.value = soundOn ? 0.5 : 0; };
 $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";

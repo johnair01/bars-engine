@@ -88,6 +88,8 @@ const SOUND = { coin: () => { blip(1800, { dur: 0.05, vol: 0.15 }); blip(220, { 
 $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
 $("#soundBtn").onclick = () => { soundOn = !soundOn; store.set("between-sound", soundOn ? "1" : "0"); $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
   $("#soundBtn").setAttribute("aria-pressed", String(soundOn)); if (audio()) master.gain.value = soundOn ? 0.5 : 0; };
+// the way out is named for where it goes (his note, 2026-11-03 19:44Z: a player can always leave a game and come back to the hall)
+$("#homeBtn").textContent = PLACE === "desk" ? "Back to the hall" : "Leave the arcade";
 $("#homeBtn").onclick = () => leave(PLACE === "desk" ? hallUrl({ from: "ask" }) : (store.get("arcade-home", sessionStorage) || "/"));
 if (PLACE === "hall" && !hall.inside && !backFrom && document.referrer && !/\/between\/land\.html|ontology-game\/between/.test(document.referrer)) {
   try { const r = new URL(document.referrer); if (r.origin === location.origin) store.set("arcade-home", r.pathname + r.search, sessionStorage); } catch { /* home is / */ }
@@ -125,7 +127,11 @@ async function runDesk() {
   const el = renderer.domElement;
   el.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw, pitch }; audio(); });
   el.addEventListener("pointermove", e => { if (drag) { yaw = drag.yaw - (e.clientX - drag.x) * 0.005; pitch = Math.max(0.05, Math.min(0.9, drag.pitch + (e.clientY - drag.y) * 0.004)); } });
-  addEventListener("pointerup", () => { drag = null; });
+  // the screen the player came through stands in the mist; a tap on it walks back out to the hall
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || pulled || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8 || e.target !== el) return;
+    ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+    if (ray.intersectObject(desk.door, true).length) act("not-today"); });
   const draft = { to: "", what: "" };
   let stage = "write";
   const html = () => stage === "write"
@@ -145,6 +151,7 @@ async function runDesk() {
   done();
   render();
   caption("The Ask: one sheet, one lever, and the mist.", 4);
+  caption("The lit screen in the mist leads back to the hall.", 5);
   const clock = new THREE.Clock(); let T = 0;
   (function frame() {
     requestAnimationFrame(frame); const dt = Math.min(0.05, clock.getDelta()); T += dt;
@@ -153,7 +160,7 @@ async function runDesk() {
     camera.position.copy(DESK.stand).add(off).add(V(0, 1.1, 0)); camera.lookAt(DESK.look);
     captionTick(T); renderer.render(scene, camera);
   })();
-  window.__arcade = { place: "desk", hall: () => hall, act };
+  window.__arcade = { place: "desk", hall: () => hall, act, door: desk.door, camera };
 }
 
 /* ===================================================================================================
@@ -179,6 +186,14 @@ async function runHall() {
   const standAt = id => { const b = built[id], n = b.normal.clone().setY(0); if (n.lengthSq() < 0.01) n.set(-Math.sign(b.screenAt.x), 0, 0); n.normalize();
     return b.screenAt.clone().setY(0).addScaledVector(n, id === "between" ? 0.75 : 0.6); };
   const STAND = Object.fromEntries(CABINETS.map(c => [c.id, standAt(c.id)]));
+  // a soft ring of light on the floor where a playable cabinet is played from (his note, 2026-11-03 19:44Z)
+  const ringTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+    const g = x.createRadialGradient(64, 64, 30, 64, 64, 62); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.55, "rgba(255,255,255,.9)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
+  const rings = CABINETS.filter(c => c.route && built[c.id]).map(c => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.0), new THREE.MeshBasicMaterial({ map: ringTex, color: new THREE.Color(c.colour), transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }));
+    m.rotation.x = -Math.PI / 2; m.position.copy(STAND[c.id]).setY(0.012); scene.add(m); return { id: c.id, m };
+  });
   const BENCH = V(-(AISLE - 0.55), 0, 1.25), BENCH_SEAT = V(-(AISLE + 0.12), 0, 1.25);
   const GATE_OUT = V(0.1, 0, GATE_Z + 1.6), GATE_IN = V(0.1, 0, GATE_Z - 2.6);
   const HALF = AISLE - 0.4, FAR = SLOT_Z(LAST) + 1.5;
@@ -209,9 +224,15 @@ async function runHall() {
     ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
     let best = null, bd = 0.7;
     if (PASS) {
+      // a tap anywhere on a lit cabinet: walk to it, or, standing at it already, drop the coin (his note, 2026-11-03 19:44Z)
+      const hit = ray.intersectObjects(built.hits, false)[0];
+      if (hit) { const id = hit.object.userData.cabinet, s = built[id].screenAt;
+        if (Math.hypot(meS.pos.x - s.x, meS.pos.z - s.z) < 1.2 && cardKey === "drop:" + id) { drop(id); return; }
+        meS.target = STAND[id].clone(); meS.face = id; info = false; return; }
       for (const c of CABINETS) { const d = ray.ray.distanceToPoint(built[c.id].screenAt); if (d < bd) { bd = d; best = STAND[c.id].clone(); } }
       if (ray.ray.distanceToPoint(V(-(AISLE + 0.2), 0.6, 1.25)) < 0.8 || ray.ray.distanceToPoint(V(-(AISLE + 0.35), 1.2, 2.7)) < 0.7) best = BENCH.clone();
     }
+    meS.face = null;
     if (!best) { const p = ray.ray.intersectPlane(floor, V(0, 0, 0)); if (!p) return; best = p; }
     best.x = Math.max(-HALF + 0.02, Math.min(HALF - 0.02, best.x));
     meS.target = best;
@@ -223,12 +244,18 @@ async function runHall() {
     if (k.has("w") || k.has("arrowup")) kd.add(fwd); if (k.has("s") || k.has("arrowdown")) kd.sub(fwd);
     if (k.has("d") || k.has("arrowright")) kd.add(right); if (k.has("a") || k.has("arrowleft")) kd.sub(right);
     if (kd.lengthSq() > 0) { dir = kd.normalize(); meS.target = null; }
-    else if (meS.target) { const d = meS.target.clone().sub(meS.pos).setY(0); if (d.length() < 0.06) meS.target = null; else dir = d.normalize(); }
+    else if (meS.target) { const d = meS.target.clone().sub(meS.pos).setY(0); if (d.length() < 0.06) { meS.target = null; arrive(); } else dir = d.normalize(); }
     if (!dir) return false;
     const s = Math.min(1.15 * dt, meS.target ? meS.target.distanceTo(meS.pos) : 9), nx = meS.pos.x + dir.x * s, nz = meS.pos.z + dir.z * s;
     if (walkable(nx, nz)) { meS.pos.x = nx; meS.pos.z = nz; } else if (walkable(nx, meS.pos.z)) meS.pos.x = nx; else if (walkable(meS.pos.x, nz)) meS.pos.z = nz; else { meS.target = null; return false; }
     const want = Math.atan2(dir.x, dir.z); let dy = want - meS.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); meS.yaw += dy * Math.min(1, dt * 8);
     return true;
+  }
+  // arriving at a cabinet the player tapped: turn to its screen, and the camera swings round over the shoulder to show it
+  let camTurn = null;
+  function arrive() {
+    const id = meS.face; meS.face = null; if (!id) return; const s = built[id].screenAt;
+    meS.yaw = Math.atan2(s.x - meS.pos.x, s.z - meS.pos.z); camTurn = meS.yaw + Math.PI + 0.75;
   }
   /* sitting on the bench: stance.js's crate sit, as the Friends' Fire seats a player */
   const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "spine", "neck"]) { const b = me.obj.getObjectByName(n); if (b) bones[n] = b; }
@@ -247,7 +274,7 @@ async function runHall() {
     const c = byId(id); if (!H.canDrop(hall, id, PASS)) return;
     commit(H.drop(hall, id, PASS)); me.hang(H.weight(hall));
     const b = built[id]; SOUND.coin(); showCard("pushing", null);
-    if (b.slots) for (const s of b.slots) s.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd27a).multiplyScalar(2.4) });
+    if (b.slotMat) b.slotMat.color.set(0xffd27a).multiplyScalar(2.4);
     if (b.marquee) b.marquee.material.color.setScalar(1.35);
     store.set("ctw-back", hallUrl({ from: id }), sessionStorage);   // each game's way home comes back to this cabinet
     push = { id, t: 0, from: camera.position.clone(), fov: camera.fov, to: b.screenAt.clone().addScaledVector(b.normal, 0.012), look: b.screenAt.clone(), href: c.route + (c.route.includes("?") ? "&" : "?") + (Q.get("skipHome") ? "skipHome=1&" : "") + "from=arcade" };
@@ -262,10 +289,13 @@ async function runHall() {
     else if (verb === "answer") { commit(H.answer(hall, id)); SOUND.ticket(); cardKey = ""; }
     else if (verb === "sit") { meS.sat = true; meS.target = null; meS.pos.copy(BENCH_SEAT); meS.yaw = Math.PI / 2; SOUND.sat(); cardKey = ""; }
     else if (verb === "stand") { meS.sat = false; meS.pos.copy(BENCH); cardKey = ""; }
+    else if (verb === "coins") { info = true; cardKey = ""; }
+    else if (verb === "gotit") { info = false; cardKey = ""; }
+    else if (verb === "tobench") { info = false; meS.target = BENCH.clone(); cardKey = ""; }
     else if (verb === "melt") { store.set("arcade-melting", "1", sessionStorage); store.set("ctw-back", hallUrl({ from: "change-machine" }), sessionStorage); leave("/between/land.html?block=ice" + (Q.get("skipHome") ? "&skipHome=1" : "")); }
   }
   onAct = act;
-  let pendingKeep = null, gateShown = false;
+  let pendingKeep = null, gateShown = false, info = false;
   function cards() {
     if (push) return;
     if (!PASS) {   // the visitor at the gate: one card, no countdown, shown once a visit
@@ -275,6 +305,9 @@ async function runHall() {
       return;
     }
     const p = meS.pos;
+    if (info) return showCard("info:" + hall.coins, card("Coins and tickets",
+      "You walk in with three coins. A cabinet marked INSERT COIN takes one, and pays you a ticket when you come back out: keep it on the prize counter's line, or let it go. To fill the purse again, sit on the bench by the change machine at the gate, or melt a block in it.",
+      btn("tobench", "Show me the bench"), btn("gotit", "Got it")));
     if (meS.sat) {
       const full = hall.coins >= H.FULL;
       return showCard("sat:" + full, card("The bench", full ? "Your purse hangs full again." : "You rest by the change machine, and the purse fills as you sit.", btn("stand", "Stand up")));
@@ -289,18 +322,28 @@ async function runHall() {
         <input id="ticketWord" maxlength="24" autocomplete="off" aria-label="One word" style="min-height:40px"><div class="row">${btn("hang:" + id, "Hang it on the line")}</div>`);
       if (t) return showCard("ticket:" + id, card("A ticket curls from the tray", "", btn("keep:" + id, "Keep it"), btn("letgo:" + id, "Let it go")));
       if (!near.route) return showCard("soon:" + id, card(near.name, "Lit soon."));
-      if (H.canDrop(hall, id, PASS)) return showCard("drop:" + id, card(near.name, "", btn("drop:" + id, "Drop a coin")));
-      return showCard("light:" + id, card(near.name, "Your purse hangs light. The bench by the change machine fills it."));
+      if (H.canDrop(hall, id, PASS)) return showCard("drop:" + id, card(near.name, KIND[near.gameType] || "", btn("drop:" + id, "Drop a coin")));
+      return showCard("light:" + id, card(near.name, "Your purse is empty. The bench by the change machine fills it.", btn("tobench", "Walk to the bench")));
     }
     if (Math.hypot(p.x - BENCH.x, p.z - BENCH.z) < 0.9 && hall.coins < H.FULL)
       return showCard("bench", card("The change machine", "Rest on the bench, or melt a block in the machine. Either fills the purse.", btn("sit", "Sit a while"), btn("melt", "Melt a block")));
     showCard("", null);
   }
 
+  /* the purse at the top of the screen: one coin drawn for each coin held, and a tap tells how coins and tickets work */
+  const KIND = { chance: "A game of chance. One coin plays.", skill: "A game of skill. One coin plays.", passion: "A game of passion. One coin plays." };
+  const purse = document.createElement("button"); purse.type = "button"; purse.id = "purseBtn";
+  purse.style.cssText = "display:inline-flex;align-items:center;gap:5px;letter-spacing:0";
+  const drawPurse = () => { purse.innerHTML = Array.from({ length: H.FULL }, (_, i) => `<span aria-hidden="true" style="width:13px;height:13px;border-radius:50%;box-sizing:border-box;${i < hall.coins ? "background:radial-gradient(circle at 35% 35%,#ffe7a3,#d9952e);border:1px solid #8a5a14" : "border:1.5px dashed rgba(255,255,255,.45)"}"></span>`).join("") + `<span style="margin-left:3px">Coins</span>`;
+    purse.setAttribute("aria-label", `Your purse holds ${hall.coins} of ${H.FULL} coins. How coins work`); };
+  let purseShown = -1;
+  purse.onclick = e => { e.stopPropagation(); audio(); info = !info; cardKey = ""; };
+  if (PASS) { $("#soundBtn").before(purse); drawPurse(); }
+
   /* the frame */
   const lit = built.lit.map(b => ({ m: b.screen.material, k: b.screen.material.color.r }));
   done();
-  if (PASS && !backFrom) { caption("Through the grey gate, the hall at dusk.", 4); caption(`The lamp hangs over ${today.name} today.`, 4); caption("Tap the floor to walk. Drag to look around.", 5); }
+  if (PASS && !backFrom) { caption("Through the grey gate, the hall at dusk.", 4); caption("Three coins in your purse. A cabinet that says INSERT COIN takes one.", 5); caption(`The lamp hangs over ${today.name} today.`, 4); caption("Tap a cabinet or the floor to walk. Drag to look around.", 5); }
   if (!PASS) caption("Through the gate, the hall glows in the dusk.", 5);
   if (backFrom && backFrom !== "change-machine") SOUND.ticket();
   if (backFrom === "change-machine") caption("The block melted, and the purse hangs full.", 5);
@@ -318,6 +361,9 @@ async function runHall() {
     puffer.holder.position.copy(pp); puffer.holder.rotation.y = dir; puffer.pose(dt);
     // attract loops (held still with reduced motion, FR-014)
     if (!STILL) lit.forEach((l, i) => l.m.color.setScalar(l.k * (0.92 + 0.08 * Math.sin(T * 2.2 + i * 1.7))));
+    if (PASS && purseShown !== hall.coins) { purseShown = hall.coins; drawPurse(); }
+    for (const r of rings) r.m.material.opacity = H.canDrop(hall, r.id, PASS) ? (STILL ? 0.55 : 0.4 + 0.25 * Math.sin(T * 3)) : 0.12;
+    for (const b of built.lit) if (b.insert) b.insert.visible = STILL || !H.canDrop(hall, b.lit.id, PASS) ? H.canDrop(hall, b.lit.id, PASS) : Math.sin(T * 4) > -0.4;
     if (!STILL) built.mist.forEach((s, i) => { s.position.x += Math.sin(T * 0.2 + i) * dt * 0.05; });
     for (const c of CABINETS) if (hall.known[c.id] === "unknown") { const s = built[c.id].screenAt; if (Math.hypot(meS.pos.x - s.x, meS.pos.z - s.z) < 3) commit(H.glimpse(hall, c.id)); }
     // camera: behind and above, turned by a drag, held inside the hall's walls
@@ -327,6 +373,8 @@ async function runHall() {
       me.holder.visible = camera.position.distanceTo(push.look) > 0.5;
       if (k > 0.85 && !push.out) { push.out = true; leave(push.href, { white: true }); }
     } else {
+      if (camTurn != null && !drag) { let d = camTurn - camYaw; d = Math.atan2(Math.sin(d), Math.cos(d)); camYaw += d * Math.min(1, dt * (STILL ? 60 : 4)); if (Math.abs(d) < 0.01) camTurn = null; }
+      if (drag && drag.moved) camTurn = null;
       const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
       const want = meS.pos.clone().add(off).add(V(0, 1.15, 0));
       if (PASS) { want.x = Math.max(-(AISLE - 0.2), Math.min(AISLE - 0.2, want.x)); want.z = Math.min(want.z, GATE_Z - 0.2); want.y = Math.min(want.y, 2.9); }
@@ -336,7 +384,7 @@ async function runHall() {
     renderer.render(scene, camera);
   }
   frame();
-  window.__arcade = { place: "hall", pass: PASS, hall: () => hall, me: meS, act, tap, built, stand: STAND, cam: (y, p) => { camYaw = y; if (p != null) camPitch = p; }, near: () => cardKey, camera, renderer };
+  window.__arcade = { place: "hall", pass: PASS, hall: () => hall, me: meS, act, tap, built, stand: STAND, cam: (y, p) => { camYaw = y; if (p != null) camPitch = p; }, near: () => cardKey, camera, renderer, info: () => info };
 }
 
 function captionTick(T) {
