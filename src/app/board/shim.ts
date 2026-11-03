@@ -64,49 +64,16 @@ export function boardShim(boardHome: string, returnTo = '/board', pageSha: strin
   // that took focus away land on the button it was aimed at before the page is rebuilt.
   const show = () => { if (typing()){ held = true; return; } held = false; notify(); };
   document.addEventListener('focusout', () => { if (held) setTimeout(() => { if (held && !typing()) show(); }, 1500); }, true);
+  // The pull and hold line is retired (Wendell, 2026-11-03: the live database is the truth, and the board is a view of
+  // it). A save is in the database the moment it is made, so the page no longer says how long main has waited, no
+  // longer offers Pull now, and no longer counts saves held for a Claude read. Main is a copy; it is not the page's
+  // business. This only clears a note a fault left behind when the store loads again.
   function pullNote(){
-    let el = document.getElementById('board-pull-note');
-    if (!el){ el = document.createElement('div'); el.id = 'board-pull-note';
-      el.style.cssText = 'font-size:.8rem;opacity:.75;text-align:center;padding:6px 8px 72px';
-      document.body.appendChild(el); }
-    const ago = mins => mins < 1 ? 'just now' : mins < 120 ? mins + ' min ago' : Math.round(mins / 60) + ' h ago';
-    const waiting = unrecorded && unrecorded.count > 0 && unrecorded.oldestReceivedAt ? unrecorded : null;
-    const wait = waiting ? Math.round((Date.now() - new Date(waiting.oldestReceivedAt)) / 60000) : 0;
-    const pulled = lastPull ? 'Last board pull: ' + ago(Math.round((Date.now() - new Date(lastPull.at)) / 60000)) + '.'
-      : 'Main has not recorded a pull from this board yet.';
-    if (waiting && wait > 60){
-      el.textContent = 'Warning: ' + waiting.count + (waiting.count === 1 ? ' save has' : ' saves have') + ' waited for main '
-        + (wait < 120 ? wait + ' min' : Math.round(wait / 60) + ' h') + ' (the oldest). ' + pulled
-        + ' Your answers are safe in the board database. Claude lands them on main at the next pickup. Pull now asks for it sooner.';
-      el.style.color = 'var(--warn, #b45309)';
-    } else { el.textContent = pulled + heldNote(); el.style.color = ''; }
-    pullButton(el);
+    const el = document.getElementById('board-pull-note');
+    if (el) el.remove();
+    const ask = document.getElementById('board-pull-ask');
+    if (ask) ask.remove();
   }
-  // "Pull now": save a Send ticket (row pull:now) in the Claude lane. The next pickup hands it to a session that runs
-  // board/live_pull.py and lands his saves on main; it is not instant, so the line under the button says when.
-  function pullButton(note){
-    let box = document.getElementById('board-pull-ask');
-    if (box) return;
-    box = document.createElement('div'); box.id = 'board-pull-ask';
-    box.style.cssText = 'text-align:center;font-size:.8rem;padding:0 8px 4px';
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Pull now';
-    b.style.cssText = 'font:inherit;padding:6px 14px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
-    const m = document.createElement('div'); m.style.cssText = 'opacity:.75;padding-top:4px';
-    b.onclick = async () => {
-      b.disabled = true; m.textContent = 'Asking…';
-      try {
-        const r = await fetch('/api/work/send', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pull: true})});
-        if (!r.ok) throw new Error(String(r.status));
-        m.textContent = 'Asked. Claude lands your saves on main at the next pickup, within the hour.';
-      } catch (e){ m.textContent = 'The ask did not save (' + (e && e.message || 'error') + '). Press again.'; }
-      setTimeout(() => { b.disabled = false; }, 60000);
-    };
-    box.appendChild(b); box.appendChild(m);
-    note.parentNode.insertBefore(box, note);
-    note.style.paddingTop = '0';
-  }
-  // Saves the pull holds on purpose (a Tap the Vein menu waits for the morning read) are not late; say so, once.
-  function heldNote(){ const n = unrecorded && unrecorded.held; return n ? ' ' + n + (n === 1 ? ' save is' : ' saves are') + ' held for a Claude read.' : ''; }
   // A store that will not load turns saving off; say why on the page, so the cause is not a guess.
   function showFault(e){
     console.error(e);
