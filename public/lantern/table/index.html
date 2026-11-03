@@ -17,6 +17,16 @@
     width: min(88vw, 620px); text-align: center; font: 1.02rem/1.45 Marcellus, Georgia, serif; color: #f3ece2;
     text-shadow: 0 1px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.6); pointer-events: none; margin: 0; }
   @media (max-width: 600px) { .cap { font-size: .96rem; } }
+  /* the goal: lettered low in the hall under the table, the one thing the whole machine works toward */
+  .goal { position: fixed; z-index: 5; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: min(88vw, 620px); text-align: center; margin: 0; pointer-events: none; color: #f6e7c1;
+    text-shadow: 0 1px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.7); }
+  .goal[hidden] { display: none; }
+  .goal b { display: block; font: 400 1.32rem/1.25 Marcellus, Georgia, serif; color: #ffe3a1; text-wrap: balance; }
+  .goal span { display: block; margin-top: 4px; font: .92rem/1.4 Marcellus, Georgia, serif; color: #e8dcc8; }
+  @media (max-width: 600px) { .goal b { font-size: 1.12rem; } .goal span { font-size: .86rem; } }
+  /* typing your own goal: the plate in the scene is what shows the words, so the field itself stays out of sight */
+  .letter { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; font-size: 16px; border: 0; padding: 0; }
   .loading { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; background: #0a0908; color: #e8dcc8;
     font: 1rem/1.4 Marcellus, Georgia, serif; text-align: center; transition: opacity .8s; }
   .loading.gone { opacity: 0; pointer-events: none; }
@@ -31,6 +41,8 @@
 </head><body>
 <div id="stage" role="img" aria-label="Lantern Hall: an empty hex table with a brass machine set into it, under a hanging lantern. Tap an object on the table to work it."></div>
 <p class="cap" id="caption" aria-live="polite"></p>
+<p class="goal" id="goal" hidden><b id="goalName"></b><span id="goalLeft"></span></p>
+<input class="letter" id="goalInput" type="text" maxlength="80" autocomplete="off" enterkeyhint="done" aria-label="Your goal, as the plate shows it">
 <div class="loading" id="loading"><div><p>The lantern hall is lighting its lanterns.</p><p id="loadStep" style="font-size:.8rem;opacity:.6">starting</p></div></div>
 <script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="The 3D library did not load. Check the connection and reload.";}},20000);</script>
 <script type="module" src="./table.js"></script>
