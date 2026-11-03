@@ -6,6 +6,7 @@ import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
 import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 /* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
+import { COPY as DECK_COPY } from "./friendcraft/deck.js";
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
@@ -1756,7 +1757,7 @@ function refreshHud() {
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
   else if (isHome(g) && satchelOpen && minuteOn()) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap the mirror in your satchel, then a glowing spot on the floor.";
   else if (minuteOn()) hintText = minuteHint();
-  else if (isHome(g) && mclock.beat === "open") hintText = "The doorway is open. Choose where you want to go when you are ready. A blank scroll waits on your shelf.";
+  else if (isHome(g) && mclock.beat === "open") hintText = bookWaits() ? DECK_COPY.open : "The doorway is open. Choose where you want to go when you are ready. A blank scroll waits on your shelf.";
   else if (isHome(g) && portalTo && !portalOpen()) hintText = `${portalTo.name ? portalTo.name + " invited you" : "You were invited"} to a room. The doorway opens at the end of your first minute here.`;
   else if (isHome(g) && portalOpen()) hintText = "The doorway by the mirror is open. Walk up to choose a place.";
   else if (isHome(g) && satchelOpen) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap an item in your satchel, then a glowing spot that fits it. Tap a placed item to put it back.";
@@ -3292,7 +3293,12 @@ async function sparkUrl(id) {
   let token = id === gardenId ? myInvite : null;
   if (!token) { const j = await api("/api/between/" + id + "/poll", {}); token = j.invite || null; }
   if (!token) throw fail("unavailable", "no link");
-  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token);
+  return inviteLink(id, token);
+}
+/* A spark's invitation link. A Friendcraft steward's carries `&game=friendcraft`, which the friend's page turns into one
+   enrolment call (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003). Every other link is unchanged. */
+function inviteLink(id, token) {
+  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token) + (list && list.steward ? "&game=friendcraft" : "");
 }
 async function sparkLink(to, note) {
   const link = await sparkUrl(to.id);
@@ -3389,7 +3395,7 @@ function minuteHint() {
   const beat = mclock.beat, st = mstate();
   if (!beat) return "";
   if (beat === "hope" && !mirrorSpot) return "Your mirror is still in your satchel. Set it down to look into it, or leave it for later.";
-  return MINUTE_PROMPTS[beat] || "";
+  return beat === "open" && bookWaits() ? DECK_COPY.open : MINUTE_PROMPTS[beat] || "";
 }
 /* Your shelf, tapped: the blank scroll to write on, a sealed one to open, a keepsake to read again. */
 function shelfTap(kind, i) {
@@ -3551,7 +3557,7 @@ document.addEventListener("click", async ev => {
     else if (a === "endNo" || a === "endWithdraw") await op("garden/main", "update", { ending: null });
     else if (a === "copy") await takeCopy();
     else if (a === "inviteLink") {
-      const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(gardenId) + "&invite=" + encodeURIComponent(myInvite);
+      const link = inviteLink(gardenId, myInvite);
       try { await navigator.clipboard.writeText(link); toast("The invitation link is on your clipboard."); }
       catch { window.prompt("Copy the invitation link:", link); }
     }
@@ -3590,7 +3596,7 @@ document.addEventListener("click", async ev => {
     }
     else if (a === "invBack") { await op("garden/main", "update", { invitations: { [id]: null } }); renderSheet(); }
     else if (a === "joinShare" || a === "joinCopy") {
-      const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(gardenId) + "&invite=" + encodeURIComponent(myInvite);
+      const link = inviteLink(gardenId, myInvite);
       const note = (($("#jNote") || {}).value || "").trim();
       const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
       if (a === "joinShare") { try { await navigator.share({ title: "The Between", text }); } catch {} }
@@ -3680,6 +3686,31 @@ addEventListener("keydown", e => { if (e.key === "Escape" && sheetName && (sheet
 
 /* ---------- the homeroom's private doc and the room list ---------- */
 const homePath = () => "data/users/" + me + "/home";
+/* The friend's own deck: a private doc of its own beside `home` (rules.ts deckWrite), so the hope told at the mirror and the
+   goals a friend means to share never sit in one record (Six-faces-council spec .specify/specs/friendcraft-deck FR-004). */
+let myDeck = {};
+const setDeck = doc => { myDeck = doc && typeof doc === "object" ? { ...doc } : {}; };
+const deckPath = () => "data/users/" + me + "/deck";
+async function deckOp(data) {
+  if (!homeId) throw fail("invalid_argument", "no homeroom");
+  const j = await api("/api/between/" + homeId + "/doc", { path: deckPath(), op: "update", data });
+  setDeck(j.doc); refresh();
+}
+const friendcraftOn = () => !!(list && (list.games || []).includes("friendcraft"));
+const deckEmpty = () => !Object.values(myDeck.goals || {}).some(g => g && g.text);
+/* The first minute's last line names the book, for a friend enrolled in Friendcraft with an empty deck (FR-006). */
+const bookWaits = () => friendcraftOn() && deckEmpty();
+/* The link's &game=friendcraft: one enrolment call, once, on load, for a steward's spark link (FR-003). The page keeps the
+   game in the list so the book shows its goal leaves at once. */
+async function joinFriendcraft(want, wantInvite) {
+  if (!want || !wantInvite || new URLSearchParams(location.search).get("game") !== "friendcraft") return;
+  try {
+    const r = await fetch("/api/friendcraft/join", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ room: want, invite: wantInvite }) });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (list && Array.isArray(j.games)) list.games = j.games;
+  } catch {}
+}
 function setHome(doc) {
   myHome = { ...(doc || {}) };
   if (list && list.home) Object.assign(list.home, { look: myHome.look ?? null, lastCheckin: myHome.lastCheckin ?? null, goals: goalsList().map(([id, x]) => ({ id, ...x })) });
@@ -3854,7 +3885,7 @@ function refresh() {
    =================================================================================================== */
 let pollTimer = null, polling = false, pollAgain = false, stopped = false, roomOk = null, storeDown = false;
 function pollSoon() { if (!gardenId || stopped) return; if (polling) { pollAgain = true; return; } clearTimeout(pollTimer); pollTimer = setTimeout(poll, 120); }
-function toLogin() { stopped = true; location.href = "/login?returnTo=" + encodeURIComponent(location.pathname + location.search); }
+function toLogin() { stopped = true; location.href = (new URLSearchParams(location.search).get("invite") ? "/signup" : "/login") + "?returnTo=" + encodeURIComponent(location.pathname + location.search); }
 function stop(msg) {
   stopped = true; clearTimeout(pollTimer);
   $("#loadMsg").textContent = msg; $("#loadStep").textContent = ""; $("#loading").hidden = false; $("#hud").hidden = true;
@@ -3877,6 +3908,7 @@ function take(j) {
   myInvite = j.invite || null;
   myPouch = j.mine && j.mine.pouch && typeof j.mine.pouch === "object" ? j.mine.pouch : null;
   if (isHome(garden) && j.mine && j.mine.home && typeof j.mine.home === "object") setHome(j.mine.home);
+  if (isHome(garden) && j.mine && j.mine.deck && typeof j.mine.deck === "object") setDeck(j.mine.deck);
   gardenLoaded = true;
   refresh();
 }
@@ -3924,6 +3956,7 @@ let booted = false;
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     if (STANDIN_ROOM) throw { code: "standin" };
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
+    await joinFriendcraft(want, wantInvite);
     /* An invitation you opened is kept until you are in its room, so the doorway still offers it when you come back to the
        homeroom without the link (pt1-two-player-check: the link got lost later in the playtest). */
     const keptKey = "between.invited." + me, kept = me ? ls.get(keptKey) : null;
@@ -3955,7 +3988,7 @@ let booted = false;
   }
   if (first) {
     take(first);
-    if (isHome(garden)) setHome((first.mine || {}).home);
+    if (isHome(garden)) { setHome((first.mine || {}).home); setDeck((first.mine || {}).deck); }
     if (isMember(garden)) {
       myPrivate = { ...((first.mine || {}).garden || {}) };
       awaySince = myPrivate.lastSeen || null;
@@ -4005,7 +4038,7 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
-  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data),
+  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
   openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
@@ -4023,5 +4056,6 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
 // ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation); ?nook=1&coins=who&games=flirtcraft sits at the table and stops at who the toss is for
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
+// ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null }); }).catch(e => noteError(e, "coins"));

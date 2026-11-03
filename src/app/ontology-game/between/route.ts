@@ -25,7 +25,10 @@ export async function GET(req: NextRequest) {
   const player = await currentPlayer()
   if (!player) {
     const back = req.nextUrl.pathname + req.nextUrl.search
-    return NextResponse.redirect(new URL('/login?returnTo=' + encodeURIComponent(back), req.url))
+    // A friend who opens a spark's invitation link has no account yet: the first screen is "Create your account", with
+    // "Sign in" one tap away (Six-faces-council spec .specify/specs/friendcraft-deck FR-001). No invite keeps the sign-in.
+    const to = req.nextUrl.searchParams.get('invite') ? '/signup' : '/login'
+    return NextResponse.redirect(new URL(to + '?returnTo=' + encodeURIComponent(back), req.url))
   }
   return new NextResponse(withChalk(BETWEEN_PAGE), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin' },

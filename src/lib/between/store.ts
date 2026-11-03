@@ -204,3 +204,36 @@ export async function enrolledGames(playerId: string): Promise<string[]> {
   }).catch(() => [])
   return [...new Set(rows.map(r => r.instance.slug))].filter(g => (TABLE_GAMES as readonly string[]).includes(g))
 }
+
+/**
+ * Friendcraft's stewards (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003): the players who hold
+ * `roleKey: "steward"` on the `friendcraft` instance. In slice 1 only a steward's spark link enrols a friend; whether any
+ * member's link may is reserved (the spec's Reserved items).
+ */
+export async function isSteward(playerId: string): Promise<boolean> {
+  const row = await db.instanceMembership.findFirst({
+    where: { playerId, roleKey: 'steward', instance: { slug: 'friendcraft' } },
+    select: { id: true },
+  }).catch(() => null)
+  return !!row
+}
+
+/**
+ * Enrols the signed-in player in Friendcraft through a steward's spark link: the token must be that spark's live invitation
+ * token and its starter a steward. Called twice it changes nothing. `null` means the link does not open Friendcraft.
+ */
+export async function joinFriendcraft(playerId: string, room: unknown, invite: unknown): Promise<string[] | null> {
+  if (typeof room !== 'string' || typeof invite !== 'string') return null
+  const found = await whoIs(room, playerId, invite)
+  if (!found || !found.who.invited) return null
+  if (asDoc(found.garden.data).phase === 'closed') return null
+  if (!(await isSteward(found.garden.startedById))) return null
+  const instance = await db.instance.findUnique({ where: { slug: 'friendcraft' }, select: { id: true } }).catch(() => null)
+  if (!instance) return null
+  await db.instanceMembership.upsert({
+    where: { instanceId_playerId: { instanceId: instance.id, playerId } },
+    create: { instanceId: instance.id, playerId },
+    update: {},
+  })
+  return enrolledGames(playerId)
+}
