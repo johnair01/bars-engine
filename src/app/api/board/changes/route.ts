@@ -17,6 +17,7 @@ import { councilCaller } from '@/lib/work/lanes'
 import { parseBoard } from '@/lib/board/save'
 import { changesAfter } from '@/lib/board/store'
 import { PAGE_PATHS, pushedSha } from '@/lib/board/content-store'
+import { leanDoc, originOf } from '@/lib/board/pictures'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -32,5 +33,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'after is a log number, 0 or more' }, { status: 400 })
   const [log, page] = await Promise.all([changesAfter(board, after),
     PAGE_PATHS[board] && !(board === 'nonprofit' && process.env.BOARD_PAGE_URL) ? pushedSha(PAGE_PATHS[board]) : null])
-  return NextResponse.json({ ...log, page }, { headers: NO_STORE })
+  // Pictures on demand, as in GET /api/board/saves: a changed look carries links, not its pictures.
+  const origin = originOf(req)
+  const changes = log.changes.map((ch) => ({ ...ch, data: leanDoc(ch.data, origin, { board, collection: ch.collection, docId: ch.docId }) }))
+  return NextResponse.json({ ...log, changes, page }, { headers: NO_STORE })
 }
