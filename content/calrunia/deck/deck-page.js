@@ -77,14 +77,14 @@ const ACTS = {
     if (!c) {
       const pick = el("select", "dk-field"); S.ports.forEach((p) => pick.appendChild(Object.assign(el("option", "", p.name), { value: p.id })));
       const act = field("One money move, fifteen minutes"), ask = field("What it asks for (optional)");
-      return say(crateAt(), null, S.moves.length ? "The hatch is clear for today. Tomorrow's crate is already chalked." : "The hatch is clear. Chalk tomorrow's crate?", pick, act, ask,
+      return say(crateAt(), null, S.moves.length ? "The hatch is clear for today. Tomorrow's crate waits in chalk." : "The hatch is clear. Chalk tomorrow's crate?", pick, act, ask,
         row(btn("Chalk it", () => { if (!act.value.trim()) return act.focus(); TH.chalk(S, pick.value, act.value.trim(), ask.value.trim(), now()); done(); say(crateAt(), null, "Chalked. It will be on the hatch in the morning."); })));
     }
     if (c.state !== "waiting") return say(crateAt(), null, c.state === "sent" ? "Today's crate sailed. The tide has turned." : c.state === "sat" ? "You sat with today's crate. The tide has turned." : "The crew has today's crate. The tide has turned.");
     const b = TH.bounty(S, now());
     const head = portName(c.port) + (b ? " · it has waited, and pays " + (TH.PAY.crate + b) : "");
     if (c.presence == null) {
-      return say(crateAt(), head, c.action + (c.ask ? " Ask: " + c.ask + "." : ""), el("p", "dk-q", "How here are you, right now?"),
+      return say(crateAt(), head, c.action + (c.ask ? " Ask: " + c.ask + "." : ""), el("p", "dk-q", "How present are you right now? 1 is far away, 5 is fully here."),
         row(...[1, 2, 3, 4, 5].map((n) => btn(String(n), () => { TH.presence(S, n, now()); done(); ACTS.crate(); }, true))));
     }
     if (c.spiritSide) return ACTS.spirit();
@@ -94,11 +94,11 @@ const ACTS = {
   spirit() {
     const at = PARTS.find((p) => p.id === "spirit").hit[0].pos.clone().add(new THREE.Vector3(0, 1.1, 0));
     const c = S.crate;
-    if (!c || c.state !== "waiting") return say(at, "The spirit", "The deck is quiet. I'm still here.");
+    if (!c || c.state !== "waiting") return say(at, "The spirit", "Nothing waits on the deck. I'm still here.");
     if (c.spiritSide) return say(at, "The spirit", "I go far away when money comes up. Sit with me before you lift it?", row(btn("Sit with it", () => sit(0)), btn("Lift it anyway", () => { c.spiritSide = false; done(); ACTS.crate(); }, true)));
-    say(at, "The spirit", "I'm the part of you that leaves when money comes up. I'll stay if you sit with me.", row(btn("Sit with it", () => sit(0), true)));
+    say(at, "The spirit", "I'm the voice that leaves when money comes up. I'll stay if you sit with me.", row(btn("Sit with it", () => sit(0), true)));
   },
-  gangway() { if (S.crate && S.crate.state === "waiting") return say(new THREE.Vector3(-9, 0.6, -2.6), null, "The trade boat waits. When the crate is sent out in the world, carry it down.", row(btn("It's sent", () => send()))); say(new THREE.Vector3(-9, 0.6, -2.6), null, "The gangway is clear."); },
+  gangway() { if (S.crate && S.crate.state === "waiting") return say(new THREE.Vector3(-9, 0.6, -2.6), null, "The trade boat waits. When the crate is sent out in the world, carry it down.", row(btn("I sent it", () => send()))); say(new THREE.Vector3(-9, 0.6, -2.6), null, "The gangway is clear."); },
   bell() {
     const at = new THREE.Vector3(4.4, DY + 3.4, -0.4);
     if (!S.crate || S.crate.state !== "waiting") return say(at, "The crew bell", "The crew has nothing waiting from you.");
@@ -107,7 +107,7 @@ const ACTS = {
       const c = S.crate, line = "Today's money move, handed to you: " + c.action + " (" + portName(c.port) + "). " + (note.value.trim() ? "Note: " + note.value.trim() : "");
       try { navigator.clipboard.writeText(line); } catch (e) { /* the line stays in the record */ }
       live.ringing = clock.elapsedTime + 1.6; live.crew = true; TH.release(S, "crew", now(), note.value.trim()); done();
-      say(at, "The crew bell", "Rung. The note is copied, ready to paste to Claude. The tide has turned.");
+      say(at, "The crew bell", "The bell rang. I copied your note; paste it to Claude. The tide has turned.");
     })));
   },
   studio(h) {
@@ -115,7 +115,7 @@ const ACTS = {
     if (TH.tideTurned(S)) return say(at, "A studio boat", "The tide carries the studio boats today. Sail where you love to go.");
     say(at, "A studio boat", "The tide is in until today's crate is off. Row against it for one vibeulon?", row(btn("Row out", () => {
       const r = TH.rowAgainst(S, now()); if (!r.ok) return say(at, "A studio boat", "The hold has no vibeulon to row with yet. Today's crate pays three.");
-      live.rowing = h.i; done(); say(at, "A studio boat", "Rowing out against the tide.");
+      live.rowing = h.i; done(); say(at, "A studio boat", "You row out against the tide.");
     }, true)));
   },
   boat(h) {
@@ -146,8 +146,8 @@ function send() {
 // The 3-2-1 with the spirit (Big Mind's three faces): look at it, talk to it, be it. The words stay on screen only.
 function sit(step) {
   const at = PARTS.find((p) => p.id === "spirit").hit[0].pos.clone().add(new THREE.Vector3(0, 1.1, 0));
-  const steps = ["Three. Look at it: what does the voice that leaves look like? Say it as “it”.", "Two. Talk to it: what does it want you to know?", "One. Be it: say “I am…” and let it speak."];
-  if (step >= steps.length) { TH.release(S, "sat", now()); done(); return say(at, "The spirit", "Thank you for sitting with me. That burned into a vibeulon, and the tide has turned."); }
+  const steps = ["Three: look at it. What does the voice that leaves look like? Call it “it”.", "Two: talk to it. What does it want you to know?", "One: be it. Say “I am…” and let it speak."];
+  if (step >= steps.length) { TH.release(S, "sat", now()); done(); return say(at, "The spirit", "Thank you for sitting with me. That minted a vibeulon, and the tide has turned."); }
   const f = field("", true);
   say(at, "Sitting with the spirit", steps[step], f, row(btn(step < 2 ? "Next" : "Done", () => sit(step + 1)), btn("Rest here instead", hush, true)));
 }
