@@ -135,7 +135,7 @@ async function runDesk() {
   const draft = { to: "", what: "" };
   let stage = "write";
   const html = () => stage === "write"
-    ? `<b>The Ask</b><div class="t">Write down who you will ask, and for what. Both stay on this phone.</div>
+    ? `<b>The Ask</b><div class="t">Write down who you will ask, and for what. Both stay on this device.</div>
        <label class="t">Who<input id="askTo" maxlength="80" autocomplete="off" style="width:100%;box-sizing:border-box;margin-top:4px" value="${esc(draft.to)}"></label>
        <label class="t">What for<textarea id="askWhat" maxlength="280" rows="2" style="width:100%;box-sizing:border-box;margin-top:4px">${esc(draft.what)}</textarea></label>
        <div class="row">${btn("written", "Write it down")}${btn("not-today", "Not today")}</div>`
@@ -284,6 +284,8 @@ async function runHall() {
     const [verb, id] = a.split(":");
     if (verb === "drop") drop(id);
     else if (verb === "keep") { pendingKeep = id; cardKey = ""; }
+    else if (verb === "notyet") { pendingKeep = null; cardKey = ""; }
+    else if (verb === "walkto") { meS.target = STAND[id].clone(); meS.face = id; cardKey = ""; }
     else if (verb === "hang") { const w = ($("#ticketWord") || {}).value || ""; commit(H.keep(hall, id, w)); hangLine(hall.line); pendingKeep = null; SOUND.keep(); cardKey = ""; caption("Your ticket hangs on the line over the prize counter.", 4); }
     else if (verb === "letgo") { commit(H.letGo(hall, id)); SOUND.letgo(); cardKey = ""; caption("The ticket drops into the change machine's hopper.", 4); }
     else if (verb === "answer") { commit(H.answer(hall, id)); SOUND.ticket(); cardKey = ""; }
@@ -305,9 +307,11 @@ async function runHall() {
       return;
     }
     const p = meS.pos;
-    if (info) return showCard("info:" + hall.coins, card("Coins and tickets",
-      "You walk in with three coins. A cabinet marked INSERT COIN takes one, and pays you a ticket when you come back out: keep it on the prize counter's line, or let it go. To fill the purse again, sit on the bench by the change machine at the gate, or melt a block in it.",
-      btn("tobench", "Show me the bench"), btn("gotit", "Got it")));
+    // the purse card says only what the player has met so far (critique 2026-11-03: four ideas in one block was too many)
+    if (info) { const met = hall.line.length > 0 || Object.keys(hall.tray).some(k => hall.tray[k]);
+      return showCard("info:" + hall.coins + met, card("Coins and tickets",
+        "Three coins a visit. A cabinet marked INSERT COIN takes one." + (met ? " Each game pays a ticket: hang it on the line over the prize counter, or let it go." : "") + " Out of coins? Sit on the bench by the gate.",
+        btn("tobench", "Walk to the bench"), btn("gotit", "Got it"))); }
     if (meS.sat) {
       const full = hall.coins >= H.FULL;
       return showCard("sat:" + full, card("The bench", full ? "Your purse hangs full again." : "You rest by the change machine, and the purse fills as you sit.", btn("stand", "Stand up")));
@@ -319,14 +323,15 @@ async function runHall() {
       const id = near.id, t = hall.tray[id];
       if (t && t.waiting) return showCard("ask-wait", card("Your ask's ticket waits", "You asked. What came back?", btn("answer:yes", "A yes"), btn("answer:no", "A no"), btn("answer:silence", "Silence")));
       if (t && pendingKeep === id) return showCard("keep:" + id, `<b>Keep it</b><div class="t">One word for the ticket, if you want one.</div>
-        <input id="ticketWord" maxlength="24" autocomplete="off" aria-label="One word" style="min-height:40px"><div class="row">${btn("hang:" + id, "Hang it on the line")}</div>`);
-      if (t) return showCard("ticket:" + id, card("A ticket curls from the tray", "", btn("keep:" + id, "Keep it"), btn("letgo:" + id, "Let it go")));
-      if (!near.route) return showCard("soon:" + id, card(near.name, "Lit soon."));
+        <input id="ticketWord" maxlength="24" autocomplete="off" aria-label="One word"><div class="row">${btn("hang:" + id, "Hang it on the line")}${btn("notyet", "Not yet")}</div>`);
+      if (t) return showCard("ticket:" + id, card("A ticket curls from the tray", "Hang it on the line over the prize counter, or let it drop into the change machine.", btn("keep:" + id, "Keep it"), btn("letgo:" + id, "Let it go")));
+      if (!near.route) { const open = CABINETS.find(c => c.route && built[c.id]);   // never a dead end: point to a cabinet that plays
+        return showCard("soon:" + id, card(near.name, open ? `This one lights soon. ${open.name} takes a coin tonight.` : "This one lights soon.", ...(open ? [btn("walkto:" + open.id, "Walk to " + open.name)] : []))); }
       if (H.canDrop(hall, id, PASS)) return showCard("drop:" + id, card(near.name, KIND[near.gameType] || "", btn("drop:" + id, "Drop a coin")));
       return showCard("light:" + id, card(near.name, "Your purse is empty. The bench by the change machine fills it.", btn("tobench", "Walk to the bench")));
     }
     if (Math.hypot(p.x - BENCH.x, p.z - BENCH.z) < 0.9 && hall.coins < H.FULL)
-      return showCard("bench", card("The change machine", "Rest on the bench, or melt a block in the machine. Either fills the purse.", btn("sit", "Sit a while"), btn("melt", "Melt a block")));
+      return showCard("bench", card("The change machine", "Rest on the bench, or melt a block in the machine. Either fills the purse.", btn("sit", "Sit a while"), btn("melt", "Melt a block (a short trip out)")));
     showCard("", null);
   }
 

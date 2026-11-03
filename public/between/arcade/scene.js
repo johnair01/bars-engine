@@ -224,15 +224,15 @@ function cabinet({ side, z, kind, lit = null, ch1 = false }) {
   // the top: a marquee housing over the screen, or the candy cabinet's thin lit strip on its rounded cap
   if (kind === "candy") {
     const a = THREE.MathUtils.degToRad(40);
-    const mm = lit ? new THREE.MeshBasicMaterial({ map: canvasTex(512, 64, marqueeArt(lit.name, hue, lit.route ? null : "lit soon")) }) : glow(pick(SCREEN_HUES), 0.3);
+    const mm = lit ? new THREE.MeshBasicMaterial({ map: canvasTex(512, 64, marqueeArt(lit.name, hue, lit.route ? "insert coin" : "lit soon")) }) : glow(pick(SCREEN_HUES), 0.16);
     out.marquee = quad(w * 0.8, lit ? 0.1 : 0.07, mm, g, V(0, top - cap + cap * Math.sin(a), face - cap + cap * Math.cos(a) + 0.006), new THREE.Euler(-(Math.PI / 2 - a), 0, 0));
     cyl(0.18, 0.48, 0, 0, 0.5, M.stool, g, 10);                                               // the stool it is played from
   } else if (marq) {
     box(w + 0.06, marq, d * 0.8 + 0.06, 0, top + marq / 2 - 0.01, -(0.6 * d - 0.03), M.trim, g);
     const mz = ch1 ? -(0.1 * d - 0.022) + 0.002 : face + 0.062 + 0.001;
     const mm = ch1 ? new THREE.MeshBasicMaterial({ map: canvasTex(512, 128, marqueeArt("Chapter 1", "#f2c55c")), fog: false })
-      : lit ? new THREE.MeshBasicMaterial({ map: canvasTex(512, 128, marqueeArt(lit.name, hue, lit.route ? null : "lit soon")) })
-      : glow(pick(SCREEN_HUES), 0.3);
+      : lit ? new THREE.MeshBasicMaterial({ map: canvasTex(512, 128, marqueeArt(lit.name, hue, lit.route ? "insert coin" : "lit soon")) })
+      : glow(pick(SCREEN_HUES), 0.16);
     out.marquee = quad(w * 0.92, marq * 0.7, mm, g, V(0, top + marq / 2 - 0.01, mz), new THREE.Euler(0, 0, 0));
     for (const e of [-1, 1]) box(0.04, top + marq * 0.6, d + 0.02, e * (w / 2 + 0.01), (top + marq * 0.6) / 2, -d / 2, M.trim, g);
   }
@@ -254,7 +254,7 @@ export const GATE_Z = 5.2, LAST = 64;
 export const SLOT = SLOT_Z;
 export async function build({ today = "ask", still = false } = {}) {
   await document.fonts.load("64px Marcellus").catch(() => {});
-  for (let i = 0; i < 9; i++) ATTRACT.push(screenMat(canvasTex(128, 96, attract(SCREEN_HUES[i % 6], i % 3)), 0.42));
+  for (let i = 0; i < 9; i++) ATTRACT.push(screenMat(canvasTex(128, 96, attract(SCREEN_HUES[i % 6], i % 3)), 0.24));
   const L = SLOT_Z(LAST) - 2, LEN = GATE_Z - L;
   // floor, an arcade carpet runner down the aisle, ceiling, back walls (seen through the 0.45 m gaps)
   box(BACK_WALL * 2 + 0.2, 0.1, LEN, 0, -0.05, (GATE_Z + L) / 2, M.floor);
