@@ -1,0 +1,24 @@
+# Tasks: Ember economy decomposition
+
+proof: HARVEST.md in this folder, the ported sim tests' output, and each retirement PR's Vercel preview of the Between
+preview: each retirement PR's Vercel preview, opened at `/ontology-game/between?nook=1&skipHome=1`
+
+## Phase 0: falsify
+
+- [ ] T001 [claude] Run mtgoa-game's four sim tests in place and record the results in HARVEST.md (FR-001, FR-002)
+
+## Phase 1: harvest
+
+- [ ] T002 [claude] Write HARVEST.md, H1 to H9, with the commit read at; count unconverted initialVibeulons (H9) (FR-001)
+- [ ] T003 [claude] Port the stress track, contagion and element pool to `src/lib/ember-economy/harvest/` with their sim tests passing (FR-002)
+- [ ] T004 [claude] Write the Show Up finding and its sim result into HARVEST.md; cite it from ember-to-vibeulon (FR-003)
+- [ ] T005 [claude] Draft DaemonSpiritLineage against the live Daemon, BetweenDaemon and BetweenSpirit shapes in plan.md (FR-004)
+
+## Phase 2: retire, one PR each
+
+- [ ] T006 [claude] Remove `mtgoa-game/` and its tsconfig exclude, naming the T003 PR (FR-005)
+- [ ] T007 [claude] Remove `understood-game/` (FR-006)
+- [ ] T008 [claude] Rebuild the deck templates with five moves and charge as playCost; post the Open Up cards as a look on the board before merge (FR-007)
+- [ ] T009 [claude] Compost the four charge-routing stubs (FR-008)
+- [ ] T010 [claude] Migrate DaemonSpiritLineage and join the rows (FR-009)
+- [ ] T011 [claude] Retire StarterPack.initialVibeulons: stop the writers, convert once, drop the column (FR-010)
