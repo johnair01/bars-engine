@@ -291,7 +291,11 @@ export function buildHollow(scene, opts = {}) {
     leaf: new THREE.MeshStandardMaterial({ color: 0x5e8a3a, roughness: 0.75, side: THREE.DoubleSide }),
     rope: new THREE.MeshStandardMaterial({ color: 0x9c7b52, roughness: 1 }),
     clay: new THREE.MeshStandardMaterial({ color: 0xa8603a, roughness: 0.8 }),
-    soot: new THREE.MeshBasicMaterial({ color: 0x120b07 }),
+    /* The firebox's back wall (fb-look-01's known flaw, the nook fireplace mouth reading black): soot-dark stone that the
+       fire's own light warms, with a glow rising from the bed of the fire and fading into smoke-dark near the lintel, so the
+       mouth reads as a lit hollow, not a hole. Its glow follows the fire (update sets emissiveIntensity from hearthFx.k). */
+    soot: new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.95, emissive: 0xffffff, emissiveIntensity: 1,
+      emissiveMap: canvasTex(32, 128, (c, w, h) => { const g = c.createLinearGradient(0, h, 0, 0); g.addColorStop(0, "#c2531c"); g.addColorStop(0.28, "#6a2a10"); g.addColorStop(0.6, "#2a120a"); g.addColorStop(1, "#0c0705"); c.fillStyle = g; c.fillRect(0, 0, w, h); }) }),
   };
 
   const root = new THREE.Group(); root.name = "hollow"; scene.add(root);
@@ -714,6 +718,7 @@ export function buildHollow(scene, opts = {}) {
     hearthFx.bankK += (hearthFx.bank - hearthFx.bankK) * Math.min(1, dt * 0.8); hearthFx.roomK += (hearthFx.room - hearthFx.roomK) * Math.min(1, dt * 0.5);
     const hk = hearthFx.k, eg = hearthFx.ember * (0.75 + 0.25 * Math.sin(t * 2.6)) * (1 - hk), bk = 1 - hearthFx.bankK * 0.72, rm = hearthFx.roomK;
     fire.intensity = base.fire * fl * scale * hk * bk + base.fire * 0.09 * eg;
+    M.soot.emissiveIntensity = 0.08 + hk * bk * (0.75 + 0.25 * fl) + 0.3 * eg; // the firebox glows with the fire, banks with it, and goes dark when it is out
     emberMat.emissiveIntensity = 0.25 + 2.6 * eg + hk * 0.8; emberHalo.material.opacity = 0.55 * eg; if (cam && eg > 0) emberHalo.lookAt(cam);
     for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; const g = hk * (0.6 + 0.4 * hk) * (1 - hearthFx.bankK * 0.8); f.m.visible = g > 0.01; f.m.scale.set(f.base.x * (1.1 - k * 0.2) * Math.max(0.2, g), f.base.y * k * 1.15 * g, f.base.z * Math.max(0.2, g)); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
     for (const sp of spotList) if (sp.light) sp.light.intensity = base.lantern * 0.9 * scale * sp.glow * Math.min(1, rm + 0.35) * (0.93 + Math.sin(t * 7 + 1.3) * 0.04 + Math.sin(t * 17) * 0.03);
