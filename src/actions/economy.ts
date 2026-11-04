@@ -6,6 +6,7 @@ import { fireTrigger } from '@/actions/quest-engine'
 import { getCurrentPlayer } from '@/lib/auth'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
 import { getVibeulonLedgerMode } from '@/lib/mvp-flags'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 /**
  * Ensures the player's integer balance is migrated to Vibulon tokens.
@@ -69,6 +70,7 @@ export async function mintVibulon(
  */
 export async function getWallet(playerId: string) {
     await ensureWallet(playerId)
+    await releaseStaleStakes(db, playerId)
     return db.vibulon.findMany({
         where: { ownerId: playerId },
         orderBy: { createdAt: 'desc' }
@@ -143,8 +145,9 @@ export async function transferVibulons(formData: FormData) {
             if (recipient.id === senderId) throw new Error('Cannot send to self')
 
             // 1. Get Sender's Wallet (FIFO)
+            await releaseStaleStakes(tx, senderId)
             const wallet = await tx.vibulon.findMany({
-                where: { ownerId: senderId },
+                where: spendableWhere(senderId),
                 orderBy: { createdAt: 'asc' },
                 take: amount
             })
@@ -283,7 +286,7 @@ export async function getTransferContext() {
     return {
         success: true,
         playerId: player.id,
-        balance: wallet.length,
+        balance: wallet.filter((v) => !v.stakedOnBarId).length,
         ledgerMode: getVibeulonLedgerMode(),
         recipients: others.map((recipient) => ({
             id: recipient.id,

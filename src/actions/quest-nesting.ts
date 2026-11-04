@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 /**
  * Creates a new sub-quest nested under a parent quest.
@@ -35,8 +36,9 @@ export async function createSubQuest(parentId: string, data: {
             if (!parent) throw new Error('Parent quest not found')
 
             // 2. Charge 1 Vibeulon
+            await releaseStaleStakes(tx, player.id)
             const wallet = await tx.vibulon.findMany({
-                where: { ownerId: player.id },
+                where: spendableWhere(player.id),
                 orderBy: { createdAt: 'asc' },
                 take: 1
             })
@@ -161,8 +163,9 @@ export async function appendExistingQuest(parentId: string, questId: string) {
             if (child.parentId === parentId) throw new Error('Quest is already a sub-quest of this parent')
 
             // 2. Charge 1 Vibeulon
+            await releaseStaleStakes(tx, player.id)
             const wallet = await tx.vibulon.findMany({
-                where: { ownerId: player.id },
+                where: spendableWhere(player.id),
                 orderBy: { createdAt: 'asc' },
                 take: 1
             })
