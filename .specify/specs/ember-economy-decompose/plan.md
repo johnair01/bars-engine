@@ -28,12 +28,47 @@ Harvest PRs first (T001 to T005), then one retirement PR per layer, each naming 
 mtgoa-game and understood-game (no runtime callers), charge-routing stubs (no callers), deck templates (only the audit
 script reads them), then the two schema changes, which need migrations and the most care.
 
-## Schema: DaemonSpiritLineage (for FR-004; drafted by T005)
+## Schema: DaemonSpiritLineage (for FR-004; drafted by T005, checked against the live shapes 2026-11-04)
 
-A lineage row `{ id, playerId, daemonId?, betweenSpiritId?, betweenDaemonId?, companionName, createdAt }` points at the
-Prisma `Daemon` and the Between's spirit or daemon row it joins. The Between's spirit owns what a player meets (look,
-element, name); the Prisma `Daemon` owns the inner-work record (voice, desire, fear, shadow, evolutionLog). T005 checks
-this against the live data shapes before any migration.
+The three shapes it joins, as they stand:
+
+- Prisma `Daemon` (`prisma/schema.prisma:1103`, table `daemons`): `id`, `playerId`, `name`, `source`, `sourceBarId?`, `level`,
+  `moveIds` (JSON string), `voice?`, `desire?`, `fear?`, `shadow?`, `evolutionLog` (JSON string), `channel`, `altitude`,
+  `collective`, `communityScope?`, `promotedToPlayerId?`, `shadow321SessionId?`, `innerWorkDigest?`. It is the inner-work record.
+- `BetweenDaemon` (`:5304`, table `between_daemons`, key `gardenId` + `id`): `ownerId` and `data` JSON
+  `{ owner, which, at, stay, history }`, where `which` is one of seven kinds (protector, controller, skeptic, fixer, victim,
+  emotional-body, damaged-self; `DAEMONS` in `public/between/garden.js:45`). It has no link to a `Daemon` row today.
+- `BetweenSpirit` (`:5291`, table `between_spirits`, same key): `ownerId` and `data` JSON `{ owner, name, element, form
+  (fox or tortoise), note, at, care?, away?, fromSpark? }`. The spirits are the companions a player meets.
+
+One new model joins them, because the two Between tables key on `gardenId` + `id` and hold their data as JSON, so a foreign
+key cannot point at them:
+
+```
+model DaemonSpiritLineage {
+  id                String   @id @default(cuid())
+  playerId          String   // the owner; cascade with Player
+  daemonId          String?  // Prisma Daemon, the inner-work record
+  betweenGardenId   String?  // with the two ids below, names the Between row
+  betweenSpiritId   String?  // the companion a player meets
+  betweenDaemonId   String?  // the Between's daemon kind, if one was brought in
+  companionName     String   // what the player calls the pair
+  createdAt         DateTime @default(now())
+  @@index([playerId])
+  @@index([daemonId])
+  @@map("daemon_spirit_lineages")
+}
+```
+
+Which side owns which field: the spirit owns what a player meets (name, element, form, care); `Daemon` owns the inner work
+(voice, desire, fear, shadow, evolutionLog, level, moveIds, channel, altitude). The lineage owns only the pointers and the
+companion name; it copies no field from either side. The H7 seed (a BAR becomes a `Daemon` whose voice, shadow and desire come
+from the BAR) stays how a `Daemon` starts; the lineage row is written when the player first brings that daemon into the Between.
+
+Open items the migration PR (FR-009, T010) must settle, not this spec: `Daemon.channel` is an upper-case element string
+(default `METAL`) while `BetweenSpirit.data.element` is title case (`Fire`), so one mapping function owns the conversion; and the
+Between rows have no table-level link to a player's `Daemon`, so the backfill matches by `ownerId` and name and leaves
+unmatched rows unlinked rather than guessing.
 
 ## Files touched
 
