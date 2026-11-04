@@ -46,10 +46,21 @@ function vitestSuitesUnderSrc(): string[] {
     .sort()
 }
 
-function registeredIncludes(): Set<string> {
+/** Turn an include entry into a matcher; `**` crosses folders and `*` stays inside one. */
+function includeMatcher(entry: string): RegExp {
+  const body = entry
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*\*\//g, '\u0000')
+    .replace(/\*/g, '[^/]*')
+    .replace(/\u0000/g, '(?:.*/)?')
+  return new RegExp(`^${body}$`)
+}
+
+function registeredIncludes(): { has(file: string): boolean } {
   const config = readFileSync(CONFIG, 'utf-8')
   const matches = config.match(/src\/[^'"]+\.test\.tsx?/g) ?? []
-  return new Set(matches)
+  const matchers = matches.map(includeMatcher)
+  return { has: (file) => matchers.some((m) => m.test(file)) }
 }
 
 describe('vitest include registration', () => {
