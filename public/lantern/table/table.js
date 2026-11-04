@@ -203,6 +203,7 @@ plate.userData.act = "plate"; picks.push(plate); grip(die, "stamp", 0.06);
    answer to the question on the plate; afterward it is the goal itself, and the goal is then the hand's. */
 function letter() {
   if (firstMove) { say("The table is in play. The goal stays as it was stamped."); return; }
+  if (qAt <= 6 && !STILL) { cardAway = false; showCard(); return; }
   goalInput.value = qAt <= 6 ? draft : intake.goal; typing = true; goalInput.focus(); goalInput.select(); drawPlate();
   say(qAt <= 6 ? "Type your answer and the plate takes it. Press Enter, or tap the stamp, when it reads right." : "Type your goal and the plate takes it. Press Enter when it reads right.");
 }
@@ -583,7 +584,7 @@ function submit(text) {
     qAt++; draft = ""; busy = false; drawIntake();
     const keptLine = kept.length ? ` Your hand set the ${kept.join(" and the ")}, so the table left ${kept.length === 1 ? "it" : "them"} as you set ${kept.length === 1 ? "it" : "them"}.` : "";
     say(r.line + keptLine + (qAt > 6 ? " The six questions are answered. " + hint() : ""));
-    if (qAt > 6) save();
+    if (qAt > 6) save(); else setTimeout(showCard, REDUCED ? 400 : 1800);
   });
 }
 
@@ -596,7 +597,7 @@ function deal() {
   drawBoard(); goTo("top", 1.2); save();
 }
 function act(a, hit) {
-  if (a === "sit") { if (!sitting()) { me.pose(true); me.holder.position.set(stools[0][0], 0, stools[0][1]); goTo("seat", 1.0); say(hint()); } else if (view === "top") { goTo("seat", 1.2); say("You look up from the board. Tap the well to look down again."); } return; }
+  if (a === "sit") { if (!sitting()) { me.pose(true); me.holder.position.set(stools[0][0], 0, stools[0][1]); goTo("seat", 1.0); say(hint()); setTimeout(showCard, REDUCED ? 0 : 900); } else if (view === "top") { goTo("seat", 1.2); say("You look up from the board. Tap the well to look down again."); } return; }
   if (!sitting()) { say("Tap the stool to sit at the empty table."); return; }
   const [kind, arg] = a.split(":");
   if (kind === "slider") { if (firstMove) return say("The sliders are set for this table once the first move is played."); sliders[arg] = sliders[arg] % 3 + 1; drawSliders(); if (state) { state = apply(init(intake, { blockSize: payout(sliders).blockSize }), { w: 1, type: "intake" }); overcome = 0; drawBoard(); } else drawIntake(); return say(`${SL_WORD[arg]} is set to ${["low", "middle", "high"][sliders[arg] - 1]}. ` + sliderLine()); }
@@ -704,6 +705,33 @@ function frame() {
   if (room.update) room.update(tAll, dt, 1, cam.position, camNow.l);
   renderer.render(scene, cam);
 }
+
+
+/* ---------- the question card: full screen, for touch and typing; sent over the table, which then moves its brass ---------- */
+const qcard = document.getElementById("qcard"), qInput = document.getElementById("qInput"), qStocks = document.getElementById("qStocks"), qHint = document.getElementById("qHint");
+let cardAway = false;   // "Look at the table" puts the card down until the plate or the stamp is tapped
+function showCard() {
+  if (STILL || cardAway || busy || qAt > 6 || !sitting() || firstMove) { if (qAt > 6 || STILL) qcard.hidden = true; return; }
+  document.getElementById("qNum").textContent = `Question ${qAt} of 6`;
+  document.getElementById("qText").textContent = QUESTIONS[qAt - 1];
+  qStocks.replaceChildren(...STOCK[qAt].map(a => { const b = document.createElement("button"); b.type = "button"; b.className = "qb"; b.textContent = a; b.addEventListener("click", () => sendCard(a)); return b; }));
+  qInput.value = draft; qHint.textContent = "";
+  qcard.classList.remove("sending"); qcard.hidden = false;
+  if (!REDUCED) { qcard.classList.remove("arriving"); void qcard.offsetWidth; qcard.classList.add("arriving"); }
+  if (!(matchMedia("(pointer: coarse)").matches)) qInput.focus({ preventScroll: true });
+}
+function sendCard(text) {
+  text = (text || "").replace(/\s+/g, " ").trim();
+  if (!text) { qHint.textContent = "Type a few words, or press one of the three below."; qInput.focus(); return; }
+  if (busy) return;
+  draft = text; qInput.blur();
+  const go = () => { qcard.hidden = true; qcard.classList.remove("sending"); submit(text); };
+  if (REDUCED) go(); else { qcard.classList.add("sending"); setTimeout(go, 650); }
+}
+qInput.addEventListener("input", () => { draft = qInput.value.replace(/\s+/g, " "); qHint.textContent = ""; });
+qInput.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendCard(qInput.value); } });
+document.getElementById("qGo").addEventListener("click", () => sendCard(qInput.value));
+document.getElementById("qLook").addEventListener("click", () => { cardAway = true; qcard.hidden = true; say("The card is down. Tap the brass plate to pick it up again, or turn any piece by hand."); });
 
 /* ---------- start ---------- */
 step("dressing the walker");
