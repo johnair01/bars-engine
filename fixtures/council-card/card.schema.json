@@ -57,7 +57,9 @@
     },
     "commitment": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/commitment"}]},
     "outcome": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/outcome"}]},
-    "bar": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/bar"}]}
+    "bar": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/bar"}]},
+    "hold": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/hold"}],
+             "description": "A hold line (Board v2 part 2): while set, a Claude Takes It pull saves but its ticket waits. May change under the card's id."}
   },
   "$defs": {
     "text": {"type": "string", "pattern": "\\S"},
@@ -131,6 +133,12 @@
       "required": ["move", "at", "due"],
       "properties": {"move": {"$ref": "#/$defs/move_name"}, "at": {"type": "string"}, "due": {"const": "one round"},
                      "receipt_required": {"type": "boolean"}}
+    },
+    "hold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "at"],
+      "properties": {"text": {"type": "string"}, "at": {"type": "string"}}
     },
     "outcome": {
       "type": "object",

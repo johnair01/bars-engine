@@ -86,7 +86,8 @@ export async function POST(req: NextRequest) {
   // Push from the board: his answer to a council question goes to the work lanes as it is saved (work queues, slice 1).
   const work = await ticketFromSave(db, board, collection, docId, doc)
   // His answer starts the work: a new Claude-lane ticket wakes the pickup now, not at the next hourly run.
-  if (work?.created && work.lane === 'claude') wakePickupAfter(collection === 'steps' ? `card ${docId} sent to a face` : `answer to ${docId}`)
+  if (work?.created && work.lane === 'claude' && work.state !== 'held')
+    wakePickupAfter(collection === 'steps' ? `card ${docId} sent to a face` : collection === 'positions' ? `Claude Takes It on ${docId}` : `answer to ${docId}`)
   // His plain yes on a look readies the drafts that waited on it, after this answers (writers-api FR-004).
   readyDraftsAfterSave(board, collection, docId, doc)
   return NextResponse.json({ ok: true, doc: leanDoc(doc, originOf(req), { board, collection, docId }), receivedAt: row.receivedAt,

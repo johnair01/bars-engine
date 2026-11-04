@@ -21,7 +21,8 @@ export async function pushTicket(db: Db, t: TicketDraft) {
   const existing = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
   if (existing) return { ticket: existing, created: false }
   const ticket = await db.workTicket.create({
-    data: { sourceKey: t.sourceKey, title: t.title, brief: t.brief, basis: t.basis as object, lanes: t.lanes, lane },
+    data: { sourceKey: t.sourceKey, title: t.title, brief: t.brief, basis: t.basis as object, lanes: t.lanes, lane,
+      ...(t.state === 'held' ? { state: 'held' } : {}) },
   })
   return { ticket, created: true }
 }
@@ -56,6 +57,15 @@ export async function claimTicket(db: Db, lane: string, by: string, now = new Da
 }
 
 type Move = 'heartbeat' | 'done' | 'release' | 'failed'
+
+/** Lift a hold: a held ticket goes back to ready, in the lane it rests in. Any other state is left alone. */
+export async function unholdTicket(db: Db, id: string) {
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not held` }
+  const ticket = await db.workTicket.update({ where: { id }, data: { state: 'ready' } })
+  return { ok: true as const, ticket }
+}
 
 /** A worker's move on the ticket it holds. Only the lane that holds the claim may move it. */
 export async function moveTicket(db: Db, id: string, lane: string | null, move: Move,
