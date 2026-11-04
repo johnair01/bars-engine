@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { answersFrom, type SavedDoc } from '../saves'
+import { answersFrom, TICKETS_LIVE, type SavedDoc } from '../saves'
 import { unworkedFrom } from '../unworked'
 import { plainYes, ringsFrom, REOPEN_MS, type RingTicket } from '../rings'
 import { ticketFromAnswer } from '../ticket'
@@ -88,5 +88,11 @@ describe('ringsFrom', () => {
   it('skips tickets that are not done and carries no count', () => {
     expect(ringsFrom([t('d', { state: 'claimed', doneAt: null })], new Map(), now)).toEqual([])
     expect(Object.keys(ringsFrom([t('c')], new Map(), now)[0]).sort()).toEqual(['doneAt', 'look', 'row'])
+  })
+})
+
+describe('the sweep floor', () => {
+  it('sits at the moment answers began pushing their own tickets, so the hand-routed answers are not swept again', () => {
+    expect(TICKETS_LIVE.toISOString()).toBe('2026-10-31T15:20:00.000Z')
   })
 })
