@@ -453,9 +453,9 @@ export function buildHollow(scene, opts = {}) {
     add(new THREE.PlaneGeometry(1.2, 1.4), M.soot, 0, 0.78, -0.2, hearth);
     for (const [x, rz] of [[-0.18, 0.3], [0.16, -0.25], [0, 0]]) { const l = add(new THREE.CylinderGeometry(0.07, 0.08, 0.8, 7), M.darkWood, x, 0.2 + (x === 0 ? 0.1 : 0), 0, hearth); l.rotation.set(Math.PI / 2, 0, rz); }
     // the fire: stacked glowing cones that flicker
-    const fireMat = c => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    const fireMat = c => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }); // 0.5, not 0.85: seven overlapping additive cones summed to white in the low sit view (focus-sit DIFF, fire clipping)
     for (let i = 0; i < 7; i++) {
-      const f = add(new THREE.ConeGeometry(0.12 + r() * 0.1, 0.5 + r() * 0.35, 8, 1, true), fireMat(i % 3 ? 0xff8a2a : 0xffc860), (r() - 0.5) * 0.5, 0.45, (r() - 0.5) * 0.2, hearth);
+      const f = add(new THREE.ConeGeometry(0.12 + r() * 0.1, 0.5 + r() * 0.35, 8, 1, true), fireMat(i % 3 ? 0xff7a22 : 0xffa840), (r() - 0.5) * 0.5, 0.45, (r() - 0.5) * 0.2, hearth);
       anim.flames.push({ m: f, ph: r() * 10, base: f.scale.clone(), x: f.position.x });
     }
     // pots on the mantel

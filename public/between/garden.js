@@ -2277,7 +2277,7 @@ function hmTick(t, dt) {
   const el = t - h.t0, P = hmPouchAt(F), ending = !hm;
   if (!ending && el > 4 && !h.said.first) { if (EMBER_DEMO || !ls.get(HM_FIRST)) { ls.set(HM_FIRST, 1); hmSay("first"); } else h.said.first = true; } // first time only (a demo preview shows it each time)
   // the satchel loosens a little before the first ember rises, and closes again once none is in flight
-  const open = h.motes.some(m => m.state === "rise" || m.state === "sink" || (m.state === "wait" && t > m.riseAt - 0.8));
+  const open = h.motes.some(m => m.state === "rise" || m.state === "sink" || (m.state === "wait" && t > m.riseAt - 0.8)) || !!(h.fs && h.fs.mote && t - h.fs.mote.t0 > 0.6);
   hmPouch.visible = true; hmPouch.position.copy(P); hmPouch.rotation.y = F.S.yaw;
   const u = hmPouch.userData; u.k = (u.k || 0) + ((open ? 1 : 0) - (u.k || 0)) * Math.min(1, dt * 3);
   u.cord.scale.setScalar(1 + u.k * 0.5); u.neck.scale.set(1 + u.k * 0.45, 1, 1 + u.k * 0.45); u.glow.material.opacity = u.k * 0.55;
@@ -2482,7 +2482,11 @@ function fsTick(t, dt, h, F) {
   }
   for (const fl of fs.flies) if (fl.turn) { const k = Math.min(1, (t - fl.turn.t0) / 1.4); fl.m.rotation.y = fl.turn.from + fl.turn.by * k * k * (3 - 2 * k); fl.m.rotation.x = Math.sin(k * Math.PI) * 0.15; if (k >= 1) fl.turn = null; }
   // the mote of a finished sit: from the ember down into the satchel
-  if (fs.mote) { const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6); if (k > 0) { const e = k * k; fs.mote.g.position.lerpVectors(fs.mote.from, hmPouchAt(F).setY(hmPouchAt(F).y + 0.1), e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.1; fs.mote.g.scale.setScalar(0.09 * (1 - 0.75 * e)); } else fs.mote.g.position.copy(fs.mote.from); if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; } }
+  if (fs.mote) { // lands on the satchel's open mouth, which the low sit view shows lower left of the fire; it keeps its size and flares as it drops in, so it never shrinks to a smear
+    const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6), mouth = hmPouchAt(F).setY(hmPouchAt(F).y + 0.13);
+    if (k > 0) { const e = k * k * (3 - 2 * k); fs.mote.g.position.lerpVectors(fs.mote.from, mouth, e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.18; fs.mote.g.scale.setScalar(0.09 - 0.04 * e + 0.05 * Math.max(0, (k - 0.85) / 0.15)); fs.mote.g.material.opacity = 0.9 * (k > 0.93 ? (1 - k) / 0.07 : 1); } else fs.mote.g.position.copy(fs.mote.from);
+    if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; }
+  }
 }
 /* The laid sticks burn down slowly once nobody is laying: they sink into the fire and go. */
 function fsBurn(dt) { for (const s of fsLaid.children.slice()) { if (hm && hm.fs && hm.fs.flies.some(f => f.m === s)) continue; s.scale.multiplyScalar(Math.pow(0.9, dt)); s.position.y -= dt * 0.004; if (s.scale.x < 0.35) fsLaid.remove(s); } }
