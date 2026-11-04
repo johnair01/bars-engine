@@ -27,7 +27,7 @@
    it names none). */
 
 const css = `
-#voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: var(--ui-ink, #f6ecdc); --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); }
+#voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: #f6ecdc; /* the voice speaks over the 3D room, which stays dusk-dark in a light theme too: its ink is pinned light, like its seals */ --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); }
 #voice[hidden] { display: none; }
 #voice .vw { position: absolute; left: max(16px, 7%); right: max(16px, 7%); transition: top .5s var(--ui-ease, ease), bottom .5s var(--ui-ease, ease), opacity .4s ease; }
 #voice .vh { font: 400 calc(24px + 8px * var(--ui-loud, 0)) / 1.16 var(--display); text-wrap: balance; text-shadow: 0 1px 3px #000, 0 0 18px rgba(0,0,0,.7); }
