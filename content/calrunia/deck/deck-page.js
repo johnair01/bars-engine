@@ -199,10 +199,11 @@ const ACTS = {
   returnCrate() {
     if (!returnMoored()) return;
     const b = S.boats.find((boat) => boat.id === live.ret.id && !boat.back); if (!b) return;
+    live.ret.open = 1;
     const at = window.__ret.crate.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 1.6, 0));
-    const amt = field("Amount"); amt.inputMode = "decimal"; const note = field("What the no taught you (optional)");
+    const amt = field("Amount"); amt.type = "number"; amt.min = "0.01"; amt.step = "0.01"; amt.inputMode = "decimal"; amt.addEventListener("input", () => amt.setCustomValidity("")); const note = field("What the no taught you (optional)");
     say(at, "The returning crate", "What came back from " + portName(b.port) + "?", amt,
-      row(btn("Coin", () => { if (!(+amt.value > 0) || !Number.isFinite(+amt.value)) return amt.focus(); TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); live.ret.kind = "coin"; live.ret.open = 1; done(); keep(b, at); })), note,
+      row(btn("Coin", () => { if (!(+amt.value > 0) || !Number.isFinite(+amt.value)) { amt.setCustomValidity("Enter an amount greater than zero."); amt.reportValidity(); return; } TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); live.ret.kind = "coin"; live.ret.open = 1; done(); keep(b, at); })), note,
       row(btn("A no", () => { TH.logReturn(S, b.id, { kind: "lesson", line: note.value.trim() }, now()); live.ret.kind = "lesson"; live.ret.open = 1; done(); say(at, "The spirit", "I'll hold that one. Nothing of yours is any less.", row(btn("Leave the boat", departReturn))); }, true), btn("Still out", departReturn, true)));
   },
   tide() { const t = TH.tideLine(S, now()); say(hitOf("tide").clone().add(new THREE.Vector3(0, 2.6, 0)), "The tide post", "This month: " + money(t.coin) + (t.goal ? " of " + money(t.goal) + "." : ".")); },
