@@ -233,7 +233,7 @@ export function mount(B, opts = {}) {
       key = "stand" + (episode ? "1" : "0");
       html = episode
         ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`
-        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them. The keeping chamber is on the map too.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
+        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them. The keeping chamber opens from here too.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
     } else if (near && near.startsWith("pane:")) {
       const p = panes[+near.slice(5)];
       key = near; html = `<div><b>${esc(p.loc.location)}</b><div class="t">${esc(p.loc.aspects[0])}</div></div><div class="row"><button type="button" data-ctw="${near}">Look into it</button></div>`;
