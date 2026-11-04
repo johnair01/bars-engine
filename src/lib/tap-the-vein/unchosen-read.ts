@@ -32,7 +32,7 @@ export type GoldFateName = 'carried' | 'offered' | 'kept'
 
 export type LivePitch = { id: string; word: string; pitch: string; weekOf: string }
 
-/** One nugget as a face reads it (contract 4). */
+/** One nugget as a face reads it (contract 4). `move` is the next step for a carried nugget, the drafted move for an offered one. */
 export type GoldIn = {
   itemKey: string
   quote: string
@@ -152,7 +152,9 @@ export function planGoldRead(
     if (!reason || reason.length > REASON_MAX_CHARS) problems.push(`${at}: reason is one sentence, 1 to ${REASON_MAX_CHARS} characters`)
     const title = text(g.title)
     if (!title || title.length > TITLE_MAX_CHARS) problems.push(`${at}: title is a council title, 1 to ${TITLE_MAX_CHARS} characters`)
+    // The title and the move reach callsheets when carried (FR-005, FR-011); the reason stays on his shelf.
     if (quote && sharesRun(quote, title)) problems.push(`${at}: the title holds ${QUOTE_RUN_WORDS} words in a row from the quote`)
+    if (quote && sharesRun(quote, text(g.move))) problems.push(`${at}: the move holds ${QUOTE_RUN_WORDS} words in a row from the quote`)
     for (const [name, t] of [['reason', reason], ['move', text(g.move)]] as const) {
       if (ABOUT_HIM.test(t)) problems.push(`${at}: the ${name} speaks about him, not the work ("${t.match(ABOUT_HIM)![0]}")`)
       if (CONVERTS.test(t)) problems.push(`${at}: a ${name} does not turn lines into qi, vibeulons or spirits (uc-links-by-hand)`)
@@ -168,6 +170,7 @@ export function planGoldRead(
         if (g.kind === 'ask') strand = DEFAULT_STRAND
         else problems.push(`${at}: a carried nugget needs a live strand, or kind "ask" to go to ${DEFAULT_STRAND}`)
       }
+      if (!move || move.length > MOVE_MAX_CHARS) problems.push(`${at}: a carried nugget names its next step as the move, 1 to ${MOVE_MAX_CHARS} characters`)
     } else if (g.fate === 'offered') {
       if (!reserved) problems.push(`${at}: only reserved gold is offered; gold with a live strand is carried, without one it is kept`)
       if (!move || move.length > MOVE_MAX_CHARS) problems.push(`${at}: an offered nugget carries one move, 1 to ${MOVE_MAX_CHARS} characters`)
@@ -189,7 +192,7 @@ export function planGoldRead(
       reserved,
       strand,
       strandTitle: text(g.strandTitle) || undefined,
-      move: g.fate === 'offered' ? move : undefined,
+      move: g.fate === 'kept' ? undefined : move,
       day: item.day,
       from: item.from,
       lensGoalId: item.lensGoalId,

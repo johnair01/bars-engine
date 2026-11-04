@@ -24,12 +24,15 @@ export type WholeSeed = {
 }
 export type WholeMorning = { day: string; freeWrite: string; sealed: boolean; lines: WholeLine[]; seeds: WholeSeed[] }
 export type WholePitch = { id: string; word: string; pitch: string; weekOf: string }
+/** An offered nugget he answered Yes whose move the council has not carried yet (FR-007). The move is the council's own words. */
+export type WholeYes = { goldId: string; title: string; strand: string | null; strandTitle: string | null; move: string; answeredAt: string | null }
 export type WholeContext = {
   since: string
   lastRead: string | null
   mornings: WholeMorning[]
   pitches: WholePitch[]
   lensGoals: { id: string; title: string }[]
+  yes: WholeYes[]
 }
 
 /** One thing the read can quote from or compost, flattened out of the whole context. */
@@ -54,6 +57,7 @@ export function toWholeContext(input: {
   history: VeinHistoryExport
   pitches: WholePitch[]
   lensGoals: { id: string; title: string }[]
+  yes?: WholeYes[]
   today: string
   lastRead: string | null
   handled: Set<string>
@@ -84,7 +88,7 @@ export function toWholeContext(input: {
     .map((m) => ({ ...m, lines: m.lines.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true })) }))
     .filter((m) => m.freeWrite || m.lines.length || m.seeds.length)
     .sort((a, b) => (a.day < b.day ? -1 : 1))
-  return { since: history.since, lastRead: input.lastRead, mornings, pitches: input.pitches, lensGoals: input.lensGoals }
+  return { since: history.since, lastRead: input.lastRead, mornings, pitches: input.pitches, lensGoals: input.lensGoals, yes: input.yes ?? [] }
 }
 
 /** Every quotable or compostable item of a whole context, keyed. */

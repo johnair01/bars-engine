@@ -55,7 +55,7 @@ function testHandledItemsAreLeftOutAndUnhandledStay() {
 }
 
 function testAGoodReadIsPlanned() {
-  const r = read({ gold: [gold(), gold({ itemKey: '2026-11-02:b:0', quote: 'Plant the garlic', fate: 'carried', strand: 'home', title: 'Garlic into the bed' })], compost: [compost(), pitchCompost] })
+  const r = read({ gold: [gold(), gold({ itemKey: '2026-11-02:b:0', quote: 'Plant the garlic', fate: 'carried', strand: 'home', move: 'Put the garlic bed on the home list.', title: 'Garlic into the bed' })], compost: [compost(), pitchCompost] })
   assert.deepEqual(problems(r), [])
   if (!('plan' in r)) return
   assert.equal(r.plan.weekOf, '2026-11-02')
@@ -80,10 +80,11 @@ function testAtMostFiveAndEachItemOnce() {
 
 function testFatesFollowTheRules() {
   // FR-004: carried needs a live strand, or kind ask (which defaults to the morning menu); reserved is never carried
-  assert.match(problems(read({ gold: [gold({ fate: 'carried' })] })).join(), /needs a live strand/)
-  const ask = read({ gold: [gold({ fate: 'carried', kind: 'ask' })] })
+  assert.match(problems(read({ gold: [gold({ fate: 'carried', move: 'Do it.' })] })).join(), /needs a live strand/)
+  assert.match(problems(read({ gold: [gold({ fate: 'carried', strand: 'home' })] })).join(), /names its next step as the move/)
+  const ask = read({ gold: [gold({ fate: 'carried', kind: 'ask', move: 'Draft the ask.' })] })
   assert.ok('plan' in ask && ask.plan.gold[0].strand === 'morning-menu')
-  assert.match(problems(read({ gold: [gold({ fate: 'carried', strand: 'x', reserved: true })] })).join(), /reserved gold .* is offered, never carried/)
+  assert.match(problems(read({ gold: [gold({ fate: 'carried', strand: 'x', move: 'm', reserved: true })] })).join(), /reserved gold .* is offered, never carried/)
   // FR-006: offered is reserved gold with one move and a strand
   assert.match(problems(read({ gold: [gold({ fate: 'offered', strand: 'x', move: 'Ask her.' })] })).join(), /only reserved gold is offered/)
   assert.match(problems(read({ gold: [gold({ fate: 'offered', reserved: true, strand: 'x' })] })).join(), /carries one move/)
@@ -97,6 +98,7 @@ function testFatesFollowTheRules() {
 
 function testWordsStayHisAndTheReadSpeaksAboutConditions() {
   assert.match(problems(read({ gold: [gold({ title: 'The garden keeps asking for my hands' })] })).join(), /6 words in a row/)
+  assert.match(problems(read({ gold: [gold({ fate: 'carried', strand: 'home', move: 'Keep the garden keeps asking for my hands.' })] })).join(), /move holds 6 words/)
   assert.match(problems(read({ gold: [gold({ reason: 'You keep avoiding the garden.' })] })).join(), /speaks about him/)
   assert.match(problems(read({ gold: [gold({ reason: 'Turn this into a spirit.' })] })).join(), /uc-links-by-hand/)
   assert.match(problems(read({ compost: [compost({ lesson: 'You procrastinate on repairs.' }), pitchCompost] })).join(), /lesson speaks about him/)

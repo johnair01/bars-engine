@@ -4,7 +4,7 @@ import { loadActiveLensGoals } from './menu-data'
 import { GOLD_TYPE, SCROLL_TYPE, parseMeta } from './council-scroll'
 import { toUnchosen, UNCHOSEN_WINDOW_DAYS, type UnchosenLine } from './unchosen'
 import type { LivePitch, ReadPlan } from './unchosen-read'
-import { toWholeContext, type WholeContext } from './unchosen-whole'
+import { toWholeContext, type WholeContext, type WholeYes } from './unchosen-whole'
 import { parseSince, toVeinHistory } from './vein-history'
 
 /** Compost records the council's read wrote (contract 3). */
@@ -76,6 +76,36 @@ export async function livePitches(playerId: string): Promise<LivePitch[]> {
   return rows.map((r) => ({ ...r, weekOf: dayOf(r.weekOf) }))
 }
 
+/** Offered nuggets he answered Yes whose move the council has not carried into its strand yet. */
+async function loadYes(playerId: string): Promise<WholeYes[]> {
+  const rows = await db.customBar.findMany({
+    where: { creatorId: playerId, type: GOLD_TYPE }, orderBy: { createdAt: 'desc' }, take: 200,
+    select: { id: true, title: true, strandMetadata: true },
+  })
+  return rows.flatMap((r) => {
+    const m = parseMeta(r.strandMetadata)
+    if (m.fate !== 'offered' || m.answer !== 'yes' || m.carriedAt) return []
+    const s = (v: unknown) => (typeof v === 'string' && v ? v : null)
+    return [{ goldId: r.id, title: r.title, strand: s(m.strand), strandTitle: s(m.strandTitle), move: s(m.move) ?? '', answeredAt: s(m.answeredAt) }]
+  })
+}
+
+/** The council carried these nuggets' steps into their strands' callsheets: write `carriedAt` once each (FR-005). */
+export async function markCarried(playerId: string, ids: string[]): Promise<number> {
+  const rows = await db.customBar.findMany({
+    where: { id: { in: ids }, creatorId: playerId, type: GOLD_TYPE }, select: { id: true, strandMetadata: true },
+  })
+  const now = new Date().toISOString()
+  let n = 0
+  for (const r of rows) {
+    const m = parseMeta(r.strandMetadata)
+    if (m.carriedAt || m.fate === 'kept') continue
+    await db.customBar.update({ where: { id: r.id }, data: { strandMetadata: JSON.stringify({ ...m, carriedAt: now }) } })
+    n++
+  }
+  return n
+}
+
 /**
  * Everything the council reads in one go (FR-001, contract 1): free writes, unchosen lines, seeds, the old pitches and
  * his Lens goals, over `since` (the view's 60-day window by default), leaving out what an earlier read handled.
@@ -99,8 +129,8 @@ export async function loadWholeContext(playerId: string, today: Date, sinceParam
     },
   })
   const day = dayOf(today)
-  const [handled, live, goals, weeks] = await Promise.all([
-    handledKeys(playerId), livePitches(playerId), loadActiveLensGoals(playerId), readWeeks(playerId),
+  const [handled, live, goals, weeks, yes] = await Promise.all([
+    handledKeys(playerId), livePitches(playerId), loadActiveLensGoals(playerId), readWeeks(playerId), loadYes(playerId),
   ])
   return toWholeContext({
     pile: toUnchosen(sessions, day),
@@ -110,6 +140,7 @@ export async function loadWholeContext(playerId: string, today: Date, sinceParam
     today: day,
     lastRead: weeks.sort().reverse()[0] ?? null,
     handled,
+    yes,
   })
 }
 

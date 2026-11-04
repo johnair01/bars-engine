@@ -15,13 +15,14 @@
  * @description Write the week's read (contract 4): at most five nuggets of gold, each a passage quoted word for word,
  *   and the fragments the read found nothing in. Checked first (src/lib/tap-the-vein/unchosen-read.ts); with
  *   dry: true nothing is written. Otherwise one transaction writes the scroll BAR, the gold BARs and the compost rows.
+ *   `{ "carried": [nugget ids] }` instead writes `carriedAt` on nuggets whose step the council carried into a callsheet (FR-005, FR-007).
  * @permissions COUNCIL_MENU_TOKEN
  * @example POST /api/tap-the-vein/unchosen {"weekOf":"2026-11-02","gold":[{"itemKey":"2026-11-02:fw","quote":"…","kind":"idea","face":"shaman","reason":"…","title":"…","fate":"kept"}],"compost":[],"dry":true}
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { planGoldRead, READ_MAX_GOLD, weekOf } from '@/lib/tap-the-vein/unchosen-read'
-import { livePitches, loadWholeContext, weekRead, writeGoldRead } from '@/lib/tap-the-vein/unchosen-store'
+import { livePitches, loadWholeContext, markCarried, weekRead, writeGoldRead } from '@/lib/tap-the-vein/unchosen-store'
 import { itemsOf } from '@/lib/tap-the-vein/unchosen-whole'
 
 export const dynamic = 'force-dynamic'
@@ -66,8 +67,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const playerId = refused(req)
   if (typeof playerId !== 'string') return playerId
-  const b = (await req.json().catch(() => null)) as { weekOf?: unknown; gold?: unknown; compost?: unknown; dry?: unknown } | null
-  if (!b) return NextResponse.json({ error: 'Expected {weekOf, gold: [...], compost: [...], dry?}' }, { status: 400 })
+  const b = (await req.json().catch(() => null)) as { weekOf?: unknown; gold?: unknown; compost?: unknown; dry?: unknown; carried?: unknown } | null
+  if (!b) return NextResponse.json({ error: 'Expected {weekOf, gold: [...], compost: [...], dry?} or {carried: [ids]}' }, { status: 400 })
+  if (b.carried !== undefined) {
+    const ids = Array.isArray(b.carried) ? b.carried.filter((x): x is string => typeof x === 'string') : []
+    if (!ids.length || ids.length > 50) return NextResponse.json({ error: 'carried is a list of 1 to 50 nugget ids' }, { status: 400 })
+    try {
+      return NextResponse.json({ carried: await markCarried(playerId, ids) }, { headers: NO_STORE })
+    } catch (e) {
+      console.error('[api:ttv-unchosen]', e)
+      return NextResponse.json({ error: 'Failed to mark the nuggets carried' }, { status: 500 })
+    }
+  }
   try {
     const today = startOfDay()
     const day = today.toISOString().slice(0, 10)
