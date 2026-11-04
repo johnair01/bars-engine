@@ -150,7 +150,10 @@ export function mount(B, opts = {}) {
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.07, 0.95, 8), darkWood); post.position.copy(place.book).setY(0.47); group.add(post);
       const lip = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.03, 0.3), wood); lip.position.copy(place.book).setY(0.96); lip.rotation.y = place.bookYaw; lip.rotation.x = 0.4; group.add(lip);
     }
-    const glow = new THREE.PointLight(0xffc890, 0.5, 1.6, 2); glow.position.copy(T).setY(0.9); group.add(glow);
+    /* The table's own warm pool. It hung at 0.9 m, level with a seated head 0.62 m away, and lit the faces at the table
+       hot (fb-look-01's known flaw, hot heads at the card table); now it sits low over the top with a short reach, so it
+       pools on the coins and the book and falls off before it reaches a face. */
+    const glow = new THREE.PointLight(0xffc890, 0.32, 0.75, 2); glow.position.copy(T).setY(TY + 0.18); group.add(glow);
     group.userData.table = top; group.userData.cushion = cushion;
     marksSig = ""; layMarks();
   }
