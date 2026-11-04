@@ -88,3 +88,36 @@ describe('ticketFromStep', () => {
     expect(k('t1')).not.toBe(k('t2'))
   })
 })
+
+import { ticketFromLever } from '../ticket'
+
+describe('ticketFromLever', () => {
+  const row = { q: 'x', card: { project: 'Harbour', front: { next_step: 'Draw the tide.' } } }
+  const pull = { move: 'claude_takes_it', savedAt: '2026-11-04T01:00:00Z' }
+  it('makes a ready claude ticket that names the receipt first', () => {
+    const t = ticketFromLever('council', 'positions', 'c1', pull, row)!
+    expect(t.sourceKey).toBe('council/positions/c1@lever:2026-11-04T01:00:00Z')
+    expect(t.lanes).toEqual(['claude'])
+    expect(t.basis).toMatchObject({ rows: ['c1'] })
+    expect(t.brief).toContain('python3 board/receipt.py write c1')
+    expect(t.title).toBe('Draw the tide.')
+    expect(t.state).toBeUndefined()
+  })
+  it('holds when the save or the card carries a hold', () => {
+    expect(ticketFromLever('council', 'positions', 'c1', { ...pull, hold: { text: 'wait', at: 'z' } }, row)!.state).toBe('held')
+    const held = { ...row, card: { ...row.card, hold: { text: 'money gate', at: 'z' } } }
+    const t = ticketFromLever('council', 'positions', 'c1', pull, held)!
+    expect(t.state).toBe('held')
+    expect(t.brief).toContain('money gate')
+  })
+  it('ignores other moves and collections', () => {
+    expect(ticketFromLever('council', 'positions', 'c1', { move: 'steer' }, row)).toBeNull()
+    expect(ticketFromLever('council', 'questions', 'c1', pull, row)).toBeNull()
+  })
+  it('names the wildcard branch and says it never gates the main card', () => {
+    const w = { ...row, card: { ...row.card, wildcard: { branch: 'wildcard/hum' } } }
+    const t = ticketFromLever('council', 'positions', 'wild-c1-hum', pull, w)!
+    expect(t.brief).toContain('wildcard/hum')
+    expect(t.brief).toContain("never gates the main card's merge")
+  })
+})

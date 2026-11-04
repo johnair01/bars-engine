@@ -33,7 +33,10 @@
 
    Previews: ?at=stump stands you at the stump, ?song=done opens with the song played to its end, ?paint=0 as the Between,
    ?place=scale-house the second land (with ?at=balance, ?at=bridge, ?bag=pan, ?plank=laid), ?place=friends-fire the third
-   (with ?at=crate sat on your crate, ?song=played the song already played on). */
+   (with ?at=crate sat on your crate, ?song=played the song already played on, ?song=1,3,0,4 the stump's notes seeded,
+   ?fire=seals|tag|oriel|card a step of the crate opened for a frame). The crate's song is ./fire-song.js, ported from the
+   council's reel round 2 (Wendell's A on ctw-fire-reel-look-2): you play the seals, name what would block you, put it in
+   Oriel's hand, and Oriel plays it home from your last note, the five seals lit above Oriel. */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
@@ -46,11 +49,14 @@ import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
 import * as SH from "./scale-house.js";
 import * as FF from "./friends-fire.js";
+import * as FS from "./fire-song.js";
+import * as CH from "./chamber.js";
+import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
-const PLACE = ["scale-house", "friends-fire"].includes(Q.get("place")) ? Q.get("place") : "clearing";
+const PLACE = ["scale-house", "friends-fire", "chamber"].includes(Q.get("place")) ? Q.get("place") : "clearing";
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -500,9 +506,10 @@ const state = { p: null, ep: null, sh: null, ff: null, friends: [], sat: false, 
 async function build() {
   step("reading the episode");
   const ep = await episode(); state.ep = ep; state.p = ep.p;
-  $("#placeName").textContent = ep.p.name;
-  $("#placeLand").textContent = `${ep.loc.land}, on the ${ep.p.line} line`;
-  document.title = ep.p.name;
+  const chName = "The keeping chamber";
+  $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
+  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}, on the ${ep.p.line} line`;
+  document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
   const M = {}, h = buildHollow(new THREE.Scene(), { lowPower: LOW, shell: "hollow" });   // built only to lend its materials
   h.root.traverse(o => { if (!o.isMesh || Array.isArray(o.material) || !o.material.isMeshStandardMaterial) return; const m = o.material, hex = m.color.getHex();
@@ -548,8 +555,19 @@ async function build() {
     step("the friends sit down");
     state.friends = await makeFriends(state.ff).catch(e => { console.warn("friends", e); return []; });
     state.bagDown = toolbagGroup(M); state.bagDown.visible = false; scene.add(state.bagDown);
+    state.oSeals = orielSeals();
     { const c = FF.YOURS, side = V(Math.cos(c.yaw), 0, -Math.sin(c.yaw)); const x = c.x + side.x * 0.55, z = c.z + side.z * 0.55;
       state.bagDown.position.set(x, groundH(x, z) + 0.24, z); state.bagDown.rotation.set(-0.25, c.yaw + 0.6, 0.1); }
+  } else if (PLACE === "chamber") {
+    // the keeping chamber under the nook's shelf (./chamber.js): the floor is the land's own ground, flattened and laid with the cave's dry stone
+    step("opening the chamber");
+    groundExtra = (x, z) => -n2(x, z) * 0.12 * Math.min(1, Math.hypot(x, z) / 6);
+    ground(M, 0x5e4e44, 0x4a3e36, CH.R + 0.5);
+    { const t = new THREE.TextureLoader().load("/ontology-game/cave/textures/dry_stone.jpg"); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 8);
+      groundMesh.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x5e4e44).multiplyScalar(1.35), map: t, roughness: 0.95 }); }
+    state.kept = Q.get("kept") === "sample" ? KEPT_SAMPLE.map(x => ({ ...x })) : keptPieces();
+    state.ch = await CH.build({ THREE, V, scene, glowSprite, LOW, pieces: state.kept });
+    state.fog = state.ch.fog; state.flies = null; state.rain = null;
   } else {
   // the forest (the Wood land) under the week's weather; dusk, green through the canopy
   state.fog = scene.fog = new THREE.FogExp2(0x4c5c58, 0.042); scene.background = new THREE.Color(0x4c5c58);
@@ -621,18 +639,20 @@ async function build() {
 /* ===================================================================================================
    Walking: tap the ground to walk there, drag to look round, or the arrow keys
    =================================================================================================== */
-const SHX = PLACE === "scale-house", FFX = PLACE === "friends-fire";
+const SHX = PLACE === "scale-house", FFX = PLACE === "friends-fire", CHX = PLACE === "chamber";
 const me = SHX ? { pos: V(SH.ARRIVE.x, 0, SH.ARRIVE.z), yaw: Math.atan2(-SH.ARRIVE.x, SH.BALANCE.z - SH.ARRIVE.z), target: null, keys: new Set() }
   : FFX ? { pos: V(FF.ARRIVE.x, 0, FF.ARRIVE.z), yaw: Math.atan2(-FF.ARRIVE.x, -FF.ARRIVE.z), target: null, keys: new Set() }
+  : CHX ? { pos: V(CH.ARRIVE.x, 0, CH.ARRIVE.z), yaw: Math.PI, target: null, keys: new Set() }
   : { pos: V(0, 0, ARCH.z - 0.9), yaw: Math.PI, target: null, keys: new Set() };
 /* you arrive walking a few steps in, seen from in front, so you see yourself come through; then the camera settles
    behind you (his note on ctw-walk-look-1: you could not see yourself without turning the camera) */
-const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : FFX ? V(FF.WALK_TO.x, 0, FF.WALK_TO.z) : V(0, 0, 4.9);
+const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : FFX ? V(FF.WALK_TO.x, 0, FF.WALK_TO.z) : CHX ? V(CH.WALK_TO.x, 0, CH.WALK_TO.z) : V(0, 0, 4.9);
 const intro = { on: !Q.get("at"), t: 0, settling: false };
 const speed = () => (state.me && !state.me.bagOn ? 1.5 : FFX ? 1.3 : 1.15);   // the bag is lighter by the fire   // the bag is heavy; set down, you walk lighter
 function walkable(x, z) {
   if (SHX) return SH.walkable(x, z, state.laid);
   if (FFX) return FF.walkable(x, z);
+  if (CHX) return CH.walkable(x, z);
   if (Math.abs(x) < 0.9 && z < -CLR + 1.3 && z > -CLR - 0.6) return true;   // a step onto the path out
   const d = Math.hypot(x, z);
   if (d < STUMP_R + 0.32) return false;
@@ -645,7 +665,7 @@ el.addEventListener("pointerdown", e => { intro.on = false; drag = { x: e.client
 el.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 8) drag.moved = true;
   if (drag.moved) { camYaw = drag.yaw - dx * 0.006; camPitch = Math.max(0.08, Math.min(0.9, drag.pitch + dy * 0.004)); } });
 el.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.moved || !groundMesh) return; tap(e.clientX, e.clientY); });
-addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button")) return; me.keys.add(e.key.toLowerCase()); });
+addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button, input, textarea")) return; me.keys.add(e.key.toLowerCase()); });
 addEventListener("keyup", e => me.keys.delete(e.key.toLowerCase()));
 function tap(cx, cy) {
   ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
@@ -707,6 +727,13 @@ function nearNow() {
     if (Math.hypot(p.x, p.z) < FF.RING_R + 3.0) return "fire";
     return null;
   }
+  if (CHX) {
+    const dBack = Math.hypot(p.x - CH.PORTAL.x, p.z - CH.PORTAL.z);
+    if (dBack > 2.6) state.leftArch = true;
+    if (dBack < 1.6) return state.leftArch ? "ch-home" : null;
+    const bs = state.block && state.block.near(p); if (bs) return bs;
+    const st = state.ch && state.ch.near(p); return st ? "kept:" + state.ch.stones.indexOf(st) : null;
+  }
   if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
@@ -728,11 +755,16 @@ function showCard() {
   else if (n === "ff-back") { key = "ff-back"; html = card("The path back", "It runs back through the trees to the Scale-House and the bridge you mended.", btn("go:scale-house-far", "Walk back to the Scale-House")); }
   else if (n === "fire") { const f = esc(state.ep.friend.name || "A friend"); key = "fire:" + state.played;
     html = card("The fire", state.played ? `${f} is still turning the song over on the guitar. Your crate is where you left it.` : `${f} is tuning a guitar, a string at a time. One crate is empty, turned to the fire, left for you.`, btn("sit", "Sit on the empty crate")); }
-  else if (n === "crate") { const f = esc(state.ep.friend.name || "Your friend"), h = state.ep.home;
-    key = "crate:" + state.playing + state.played;
-    html = state.playing ? card(f, `${f} listens. The others have gone quiet.`)
-      : state.played ? card("This week", `${esc(h.capability || "Play one unfinished song for one person.")}${h.key ? ` The key you carry home says “${esc(h.key)}”` : ""}`, btn("home", "Take it home to your nook"), btn("play", "Play it again"), btn("stand", "Stand up"))
-      : card(f, `“${esc(state.ep.friend.line || "Play what you have so far?")}”`, btn("play", "Open the toolbag and play"), btn("stand", "Stand up")); }
+  else if (n === "crate") { const f = esc(state.ep.friend.name || "Your friend"), fs = fireSong();
+    key = "crate:" + fs.step + fs.song.played.length + (fs.song.block || "") + state.played + (fs.stay ? "s" : "");
+    const seals = () => `<div class="row notes">${[0, 1, 2, 3, 4].map(d => `<button type="button" data-fnote="${d}" class="${fs.stump.includes(d) ? "lit" : ""}" aria-label="note ${d + 1}${NOTE_NAMES[d] ? ", " + NOTE_NAMES[d] : ""}${fs.stump.includes(d) ? ", one you gave the stump" : ""}">${d + 1}</button>`).join("")}</div>`;
+    html = fs.step === "seals" ? `<div><b>Your bar</b><div class="t">${fs.song.played.length ? `${fs.song.played.length === 1 ? "One note" : fs.song.played.length + " notes"} so far. Any seal is right.` : "Play what you have so far. The rings mark the notes you gave the stump."}</div></div>${seals()}<div class="row">${btn("tag", "Hand it to Oriel")}${btn("stand", "Stand up")}</div>`
+      : fs.step === "tag" ? `<div><b>Before it goes to ${f}</b><div class="t">What would block you from playing this for someone?</div></div><div class="row blocks">${FS_ORDER.map(c => `<button type="button" data-block="${c}" aria-pressed="${fs.song.block === c}">${FS.BLOCKS[c]}</button>`).join("")}</div><div class="row">${fs.song.block ? btn("give", `Put it in ${f}'s hand`) : ""}${btn("more", "Play a little more")}</div>`
+      : fs.step === "oriel" ? card(f, fs.song.passed ? `${f} plays the old bar for you, and its own way home.` : `${f} plays it on from your last note, at your pace. The others have gone quiet.`)
+      : fs.step === "card" ? (fs.stay ? card("The fire", `${f} is still turning the song over on the guitar.`, btn("home", "Take it home to your nook"), btn("stand", "Stand up"))
+        : thisWeek(fs))
+      : fs.step === "after" ? card(f, "The last note hangs over the fire.")
+      : card(f, `“${esc(state.ep.friend.line || "Play what you have so far?")}”`, btn("play", "Open the toolbag and play"), btn("listen", "Just listen tonight"), btn("stand", "Stand up")); }
   else if (n === "balance") {
     const inPan = state.me && !state.me.bagOn;
     key = "balance:" + inPan + state.plank + state.laid;
@@ -748,6 +780,9 @@ function showCard() {
       : card("The footbridge", "Its middle planks are gone and the gully is deep. Your toolbag is heavy; the balance in the doorway would hold it.", btn("walk:balance", "Walk to the balance"));
   } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
   else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
+  else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
+  else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
+    html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
   else if (n === "stump") {
     const left = ADD - state.given.length;
     key = "stump:" + state.given.length + (state.done ? "d" : "");
@@ -756,12 +791,24 @@ function showCard() {
       : `<div><b>The stump</b><div class="t">Sound a note, any note. ${left === ADD ? "The bar stops where it always stops." : `${left} more and the bar can run on.`}</div></div><div class="row notes">${[0, 1, 2, 3, 4].map(d => `<button type="button" data-note="${d}" aria-label="note ${d + 1}${NOTE_NAMES[d] ? ", " + NOTE_NAMES[d] : ""}">${d + 1}</button>`).join("")}</div>`;
   } else if (n && n.startsWith("ins:")) { const ins = instruments[+n.slice(4)]; key = n; html = `<div><b>${NAMES[ins.kind]}</b><div class="t">It faces the stump, like the others.</div></div><div class="row"><button type="button" data-act="${n}">Play it</button></div>`; }
   if (key === state.cardKey) return;
+  const had = document.activeElement && document.activeElement.closest && document.activeElement.closest("#card input");
   state.cardKey = key; const c = $("#card"); c.hidden = !key; c.innerHTML = html;
+  // a stand's line field takes the keys once you have started writing there, and keeps them line after line
+  const inp = c.querySelector("input"); if (!inp) state.melting = false; else if (had || state.melting) inp.focus({ preventScroll: true });
 }
+// a line written at a stand (block-room.js): Enter or "Say it" sends it; the walk keys stay with the field while it has them
+$("#card").addEventListener("submit", e => { const f = e.target.closest("form[data-melt-form]"); if (!f) return; e.preventDefault(); audio();
+  const inp = f.querySelector("input"), t = inp.value.trim(); if (!t) return; me.keys.clear(); state.melting = true;
+  state.block.act("say:" + f.dataset.meltForm, t); state.cardKey = ""; });
+$("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
+$("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
+$("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
   else if (b.dataset.note != null) giveNote(+b.dataset.note);
+  else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
+  else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
@@ -820,40 +867,132 @@ function shAct(act) {
   }
 }
 /* a string tuned up to pitch: plucked a little flat and slid up (Oriel at the fire, between songs) */
-function tune(f, at = 0) {
+function tune(f, at = 0, vol = 0.16) {
   const a = audio(); if (!a) return; const t = a.currentTime + at;
   const g = a.createGain(); g.connect(master); const o = a.createOscillator(); o.type = "triangle";
   o.frequency.setValueAtTime(f * 0.955, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.7); o.connect(g);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
   o.start(t); o.stop(t + 1.7);
+}
+/* The fire's crackle (spec ctw-friends-fire FR-007): filtered noise with random pops, always under the scene, ducked about
+   6 dB (x0.5) while either you or Oriel is playing. Built once, on the first frame after audio is unlocked. */
+function crackle(playing, dt) {
+  const a = audio(); if (!a || a.state !== "running") return;
+  if (!state.crk) {
+    const buf = a.createBuffer(1, a.sampleRate * 2, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.002 ? 1 : 0.15);
+    const src = a.createBufferSource(); src.buffer = buf; src.loop = true;
+    const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900;
+    const g = a.createGain(); g.gain.value = 0.05; src.connect(hp); hp.connect(g); g.connect(master); src.start();
+    state.crk = { g, duck: 1 };
+  }
+  const c = state.crk, want = playing ? 0.5 : 1;
+  c.duck += (want - c.duck) * Math.min(1, dt * 4); c.g.gain.value = 0.05 * c.duck;
 }
 /* your song, carried from the stump: the notes you gave it, or the bar's own cadence */
 function yourNotes() { try { const v = JSON.parse(sessionStorage.getItem("ctw-song") || "null"); if (Array.isArray(v) && v.length) return v.slice(0, 6).map(n => +n || 0); } catch (e) { /* the cadence */ } return CADENCE.slice(); }
-/* the Friends' Fire's moves: sit on your crate, play what you have so far, stand up */
+/* The Friends' Fire's moves (spec ctw-friends-fire FR-001 to FR-009; the song is ./fire-song.js). You sit, open the toolbag
+   and sound your own notes on the stump's five seals, name the energy that would block you, and put it in Oriel's hand;
+   Oriel plays it home from your last note at your pace. Nothing plays until you hand it over or choose to listen, and
+   nothing grades the playing: the friends laugh only after a silence, whatever you played. */
+const FS_ORDER = ["fire", "wood", "water", "metal", "earth"];
+const BLOCK_HUE = { fire: 0xff7a4a, wood: 0x9ad66e, water: 0x6fb0f0, metal: 0xe4e8f0, earth: 0xe0b85c };
+const KIND_HUE = { yours: 0xffc862, passing: 0xc9d4de, home: 0xffffff, bar: 0xc9d4de };
+const now = () => performance.now() / 1000;
+function fireSong() {
+  if (!state.fs) { const q = Q.get("song"), seed = q && /\d/.test(q) ? FS.stumpNotes(q) : null; let stored = null;
+    try { stored = FS.stumpNotes(sessionStorage.getItem("ctw-song")); } catch (e) { /* the bar's own cadence */ }
+    const stump = seed || stored || [];
+    state.fs = { step: "ask", stump, song: FS.newSong({ stump }), tl: null, lit: -1, stay: false }; }
+  return state.fs;
+}
+function fireNote(d) {
+  const fs = fireSong(); if (fs.step !== "seals") return;
+  const next = FS.play(fs.song, d, now()); if (next.refused) return;
+  fs.song = next; state.cardKey = "";
+  pluck(hz(d, 220), { kind: "string", vol: 0.28 });
+  if (state.ff && state.ff.lean) state.ff.lean(1);
+}
+function thisWeek(fs) {
+  const h = state.ep.home, g = secret(/key to the garage/i);
+  const named = fs.song.block ? `<div class="t">You named ${esc(FS.BLOCKS[fs.song.block].toLowerCase())} as what would block you, and it went into Oriel's hand with the song.</div>` : "";
+  return `<div><b>This week</b><div class="t">${esc(h.capability || "Play one unfinished song for one person.")}</div>${h.key ? `<div class="t">The key you carry home: “${esc(h.key)}”</div>` : ""}${g ? `<div class="t">${esc(g)}</div>` : ""}${named}</div><div class="row"><button type="button" data-act="home">Take it home to your nook</button><button type="button" data-act="stay">Stay by the fire</button></div>`;
+}
+/* Oriel's turn: the timeline's notes plucked on the guitar, one beat after the hand-over, each lighting its seal above
+   Oriel; the home note held; a silence; then the friends laugh and the last card comes. */
+function orielPlays() {
+  const fs = fireSong(), tl = FS.timeline(fs.song); if (!tl) return;
+  fs.tl = tl; fs.step = "oriel"; fs.lit = -1; state.playing = true; state.cardKey = "";
+  const t0 = now(), o = state.friends.find(x => x.oriel);
+  tune(hz(0, 220), 0, 0.1);   // Oriel's last tuned string lands on the home note before the first one of yours
+
+  tl.notes.forEach((n, i) => pluck(hz(n.degree, 220), { kind: "string", at: Math.max(0, n.t - t0), dur: i === tl.notes.length - 1 ? 2.6 : 1.1, vol: 0.22 }));
+  setTimeout(() => { if (o) o.strum = 1; }, Math.max(0, tl.notes[0].t - t0) * 1000);
+  setTimeout(() => { if (o) o.strum = 0; fs.step = "after"; state.cardKey = ""; }, (tl.end - t0) * 1000);
+  setTimeout(() => { state.playing = false; state.played = true;
+    for (const fr of state.friends) fr.laugh = 1;
+    const a = secret(/recording/i); if (a) tell("ff-rec", a, 7);
+    setTimeout(() => { fs.step = "card"; state.cardKey = ""; }, 2600);
+  }, (tl.laughAt - t0) * 1000);
+}
 function ffAct(act) {
   const f = state.me; if (!f) return; state.cardKey = "";
+  const fs = fireSong();
   if (act === "sit") {
     me.target = V(FF.STAND.x, 0, FF.STAND.z); state.sitWhenThere = true;
   } else if (act === "stand") {
+    if (fs.step === "oriel" || fs.step === "after") return;
     state.sat = false; f.setBag(true); state.bagDown.visible = false;
     me.pos.set(FF.STAND.x, 0, FF.STAND.z); me.yaw = FF.YOURS.yaw;
-  } else if (act === "play" && !state.playing) {
-    state.playing = true;
-    const dt = 0.42, mine = PHRASE.slice(0, 8);
-    mine.forEach((d, i) => pluck(hz(d + 2, 220), { kind: "string", at: i * dt, dur: 0.9, vol: 0.24 }));   // you play the bar, and it stops where it always stops
-    const t1 = mine.length * dt + 1.3, notes = PHRASE.slice(0, 8).concat(yourNotes());
-    setTimeout(() => { const o = state.friends.find(x => x.oriel); if (o) o.strum = 1; }, t1 * 1000);
-    notes.forEach((d, i) => pluck(hz(d + 2, 220), { kind: "string", at: t1 + i * dt * 0.9, dur: 1.1, vol: 0.2 }));     // Oriel picks it up on the guitar where you stopped
-    const end = t1 + notes.length * dt * 0.9;
-    [0, 4, 7, 12].forEach((st, i) => pluck(110 * Math.pow(2, st / 12), { kind: "string", at: end + i * 0.04, dur: 2.6, vol: 0.18 }));   // and strums home
-    setTimeout(() => { state.playing = false; state.played = true; state.cardKey = "";
-      const o = state.friends.find(x => x.oriel); if (o) o.strum = 0;
-      for (const fr of state.friends) fr.laugh = 1;
-      tell("ff-laugh", "Round the fire they laugh, the way friends laugh when a song lands.", 5);
-      const a = secret(/recording/i); if (a) tell("ff-rec", a, 7);
-      const b = secret(/key to the garage/i); if (b) tell("ff-key", b, 7);
-    }, (end + 1.6) * 1000);
-  }
+    if (fs.step !== "card") { fs.step = "ask"; fs.song = FS.newSong({ stump: fs.stump }); }
+  } else if (act === "play" && fs.step === "ask") { fs.step = "seals"; f.setBag(false);
+  } else if (act === "tag" && fs.step === "seals") { fs.step = "tag";
+  } else if (act === "more" && fs.step === "tag") { fs.step = "seals";
+  } else if (act === "give" && fs.step === "tag") {
+    const next = FS.handOver(fs.song, now()); if (next.refused) { caption(next.refused.replace(/^./, c => c.toUpperCase()) + ".", 4); return; }
+    fs.song = next; orielPlays();
+  } else if (act === "listen" && fs.step === "ask") {
+    fs.song = FS.pass(fs.song, now()); orielPlays();
+  } else if (act === "stay" && fs.step === "card") { fs.stay = true; }
+}
+/* five seals hung above Oriel, lit one per note while Oriel plays, with a thread through the notes so far (his m07 stone
+   on reel round 1: "I can't see what it looks like when Oriel plays along") */
+function orielSeals() {
+  const o = state.friends.find(x => x.oriel); if (!o) return null;
+  const c = o.holder.position, out = V(c.x, 0, c.z).normalize(), side = V(-out.z, 0, out.x);
+  const group = new THREE.Group(); scene.add(group); group.visible = false;
+  const at = d => c.clone().add(V(0, 1.95 + 0.07 * d, 0)).add(side.clone().multiplyScalar((d - 2) * 0.3));
+  const seals = [0, 1, 2, 3, 4].map(d => { const s = glowSprite(at(d), 0.2, 0xffe2b0, 0.22, false, group); s.userData = { base: at(d), k: 0, hue: new THREE.Color(0xffe2b0) }; return s; });
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([at(0), at(0)]), new THREE.LineBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0.55, fog: false }));
+  group.add(line);
+  const ripple = glowSprite(at(2), 0.1, 0xffc862, 0, false, group);
+  const tagYou = glowSprite(V(0, -9, 0), 0.24, 0xffffff, 0), tagOriel = glowSprite(V(0, -9, 0), 0.24, 0xffffff, 0);
+  return { group, seals, line, ripple, at, tagYou, tagOriel, oriel: o };
+}
+function frameSeals(dt) {
+  const os = state.oSeals, fs = state.fs; if (!os || !fs) return;
+  // the tag glows in your hands while you choose, then in Oriel's fretting hand while Oriel plays
+  const hue = fs.song.block ? BLOCK_HUE[fs.song.block] : null;
+  const you = state.me && state.me.holder.position, oh = os.oriel.holder;
+  os.tagYou.material.opacity += ((hue && (fs.step === "tag") ? 0.85 : 0) - os.tagYou.material.opacity) * Math.min(1, dt * 4);
+  os.tagOriel.material.opacity += ((hue && (fs.step === "oriel" || fs.step === "after") ? 0.85 : 0) - os.tagOriel.material.opacity) * Math.min(1, dt * 3);
+  if (hue) { os.tagYou.material.color.setHex(hue); os.tagOriel.material.color.setHex(hue); }
+  if (you) { const fwd = V(Math.sin(me.yaw), 0, Math.cos(me.yaw)); os.tagYou.position.copy(you).add(fwd.multiplyScalar(0.32)).add(V(0, 0.72, 0)); }
+  { const fwd = V(Math.sin(oh.rotation.y), 0, Math.cos(oh.rotation.y)), side = V(fwd.z, 0, -fwd.x); os.tagOriel.position.copy(oh.position).add(fwd.multiplyScalar(0.3)).add(side.multiplyScalar(-0.18)).add(V(0, 0.95, 0)); }
+  const on = fs.step === "oriel" || fs.step === "after" || (fs.step === "card" && !fs.stay);
+  os.group.visible = on || os.group.visible && os.seals.some(s => s.material.opacity > 0.02);
+  if (!os.group.visible) return;
+  const ph = fs.tl ? FS.phaseAt(fs.song, now()) : { phase: "ready" };
+  const upTo = ph.phase === "oriel" ? ph.index : ph.phase === "handed" || !fs.tl ? -1 : fs.tl.notes.length - 1;
+  if (ph.phase === "oriel" && ph.index !== fs.lit) { fs.lit = ph.index; const n = ph.note, s = os.seals[n.degree]; s.userData.k = 1; s.userData.hue.setHex(KIND_HUE[n.kind] || 0xffffff);
+    os.ripple.position.copy(s.userData.base); os.ripple.scale.set(0.12, 0.12, 1); os.ripple.material.opacity = 0.9; os.ripple.material.color.setHex(KIND_HUE[n.kind] || 0xffffff); }
+  const pts = fs.tl ? fs.tl.notes.slice(0, upTo + 1).filter(n => n.part === "ending" || fs.song.passed).map(n => os.at(n.degree)) : [];
+  os.line.geometry.setFromPoints(pts.length > 1 ? pts : [os.at(0), os.at(0)]);
+  for (const s of os.seals) { s.userData.k *= 1 - dt * 0.9; const lit = fs.tl && fs.tl.notes.slice(0, upTo + 1).some(n => os.seals[n.degree] === s);
+    s.material.color.copy(lit ? s.userData.hue : new THREE.Color(0xffe2b0));
+    s.material.opacity = on ? (lit ? 0.55 + 0.45 * s.userData.k : 0.2) : s.material.opacity * (1 - dt * 1.5);
+    const z = 0.2 + 0.12 * s.userData.k; s.scale.set(z, z, 1); }
+  os.ripple.scale.multiplyScalar(1 + dt * 3.2); os.ripple.material.opacity *= 1 - dt * 2.4;
 }
 function goPlace(where) {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
@@ -874,7 +1013,18 @@ $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
 /* ===================================================================================================
    The frame
    =================================================================================================== */
-const clock = new THREE.Clock(); let T = 0;
+const clock = new THREE.Clock(); let T = 0; const camLook = V(0, 1, 0);
+/* the seated framing: low over your left shoulder at about 1.1 m, the fire in the middle, Oriel upper right; once Oriel
+   has the song the view swings further left, so your back stops covering Oriel. A drag turns it a little. */
+const SEAT_VIEW = { swing: -0.6, swingOriel: -0.9, dist: 2.3, h: 1.2 };
+function seatView() {
+  const fs = state.fs, a = FF.SEATS[0].a, oriel = fs && (fs.step === "oriel" || fs.step === "after");
+  const sw = (oriel ? SEAT_VIEW.swingOriel : SEAT_VIEW.swing) + (camYaw - (FF.YOURS.yaw + Math.PI + 0.35)) * 0.5;
+  const dir = V(Math.sin(a), 0, Math.cos(a)).applyAxisAngle(V(0, 1, 0), sw);
+  const want = me.pos.clone().setY(groundH(me.pos.x, me.pos.z)).add(dir.multiplyScalar(SEAT_VIEW.dist)).add(V(0, SEAT_VIEW.h, 0));
+  const o = state.friends.find(x => x.oriel), op = o ? o.holder.position.clone().add(V(0, oriel ? 1.5 : 1.0, 0)) : V(0, 0.8, 0);
+  return { want, look: V(0, 0.6, 0).lerp(op, oriel ? 0.55 : 0.3) };
+}
 function frame() {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, clock.getDelta()); T += dt;
@@ -887,29 +1037,37 @@ function frame() {
   }
   if (FFX && state.sat) me.pos.y = groundH(FF.YOURS.x, FF.YOURS.z);
   if (state.me) { state.me.holder.position.copy(me.pos); state.me.holder.rotation.y = me.yaw; state.me.update(dt, moving, FFX && state.sat, FF.CRATE.h, T); }
+  if (SHX && state.me && me.pos.x < SH.GULLY.x - 1 && T > (state.farTuneAt || 0)) { tune([110, 146.8, 196, 246.9][Math.floor(T) % 4], 0, 0.05); state.farTuneAt = T + 5; }   // heard from the far bank
   if (state.ff) {
     state.ff.frame(dt, T, state.sat);
     for (const fr of state.friends) { fr.laugh *= 1 - dt * 0.6; fr.mixer.update(dt);
       const bob = fr.laugh > 0.02 ? Math.abs(Math.sin(T * 9 + fr.phase)) * 0.12 * fr.laugh : 0, listen = state.playing ? 0.12 : 0;
       fr.poser.apply(1, true, FF.CRATE.h, T + fr.phase, bob + listen, fr.oriel ? (fr.strum || (state.played || state.playing ? 0 : 0.25 * Math.max(0, Math.sin(T * 0.8)))) : 0);
       fr.wardrobe.dress(dt); }
+    crackle(!!state.playing || (state.fs && state.fs.step === "seals" && state.fs.song.played.length > 0), dt);
     // between songs Oriel tunes a string at a time; now and then the others laugh at something said
-    if (!state.playing && T > (state.tuneAt || 2)) { const st = [82.4, 110, 146.8, 196, 246.9, 329.6][Math.floor(T * 7) % 6]; tune(st); if (!state.played) tune(st, 0.9);
+    if (!state.playing && !(state.sat && state.fs && state.fs.step !== "card") && T > (state.tuneAt || 2)) { const st = [82.4, 110, 146.8, 196, 246.9, 329.6][Math.floor(T * 7) % 6]; tune(st); if (!state.played) tune(st, 0.9);
       state.tuneAt = T + (state.played ? 9 : 4.5);
-      if (!state.played && Math.floor(T) % 3 === 0) { const fr = state.friends[Math.floor(T) % Math.max(1, state.friends.length)]; if (fr && !fr.oriel) fr.laugh = 0.7; } }
+      if (!state.played && !state.sat && Math.floor(T) % 3 === 0) { const fr = state.friends[Math.floor(T) % Math.max(1, state.friends.length)]; if (fr && !fr.oriel) fr.laugh = 0.7; } }
   }
   // camera: behind and above you, turned by a drag, never inside a trunk (it is held inside the ring and the way in)
   const off = V(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist);
-  const want = me.pos.clone().add(off).add(V(0, 1.0, 0));
+  let want = me.pos.clone().add(off).add(V(0, 1.0, 0)), look = me.pos.clone().add(V(0, 1.25, 0)), ease = 6;
+  if (FFX && state.sat) { const seat = seatView(); want = seat.want; look = seat.look; ease = 2.5; }
   if (intro.on) { intro.t += dt; if (!me.target || intro.t > 7) intro.settling = true;
     if (intro.settling) { camYaw += (0 - camYaw) * Math.min(1, dt * 1.4); if (Math.abs(camYaw) < 0.01) { camYaw = 0; intro.on = false; } } }
-  if (FFX) { const fh = Math.hypot(want.x, want.z), lim = FF.FIRE_R + 0.5; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
+  if (FFX && !state.sat) { const fh = Math.hypot(want.x, want.z), lim = FF.FIRE_R + 0.5; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
+  else if (CHX) {   // inside the chamber's wall: come in along the line to you rather than slide round the wall
+    const base = me.pos.clone().add(V(0, 1.0, 0)), lim = CH.R - 0.6; let t = 1;
+    for (let i = 0; i < 12 && Math.hypot(base.x + off.x * t, base.z + off.z * t) > lim; i++) t *= 0.86;
+    want.copy(base).addScaledVector(off, Math.max(0.3, t)); want.y = Math.min(want.y, CH.TOP - 0.4); }
   else if (SHX) { const fh = Math.hypot(want.x, want.z), lim = SH.HUT_R + 0.7; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
   else { const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? ARCH.z - 0.3 : CLR - 0.6;   // never out past the arch, into the roots
     if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; } }
   want.y = Math.max(want.y, groundH(want.x, want.z) + 0.6);
-  camera.position.lerp(want, 1 - Math.exp(-dt * 6));
-  camera.lookAt(me.pos.clone().add(V(0, 1.25, 0)));
+  camera.position.lerp(want, 1 - Math.exp(-dt * ease));
+  if (FFX && state.sat) { camLook.lerp(look, 1 - Math.exp(-dt * ease)); camera.lookAt(camLook); } else { camLook.copy(look); camera.lookAt(look); }
+  if (FFX) frameSeals(dt);
   // the hum: every so often it starts, and stops mid-bar (until the song has been played to its end)
   if (bar && T > humAt) { playPhrase(state.done); humAt = T + (state.done ? 16 : 11); if (!state.done && T > 8 && Math.hypot(me.pos.x, me.pos.z) < CLR - 1) tell("bar", "Through the trees, the hum starts again, and stops mid-bar.", 5); }
   if (bar) {
@@ -928,6 +1086,7 @@ function frame() {
   if (state.rain) { state.rain.mat.opacity = 0.32 * state.rainK; state.rain.lines.visible = state.rainK > 0.02; if (state.rain.lines.visible) state.rain.update(T, me.pos); }
   if (state.fog && !SHX && !FFX) { state.fog.density = 0.03 + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
   if (state.block) state.block.frame(dt, T);
+  if (state.ch) state.ch.frame(dt, T);
   if (state.flies) state.flies.material.opacity = 0.65 + Math.sin(T * 1.7) * 0.25;
   if (archFx) { archFx.sheetM.opacity = 0.6 + Math.sin(T * 1.3) * 0.12; archFx.light.intensity = 4 + Math.sin(T * 2.1) * 0.6; }
   // near things, captions
@@ -949,33 +1108,47 @@ function frame() {
     if (SHX && Q.get("plank") === "laid") { state.laid = true; state.sh.lay(); }
     if (SHX && Q.get("at") === "far") { state.laid = true; state.sh.lay(); me.pos.set(SH.FAR_BANK.x, 0, SH.FAR_BANK.z); me.yaw = Math.PI / 2; camYaw = -Math.PI / 2; }
     if (FFX && Q.get("at") === "crate") { state.sat = true; state.me.setBag(false); state.bagDown.visible = true; me.pos.set(FF.YOURS.x, 0, FF.YOURS.z); me.yaw = FF.YOURS.yaw; camYaw = FF.YOURS.yaw + Math.PI + 0.35; intro.on = false; }
-    if (FFX && Q.get("song") === "played") { state.played = true; }
+    if (FFX && Q.get("song") === "played") { state.played = true; const fs = fireSong(); fs.step = "card"; }
+    if (FFX && state.sat && Q.get("fire")) { const fs = fireSong(), w = Q.get("fire"); const t = now() - 6;
+      const sample = fs.stump.length ? fs.stump : [1, 3, 0, 4];
+      if (w !== "ask") { fs.step = "seals"; sample.forEach((d, i) => { fs.song = FS.play(fs.song, d, t + i * 0.7); }); }
+      if (w === "tag" || w === "oriel" || w === "card") { fs.step = "tag"; fs.song = FS.tagBlock(fs.song, Q.get("block") || "water"); }
+      if (w === "oriel") { fs.song = FS.handOver(fs.song, now()); orielPlays(); }
+      if (w === "card") { fs.song = FS.handOver(fs.song, t + 3); fs.tl = FS.timeline(fs.song); fs.step = "card"; state.played = true; } }
     if (intro.on) { me.target = ARRIVE_AT.clone(); camYaw = me.yaw; }
     if (Q.get("song") === "done" && bar) { state.given = CADENCE.slice(); bar.more.forEach(m => { m.want = m.on = 1; }); for (const f of bar.falling) f.material.opacity = 0; state.done = true; state.rainK = 0; }
     // the block's room: a dense charge from the nook's doorway, or the ?block= preview with the sample's charge
+    // slice 2: a storm fills the land, a season fills the keeping chamber (densityOf().where); ?block= previews either
     if (!SHX) {
       let fromNook = false; try { fromNook = !!sessionStorage.getItem("ctw-charge"); } catch (e) { /* the sample */ }
-      const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1;
+      const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1, here = CHX ? "chamber" : "land";
       let d = densityOf(state.ep.charge);
-      if (qb && !d.dense) d = densityOf({ q4: { weather: [{ feeling: "disappointed", strength: "a storm" }] } });
-      if (d.dense && (fromNook || qb)) {
+      if (qb && !(d.dense && d.where === here)) d = densityOf({ q4: { weather: [{ feeling: CHX ? "frustrated" : "disappointed", strength: CHX ? "a season" : "a storm" }] } });
+      // the chamber resets each time someone enters it (his B on bm-build-look-3, 2026-11-03): the frost is back, the stands are fresh
+      if (d.dense && d.where === here && (fromNook || qb)) {
         step("the cold comes through with you");
+        const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6, basins: [CH.POOL],
+          where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "It goes onto the next stone, and the cave's kit grows beside it.",
+          onKeep: rec => { setTimeout(() => state.ch.add(rec), 1200); } } : {};
         state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
-          exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95,
+          exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95, ...chRoom,
           say: (t, secs) => { if (t) caption(t, secs); },
           sound: k => { if (k === "take" || k === "keep") [0, 2, 4].forEach((dd, i) => pluck(hz(dd, 220), { kind: "string", at: i * 0.16, vol: 0.2 }));
             else if (k === "pass") pluck(hz(0, 110), { kind: "hum", dur: 1.6, vol: 0.14 }); else pluck(hz(4, 440), { kind: "string", vol: 0.15 }); } });
-        if (startK === 1) caption(`The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. Three stands wait in the frost, and the nearest one glows.`, 7);
+        if (startK === 1) caption(CHX ? `A season of it came through the arch with you: feeling ${d.feeling}. The frost has set on what you keep here. One stand glows on the floor: what you write there melts it.`
+          : `The cold came through with you: feeling ${d.feeling}, ${d.strength} of it. One stand glows in the frost: what you write there melts it.`, 7);
       }
     }
     camera.position.copy(me.pos).add(V(-Math.sin(me.yaw) * -4.5, 2.2, -Math.cos(me.yaw) * -4.5));
+    if (FFX && state.sat) { const sv = seatView(); camera.position.copy(sv.want); camLook.copy(sv.look); }   // opened seated: no ease from afar
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
+    if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);
     if (FFX) { caption("The road home, at the homeroom's rim.", 5); caption("Round the fire, someone is tuning a guitar, and the others laugh at something said.", 6); }
     if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }
     caption("Tap the ground to walk. Drag to look around.", 5);
-    window.__land = { place: PLACE, plan: state.p, me, state, shAct, ffAct, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, block: () => state.block, view: () => ({ near: state.near, block: state.block ? state.block.view() : null, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
+    window.__land = { place: PLACE, plan: state.p, me, state, shAct, ffAct, SEAT_VIEW, intro, cam: (y, p) => { intro.on = false; camYaw = y; if (p != null) camPitch = p; }, instruments, camera, scene, tap, giveNote, block: () => state.block, view: () => ({ near: state.near, block: state.block ? state.block.view() : null, given: state.given.slice(), done: state.done, pos: me.pos.toArray(), pieces: state.p.pieces.map(x => x.id), unbuilt: state.p.unbuilt }) };
     frame();
   } catch (e) {
     console.error(e); step("the land did not build: " + (e && e.message || e)); window.__landError = String(e && e.stack || e);

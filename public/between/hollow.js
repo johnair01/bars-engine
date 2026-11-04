@@ -565,9 +565,10 @@ export function buildHollow(scene, opts = {}) {
       m.scale.set(1.0, 0.26, 0.85); m.position.set(s.x, DAIS_Y + 0.12, s.z); m.rotation.y = s.yaw; root.add(m);
       cushions.push(m);
     });
-    // a woven blanket over the plum cushion's edge, and one on the moss in front
-    const blanketA = add(new THREE.PlaneGeometry(1.0, 0.75, 8, 6), new THREE.MeshStandardMaterial({ map: weave("#c9a07e", "#8f3f78", "#e6cfb0"), roughness: 1, side: THREE.DoubleSide }), SEATS[1].x + 0.25, DAIS_Y + 0.27, SEATS[1].z + 0.05);
-    blanketA.rotation.set(-Math.PI / 2, 0, SEATS[1].yaw + 0.3);
+    // a woven mat under the plum cushion: it lies on the dais and the cushion sits on it, the mat showing round the cushion's edge (pt1-cushion-look-2, his steer: the mat was on top, not underneath)
+    const blanketA = add(new THREE.PlaneGeometry(1.3, 1.12, 8, 6), new THREE.MeshStandardMaterial({ map: weave("#c9a07e", "#8f3f78", "#e6cfb0"), roughness: 1, side: THREE.DoubleSide }), SEATS[1].x, DAIS_Y + 0.012, SEATS[1].z);
+    blanketA.rotation.order = "YXZ"; blanketA.rotation.set(-Math.PI / 2, SEATS[1].yaw, 0);
+    // and one on the moss in front
     const blanketB = add(new THREE.PlaneGeometry(1.5, 1.0, 10, 6), new THREE.MeshStandardMaterial({ map: weave("#2f6f72", "#d8c8a8", "#1e4e52"), roughness: 1, side: THREE.DoubleSide }), -0.7, DAIS_Y + 0.02, 1.85);
     blanketB.rotation.set(-Math.PI / 2, 0, 0.35);
     // the low table, a teapot and two cups
