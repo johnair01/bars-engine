@@ -1,7 +1,9 @@
 // The money boat at its pier, played (Six-faces-council council/callsheets/pipeline/money-block/game-frame.md, Homeroom and
 // Core loop; his A on mb-pier-look-1). The parts above drew the pier and the boat; this file walks the captain down the
 // pier, across the plank and onto the boat's deck, where the crate is worked, and plays the trade hand (trade-hand.js).
-// When the crate is sent the captain steps back onto the pier and the boat sails with it. Tap where to walk; tap the
+// When the crate is sent the captain steps back onto the pier and the boat sails with it. Days later the player taps a boat
+// at anchor and says it is back: it comes in out of the fog to the return berth on the pier's west side (return.js, his A
+// on mb-return-look-1), the captain crosses its plank and opens its crate: coin, a no, or still out. Tap where to walk; tap the
 // crate, the spirit, the plank, the crew bell, a studio boat, a boat at anchor, the tide post or the route book to go to
 // it. Drag turns the view. ?build=1 assembles the deck part by part with each part's source (his note on mb-gate-look-3).
 // ?demo=1 plays the sample chart without writing to this device.
@@ -41,14 +43,23 @@ place("bell", [5.0, DY, -0.4], [BERTH.x + 1.25, -2.42, BERTH.z + 2.4], 0.55);
 boatGrp.attach(part("bell").group); // the crew bell rides the boat's stern
 const hitOf = (kind) => PARTS.flatMap((p) => p.hit || []).find((h) => h.kind === kind).pos;
 
-// ---- the walkable ground: the pier, the plank, the boat's deck ------------------------------------------------------------
+// ---- the walkable ground: the pier, the plank, the boat's deck, and the west plank and deck of a boat that came back ------
 const BOAT_Y = BERTH.y - 0.35 + boatProto.userData.deckY, PLZ = BERTH.z + 1.6, PIER_EDGE = PIER.x + PIER.w / 2, BOAT_IN = BERTH.x - 1.5;
 const PIER_END = new THREE.Vector3(PIER_EDGE - 0.4, PIER.y, PLZ), BOAT_END = new THREE.Vector3(BOAT_IN + 0.4, BOAT_Y, PLZ);
 // the berth stands empty from the moment today's boat sails until tomorrow's crate is dealt
 const berthEmpty = () => !!S.crate && S.crate.state === "sent" && live.sending == null;
 const plankOut = () => !(live.sending > 0) && !berthEmpty();
+// the return berth (return.js): its plank runs west from the pier to a boat moored with its bow toward the pier's root
+const RPLZ = RET.z - 1.6, PIER_WEST = PIER.x - PIER.w / 2, RET_IN = RET.x + 1.5;
+const RPIER_END = new THREE.Vector3(PIER_WEST + 0.4, PIER.y, RPLZ), RET_END = new THREE.Vector3(RET_IN - 0.4, BOAT_Y, RPLZ);
+const retMoored = () => !!live.ret && live.ret.come === 0;
 function where(x, z) {
   if (Math.abs(x - PIER.x) < PIER.w / 2 - 0.2 && z < PIER.z0 - 0.3 && z > PIER.z1 + 0.3) return "pier";
+  if (retMoored() && x < PIER_WEST + 0.3) {
+    if (x >= RET_IN - 0.3 && Math.abs(z - RPLZ) < 0.32) return "retplank";
+    const tp = Math.min(1, (RET.z + 3.9 - z) / 1.8);
+    if (z > RET.z - 3.0 && tp > 0 && Math.abs(x - RET.x) < 1.45 * tp) return "ret";
+  }
   if (!plankOut()) return null;
   if (x >= PIER_EDGE - 0.3 && x <= BOAT_IN + 0.3 && Math.abs(z - PLZ) < 0.32) return "plank";
   const taper = Math.min(1, (z - (BERTH.z - 3.9)) / 1.8);
@@ -56,16 +67,19 @@ function where(x, z) {
   return null;
 }
 const onDeck = (x, z) => !!where(x, z);
-const heightAt = (x, z) => { const w = where(x, z); if (w === "boat") return BOAT_Y; if (w === "plank") return PIER.y + (BOAT_Y - PIER.y) * Math.min(1, Math.max(0, (x - PIER_EDGE) / (BOAT_IN - PIER_EDGE))); return PIER.y; };
-const side = (x, z) => { const w = where(x, z); return w === "plank" ? (x - PIER_EDGE < BOAT_IN - x ? "pier" : "boat") : w; };
+const heightAt = (x, z) => { const w = where(x, z); if (w === "boat" || w === "ret") return BOAT_Y; if (w === "retplank") return PIER.y + (BOAT_Y - PIER.y) * Math.min(1, Math.max(0, (PIER_WEST - x) / (PIER_WEST - RET_IN))); if (w === "plank") return PIER.y + (BOAT_Y - PIER.y) * Math.min(1, Math.max(0, (x - PIER_EDGE) / (BOAT_IN - PIER_EDGE))); return PIER.y; };
+const side = (x, z) => { const w = where(x, z); return w === "plank" ? (x - PIER_EDGE < BOAT_IN - x ? "pier" : "boat") : w === "retplank" ? (PIER_WEST - x < x - RET_IN ? "pier" : "ret") : w; };
 
 // ---- the captain -------------------------------------------------------------------------------------------------------
 const player = { group: new THREE.Group(), pos: new THREE.Vector3(0, PIER.y, 7.0), path: [], then: null, mixer: null, acts: {}, walking: false };
 const aboard = () => side(player.pos.x, player.pos.z) === "boat";
-// Walk to p, crossing the plank when p is on the other side of it.
+const onReturn = () => ["ret", "retplank"].includes(where(player.pos.x, player.pos.z));
+// Walk to p, crossing a plank (or both, boat to boat by the pier) when p is on the other side of it.
+const ENDS = { boat: [BOAT_END, PIER_END], ret: [RET_END, RPIER_END] }; // [the end aboard, the end on the pier]
 function goTo(p, then = null) {
-  const a = side(player.pos.x, player.pos.z), b = side(p.x, p.z);
-  player.path = a && b && a !== b ? (a === "pier" ? [PIER_END, BOAT_END] : [BOAT_END, PIER_END]).map((v) => v.clone()).concat([p]) : [p];
+  const a = side(player.pos.x, player.pos.z), b = side(p.x, p.z), path = [];
+  if (a && b && a !== b) { if (a !== "pier") path.push(...ENDS[a]); if (b !== "pier") path.push(ENDS[b][1], ENDS[b][0]); }
+  player.path = path.map((v) => v.clone()).concat([p]);
   player.then = then;
 }
 player.group.position.copy(player.pos); player.group.rotation.y = Math.PI; scene.add(player.group);
@@ -83,6 +97,11 @@ function setWalking(w) {
 }
 // Where to stand to work a thing: on the boat, between the plank and the thing; elsewhere, a step short of it.
 const near = (v) => {
+  if (Math.abs(v.x - RET.x) < 2.4 && v.z > RET.z - 4 && v.z < RET.z + 5) {
+    if (!retMoored()) return null;
+    const d = new THREE.Vector3(RET_END.x - v.x, 0, RET_END.z - v.z), L = d.length(); if (L < 1.1) return RET_END.clone();
+    const p = new THREE.Vector3(v.x, 0, v.z).addScaledVector(d.normalize(), 1.0); return where(p.x, p.z) === "ret" ? p : RET_END.clone();
+  }
   if (Math.abs(v.x - BERTH.x) < 2.4 && v.z > BERTH.z - 5 && v.z < BERTH.z + 4) {
     if (!plankOut()) return null;
     const d = new THREE.Vector3(BOAT_END.x - v.x, 0, BOAT_END.z - v.z), L = d.length(); if (L < 1.1) return BOAT_END.clone();
@@ -92,13 +111,16 @@ const near = (v) => {
 };
 
 // ---- live state the parts draw -----------------------------------------------------------------------------------------
-const live = { sending: null, crew: false, ringing: 0, rowing: -1 };
+// ret: the boat that came back, while it runs in, waits at the west berth and leaves ({ id, come, open, ajar, kind, leaveAt })
+const live = { sending: null, crew: false, ringing: 0, rowing: -1, ret: null };
+// boats still out at anchor, in the order the anchored boats are drawn: not the one sailing now, not the one in at the berth
+const atAnchor = () => { const out = S.boats.filter((b) => !b.back && !(live.ret && live.ret.id === b.id)); return live.sending != null ? out.slice(0, -1) : out; };
 const LEVEL = { stranger: 0, known: 0.33, trusted: 0.66, route: 1 };
 function st(t) {
   const waiting = !!S.crate && S.crate.state === "waiting";
   return { t, waiting, turned: TH.tideTurned(S) && !!S.crate, spiritSide: waiting && S.crate.spiritSide, sending: live.sending, berthEmpty: berthEmpty(), crew: live.crew || (S.crate && S.crate.state === "crew"),
     ringing: live.ringing > t, rowing: live.rowing, fog: S.fog, tide: TH.tideLine(S, now()).level, routes: S.routes.length,
-    boatsOut: Math.min(5, S.boats.filter((b) => !b.back).length - (live.sending != null ? 1 : 0)),
+    boatsOut: Math.min(5, atAnchor().length), ret: live.ret,
     ports: [0, 1, 2, 3, 4, 5].map((i) => (S.ports[i] ? LEVEL[S.ports[i].standing] : -1)) };
 }
 
@@ -170,12 +192,27 @@ const ACTS = {
     }, true)));
   },
   boat(h) {
-    const out = S.boats.filter((b) => !b.back); const b = out[h.i]; if (!b) return;
-    const at = h.pos.clone().add(new THREE.Vector3(0, 2.4, 0));
-    const amt = field("Amount"); amt.inputMode = "decimal"; const no = field("What the no taught you");
-    say(at, "A boat at anchor", "It carried " + b.action + " to " + portName(b.port) + ". What did it bring back?", amt,
-      row(btn("Coin", () => { if (!(+amt.value > 0)) return amt.focus(); TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); done(); keep(b, at); })), no,
-      row(btn("A no", () => { TH.logReturn(S, b.id, { kind: "lesson", line: no.value.trim() }, now()); done(); say(at, "The spirit", "I'll hold that one. Nothing of yours is any less."); }, true), btn("Still out", hush, true)));
+    const b = atAnchor()[h.i]; if (!b) return;
+    const at = h.pos.clone().add(new THREE.Vector3(0, 2.4, 0)), carried = "It carried “" + b.action.replace(/[.\s]+$/, "") + "” to " + portName(b.port) + ".";
+    if (live.ret) return say(at, "A boat at anchor", carried + " One boat is already in at the far side of the pier. Open its crate first.");
+    say(at, "A boat at anchor", carried + " Has it come back?", row(btn("She's back", () => { hush(); live.ret = { id: b.id, come: 1, open: 0, ajar: false, kind: null, leaveAt: null }; goTo(RPIER_END.clone().add(new THREE.Vector3(0.5, 0, 0.9))); }), btn("Still out", hush, true)));
+  },
+  // the crate of a boat that came back, opened aboard: what came back is answered the same way for coin and for a no
+  retcrate() {
+    const r = live.ret; if (!r || r.come > 0) return;
+    const b = S.boats.find((x) => x.id === r.id); if (!b) return;
+    const at = retCrateAt();
+    if (r.kind) return say(at, null, r.kind === "coin" ? "The coin is logged on the tide post." : "The spirit holds that one.");
+    r.ajar = true;
+    const amt = field("Amount"); amt.inputMode = "decimal"; const no = field("What the no taught you (optional)");
+    say(at, "Back from " + portName(b.port), "It carried “" + b.action.replace(/[.\s]+$/, "") + "”. What did it bring back?", amt,
+      row(btn("Coin", () => { if (!(+amt.value > 0)) return amt.focus(); TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); done(); r.kind = "coin"; keep(b, at, () => leave(1.2)); })), no,
+      row(btn("A no", () => { TH.logReturn(S, b.id, { kind: "lesson", line: no.value.trim() }, now()); done(); r.kind = "lesson"; say(at, "The spirit", "I'll hold that one. Nothing of yours is any less."); leave(3.5); }, true),
+        btn("Still out", () => { r.ajar = false; hush(); leave(0); }, true)));
+  },
+  retplank() {
+    if (!retMoored()) return;
+    hush(); goTo(onReturn() ? new THREE.Vector3(PIER.x - 0.2, PIER.y, RPLZ + 0.6) : RET_END.clone().add(new THREE.Vector3(-0.5, 0, 0.4)));
   },
   tide() { const t = TH.tideLine(S, now()); say(hitOf("tide").clone().add(new THREE.Vector3(0, 2.6, 0)), "The tide post", "This month: " + money(t.coin) + (t.goal ? " of " + money(t.goal) + "." : ".")); },
   book() {
@@ -185,10 +222,14 @@ const ACTS = {
   port(h) { const p = S.ports[h.i]; if (!p) return; const words = { stranger: "still in fog: no boat has reached it yet", known: "known: a boat has reached it", trusted: "trusted: coin has come back from it", route: "a standing route: coin came back twice" }; say(h.pos, p.name, words[p.standing] + "."); },
 };
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
-function keep(b, at) {
+function keep(b, at, then) {
   const words = field("The words that worked (optional)");
-  say(at, "Coin came back", "Keep this as a route in the route book?", words, row(btn("Keep the route", () => { TH.keepRoute(S, b.id, words.value.trim(), now()); done(); say(at, null, "Kept. The route book has a new page."); }), btn("Not now", hush, true)));
+  say(at, "Coin came back", "Keep this as a route in the route book?", words, row(btn("Keep the route", () => { TH.keepRoute(S, b.id, words.value.trim(), now()); done(); say(at, null, "Kept. The route book has a new page."); if (then) then(); }), btn("Not now", () => { hush(); if (then) then(); }, true)));
 }
+const retCrateAt = () => RETURN.crate.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 1.6, 0));
+// The boat that came back leaves the berth once the captain is back on the pier: logged boats sail off into the fog;
+// a boat still out goes back to anchor.
+function leave(delay) { if (live.ret) live.ret.leaveAt = clock.elapsedTime + delay; }
 function send() {
   const c = S.crate; if (!c || c.state !== "waiting") return;
   TH.release(S, "sent", now()); done(); hush(); live.sending = 0; // the boat waits at 0 until the captain is back on the pier
@@ -212,12 +253,12 @@ addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clientX
 addEventListener("pointerup", (e) => {
   const d = drag; drag = null; if (!d || d.moved || BUILD) return;
   let best = null, bd = 64;
-  hits().forEach((h) => { if (h.part.update && !h.part.group.visible) return; const s = toScreen(h.pos); if (s.z > 1) return; const dd = Math.hypot(s.x - e.clientX, s.y - e.clientY); if (dd < bd) { bd = dd; best = h; } });
-  if (best) { if (best.kind === "plank") return ACTS.plank(); const act = () => ACTS[best.kind](best); const to = near(best.pos); if (to) goTo(to, act); else act(); return; }
+  hits().forEach((h) => { if (h.part.update && !h.part.group.visible) return; if ((h.kind === "retcrate" || h.kind === "retplank") && !retMoored()) return; const s = toScreen(h.pos); if (s.z > 1) return; const dd = Math.hypot(s.x - e.clientX, s.y - e.clientY); if (dd < bd) { bd = dd; best = h; } });
+  if (best) { if (best.kind === "plank") return ACTS.plank(); if (best.kind === "retplank") return ACTS.retplank(); const act = () => ACTS[best.kind](best); const to = near(best.pos); if (to) goTo(to, act); else act(); return; }
   hush();
   const ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
   // the boat's deck sits lower than the pier: try it first, then the pier and the plank
-  for (const y of [BOAT_Y, PIER.y]) { const p = new THREE.Vector3(); if (ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), p) && where(p.x, p.z) && (y === PIER.y || where(p.x, p.z) === "boat")) { goTo(p); return; } }
+  for (const y of [BOAT_Y, PIER.y]) { const p = new THREE.Vector3(); if (ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), p) && where(p.x, p.z) && (y === PIER.y || ["boat", "ret"].includes(where(p.x, p.z)))) { goTo(p); return; } }
 });
 addEventListener("resize", () => { renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
 
@@ -246,6 +287,16 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   // the boat casts off once the captain is back on the pier, and sails with the crate for seven seconds
   if (live.sending != null && !(live.sending === 0 && (aboard() || player.path.length))) { live.sending = Math.min(1, live.sending + dt / 7); if (live.sending >= 1) { live.sending = null; say(new THREE.Vector3(BERTH.x, -0.4, BERTH.z), null, "The boat is out in the fog. The tide has turned, and the studio boats are free."); } }
+  // the boat that came back: runs in from the fog for six seconds, moors, its lid lifts, and it leaves once the captain is ashore
+  const r = live.ret;
+  if (r) {
+    if (r.come > 0 && r.leaveAt == null) { r.come = Math.max(0, r.come - dt / 6); if (r.come === 0) say(RETURN.crate.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 2.2, 0)), null, "She's in at the far side of the pier. Cross her plank and open the crate."); }
+    const want = r.kind ? 1 : r.ajar ? 0.25 : 0; r.open += Math.sign(want - r.open) * Math.min(Math.abs(want - r.open), dt * 1.2);
+    if (r.leaveAt != null && t >= r.leaveAt) {
+      if (onReturn()) { if (!player.path.length) goTo(new THREE.Vector3(PIER.x - 0.3, PIER.y, RPLZ + 0.8)); }
+      else { r.come = Math.min(1, r.come + dt / 7); if (r.come >= 1) live.ret = null; }
+    }
+  }
   const goal = player.path[0];
   if (goal) {
     const d = new THREE.Vector3(goal.x - player.pos.x, 0, goal.z - player.pos.z), L = d.length();
@@ -258,7 +309,8 @@ function frame() {
   const s = st(t); PARTS.forEach((p) => p.update && p.update(s));
   // a phone stands the camera further back, so the boat's stern stays in frame (money pier round 1, "not checked")
   const far = innerWidth / innerHeight < 0.8 ? 1.5 : 1;
-  const focus = BUILD ? new THREE.Vector3(2.0, -2.2, -3.5) : new THREE.Vector3(player.pos.x * 0.5 + 1.2, player.pos.y + 0.2, player.pos.z - 8);
+  // aboard a boat that came back, the view follows the captain onto it, so its crate stays in frame
+  const focus = BUILD ? new THREE.Vector3(2.0, -2.2, -3.5) : new THREE.Vector3(onReturn() ? player.pos.x + 1.0 : player.pos.x * 0.5 + 1.2, player.pos.y + 0.2, player.pos.z - 8);
   const eye = BUILD ? new THREE.Vector3(-5.0, 4.5, 12.0 * far) : focus.clone().add(new THREE.Vector3(Math.sin(yaw) * 15 * far, 5.6, Math.cos(yaw) * 15 * far));
   camera.position.lerp(eye, BUILD || page.frames === 0 ? 1 : 0.08);
   camera.lookAt(focus);
@@ -271,3 +323,5 @@ requestAnimationFrame(frame);
 // For checks (board/checks style): where a thing is on screen, and the trade hand's state.
 page.where = (kind, i = 0) => { const h = hits().filter((x) => x.kind === kind)[i]; return h ? toScreen(h.pos) : null; };
 page.state = () => JSON.parse(JSON.stringify(S));
+page.live = () => ({ ret: live.ret && { ...live.ret } });
+page.atAnchor = () => atAnchor().length;
