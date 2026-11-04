@@ -58,6 +58,11 @@ npm install
 
 ## 3. Environment variables
 
+> **Local-first (2026-11-04):** for development and testing you need no `.env` at all. `scripts/local/dev.sh dev`
+> starts a local Postgres and the app; see [LOCAL_FIRST_TESTING.md](LOCAL_FIRST_TESTING.md). The steps below are for
+> AI keys and for people who manage production. A pulled `.env.local` holds production's database URL, which a dev
+> server now refuses.
+
 The app needs `DATABASE_URL` (PostgreSQL) and optionally `OPENAI_API_KEY` for AI features.
 
 **With Vercel access:**
