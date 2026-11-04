@@ -128,6 +128,7 @@ export default defineConfig({
       'src/lib/studio/__tests__/shaman.test.ts',
       'src/lib/lantern/__tests__/engine.test.ts',
       'src/lib/lantern/__tests__/kit.test.ts',
+      'src/lib/ember-economy/harvest/**/__tests__/*.test.ts',
     ],
   },
   resolve: {
