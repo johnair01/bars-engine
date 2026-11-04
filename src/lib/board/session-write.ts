@@ -17,6 +17,8 @@ export const UNRECORDED_COLLECTIONS = new Set(['rows'])
  * its pictures are all he can judge it by. Same rules as the council's gate, so a lane that skips post_rows.py is caught. */
 const IMG = /\.(png|jpe?g|gif|webp)(\?|$)/i
 const DATA_IMG = /^data:image\/(png|jpe?g|gif|webp);base64,/i
+const BARS_ANY = /^https:\/\/bars-engine\.vercel\.app(\/|$)/i
+const BARS_OK = /^https:\/\/bars-engine\.vercel\.app\/board\/(look|stills)([/?]|$)/i
 const PREVIEW = /^https:\/\/(?!bars-engine\.vercel\.app\/)[^/]+\.vercel\.app(\/|$)/i
 const isPicture = (u: unknown): u is string => typeof u === 'string' && (DATA_IMG.test(u) || (u.startsWith('https://') && IMG.test(u)))
 export const isLook = (docId: string, data: Record<string, unknown>) => data.look === true || /-look-\d+$/.test(docId)
@@ -37,6 +39,11 @@ export function lookErrors(docId: string, data: Record<string, unknown>): string
   const href = typeof data.href === 'string' ? data.href : ''
   if (PREVIEW.test(href)) out.push(`LOOK NOT POSTED: Open it leads to a Vercel preview (${href.slice(0, 70)}), and previews are off; `
     + 'point it at the look\'s pictures (a /board/look link)')
+  // A live app page shows only what has shipped, not the look (ctw-own-charge-look-1, 2026-11-04: it led to sign-in).
+  else if (BARS_ANY.test(href) && !BARS_OK.test(href)) out.push(`LOOK NOT POSTED: Open it is a bars-engine app page (${href.slice(0, 70)}), `
+    + 'which shows only what has shipped; make Open it the look\'s /board/look picture page and put the live page in `href2`')
+  else if (/^https:\/\/bars-engine\.vercel\.app\/board\/look([/?]|$)/i.test(href) && !/[?&]i=/.test(href))
+    out.push(`LOOK NOT POSTED: Open it is a /board/look page that names no picture (${href.slice(0, 70)}); add each picture as \`i=\``)
   return out
 }
 
