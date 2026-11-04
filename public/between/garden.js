@@ -3127,11 +3127,24 @@ const vines = [];
 /* ---------- the shelf: the blank scroll, scrolls that arrived sealed, keepsakes ---------- */
 const shelf = { group: null, at: new THREE.Vector3(), face: 0, sig: "", taps: [], sealedSeen: null };
 function scrollMesh(kind, hue) {
-  const g = new THREE.Group(), s = kind === "keep" ? 0.5 : 0.68;
+  const g = new THREE.Group(), s = kind === "keep" ? 0.5 : kind === "council" ? 0.74 : 0.68;
   const paper = new THREE.MeshStandardMaterial({ color: 0xd9ccb0, roughness: 0.9, emissive: 0xefe2c4, emissiveIntensity: 0.22 }), rod = new THREE.MeshStandardMaterial({ color: 0x7a5236, roughness: 0.7 });
   const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.34, 14), paper); roll.rotation.z = Math.PI / 2; roll.position.y = 0.05; g.add(roll);
   for (const sx of [-1, 1]) { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.05, 8), rod); k.rotation.z = Math.PI / 2; k.position.set(sx * 0.19, 0.05, 0); g.add(k); }
-  if (kind === "sealed") {
+  if (kind === "council" || kind === "councilKeep") { // the council's scroll (stills round 2026-11-03-council-scroll-ad1, his B on ug-scroll-look-1)
+    const look = COUNCIL_LOOK;
+    if (kind === "councilKeep") { // opened and rolled: no seal, one violet band, dark rods, like a keepsake
+      rod.color.setHex(0x2a2238); g.scale.setScalar(0.5 / s);
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.053, 0.053, 0.05, 14), new THREE.MeshStandardMaterial({ color: look.cord, emissive: look.cord, emissiveIntensity: 0.25, roughness: 0.6 })); band.rotation.z = Math.PI / 2; band.position.y = 0.05; g.add(band);
+    } else {
+      rod.color.setHex(0x2a2238);
+      const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.056, 0.06, 0.024, 6), new THREE.MeshStandardMaterial({ color: look.wax, emissive: look.wax, emissiveIntensity: 0.55, roughness: 0.35 }));
+      wax.rotation.x = Math.PI / 2; wax.rotation.y = Math.PI / 6; wax.position.set(0, 0.05, 0.056); g.add(wax);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.058, 0.006, 6, 6), new THREE.MeshStandardMaterial({ color: look.rim, emissive: look.rim, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.3 }));
+      rim.position.set(0, 0.05, 0.068); rim.rotation.z = Math.PI / 6; g.add(rim);
+      for (const sx of [-0.1, 0.1]) { const cord = new THREE.Mesh(new THREE.TorusGeometry(0.053, 0.007, 6, 18), new THREE.MeshStandardMaterial({ color: look.cord, emissive: look.cord, emissiveIntensity: 0.25, roughness: 0.5, metalness: 0.4 })); cord.rotation.y = Math.PI / 2; cord.position.set(sx, 0.05, 0); g.add(cord); }
+    }
+  } else if (kind === "sealed") {
     const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.02, 16), new THREE.MeshStandardMaterial({ color: hue, emissive: hue, emissiveIntensity: 0.45, roughness: 0.4 }));
     wax.rotation.x = Math.PI / 2; wax.position.set(0, 0.05, 0.055); g.add(wax);
   } else if (kind === "keep") {
@@ -3144,12 +3157,27 @@ function scrollMesh(kind, hue) {
 }
 const SEAL_HUE = started => started ? 0x3f9e93 : 0x9a5a8e;   // the room's first hue for whoever started it, plum for who joined
 const KEEP_HUE = { later: 0xb0803c, no: 0x6c5a62 };
+/* The council's scroll (six-faces-council .specify/specs/unchosen-gold FR-009): a six-sided seal in a saturated gold with a pale
+   rim, violet cords for the vein, dark violet rods. His B on ug-scroll-look-1 (2026-11-03): "a mix of violet and gold and make the
+   gold more saturated. This is a precursor to how vibeulons get minted". The round's gold #c8902a is pushed to #e8a20c. */
+const COUNCIL_LOOK = { wax: 0xe8a20c, rim: 0xffd76a, cord: 0x7c3aed, css: "#e8a20c", trim: "#7c3aed" };
+/* Previews (?scroll=council, &open=1 or &open=broken): a sample scroll, five sample nuggets, never anyone's words (FR-014). */
+const COUNCIL_PREVIEW = { id: "council-preview", preview: true, week: "the week of 26 October", opened: false, gold: [
+  { id: "p1", kind: "carried", day: "Tuesday", what: "an idea", quote: "Write the harbour song before the map.", why: "It names what the map is for.", went: "Taken into Lantern Harbour", answer: null },
+  { id: "p2", kind: "offered", day: "Thursday", what: "an ask", quote: "Read the first chapter aloud to a friend.", why: "Only you can choose who hears it first.", move: "Choose one friend and read them the first chapter this week.", answer: null },
+  { id: "p3", kind: "carried", day: "Thursday", what: "a link between two things", quote: "The coin table and the morning list are the same table.", why: "Two strands were drawing one thing twice.", went: "Taken into the money boat", answer: null },
+  { id: "p4", kind: "kept", day: "Saturday", what: "an image", quote: "A tea shop where the cups remember.", why: "Nothing needs it yet.", answer: null },
+  { id: "p5", kind: "offered", day: "Sunday", what: "something that came back", quote: "Ask the reading group what they would pay for.", why: "It touches money, so it is yours to move.", move: "Send the reading group one question about price.", answer: null } ],
+  compost: "Nineteen other lines went to the compost bin. Two fed Lantern Harbour." };
+let councilScrolls = []; // GET /api/tap-the-vein/scroll, his own; fetched with the garden list
 function myShelf() {
   const st = inNook() && garden && isHome(garden) ? mstate() : null;
   const s = shelfScrolls((list && list.gardens) || []);
   if (SCROLL_PREVIEW === "arrived" && !paperDone.has("preview|s0")) s.sealed.unshift(PREVIEW_SCROLL);
+  const cs = SCROLL_PREVIEW === "council" ? [COUNCIL_PREVIEW, ...councilScrolls] : st ? councilScrolls : [];
+  if (SCROLL_PREVIEW === "council") { s.sealed.unshift(PREVIEW_SCROLL, { ...PREVIEW_SCROLL, id: "s1", name: "Teo", started: false }); s.keepsakes.unshift({ room: "preview", id: "k0", name: "Mo", style: "dusk-hollow", started: true, answer: "later", note: "", at: 1, preview: true }); }
   s.sealed = s.sealed.filter(x => !paperDone.has(x.room + "|" + x.id));
-  return { blank: !!(st && st.scrollGiven), sealed: s.sealed, keepsakes: s.keepsakes };
+  return { blank: !!(st && st.scrollGiven), sealed: s.sealed, keepsakes: s.keepsakes, council: cs.filter(x => !x.opened), councilKept: cs.filter(x => x.opened) };
 }
 const PREVIEW_SCROLL = { room: "preview", id: "s0", name: "Ari", style: "dusk-hollow", started: true, when: null, note: "I saved you the plum cushion.", at: 1, preview: true };
 const paperDone = new Set(); // scrolls answered on this page, before the list catches up
@@ -3167,9 +3195,13 @@ function syncShelf() {
   const g = new THREE.Group(); g.position.set(sp.at[0], sp.at[1], sp.at[2]); g.rotation.y = sp.face || 0; scene.add(g);
   shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = [];
   const put = (m, x, y, z, ry, tap) => { m.position.set(x, y, z); m.rotation.y = ry; g.add(m); if (tap) shelf.taps.push({ ...tap, m }); };
-  if (sh.blank && paperBusy !== "blank") put(scrollMesh("blank"), 0.28, 0, 0.04, 0.12, { key: "blank" });
-  sh.sealed.slice(0, 3).forEach((x, i) => put(scrollMesh("sealed", SEAL_HUE(x.started)), -0.27, i * 0.055, 0.06 - i * 0.02, -0.1 + i * 0.15, { key: "sealed", i }));
-  sh.keepsakes.slice(0, 4).forEach((x, i) => put(scrollMesh("keep", KEEP_HUE[x.answer] || KEEP_HUE.no), -0.3 + i * 0.16, 0, -0.13, Math.PI / 2 + (i % 2 ? 0.15 : -0.1), { key: "keep", i }));
+  // stills round 2026-11-03-council-scroll-ad1: the book stands on the shelf's left half since fb-look-01 and hid the sealed
+  // scrolls at -0.27; every scroll now sits on the right half, sealed ones in front, the council's on top of them
+  if (sh.blank && paperBusy !== "blank") put(scrollMesh("blank"), 0.34, 0, -0.1, 0.12, { key: "blank" });
+  sh.sealed.slice(0, 3).forEach((x, i) => put(scrollMesh("sealed", SEAL_HUE(x.started)), 0.2 + (i % 2) * 0.2, (i > 1 ? 0.07 : 0), 0.1, -0.06 + i * 0.08, { key: "sealed", i }));
+  sh.council.slice(0, 1).forEach((x, i) => put(scrollMesh("council"), sh.sealed.length > 1 ? 0.3 : 0.38, sh.sealed.length > 1 ? 0.072 : 0, 0.1, 0.03, { key: "council", i }));
+  sh.keepsakes.slice(0, 4).forEach((x, i) => put(scrollMesh("keep", KEEP_HUE[x.answer] || KEEP_HUE.no), 0.48 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? 0.15 : -0.1), { key: "keep", i }));
+  sh.councilKept.slice(0, 2).forEach((x, i) => put(scrollMesh("councilKeep"), 0.2 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? -0.12 : 0.08), { key: "councilKeep", i }));
   if (landed) burst(shelf.at.clone().add(new THREE.Vector3(-0.25, 0.1, 0.1)), 0x8fd08a);
 }
 function shelfTapPos(tp) { const v = new THREE.Vector3(); tp.m.getWorldPosition(v); v.y += 0.03; return v; }
@@ -3220,6 +3252,14 @@ function renderPaper() {
     seal = none ? "" : `<button class="seal" type="button" data-act="pSeal" style="--seal:${hue}" aria-label="Press the seal to roll it up and send it"><span>${esc(markOf(myName))}</span></button>`;
     hint = none ? "" : to && to.spark ? "Press the seal. It rolls up with this room's link, ready to send." : "Press the seal to roll it up and send it.";
     foot = `<button class="quiet pclose" type="button" data-act="pClose">${none ? "Close" : "Put it back"}</button>`;
+  } else if (P.mode === "council") {
+    const s = P.s, look = COUNCIL_LOOK, ANS = { yes: "You said yes. The council takes it from here.", later: "Another time. It stays on your shelf.", no: "Let go. Nothing more comes of it." };
+    const nug = n => `<div class="nug ${n.kind}"><div class="meta">${esc(n.day)} · ${esc(n.what)}</div><div class="hand">${esc(n.quote)}</div><div class="why">${esc(n.why)}</div>${
+      n.kind === "carried" ? `<div class="went">${esc(n.went)}</div>` : n.kind === "offered" ? `<div class="move">${esc(n.move)}</div>${n.answer ? `<div class="kept">${esc(ANS[n.answer] || "")}</div>` : `<div class="ribbons" role="group" aria-label="Your answer">${RIBBONS.map(([k, l]) => `<button class="ribbon ${k}" type="button" data-act="pGold" data-id="${esc(n.id + "|" + k)}">${esc(l)}</button>`).join("")}</div>`}` : `<div class="kept">Kept for later.</div>`}</div>`;
+    inner = `<div class="from">From the council · ${esc(s.week)}</div>${s.gold.map(nug).join("")}<div class="compost">${esc(s.compost)}</div>`;
+    seal = `<button class="seal council" type="button" data-act="pBreak" style="--seal:${look.css};--trim:${look.trim}" aria-label="${P.open ? "The seal is broken" : "Break the seal to unroll it"}" ${P.open ? "disabled" : ""}><span>✶</span></button>`;
+    hint = P.open ? "Most of this is already moving. The ribbons answer only what is yours to choose." : "It arrived sealed. Tap the seal to unroll it.";
+    foot = `<button class="quiet pclose" type="button" data-act="pClose">Put it back</button>`;
   } else {
     const s = P.s, hue = cssHue(SEAL_HUE(s.started));
     inner = `<div class="from">From ${esc(s.name || "someone")}</div>
@@ -3230,7 +3270,7 @@ function renderPaper() {
     hint = P.hint || (P.mode === "read" ? (P.open ? "Answer with a ribbon. No needs no reason." : "It arrived sealed. Tap the seal to unroll it.") : "");
     foot = `<button class="quiet pclose" type="button" data-act="pClose">${P.mode === "read" && !P.answered ? "Leave it sealed for now" : "Put it back"}</button>`;
   }
-  const h = `<div class="scroll${P.open ? " open" : ""}${P.leaving ? " leaving" : ""}"><div class="rod"></div><div class="psheet"><div class="pin">${inner}</div></div><div class="rod"></div>${seal}</div>
+  const h = `<div class="scroll${P.mode === "council" ? " council" : ""}${P.open ? " open" : ""}${P.leaving ? " leaving" : ""}"><div class="rod"></div><div class="psheet"><div class="pin">${inner}</div></div><div class="rod"></div>${seal}</div>
     <p class="phint" aria-live="polite">${esc(hint)}</p>${foot}`;
   if (paperEl._h === h) return;
   const keep = $("#pLine", paperEl), had = keep && document.activeElement === keep;
@@ -3256,8 +3296,28 @@ async function paperAct(a, id) {
   if (a === "pCalMonth") { P.calMonth = +id; renderPaper(); return; }
   if (a === "pDay") { const [y, m, d] = id.split("-").map(Number); P.day = { y, m, d }; P.cal = false; renderPaper(); return; }
   if (a === "pSeal") return sealScroll();
-  if (a === "pBreak") { P.open = true; renderPaper(); return; }
+  if (a === "pBreak") { P.open = true; renderPaper(); if (P.mode === "council") openCouncil(P.s); return; }
+  if (a === "pGold") return answerGold(id);
   if (a === "pAnswer") return answerScroll(id);
+}
+/* The council's scroll: breaking the seal writes openedAt once (FR-009); a ribbon answers one offered nugget (FR-007). */
+async function openCouncil(s) {
+  if (s.opened) return;
+  s.opened = true;
+  if (!s.preview) api("/api/tap-the-vein/scroll", { scrollId: s.id, open: true }).catch(() => {});
+}
+async function answerGold(id) {
+  const P = paper; if (!P || P.mode !== "council" || P.busy) return;
+  const [gid, ans] = String(id).split("|"), n = P.s.gold.find(x => x.id === gid);
+  if (!n || n.answer || !["yes", "later", "no"].includes(ans)) return;
+  P.busy = true;
+  try { if (!P.s.preview) await api("/api/tap-the-vein/scroll", { goldId: gid, answer: ans }); }
+  catch { P.busy = false; toast("That did not save. Check your connection and try again."); return; }
+  P.busy = false; n.answer = ans; renderPaper();
+}
+async function fetchCouncil() {
+  if (PREVIEW_HOST) return;
+  try { const r = await fetch("/api/tap-the-vein/scroll", { credentials: "same-origin", cache: "no-store" }); if (r.ok) councilScrolls = ((await r.json()).scrolls || []).slice(0, 3); } catch {}
 }
 /* Pressing the seal: it rolls up, and leaves through the doorway on a gust of leaves. */
 async function sealScroll() {
@@ -3397,6 +3457,8 @@ function shelfTap(kind, i) {
   if (kind === "blank") { if (minuteOn()) { toast("Your first scroll. You can write it once the doorway opens."); return; } openPaper("write", { fromShelf: true }); return; }
   if (kind === "sealed" && sh.sealed[i]) { openPaper("read", sh.sealed[i]); return; }
   if (kind === "keep" && sh.keepsakes[i]) openPaper("keep", sh.keepsakes[i]);
+  if (kind === "council" && sh.council[i]) openPaper("council", sh.council[i]);
+  if (kind === "councilKeep" && sh.councilKept[i]) { openPaper("council", sh.councilKept[i]); paper.open = true; renderPaper(); }
 }
 
 /* ---------- sound: starts on the first tap, if it is on ---------- */
@@ -3698,6 +3760,7 @@ async function fetchList() {
   me = me || j.me; names[j.me] = j.name;
   homeId = j.home ? j.home.id : homeId;
   list = j;
+  await fetchCouncil();
   if (j.home && !Object.keys(myHome).length) myHome = { look: j.home.look, lastCheckin: j.home.lastCheckin, goals: Object.fromEntries((j.home.goals || []).map(({ id, ...x }) => [id, x])) };
   return j;
 }
@@ -3988,6 +4051,7 @@ let booted = false;
   minuteStart();
   syncShelf();
   if (SCROLL_PREVIEW === "write" && inNook()) openPaper("write", { fromShelf: true });
+  if (SCROLL_PREVIEW === "council" && KQ.get("open") && inNook()) { openPaper("council", COUNCIL_PREVIEW); if (KQ.get("open") === "broken") { paper.open = true; openCouncil(COUNCIL_PREVIEW); renderPaper(); } }
   if (STANDIN_ROOM) { names["stand-in"] = "Your stand-in partner"; onPeers([{ uid: "stand-in", x: 0.9, z: 1.4, h: Math.PI + 0.4, w: false }]); }
   booted = true;
   requestAnimationFrame(frame);

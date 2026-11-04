@@ -81,6 +81,7 @@ export default defineConfig({
       'src/app/api/board/saves/__tests__/seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-set-aside.test.ts',
+      'src/lib/tap-the-vein/__tests__/council-scroll.test.ts',
       'src/app/board/__tests__/shim.test.ts',
       'src/app/board/__tests__/serve.test.ts',
       'src/app/board/__tests__/part.test.ts',
