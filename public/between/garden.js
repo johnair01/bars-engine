@@ -2689,6 +2689,7 @@ function destinationsSheet() {
     <p class="muted">Choose where to go. You always return to your Nook.</p>
     ${invited}
     ${PREVIEW_HOST ? `<div class="roomrow"><div><b>Stand-in room</b><span class="small muted">A rehearsal room of two, with a partner already there. Nothing is saved.</span></div><button type="button" data-act="goStandIn">Enter</button></div>` : ""}
+    <div class="roomrow"><div><b>The keeping chamber</b><span class="small muted">What your blocks left when they cleared, each on its own stone.</span></div><button type="button" data-act="goChamber">Enter</button></div>
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
@@ -3542,6 +3543,9 @@ document.addEventListener("click", async ev => {
   if (a === "goRoom") { goRoom(id); return; }
   if (a === "goStandIn") { walkToStandInRoom(); return; }
   if (a === "goDojo") { walkToTriangleWorkshop(); return; }
+  // the keeping chamber opens from the doorway and the map stand (his C on bm-satchel-look-2, 2026-11-04: the arch is gone)
+  if (a === "goChamber") { if (!portalOpen()) { toast("The doorway opens when your first minute here is complete."); return; }
+    closeSheet(); const c = window.__between && window.__between.ctw; if (c && c.chamber) c.chamber(); else location.href = "/between/land.html?place=chamber"; return; }
   // a spark's link, found again from the homeroom (pt1-two-player-check: the link got lost after the first send)
   if (a === "sparkAgain") {
     const r = ((list && list.gardens) || []).find(x => x.id === id);
@@ -4104,9 +4108,6 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
 // Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
 import("./block-room.js").then(m => { window.__between.block = m.mountSigns(window.__between); }).catch(e => noteError(e, "block"));
-// the keeping chamber (block-metabolize slice 2, his "Mix of a and b" on bm-chamber-look-3): an arch of the cave's stone under the
-// shelf leads to /between/land.html?place=chamber, where what the charge left is kept and a season's weather fills the room
-import("./chamber-arch.js").then(m => { window.__between.chamberArch = m.mount(window.__between); }).catch(e => noteError(e, "chamber arch"));
 // letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome

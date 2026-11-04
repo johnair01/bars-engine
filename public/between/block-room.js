@@ -14,7 +14,8 @@
    Slice 2 (his steer on bm-chamber-look-3, 2026-11-02 20:12Z, "Mix of a and b"): the record is kept in the spirit store
    (./kept.js, `oag.spirits.v1`), not the tab, and the keeping chamber under the nook's shelf (land/chamber.js) stands every
    piece on its own stone. A storm still fills the land; a season, the densest weather, fills the keeping chamber itself,
-   over what is kept there (densityOf().where), and its signs show at the chamber's arch rather than the doorway.
+   over what is kept there (densityOf().where). Its signs show at the doorway like a storm's, and the doorway leads into the
+   chamber (the arch under the shelf is gone: his C on bm-satchel-look-2, 2026-11-04).
 
    Slice 2b (his B on bm-build-look-2, 2026-11-03 10:50Z: "break down what those actions actually are versus metaphors ...
    A bit busy and it's not as clear that the actions are a result of doing the work"): each stand is the 3-2-1's real steps,
@@ -117,7 +118,7 @@ export function mountSigns(B) {
   let G = null, key = "", fade = 0, snow = null, setF = null;
   const shelfBook = () => { const a = B.anchors && B.anchors(); return a && a.shelf ? V(a.shelf[0], 1.32, a.shelf[2]) : null; };
   function build(d) {
-    const a = B.anchors(), arch = d.where === "chamber" && B.chamberArch && B.chamberArch.at(), P = arch ? V(arch[0], 0, arch[1]) : V(a.portal[0], 0, a.portal[2]), Hh = a.hearth ? V(a.hearth[0], 0, a.hearth[2]) : null, book = shelfBook();
+    const a = B.anchors(), P = V(a.portal[0], 0, a.portal[2]), Hh = a.hearth ? V(a.hearth[0], 0, a.hearth[2]) : null, book = shelfBook();
     G = new THREE.Group(); G.name = "block-signs"; B.scene.add(G);
     const { rnd, glow, dots } = kit(G, 23), toRoom = V(-P.x, 0, -P.z).normalize();
     // the doorway glows cold, with the room behind it

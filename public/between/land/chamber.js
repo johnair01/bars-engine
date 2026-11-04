@@ -1,8 +1,8 @@
 /* The keeping chamber (Six-faces-council council/callsheets/block-metabolize.md, slice 2; stills round
    2026-11-02-block-chamber-3; his steer on bm-chamber-look-3, 2026-11-02 20:12Z: "Mix of a and b").
 
-   One chamber that holds both of round 3's options. It is reached from the nook through an arch of the cave's stone under
-   the shelf (../chamber-arch.js) and opens at ../land.html?place=chamber.
+   One chamber that holds both of round 3's options. It is reached from the nook's doorway and from the map stand (the
+   arch under the shelf was removed on his C to bm-satchel-look-2, 2026-11-04) and opens at ../land.html?place=chamber.
    - B, what the charge left: every piece carried home from a block's room stands on its own stone (since the satchel slice the
      piece itself goes into the pouch and its stone keeps a light where it lay), in the order the blocks
      cleared, spiralling from the portal round the pool. Beside each the cave's kit grows one structure in the piece's

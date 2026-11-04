@@ -224,15 +224,16 @@ export function mount(B, opts = {}) {
     const b = e.target.closest("[data-ctw]"); if (!b) return;
     const k = b.dataset.ctw;
     if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
-    else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough();
+    else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough(dense() && dense().where === "chamber" ? CHAMBER : undefined);
+    else if (k === "chamber") stepThrough(CHAMBER);
   });
   function showCard() {
     let key = "", html = "";
     if (near === "stand") {
       key = "stand" + (episode ? "1" : "0");
       html = episode
-        ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button></div>`
-        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button></div>`;
+        ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`
+        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them. The keeping chamber is on the map too.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
     } else if (near && near.startsWith("pane:")) {
       const p = panes[+near.slice(5)];
       key = near; html = `<div><b>${esc(p.loc.location)}</b><div class="t">${esc(p.loc.aspects[0])}</div></div><div class="row"><button type="button" data-ctw="${near}">Look into it</button></div>`;
@@ -242,9 +243,11 @@ export function mount(B, opts = {}) {
       key = "door" + (shut ? "0" : "1") + (dense() ? "c" : "");
       html = shut
         ? `<div><b>The doorway, grown over</b><div class="t">It opens at the end of your first minute here. Then it leads to ${esc(first ? first.location : "the episode's first land")}.</div></div>`
+        : dense() && dense().where === "chamber"
+        ? `<div><b>The doorway runs cold</b><div class="t">Past it, the keeping chamber has filled with a season of feeling ${esc(dense().feeling)}, over what you keep there. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`
         : dense()
-        ? `<div><b>The doorway runs cold</b><div class="t">Past it, ${esc(first ? first.location : "the episode's first land")} has filled with the weather of feeling ${esc(dense().feeling)}. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`
-        : `<div><b>The doorway</b><div class="t">Through it, the episode's first land: ${esc(first ? first.location : "the place the map took")}, ${esc(first ? first.land : "")}.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
+        ? `<div><b>The doorway runs cold</b><div class="t">Past it, ${esc(first ? first.location : "the episode's first land")} has filled with the weather of feeling ${esc(dense().feeling)}. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`
+        : `<div><b>The doorway</b><div class="t">Through it, the episode's first land: ${esc(first ? first.location : "the place the map took")}, ${esc(first ? first.land : "")}.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
     }
     if (key === cardKey) return;
     cardKey = key; card.hidden = !key || !!dlg; card.innerHTML = html;
@@ -278,12 +281,15 @@ export function mount(B, opts = {}) {
   const dense = () => { if (!episode || !charge) return null; const d = densityOf(charge); return d.dense ? d : null; };
   const firstLand = () => episode ? locations(charge, g).find(l => l.role === "encounter") : null;
   const grownOver = () => { const m = B.minute && B.minute(); return !!(m && m.started && m.oriented === false); };
+  const CHAMBER = "/between/land.html?place=chamber";
   function doorAt() {
     const a = B.anchors && B.anchors(); if (!a || !a.portal) return null;
     const at = new THREE.Vector3().fromArray(a.portal).setY(0), front = at.clone().multiplyScalar(0.72);   // a step in from it, toward the room's middle
     return { at, front };
   }
-  // href: another place behind the nook (the keeping chamber's arch, chamber-arch.js); it opens with or without an episode
+  /* href: another place behind the nook. The keeping chamber is reached from the doorway and from the map stand, not from a
+     place of its own in the wall: his C on bm-satchel-look-2 (2026-11-04 01:06Z), "No the arch doesn't work at all and needs
+     to be removed. They can access it from the main doorway or the map". It opens with or without an episode. */
   function stepThrough(href) {
     if (grownOver() || (!href && !episode)) return;
     try {
@@ -347,5 +353,5 @@ export function mount(B, opts = {}) {
     if (opts.open === "episode") await unroll(JSON.parse(JSON.stringify(sample)), null);
     else if (opts.open === "sheet") { walkTo(STAND.clone().addScaledVector(FRONT, 0.85)); openCharge(); }
   })().catch(e => console.warn("charge to world:", e));
-  return { stand: STAND, stepThrough, door: () => doorAt(), view: () => ({ near, episode: !!episode, block: dense(), sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
+  return { stand: STAND, stepThrough, chamber: () => stepThrough(CHAMBER), door: () => doorAt(), view: () => ({ near, episode: !!episode, block: dense(), sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
 }
