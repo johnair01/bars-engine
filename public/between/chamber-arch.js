@@ -11,7 +11,7 @@ import { kept } from "./kept.js";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 export function mount(B) {
-  let G = null, at = null, veilM = null, light = null, card = null, cardKey = "", motes = [];
+  let G = null, at = null, veilM = null, light = null, card = null, label = null, cardKey = "", motes = [];
   function build() {
     const a = B.anchors(); if (!a || !a.hearth) return false;
     // the shelf's anchor is (0,0,0) until the store has answered and the shelf is mounted (or for good with the store down), which
@@ -37,20 +37,37 @@ export function mount(B) {
     for (let i = 0; i < 14; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: "#cfe8ff", transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
       const base = A.localToWorld(V((rnd() - 0.5) * 1.0, 0.2 + rnd() * 1.1, 0.1 + rnd() * 0.6)); sp.position.copy(base); sp.scale.setScalar(0.05 + rnd() * 0.04); G.add(sp); motes.push({ sp, base, ph: rnd() * 6.28 }); }
     card = document.createElement("div"); card.className = "ctw-card"; card.hidden = true; document.body.appendChild(card);
-    card.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
-      if (B.ctw && B.ctw.stepThrough) B.ctw.stepThrough("/between/land.html?place=chamber"); else location.href = "/between/land.html?place=chamber"; });
+    card.addEventListener("click", e => { if (e.target.closest("button")) step(); });
+    label = document.createElement("div"); label.className = "ca-label"; label.textContent = "The arch · the keeping chamber"; label.hidden = true; document.body.appendChild(label);
+    if (!document.getElementById("ca-style")) { const st = document.createElement("style"); st.id = "ca-style";
+      st.textContent = ".ca-label{position:fixed;z-index:30;transform:translate(-50%,-100%);font:600 .82rem Marcellus,Georgia,serif;color:#f3ece2;text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap}"; document.head.appendChild(st); }
+    // a tap on the arch walks you to it, as a tap on the map stand does (a phone has no hover and no way to know to walk up); a tap
+    // while you already stand at it steps through
+    let down = null;
+    B.renderer.domElement.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; });
+    B.renderer.domElement.addEventListener("pointerup", e => {
+      if (!G || !G.visible || !down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8) return;
+      ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), B.camera);
+      if (!ray.intersectObject(G, true).length) return;
+      if (cardKey) { step(); return; }
+      const front = at.clone().setY(0).multiplyScalar(1 - 1.1 / Math.max(1.2, at.length())); B.meState.target = front; B.meState.keys.clear();
+    });
     return true;
   }
+  const ray = new THREE.Raycaster();
+  const step = () => { if (B.ctw && B.ctw.stepThrough) B.ctw.stepThrough("/between/land.html?place=chamber"); else location.href = "/between/land.html?place=chamber"; };
   // what the arch says it holds: cold for a season on the map stand, warm once something is kept, dim when bare
   const mood = () => { const v = B.ctw && B.ctw.view ? B.ctw.view() : null, d = v && v.episode && v.block;
     return d && d.where === "chamber" ? "cold" : kept().length ? "warm" : "bare"; };
-  const COL = { cold: ["#2b5f8a", "#6fa8ff", 4, 0.8], warm: ["#7a4f2a", "#ffb062", 3, 0.45], bare: ["#2b3440", "#8aa0b8", 0.6, 0.12] };
+  /* a veil is the one flat plane in the room that lights itself (MeshBasicMaterial), so it has to read against the wall's dark:
+     the bare one was #2b3440, the wall's own colour, and the arch read as a hole in the wall, not a way through */
+  const COL = { cold: ["#3f86bd", "#6fa8ff", 4, 0.8], warm: ["#b3743c", "#ffb062", 3, 0.5], bare: ["#5b7490", "#8aa0b8", 1.2, 0.3] };
   let m = "", seen = 0;
   function frame() {
     requestAnimationFrame(frame);
     const inNook = B.room && B.room().shell === "nook";
     if (!G) { if (inNook && B.anchors && build()) seen = 1; else return; }
-    G.visible = inNook; if (!inNook) { card.hidden = true; cardKey = ""; cardVoice(""); return; }
+    G.visible = inNook; label.hidden = !inNook; if (!inNook) { card.hidden = true; cardKey = ""; cardVoice(""); return; }
     const T = performance.now() / 1000;
     if ((seen++ % 30) === 1 || !m) m = mood();
     const [veil, glow, li, mo] = COL[m];
@@ -58,6 +75,8 @@ export function mount(B) {
     for (const x of motes) { x.sp.material.color.set(glow); x.sp.material.opacity = mo * (0.6 + 0.4 * Math.sin(T * 1.3 + x.ph)); x.sp.position.y = x.base.y + Math.sin(T * 0.7 + x.ph) * 0.08; }
     const me = B.meState && B.meState.pos, near = me && Math.hypot(me.x - at.x, me.z - at.z) < 1.5;
     const key = near ? m : "";
+    // the name stands over the arch until you are close enough for its card to speak it
+    if (near) label.hidden = true; else { const [lx, ly] = B.screenOf(V(at.x, 1.6, at.z)); label.style.left = lx + "px"; label.style.top = ly + "px"; label.hidden = !(lx > 0 && lx < innerWidth && ly > 0 && ly < innerHeight); }
     if (key === cardKey) return; cardKey = key; card.hidden = !key;
     if (!key) { cardVoice(""); return; }
     const text = m === "cold" ? "The cold comes from behind it: a season of it. It has filled the keeping chamber, over what you keep there."
