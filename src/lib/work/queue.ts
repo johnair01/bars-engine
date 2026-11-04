@@ -59,14 +59,16 @@ type Move = 'heartbeat' | 'done' | 'release' | 'failed'
 
 /** A worker's move on the ticket it holds. Only the lane that holds the claim may move it. */
 export async function moveTicket(db: Db, id: string, lane: string | null, move: Move,
-                                 result: string | null, now = new Date()) {
+                                 result: string | null, now = new Date(), look: string | null = null) {
   const t = await db.workTicket.findUnique({ where: { id } })
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (lane && t.lane !== lane) return { ok: false as const, status: 403, error: `This ticket is in the ${t.lane} lane` }
   if (t.state !== 'claimed') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not claimed` }
+  // `look` is the board row of the look this voyage brought home (homeport FR-006); the ring reads it from the basis.
+  const basis = look && move === 'done' ? { ...((t.basis ?? {}) as object), look } : undefined
   const data: Prisma.WorkTicketUpdateInput =
     move === 'heartbeat' ? { leaseUntil: new Date(now.getTime() + LEASE_MS) }
-    : move === 'done' ? { state: 'done', result, doneAt: now, leaseUntil: null }
+    : move === 'done' ? { state: 'done', result, doneAt: now, leaseUntil: null, ...(basis ? { basis } : {}) }
     : move === 'failed' ? { state: 'failed', result, leaseUntil: null }
     : { state: 'ready', claimedBy: null, leaseUntil: null, result }
   const ticket = await db.workTicket.update({ where: { id }, data })
