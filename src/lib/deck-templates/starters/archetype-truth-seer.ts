@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Let the Blur Stay',
+      bodyText:
+        'You see sharply, and sharpness can close a question early. Breathe and let one thing stay blurry for a full minute. Do not resolve it. Write down what the blur held that the clear view cut off.',
+      faceKey: null,
+      archetypeKey: 'truth-seer',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Ask and Do Not Correct',
+      bodyText:
+        'Ask one person what they see in the situation. Take in their answer without fixing it, even where you know better. Write down the one piece of their view that you had not reached alone.',
+      faceKey: null,
+      archetypeKey: 'truth-seer',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'The Truth You Are Softening',
       bodyText:
         'What truth are you making more palatable — hedging, qualifying, burying in context — when it needs to land clearly? Name the unedited version. Write the unedited version. Then sit with what it would cost to say it.',
