@@ -508,7 +508,7 @@ async function build() {
   const ep = await episode(); state.ep = ep; state.p = ep.p;
   const chName = "The keeping chamber";
   $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
-  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}, on the ${ep.p.line} line`;
+  $("#placeLand").textContent = PLACE === "chamber" ? "past the nook's doorway, built the cave's way" : `${ep.loc.land}, on the ${ep.p.line} line`;
   document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
   const M = {}, h = buildHollow(new THREE.Scene(), { lowPower: LOW, shell: "hollow" });   // built only to lend its materials
