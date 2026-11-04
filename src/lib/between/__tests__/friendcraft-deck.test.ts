@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 // Friendcraft onboarding slice 1 (Six-faces-council spec .specify/specs/friendcraft-deck): a friend's own deck, written in
 // their book. The invariants: the mirror's hope never reaches the deck, a blank card is not drawn, cost follows depth only,
 // and no digit is on a goal page.
-import { BLANK_GOAL, COPY, COST, DEPTHS, HINTS, cardsOf, deckLeaves, mirrorHope, newGoal, pageWords, wordCard } from '../../../../public/between/friendcraft/deck.js'
+import { applyCopy, cleanCopy, DEFAULT_COPY, BLANK_GOAL, COPY, COST, DEPTHS, HINTS, cardsOf, deckLeaves, mirrorHope, newGoal, pageWords, wordCard } from '../../../../public/between/friendcraft/deck.js'
 import { leavesOf, openAt, pagesOf } from '../../../../public/between/iching/book.js'
 import { deckWrite, mayWrite, parsePath, plantedHome, type Doc, type Who } from '@/lib/between/rules'
 
@@ -120,5 +120,23 @@ describe('deckWrite and the rules around the deck', () => {
   it('lets the homeroom open at the blank goal leaf', () => {
     const t = { table: 'privates', playerId: me, key: 'home' } as const
     expect(mayWrite(member, homeGarden, t, 'update', { bookAt: 'goal' }, {}).ok).toBe(true)
+  })
+})
+
+describe('admin-edited default text', () => {
+  it('keeps only known one-line edits with no digit or markup', () => {
+    expect(cleanCopy({ ask: '  What do you hope   a friend will do? ', add: 'Keep 3', another: '<b>x</b>', nope: 'x', anyone: 5, takeOut: 'x'.repeat(201) })).toEqual({ ask: 'What do you hope a friend will do?' })
+    expect(cleanCopy({ ask: DEFAULT_COPY.ask, 'hint.deep': '' })).toEqual({})
+    expect(cleanCopy(null)).toEqual({})
+    expect(cleanCopy([1])).toEqual({})
+  })
+  it('puts an edit over the built-in text and restores it when cleared', () => {
+    const built = { ask: COPY.ask, deep: HINTS.deep }
+    applyCopy({ ask: 'What do you hope a friend will do?', 'hint.deep': 'Write what you tell only old friends.' })
+    expect(COPY.ask).toBe('What do you hope a friend will do?')
+    expect(HINTS.deep).toBe('Write what you tell only old friends.')
+    expect(COPY.add).toBe(DEFAULT_COPY.add)
+    applyCopy({})
+    expect({ ask: COPY.ask, deep: HINTS.deep }).toEqual(built)
   })
 })

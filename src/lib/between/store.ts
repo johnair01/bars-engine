@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
 import { settle, viewGarden } from './shared-pick'
+import { cleanCopy } from '../../../public/between/friendcraft/deck.js'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -236,4 +237,27 @@ export async function joinFriendcraft(playerId: string, room: unknown, invite: u
     update: {},
   })
   return enrolledGames(playerId)
+}
+
+/**
+ * The Friendcraft deck pages' default text, as an admin or steward last kept it (Instance.friendcraftCopy). Anything
+ * unreadable is the built-in text.
+ */
+export async function friendcraftCopy(): Promise<Record<string, string>> {
+  const row = await db.instance.findUnique({ where: { slug: 'friendcraft' }, select: { friendcraftCopy: true } }).catch(() => null)
+  return cleanCopy(row?.friendcraftCopy) as Record<string, string>
+}
+
+/** May this player change the default text: a site admin, or a steward of Friendcraft. */
+export async function mayEditFriendcraftCopy(playerId: string): Promise<boolean> {
+  if (await isSteward(playerId)) return true
+  const admin = await db.playerRole.findFirst({ where: { playerId, role: { key: 'admin' } }, select: { id: true } }).catch(() => null)
+  return !!admin
+}
+
+/** Keeps an edit: the cleaned fields replace the old ones whole, so a field cleared or set to its default goes back to the built-in text. `null` means no such instance. */
+export async function saveFriendcraftCopy(edit: unknown): Promise<Record<string, string> | null> {
+  const kept = cleanCopy(edit) as Record<string, string>
+  const done = await db.instance.updateMany({ where: { slug: 'friendcraft' }, data: { friendcraftCopy: kept } })
+  return done.count ? kept : null
 }

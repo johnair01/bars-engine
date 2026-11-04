@@ -6,7 +6,7 @@ import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
 import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 /* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
-import { COPY as DECK_COPY } from "./friendcraft/deck.js";
+import { COPY as DECK_COPY, applyCopy as applyDeckCopy } from "./friendcraft/deck.js";
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
@@ -3792,6 +3792,7 @@ async function fetchList() {
   homeId = j.home ? j.home.id : homeId;
   list = j;
   await fetchCouncil();
+  applyDeckCopy(j.copy);
   if (j.home && !Object.keys(myHome).length) myHome = { look: j.home.look, lastCheckin: j.home.lastCheckin, goals: Object.fromEntries((j.home.goals || []).map(({ id, ...x }) => [id, x])) };
   return j;
 }

@@ -29,6 +29,34 @@ export const HINTS = {
   deep: "Write an ask you would make only of someone who has sat with you a while.",
 };
 
+/* The default text an admin or steward may change. Each field is a line of the deck pages' words; the built-in text above
+   stays the fallback, so an empty field returns to it. `hopeOnly` and `hope` are joined to the player's own words and stay
+   fixed. Every edit keeps the keep list: no digit, no markup, one short line (keep list 5). */
+export const COPY_FIELDS = ["ask", "anyone", "add", "another", "takeOut", "open", "hint.light", "hint.middle", "hint.deep"];
+export const COPY_MAX = 200;
+export const DEFAULT_COPY = { ...COPY, ...Object.fromEntries(DEPTHS.map(d => ["hint." + d, HINTS[d]])) };
+/** An edit as the server keeps it: only known fields, trimmed single lines under COPY_MAX, no digit, no angle bracket. */
+export function cleanCopy(edit) {
+  const out = {};
+  if (!edit || typeof edit !== "object" || Array.isArray(edit)) return out;
+  for (const k of COPY_FIELDS) {
+    const v = edit[k];
+    if (typeof v !== "string") continue;
+    const t = v.replace(/\s+/g, " ").trim();
+    if (t && t.length <= COPY_MAX && !/[0-9<>]/.test(t) && t !== DEFAULT_COPY[k]) out[k] = t;
+  }
+  return out;
+}
+/** Puts a kept edit over the built-in text, in place, so the page's COPY and HINTS read it. An empty edit restores the default. */
+export function applyCopy(edit) {
+  const e = cleanCopy(edit);
+  for (const k of COPY_FIELDS) {
+    const v = e[k] !== undefined ? e[k] : DEFAULT_COPY[k];
+    if (k.startsWith("hint.")) HINTS[k.slice(5)] = v; else COPY[k] = v;
+  }
+  return e;
+}
+
 const clean = t => String(t == null ? "" : t).replace(/\s+/g, " ").trim().slice(0, WORDS_MAX);
 
 /** The leaf key of the blank goal leaf; no goal id is ever this. */
