@@ -24,9 +24,9 @@ export const COPY = {
   open: "The doorway is open. Your book waits on the low table: sit, and write what you want from a friend.",
 };
 export const HINTS = {
-  light: "Something easy a friend could ask you, or do with you.",
-  middle: "Something that asks a little more of you both.",
-  deep: "Something you would want only from someone who has sat with you a while.",
+  light: "Write a small ask a friend could make of you, or an easy hour you could spend together.",
+  middle: "Write an ask that takes a little more from you both.",
+  deep: "Write an ask you would make only of someone who has sat with you a while.",
 };
 
 const clean = t => String(t == null ? "" : t).replace(/\s+/g, " ").trim().slice(0, WORDS_MAX);

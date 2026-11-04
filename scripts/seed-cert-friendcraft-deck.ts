@@ -26,7 +26,7 @@ const PASSAGES: Passage[] = [
   { name: 'STEP_4', pid: '5', text: '### Step 4: Write a goal and three cards\n\nWrite a goal and press Enter. Word the **light** card, then the **middle**, then the **deep**, one at a time. Confirm the middle card shows one empty tea bowl, the deep two, and no number appears anywhere on the page.', links: next('STEP_5') },
   { name: 'STEP_5', pid: '6', text: '### Step 5: Add them to your deck\n\nConfirm the page says **Anyone you sit with can draw these.** Tap **Add these to my deck**. The book closes onto the table.', links: next('STEP_6') },
   { name: 'STEP_6', pid: '7', text: '### Step 6: Stand, sit again, write another\n\nStand, then sit again. Confirm the book opens at your goal page with its red ribbon and red tab. Tap **Write another**: a new blank leaf turns up. Rewrite a card on the first page, then clear one, and confirm both stick when you sit again.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
-  { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nSomething off? Say which step, and what you saw on the page, so it can be fixed before the first link goes to a friend.', links: [], tags: ['feedback'] },
+  { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nDid something look wrong? Say which step you were on and what the page showed, so we can fix it before the first link goes to a friend.', links: [], tags: ['feedback'] },
   { name: 'END_SUCCESS', pid: '9', text: 'Verified: a friend can open the link, write what they want from a friend and keep three cards in their own deck. Complete this quest for your vibeulon.', links: [] },
 ]
 

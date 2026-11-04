@@ -765,7 +765,7 @@ export function mount(B, opts = {}) {
       const now = Date.now();
       localHome.goals = { "stand-in-hope": { text: "To be known by a few people who stay", room: null, at: now - 9e8 } };
       if (String(opts.deck) === "2") {
-        localDeck.goals["stand-in-goal"] = wordCard(wordCard(wordCard({ text: "Someone who asks how I really am", at: now - 6e5, cards: {} }, "light", "Ask me what I had for breakfast, and mean the question.", now - 5e5), "middle", "Notice when I go quiet, and say so.", now - 4e5), "deep", "Stay when I am hard to be around.", now - 3e5);
+        localDeck.goals["stand-in-goal"] = wordCard(wordCard(wordCard({ text: "Someone who asks how I really am", at: now - 6e5, cards: {} }, "light", "Ask me what I had for breakfast, then listen to the whole answer.", now - 5e5), "middle", "Notice when I stop talking, and say so.", now - 4e5), "deep", "Stay when I am hard to be around.", now - 3e5);
         localBookAt = "stand-in-goal";
       } else localBookAt = "goal";
     }
