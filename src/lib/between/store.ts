@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
 import { settle, viewGarden } from './shared-pick'
+import { cleanCopy } from '../../../public/between/friendcraft/deck.js'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -203,4 +204,60 @@ export async function enrolledGames(playerId: string): Promise<string[]> {
     select: { instance: { select: { slug: true } } },
   }).catch(() => [])
   return [...new Set(rows.map(r => r.instance.slug))].filter(g => (TABLE_GAMES as readonly string[]).includes(g))
+}
+
+/**
+ * Friendcraft's stewards (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003): the players who hold
+ * `roleKey: "steward"` on the `friendcraft` instance. In slice 1 only a steward's spark link enrols a friend; whether any
+ * member's link may is reserved (the spec's Reserved items).
+ */
+export async function isSteward(playerId: string): Promise<boolean> {
+  const row = await db.instanceMembership.findFirst({
+    where: { playerId, roleKey: 'steward', instance: { slug: 'friendcraft' } },
+    select: { id: true },
+  }).catch(() => null)
+  return !!row
+}
+
+/**
+ * Enrols the signed-in player in Friendcraft through a steward's spark link: the token must be that spark's live invitation
+ * token and its starter a steward. Called twice it changes nothing. `null` means the link does not open Friendcraft.
+ */
+export async function joinFriendcraft(playerId: string, room: unknown, invite: unknown): Promise<string[] | null> {
+  if (typeof room !== 'string' || typeof invite !== 'string') return null
+  const found = await whoIs(room, playerId, invite)
+  if (!found || !found.who.invited) return null
+  if (asDoc(found.garden.data).phase === 'closed') return null
+  if (!(await isSteward(found.garden.startedById))) return null
+  const instance = await db.instance.findUnique({ where: { slug: 'friendcraft' }, select: { id: true } }).catch(() => null)
+  if (!instance) return null
+  await db.instanceMembership.upsert({
+    where: { instanceId_playerId: { instanceId: instance.id, playerId } },
+    create: { instanceId: instance.id, playerId },
+    update: {},
+  })
+  return enrolledGames(playerId)
+}
+
+/**
+ * The Friendcraft deck pages' default text, as an admin or steward last kept it (Instance.friendcraftCopy). Anything
+ * unreadable is the built-in text.
+ */
+export async function friendcraftCopy(): Promise<Record<string, string>> {
+  const row = await db.instance.findUnique({ where: { slug: 'friendcraft' }, select: { friendcraftCopy: true } }).catch(() => null)
+  return cleanCopy(row?.friendcraftCopy) as Record<string, string>
+}
+
+/** May this player change the default text: a site admin, or a steward of Friendcraft. */
+export async function mayEditFriendcraftCopy(playerId: string): Promise<boolean> {
+  if (await isSteward(playerId)) return true
+  const admin = await db.playerRole.findFirst({ where: { playerId, role: { key: 'admin' } }, select: { id: true } }).catch(() => null)
+  return !!admin
+}
+
+/** Keeps an edit: the cleaned fields replace the old ones whole, so a field cleared or set to its default goes back to the built-in text. `null` means no such instance. */
+export async function saveFriendcraftCopy(edit: unknown): Promise<Record<string, string> | null> {
+  const kept = cleanCopy(edit) as Record<string, string>
+  const done = await db.instance.updateMany({ where: { slug: 'friendcraft' }, data: { friendcraftCopy: kept } })
+  return done.count ? kept : null
 }

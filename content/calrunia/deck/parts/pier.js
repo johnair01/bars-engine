@@ -60,7 +60,7 @@ PART("berth", "The money boat at its berth", "The money boat piece; the hatch, l
     const k = st.sending == null ? 0 : st.sending;
     c.visible = st.waiting || st.sending != null; b.visible = k < 0.98 && !st.berthEmpty;
     spM.color.set(st.turned ? 0xffd27a : 0x9ff6e4); spM.emissive.copy(spM.color);
-    anchored.forEach((a, i) => { a.visible = i < st.boatsOut; a.position.y = -2.75 + Math.sin(st.t * 0.9 + i) * 0.05; });
+    anchored.forEach((a, i) => { a.visible = i < st.boatsOut && i !== st.returningIndex; a.position.y = -2.75 + Math.sin(st.t * 0.9 + i) * 0.05; });
     b.position.lerpVectors(HOME, FAR, k * k); b.rotation.y = k * 0.18; b.position.y += Math.sin(st.t * 1.1) * 0.04; b.rotation.z = Math.sin(st.t * 0.8) * 0.015;
     sp.position.y = -0.35 + u.deckY + 0.95 + Math.sin(st.t * 1.6) * 0.05;
     wake.forEach((w, i) => { w.visible = k > 0.02; w.position.set(b.position.x - i * 0.12, -3.1, b.position.z + 3.5 + i * 1.6); w.rotation.z = 0.05; });

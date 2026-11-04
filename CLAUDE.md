@@ -23,7 +23,7 @@ tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.m
 
 - Start: `scripts/local/dev.sh dev` (local Postgres, a database for this workspace, `next dev` on a free port; prints
   the URL). Sign in as `admin@admin.local` / `password`, or player id `test-admin`. Stop: `scripts/local/dev.sh stop`.
-- Before pushing: `scripts/local/check.sh --build`. It replaces the Vercel preview as the build check for self-merge;
+- Before pushing: `scripts/local/check.sh --build`. It replaces the Vercel preview as the build check;
   name the command and its result in the pull request.
 - Show Wendell: a cloud session's `localhost` is the container, which he cannot open. Take pictures with
   `AS=test-admin OUT=/mnt/project-files/looks/<name> scripts/local/dev.sh shot /page ...`, read them yourself, then
@@ -33,6 +33,15 @@ tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.m
   `vercel env pull` to get a database, and do not create hosted preview deployments as routine testing.
 - A change that only Vercel can show (middleware, crons, Blob, Vercel-only env) says "needs hosted check" in its pull
   request; the options are in the guide, section 7.
+
+## Ship once a day: do not merge your own pull request
+
+Wendell, 2026-11-04 (council board `lf-daily-ship`, answer A). Every merge to `main` is a production build, so threads
+no longer self-merge in bars-engine. When `scripts/local/check.sh --build` is green and no look gates the pull request
+(`board/answered.py --pr N` in the council repo), mark it ready for review and add the `ship-next` label, then stop. One
+shipping session a day merges every `ship-next` pull request in one batch (`docs/LOCAL_FIRST_TESTING.md` section 7).
+Only an urgent fix (production down, payment or sign-in broken) merges straight to `main` by hand, and its description
+says why. Council pull requests are unchanged.
 
 ## Hand off before the context passes 150,000 tokens
 

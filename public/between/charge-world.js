@@ -14,7 +14,9 @@
    first land. Walk to the doorway and step through, and /between/land.html builds the encounter location (the sample's
    Unfinished Clearing) from the sheet; the charge and your look ride over in this tab's sessionStorage, nowhere else. */
 import * as THREE from "three";
+import { inFrame } from "./voice.js";
 import { densityOf } from "./block-room.js";
+import { withDraft } from "../calrunia/episode-draft.js";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
 
 const STAND = new THREE.Vector3(0.95, 0, -2.0);
@@ -30,6 +32,11 @@ const QUESTIONS = {
 };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const strip = c => { const o = JSON.parse(JSON.stringify(c)); delete o.drafted; return canonical(o); };
+// your own charge starts here: nothing of the sample's in it (ctw2-stand-opens-blank)
+const BLANK = { id: "your-charge", player: "you", episode: "episode 1", line: "", q1: { words: "", quadrant: "upper_right", domain: "" },
+  q2: { feelings: [] }, q3: { distance: "a day's walk", obstacles: [], townsfolk: [] }, q4: { weather: [{ feeling: "", strength: "a breeze" }] },
+  q5: { keys: {} }, q6: { beliefs: [], loudest: "", hoard: "" } };
+const LINE_WORDS = l => l.replace(/_/g, " ");
 
 export function mount(B, opts = {}) {
   let sample = null, charge = null, g = null, episode = null, built = false, sampleKept = true;
@@ -78,7 +85,7 @@ export function mount(B, opts = {}) {
     panes.length = 0;
     const locs = locations(charge, g).filter(l => l.role !== "road-home");
     locs.forEach((loc, i) => {
-      const src = sampleKept && loc.drafted ? STILLS[loc.role] : null;
+      const src = loc.drafted ? STILLS[loc.role] : null;   // drafted from the kit, so the kit's stills show it
       const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide });
       if (src) new THREE.TextureLoader().load(src, t => { t.colorSpace = THREE.SRGBColorSpace; mat.map = t; mat.needsUpdate = true; });
       else { mat.map = blankPane(loc); }
@@ -104,7 +111,7 @@ export function mount(B, opts = {}) {
   /* ---------- the page's own layer: a card when you stand near, the six questions, the sheet, a pane ---------- */
   const css = document.createElement("style");
   css.textContent = `
-  .ctw-card{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));z-index:40;background:var(--glass);color:var(--glass-ink);backdrop-filter:blur(6px);border-radius:14px;padding:10px 14px;display:grid;gap:8px;width:min(92vw,520px)}
+  .ctw-card{display:none!important} /* never drawn: the stand speaks through voice; the card keeps its buttons' handlers (hp1-one-owner) */
   .ctw-card b{font-family:var(--display)} .ctw-card .t{font-size:.88rem;color:var(--glass-muted)} .ctw-card .row{display:flex;gap:8px;flex-wrap:wrap}
   .ctw-card button,.ctw-sheet button{font:inherit;border-radius:999px;padding:7px 14px;border:1px solid rgba(255,255,255,.35);background:#2f8f86;color:#fff;cursor:pointer}
   .ctw-card button.q,.ctw-sheet button.q{background:transparent;color:inherit;border-color:var(--line)}
@@ -118,32 +125,35 @@ export function mount(B, opts = {}) {
   .ctw-label{position:fixed;z-index:30;transform:translate(-50%,-100%);font:600 .82rem var(--display);color:#f3ece2;text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap}`;
   document.head.appendChild(css);
   const card = document.createElement("div"); card.className = "ctw-card"; card.hidden = true; document.body.appendChild(card);
-  const label = document.createElement("div"); label.className = "ctw-label"; label.textContent = "The map stand"; document.body.appendChild(label);
+  const label = document.createElement("div"); label.className = "ctw-label"; label.dataset.uiLayer = "label"; label.textContent = "The map stand"; document.body.appendChild(label);
   let scrim = null, dlg = null;
-  function closeDlg() { if (scrim) scrim.remove(); if (dlg) dlg.remove(); scrim = dlg = null; cardKey = ""; }
+  function closeDlg() { if (scrim) scrim.remove(); if (dlg) dlg.remove(); scrim = dlg = null; cardKey = ""; if (B.voice) B.voice.quiet("ctw-sheet"); }
   function openDlg(html) {
     closeDlg();
     scrim = document.createElement("div"); scrim.className = "ctw-scrim"; scrim.onclick = closeDlg;
+    if (B.voice) B.voice.say({ hold: true }, "ctw-sheet", 4); // the opened sheet holds the screen alone (hp1-one-owner)
     dlg = document.createElement("section"); dlg.className = "ctw-sheet"; dlg.setAttribute("role", "dialog"); dlg.innerHTML = html;
     dlg.addEventListener("pointerdown", e => e.stopPropagation()); dlg.addEventListener("keydown", e => e.stopPropagation());
     document.body.append(scrim, dlg);
     return dlg;
   }
 
+  const pick = cur => `<option value="" ${cur ? "" : "selected"}>choose one</option>`;
   const opt = (vals, cur) => vals.map(v => `<option ${v === cur ? "selected" : ""}>${esc(v)}</option>`).join("");
   const checks = (name, vals, cur) => `<div class="checks">${vals.map(v => `<label><input type="checkbox" name="${name}" value="${esc(v)}" ${cur.includes(v) ? "checked" : ""}>${esc(v)}</label>`).join("")}</div>`;
-  function openCharge() {
-    const c = charge || sample, q = k => c[k] || {};
+  function openCharge(from) {
+    const c = from || charge || BLANK, q = k => c[k] || {};
+    const isSample = !!sample && c !== BLANK && strip(c) === strip(sample);
     const feels = q("q2").feelings || [], w = (q("q4").weather || [{}])[0], folk = q("q3").townsfolk || [];
     const d = openDlg(`<h2>Bring a charge</h2>
-      <p class="muted">The six questions. The sample player's answers are filled in; change any of them and the grammar redraws the episode. Nothing here is saved.</p>
+      <p class="muted">${isSample ? "The sample player's answers are filled in. Change any of them and the episode is drawn from yours." : "Answer in your own words. The lands are drawn from your answers, and they stay in this tab. Nothing is saved."}</p>
       <h3>1. ${QUESTIONS.q1}</h3>
       <label>In their words<input type="text" name="words" value="${esc(q("q1").words)}"></label>
       <label>Where it lives (quadrant)<select name="quadrant">${Object.keys(QUADRANTS).map(k => `<option value="${k}" ${k === (q("q1").quadrant || "upper_right") ? "selected" : ""}>${esc(QUADRANTS[k][0])} (${QUADRANTS[k][1]})</option>`).join("")}</select></label>
-      <label>Life domain<select name="domain">${opt(LIFE_DOMAINS, q("q1").domain)}</select></label>
-      <label>The line it works<select name="line">${opt(LINES, c.line)}</select></label>
+      <label>Life domain<select name="domain">${pick(q("q1").domain)}${opt(LIFE_DOMAINS, q("q1").domain)}</select></label>
+      <label>The line it works<select name="line">${pick(c.line)}${LINES.map(v => `<option value="${v}" ${v === c.line ? "selected" : ""}>${esc(LINE_WORDS(v))}</option>`).join("")}</select></label>
       <h3>2. ${QUESTIONS.q2}</h3>
-      <label>The feeling when it is real<select name="feel1">${opt(Object.keys(SATISFACTION), feels[0])}</select></label>
+      <label>The feeling when it is real<select name="feel1">${pick(feels[0])}${opt(Object.keys(SATISFACTION), feels[0])}</select></label>
       <label>And another (optional)<select name="feel2"><option value="">none</option>${opt(Object.keys(SATISFACTION), feels[1])}</select></label>
       <h3>3. ${QUESTIONS.q3}</h3>
       <label>How far it feels<select name="distance">${opt(Object.keys(DISTANCE), q("q3").distance)}</select></label>
@@ -151,25 +161,28 @@ export function mount(B, opts = {}) {
       <label>Someone near (their role and name)<input type="text" name="folk1" value="${esc(folk[0] ? folk[0].role + ": " + folk[0].name : "")}"></label>
       <label>Someone else near<input type="text" name="folk2" value="${esc(folk[1] ? folk[1].role + ": " + folk[1].name : "")}"></label>
       <h3>4. ${QUESTIONS.q4}</h3>
-      <label>This week<select name="week">${opt(Object.keys(DISSATISFACTION), w.feeling)}</select></label>
+      <label>This week<select name="week">${pick(w.feeling)}${opt(Object.keys(DISSATISFACTION), w.feeling)}</select></label>
       <label>How strong<select name="strength">${opt(STRENGTH, w.strength)}</select></label>
       <h3>5. ${QUESTIONS.q5}</h3>
       <label>What has to be true (the key)<input type="text" name="key" value="${esc(Object.values(q("q5").keys || {})[0] || "")}"></label>
       <h3>6. ${QUESTIONS.q6}</h3>
       <div class="muted">The beliefs that come up</div>${checks("beliefs", Object.keys(VILLAINS), q("q6").beliefs || [])}
-      <label>The loudest<select name="loudest">${opt(Object.keys(VILLAINS), q("q6").loudest)}</select></label>
+      <label>The loudest<select name="loudest">${pick(q("q6").loudest)}${opt(Object.keys(VILLAINS), q("q6").loudest)}</select></label>
       <label>Loudest when facing<select name="when"><option value="">any</option>${opt(Object.keys(OBSTACLE), q("q6").when)}</select></label>
       <label>What it hoards<input type="text" name="hoard" value="${esc(q("q6").hoard)}"></label>
       <p class="err" id="ctwErr" hidden></p>
-      <div class="foot"><button type="button" data-ctw="unroll">Unroll the episode</button><button type="button" class="q" data-ctw="reset">The sample's answers</button><button type="button" class="q" data-ctw="close">Close</button></div>`);
+      <div class="foot"><button type="button" data-ctw="unroll">Unroll the episode</button><button type="button" class="q" data-ctw="reset">${isSample ? "Start from blank" : "Try the sample's answers"}</button><button type="button" class="q" data-ctw="close">Close</button></div>`);
     d.querySelector('[data-ctw="unroll"]').onclick = () => unroll(fromForm(d), d);
-    d.querySelector('[data-ctw="reset"]').onclick = () => { charge = null; openCharge(); };
+    d.querySelector('[data-ctw="reset"]').onclick = () => { charge = null; openCharge(isSample ? BLANK : sample); };
     d.querySelector('[data-ctw="close"]').onclick = closeDlg;
   }
   function fromForm(d) {
     const v = n => (d.querySelector(`[name="${n}"]`) || {}).value || "";
     const all = n => [...d.querySelectorAll(`[name="${n}"]:checked`)].map(x => x.value);
     const c = JSON.parse(JSON.stringify(sample));
+    const missing = [["words", "1, what you want to create"], ["domain", "1, its life domain"], ["line", "1, the line it works"], ["feel1", "2, the feeling"], ["week", "4, this week"], ["loudest", "6, the loudest belief"]]
+      .filter(([n]) => !v(n).trim()).map(([, w]) => w);
+    if (missing.length) return { missing };
     const person = s => { const [role, ...rest] = s.split(":"); return rest.length ? { role: role.trim(), name: rest.join(":").trim() } : { role: "friend", name: s.trim() }; };
     c.line = v("line");
     Object.assign(c.q1, { words: v("words"), quadrant: v("quadrant"), domain: v("domain") });
@@ -182,12 +195,21 @@ export function mount(B, opts = {}) {
     if (v("when")) c.q6.when = v("when"); else delete c.q6.when;
     // The drafted text (secrets, names, the two stills) belongs to the sample's answers: changed answers leave gaps to draft.
     sampleKept = strip(c) === strip(sample);
-    if (!sampleKept) delete c.drafted;
-    return c;
+    if (sampleKept) return c;
+    // a charge you wrote: built from yours alone, then drafted by rules on unroll (episode-draft.js)
+    const own = JSON.parse(JSON.stringify(BLANK));
+    own.line = c.line; own.q1 = { words: c.q1.words, quadrant: c.q1.quadrant, domain: c.q1.domain };
+    own.q2 = { feelings: c.q2.feelings }; own.q3 = { distance: c.q3.distance, obstacles: c.q3.obstacles, townsfolk: c.q3.townsfolk };
+    own.q4 = c.q4; own.q5 = c.q5; own.q6 = { beliefs: c.q6.beliefs, loudest: c.q6.loudest, hoard: c.q6.hoard };
+    if (c.q6.when) own.q6.when = c.q6.when;
+    return own;
   }
   async function unroll(c, d) {
-    const r = await read(c);
-    if (r.errors) { const e = d && d.querySelector("#ctwErr"); if (e) { e.hidden = false; e.innerHTML = r.errors.map(esc).join("<br>"); } return; }
+    const err = d && d.querySelector("#ctwErr");
+    if (c.missing) { if (err) { err.hidden = false; err.textContent = "Answer question " + c.missing.join("; question ") + "."; } return; }
+    let r = await read(c);
+    if (!r.errors) { c = withDraft(c, r); r = await read(c); }
+    if (r.errors) { if (err) { err.hidden = false; err.textContent = "One answer does not fit the map yet. Check questions 3 and 6: the belief loudest when facing a road you ticked."; } console.warn("charge to world:", r.errors); return; }
     charge = c; g = r; episode = sheet(c, g);
     raisePanes(); closeDlg();
     walkTo(STAND.clone().addScaledVector(FRONT, 0.85));
@@ -216,7 +238,8 @@ export function mount(B, opts = {}) {
     const d = openDlg(`<h2>${esc(l.location)}</h2>${p.src ? `<img src="${p.src}" alt="${esc(l.location)}: ${esc(l.aspects.join("; "))}">` : `<p class="muted">Not drawn yet: this place is a brief until a stills round draws it.</p>`}
       <p class="muted">${esc(l.land)}. ${esc(l.purpose[0].toUpperCase() + l.purpose.slice(1))}.</p>
       <ul>${l.aspects.map(a => `<li>${esc(a)}</li>`).join("")}</ul>
-      <p class="muted">This place is an asset brief on the ${esc(l.line)} line. ${l.role === "encounter" ? "It is the episode's first land: walk through the doorway to stand in it." : p.src ? "The frame is the round 1 blockout (look ctw-locations-look-1)." : ""}</p>
+      ${l.element !== "wood" ? `<p class="muted">The ${esc(l.land.split(": the ")[1] || l.land)} is not built yet, so the forest stands in for it.</p>` : ""}
+      <p class="muted">This place is an asset brief on the ${esc(LINE_WORDS(l.line))} line. ${l.role === "encounter" ? "It is the episode's first land: walk through the doorway to stand in it." : p.src ? "The frame is the round 1 blockout (look ctw-locations-look-1)." : ""}</p>
       <div class="foot"><button type="button" data-ctw="sheet">The episode sheet</button><button type="button" class="q" data-ctw="close">Close</button></div>`);
     d.querySelector('[data-ctw="sheet"]').onclick = openSheet; d.querySelector('[data-ctw="close"]').onclick = closeDlg;
   }
@@ -337,6 +360,7 @@ export function mount(B, opts = {}) {
     const v = STAND.clone().setY(1.2).project(B.camera);
     label.hidden = !!dlg || v.z > 1 || !!near; label.style.left = sx + "px"; label.style.top = sy + "px";
     label.textContent = episode ? "The map stand: " + g.environment : "The map stand";
+    if (!label.hidden && !inFrame(label, sx, sy)) label.hidden = true; // a name half off the glass is not drawn (hp1-labels-in-frame)
   }
 
   (async function start() {

@@ -28,6 +28,7 @@ const SECTIONS: {
       { name: 'Games', href: '/admin/games', icon: '🎮' },
       { name: 'Onboarding', href: '/admin/onboarding', icon: '✨' },
       { name: 'Instances', href: '/admin/instances', icon: '🧩' },
+      { name: 'Friendcraft text', href: '/admin/friendcraft', icon: '🍵' },
       { name: 'Players', href: '/admin/players', icon: '👥' },
       { name: 'World Data', href: '/admin/world', icon: '🌍' },
       { name: 'Governance', href: '/admin/governance', icon: '🏛️' },

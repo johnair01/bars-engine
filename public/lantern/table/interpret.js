@@ -149,7 +149,9 @@ var DISSATISFACTION_OPTIONS = [
   "empty",
   "worried",
   "disappointed",
-  "isolated"
+  "isolated",
+  // Wood/Joy dissatisfied: the want not yet met (engine STATE.wood[0])
+  "craving"
 ];
 var SHADOW_VOICE_OPTIONS = [
   "I'm not ready",
@@ -335,7 +337,7 @@ function interpret(q, text, intake) {
     if (!top) return { q, heard: [], line: `${NOTHING}, so the lantern's flame stays as it is. Tap the lantern to set it by hand.` };
     const lead = score.filter((s) => s.ws.length === top);
     const life = lead.length > 1 ? "Neutral" : lead[0].life;
-    const flame = { Flowing: "burns high and steady", Stalled: "gutters low", Neutral: "holds still" }[life];
+    const flame = { Flowing: "burns high and steady", Stalled: "gutters low", Stuck: "gutters low", Neutral: "holds still" }[life];
     return { q, life, heard: heard2, line: `I heard ${quoteList(heard2)}, so the lantern's flame ${flame}: ${life}.` };
   }
   if (q === 4) {

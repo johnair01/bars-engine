@@ -49,6 +49,7 @@ export default async function WalletPage() {
     ])
     const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : []
     const total = wallet.length
+    const staked = wallet.filter((token) => token.stakedOnBarId).length
 
     // Fetch potential recipients
     const others = await db.player.findMany({
@@ -91,6 +92,11 @@ export default async function WalletPage() {
                 <div className="bg-zinc-900/50 px-6 py-4 rounded-xl border border-zinc-800 text-center">
                     <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Total Balance</div>
                     <div className="text-4xl font-mono text-green-400">{total} ♦</div>
+                    {staked > 0 && (
+                        <div className="text-xs text-zinc-500 mt-1">
+                            {total - staked} to spend, {staked} on BARs you shared
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -205,6 +211,9 @@ export default async function WalletPage() {
                                 <div className="text-green-400 font-mono text-sm mb-1">1 ♦ VIBULON COIN</div>
                                 <div className="text-white font-bold">{token.originTitle}</div>
                                 <div className="text-xs text-zinc-500 mt-1">Source: {token.originSource} • ID: {token.originId}</div>
+                                {token.stakedOnBarId && (
+                                    <div className="text-xs text-amber-400/80 mt-1">On a BAR you shared. It comes back if you take the BAR back.</div>
+                                )}
                             </div>
                             <div className="text-right">
                                 <div className="text-xs text-zinc-600 font-mono">{token.id.slice(-8)}</div>
