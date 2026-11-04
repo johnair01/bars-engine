@@ -60,8 +60,6 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      { source: '/understood/play', destination: '/understood-app/index.html' },
-      { source: '/understood/demo', destination: '/understood-app/index.html?demo=1' },
       // Ontology Alchemy Game (built by scripts/build-ontology-game.mjs). /ontology-game/wave
       // opens it with W.A.V.E. as the opening practice for the whole session.
       { source: '/ontology-game', destination: '/ontology-game/index.html' },
