@@ -16,7 +16,7 @@ preview: each retirement PR's Vercel preview, opened at `/ontology-game/between?
 
 ## Phase 2: retire, one PR each
 
-- [ ] T006 [claude] Remove `mtgoa-game/` and its tsconfig exclude, naming the T003 PR (FR-005)
+- [x] T006 [claude] Remove `mtgoa-game/` and its tsconfig exclude, naming the T003 PR (FR-005)
 - [ ] T007 [claude] Remove `understood-game/` (FR-006)
 - [ ] T008 [claude] Rebuild the deck templates with five moves and charge as playCost; post the Open Up cards as a look on the board before merge (FR-007)
 - [ ] T009 [claude] Compost the four charge-routing stubs (FR-008)
