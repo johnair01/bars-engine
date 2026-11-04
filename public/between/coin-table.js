@@ -37,12 +37,22 @@
    The book opens to the page last tossed for. Names live only in your homeroom (./iching/book.js, rules.ts homePageOk).
    On a named page steered to Flirtcraft, "Plant a spark for <name>" opens the built sheet with the name in it, and the
    spark is written onto the page. Preview: ?nook=1&book=1 sits you at the table with the book open on stand-in pages
-   (yourself, a Between partner, two named pages, three casts kept on Jun's); add &games=flirtcraft for the spark step. */
+   (yourself, a Between partner, two named pages, three casts kept on Jun's); add &games=flirtcraft for the spark step.
+
+   The friend's deck (Six-faces-council spec .specify/specs/friendcraft-deck, slice 1; his A on fo-ad-look-1, tea bowls).
+   For a player enrolled in Friendcraft the nook's book begins with goal pages: a blank goal leaf that asks "What do you
+   want from a friend?" with one ink line (the hope told at the mirror shows faint above it, and is never copied), then a
+   goal page with three cards, light, middle and deep, worded one at a time, each costing empty tea bowls (none, one, two)
+   read from its depth. "Add these to my deck" keeps the goal and its cards in the deck (./friendcraft/deck.js, rules.ts
+   deckWrite) and closes the book onto the table; "Anyone you sit with can draw these." sits above it. No number, count or
+   score appears. Preview: ?nook=1&deck=1&skipHome=1 seats a stand-in player enrolled in Friendcraft with an empty deck at
+   the blank goal leaf; &deck=2 adds one written goal with three cards. */
 import * as THREE from "three";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { SUITS, SELF, PLANT, withPlant, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
 import { leavesOf, castsOn, openAt, pageKeys, whoOf, lineOn, newPage, tabName, NAME_MAX } from "./iching/book.js";
+import { DEPTHS as CARD_DEPTHS, DEPTH_NAMES as CARD_NAMES, COST as CARD_COST, COPY as DECK_COPY, HINTS as CARD_HINTS, WORDS_MAX, newGoal, wordCard, cardsOf, mirrorHope } from "./friendcraft/deck.js";
 
 const TY = 0.32, TR = 0.34, SEAT_D = 0.62, PUSH_R = 0.5, NEAR_R = 1.25, BOOK_NEAR = 0.8, BOOK_LEAVE = 1.8;
 const STAND_IN = { kind: "them", room: "stand-in", person: "stand-in", name: "Sam", standIn: true };
@@ -67,6 +77,7 @@ export function mount(B, opts = {}) {
   const coins = [], marks = [];
   const localKept = {}, localItems = new Map(); // previews and a store that is down keep these on this page only
   const localPages = {}; let localBookAt = null;  // the record book's pages and where it opens, on this page only
+  const localDeck = { goals: {} }, localHome = {};  // a preview's (or a downed store's) deck, and a stand-in's mirror hope: this page only
   const ids = () => (B.ids ? B.ids() : {}) || {};
   const down = () => preview || !ids().gardenId;
   const hereRoom = () => { const g = B.view && B.view().g; return g && g.kind !== "home" ? ids().gardenId : null; };
@@ -194,7 +205,7 @@ export function mount(B, opts = {}) {
      and door belong to a player enrolled in Flirtcraft, who can steer the same table toward any game they are enrolled in.
      The enrolment is the one /api/between already hands the page (`games`); a preview says it with &games=flirtcraft. */
   const GAME_NAMES = { general: "General", flirtcraft: "Flirtcraft", friendcraft: "Friendcraft", allyship: "Allyship" };
-  function enrolled() { const l = B.list && B.list(); const g = preview ? (opts.games ? String(opts.games).split(",") : []) : (l && l.games) || []; return g.filter(x => GAME_NAMES[x] && x !== "general"); }
+  function enrolled() { const l = B.list && B.list(); const g = preview ? [...(opts.games ? String(opts.games).split(",") : []), ...(opts.deck ? ["friendcraft"] : [])] : (l && l.games) || []; return g.filter(x => GAME_NAMES[x] && x !== "general"); }
   let tableGame = "general";
   function steerTo(g) { tableGame = g === "general" || enrolled().includes(g) ? g : "general"; if (s && !s.who) cardKey = ""; }
   function rooms() { const l = B.list && B.list(); return (l && l.gardens) || []; }
@@ -237,7 +248,7 @@ export function mount(B, opts = {}) {
 
   /* ---------- the sitting ---------- */
   let doorWords = false; // the Flirtcraft door: the first sitting's first line names what the table is for
-  function fresh(source) { const d = doorWords; doorWords = false; return { source, who: null, tosses: [], cast: null, move: null, did: null, answering: null, card: null, door: d, link: null, sent: false, at: null, leaf: null, draft: "" }; }
+  function fresh(source) { const d = doorWords; doorWords = false; return { source, who: null, tosses: [], cast: null, move: null, did: null, answering: null, card: null, door: d, link: null, sent: false, at: null, leaf: null, draft: "", g: null, gdraft: "", focus: null, adding: false, seenGoal: false }; }
   function choose(w) {
     if (!s || s.who) return;
     if (w.kind === "plant") { B.standUp(); end(); if (B.openSheet) B.openSheet("setup"); return; }
@@ -249,9 +260,13 @@ export function mount(B, opts = {}) {
   /* ---------- the record book: its pages, and turning to one ---------- */
   function homeNow() {
     const h = (B.home && B.home()) || {};
-    return { ...h, pages: { ...(h.pages || {}), ...localPages }, casts: { ...(h.casts || {}), ...localKept }, bookAt: localBookAt || h.bookAt || null };
+    return { ...h, goals: { ...(h.goals || {}), ...(localHome.goals || {}) }, pages: { ...(h.pages || {}), ...localPages }, casts: { ...(h.casts || {}), ...localKept }, bookAt: localBookAt || h.bookAt || null };
   }
-  function leaves() { const here = hereRoom(); return leavesOf(here ? rawChoices() : choices(), homeNow(), { blank: !here }); }
+  /* the deck: a Friendcraft player's own goals and their cards (empty until the first is added) */
+  const friendcraftOn = () => enrolled().includes("friendcraft");
+  const deckNow = () => (down() ? localDeck : (B.deck && B.deck()) || { goals: {} });
+  const deckEmpty = () => !Object.values(deckNow().goals || {}).some(g => g && g.text);
+  function leaves() { const here = hereRoom(); return leavesOf(here ? rawChoices() : choices(), homeNow(), { blank: !here, deck: !here && friendcraftOn() ? deckNow() : null }); }
   async function homeSave(data) { // the homeroom's private doc; a preview or a store that is down keeps it on this page
     if (down()) { Object.assign(localPages, data.pages || {}); if (data.bookAt) localBookAt = data.bookAt; return true; }
     try { await B.homeWrite(data); return true; } catch { if (B.toast) B.toast("That did not save. Check your connection and try again."); return false; }
@@ -269,7 +284,55 @@ export function mount(B, opts = {}) {
     if (leaf.kind === "named") { s.who = whoOf(leaf); cardKey = ""; if (s.source === "book") castAll(); return; }
     choose(leaf);
   }
-  function turnTo(i) { if (!s || s.who) return; const n = leaves().length; s.at = Math.max(0, Math.min(n - 1, i)); bookSig = ""; cardKey = ""; if (!bookEl.hidden) drawBook(); }
+  function turnTo(i) {
+    if (!s || s.who) return;
+    const L = leaves(); s.at = Math.max(0, Math.min(L.length - 1, i)); bookSig = ""; cardKey = "";
+    const leaf = L[s.at]; // the red ribbon marks the goal page last opened
+    if (leaf && leaf.kind === "goal") { localBookAt = leaf.key; if (!down()) B.homeWrite({ bookAt: leaf.key }).catch(() => {}); }
+    if (!bookEl.hidden) drawBook();
+  }
+  /* ---------- the goal pages: write a goal, word three cards, add them to the deck ---------- */
+  const hasWords = o => !!(o && String(o).trim());
+  function startGoal() { // the blank goal leaf's ink line, entered: the leaf turns to a goal page
+    if (!s) return; const g = newGoal(s.gdraft, Date.now()); if (!g) return;
+    s.g = { text: g.text, words: {}, step: 0 }; s.focus = "card:light"; bookSig = ""; cardKey = "";
+  }
+  function goalBack() { if (!s || !s.g) return; s.gdraft = s.g.text; s.g = null; s.focus = "goal"; bookSig = ""; cardKey = ""; }
+  function wordDraft(depth, words, advance) { // a card on the unsaved page; Enter (even blank) moves to the next card
+    if (!s || !s.g) return; s.g.words[depth] = words;
+    if (advance) { const i = CARD_DEPTHS.indexOf(depth); s.g.step = Math.max(s.g.step, i + 1); s.focus = CARD_DEPTHS[i + 1] ? "card:" + CARD_DEPTHS[i + 1] : null; bookSig = ""; cardKey = ""; }
+  }
+  const draftReady = () => !!(s && s.g && (s.g.step >= 3 || CARD_DEPTHS.some(d => hasWords(s.g.words[d]))));
+  async function addGoal() {
+    if (!s || !s.g || s.adding) return; s.adding = true;
+    const at = Date.now(), gid = "g" + hkey();
+    let goal = newGoal(s.g.text, at); if (!goal) { s.adding = false; return; }
+    for (const d of CARD_DEPTHS) goal = wordCard(goal, d, s.g.words[d] || "", at);
+    for (const d of CARD_DEPTHS) if (!goal.cards[d]) delete goal.cards[d]; // a blank card stays blank: it is not in the deck
+    localBookAt = gid;
+    if (down()) { localDeck.goals[gid] = goal; }
+    else {
+      try { await B.deckWrite({ goals: { [gid]: goal } }); await B.homeWrite({ bookAt: gid }); }
+      catch { s.adding = false; localBookAt = null; if (B.toast) B.toast("That did not save. Check your connection and try again."); return; }
+    }
+    B.standUp(); end(); // the book closes onto the table
+  }
+  function writeAnother() { if (!s) return; const L = leaves(); s.g = null; s.gdraft = ""; s.focus = "goal"; turnTo(L.findIndex(l => l.kind === "goalblank")); }
+  async function cardSave(gid, depth, words) { // a saved goal's card, rewritten or cleared
+    const goals = deckNow().goals || {}, cur = goals[gid]; if (!cur || !CARD_DEPTHS.includes(depth)) return;
+    const was = (cur.cards && cur.cards[depth] && cur.cards[depth].words) || "", w = String(words || "").replace(/\s+/g, " ").trim().slice(0, WORDS_MAX);
+    if (w === was) return;
+    const card = w ? { words: w, at: Date.now() } : null;
+    if (down()) { localDeck.goals[gid] = { ...cur, cards: { ...(cur.cards || {}), [depth]: card } }; return; }
+    try { await B.deckWrite({ goals: { [gid]: { cards: { [depth]: card } } } }); }
+    catch { if (B.toast) B.toast("That did not save. Check your connection and try again."); }
+  }
+  async function goalOut(gid) { // a goal with no worded card left can be taken out of the book
+    const cur = (deckNow().goals || {})[gid]; if (!cur || cardsOf(cur).length) return;
+    if (down()) delete localDeck.goals[gid];
+    else { try { await B.deckWrite({ goals: { [gid]: null } }); } catch { if (B.toast) B.toast("That did not save. Check your connection and try again."); return; } }
+    const at = s && s.at || 0; bookSig = ""; cardKey = ""; if (s) s.at = Math.max(0, at - 1);
+  }
   /* A spark planted from a named page (FR-007) is written onto that page once it appears in your rooms: the sheet takes you
      into the new room, so the page waits in this tab's session until then. */
   const PLANT_KEY = "rb-plant";
@@ -404,7 +467,23 @@ export function mount(B, opts = {}) {
   .rb-turn.next{right:4px} .rb-turn.prev{left:4px} .rb-turn[hidden]{display:none} .rb-turn:hover{color:var(--ink)}
   .rb ::selection{background:rgba(178,122,60,.35);color:var(--ink)}
   .rb-casts{scrollbar-width:thin;scrollbar-color:#b9a283 transparent;-webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent);padding-bottom:18px}
-  .rb.one .rb-tab{flex:1 1 0;max-height:112px;padding:4px 0;font-size:13px;text-overflow:clip}`;
+  .rb.one .rb-tab{flex:1 1 0;max-height:112px;padding:4px 0;font-size:13px;text-overflow:clip}
+  .rb-tab.goal{border-color:#b8845f} .rb-tab.goal.mark{background:#a0302a;border-color:#7d2420;color:#f7ead6}
+  .rb-leaf.mark::after{content:"";position:absolute;top:0;right:11%;width:15px;height:74px;background:#a0302a;clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);box-shadow:0 2px 3px rgba(0,0,0,.3)}
+  .rb-goalname{margin:0;font:400 clamp(21px,2.5vw,32px)/1.15 Marcellus,var(--rb-serif);text-align:center;overflow-wrap:anywhere;text-wrap:balance}
+  .rb-hope{margin:.5em 8% 0;font:italic 400 clamp(14px,1.3vw,17px)/1.35 var(--rb-serif);color:var(--faint);text-align:center;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .rb-gin,.rb-line{display:block;resize:none;overflow:hidden;box-sizing:border-box;width:100%;padding:0 .08em;border:0;border-bottom:2px solid #96806a;border-radius:0;background:transparent;color:var(--ink);font:italic 400 clamp(20px,2.2vw,30px)/1.25 var(--rb-serif);caret-color:var(--ink)}
+  .rb-gin{width:90%;margin:1em auto 0;font-size:clamp(30px,4vw,56px)} .rb-gin::placeholder,.rb-line::placeholder{color:transparent}
+  .rb-gin:focus,.rb-line:focus{outline:none;border-bottom-color:var(--ink)}
+  .rb-deck{list-style:none;margin:0;padding:0 .2em 0 0;flex:1 1 auto;min-height:0;overflow:auto;display:grid;gap:.95em;align-content:start;scrollbar-width:thin;scrollbar-color:#b9a283 transparent}
+  .rb-dcard{display:grid;gap:2px}
+  .rb-dhint{margin:0;font:italic 400 clamp(13px,1.2vw,15px)/1.3 var(--rb-serif);color:var(--faint)}
+  .rb-dhint[hidden]{display:none}
+  .rb-dname{display:flex;align-items:center;gap:8px;font:400 clamp(13px,1.15vw,15px)/1 var(--rb-serif);color:var(--faint);letter-spacing:.04em}
+  .rb-bowl{width:22px;height:15px;color:#8a6a4a;flex:none}
+  .rb-anyone{margin:.7em 0 0;font:italic 400 clamp(14px,1.35vw,18px)/1.3 var(--rb-serif);color:var(--ink);text-align:center;text-wrap:balance}
+  .rb-gin:focus-visible,.rb-line:focus-visible{outline:3px solid #5fc2ba;outline-offset:3px}
+  .rb.one .rb-deck{gap:.6em}`;
   document.head.appendChild(bookCss);
   const bookEl = document.createElement("div"); bookEl.className = "rb"; bookEl.hidden = true; document.body.appendChild(bookEl);
   let bookSig = "";
@@ -422,19 +501,68 @@ export function mount(B, opts = {}) {
     if (leaf.kind === "blank") {
       return `<div class="rb-leaf ${side}"${open ? "" : ` data-turn="-1"`}><p class="rb-write">Write a name</p>${open ? `<input class="rb-input" maxlength="${NAME_MAX}" autocomplete="off" spellcheck="false" aria-label="Write a name" placeholder="A name">` : ""}${open ? `<div class="rb-coins">${COIN + COIN + COIN}</div><p class="rb-only">Only you read this book.</p>` : ""}</div>`;
     }
+    if (leaf.kind === "goalblank" || leaf.kind === "goal") return goalLeafHtml(leaf, open, side);
     const cs = castsOn(leaf, home);
     const list = cs.length ? `<ul class="rb-casts">${cs.map(c => `<li class="rb-cast">${hexSvg(c.n)}<div><small>${esc(hexName(c.n))}</small><span>${esc(lineOn(c, leaf))}</span></div></li>`).join("")}</ul>` : "";
     return `<div class="rb-leaf ${side}"${open ? "" : ` data-turn="-1"`}><h2 class="rb-name">${esc(leaf.name)}</h2><div class="rb-rule"></div>${list}${open ? `<div class="rb-coins">${COIN + COIN + COIN}</div><p class="rb-only">Only you read this book.</p>` : ""}</div>`;
   }
+  const BOWL = `<svg class="rb-bowl" viewBox="0 0 22 15" aria-hidden="true"><path d="M1.5 3.5h19c0 6.2-4.2 10-9.5 10S1.5 9.7 1.5 3.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4.5 3.5c1.6-1 3.6-1.5 6.5-1.5s4.9.5 6.5 1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/></svg>`;
+  const bowls = n => BOWL.repeat(n);
+  const costWords = n => n === 0 ? "costs no tea" : n === 1 ? "costs one tea bowl" : "costs two tea bowls";
+  const savedGoal = leaf => (deckNow().goals || {})[leaf.key] || null;
+  /* a goal page's three cards: the ink line, its faint hint while it is empty, then its depth and its bowls */
+  function cardRows(words, upto, saved) {
+    return CARD_DEPTHS.map((d, i) => i > upto ? "" : `<li class="rb-dcard" data-depth="${d}"><textarea class="rb-line" data-f="card" data-depth="${d}" rows="1" maxlength="${WORDS_MAX}" autocomplete="off" aria-label="${CARD_NAMES[d]} card: ${esc(CARD_HINTS[d])}">${esc(words[d] || "")}</textarea>
+      <p class="rb-dhint"${words[d] ? " hidden" : ""}>${esc(CARD_HINTS[d])}</p><div class="rb-dname"><span>${CARD_NAMES[d]}</span><span role="img" aria-label="${costWords(CARD_COST[d])}" style="display:flex;gap:3px">${bowls(CARD_COST[d])}</span></div></li>`).join("");
+  }
+  function goalLeafHtml(leaf, open, side) {
+    const turn = open ? "" : ` data-turn="-1"`;
+    if (leaf.kind === "goalblank" && !(open && s && s.g)) { // the blank goal leaf: the ask, the mirror's hope faint, one ink line
+      const hope = open ? mirrorHope(homeNow()) : "";
+      return `<div class="rb-leaf ${side}"${turn}><p class="rb-write">${DECK_COPY.ask}</p>${hope ? `<p class="rb-hope">${DECK_COPY.hope}${esc(hope)}${DECK_COPY.hopeOnly}</p>` : ""}${open ? `<textarea class="rb-gin" data-f="goal" rows="1" maxlength="${WORDS_MAX}" autocomplete="off" spellcheck="false" aria-label="${DECK_COPY.ask}"></textarea>` : ""}</div>`;
+    }
+    if (leaf.kind === "goalblank") { // the goal is written; its cards are not in the deck until they are added
+      const g = s.g;
+      return `<div class="rb-leaf ${side}"><h2 class="rb-goalname">${esc(g.text)}</h2><div class="rb-rule"></div><ul class="rb-deck">${cardRows(g.words, g.step)}</ul>${draftReady() ? `<p class="rb-anyone">${DECK_COPY.anyone}</p>` : ""}</div>`;
+    }
+    const g = savedGoal(leaf); if (!g) return `<div class="rb-leaf ${side}"${turn}></div>`;
+    const mark = leaf.key === homeNow().bookAt;
+    if (!open) return `<div class="rb-leaf ${side}${mark ? " mark" : ""}"${turn}><h2 class="rb-goalname">${esc(g.text)}</h2><div class="rb-rule"></div><ul class="rb-deck">${cardsOf(g).map(c => `<li class="rb-dcard"><span class="rb-cast"><span>${esc(c.words)}</span></span><div class="rb-dname"><span>${CARD_NAMES[c.depth]}</span><span role="img" aria-label="${costWords(c.cost)}" style="display:flex;gap:3px">${bowls(c.cost)}</span></div></li>`).join("")}</ul></div>`;
+    const words = Object.fromEntries(CARD_DEPTHS.map(d => [d, (g.cards && g.cards[d] && g.cards[d].words) || ""]));
+    return `<div class="rb-leaf ${side}${mark ? " mark" : ""}" data-gid="${esc(leaf.key)}"><h2 class="rb-goalname">${esc(g.text)}</h2><div class="rb-rule"></div><ul class="rb-deck">${cardRows(words, 2)}</ul><p class="rb-anyone">${DECK_COPY.anyone}</p></div>`;
+  }
+  function wireGoal(L, i) { // the goal pages' ink lines
+    const fit = t => { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; };
+    const gin = bookEl.querySelector(".rb-gin");
+    if (gin) { gin.value = s.gdraft || ""; fit(gin); setTimeout(() => fit(gin), 250);
+      gin.addEventListener("input", () => { if (s) { s.gdraft = gin.value; cardKey = ""; } fit(gin); });
+      gin.addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); startGoal(); } }); }
+    const leaf = L[i], saved = leaf && leaf.kind === "goal";
+    const rows = [...bookEl.querySelectorAll(".rb-line")];
+    rows.forEach((inp, k) => {
+      const d = inp.dataset.depth, hint = inp.parentElement.querySelector(".rb-dhint");
+      fit(inp); setTimeout(() => fit(inp), 250);
+      inp.addEventListener("input", () => { if (hint) hint.hidden = !!inp.value; if (!saved) wordDraft(d, inp.value, false); cardKey = ""; fit(inp); });
+      inp.addEventListener("keydown", e => { e.stopPropagation(); if (e.key !== "Enter") return; e.preventDefault();
+        if (saved) { cardSave(leaf.key, d, inp.value); const nx = rows[k + 1]; if (nx) nx.focus(); else inp.blur(); } else wordDraft(d, inp.value, true); });
+      if (saved) inp.addEventListener("change", () => cardSave(leaf.key, d, inp.value));
+    });
+    const want = s.focus; s.focus = null;
+    const el = want === "goal" ? gin : want && want.startsWith("card:") ? bookEl.querySelector(`.rb-line[data-depth="${want.slice(5)}"]`) : null;
+    if (el) setTimeout(() => el.focus({ preventScroll: true }), 60);
+  }
   function drawBook() {
     const L = leaves(), i = Math.min(s.at || 0, L.length - 1), home = homeNow(), one = innerWidth < 760;
-    const sig = JSON.stringify([i, one, L.map(l => [l.key, l.name]), castsOn(L[i], home).map(c => c.id), i > 0 ? castsOn(L[i - 1], home).map(c => c.id) : 0, !!hexTable]);
+    const gs = deckNow().goals || {}, nb = i > 0 && L[i - 1].kind === "goal" ? gs[L[i - 1].key] : null; // typed card words never redraw the open leaf
+    const deckSig = JSON.stringify([Object.entries(gs).map(([k, g]) => [k, g && g.text]), nb && nb.cards, home.bookAt, s.g && [s.g.text, s.g.step, draftReady()], s.focus]);
+    const sig = JSON.stringify([i, one, L.map(l => [l.key, l.name]), castsOn(L[i], home).map(c => c.id), i > 0 ? castsOn(L[i - 1], home).map(c => c.id) : 0, !!hexTable, deckSig]);
     bookEl.hidden = false;
     if (sig === bookSig) return; bookSig = sig;
     bookEl.classList.toggle("one", one);
     bookEl.innerHTML = `<div class="rb-book" role="dialog" aria-label="Your record book">${leafHtml(i > 0 ? L[i - 1] : null, false, home)}${leafHtml(L[i], true, home)}
-      <nav class="rb-tabs" aria-label="Pages">${L.map((l, k) => `<button type="button" class="rb-tab" data-at="${k}"${k === i ? ` aria-current="page"` : ""} aria-label="${l.kind === "blank" ? "A blank page" : esc(l.name)}">${esc(tabName(l, L.length))}</button>`).join("")}</nav>
+      <nav class="rb-tabs" aria-label="Pages">${L.map((l, k) => `<button type="button" class="rb-tab${l.kind === "goal" || l.kind === "goalblank" ? " goal" : ""}${l.kind === "goal" && l.key === home.bookAt ? " mark" : ""}" data-at="${k}"${k === i ? ` aria-current="page"` : ""} aria-label="${l.kind === "blank" ? "A blank page" : l.kind === "goalblank" ? "A blank goal page" : l.kind === "goal" ? "Goal: " + esc(l.name) : esc(l.name)}">${esc(tabName(l, L.length))}</button>`).join("")}</nav>
       <button type="button" class="rb-turn prev" data-turn="-1" aria-label="Turn back a page"${i > 0 ? "" : " hidden"}>${CHEV(-1)}</button><button type="button" class="rb-turn next" data-turn="1" aria-label="Turn the page"${i < L.length - 1 ? "" : " hidden"}>${CHEV(1)}</button></div>`;
+    wireGoal(L, i);
     const inp = bookEl.querySelector(".rb-input");
     if (inp) { inp.value = s.draft || ""; inp.addEventListener("input", () => { if (s) { s.draft = inp.value; cardKey = ""; } });
       inp.addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Enter" && s) chooseLeaf(L[i]); });
@@ -497,7 +625,14 @@ export function mount(B, opts = {}) {
     if (!s.who) {
       const fu = !atBook && faceUp(), me = ids().me || "you";
       const L = leaves(); if (s.at == null) s.at = openAt(L, homeNow()); s.at = Math.min(s.at, L.length - 1);
+      if (friendcraftOn() && deckEmpty() && !s.g && !s.seenGoal) { const k = L.findIndex(l => l.kind === "goalblank"); if (k >= 0) { s.at = k; s.seenGoal = true; } } // an empty deck opens at the blank goal leaf (bookAt "goal")
       const leaf = L[s.at], acts = [], away = atBook ? close : closeStand;
+      if (leaf.kind === "goalblank" || leaf.kind === "goal") {
+        if (leaf.kind === "goalblank" && !s.g && newGoal(s.gdraft, 0)) acts.push({ label: "Write this goal", on: startGoal });
+        if (leaf.kind === "goalblank" && s.g) { if (draftReady()) acts.push({ label: DECK_COPY.add, on: addGoal }); acts.push({ label: "Change the goal", quiet: true, on: goalBack }); }
+        if (leaf.kind === "goal") { acts.push({ label: DECK_COPY.another, on: writeAnother }); const g = savedGoal(leaf); if (g && !cardsOf(g).length) acts.push({ label: DECK_COPY.takeOut, quiet: true, on: () => goalOut(leaf.key) }); }
+        return { subject: bookRect, book: true, head: "", sub: "", actions: [...acts, away] };
+      }
       if (leaf.kind === "blank") { const nm = newPage(s.draft, 0); if (nm) acts.push({ label: `${atBook ? "Read" : "Toss"} for ${nm.name}`, on: () => chooseLeaf(leaf) }); }
       else acts.push({ label: `${atBook ? "Read" : "Toss"} for ${leaf.kind === "self" ? "yourself" : leaf.name}`, on: () => chooseLeaf(leaf) });
       const flirt = tableGame === "flirtcraft" && enrolled().includes("flirtcraft");
@@ -629,7 +764,15 @@ export function mount(B, opts = {}) {
         if (r) localKept["stand-in-jun-" + k] = { n, becomes: null, lane: r.lane, suit: "WU", room: null, page: "stand-in-jun", line: r.them, at: now - (k + 1) * 864e5 * 3 }; });
       localBookAt = "stand-in-jun";
     }
-    if (!opts.open && !opts.book) return;
+    if (opts.deck) { // the friend's deck stand-in: enrolled, first minute done, a mirror hope, an empty deck (&deck=2: one written goal)
+      const now = Date.now();
+      localHome.goals = { "stand-in-hope": { text: "To be known by a few people who stay", room: null, at: now - 9e8 } };
+      if (String(opts.deck) === "2") {
+        localDeck.goals["stand-in-goal"] = wordCard(wordCard(wordCard({ text: "Someone who asks how I really am", at: now - 6e5, cards: {} }, "light", "Ask me what I had for breakfast, then listen to the whole answer.", now - 5e5), "middle", "Notice when I stop talking, and say so.", now - 4e5), "deep", "Stay when I am hard to be around.", now - 3e5);
+        localBookAt = "stand-in-goal";
+      } else localBookAt = "goal";
+    }
+    if (!opts.open && !opts.book && !opts.deck) return;
     while (!B.meState.placed) await new Promise(r => setTimeout(r, 250)); // the page sets you down where you wake first
     await new Promise(r => setTimeout(r, 600));
     if (opts.open === "faceup") { // the stand-in left a cast for you face up on this hollow's table

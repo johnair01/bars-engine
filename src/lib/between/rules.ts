@@ -21,7 +21,7 @@ export type Target =
   | { table: 'shown'; playerId: string }
   | { table: 'privates'; playerId: string; key: PrivateKey }
 
-const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home'] as const
+const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home', 'deck'] as const
 type PrivateKey = (typeof PRIVATE_KEYS)[number]
 
 export type Op = 'set' | 'update' | 'delete'
@@ -131,7 +131,9 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
     case 'privates':
       if (target.playerId !== me) return no(403, 'That is the other person\'s own.')
       if (target.key === 'home' && !home) return no(400, 'Your look and hopes are kept in your homeroom.')
+      if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
+      if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!)) : yes
   }
 }
@@ -457,6 +459,42 @@ export function homeWrite(doc: Doc): Verdict {
       if (!ID.test(id)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
       if (v !== null && !(isObj(v) && ok(v))) return no(400, field === 'goals' ? 'A hope is a short line, maybe tied to one room.' : field === 'embers' ? 'An ember is a feeling and where it went, nothing more.' : field === 'pages' ? 'A page in your book is a name, nothing more.' : field === 'casts' ? 'A kept cast is its hexagram and its move, nothing more.' : 'A check-in is a feeling and a short line.')
     }
+  }
+  return yes
+}
+
+/* ---------- the deck (Six-faces-council spec .specify/specs/friendcraft-deck, slice 1; his A on fo-ad-look-1) ----------
+ * A friend's own deck is a private doc beside `home`, so the words they mean to share and the words they keep to
+ * themselves never sit in one record (fo-deck-own-doc). A goal is the player's line; under it three cards, light,
+ * middle and deep, each the player's own words. Cost is read from the depth in code (public/between/friendcraft/deck.js
+ * COST), never stored, and nothing here counts, scores or prices a card: a count or cost field is refused. */
+export const DECK_DEPTHS = ['light', 'middle', 'deep'] as const
+export const DECK_WORDS_MAX = 140
+const DECK_GOAL_KEYS = new Set(['text', 'at', 'cards'])
+const DECK_CARD_KEYS = new Set(['words', 'at'])
+const deckWords = (v: unknown) => typeof v === 'string' && v.trim().length > 0 && v.length <= DECK_WORDS_MAX && isNote(v)
+function deckGoalOk(g: Doc): boolean {
+  if (!Object.keys(g).every(k => DECK_GOAL_KEYS.has(k))) return false
+  if (!deckWords(g.text) || !isNum(g.at)) return false
+  const cards = g.cards
+  if (cards == null) return true
+  if (!isObj(cards)) return false
+  for (const [depth, c] of Object.entries(cards)) {
+    if (!(DECK_DEPTHS as readonly string[]).includes(depth)) return false
+    if (c === null) continue
+    if (!isObj(c) || !Object.keys(c).every(k => DECK_CARD_KEYS.has(k)) || !deckWords(c.words) || !isNum(c.at)) return false
+  }
+  return true
+}
+/** May the deck stand? Goals only; each a line of the player's words with up to three cards at the three depths. */
+export function deckWrite(doc: Doc): Verdict {
+  for (const k of Object.keys(doc)) if (k !== 'goals') return no(400, 'Your deck keeps your goals and their cards, nothing more.')
+  const goals = doc.goals
+  if (goals == null) return yes
+  if (!isObj(goals)) return no(400, 'Your deck keeps your goals and their cards, nothing more.')
+  for (const [id, g] of Object.entries(goals)) {
+    if (!ID.test(id) || id === 'goal') return no(400, 'Your deck keeps your goals and their cards, nothing more.')
+    if (g !== null && !(isObj(g) && deckGoalOk(g))) return no(400, 'A goal is a short line of your words, with up to three cards under it.')
   }
   return yes
 }
