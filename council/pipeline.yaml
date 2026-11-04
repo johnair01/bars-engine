@@ -23,13 +23,41 @@ where: .specify/specs/<feature-name>/   # spec.md, plan.md, tasks.md, as bars-en
 
 templates: council/spec-kit/            # spec.md, plan.md, tasks.md, synced from the home repo
 
+# The stage contract (pass spec-contract-1, 2026-10-28; Wendell: "a contract that makes the moves More consistent").
+# github/spec-kit runs constitution, specify, clarify, plan, tasks, analyze, implement. Each stage below names the
+# spec-kit command it plays (speckit), the faces that sign it (owners), the design-ontology output fields it must
+# leave filled (fills, owned by the face in field_owners), the studio skills it loads (loads, from council/skills.yaml)
+# and the constitution articles it checks (articles). council/tools/contract_check.py reads all of it.
+contract:
+  constitution: council/constitution.md
+  check: python3 council/tools/contract_check.py <spec folder> [--through <stage>]
+  signed: >
+    spec.md, plan.md or tasks.md carries a `## Signed` section with one line per stage reached,
+    `- <stage>: <face>, <face> (<date>)`, naming every owner. A face signs only what its lens read.
+  field_owners:   # the design ontology's output contract (.claude/skills/design-ontology/SKILL.md), one face each;
+                  # the same faces docs/experience-intake.md gives its lines
+    design_intent: diplomat
+    intrinsic_pleasure: shaman
+    ontology_objects: sage
+    mechanical_claims: architect
+    aqal_attention: shaman
+    agency_and_consent: diplomat
+    evidence_and_unknowns: sage
+    provenance_effects: regent
+    risks_and_tests: challenger
+    implementation_translation: architect
+    decision_or_open_authority: regent
+  not_a_game: >
+    A feature that is not game or world design writes `n/a: <why>` on a field that does not apply. The check
+    accepts that; it does not accept a blank or a template placeholder.
+
 # Three typed outputs, kept apart. A pass never mixes them.
 outputs:
-  questions: the Council Board, https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho
+  questions: the Council Board, https://bars-engine.vercel.app/board/council
   steps: the Your steps tab on the same board, named in steps_page below
   product: a pull request per feature, on its own branch
 
-steps_page: https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho#steps   # the Your steps tab; Wendell overruled a separate page at board read 8
+steps_page: https://bars-engine.vercel.app/board/council#steps   # the Your steps tab, written with board/store_write.py push; Wendell overruled a separate page at board read 8
 
 # Deferral. Wendell asked for it at board read 20 (2026-10-03), on the oracle drafts: "We need to be
 # able to defer projects so they don't get trapped on the board, but we are also collecting data
@@ -143,49 +171,143 @@ feature_request:
   produces: request.md and the spec kit in .specify/specs/<feature>/, a ledger record, board rows, and a pull request
   covers_stages: [intake, spec, falsify]
 
+# Prototype rounds (Wendell, 2026-11-02, on the Lantern Hall reel: "Essentially we can play rounds of that game in a sonnet
+# thread to get the mechanics down and then have things built from there more deftly"; "Let's do that" to this plan).
+# Rules: docs/satisfaction-reel.md. It is kept beside `stages`, not in it: a stage there is graded on every spec folder
+# and every feature on the map, and the rounds are a loop a game feature plays, entered from intake or from a look he
+# turned back. Whether it joins `stages` is the council's position sr-rounds-beside-stages, standing unless he flips it.
+prototype:
+  owners: [shaman, architect]
+  runs_for: >
+    a game feature, after its experience intake passes and before its build; a built feature he turned back on its look
+    (a C, an overrule) before its next build
+  rounds_and_rulings: >
+    Mechanics and feel play out in rounds; rulings still go to the board. A round finds the mechanic and how it feels.
+    Money, scope, a person's name or consent, and what ships stay board questions, through the reach test.
+  who: >
+    A Sonnet thread plays each round (Opus when the round needs a new look or mechanics from nothing). Wendell scores the
+    keyframes on the round's look row in Emotional Alchemy terms (channel, lead/neutral/gold, intensity) and tags each
+    note to its moment (`m06 water gold major: ...`). The next round opens with his notes verbatim.
+  loop: council/loops/<strand>.json   # next_round.py start/finish; his look answer reaches it through board/pull.py
+  body: >
+    A feature that needs a built space gets a cheap stand-in first: the procedural figure (lh-two-bodies), no asset files.
+  produces: >
+    council/callsheets/stills/<date>-<feature>-reel-<n>/ with MANIFEST.md (stage: prototype), rules.md, make/engine.*,
+    make/script.*, make/check.*, frames/, and round-<n>.md, the decision record; a look row on the board
+  gate: >
+    python3 council/tools/assets_here.py --check <round folder> passes, make/check.* prints pass for every rule, and
+    his look answer is in round-<n>.md before the next round starts.
+  exits: >
+    when he answers a look yes with no steer, or asks for the handoff. The spec is written from rules.md, and the build
+    ports make/engine.* to src/lib/<feature>/engine.ts and make/script.* to its tests before the body, place and
+    interface; art direction runs then, its keep list starting from the last round.
+  first: ch1-shared-pick, round 1 (2026-11-02), look sp-reel-look-1
+
 stages:
   - id: intake
+    speckit: specify
     owners: [shaman, diplomat]
-    produces: spec.md Purpose and user stories, with the ask quoted in Wendell's words
+    fills: [design_intent, intrinsic_pleasure, agency_and_consent]
+    articles: [2, 4]
+    loads: [design-ontology, intake_check, better, brief-master]
+    produces: >
+      spec.md Purpose and user stories, with the ask quoted in Wendell's words; for a game or world, the
+      experience intake (docs/experience-intake.md) as the callsheet's Intake section
     gate: >
       The ask is quoted, and who it is for is named. Every clarifying question goes through the reach
-      test first; the spec kit interview's questions are answered from the record where it can.
+      test first; the spec kit interview's questions are answered from the record where it can. A game or
+      world brief also passes council/tools/intake_check.py, each line answered by a face through a
+      design-ontology field: the place it extends (a new place proves why not to extend), the player's body (an
+      avatar in a space by default), the medium, the first 60 seconds from the player's eyes, references,
+      a keep list, and what came from the record versus the board (Wendell, 2026-10-27).
 
   - id: spec
+    speckit: specify
     owners: [architect, regent]
-    produces: spec.md design decisions, contracts, acceptance
+    fills: [ontology_objects, mechanical_claims, aqal_attention, provenance_effects]
+    articles: [3, 4, 8]
+    loads: [design-ontology, six-faces, primitives]
+    produces: spec.md design decisions, contracts, acceptance, numbered requirements (FR-001)
     gate: >
       Each design decision says whose it is: Wendell's (cited), a source's (named) or the council's
       (marked). Anything on the reserved list becomes a board question, never a decision.
 
+  - id: clarify
+    speckit: clarify
+    owners: [sage]
+    fills: [evidence_and_unknowns, decision_or_open_authority]
+    articles: [1, 4]
+    loads: [six-faces]
+    produces: every [NEEDS CLARIFICATION] in spec.md answered from the record or turned into a board row
+    gate: >
+      spec-kit's clarify asks the user up to five questions. The council's sends each one back to the face
+      that owns it with the record first (the reach test); what survives goes on the board, and the marker
+      names the row: [NEEDS CLARIFICATION: <what> | board: <row id>]. Nothing is asked in chat.
+
   - id: falsify
+    speckit: none   # the council's own stage; spec-kit has no test before the plan
     owners: [challenger]
+    fills: [risks_and_tests]
+    articles: [4, 5]
+    loads: [six-faces, scout]
     produces: spec.md section "How we will know it failed"
     gate: >
       One cheap test, run before the build, that could show the design is wrong, and the result that
       would stop the work. Root-game's rule, made general: confirm with a cheap test before building.
 
   - id: plan
+    speckit: plan, tasks
     owners: [architect, regent]
-    produces: plan.md and tasks.md, every task tagged [claude] or [wendell]
+    fills: [implementation_translation]
+    articles: [3, 4, 6]
+    loads: [design-ontology, six-faces, primitives, brief-master]
+    produces: >
+      plan.md with its constitution check, and tasks.md, every task numbered (T001), tagged [claude] or
+      [wendell], and naming the requirement it serves (FR-001)
     gate: >
       Every [wendell] task passes step_test and has the full step_shape. Those tasks are published to
       the steps tab as one list for the feature before any build starts that depends on them.
 
+  - id: analyze
+    speckit: analyze
+    owners: [sage, challenger]
+    fills: []
+    articles: [1, 4, 5]
+    loads: [six-faces]
+    produces: python3 council/tools/contract_check.py <spec folder> exits 0
+    gate: >
+      The three files agree before a line is built: every requirement has a task, every stage reached is
+      signed by its owners, every ontology field is filled or says why not, every article has a row in the
+      constitution check, and every skill a stage loads is named in the skills line or skipped with a reason.
+
   - id: build
+    speckit: implement
     owners: [architect]
+    fills: []
+    articles: [6, 9]
+    loads: [scout, game_frame_check, assets_here, art-direction, impeccable]
     produces: a pull request on its own branch
-    gate: The repo's own checks pass, and the preview builds where the repo has one.
+    gate: >
+      The repo's own checks pass, and the preview builds where the repo has one. A feature that played prototype rounds
+      ports the last round's engine and script first, and its tests are the script's steps.
 
   - id: verify
+    speckit: implement
     owners: [regent, diplomat]
+    fills: []
+    articles: [7]
+    loads: [look_floor, assets_here, art-direction, impeccable]
     produces: the definition of done, checked; a walk-through for a person where the feature has one
     gate: >
       The falsification test passed. Any check only Wendell can make (his account, his eyes) is a
       list on the steps tab, and the feature is not done until he ticks it.
 
   - id: ship
+    speckit: implement
     owners: [regent]
+    fills: []
+    articles: [8]
+    loads: [six-faces]
     produces: a board position "merges on the next board read unless flipped"
     gate: >
       Precedent: flirtcraft pull request #5 merged this way, its position standing on 2026-10-02.
@@ -193,7 +315,11 @@ stages:
       only on a board question he answers.
 
   - id: close
+    speckit: implement
     owners: [sage]
+    fills: []
+    articles: [9, 10]
+    loads: [six-faces]
     produces: a ledger record, tasks.md ticked, lessons_pending for anything he ruled
     gate: Every face's contribution is named, and the dissent is listed.
 
@@ -221,6 +347,7 @@ transcend_and_include:
   synthesis: The Sage names what the synthesis keeps from each face, and which face's work it set down and why.
 
 retro:   # pass 13 (council/passes/6FACE_PASS13_2026-10-07.md); all five positions stood and proc-rule-retire was answered A, 2026-10-07
+  template: docs/retros/README.md (weekly interview + throughput and delight scorecard; retro 2, 2026-11-01)
   subject: the council's own record, meaning his overrules, steers and deferrals, the plumbing incidents, and lessons_pending
     across every registered repo (collect_lessons.py). Resolved entries carry faces and pass (proc-record-face), so an
     overrule can be traced to the face that made the row.
