@@ -115,6 +115,8 @@ function testEmberTakesTheMovesElement() { // T1
   assert.equal(w(ember({ state: 'spent' })), false, 'an ember is never used up')
   assert.equal(w(ember({ risen: true })), true, 'a focus sit run its length raises it one state')
   assert.equal(w(ember({ risen: 2 })), false, 'it rises once, or not yet')
+  assert.equal(w(ember({ state: 'written', bar: 'clbar123' })), true, 'written into a BAR with the brush, it stays kept')
+  assert.equal(w(ember({ state: 'written', bar: 7 })), false, 'it names one BAR')
   assert.equal(mayWrite(member(B), g, pouch(A), 'update', { embers: { e1: ember() } }, null).ok, false, 'the other person\'s pouch')
 }
 
