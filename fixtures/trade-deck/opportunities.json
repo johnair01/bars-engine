@@ -1,0 +1,212 @@
+{
+  "note": "The opportunity deck for the money boat's return (Six-faces-council money-block.md, his note on mb-return-build-look-1). A boat that comes home opens its crate on one card: a fifteen-minute way to move the money needle that the port sent back. Cards are keyed by port id; a port this deck does not know draws from 'any'. 'from_boat' cards are built from the boat's own move and port, so the first thing back is about what the player sent. {port}, {action} and {ask} are filled from the boat. bonus is paid on top of the move's usual three vibeulons when the card is played off the hatch. element is the port's Wuxing colour on the card (bars-engine UI_COVENANT.md), with its reason.",
+  "elements": {
+    "coaching": {
+      "element": "wood",
+      "why": "coaching is growth: wood"
+    },
+    "courses": {
+      "element": "water",
+      "why": "a course is knowledge that flows on: water"
+    },
+    "games": {
+      "element": "fire",
+      "why": "games are play and heat: fire"
+    },
+    "books": {
+      "element": "metal",
+      "why": "a book is refined craft: metal"
+    },
+    "patreon": {
+      "element": "earth",
+      "why": "patrons are ground that holds steady: earth"
+    },
+    "jobs": {
+      "element": "metal",
+      "why": "a job is structure and a contract: metal"
+    },
+    "any": {
+      "element": "earth",
+      "why": "a port the deck does not know yet stands on earth"
+    }
+  },
+  "from_boat": [
+    {
+      "id": "follow-up",
+      "title": "A reply in the hold",
+      "line": "{port} wrote back about what you sent.",
+      "action": "Send a two-line follow-up about {ask}: thank them, and name one next step with a date.",
+      "bonus": 2
+    },
+    {
+      "id": "second-door",
+      "title": "A second door",
+      "line": "The person at {port} mentioned someone else who should hear this.",
+      "action": "Ask who else at {port} should see {ask}, in one sentence, and offer to send it.",
+      "bonus": 2
+    },
+    {
+      "id": "date-it",
+      "title": "A date to hear back",
+      "line": "{port} has your move; a date keeps it from drifting off.",
+      "action": "Write down when you expect to hear back about {ask}, and set one reminder to ask on that day.",
+      "bonus": 1
+    }
+  ],
+  "ports": {
+    "coaching": [
+      {
+        "id": "coaching-referral",
+        "title": "A name for your sessions",
+        "line": "Someone you coached once has a friend in the same knot.",
+        "action": "Ask one past client, by message, who they know that would want a session.",
+        "bonus": 2
+      },
+      {
+        "id": "coaching-taster",
+        "title": "A free half hour",
+        "line": "A slot opened in the week ahead.",
+        "action": "Offer one person a free thirty-minute call this week with a link to book it.",
+        "bonus": 1
+      },
+      {
+        "id": "coaching-price",
+        "title": "A price said aloud",
+        "line": "The port wants to hear what a session costs.",
+        "action": "Write your session price in one sentence and post it where clients look.",
+        "bonus": 3
+      }
+    ],
+    "courses": [
+      {
+        "id": "courses-waitlist",
+        "title": "A list that wants in",
+        "line": "Three people asked when the course opens.",
+        "action": "Write a two-line note to your waitlist with the date and the price.",
+        "bonus": 2
+      },
+      {
+        "id": "courses-lesson",
+        "title": "One lesson, given away",
+        "line": "A lesson out in the world brings buyers back.",
+        "action": "Share one lesson from the course in public with a link to the full course.",
+        "bonus": 1
+      },
+      {
+        "id": "courses-partner",
+        "title": "A teacher who would host it",
+        "line": "Another teacher's students would like this course.",
+        "action": "Ask one teacher if they would share your course with their students for a cut.",
+        "bonus": 3
+      }
+    ],
+    "games": [
+      {
+        "id": "games-playtest",
+        "title": "A paid table",
+        "line": "A group wants to play your game.",
+        "action": "Offer one group a paid playtest night with a price and a date.",
+        "bonus": 2
+      },
+      {
+        "id": "games-store",
+        "title": "A shelf in a shop",
+        "line": "A local shop has an empty shelf.",
+        "action": "Email one game shop about stocking your game, with a photo and the price.",
+        "bonus": 3
+      },
+      {
+        "id": "games-page",
+        "title": "A page that sells",
+        "line": "The game's page has visitors but no buy button.",
+        "action": "Add a buy or pledge link to the game's page and share it once.",
+        "bonus": 1
+      }
+    ],
+    "books": [
+      {
+        "id": "books-review",
+        "title": "A reader with a voice",
+        "line": "A reader loved the book and has not said so in public.",
+        "action": "Ask one reader to leave a review where the book is sold.",
+        "bonus": 2
+      },
+      {
+        "id": "books-bulk",
+        "title": "A box of books",
+        "line": "A group could use copies for everyone.",
+        "action": "Offer one group, class or circle a bulk price on the book.",
+        "bonus": 3
+      },
+      {
+        "id": "books-reading",
+        "title": "A night to read aloud",
+        "line": "A venue wants an evening.",
+        "action": "Ask one venue for a reading date with books for sale at the door.",
+        "bonus": 2
+      }
+    ],
+    "patreon": [
+      {
+        "id": "patreon-thanks",
+        "title": "A patron to thank",
+        "line": "A patron has stayed a long time without a word back.",
+        "action": "Thank one patron by name and ask what they would like more of.",
+        "bonus": 1
+      },
+      {
+        "id": "patreon-tier",
+        "title": "A tier with a door",
+        "line": "A higher tier would fit someone who already gives.",
+        "action": "Write one new tier in three lines, with its price, and post it.",
+        "bonus": 3
+      },
+      {
+        "id": "patreon-invite",
+        "title": "An open invitation",
+        "line": "Friends of the work have not been asked.",
+        "action": "Invite three people who like the work to join, with the link.",
+        "bonus": 2
+      }
+    ],
+    "jobs": [
+      {
+        "id": "jobs-reference",
+        "title": "A word from someone",
+        "line": "Someone who knows your work would vouch for you.",
+        "action": "Ask one past colleague to be a reference, in two lines.",
+        "bonus": 2
+      },
+      {
+        "id": "jobs-coffee",
+        "title": "A coffee on the calendar",
+        "line": "Someone inside the place you applied would talk.",
+        "action": "Ask one person who works there for a twenty-minute call.",
+        "bonus": 2
+      },
+      {
+        "id": "jobs-next",
+        "title": "The next posting",
+        "line": "A posting like this one is open somewhere else.",
+        "action": "Find one more posting like this one and save it with its closing date.",
+        "bonus": 1
+      }
+    ],
+    "any": [
+      {
+        "id": "any-ask",
+        "title": "One more ask",
+        "line": "The port is open to one more offer.",
+        "action": "Send one person a plain offer with a price.",
+        "bonus": 2
+      },
+      {
+        "id": "any-thanks",
+        "title": "A thank-you that opens",
+        "line": "Someone helped and has not heard back.",
+        "action": "Thank one person who helped and ask what they need next.",
+        "bonus": 1
+      }
+    ]
+  }
+}

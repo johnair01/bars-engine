@@ -3,7 +3,7 @@
 // player boards it, opens what it carries"; spec FR-005, FR-006). Built from bars-engine main's own pieces: the money
 // boat (tradeBoat, his mb-boat-look-1 preset, lit so its bow lantern burns), the crate piece, Still B's spirit, and the
 // pier part's bollard, fender, plank and line shapes, drawn on the west edge. New here: the crate's lid, the light that
-// rises when it opens (coin: gold motes; a no: a folded note the spirit takes), and the run in from the fog.
+// rises when it opens (an opportunity or coin: gold motes; a no: a folded note the spirit takes), and the run in from the fog.
 const RET = { x: -3.85, y: -2.95, z: 2.0 };
 PART("returnBerth", "The return berth and the boat that came back", "The money boat piece and the pier's shapes; the lid, the opened light and the run in are new", (grp) => {
   const x = PIER.x - PIER.w / 2, y = PIER.y;
@@ -31,7 +31,7 @@ PART("returnBerth", "The return berth and the boat that came back", "The money b
   for (let i = 0; i < 5; i++) add(new THREE.BoxGeometry(0.05, 0.05, 0.66), mat(0x5e4436), 0.15 + i * 0.36, 0.06, 0, { parent: plank, noShadow: true });
   const lines = bollards.map((bo, i) => ({ m: add(new THREE.CylinderGeometry(0.03, 0.03, 1, 4), mat(0xd8c8a8), 0, 0, 0, { noShadow: true }), from: bo, to: new THREE.Vector3(RET.x + 1.6, -1.85, RET.z + (i ? -3.4 : 3.4)) }));
   const HOME = new THREE.Vector3(RET.x, RET.y, RET.z), FAR = new THREE.Vector3(-11, -2.95, -46), up = new THREE.Vector3(0, 1, 0);
-  // st.ret: { come: 0..1 (0 moored, 1 far in the fog), open: 0..1, kind: "coin" | "lesson" | null, at: [x,y,z] to moor elsewhere, ry }
+  // st.ret: { come: 0..1 (0 moored, 1 far in the fog), open: 0..1, kind: "opportunity" | "coin" | "lesson" | null, at: [x,y,z] to moor elsewhere, ry }
   window.__ret = { boat: b, crate: c, spirit: sp };
   return { update(st) {
     const r = st.ret || null; b.visible = !!r; if (!r) { plank.visible = false; lines.forEach((l) => { l.m.visible = false; }); return; }
@@ -42,7 +42,7 @@ PART("returnBerth", "The return berth and the boat that came back", "The money b
     hinge.rotation.x = -1.95 * o; seamOn.emissiveIntensity = 0.5;
     mouth.visible = !!lit; mouth.material.color.set(lit === "lesson" ? 0xcff6ee : 0xffd27a); mouth.material.emissive.copy(mouth.material.color); mouth.material.emissiveIntensity = lit === "lesson" ? 1.2 : 2.4;
     shine.material.opacity = lit ? (lit === "lesson" ? 0.35 : 0.7) * o : 0; shine.material.color.set(lit === "lesson" ? 0xcff6ee : 0xffd27a); lamp.intensity = lit ? 9 * o : 0; lamp.color.set(lit === "lesson" ? 0xcff6ee : 0xffc870);
-    motes.forEach((m, i) => { m.visible = lit === "coin"; m.position.y = 1.0 + (i * 0.16 + st.t * 0.3) % 1.5 * o; });
+    motes.forEach((m, i) => { m.visible = lit === "coin" || lit === "opportunity"; m.position.y = 1.0 + (i * 0.16 + st.t * 0.3) % 1.5 * o; });
     note.visible = lit === "lesson"; note.rotation.y = st.t * 0.4;
     sp.position.set(r.spirit ? r.spirit[0] : 0.75, -0.35 + u.deckY + 0.95 + (r.spirit ? r.spirit[1] : 0) + Math.sin(st.t * 1.6) * 0.05, r.spirit ? r.spirit[2] : -1.35); sp.visible = !!r.spirit || lit === "lesson";
   }, hit: [] };
