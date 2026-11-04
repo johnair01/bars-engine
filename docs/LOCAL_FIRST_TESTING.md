@@ -142,7 +142,7 @@ scripts/local/check.sh            # npm run check (Prisma generate, verifiers, e
 scripts/local/check.sh --build    # the same, then npm run build on the local database
 ```
 
-The Vercel preview build used to be the build check for self-merge. **`scripts/local/check.sh --build` passing is
+The Vercel preview build used to be the build check for merging. **`scripts/local/check.sh --build` passing is
 that check now.** A pull request's "How I checked it" names the command and its result, the pages it opened, and the
 pictures it took. Also run the narrow `npm run test:<area>` scripts for what you changed, through
 `scripts/local/dev.sh run --` when they need the database.
@@ -174,9 +174,11 @@ the number of production builds. To ship about once a day, merges are batched:
 
 Urgent fixes (production is down, a payment or sign-in is broken) merge straight to `main` as before.
 
-Adopting step 1 changes the standing self-merge rule (threads merge their own pull requests once the build passes), so
-it waits for Wendell's ruling; the question is on the Council Board. Until he rules, self-merge stands, with
-`scripts/local/check.sh --build` as the build check.
+Wendell ruled this on 2026-11-04 (board `lf-daily-ship`, answer A). It replaces threads merging their own pull
+requests in bars-engine. A manual merge to `main` stays for urgent fixes only. The council repo's `docs/merging.md`
+("bars-engine ships once a day") holds the same rule.
+
+Create the label once: `ship-next` (colour `0e8a16`, "Ready: merges in the next daily ship").
 
 A shared `staging` branch with its own Vercel environment can be added later without changing any of this: the
 shipping session would merge `ship/<date>` into `staging` first, look, then into `main`.
