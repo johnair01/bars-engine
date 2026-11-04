@@ -7,6 +7,13 @@ import { ticketFromAnswer, ticketFromStep, type AnswerDoc, type RowDoc, type Ste
  * found here, so the sweep can make the ticket and the unworked read can name the answer.
  */
 export const SWEEP_DAYS = 7
+/**
+ * Saves made before his answers pushed their own tickets (from-save.ts went live 2026-10-31 15:20 UTC) have no ticket by
+ * design: the council routed them by hand on 2026-11-04. The first dry sweep on production found 100 of them, 10-28 to
+ * 10-31 14:54, none after, so a sweep that reached back to them would send a hundred worked answers out again (the
+ * spec's own risk). Neither the sweep nor the unworked read looks before this.
+ */
+export const TICKETS_LIVE = new Date('2026-10-31T15:20:00Z')
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export interface SavedDoc { collection: string; docId: string; data: Record<string, unknown>; receivedAt: Date }
@@ -42,7 +49,7 @@ export function answersFrom(saves: SavedDoc[], rows: Map<string, RowDoc>): Saved
 
 /** Every council answer and every card sent in the last `days` days, newest save per document. */
 export async function recentAnswers(db: PrismaClient, now = new Date(), days = SWEEP_DAYS): Promise<SavedAnswer[]> {
-  const since = new Date(now.getTime() - days * DAY_MS)
+  const since = new Date(Math.max(now.getTime() - days * DAY_MS, TICKETS_LIVE.getTime()))
   const saves = await db.boardSave.findMany({
     where: { board: 'council', collection: { in: ['questions', 'steps'] }, receivedAt: { gt: since } },
     orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }],
