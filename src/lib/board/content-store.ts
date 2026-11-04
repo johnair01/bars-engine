@@ -142,9 +142,31 @@ export async function storeObject(sha: string, bytes: Uint8Array, type: string):
 
 const rawOn = () => process.env.BOARD_CONTENT_RAW_FALLBACK === '1'
 
+/** Local-first testing (docs/LOCAL_FIRST_TESTING.md): outside production, BOARD_CONTENT_DIR names a six-faces-council
+ * checkout and the board files are read from it (dev server only; tests and builds keep the store), so a local server shows the board without the production Blob store.
+ * scripts/local/dev.sh sets it when it finds the checkout. */
+function localDir(): string | null {
+  const dir = process.env.BOARD_CONTENT_DIR
+  return dir && process.env.NODE_ENV === 'development' ? dir : null
+}
+
+async function readLocal(dir: string, path: string): Promise<{ body: ReadableStream<Uint8Array>; type: string; sha: null } | null> {
+  const { readFile: read } = await import('node:fs/promises')
+  const { join } = await import('node:path')
+  const bytes = await read(join(dir, path)).catch(() => null)
+  if (!bytes) return null
+  const ext = path.split('.').pop()?.toLowerCase() ?? ''
+  const type = ({ html: 'text/html; charset=utf-8', json: 'application/json', md: 'text/markdown; charset=utf-8',
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' } as Record<string, string>)[ext]
+    ?? 'application/octet-stream'
+  return { body: new Response(new Uint8Array(bytes)).body!, type, sha: null }
+}
+
 /** One pushed file as a stream, with its type and hash; null when the store does not have it. */
 export async function readFile(path: string): Promise<{ body: ReadableStream<Uint8Array>; type: string; sha: string | null } | null> {
   if (!allowedPath(path)) return null
+  const dir = localDir()
+  if (dir) return readLocal(dir, path)
   const e = (await manifest()).files[path], b = backend()
   if (e && b) {
     const got = await b.read('sha/' + e.sha).catch(() => null)

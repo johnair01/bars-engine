@@ -123,3 +123,6 @@ gumroad-exports/
 
 # built skill packages (rebuild with python3 council/package_skill.py)
 council/dist/
+
+# local-first testing state (scripts/local/dev.sh)
+.local-dev/

@@ -2,9 +2,15 @@ import { PrismaClient } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
 import { resolveDatabaseUrl } from './db-resolve'
+import { remoteDatabaseMessage, remoteDatabaseRefused } from './local-db-guard'
 
 const createPrismaClient = () => {
     const dbConfig = resolveDatabaseUrl()
+
+    // Local-first testing: a dev server never reaches a remote (production) database by accident.
+    if (process.env.NODE_ENV === 'development' && dbConfig && remoteDatabaseRefused(dbConfig.url)) {
+        throw new Error(remoteDatabaseMessage(dbConfig.url, 'Dev server database connection'))
+    }
 
     if (process.env.NODE_ENV === 'development' && dbConfig) {
         console.log(`[DB] Using ${dbConfig.source}${dbConfig.accelerate ? ' (Accelerate)' : ''}`)

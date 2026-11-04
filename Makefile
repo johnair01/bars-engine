@@ -5,7 +5,7 @@ help:
 	@echo "🎮 BARs Engine - Development Commands"
 	@echo ""
 	@echo "🚀 Quick Start:"
-	@echo "  make dev-local       Start with synthetic data (local Docker Postgres)"
+	@echo "  make dev-local       Start locally: local Postgres + seeded data (docs/LOCAL_FIRST_TESTING.md)"
 	@echo "  make dev-vercel      Start with real Vercel backend"
 	@echo ""
 	@echo "🔄 Switch Modes (without starting dev):"
@@ -35,7 +35,7 @@ help:
 # 🚀 Quick Start Commands
 
 dev-local:
-	npm run dev:local
+	bash scripts/local/dev.sh dev --fg
 
 dev-vercel:
 	npm run dev:vercel
@@ -57,8 +57,7 @@ switch-vercel:
 # 🗄️ Database Commands
 
 db-local:
-	docker compose up postgres -d
-	@echo "✓ Postgres running on :5432"
+	bash scripts/local/dev.sh up
 
 db-seed:
 	npm run db:seed

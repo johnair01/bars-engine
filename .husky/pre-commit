@@ -1,2 +1,5 @@
 #!/bin/sh
+# tsc over this repo needs more than Node's default ~2 GB heap; without this the hook dies with "heap out of memory"
+# in cloud sessions (docs/LOCAL_FIRST_TESTING.md).
+case " ${NODE_OPTIONS:-} " in *max-old-space-size*) ;; *) export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=6144" ;; esac
 npm run precommit:check

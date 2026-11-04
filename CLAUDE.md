@@ -16,6 +16,24 @@ and for any worker a session starts.
 - A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
   anything.
 
+## Test locally before you push: there are no Vercel previews
+
+Since 2026-11-04 Vercel builds production only (merges to `main`); a branch gets no preview. Every session starts,
+tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.md`](docs/LOCAL_FIRST_TESTING.md).
+
+- Start: `scripts/local/dev.sh dev` (local Postgres, a database for this workspace, `next dev` on a free port; prints
+  the URL). Sign in as `admin@admin.local` / `password`, or player id `test-admin`. Stop: `scripts/local/dev.sh stop`.
+- Before pushing: `scripts/local/check.sh --build`. It replaces the Vercel preview as the build check for self-merge;
+  name the command and its result in the pull request.
+- Show Wendell: a cloud session's `localhost` is the container, which he cannot open. Take pictures with
+  `AS=test-admin OUT=/mnt/project-files/looks/<name> scripts/local/dev.sh shot /page ...`, read them yourself, then
+  attach them or carry them into a look row. On his Mac (Remote Control) give him the `http://localhost:<port>` URL.
+- Never point local runs at production. A dev server refuses a non-local `DATABASE_URL` and a local build skips
+  `prisma migrate deploy` on one; `BARS_ALLOW_REMOTE_DB=1` is for a deliberate, named exception only. Do not run
+  `vercel env pull` to get a database, and do not create hosted preview deployments as routine testing.
+- A change that only Vercel can show (middleware, crons, Blob, Vercel-only env) says "needs hosted check" in its pull
+  request; the options are in the guide, section 7.
+
 ## Hand off before the context passes 150,000 tokens
 
 A PostToolUse hook (`.claude/settings.json`, `council/tools/context_size.py --hook`, a copy of the council's) adds the
@@ -86,10 +104,9 @@ Run when switching branches or after pulling new specs:
 
 ## Fail-Fix Workflow
 
-Before moving on, verify:
+Before moving on, verify (on the local database, docs/LOCAL_FIRST_TESTING.md):
 
-- `npm run build` — full Next.js build
-- `npm run check` — lint + type-check
+- `scripts/local/check.sh --build` — `npm run check` (lint + type-check), vitest, and the full `npm run build`
 
 After modifying `prisma/schema.prisma`:
 
