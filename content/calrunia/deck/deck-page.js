@@ -194,7 +194,7 @@ const ACTS = {
     const at = h.pos.clone().add(new THREE.Vector3(0, 2.4, 0));
     if (live.ret) return say(at, "A boat at anchor", "One boat is already at the return berth. Open its crate first.");
     say(at, "A boat at anchor", "It carried " + b.action + " to " + portName(b.port) + ". Has it come home?",
-      row(btn("She's back", () => { live.ret = { id: b.id, come: 1, open: 0, kind: null }; hush(); }), btn("Still out", hush, true)));
+      row(btn("She's back", () => { live.ret = { id: b.id, come: 1, open: 0, kind: null }; yaw = 0; hush(); }), btn("Still out", hush, true)));
   },
   returnCrate() {
     if (!returnMoored()) return;
