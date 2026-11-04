@@ -43,8 +43,7 @@ import { initialTtvPhase } from '@/lib/tap-the-vein/initial-phase'
 import { isOutOfDay, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
 import { Resurfaced, SeedLibrary } from './SeedLibrary'
 import { Unchosen } from './Unchosen'
-import type { UnchosenLine, UnchosenPattern } from '@/lib/tap-the-vein/unchosen'
-import type { PitchView } from '@/lib/tap-the-vein/unchosen-read'
+import type { UnchosenLine } from '@/lib/tap-the-vein/unchosen'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -69,7 +68,7 @@ type Props = {
   /** What he set aside to draw from later. */
   seeds?: SeedLibraryEntry[]
   /** Lines named on past mornings and not chosen, and the words that keep coming back (pass unchosen1). */
-  unchosen?: { lines: UnchosenLine[]; patterns: UnchosenPattern[]; pitches?: PitchView[]; sample?: boolean }
+  unchosen?: { lines: UnchosenLine[]; sample?: boolean }
   /** ?view=unchosen opens that section, so a preview link lands on it. */
   openUnchosen?: boolean
 }
@@ -81,7 +80,7 @@ function isLive(t: TtvTaskDTO) {
   return !isOutOfDay(t.status)
 }
 
-export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [], unchosen = { lines: [], patterns: [] }, openUnchosen = false }: Props) {
+export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [], unchosen = { lines: [] }, openUnchosen = false }: Props) {
   const router = useRouter()
   // /tap-the-vein/embed is this same runner inside the Council Board's Morning tab (/board/council), so the board
   // shows Tap the Vein itself, never a copy of it (Wendell, 2026-10-19: "They differ enough as to confuse me an annoy me").
@@ -330,7 +329,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
                     onDraw={(id) => run(() => drawSeed(id))}
                     onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
                   />
-                  <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} pitches={unchosen.pitches} sample={unchosen.sample} defaultOpen={openUnchosen} />
+                  <Unchosen lines={unchosen.lines} sample={unchosen.sample} defaultOpen={openUnchosen} />
                 </>
               }
             />
@@ -341,7 +340,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
           )}
 
           {(phase === 'open' || phase === 'seal') && (
-            <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} pitches={unchosen.pitches} sample={unchosen.sample} defaultOpen={openUnchosen} />
+            <Unchosen lines={unchosen.lines} sample={unchosen.sample} defaultOpen={openUnchosen} />
           )}
         </main>
       </div>
