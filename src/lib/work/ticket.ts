@@ -8,6 +8,8 @@ export interface RowDoc {
   options?: { v?: string; label?: string; then?: string }[]
   then?: string
   lanes?: string[]
+  /** The Council Board card riding on the row (Board v2); only its hold and face matter to a ticket. */
+  card?: { project?: string; hold?: { text?: string; at?: string } | null; front?: { next_step?: string } } | null
 }
 
 /** His saved answer to a council question, as the board page saves it. */
@@ -24,6 +26,8 @@ export interface TicketDraft {
   brief: string
   basis: { rows: string[]; answer: string; label: string; steer: string; savedAt: string }
   lanes: Lane[]
+  /** 'held' makes the ticket rest until an unhold move; default ready. */
+  state?: 'ready' | 'held'
 }
 
 const COUNCIL = 'wendell-britt/six-faces-council'
@@ -111,5 +115,41 @@ export function ticketFromStep(board: string, collection: string, docId: string,
     brief,
     basis: { rows: [docId], answer: `grow:${kind}:${who}`, label: title, steer: note, savedAt: at },
     lanes: ['claude'],
+  }
+}
+
+/** His saved Claude Takes It pull on a card (positions collection): `move` is the card move, `hold` the hold line. */
+export interface LeverDoc {
+  move?: string
+  savedAt?: string
+  hold?: { text?: string; at?: string } | null
+}
+
+/**
+ * The ticket a Claude Takes It pull makes (Board v2 part 2, slice 1b): the lever saves `positions/<id>` with
+ * `move: claude_takes_it`. The ticket works the card, and the read receipt comes first. A hold line, on the save or on
+ * the rows-store card, makes the ticket `held`, so it waits until an unhold. Null for any other save.
+ */
+export function ticketFromLever(board: string, collection: string, docId: string, doc: LeverDoc, row: RowDoc | null): TicketDraft | null {
+  if (board !== 'council' || collection !== 'positions' || doc.move !== 'claude_takes_it') return null
+  const hold = (doc.hold ?? row?.card?.hold) as { text?: string } | null | undefined
+  const held = !!hold && typeof hold === 'object'
+  const step = (row?.card?.front?.next_step ?? '').trim()
+  const q = (row?.q ?? '').trim()
+  const name = step || q || `card ${docId}`
+  const at = doc.savedAt ?? ''
+  const brief = `Wendell pulled Claude Takes It on the card ${docId}${row?.card?.project ? ` (${row.card.project})` : ''}`
+    + (step ? `: "${step}"` : '') + `.\n\nIn ${COUNCIL}, this ticket works the card. Read it live with python3 board/read.py --live, `
+    + `write the read receipt first (python3 board/receipt.py write ${docId} --read <files> --acceptance "..." --standard "..."), `
+    + `then work it; python3 board/work.py claim prints the line too. A card with no receipt goes back without review. `
+    + `No other thread takes ${docId} while you hold this ticket.`
+    + (held ? `\n\nThe card is on hold: "${(hold?.text ?? '').trim()}". This ticket waits until the hold is lifted.` : '')
+  return {
+    sourceKey: `${board}/${collection}/${docId}@lever:${at}`,
+    title: name.length > 90 ? name.slice(0, 89) + '…' : name,
+    brief,
+    basis: { rows: [docId], answer: 'claude_takes_it', label: 'Claude Takes It', steer: '', savedAt: at },
+    lanes: row?.lanes ? cleanLanes(row.lanes) : ['claude'],
+    ...(held ? { state: 'held' as const } : {}),
   }
 }

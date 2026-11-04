@@ -35,6 +35,7 @@ export interface Ruling { question: string; answer: string; project?: string; da
 export interface Charge { channels: (typeof CARD_CHANNELS)[number][]; at?: string; satisfied?: 'satisfied' | 'dissatisfied' | 'neutral' }
 export interface Commitment { move: CardMoveName; at: string; due: 'one round'; receipt_required?: boolean }
 export interface Outcome { at: string; result: (typeof OUTCOME_RESULTS)[number]; text?: string }
+export interface Hold { text: string; at: string }
 export interface CompostBar { tried: string; stall: (typeof STALLS)[number]; salvage?: string; feeds?: string; lesson?: string }
 
 export interface Card {
@@ -64,4 +65,6 @@ export interface Card {
   commitment?: Commitment | null
   outcome?: Outcome | null
   bar?: CompostBar | null
+  /** A hold line: a Claude Takes It pull saves but its ticket waits (Board v2 part 2). */
+  hold?: Hold | null
 }
