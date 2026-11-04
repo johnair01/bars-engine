@@ -9,7 +9,7 @@ export interface RowDoc {
   then?: string
   lanes?: string[]
   /** The Council Board card riding on the row (Board v2); only its hold and face matter to a ticket. */
-  card?: { project?: string; hold?: { text?: string; at?: string } | null; front?: { next_step?: string } } | null
+  card?: { project?: string; wildcard?: { branch?: string } | null; hold?: { text?: string; at?: string } | null; front?: { next_step?: string } } | null
 }
 
 /** His saved answer to a council question, as the board page saves it. */
@@ -143,6 +143,7 @@ export function ticketFromLever(board: string, collection: string, docId: string
     + `write the read receipt first (python3 board/receipt.py write ${docId} --read <files> --acceptance "..." --standard "..."), `
     + `then work it; python3 board/work.py claim prints the line too. A card with no receipt goes back without review. `
     + `No other thread takes ${docId} while you hold this ticket.`
+    + (row?.card?.wildcard?.branch ? `\n\nThis card is a wildcard: build it on ${row.card.wildcard.branch}, apart from the main card, and it never gates the main card's merge.` : '')
     + (held ? `\n\nThe card is on hold: "${(hold?.text ?? '').trim()}". This ticket waits until the hold is lifted.` : '')
   return {
     sourceKey: `${board}/${collection}/${docId}@lever:${at}`,

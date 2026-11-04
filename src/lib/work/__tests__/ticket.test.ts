@@ -114,4 +114,10 @@ describe('ticketFromLever', () => {
     expect(ticketFromLever('council', 'positions', 'c1', { move: 'steer' }, row)).toBeNull()
     expect(ticketFromLever('council', 'questions', 'c1', pull, row)).toBeNull()
   })
+  it('names the wildcard branch and says it never gates the main card', () => {
+    const w = { ...row, card: { ...row.card, wildcard: { branch: 'wildcard/hum' } } }
+    const t = ticketFromLever('council', 'positions', 'wild-c1-hum', pull, w)!
+    expect(t.brief).toContain('wildcard/hum')
+    expect(t.brief).toContain("never gates the main card's merge")
+  })
 })
