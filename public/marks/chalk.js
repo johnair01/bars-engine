@@ -11,6 +11,10 @@
  * Send posts to /api/council/preview-shots: the page, his line, the picture (the game's canvas when it can be read,
  * or one he adds), where he held, the look under his finger and the errors the page caught.
  *
+ * Opt-out: a hold that starts inside an element marked data-chalk-off belongs to that element, never to the ring. The
+ * Council Board's Projects tab marks its full-screen harbour this way (his A on cargo-look-1), because a still finger
+ * there is the start of a drag or a swipe through the hand.
+ *
  * One file, no dependencies. Loaded on previews by src/app/layout.tsx and src/lib/marks/chalk.ts.
  */
 (function () {
@@ -98,6 +102,9 @@
     if (parent) parent.appendChild(n);
     return n;
   }
+  function optedOut(t) {
+    try { return !!(t && t.closest && t.closest('[data-chalk-off]')); } catch (e) { return false; }
+  }
   function inLayer(e) {
     if (!host) return false;
     var path = e.composedPath ? e.composedPath() : [];
@@ -141,7 +148,7 @@
   // Touch: touch events, which keep coming on iOS while the page scrolls, so a walking finger is always seen.
   document.addEventListener('touchstart', function (e) {
     if (inLayer(e)) return;
-    if (e.touches.length !== 1) { clearHold(); return; }
+    if (e.touches.length !== 1 || optedOut(e.target)) { clearHold(); return; }
     var t = e.touches[0];
     start('t' + t.identifier, t.clientX, t.clientY, true, e.target);
   }, { capture: true, passive: true });
@@ -160,7 +167,7 @@
 
   // Mouse and pen: pointer events. Touch pointers are left to the touch events above.
   document.addEventListener('pointerdown', function (e) {
-    if (e.pointerType === 'touch' || inLayer(e) || e.button !== 0 || e.altKey) return;
+    if (e.pointerType === 'touch' || inLayer(e) || e.button !== 0 || e.altKey || optedOut(e.target)) return;
     start('p' + e.pointerId, e.clientX, e.clientY, false, e.target);
   }, true);
   document.addEventListener('pointermove', function (e) {
@@ -173,7 +180,7 @@
   // After a hold, that pointer's click and context menu belong to the mark, not the page.
   document.addEventListener('click', function (e) {
     if (inLayer(e)) return;
-    if (e.altKey && !ui && e.button === 0) { // Alt+click marks at once on a desktop
+    if (e.altKey && !ui && e.button === 0 && !optedOut(e.target)) { // Alt+click marks at once on a desktop
       e.preventDefault(); e.stopImmediatePropagation();
       fire(e.clientX, e.clientY, false);
       return;

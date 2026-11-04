@@ -196,7 +196,7 @@ export function keepBuildingAfterWall(
   // 2. In-kind: lend time / offer space.
   actions.push({ label: "Lend a hand or offer space", href: "/event/donate/wizard?dswPath=time" });
   // 3. Access: open the app.
-  actions.push({ label: "Open the app", href: "/game/" });
+  actions.push({ label: "Open the app", href: "/play" });
 
   return {
     completedWallKey: creditedWall,

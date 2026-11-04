@@ -113,3 +113,43 @@
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+
+
+## Council contract (council/pipeline.yaml; python3 council/tools/contract_check.py <this folder>)
+
+<!-- The sections below are what contract_check.py reads. Keep the headings exact. -->
+
+## The ask
+
+> [Wendell's words, quoted, with the date and where he said it.]
+
+**Who it is for:** [the person who will use it, named by role]
+**What they feel now, and what should change:** [the Shaman's read, in one or two sentences]
+
+## Ontology
+
+<!-- The design ontology's output contract (.claude/skills/design-ontology/SKILL.md). The face named owns the line.
+     A field that does not apply says `n/a: <why>`. -->
+
+- `design_intent`: [Diplomat]
+- `intrinsic_pleasure`: [Shaman]
+- `ontology_objects`: [Sage]
+- `mechanical_claims`: [Architect]
+- `aqal_attention`: [Shaman]
+- `agency_and_consent`: [Diplomat]
+- `evidence_and_unknowns`: [Sage]
+- `provenance_effects`: [Regent]
+- `risks_and_tests`: [Challenger]
+- `implementation_translation`: [Architect]
+- `decision_or_open_authority`: [Regent; the only field that may escalate, after the reach test]
+
+## How we will know it failed
+
+- **The cheap test, run before building:** [what to run, and what it should show]
+- **The result that stops the work:** [what would make the council drop or rethink the design]
+
+## Signed
+
+<!-- One line per stage reached, naming every owner in council/pipeline.yaml. -->
+
+- intake: shaman, diplomat ([date])

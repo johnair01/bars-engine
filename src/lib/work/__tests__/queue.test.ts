@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { moveTicket, pushTicket, setLaneDry } from '../queue'
+import { moveTicket, pushTicket, setLaneDry, unholdTicket } from '../queue'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -47,5 +47,16 @@ describe('the queue', () => {
     expect(await moveTicket(fakeDb(tickets), 'a', 'claude', 'done', 'pr')).toMatchObject({ ok: true })
     expect(tickets[0]).toMatchObject({ state: 'done', result: 'pr' })
     expect(await moveTicket(fakeDb(tickets), 'a', null, 'release', null)).toMatchObject({ ok: false, status: 409 })
+  })
+  it('creates a held ticket that no claim takes, and unhold readies it', async () => {
+    const tickets: Record<string, unknown>[] = []
+    const db = fakeDb(tickets)
+    const r = await pushTicket(db, { ...draft, sourceKey: 'k', state: 'held' })
+    expect(r.ticket).toMatchObject({ state: 'held' })
+    const id = tickets[0].id as string
+    expect(await unholdTicket(db, id)).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'ready' })
+    expect(await unholdTicket(db, id)).toMatchObject({ ok: false, status: 409 })
+    expect(await unholdTicket(db, 'nope')).toMatchObject({ ok: false, status: 404 })
   })
 })

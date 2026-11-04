@@ -45,6 +45,10 @@ const nextConfig: NextConfig = {
     return [
       // The booking page was /podcasts until 2026-09-15; it now closes the podcast page.
       { source: "/podcasts", destination: "/podcast#on-your-show", permanent: true },
+      // The standalone Vite game that served /game was retired (ember-economy-decompose T006);
+      // /play is the current guided creative loop.
+      { source: "/game", destination: "/play", permanent: false },
+      { source: "/game/:path*", destination: "/play", permanent: false },
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
       // wendell.masteringallyship.com is on this Vercel project and showed the home page. Its
@@ -60,8 +64,6 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      { source: '/understood/play', destination: '/understood-app/index.html' },
-      { source: '/understood/demo', destination: '/understood-app/index.html?demo=1' },
       // Ontology Alchemy Game (built by scripts/build-ontology-game.mjs). /ontology-game/wave
       // opens it with W.A.V.E. as the opening practice for the whole session.
       { source: '/ontology-game', destination: '/ontology-game/index.html' },
@@ -71,7 +73,10 @@ const nextConfig: NextConfig = {
       // The Cave of Lessons: the block work walked inside the body map.
       { source: '/ontology-game/cave', destination: '/ontology-game/cave/index.html' },
       // Chapter 1's arrival aboard the ship (scripts/build-calrunia-arrive.mjs). The passport rides in the #p= fragment.
+      // The living ship's trade deck (scripts/build-calrunia-deck.mjs); /calrunia/arrive?deck=trade opens it too.
+      { source: '/calrunia/arrive', has: [{ type: 'query', key: 'deck', value: 'trade' }], destination: '/calrunia/deck/index.html' },
       { source: '/calrunia/arrive', destination: '/calrunia/arrive/index.html' },
+      { source: '/calrunia/deck', destination: '/calrunia/deck/index.html' },
     ];
   },
 };

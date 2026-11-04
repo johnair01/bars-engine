@@ -18,13 +18,8 @@ import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import { normalizeChargeLevel, parseBrainstormCandidates } from '@/lib/tap-the-vein/charge'
-import {
-  unchosenPatterns,
-  type UnchosenLine,
-  type UnchosenPattern,
-} from '@/lib/tap-the-vein/unchosen'
-import { loadPile, loadPitchViews } from '@/lib/tap-the-vein/unchosen-store'
-import type { PitchView } from '@/lib/tap-the-vein/unchosen-read'
+import type { UnchosenLine } from '@/lib/tap-the-vein/unchosen'
+import { loadPile, loadResidueKeys } from '@/lib/tap-the-vein/unchosen-store'
 import {
   TTV_CHARGE_LEVELS,
   TTV_NOTE_KINDS,
@@ -719,21 +714,20 @@ export async function getSeedLibrary(): Promise<TtvResult<{ seeds: SeedLibraryEn
 }
 
 /**
- * The lines he named on past mornings and did not choose, and the words that keep coming back in them
- * (six-faces-council pass unchosen1). Read-only: nothing here moves a line or asks anything of him.
+ * The lines he named on past mornings and did not choose (six-faces-council pass unchosen1). Read-only: nothing here
+ * moves a line or asks anything of him. A line the council's read composted comes back marked as residue, so the view
+ * shows it muted (unchosen-gold FR-013); the view works without that mark (a database that has not run the read yet).
  */
-export async function getUnchosen(): Promise<TtvResult<{ lines: UnchosenLine[]; patterns: UnchosenPattern[]; pitches: PitchView[] }>> {
+export async function getUnchosen(): Promise<TtvResult<{ lines: UnchosenLine[] }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
     const lines = await loadPile(player.id, startOfDay())
-    // The council's weekly read sits beside the lines; the view works without it (a preview whose database has not
-    // run the migration, or a week with no read yet).
-    const pitches = await loadPitchViews(player.id).catch((e) => {
-      console.error('[ttv:getUnchosen:pitches]', e)
-      return [] as PitchView[]
+    const residue = await loadResidueKeys(player.id).catch((e) => {
+      console.error('[ttv:getUnchosen:residue]', e)
+      return new Set<string>()
     })
-    return { lines, patterns: unchosenPatterns(lines), pitches }
+    return { lines: lines.map((l) => (residue.has(l.key) ? { ...l, residue: true } : l)) }
   } catch (e) {
     console.error('[ttv:getUnchosen]', e)
     return { error: 'Failed to load unchosen lines' }

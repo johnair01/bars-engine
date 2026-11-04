@@ -76,7 +76,7 @@ the hand-over, a second sitting with "Just listen tonight", and the last card; t
 - **FR-002** "Open the toolbag and play" opens the five note seals of the stump (the same pentatonic, the same labels),
   with the notes from sessionStorage `ctw-song` shown lit; each press sounds the note in the player's string voice and
   appends it to the song state.
-- **FR-003** A "Hand it to Oriel" seal is the only way Oriel starts; there is no timer and no auto hand-over.
+- **FR-003** "Hand it to Oriel" opens the tag step: the player names the energy that would block them from playing it for someone (Fire frustration, Wood craving, Water despair, Metal anxiety, Earth apathy, each channel's lead state), may go back and play more, and then "Put it in Oriel's hand" is the only way Oriel starts; there is no timer and no auto hand-over. The tag changes no note and no time (reel round 2 rules 10 and 11, from his m09 stone on ctw-fire-reel-look-1).
 - **FR-004** Oriel's ending is a pure function of the song state (`fire-song.js`): it starts from the player's last
   played note (else the last stump note, else the bar's cadence), walks the pentatonic to the home note in four to six
   notes, at the player's tempo (the median gap between their notes, held to 60-110 beats a minute, 84 when there is one
@@ -84,13 +84,16 @@ the hand-over, a second sitting with "Just listen tonight", and the last card; t
 - **FR-005** "Just listen tonight" is a valid turn: Oriel plays the bar and its own cadence; the last card follows the
   same way.
 - **FR-006** While the player plays, the camera rests in the seated framing: low three-quarter over the player's left
-  shoulder at about 1.1 m, the fire in the middle third, Oriel upper right, eased in over about 1.2 s with no cut.
+  shoulder at about 1.1 m, the fire in the middle third, Oriel upper right, eased in over about 1.2 s with no cut. Once
+  Oriel has the song the view swings further left so the player's back never covers Oriel, and five seals hang above Oriel,
+  one lit per note with a ripple and a thread through the notes so far: the player's notes gold, passing tones pale, home
+  white (reel round 2 rule 12, from his m07 stone).
 - **FR-007** Audio: the tuning is heard from the far bank; Oriel's last tuned string lands on the song's home note; the
   fire's crackle ducks about 6 dB while either plays; the friends are silent from the ask until the song ends.
 - **FR-008** Laughter never answers the playing: the friends laugh on arrival at something said, and after the song a
   1.5 s silence comes before any laugh; nothing in the scene varies with which notes were played except Oriel's ending.
 - **FR-009** The last card is the "Take it home" card of the user story, with drafted text read from the episode sheet
-  (`takeHome()`); Oriel says one drafted line landing the recording secret before it.
+  (`takeHome()`) and one line naming the energy the player tagged; Oriel's recording secret lands as a caption before it.
 - **FR-010** A verification quest `cert-ctw-friends-fire-v1` (bars-engine spec-kit-translator rule), framed as readying
   the episode's road home for a first player, walks a tester through FR-001 to FR-009; its last passage mints the reward.
 - **FR-011** Preview params on preview hosts: `?place=friends-fire&at=crate` opens seated; `&song=1,3,0,4` seeds the
@@ -116,11 +119,14 @@ the hand-over, a second sitting with "Just listen tonight", and the last card; t
 ```
 newSong({ bar: number[8], stump: number[] }) -> Song
 play(song, degree: 0..4, t: seconds) -> Song          // appends { degree, t } to song.played
-handOver(song) -> Song                               // song.handedOver = true; refused after a pass
-pass(song) -> Song                                   // song.passed = true; refused after a hand-over
+tagBlock(song, channel) -> Song                       // song.block = channel; the last tag stands
+handOver(song, t) -> Song                            // needs a tag; refused after a pass
+pass(song, t) -> Song                                // song.passed = true; refused after a hand-over
+timeline(song), phaseAt(song, t), kinds(song)        // the clock from the hand-over, and whose each Oriel note is
 tempo(song) -> number                                // bpm, median gap of played notes, held to 60..110, else 84
 ending(song) -> number[]                             // Oriel's notes, 4..6 long, last is 0 (home); pure
-Song = { bar, stump, played: [{ degree, t }], handedOver: boolean, passed: boolean }
+Song = { bar, stump, played: [{ degree, t }], block: channel | null, handedOver: boolean, handedAt: number | null, passed: boolean, refused: string | null }
+// a refused move returns the song unchanged with `refused` set to the reason (reel round 1 spec delta)
 ```
 
 The feature adds no route, no table and no Prisma change. `ctw-song` in sessionStorage stays the carry from the clearing.

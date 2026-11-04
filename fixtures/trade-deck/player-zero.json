@@ -1,0 +1,15 @@
+{
+  "note": "Player zero's chart for the trade deck (Six-faces-council money-block.md): six ports, one per stream, and the first crate his mb-first-coin answer chose. No people and no prices: those live only on the player's device.",
+  "goal": 6000,
+  "ports": [
+    { "id": "coaching", "name": "Coaching" },
+    { "id": "courses", "name": "Courses" },
+    { "id": "games", "name": "Games" },
+    { "id": "books", "name": "Books" },
+    { "id": "patreon", "name": "Patreon" },
+    { "id": "jobs", "name": "Jobs" }
+  ],
+  "moves": [
+    { "id": "first-coin", "port": "jobs", "action": "Finish the director application and press Submit on the form.", "ask": "the director role" }
+  ]
+}

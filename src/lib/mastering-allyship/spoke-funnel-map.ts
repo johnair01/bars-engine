@@ -43,7 +43,7 @@ export const SPOKE_FUNNEL_MAP: readonly SpokeFunnel[] = [
     numeral: "II",
     band: "free-door",
     ribbon: "Play free",
-    href: "/game/",
+    href: "/play",
     wallTint: null,
   },
   {

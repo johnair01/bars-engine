@@ -38,4 +38,9 @@ for (const [name, s] of Object.entries(SCHEMES as Record<string, Record<string, 
 // the old Between button, for the record: white on the dark accent fails, the token ink passes
 assert.ok(ratio('#ffffff', '#5fc0b5') < 4.5)
 
+// ── The theme follows the phone: light on light, dusk on dark (uu-theme-follow, 2026-11-02) ──
+assert.ok(!('dark' in (SCHEMES as object)), 'one dark: dusk')
+assert.match(css, /@media \(prefers-color-scheme: light\) \{ :root:not\(\[data-theme="dusk"\]\):not\(\[data-theme="dark"\]\) \{/)
+assert.doesNotMatch(css, /prefers-color-scheme: dark/, 'a dark phone keeps the dusk default; no second dark block')
+
 console.log('ui-tokens: in step with card-tokens.ts; every accent ink reads at 4.5:1 or more')

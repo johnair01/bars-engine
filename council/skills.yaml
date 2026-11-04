@@ -1,0 +1,108 @@
+# The council's skills and tools, and where each one lives.
+#
+# The pipeline (`council/pipeline.yaml`) names the skills a stage loads; a round or a pass names the ones it ran in a
+# `skills:` line; `council/tools/skills_here.py` reads both and fails when one is missing, unknown, or not in this tree.
+# Wendell, 2026-10-28: "what do we need to do at least in this environment so that we are using those skills as part of
+# the pipeline ... We're gamifying these skills so that we make sure we aren't skipping steps."
+#
+# `where` is a path in this repo, or `toolbox:<id>` for a role the council fetches per round instead of installing
+# (docs/tool-scout.md). `dept` is the studio hall from `council/callsheets/studio-lot.md` the skill would work in; that
+# mapping is the council's reading, not a ruling.
+skills:
+  - id: art-direction
+    does: the pass that decides a look before a still is drawn, standing on board rows with the reuse and keep lists
+    where: .claude/skills/art-direction/SKILL.md
+    dept: Art Studio
+    kind: skill
+    stages: [build, verify]
+
+  - id: impeccable
+    does: the craft pass for player-facing UI, including his board and look pages; critique and audit before a look, after the Play Canon names the mechanic (docs/impeccable.md)
+    where: .claude/skills/impeccable/SKILL.md
+    dept: Art Studio
+    kind: skill
+    stages: [build, verify]
+
+  - id: satisfaction-reel
+    does: prototype rounds that play a feature's mechanic as keyframes he scores in Emotional Alchemy terms, before the build (docs/satisfaction-reel.md)
+    where: docs/satisfaction-reel.md
+    dept: Game Design
+    kind: skill
+    stages: [prototype]
+
+  - id: assets_here
+    does: names the art that already draws a subject, and gates a round on the reuse lines it writes and on its direction
+    where: council/tools/assets_here.py
+    dept: Art Studio
+    kind: tool
+    stages: [build, verify]
+
+  - id: look_floor
+    does: measures a still against the served look floor of the place it will be seen in
+    where: council/tools/studio_here/look_floor.py
+    dept: Art Studio
+    kind: tool
+    stages: [verify]
+
+  - id: ccgs-roles
+    does: the Claude-Code-Game-Studios roster, fetched per round; art-bible for the game's look, art-director for a review
+    where: toolbox:ccgs-roles
+    dept: Art Studio
+    kind: role
+    stages: [build, verify]
+
+  - id: design-ontology
+    does: the integral design ontology, loaded by the one profile a question needs
+    where: .claude/skills/design-ontology/SKILL.md
+    dept: Design Room
+    kind: skill
+    stages: [intake, spec, plan]
+
+  - id: game_frame_check
+    does: fails a pass on a game that wrote no Game frame, the player and their body in a space
+    where: ontology/tools/game_frame_check.py
+    dept: Design Room
+    kind: tool
+    stages: [build]
+
+  - id: primitives
+    does: prints the strand's style, mechanics and ontology lines, the primitives a brief stands on
+    where: council/tools/primitives.py
+    dept: Design Room
+    kind: tool
+    stages: [intake, spec, plan]
+
+  - id: better
+    does: deepens a plain ask once before building
+    where: .claude/skills/better/SKILL.md
+    dept: Design Room
+    kind: skill
+    stages: [intake]
+
+  - id: brief-master
+    does: turns an ask or a dispatch into one tight prompt
+    where: .claude/skills/brief-master/SKILL.md
+    dept: Post Office
+    kind: skill
+    stages: [intake, plan]
+
+  - id: intake_check
+    does: fails a game or world brief that skips the experience intake
+    where: council/tools/intake_check.py
+    dept: Design Room
+    kind: tool
+    stages: [intake]
+
+  - id: scout
+    does: rung 3 of the tool ladder, the known tools that fit a job
+    where: council/tools/scout.py
+    dept: Map Room
+    kind: tool
+    stages: [build]
+
+  - id: six-faces
+    does: the six faces convened on a question, with the reach test and the board
+    where: .claude/skills/six-faces/SKILL.md
+    dept: Engine Room
+    kind: skill
+    stages: [spec, clarify, falsify, plan, analyze, ship, close]
