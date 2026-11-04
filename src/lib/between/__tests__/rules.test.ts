@@ -309,6 +309,25 @@ function testFirstMinuteAndKeepsakes() { // room kit part 2: Still C's minute in
   assert.equal(roomSummary(B, 'gX', g, []).personStarted, true, 'for B, the person (A) started it')
 }
 
+function testBarOnTheTable() { // bb-look-1 B: a bar lies on the low table for the other to read
+  const g = between(), bar = (extra: Doc = {}): Doc => ({ kind: 'bar', by: A, at: 7, status: 'left', title: 'What I saw today', lines: ['a heron', 'at the river'], history: { h1: { act: 'left a bar', by: A, at: 7 } }, ...extra })
+  const it = { table: 'items', id: 'b1' } as const
+  const w = (who: Who, op: 'set' | 'update' | 'delete', d: Doc | null, cur: Doc | null) => mayWrite(who, g, it, op, d, cur).ok
+  assert.equal(w(member(A), 'set', bar(), null), true, 'the leaver lays it down')
+  assert.equal(w(member(B), 'set', bar(), null), false, 'a bar is left in your own name')
+  for (const bad of [{ title: '' }, { title: 'x'.repeat(61) }, { lines: ['1', '2', '3', '4', '5'] }, { lines: ['x'.repeat(141)] }, { status: 'found' }, { reply: 'thanks' }, { yes: {} }] as Doc[])
+    assert.equal(w(member(A), 'set', bar(bad), null), false, 'refused: ' + Object.keys(bad)[0])
+  assert.equal(w(member(B), 'update', { status: 'found', foundAt: 8, history: { h2: { act: 'read a bar', by: B, at: 8 } } }, bar()), true, 'the finder marks it read')
+  assert.equal(w(member(B), 'update', { title: 'mine now' }, bar()), false, 'the finder writes nothing else')
+  assert.equal(w(member(B), 'update', { status: 'left', foundAt: 8 }, bar()), false)
+  assert.equal(w(member(B), 'delete', null, bar()), false, 'only the leaver takes it back')
+  assert.equal(w(member(A), 'delete', null, bar()), true, 'the leaver takes it back before it is found')
+  assert.equal(w(member(A), 'delete', null, bar({ status: 'found', foundAt: 8 })), false, 'a read bar stays')
+  assert.equal(w(member(A), 'update', { title: 'rewritten' }, bar()), false, 'a bar is left once')
+  const home = { ...plantedHome(A, 1) } as Doc
+  assert.equal(mayWrite(member(A), home, it, 'set', bar(), null).ok, false, 'not in a homeroom')
+}
+
 testPaths()
 testSealedWordsStayOnTheServer()
 testMergeMatchesThePage()
@@ -330,4 +349,5 @@ testInvitations()
 testHomePrivateDoc()
 testRoomSummary()
 testFirstMinuteAndKeepsakes()
+testBarOnTheTable()
 console.log('between rules: all passed')

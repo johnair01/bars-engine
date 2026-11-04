@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
-import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
+import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH, TABLE } from "./hollow.js";
 import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 /* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
@@ -282,7 +282,7 @@ function nameOf(uid, g) {
 const possessive = (uid, g) => uid === me ? "yours" : nameOf(uid, g) + "'s";
 /* A lantern counts toward the Between once, when someone other than its maker has said yes (lanternLit in rules.ts). */
 const lanternLit = it => it.kind === "lantern" && !!it.yes && typeof it.yes === "object" && Object.entries(it.yes).some(([k, v]) => k !== it.by && typeof v === "number" && Number.isFinite(v));
-const isFed = it => it.kind === "lantern" ? lanternLit(it) : it.kind !== "agreement" && (it.status === "received" || it.status === "kept");
+const isFed = it => it.kind === "lantern" ? lanternLit(it) : it.kind === "bar" ? it.status === "found" : it.kind !== "agreement" && (it.status === "received" || it.status === "kept");
 function satisfaction(its) {
   let agreed = 0, fed = 0;
   for (const it of its.values()) {
@@ -902,12 +902,106 @@ function orbMesh(it, g) {
   if (sealed) { const seam = new THREE.Mesh(new THREE.TorusGeometry(0.172, 0.012, 6, 28), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1 })); seam.position.y = 0.62; seam.rotation.x = Math.PI / 2; grp.add(seam); }
   return grp;
 }
+/* ---------- bars on the low table (council friendship-between, bb-look-1 B, 2026-11-04) ----------
+   His note: a bar is not folded; it lies on the table, highlighted, like a Taoist talisman and a trading card. Up to five lie
+   in a fan on the side nearest the hollow's mouth; past five they gather into a Bar deck. The glow rising off a bar the
+   other person left is the only signal: no count, dot or toast. */
+const BAR_FAN = 5, BAR_TOP = () => DAIS_Y + 0.292;
+function wrapLines(x, text, w) {
+  const out = []; let cur = "";
+  for (const word of String(text).split(/\s+/)) { const t = cur ? cur + " " + word : word; if (cur && x.measureText(t).width > w) { out.push(cur); cur = word; } else cur = t; }
+  if (cur) out.push(cur); return out;
+}
+function barFaceTexture(it, hue) {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 384; const x = c.getContext("2d");
+  const css = cssHue(hue);
+  x.fillStyle = css; x.fillRect(0, 0, 256, 384);                         // the rim, in the leaver's hue
+  x.fillStyle = "#f0dfae"; x.fillRect(12, 12, 232, 360);                  // talisman paper
+  x.strokeStyle = "#a3341f"; x.lineWidth = 3; x.strokeRect(20, 20, 216, 344);   // cinnabar frame
+  x.fillStyle = "rgba(163,52,31,0.14)"; x.fillRect(26, 26, 204, 40);      // the name bar
+  x.fillStyle = "#4a1c12"; x.font = "bold 22px serif"; x.textBaseline = "middle";
+  let title = String(it.title || ""); while (title.length > 1 && x.measureText(title).width > 192) title = title.slice(0, -2) + "…";
+  x.fillText(title, 34, 47);
+  x.strokeStyle = "#a3341f"; x.lineWidth = 2; x.strokeRect(34, 76, 188, 112);   // the art box: a seal-script scrawl from the title
+  let h = 7; for (const ch of String(it.title || "") + (it.at || 0)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const r = () => (h = (h * 1664525 + 1013904223) >>> 0) / 4294967296;
+  x.lineWidth = 3.2; x.lineCap = "round"; x.beginPath(); let px = 128, py = 84; x.moveTo(px, py);
+  for (let i = 0; i < 9; i++) { px = 48 + r() * 160; py = 88 + (i + 1) * 10 + r() * 6; x.lineTo(px, py); if (i % 3 === 2) { x.moveTo(px - 30 + r() * 60, py - 8); } }
+  x.stroke();
+  x.fillStyle = css; x.beginPath(); x.arc(196, 164, 11, 0, 7); x.fill(); x.strokeStyle = "#4a1c12"; x.lineWidth = 1.5; x.stroke();   // the wax seal
+  x.fillStyle = "#3a2a1c"; x.font = "15px serif"; x.textBaseline = "alphabetic";
+  let y = 214; for (const ln of (Array.isArray(it.lines) ? it.lines : [])) for (const w of wrapLines(x, ln, 188)) { if (y > 350) break; x.fillText(w, 34, y); y += 19; }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+function barBackTexture(hue) {
+  const c = document.createElement("canvas"); c.width = 128; c.height = 192; const x = c.getContext("2d");
+  x.fillStyle = cssHue(hue); x.fillRect(0, 0, 128, 192); x.fillStyle = "#e8d49c"; x.fillRect(8, 8, 112, 176);
+  x.strokeStyle = "#a3341f"; x.lineWidth = 2; x.strokeRect(14, 14, 100, 164);
+  x.beginPath(); x.arc(64, 96, 26, 0, 7); x.stroke(); x.beginPath(); x.moveTo(64, 56); x.lineTo(64, 136); x.moveTo(40, 96); x.lineTo(88, 96); x.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const BAR_W = 0.24, BAR_L = 0.36;
+function barGlow(hue, k) { // the highlight: a soft rim under the card and, for the finder until read, light rising off it
+  const g = new THREE.Group();
+  const rim = new THREE.Mesh(new THREE.PlaneGeometry(BAR_W * 1.5, BAR_L * 1.4).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: hue, transparent: true, opacity: 0.28 * k, blending: THREE.AdditiveBlending, depthWrite: false }));
+  rim.position.y = -0.004; rim.userData.pulse = true; g.add(rim);
+  if (k > 0.9) {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.16, 0.95, 16, 1, true), new THREE.MeshBasicMaterial({ color: hue, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    col.position.y = 0.475; g.add(col);
+    const mote = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff2cf })); mote.userData.bob = true; g.add(mote);
+  }
+  return g;
+}
+function barMesh(it, g) {
+  const grp = new THREE.Group(), hue = hueOf(it.by, g);
+  const geo = new THREE.PlaneGeometry(BAR_W, BAR_L).rotateX(-Math.PI / 2).rotateY(Math.PI);   // top edge toward the far side, facing up
+  const card = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: barFaceTexture(it, hue) })); card.position.y = 0.004; grp.add(card);
+  grp.add(barGlow(hue, it.status === "left" && it.by !== me ? 1 : 0.55));
+  return grp;
+}
+function deckMesh(bars, g) {
+  const grp = new THREE.Group(), n = Math.min(bars.length, 14);
+  const newest = bars[bars.length - 1][1], unread = bars.filter(([, i]) => i.status === "left" && i.by !== me);
+  for (let k = 0; k < n; k++) {
+    const it = bars[bars.length - 1 - k][1], hue = hueOf(it.by, g);
+    const layer = new THREE.Mesh(new THREE.BoxGeometry(BAR_W, 0.006, BAR_L), new THREE.MeshBasicMaterial({ color: k % 2 ? 0xe8d49c : cssHue(hue) }));
+    layer.position.y = 0.003 + (n - 1 - k) * 0.006; layer.rotation.y = Math.sin(k * 2.3) * 0.12; grp.add(layer);
+  }
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(BAR_W, BAR_L).rotateX(-Math.PI / 2).rotateY(Math.PI), new THREE.MeshBasicMaterial({ map: barBackTexture(hueOf(newest.by, g)) }));
+  top.position.y = 0.006 * n + 0.001; top.rotation.y = Math.sin(0) * 0.12; grp.add(top);
+  const gl = barGlow(unread.length ? hueOf(unread[unread.length - 1][1].by, g) : hueOf(newest.by, g), unread.length ? 1 : 0.55); gl.position.y = 0.006 * n; grp.add(gl);
+  return grp;
+}
+/* The bars on the table: five or fewer lie in a fan on the mouth side (the spark stands in the middle of the view, so the fan
+   keeps to the edge); more than five are one deck. Read or not, they stay; only their glow changes. */
+function syncBars(V, g, want) {
+  if (!g || isHome(g)) return;
+  const bars = [...V.items.entries()].filter(([, i]) => i.kind === "bar" && (i.status === "left" || i.status === "found")).sort((a, b) => (a[1].at - b[1].at) || (a[0] < b[0] ? -1 : 1));
+  if (!bars.length) return;
+  const put = (id, item, sig, build, x, z, yaw) => {
+    want.add(id);
+    let t = things.get(id); if (t && t.sig !== sig) { gardenGroup.remove(t.group); t = null; }
+    if (!t) { const group = build(); group.position.set(x, BAR_TOP(), z); group.rotation.y = yaw; gardenGroup.add(group); t = { id, kind: "bar", group, pos: new THREE.Vector3(x, 0, z), sig }; things.set(id, t); }
+    t.item = item;
+  };
+  if (bars.length > BAR_FAN) {
+    const sig = "deck:" + bars.map(([id, i]) => id + i.status + (i.by === me ? "m" : "")).join(",");
+    put("deck:bars", { kind: "bardeck" }, sig, () => deckMesh(bars, g), TABLE.x, TABLE.z - 0.3, 0.1);
+    return;
+  }
+  const n = bars.length, spread = 0.33;
+  bars.forEach(([id, it], k) => {
+    const a = n === 1 ? 0 : (k / (n - 1) - 0.5) * 2 * spread * Math.min(1, (n + 1) / 4) * 1.6, r = 0.3;
+    put(id, it, "bar:" + it.status + (it.by === me ? "m" : "") + ":" + n + ":" + k, () => barMesh(it, g), TABLE.x + Math.sin(a) * r, TABLE.z - Math.cos(a) * r, -a);
+  });
+}
 const fly = []; // offerings flying into the Between
 function syncThings() {
   const V = view(); const g = V.g;
   const want = new Set();
   const prevStatus = syncThings.prev || new Map(); const nextStatus = new Map();
   for (const [id, it] of V.items) {
+    if (it.kind === "bar") continue; // bars lie on the low table (syncBars)
     const lan = it.kind === "lantern";
     nextStatus.set(id, lan ? "lantern:" + (it.element || "") + (lanternLit(it) ? "+lit" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z + (it.pos.hang ? "@" + it.pos.hang : "") : "")
       : it.status + (it.pending ? "+p" : "") + (it.opened && it.opened[me] ? "+o" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z : "")
@@ -945,6 +1039,7 @@ function syncThings() {
     }
     t.item = it;
   }
+  syncBars(V, g, want);
   for (const [id, t] of things) if (!want.has(id)) { gardenGroup.remove(t.group); things.delete(id); if (selected === "item:" + id) selected = null; }
   syncThings.prev = nextStatus;
   // a hook with a hearth lantern on it lights as the room kit's own hung lantern does
@@ -1799,6 +1894,7 @@ function refreshHud() {
   }
   else if (g.phase !== "closed" && isMember(g) && !readOnly) {
     tools.push(`<button type="button" data-open="offer">${g.phase === "spark" ? "Tend the spark" : "Offer something"}</button>`);
+    if (g.phase === "between" && !isHome(g)) tools.push(`<button class="glassbtn" type="button" data-open="barleave">Leave a bar</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="agreement">Plant an agreement</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="spirit">Bring a spirit</button>`);
@@ -1913,8 +2009,20 @@ function nearHtml(key, V, g) {
     return `<div class="what"><b>${name}</b><span class="t">Anyone can sit here.${spells ? " Spells start from whichever cushion you sit on." : ""}</span></div><div class="row"><button type="button" data-act="sit">Sit here</button>${spells}</div>`;
   }
   if (key.startsWith("item:")) {
-    const id = key.slice(5), it = V.items.get(id); if (!it) return "";
+    const id = key.slice(5);
+    if (id === "deck:bars") {
+      const bars = [...V.items.values()].filter(i => i.kind === "bar");
+      const waiting = bars.some(i => i.status === "left" && i.by !== me);
+      return `<div class="what"><b>The bar deck</b><span class="t">${waiting ? "Something new is in it for you." : "The bars you have left each other, kept together."}</span></div><div class="row"><button type="button" data-open="bardeck">Look through it</button></div>`;
+    }
+    const it = V.items.get(id); if (!it) return "";
     const mineIt = it.by === me;
+    if (it.kind === "bar") {
+      const left = it.status === "left";
+      const txt = mineIt ? (left ? `You left it on the table for ${esc(nameOf(other(g), g))}.` : `${esc(nameOf(other(g), g))} has read it.`) : (left ? `${esc(nameOf(it.by, g))} left it on the table for you.` : "You read it.");
+      const acts = `<button type="button" data-open="bar" data-id="${id}">${mineIt ? "Read it again" : left ? "Pick it up and read" : "Read it again"}</button>${mineIt && left && canTend ? `<button class="quiet" type="button" data-act="barBack" data-id="${id}">Take it back</button>` : ""}`;
+      return `<div class="what"><b>${esc(it.title)}</b><span class="t">${txt}</span></div><div class="row">${acts}</div>`;
+    }
     if (it.kind === "agreement") {
       let acts = ""; const p = it.pending;
       if (canTend) {
@@ -2027,6 +2135,7 @@ async function makeLantern(eid) {
 function moveRight(it) {
   if (!it || readOnly) return null;
   if (it.kind === "lantern") return it.by === me ? "own" : null;
+  if (it.kind === "bar" || it.kind === "bardeck") return null; // a bar stays where it was laid
   if (it.kind === "agreement") return it.status === "draft" ? (it.by === me ? "own" : null) : ["proposed", "agreed", "revisit"].includes(it.status) ? "shared" : null;
   return it.by === me && it.status === "offered" ? "own" : null;
 }
@@ -2471,6 +2580,11 @@ function fsTick(t, dt, h, F) {
 function fsBurn(dt) { for (const s of fsLaid.children.slice()) { if (hm && hm.fs && hm.fs.flies.some(f => f.m === s)) continue; s.scale.multiplyScalar(Math.pow(0.9, dt)); s.position.y -= dt * 0.004; if (s.scale.x < 0.35) fsLaid.remove(s); } }
 const ASK_TEXT = { revisit: "asked to revisit an agreement", broken: "named a break in an agreement", retire: "asked to retire an agreement", compost: "asked to compost an agreement" };
 const YES_TEXT = { revisit: "agreed to revisit it", broken: "owned the break; the agreement is up for revisit", retire: "agreed to retire it", compost: "agreed to compost it" };
+async function readBar(id) { // reading marks it found for both; the glow goes (rules.ts barWrite)
+  const it = items.get(id); if (!it || it.kind !== "bar" || it.by === me || it.status !== "left") return;
+  await op("items/" + id, "update", { status: "found", foundAt: now(), history: hist("read a bar") });
+  await touch();
+}
 async function itemAct(id, act, payload) {
   const { items: its } = view();
   const it = its.get(id); if (!it) return;
@@ -2545,6 +2659,20 @@ function renderSheet() {
       <label for="oText">In your words<textarea id="oText" maxlength="2000" placeholder="A line, a gesture, a drawing described in words. Small counts as much as long."></textarea></label>
       <p class="small muted" id="oHint">${g.phase === "spark" ? "While it is a spark, what you bring feeds it straight away." : "It waits on a stone where you stand. It changes the Between only when the other person walks up and says yes. A worked-through charge arrives sealed."}</p>
       <div class="row"><button type="submit">${g.phase === "spark" ? "Give it to the spark" : "Set it down"}</button>${close}</div></form>`; break;
+    case "barleave": h = `<form class="stack" id="barForm"><h2>Leave a bar</h2>
+      <p class="muted small">It lies on the low table in your hue. ${esc(nameOf(other(g), g))} finds it glowing when they come in. Nothing asks them to answer.</p>
+      <label for="bTitle">Its name<input id="bTitle" maxlength="60" autocomplete="off" placeholder="What it is, in a few words"></label>
+      <label for="bLines">Its lines<textarea id="bLines" rows="5" maxlength="600" placeholder="Up to four short lines, one to a line."></textarea></label>
+      <div class="row"><button type="submit">Lay it on the table</button>${close}</div></form>`; break;
+    case "bar": { const it = V.items.get(sheetArg); if (!it || it.kind !== "bar") { closeSheet(); return; }
+      const mineB = it.by === me; if (!mineB && it.status === "left") readBar(sheetArg);
+      h = `<div class="stack"><h2>${esc(it.title)}</h2><p class="small muted">${mineB ? "You left this on the table." : esc(nameOf(it.by, g)) + " left this on the table."}</p>
+      ${(Array.isArray(it.lines) ? it.lines : []).map(l => `<p>${esc(l)}</p>`).join("")}
+      <div class="row">${mineB && it.status === "left" ? `<button class="quiet" type="button" data-act="barBack" data-id="${sheetArg}">Take it back</button>` : ""}<button class="glassbtn" type="button" data-close>${mineB ? "Close" : "Set it back down"}</button></div></div>`; break; }
+    case "bardeck": { const bars = [...V.items.entries()].filter(([, i]) => i.kind === "bar").sort((a, b) => b[1].at - a[1].at);
+      h = `<div class="stack"><h2>The bar deck</h2><p class="small muted">The bars you have left each other, kept together on the table.</p>
+      ${bars.map(([id, i]) => `<div class="row"><button class="ghost" type="button" data-open="bar" data-id="${id}">${esc(i.title)}</button><span class="small muted">${i.by === me ? "yours" : esc(nameOf(i.by, g)) + "'s"}${i.status === "left" && i.by !== me ? ", not read yet" : ""}</span></div>`).join("")}
+      <div class="row">${close}</div></div>`; break; }
     case "agreement": h = `<form class="stack" id="agForm"><h2>Plant an agreement</h2>
       <p class="muted small">It goes in the ground where you stand, as a draft. Propose it when it reads right; it flowers once you both say yes.</p>
       <label for="aText">The agreement<textarea id="aText" maxlength="2000" placeholder="What the two of you will do, or won't"></textarea></label>
@@ -3539,6 +3667,7 @@ document.addEventListener("click", async ev => {
     else if (a === "hKeep") await keepEmber();
     else if (a === "lanternHere") { if (placing) await moveItem(placing.id, spotAhead(0.9)); }
     else if (a === "moveYes" || a === "moveNo") await moveAnswer(id, a === "moveYes");
+    else if (a === "barBack") { await op("items/" + id, "delete"); await touch(); closeSheet(); toast("You took it back."); }
     else if (a === "lanternBack" || a === "lanternCompost") await unmakeLantern(id, a === "lanternCompost");
     else if (a === "lanternYes") { await op("items/" + id, "update", { yes: { [me]: now() }, history: lanternLog("welcomed") }); await touch(); toast("Welcomed. It lights your home together."); }
     else if (a === "lanternNo") await op("items/" + id, "update", { yes: { [me]: null } });
@@ -3696,6 +3825,12 @@ document.addEventListener("submit", async ev => {
       await addItem(kind, text, kind === "charge");
       closeSheet();
       toast(view().g.phase === "spark" ? "The spark took it in." : "Set down. It waits for their yes.");
+    } else if (f.id === "barForm") {
+      const title = $("#bTitle").value.trim(), lines = $("#bLines").value.split("\n").map(l => l.trim()).filter(Boolean);
+      if (!title) { toast("Give the bar a name first."); return; }
+      if (lines.length > 4 || lines.some(l => l.length > 140)) { toast("A bar holds four short lines."); return; }
+      await op("items/b" + hkey(), "set", { kind: "bar", by: me, at: now(), status: "left", title, lines, history: hist("left a bar") });
+      await touch(); closeSheet(); toast("It lies on the table. They will see it glowing when they come in.");
     } else if (f.id === "agForm") {
       const text = $("#aText").value.trim(); if (!text) { toast("Write the agreement first."); return; }
       await addItem("agreement", text, false); closeSheet(); toast("Planted as a draft. Walk up to it to propose it.");
