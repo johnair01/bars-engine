@@ -138,6 +138,8 @@ export default defineConfig({
       'src/lib/lantern/__tests__/engine-bundle.test.ts',
       'src/lib/lantern/__tests__/interpret.test.ts',
       'src/lib/lantern/__tests__/interpret-bundle.test.ts',
+      'src/lib/lantern/__tests__/unpack-read.test.ts',
+      'src/app/api/unpack/read/__tests__/route.test.ts',
       'src/app/api/lantern/table/__tests__/route.test.ts',
       'src/lib/ember-economy/harvest/**/__tests__/*.test.ts',
     ],
