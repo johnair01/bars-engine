@@ -309,8 +309,8 @@ function frame() {
   const s = st(t); PARTS.forEach((p) => p.update && p.update(s));
   // a phone stands the camera further back, so the boat's stern stays in frame (money pier round 1, "not checked")
   const far = innerWidth / innerHeight < 0.8 ? 1.5 : 1;
-  // aboard a boat that came back, the view follows the captain onto it, so its crate stays in frame
-  const focus = BUILD ? new THREE.Vector3(2.0, -2.2, -3.5) : new THREE.Vector3(onReturn() ? player.pos.x + 1.0 : player.pos.x * 0.5 + 1.2, player.pos.y + 0.2, player.pos.z - 8);
+  // while a boat that came back is in, the view leans toward it (a phone lost it off the left edge); aboard, it follows the captain
+  const focus = BUILD ? new THREE.Vector3(2.0, -2.2, -3.5) : new THREE.Vector3(onReturn() ? player.pos.x + 1.0 : live.ret ? (player.pos.x + RET.x) / 2 + 0.5 : player.pos.x * 0.5 + 1.2, player.pos.y + 0.2, player.pos.z - 8);
   const eye = BUILD ? new THREE.Vector3(-5.0, 4.5, 12.0 * far) : focus.clone().add(new THREE.Vector3(Math.sin(yaw) * 15 * far, 5.6, Math.cos(yaw) * 15 * far));
   camera.position.lerp(eye, BUILD || page.frames === 0 ? 1 : 0.08);
   camera.lookAt(focus);
