@@ -45,6 +45,10 @@ const nextConfig: NextConfig = {
     return [
       // The booking page was /podcasts until 2026-09-15; it now closes the podcast page.
       { source: "/podcasts", destination: "/podcast#on-your-show", permanent: true },
+      // The standalone Vite game that served /game was retired (ember-economy-decompose T006);
+      // /play is the current guided creative loop.
+      { source: "/game", destination: "/play", permanent: false },
+      { source: "/game/:path*", destination: "/play", permanent: false },
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
       // wendell.masteringallyship.com is on this Vercel project and showed the home page. Its
