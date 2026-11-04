@@ -12,7 +12,7 @@
    more slowly. At the clearing the charge's keepsake is offered (kept or let go) and the compost record is kept.
 
    Slice 2 (his steer on bm-chamber-look-3, 2026-11-02 20:12Z, "Mix of a and b"): the record is kept in the spirit store
-   (./kept.js, `oag.spirits.v1`), not the tab, and the keeping chamber under the nook's shelf (land/chamber.js) stands every
+   (./kept.js, `oag.spirits.v1`), not the tab, and the keeping chamber past the nook's doorway (land/chamber.js) stands every
    piece on its own stone. A storm still fills the land; a season, the densest weather, fills the keeping chamber itself,
    over what is kept there (densityOf().where). Its signs show at the doorway like a storm's, and the doorway leads into the
    chamber (the arch under the shelf is gone: his C on bm-satchel-look-2, 2026-11-04).

@@ -527,7 +527,7 @@ async function build() {
   const ep = await episode(); state.ep = ep; state.p = ep.p;
   const chName = "The keeping chamber";
   $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
-  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
+  $("#placeLand").textContent = PLACE === "chamber" ? "past the nook's doorway, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
   if (WALK) { $("#placeLand").textContent = `The walk, land ${WALK_STOPS.indexOf(PLACE) + 1} of ${WALK_STOPS.length}`; $("#homeBtn").textContent = "Start over"; }
   document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
