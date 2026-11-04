@@ -19,6 +19,9 @@ export const dynamic = 'force-dynamic'
  * app now lives beside the caves. This route only checks the sign-in and hands out the page (src/lib/between/page.ts);
  * the scene is public/between/garden.js (the hollow and the creature in hollow.js and creature.js, round 2) and the store
  * is /api/between.
+ *
+ * Six-faces-council friendship-between build round 1 (2026-11-04): the nook's firebox glows with its fire (hollow.js M.soot)
+ * and the coin table's light sits low over the table (coin-table.js), so faces at the table are not lit hot.
  */
 
 export async function GET(req: NextRequest) {

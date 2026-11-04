@@ -1,6 +1,6 @@
 import { FACE_SENTENCES } from '@/lib/face-sentences'
 
-export const FACE_OPTIONS = Object.keys(FACE_SENTENCES) as (keyof typeof FACE_SENTENCES)[]
+export const FACE_OPTIONS = /* @__PURE__ */ Object.keys(FACE_SENTENCES) as (keyof typeof FACE_SENTENCES)[]
 
 export const EXPERIENCE_OPTIONS = [
   'Gather Resource',
