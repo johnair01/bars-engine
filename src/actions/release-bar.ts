@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 const RELEASE_COST = 1 // Cost to release back to the salad bowl
 
@@ -33,8 +34,9 @@ export async function releaseBarToSaladBowl(barId: string) {
         })
 
         // Check wallet balance
+        await releaseStaleStakes(db, playerId)
         const wallet = await db.vibulon.findMany({
-            where: { ownerId: playerId },
+            where: spendableWhere(playerId),
             orderBy: { createdAt: 'asc' },
             take: RELEASE_COST
         })

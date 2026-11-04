@@ -10,6 +10,7 @@ export default defineConfig({
     include: [
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
       'src/lib/wake-up/__tests__/check-content.test.ts',
+      'src/lib/economy/__tests__/bar-mint.test.ts',
       'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
       'src/lib/mtgoa-course/__tests__/round-two.test.ts',
       'src/lib/mtgoa-course/__tests__/day-eight.test.ts',
