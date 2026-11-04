@@ -11,11 +11,50 @@ export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows
  * waits for board-pull to put it in board_data.json and acknowledge it, and the staleness check alarms if it does not. */
 export const UNRECORDED_COLLECTIONS = new Set(['rows'])
 
+/** The picture gate (six-faces-council board/look_gate.py, Wendell 2026-11-04 18:25: "they should have failed and
+ * failed loudly before they posted something that wasn't able to be seen"). A look is a row or step with `look: true`
+ * or an id ending `-look-<n>`. Its card draws `still` (a step's also draws its first image file); previews are off, so
+ * its pictures are all he can judge it by. Same rules as the council's gate, so a lane that skips post_rows.py is caught. */
+const IMG = /\.(png|jpe?g|gif|webp)(\?|$)/i
+const DATA_IMG = /^data:image\/(png|jpe?g|gif|webp);base64,/i
+const PREVIEW = /^https:\/\/(?!bars-engine\.vercel\.app\/)[^/]+\.vercel\.app(\/|$)/i
+const isPicture = (u: unknown): u is string => typeof u === 'string' && (DATA_IMG.test(u) || (u.startsWith('https://') && IMG.test(u)))
+export const isLook = (docId: string, data: Record<string, unknown>) => data.look === true || /-look-\d+$/.test(docId)
+
+export function cardPicture(data: Record<string, unknown>): string {
+  if (isPicture(data.still)) return data.still
+  const files = Array.isArray(data.files) ? data.files : []
+  for (const f of files) { const src = (f as Record<string, unknown> | null)?.src; if (isPicture(src)) return src }
+  return ''
+}
+
+/** Reasons a look cannot be seen, from the document alone. */
+export function lookErrors(docId: string, data: Record<string, unknown>): string[] {
+  if (!isLook(docId, data)) return []
+  const out: string[] = []
+  if (!cardPicture(data)) out.push(`LOOK NOT POSTED: its card has no picture (\`still\` is ${data.still ? 'not a picture' : 'empty'}); `
+    + 'take pictures from a local build (scripts/local/dev.sh shot) and put one in `still`')
+  const href = typeof data.href === 'string' ? data.href : ''
+  if (PREVIEW.test(href)) out.push(`LOOK NOT POSTED: Open it leads to a Vercel preview (${href.slice(0, 70)}), and previews are off; `
+    + 'point it at the look\'s pictures (a /board/look link)')
+  return out
+}
+
+/** Does a picture outside the content store load as an image? (Pictures in the store are checked by the seal.) */
+export async function pictureLoads(url: string): Promise<boolean> {
+  if (url.startsWith('data:')) return true
+  try {
+    const r = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(15000) })
+    return r.status === 200 && (r.headers.get('content-type') ?? '').startsWith('image/')
+  } catch { return false }
+}
+
 export type SessionDoc = { collection: string; docId: string; mode?: 'set' | 'update'; data: unknown }
 export type SessionResult = { written: string[]; same: number; refused: string[] }
 
 /** The content hashes a row names: a picture at /board/stills/sha/<sha256>.<ext>, or a look page's `i=sha/<sha256>...`
  * (escaped or not). board/post_rows.py pushes each one before it posts the row. */
+const HOLD_URL = /\/board\/stills\/sha\/[0-9a-f]{64}\./i
 const HOLD = /sha(?:\/|%2F)([0-9a-f]{64})\.(?:jpe?g|png|gif|webp)/gi
 export function holdOf(data: unknown): string[] {
   return [...new Set([...canonical(data).matchAll(HOLD)].map(m => m[1].toLowerCase()))]
@@ -40,7 +79,8 @@ export const docHash = (v: unknown) => createHash('sha256').update(canonical(v))
  * content store lacks is refused (`hold not aboard`).
  */
 export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: SessionDoc[], dry = false,
-    missing: (shas: string[]) => Promise<string[]> = missingObjects): Promise<SessionResult> {
+    missing: (shas: string[]) => Promise<string[]> = missingObjects,
+    loads: (url: string) => Promise<boolean> = pictureLoads): Promise<SessionResult> {
   const out: SessionResult = { written: [], same: 0, refused: [] }
   for (const { collection, docId, mode = collection === 'rows' ? 'set' : 'update', data } of docs) {
     const key = `${collection}/${docId}`
@@ -61,6 +101,14 @@ export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: Se
     })
     const prev = (latest?.data as Record<string, unknown> | undefined) ?? null
     const next = applyWrite(prev, v.save)
+    if (collection === 'rows' || collection === 'steps') {
+      // Judged on the document as it will stand (an update merges onto the latest), so a step edit cannot strip the picture.
+      const bad = lookErrors(docId, next)
+      const pic = cardPicture(next)
+      if (!bad.length && pic && !(collection === 'rows' && HOLD_URL.test(pic)) && !(await loads(pic)))
+        bad.push(`LOOK NOT POSTED: its picture ${pic.slice(-70)} does not answer 200 as an image; push it or take it again`)
+      if (bad.length && isLook(docId, next)) { out.refused.push(`${key}: ${bad.join('; ')}`); continue }
+    }
     if (prev && canonical(prev) === canonical(next)) { out.same++; continue }
     out.written.push(key)
     const landed = UNRECORDED_COLLECTIONS.has(collection)
