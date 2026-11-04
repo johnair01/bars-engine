@@ -39,6 +39,7 @@
    spark is written onto the page. Preview: ?nook=1&book=1 sits you at the table with the book open on stand-in pages
    (yourself, a Between partner, two named pages, three casts kept on Jun's); add &games=flirtcraft for the spark step. */
 import * as THREE from "three";
+import { inFrame } from "./voice.js";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { SUITS, SELF, PLANT, withPlant, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
@@ -364,7 +365,7 @@ export function mount(B, opts = {}) {
   .ct-card b{font:400 22px Marcellus,Georgia,serif} .ct-card button{font:inherit;border-radius:999px;padding:7px 14px;border:1px solid rgba(255,255,255,.35);background:#2f8f86;color:#fff;cursor:pointer;margin:2px}
   .ct-label{position:fixed;z-index:30;transform:translate(-50%,-100%);font:600 .82rem Marcellus,Georgia,serif;color:#f3ece2;text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap}`;
   document.head.appendChild(css);
-  const label = document.createElement("div"); label.className = "ct-label"; document.body.appendChild(label);
+  const label = document.createElement("div"); label.className = "ct-label"; label.dataset.uiLayer = "label"; document.body.appendChild(label);
   /* ---------- the open book (his pick A on rb-ad-look-1, the ink diary) ----------
      A spread over the table, the room blurred behind it as the camera comes down. The open page is the right-hand leaf,
      where the coins wait; the leaf before it faces it, as in any book. The fore-edge carries a tab per page. At phone width
@@ -614,6 +615,7 @@ export function mount(B, opts = {}) {
     const v = at.clone().project(B.camera), [sx, sy] = B.screenOf(at);
     label.textContent = near === "book" ? "The book · tap it for a reading" : words;
     label.hidden = !!s || v.z > 1 || sittingHere(); label.style.left = sx + "px"; label.style.top = sy + "px";
+    if (!label.hidden && !inFrame(label, sx, sy)) label.hidden = true; // a name half off the glass is not drawn (hp1-labels-in-frame)
   }
 
   B.addSeat(() => (place && builtFor === B.room().shell ? [{ id: "coins", coins: true, x: place.seat.x, z: place.seat.z, yaw: place.seatYaw, floor: 0, top: 0.14 }] : []));

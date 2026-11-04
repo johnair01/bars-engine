@@ -14,6 +14,7 @@
    first land. Walk to the doorway and step through, and /between/land.html builds the encounter location (the sample's
    Unfinished Clearing) from the sheet; the charge and your look ride over in this tab's sessionStorage, nowhere else. */
 import * as THREE from "three";
+import { inFrame } from "./voice.js";
 import { densityOf } from "./block-room.js";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
 
@@ -104,7 +105,7 @@ export function mount(B, opts = {}) {
   /* ---------- the page's own layer: a card when you stand near, the six questions, the sheet, a pane ---------- */
   const css = document.createElement("style");
   css.textContent = `
-  .ctw-card{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));z-index:40;background:var(--glass);color:var(--glass-ink);backdrop-filter:blur(6px);border-radius:14px;padding:10px 14px;display:grid;gap:8px;width:min(92vw,520px)}
+  .ctw-card{display:none!important} /* never drawn: the stand speaks through voice; the card keeps its buttons' handlers (hp1-one-owner) */
   .ctw-card b{font-family:var(--display)} .ctw-card .t{font-size:.88rem;color:var(--glass-muted)} .ctw-card .row{display:flex;gap:8px;flex-wrap:wrap}
   .ctw-card button,.ctw-sheet button{font:inherit;border-radius:999px;padding:7px 14px;border:1px solid rgba(255,255,255,.35);background:#2f8f86;color:#fff;cursor:pointer}
   .ctw-card button.q,.ctw-sheet button.q{background:transparent;color:inherit;border-color:var(--line)}
@@ -118,12 +119,13 @@ export function mount(B, opts = {}) {
   .ctw-label{position:fixed;z-index:30;transform:translate(-50%,-100%);font:600 .82rem var(--display);color:#f3ece2;text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap}`;
   document.head.appendChild(css);
   const card = document.createElement("div"); card.className = "ctw-card"; card.hidden = true; document.body.appendChild(card);
-  const label = document.createElement("div"); label.className = "ctw-label"; label.textContent = "The map stand"; document.body.appendChild(label);
+  const label = document.createElement("div"); label.className = "ctw-label"; label.dataset.uiLayer = "label"; label.textContent = "The map stand"; document.body.appendChild(label);
   let scrim = null, dlg = null;
-  function closeDlg() { if (scrim) scrim.remove(); if (dlg) dlg.remove(); scrim = dlg = null; cardKey = ""; }
+  function closeDlg() { if (scrim) scrim.remove(); if (dlg) dlg.remove(); scrim = dlg = null; cardKey = ""; if (B.voice) B.voice.quiet("ctw-sheet"); }
   function openDlg(html) {
     closeDlg();
     scrim = document.createElement("div"); scrim.className = "ctw-scrim"; scrim.onclick = closeDlg;
+    if (B.voice) B.voice.say({ hold: true }, "ctw-sheet", 4); // the opened sheet holds the screen alone (hp1-one-owner)
     dlg = document.createElement("section"); dlg.className = "ctw-sheet"; dlg.setAttribute("role", "dialog"); dlg.innerHTML = html;
     dlg.addEventListener("pointerdown", e => e.stopPropagation()); dlg.addEventListener("keydown", e => e.stopPropagation());
     document.body.append(scrim, dlg);
@@ -337,6 +339,7 @@ export function mount(B, opts = {}) {
     const v = STAND.clone().setY(1.2).project(B.camera);
     label.hidden = !!dlg || v.z > 1 || !!near; label.style.left = sx + "px"; label.style.top = sy + "px";
     label.textContent = episode ? "The map stand: " + g.environment : "The map stand";
+    if (!label.hidden && !inFrame(label, sx, sy)) label.hidden = true; // a name half off the glass is not drawn (hp1-labels-in-frame)
   }
 
   (async function start() {

@@ -509,8 +509,9 @@ function placeLabel(el, pos) {
   tmpV.copy(pos).project(camera);
   if (tmpV.z > 1 || tmpV.z < -1) { el.style.display = "none"; return; }
   el.style.display = "";
-  el.style.left = ((tmpV.x + 1) / 2 * innerWidth) + "px";
-  el.style.top = ((1 - tmpV.y) / 2 * innerHeight) + "px";
+  const x = (tmpV.x + 1) / 2 * innerWidth, y = (1 - tmpV.y) / 2 * innerHeight;
+  el.style.left = x + "px"; el.style.top = y + "px";
+  if (voiceMod && !voiceMod.inFrame(el, x, y)) el.style.display = "none"; // a name half off the glass is not drawn (hp1-labels-in-frame)
 }
 
 /* ---------- the Between (or the spark): the creature from the concept views (creature.js) ---------- */
@@ -585,7 +586,7 @@ const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands furth
 };
 function roomNow() {
   const g = view().g;
-  return { shell: builtShell, style: (g && g.style) || null, placed: (g ? g.room && g.room.placed : localPlaced) || {} };
+  return { shell: builtShell, style: stylePreview || (g && g.style) || null, placed: (g ? g.room && g.room.placed : localPlaced) || {} };
 }
 function myEarned() {
   if (SATCHEL_ALL) return ITEM_ORDER.filter(id => !ITEMS[id].shelf);
@@ -1111,6 +1112,7 @@ function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
    "Pour a cup" is offered only to someone sat within NEAR of the kettle (tea-look-2, his note 2026-10-29: "the cup is offering
    when they aren't near the teapot"). No qi, no shelf and no music yet: someone who has worked through nothing can sit and pour. */
 let tea = null, teaRoom = null, teaKey = "", teaWas = false, teaSkipped = false, teaK = 0;
+let winTurn = null, winK = 0, stylePreview = null; // the window turn: { was, at } while the room's look is being chosen at the opening
 function teaNow() {
   const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return null;
   if (!tea) tea = buildTea({ THREE, scene, seat: s, groundY });
@@ -1636,6 +1638,20 @@ function frameBody() {
   /* Tea in your hand (tea-cup-look-3, his note 2026-10-29: when you sit to drink, the camera should move so you see yourself
      drinking): the view comes round in front of you, a little to your left and level with your face, so the cup coming up to
      your mouth, your hand on it and the kettle on its stone are all in sight. It eases back behind you when you stand. */
+  /* The window turn (homeroom-poster-1, window-turn): choosing how the homeroom looks turns the camera to the opening, so
+     the weather is chosen where weather is seen. It eases there and back like the tea view. */
+  winK += ((winTurn ? 1 : 0) - winK) * Math.min(1, dt * 2.4);
+  if (winK < 0.002 && !winTurn) winK = 0;
+  if (winK > 0 && hollow && inNook()) {
+    const w = hollow.layout.window, tall = innerWidth < innerHeight, inX = -w.x, inZ = -w.z, n = Math.hypot(inX, inZ) || 1;
+    const ix = inX / n, iz = inZ / n, rx = -iz, rz = ix; // in from the opening, and to its right as you face it
+    // to the left of the opening and a little below its middle, so the opening fills the middle of the frame, the headline
+    // has the dark wall above it and the seals the floor band under the sill (window.__hpWin tunes it for a still)
+    const back = 2.6, side = tall ? -1.3 : -0.9, W = window.__hpWin || {};
+    const p = new THREE.Vector3(w.x + ix * (W.back ?? back) + rx * (W.side ?? side), W.y ?? (tall ? 1.15 : 1.2), w.z + iz * (W.back ?? back) + rz * (W.side ?? side));
+    const f = new THREE.Vector3(w.x, w.y + (W.fy ?? (tall ? -0.3 : -0.1)), w.z);
+    const k = winK * winK * (3 - 2 * winK); cp.lerp(p, k); focus.lerp(f, k);
+  }
   const teaOn = !!(tea && tea.holding() && meState.sitting && seatViewAt && !mirrorOn);
   teaK += ((teaOn ? 1 : 0) - teaK) * Math.min(1, dt * 1.1);
   if (teaK < 0.002 && !teaOn) teaK = 0;
@@ -2514,10 +2530,13 @@ function openSheet(name, arg) {
   if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
   if (name === "invite" && g && !isHome(g) && isMember(g) && members(g).length >= 2 && arg !== "list") { openPaper("write", { room: gardenId }); return; } // a scroll, not a form (Still B)
   if (name === "hope") caption(MINUTE_CAPTIONS.hope);
+  if (name === "style" && g && isHome(g) && inNook() && hollow && window.__between.voice) { if (sheetName) closeSheet(); windowTurn(); return; }
+  if (winTurn) windowDown();
   sheetName = name; sheetArg = arg; setMirror(name === "look" || name === "hope"); renderSheet();
 }
 function closeSheet() {
   const wasLook = sheetName === "look" || sheetName === "hope";
+  if (window.__between && window.__between.voice) window.__between.voice.quiet("sheet");
   sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud"); document.body.classList.toggle("seatedmoment", !!hm);
   if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
@@ -2607,6 +2626,7 @@ function renderSheet() {
   const seated = sheetName === "hearth" && seatedAtHearth();
   sh.classList.toggle("seated", seated);
   sh.classList.toggle("dark", seated || ["look", "checkin", "spirits", "hope"].includes(sheetName));
+  if (window.__between.voice) window.__between.voice.say({ hold: true }, "sheet", 4); // what he opened holds the screen alone (hp1-one-owner)
   sh.hidden = false; $("#scrim").hidden = seated || sheetName === "look" || sheetName === "checkin" || sheetName === "hope";
   document.body.classList.toggle("quiethud", sheetName === "checkin");
   document.body.classList.toggle("seatedmoment", seated || !!hm); // the room's own buttons step aside; the strip carries Stand up // the room's own buttons step aside while you walk it
@@ -2837,6 +2857,49 @@ function styleSheet(g) {
     <p class="small muted">${isHome(g) ? "The light and weather of your own room." : shared ? "The light and weather of the place you share. It changes when you both say yes: choose one to ask " + esc(nameOf(o, g)) + "." : "The light and weather of the place. Once they join, a change waits for both of you."}</p>
     ${askLine}
     <div class="choice">${ROOM_STYLES.map(st => { const on = styleOf(g.style).id === st.id; return `<button type="button" class="${on ? "on" : ""}" aria-pressed="${on}" ${on && shared ? "disabled" : ""} data-act="setStyle" data-id="${st.id}"><b>${esc(st.name)}</b>${esc(shared && !on ? "Ask for this. " : "")}${esc(st.line)}</button>`; }).join("")}</div></div>`;
+}
+/* The window turn (Six-faces-council homeroom-poster-1; his A on hp1-look-1): in the homeroom, "How your homeroom looks"
+   is not a sheet. The camera turns to the opening, the headline says what this is, and each weather is a seal in the
+   floor band. Touching one changes the sky in the opening at once (a preview, nothing saved); touching it again keeps it.
+   Put it down (or Escape, or a swipe down) brings the old weather back and turns the camera home. It speaks through the
+   one screen owner as "sheet" at rank 4, so the waiting letter and the map stand wait and come back afterwards. */
+const STYLE_EL = { "dusk-hollow": "earth", moonlit: "metal", "spring-morning": "wood", "ember-rain": "fire" };
+function windowTurn() {
+  const g = view().g; if (!g) return;
+  winTurn = { was: styleOf(g.style).id };
+  stylePreview = null; refresh(); windowSay();
+}
+function windowSay(pick) {
+  const vo = window.__between.voice; if (!vo || !winTurn) return;
+  const now = winTurn.was, shown = stylePreview || now, st = styleOf(shown);
+  const sub = shown === now ? "The light and weather of your own room. Touch one to see it."
+    : `${st.name}. Touch it again to keep it, or put it down for ${styleOf(now).name.toLowerCase()}.`;
+  vo.say({ head: "How your homeroom looks", sub, down: { on: windowDown }, subject: windowBox,
+    actions: ROOM_STYLES.map(x => ({ label: x.name, el: STYLE_EL[x.id] || "earth", sub: x.id === now ? "now" : x.id === shown ? "touch again to keep" : "",
+      on: () => windowTouch(x.id) })) }, "sheet", 4);
+}
+async function windowTouch(id) {
+  if (!winTurn) return;
+  const shown = stylePreview || winTurn.was;
+  if (id !== shown) { stylePreview = id === winTurn.was ? null : id; refresh(); windowSay(); return; }
+  if (id === winTurn.was) { windowDown(); return; } // the weather it already has: nothing to keep
+  const st = styleOf(id);
+  try { await op("garden/main", "update", { style: st.id }); } catch (e) { toast("The room could not keep it. It stays as it was."); windowDown(); return; }
+  winTurn = null; stylePreview = null; refresh();
+  window.__between.voice.quiet("sheet"); toast(st.name + ".");
+}
+function windowDown() {
+  if (!winTurn) return;
+  winTurn = null; stylePreview = null; refresh();
+  if (window.__between.voice) window.__between.voice.quiet("sheet");
+}
+/* the opening on the glass: what the camera looks at, never covered by words */
+function windowBox() {
+  if (!hollow) return null;
+  const w = hollow.layout.window, a = w.clone().setY(w.y - 0.6), b = w.clone().setY(w.y + 0.6);
+  const pa = a.project(camera), pb = b.project(camera);
+  const y0 = (1 - pa.y) / 2 * innerHeight, y1 = (1 - pb.y) / 2 * innerHeight, x = (pa.x + 1) / 2 * innerWidth, h = Math.abs(y0 - y1);
+  return { l: x - h * 0.4, r: x + h * 0.4, t: Math.min(y0, y1), b: Math.max(y0, y1) };
 }
 const ANSWER_TEXT = { yes: "said yes", later: "asked for another time", no: "said no" };
 function inviteSheet(g) {
