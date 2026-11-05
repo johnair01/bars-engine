@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a332f">
+<title>The forest walk: coaching with Wendell Britt</title>
+<meta name="description" content="Walk a short forest path with six questions about what stands between you and the life you want. At the fire: a session with Wendell, his book, or the games he is building.">
+<!-- Six-faces-council .specify/specs/coaching-walk (his steer on cp-send-look-1, 2026-11-05): the /coaching intake, walked. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Marcellus&display=swap">
+<link rel="stylesheet" href="/between/garden.css">
+<style>
+  .w-top { position: fixed; z-index: 20; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; pointer-events: none; }
+  .w-top > * { pointer-events: auto; }
+  .w-name { background: var(--glass); backdrop-filter: blur(6px); border-radius: 14px; padding: 8px 12px; max-width: 62vw; }
+  .w-name b { font-family: Marcellus, serif; font-size: 1.02rem; display: block; font-weight: 400; }
+  .w-name span { font-size: .78rem; color: var(--glass-muted); }
+  .w-steps { display: flex; gap: 5px; margin-top: 5px; }
+  .w-steps i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(255,255,255,.45); }
+  .w-steps i.on { background: #f3d27a; border-color: #f3d27a; }
+  .w-top a.read { background: var(--glass); color: var(--glass-ink); backdrop-filter: blur(6px); border-radius: 12px; padding: 9px 12px; font-size: .86rem; text-decoration: none; min-height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; }
+  .w-card { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(94vw, 540px); box-sizing: border-box; max-height: 62vh; overflow-y: auto;
+    background: rgba(20, 17, 13, .86); color: var(--glass-ink); backdrop-filter: blur(8px); border-radius: 16px; padding: 14px 16px; display: grid; gap: 10px; }
+  .w-card .k { color: #b9d4aa; }
+  .w-card h2 { font: 400 1.18rem/1.3 Marcellus, serif; margin: 0; }
+  .w-card p { margin: 0; font-size: .92rem; color: var(--glass-muted); line-height: 1.45; }
+  .w-card .opts { display: grid; gap: 7px; }
+  .w-card .opts.two { grid-template-columns: 1fr 1fr; }
+  .w-card button, .w-card a.btn { font: 1rem/1.25 var(--body); color: var(--glass-ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.22); border-radius: 12px; padding: 10px 12px; min-height: 44px; text-align: left; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; }
+  .w-card button[aria-pressed="true"] { background: #f3ece2; color: #221c16; border-color: #f3ece2; }
+  .w-card button small, .w-card a.btn small { display: block; font-size: .8rem; opacity: .75; margin-top: 2px; }
+  .w-card .go { background: #f3d27a; color: #221c16; border-color: #f3d27a; font-weight: 700; text-align: center; }
+  .w-card .row { display: flex; gap: 8px; flex-wrap: wrap; } .w-card .row > * { flex: 1 1 auto; }
+  .w-card .quiet { background: transparent; border-color: transparent; text-decoration: underline; text-underline-offset: 4px; color: var(--glass-muted); text-align: center; }
+  .w-card textarea, .w-card input { width: 100%; box-sizing: border-box; min-height: 64px; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.28); background: rgba(0,0,0,.3); color: inherit; font: 1rem/1.4 var(--body); resize: vertical; }
+  .w-card input { min-height: 44px; }
+  .w-card .job { border-left: 3px solid #a9c79a; padding: 4px 10px; font-size: .88rem; color: var(--glass-ink); }
+  .w-card .chip { display: inline-block; border-radius: 999px; padding: 8px 12px; text-align: center; }
+  .w-card .chips { display: flex; flex-wrap: wrap; gap: 6px; } .w-card .chips button { flex: 0 0 auto; border-radius: 999px; padding: 8px 12px; }
+  .w-card figure { display: flex; gap: 12px; margin: 0; align-items: flex-start; } .w-card figure img { width: 64px; height: 84px; object-fit: cover; border-radius: 10px; flex: none; }
+  .w-card figcaption { font-size: .92rem; line-height: 1.45; }
+  .w-card button:focus-visible, .w-card a:focus-visible, .w-card textarea:focus-visible, .w-card input:focus-visible { outline: 2px solid #ffc46a; outline-offset: 2px; }
+  .w-cap { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); top: calc(92px + env(safe-area-inset-top, 0px)); width: min(90vw, 560px); text-align: center;
+    font: 1.02rem/1.45 Marcellus, serif; color: #f3ece2; text-shadow: 0 1px 4px rgba(0,0,0,.85), 0 0 18px rgba(0,0,0,.5); opacity: 0; transition: opacity .9s; pointer-events: none; }
+  .w-cap.on { opacity: 1; }
+  @media (min-width: 900px) { .w-card { left: auto; right: 24px; transform: none; bottom: 24px; width: 420px; max-height: calc(100vh - 110px); } }
+  @media (max-width: 600px) { .w-cap { top: calc(104px + env(safe-area-inset-top, 0px)); font-size: .96rem; } }
+  .loading { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; background: #232b28; z-index: 60; transition: opacity .8s; padding: 24px; } .loading.gone { opacity: 0; }
+  .loading h1 { font: 400 1.6rem Marcellus, serif; margin: 0 0 8px; } .loading a { color: #f3d27a; }
+  @media (prefers-reduced-motion: reduce) { .w-cap, .loading { transition: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head><body>
+<div id="stage" aria-label="A forest path. Tap the ground to walk there; drag to look around."></div>
+<div class="loading" id="loading"><div><h1>The forest walk</h1><p id="loadMsg">Six questions on a path through the trees. About ten minutes.</p><p id="loadStep" style="font-size:.8rem;opacity:.6;margin-top:8px">starting</p>
+  <p style="font-size:.86rem;margin-top:16px">Would you rather read? <a href="/coaching">The same six questions as cards</a></p></div></div>
+<div id="hud" hidden>
+  <div class="w-top">
+    <div class="w-name"><b id="placeName">The forest walk</b><span id="placeSub">Tap the ground to walk</span><div class="w-steps" id="steps" aria-label="Questions answered"></div></div>
+    <a class="read" href="/coaching">Read it instead</a>
+  </div>
+  <div class="w-cap" id="caption" aria-live="polite"></div>
+  <div class="w-card" id="card" hidden></div>
+</div>
+<script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="The forest did not load on this device. The cards below hold the same walk.";}},20000);</script>
+<script type="module" src="/coaching/walk/walk.js"></script>
+</body></html>
