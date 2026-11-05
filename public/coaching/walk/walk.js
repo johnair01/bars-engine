@@ -10,8 +10,10 @@
    book) and the gate (the Patreon, for the games he is building).
 
    Reused, not redrawn: the Between land's forest (public/between/land/land.js: its tree, ground, grass, mist and glow
-   recipes, the hollow's bark, root and moss materials, the paint pass) and its traveller (Average Dusk dressed by
-   wardrobe.js, stance.js blending Walk and Idle), with the land's tap-to-walk, drag-to-look and arrow keys.
+   recipes, the hollow's bark, root and moss materials, the paint pass), with the land's tap-to-walk, drag-to-look and
+   arrow keys. The traveller (round 2, his steer on cw-walk-look-1): one of the cultivation characters, her or him in
+   the light travel robe, built in the page by public/between/cult/ (a copy of the shells preview) and walked by
+   cult/walker.js. If that figure cannot be built, the Between's Average Dusk walks instead (land.js makeFigure).
 
    Nothing typed leaves the tab (cg-browser-only): the walk lives in sessionStorage "coaching-walk"; the copy button is
    how the visitor's words reach Calendly's notes box, by their own paste. The utm tags they arrived with ride every door.
@@ -328,6 +330,23 @@ function colourFlies() {
    The traveller (land.js makeFigure, without the toolbag)
    =================================================================================================== */
 const loader = new GLTFLoader();
+// who walks: asked once at the forest's edge, kept for the tab; ?who=f|m answers it for the pictures
+const WHO_KEY = "coaching-walk-who";
+function chooseWho() {
+  const q = Q.get("who"); if (q === "f" || q === "m") return Promise.resolve(q);
+  try { const s = sessionStorage.getItem(WHO_KEY); if (s === "f" || s === "m") return Promise.resolve(s); } catch (e) { /* ask */ }
+  if (Q.get("shot")) return Promise.resolve("f");
+  const box = $("#who"); box.hidden = false; step("");
+  return new Promise(res => { for (const b of box.querySelectorAll("button")) b.onclick = () => {
+    try { sessionStorage.setItem(WHO_KEY, b.dataset.who); } catch (e) { /* private mode */ }
+    box.hidden = true; res(b.dataset.who); }; });
+}
+async function makeTraveller(who) {
+  const { makeWalker } = await import("/between/cult/walker.js");   // loaded here, so a failure leaves the Dusk fallback standing
+  const w = await makeWalker({ who, outfit: "B2" });
+  scene.add(w.holder);
+  return w;
+}
 async function makeFigure() {
   const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
   const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
@@ -398,8 +417,10 @@ async function build() {
   mist(r, LOW ? 16 : 30, 0xb8c8bc, 0.12);
   makeFlies(r);
   mergeStatic(G);
+  const who = await chooseWho();
   step("waking your traveller");
-  try { state.me = await makeFigure(); } catch (e) { console.warn("figure", e); }
+  try { state.me = await makeTraveller(who); } catch (e) { console.warn("cultivation figure", e); }
+  if (!state.me) try { state.me = await makeFigure(); } catch (e) { console.warn("figure", e); }
   applyWalk();
 }
 

@@ -47,17 +47,26 @@
   @media (max-width: 600px) { .w-cap { top: calc(104px + env(safe-area-inset-top, 0px)); font-size: .96rem; } }
   .loading { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; background: #232b28; z-index: 60; transition: opacity .8s; padding: 24px; } .loading.gone { opacity: 0; }
   .loading h1 { font: 400 1.6rem Marcellus, serif; margin: 0 0 8px; } .loading a { color: #f3d27a; }
+  .who p { font: 400 1.15rem Marcellus, serif; margin: 14px 0 10px; }
+  .who-row { display: flex; gap: 12px; justify-content: center; }
+  .who button { font: 1rem/1.25 var(--body); color: var(--glass-ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 8px 8px 10px; cursor: pointer; display: grid; gap: 8px; justify-items: center; min-width: 132px; }
+  .who button:hover { border-color: #f3d27a; } .who button:focus-visible { outline: 2px solid #ffc46a; outline-offset: 2px; }
+  .who img { width: 120px; height: 180px; object-fit: cover; border-radius: 10px; background: #2c3631; }
   @media (prefers-reduced-motion: reduce) { .w-cap, .loading { transition: none; } }
 </style>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
 } }
 </script>
 </head><body>
 <div id="stage" aria-label="A forest path. Tap the ground to walk there; drag to look around."></div>
 <div class="loading" id="loading"><div><h1>The forest walk</h1><p id="loadMsg">Six questions on a path through the trees. About ten minutes.</p><p id="loadStep" style="font-size:.8rem;opacity:.6;margin-top:8px">starting</p>
+  <div id="who" class="who" hidden><p>Who walks the path?</p><div class="who-row">
+    <button type="button" data-who="f"><img src="/coaching/walk/her.jpg" alt="" width="120" height="180"><span>Walk as her</span></button>
+    <button type="button" data-who="m"><img src="/coaching/walk/him.jpg" alt="" width="120" height="180"><span>Walk as him</span></button></div></div>
   <p style="font-size:.86rem;margin-top:16px">Would you rather read? <a href="/coaching">The same six questions as cards</a></p></div></div>
 <div id="hud" hidden>
   <div class="w-top">
