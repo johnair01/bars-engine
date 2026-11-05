@@ -91,4 +91,17 @@ describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
     expect(careOffered(0, false)).toBe('sweep'); expect(careOffered(0, true)).toBe(null)
     expect(careOffered(3, false)).toBe('turn'); expect(careOffered(4, false)).toBe(null)
   })
+  it('garden.js tends the hearth one care a visit and lets no sit in below the second', () => {
+    const garden = readFileSync(path.resolve(__dirname, '../../../../public/between/garden.js'), 'utf8')
+    for (const fn of ['function doCare(', 'const careNow =', 'const sitBlocked =']) expect(garden).toContain(fn)
+    expect(garden).toMatch(/careOffered\(c, caredThisVisit\)/)
+    expect(garden).toMatch(/caredThisVisit = true/)
+    expect(garden).toMatch(/canSitOn = id => !seatTaken\(id\) && !\(sitBlocked\(\)/)
+    expect(garden).toMatch(/function sitAtHearth\(\) \{ if \(sitBlocked\(\)\) return;/)
+    expect(garden).toMatch(/if \(hm \|\| sitBlocked\(\)/)
+    expect(garden).toMatch(/PREVIEW_HOST && \/\^\[0-4\]\$\/\.test\(KQ\.get\("care"\)/) // ?care= is a preview only
+    const doCare = garden.slice(garden.indexOf('function doCare('), garden.indexOf('/* What a tap on the nook does'))
+    expect(doCare).toContain('minuteAct("ember", "done", patch)') // care 0 and the ember beat are one write (FR-019)
+    expect(doCare).not.toMatch(/care: c \+ 2|care: 4/)
+  })
 })
