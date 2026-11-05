@@ -339,7 +339,7 @@ function roomWrite(me: string, garden: Doc, room: Json): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt', 'hearth'])
 
 /* ---------- the coin table (Six-faces-council pass bar-intake-2, brief "Coin table, build 2") ----------
  * Keep writes the move a cast gave you to your homeroom's private doc (`casts`): the hexagram, its lane and suit, the
@@ -436,6 +436,22 @@ function homeEmberOk(e: Doc): boolean {
   return to.length === 1 && isId(to[0]) && (g.room == null || isId(g.room)) && isNum(g.at)
 }
 
+/* The hearth's record (spec focus-sit-world-growth, Contracts 1): finished sits, the last one's time, and when each of the five
+ * fragments was told. The page never shows the count. */
+const HEARTH_CHANNELS = ['earth', 'fire', 'wood', 'metal', 'water']
+function hearthOk(h: unknown): boolean {
+  if (h == null) return true
+  if (!isObj(h)) return false
+  if (Object.keys(h).some(k => !['sits', 'at', 'told'].includes(k))) return false
+  if (h.sits != null && !(isNum(h.sits) && Number.isInteger(h.sits) && h.sits >= 0 && h.sits <= 1_000_000)) return false
+  if (h.at != null && !isNum(h.at)) return false
+  if (h.told != null) {
+    if (!isObj(h.told)) return false
+    for (const [c, v] of Object.entries(h.told)) if (!HEARTH_CHANNELS.includes(c) || !isNum(v)) return false
+  }
+  return true
+}
+
 /** May the homeroom's private doc stand? A look, goals (each maybe tied to a room), check-ins from the five feelings, embers. */
 export function homeWrite(doc: Doc): Verdict {
   for (const k of Object.keys(doc)) if (!HOME_KEYS.has(k)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
@@ -444,6 +460,7 @@ export function homeWrite(doc: Doc): Verdict {
   if (doc.oriented != null && !isNum(doc.oriented)) return no(400, 'Your first minute here has a time.')
   if (!minuteOk(doc.minute)) return no(400, 'Your first minute here keeps times, nothing more.')
   if (doc.bookAt != null && !(doc.bookAt === 'self' || isId(doc.bookAt))) return no(400, 'The book opens at a page.')
+  if (!hearthOk(doc.hearth)) return no(400, 'Your hearth keeps finished sits and when each part of its story was told, nothing more.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
     ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)

@@ -36,3 +36,17 @@ export function emberWarmth(sit, nowMs, minuteMs = MINUTE_MS, risen = false) {
   const p = focusProgress(sit, nowMs, minuteMs);
   return p.done ? 1 : p.k * 0.85; // the last step of the warming is the rise itself, at the end
 }
+
+/* The hearth spirit's story (spec focus-sit-world-growth, FR-006 to FR-008): five fragments, one for each channel, told root to
+   crown. A finished sit tells the fragment of the channel of the ember it sat with (no ember is earth) if that one is untold;
+   otherwise it tells nothing new. Nothing else gates a fragment: no timer, day or count. */
+export const FRAGMENT_ORDER = ["earth", "fire", "wood", "metal", "water"];
+export function fragmentFor(emberFeel, told) {
+  const c = FRAGMENT_ORDER.includes(emberFeel) ? emberFeel : "earth";
+  return told && told[c] ? null : c;
+}
+/* What a finished sit adds to the homeroom doc's `hearth`: one more sit, its time, and the fragment it told (if any). */
+export function hearthRecord(cur, channel, at) {
+  const sits = Math.max(0, Math.floor(+(cur && cur.sits) || 0)) + 1;
+  return channel ? { sits, at, told: { [channel]: at } } : { sits, at };
+}

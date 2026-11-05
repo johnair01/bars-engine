@@ -17,7 +17,8 @@ import { createAmbient } from "./ambient.js";
 import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
 import { NEAR as TEA_NEAR } from "./tea-pose.js";
-import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
+import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS, FRAGMENT_ORDER, fragmentFor, hearthRecord } from "./focus.js";
+import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from "./fragments.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
 import { figureWrap, figureProbe, lightFigure } from "./figure-light.js";
@@ -2236,6 +2237,7 @@ function hmTap(cx, cy) {
     if (best === hm.held && hm.press && performance.now() / 1000 - hm.press.t0 > 0.35) return true; // the end of a breath, not a touch
     hmHold(best.eid); return true;
   }
+  if (ray.ray.distanceToPoint(HEARTH_AT.clone().setY(0.4)) < 0.45 && fireTouch()) return true;
   const hit = new THREE.Vector3();
   if (bd > 90 && ray.ray.intersectPlane(floorPlane, hit) && hit.distanceTo(HEARTH_AT) > 0.9) { hmStand(); return true; }
   return true; // the fire and the air hold still
@@ -2431,17 +2433,81 @@ async function fsDone() {
     if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], risen: true };
     else if (!storeDown) await op(pouchPath(), "update", { embers: { [m.eid]: { risen: true } } });
   }
+  const told = fsOwn() ? await fsKeep(m ? m.e.feel : null, !!m && isDemoEmber(m.eid)) : null; // a Between's hearth writes nothing (FR-013)
+  if (told) { const h0 = hm; setTimeout(() => { if (hm && hm === h0) fragStart(told, "told"); }, 7000); } // after the rise and the mote's flight are over (FR-008)
   setTimeout(() => { if (!hm || hm.fs !== fs) return; // then everything comes back: the risen one first, out of the satchel
     for (const o of hm.motes) if (o.state === "lip") o.state = "sink";
     setTimeout(() => { if (!hm || hm.fs !== fs) return; for (const o of hm.motes.filter(x => x.state === "gone")) hmDrop(o); hm.motes = hm.motes.filter(x => x.state !== "gone"); hm.riseNext = performance.now() / 1000 + 0.6; hmSync(); fsAgain(); }, 1600);
   }, 2600);
   hmHud();
 }
+/* ---------- the hearth spirit's story (spec focus-sit-world-growth) ----------
+   A finished sit at your own hearth adds to `hearth` in the homeroom doc (sits, at, and the channel it told, once). The first sit
+   in a channel shows that channel's picture in the fire with its line; a touch on the fire with nothing laid shows the told
+   ones again, root first. No count, ring or blank slot is ever drawn. Previews: ?hearth=<sits>&told=earth,wood seed the record. */
+const fsOwn = () => { const g = view().g; return !g || isHome(g); };
+const HEARTH_SEED = PREVIEW_HOST && (KQ.get("hearth") || KQ.get("told")) ? { sits: Math.max(0, parseInt(KQ.get("hearth"), 10) || 0), told: Object.fromEntries((KQ.get("told") || "").split(",").filter(c => FRAGMENT_ORDER.includes(c)).map(c => [c, 1])) } : null;
+let hearthLocal = {}; // the record kept on this page only (a demo ember, the store down, a failed write)
+const hearthNow = () => { const mine = myHome.hearth || {}; return { ...(HEARTH_SEED || {}), ...mine, ...hearthLocal, told: { ...(HEARTH_SEED ? HEARTH_SEED.told : {}), ...(mine.told || {}), ...(hearthLocal.told || {}) } }; };
+const toldNow = () => FRAGMENT_ORDER.filter(c => hearthNow().told[c]);
+/* Writes the finished sit; returns the channel it told, or null when that one was told before. */
+async function fsKeep(feel, demo) {
+  const cur = hearthNow(), c = fragmentFor(feel, cur.told), patch = hearthRecord(cur, c, Date.now());
+  const local = () => { hearthLocal = merge({ ...hearthLocal, told: { ...(hearthLocal.told || {}) } }, patch); };
+  if (demo || EMBER_DEMO || storeDown || !homeId) local();
+  else { try { await homeOp({ hearth: patch }); } catch { local(); } }
+  return c;
+}
+const REDUCED = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })();
+/* A fragment: the fire's own sparks gather into the picture above the flames, the line shows as a caption, then it fades to fire.
+   mode "told" runs by itself; "browse" waits for a touch. */
+function fragStart(c, mode) {
+  if (!hm) return;
+  fragEnd(false);
+  const dots = pictureDots(c), mk = (glow, size, color) => {
+    const pts = dots.filter(d => d[2] === glow), g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pts.length * 3), 3));
+    const p = new THREE.Points(g, new THREE.PointsMaterial({ map: moteMat.map, color, size, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
+    p.frustumCulled = false; hmGroup.add(p);
+    return { p, pts, from: pts.map(() => [(Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.3]) };
+  };
+  hm.frag = { c, mode, t0: performance.now() / 1000, layers: [mk(0, 0.05, 0xffa040), mk(1, 0.09, FS_SAT)] };
+  caption(FRAGMENTS[c].line);
+}
+function fragEnd(clear = true) {
+  const f = hm && hm.frag; if (!f) return;
+  for (const l of f.layers) { hmGroup.remove(l.p); l.p.geometry.dispose(); }
+  hm.frag = null; if (clear) captionOut();
+}
+function fragTick(t, F, h) {
+  const f = h.frag; if (!f) return;
+  const el = t - f.t0, dur = f.mode === "told" ? FRAGMENT_SECONDS : 30;
+  if (el >= dur) { fragEnd(); return; }
+  const k = REDUCED ? 1 : Math.min(1, el / 1.8), e = k * k * (3 - 2 * k), fade = REDUCED ? 1 : Math.min(1, (dur - el) / 1.2);
+  const C = HEARTH_AT.clone().setY(0.85), S = 0.68, base = HEARTH_AT.clone().setY(0.3);
+  for (const l of f.layers) {
+    const a = l.p.geometry.attributes.position;
+    l.pts.forEach((d, i) => {
+      const w = REDUCED ? 0 : Math.sin(t * 1.7 + i) * 0.006, tx = C.x + F.r.x * d[0] * S, ty = C.y + d[1] * S + w, tz = C.z + F.r.z * d[0] * S, o = l.from[i];
+      a.setXYZ(i, base.x + o[0] + (tx - base.x - o[0]) * e, base.y + o[1] + (ty - base.y - o[1]) * e, base.z + o[2] + (tz - base.z - o[2]) * e);
+    });
+    a.needsUpdate = true; l.p.material.opacity = 0.9 * e * fade;
+  }
+}
+/* A touch on the fire with nothing laid and no sit running: the told pictures, root first, one at a time; the last returns to fire. */
+function fireTouch() {
+  const free = !hm.fs || (hm.fs.step === "choose" && !hm.fs.sticks), list = toldNow();
+  if (!free || !list.length) return false;
+  const at = hm.frag && hm.frag.mode === "browse" ? list.indexOf(hm.frag.c) + 1 : 0;
+  if (at >= list.length) fragEnd(); else fragStart(list[at], "browse");
+  return true;
+}
 /* After a sit, the stack waits again (the fire takes what was laid, slowly). */
 function fsAgain() { if (!hm) return; hm.fs = null; for (const l of fsLogs) l.visible = true; hmHud(); }
 /* Getting up: whatever the sit had reached, nothing is written but a rise already made. */
 function fsEnd(h) {
   if (h.fs && h.fs.mote) hmGroup.remove(h.fs.mote.g);
+  if (h.frag) { for (const l of h.frag.layers) { hmGroup.remove(l.p); l.p.geometry.dispose(); } h.frag = null; captionOut(); }
   h.fs = null; for (const l of fsLogs) l.visible = true; fsStack.visible = false;
   if (hollow) { hollow.handles.hearth.bank = 0; hollow.handles.hearth.room = fsRoom; }
 }
@@ -2468,6 +2534,7 @@ function fsTick(t, dt, h, F) {
   fsSpirit.visible = sp.k > 0.01; fsSpirit.position.copy(HEARTH_AT).addScaledVector(F.f, -0.2).setY(0.72 + Math.sin(t * 0.9) * 0.02);
   sp.glow.material.opacity = 0.22 * sp.k * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
   fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink; // its eyes on you
+  fragTick(t, F, h);
   if (!fs) return;
   // sticks in flight: an arc from the stack onto the fire, a puff of sparks as each lands
   for (const fl of fs.flies) { const k = Math.min(1, (t - fl.t0) / 1.1), e = k * k * (3 - 2 * k); fl.m.position.lerpVectors(fl.from, fl.to, e); fl.m.position.y += Math.sin(k * Math.PI) * 0.45; fl.m.rotation.y = F.S.yaw + (fl.yaw - F.S.yaw) * e; if (k >= 1 && !fl.landed) { fl.landed = true; fsPuff(fl.to, 0xffb050, 12); } }
