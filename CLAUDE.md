@@ -11,7 +11,7 @@ and for any worker a session starts.
 - Run the reach test first (`reach_test` in `council/faces.yaml`; the skill is `.claude/skills/six-faces/`). A
   question the record can answer becomes a position that stands unless he flips it.
 - Board rows are written in the council's home repo, `wendell-britt/six-faces-council`, as rows posted with
-  `board/post_rows.py` that the board-pull Action lands on main. Its `CLAUDE.md` holds the full rule.
+  `board/post_rows.py` that a session lands on main with `python3 board/live_pull.py` (no Action runs since 2026-11-02). Its `AGENTS.md` holds the full rule.
 - A chat reply says what changed and names the new board rows with the link. It ends without a question.
 - A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
   anything.
