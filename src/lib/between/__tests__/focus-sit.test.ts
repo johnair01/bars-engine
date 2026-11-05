@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { emberWarmth, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES, FRAGMENT_ORDER, fragmentFor, hearthRecord } from '../../../../public/between/focus.js'
+import { emberWarmth, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES, FRAGMENT_ORDER, fragmentFor, hearthRecord, CARES, HEARTH_K, careOf, hearthStage, careOffered } from '../../../../public/between/focus.js'
 import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from '../../../../public/between/fragments.js'
 
 // The focus sit at the hearth (council pass integral-octalysis2; his yes on io-focus-sit-look-1, 2026-10-25): the sticks you
@@ -68,5 +68,27 @@ describe('the hearth spirit\'s fragments', () => {
     expect(garden).toMatch(/fsOwn\(\) \? await fsKeep/) // a Between's hearth writes nothing
     const block = garden.slice(garden.indexOf('function fragStart('), garden.indexOf('function fireTouch('))
     expect(block).not.toMatch(/toast\(|of 5|locked|sits/)
+  })
+})
+
+describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
+  it('draws five stages from the cares done, and never falls', () => {
+    expect(CARES).toEqual(['sweep', 'wood', 'log', 'turn'])
+    expect(HEARTH_K).toEqual([0, 0, 0.17, 0.5, 1])
+    expect(hearthStage(0)).toMatchObject({ k: 0, coal: false, woke: 0, alive: false, offer: 'sweep', sit: false })
+    expect(hearthStage(1)).toMatchObject({ k: 0, coal: true, woke: 1, offer: 'wood', sit: false })
+    expect(hearthStage(2)).toMatchObject({ k: 0.17, woke: 2, offer: 'log', sit: true })
+    expect(hearthStage(3)).toMatchObject({ k: 0.5, woke: 3, offer: 'turn', sit: true })
+    expect(hearthStage(4)).toMatchObject({ k: 1, woke: 3, alive: true, offer: null, sit: true })
+    expect(hearthStage(9).care).toBe(4); expect(hearthStage(-2).care).toBe(0); expect(hearthStage(undefined).care).toBe(0)
+  })
+  it('reads a fire already lit as stage 4 and a new home as 0', () => {
+    expect(careOf({})).toBe(0); expect(careOf(null)).toBe(0)
+    expect(careOf({ minute: { ember: 1 } })).toBe(4); expect(careOf({ oriented: 1 })).toBe(4)
+    expect(careOf({ hearth: { care: 2 } })).toBe(2); expect(careOf({ hearth: { care: 0 }, minute: { ember: 1 } })).toBe(0)
+  })
+  it('offers one care a visit', () => {
+    expect(careOffered(0, false)).toBe('sweep'); expect(careOffered(0, true)).toBe(null)
+    expect(careOffered(3, false)).toBe('turn'); expect(careOffered(4, false)).toBe(null)
   })
 })

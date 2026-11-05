@@ -442,9 +442,11 @@ const HEARTH_CHANNELS = ['earth', 'fire', 'wood', 'metal', 'water']
 function hearthOk(h: unknown): boolean {
   if (h == null) return true
   if (!isObj(h)) return false
-  if (Object.keys(h).some(k => !['sits', 'at', 'told'].includes(k))) return false
+  if (Object.keys(h).some(k => !['sits', 'at', 'told', 'care', 'careAt'].includes(k))) return false
   if (h.sits != null && !(isNum(h.sits) && Number.isInteger(h.sits) && h.sits >= 0 && h.sits <= 1_000_000)) return false
   if (h.at != null && !isNum(h.at)) return false
+  if (h.care != null && !(isNum(h.care) && Number.isInteger(h.care) && h.care >= 0 && h.care <= 4)) return false
+  if (h.careAt != null && !isNum(h.careAt)) return false
   if (h.told != null) {
     if (!isObj(h.told)) return false
     for (const [c, v] of Object.entries(h.told)) if (!HEARTH_CHANNELS.includes(c) || !isNum(v)) return false

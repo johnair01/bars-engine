@@ -440,6 +440,7 @@ export function buildHollow(scene, opts = {}) {
   } // the hollow's dais, fence and boulders
 
   /* ---------- the hearth, its fire, and shelves of pots ---------- */
+  const hearthLogs = [];
   const hearth = new THREE.Group(); hearth.position.set(HEARTH.x, 0, HEARTH.z); hearth.rotation.y = Math.atan2(-HEARTH.x, -HEARTH.z); root.add(hearth);
   if (nook) hearth.scale.setScalar(0.85);
   {
@@ -451,7 +452,7 @@ export function buildHollow(scene, opts = {}) {
     stone(1.3, 1.5, 0.3, 0, 0.75, -0.36);                                         // back
     stone(2.2, 0.12, 1.3, 0, 0.06, 0.15);                                         // hearthstone
     add(new THREE.PlaneGeometry(1.2, 1.4), M.soot, 0, 0.78, -0.2, hearth);
-    for (const [x, rz] of [[-0.18, 0.3], [0.16, -0.25], [0, 0]]) { const l = add(new THREE.CylinderGeometry(0.07, 0.08, 0.8, 7), M.darkWood, x, 0.2 + (x === 0 ? 0.1 : 0), 0, hearth); l.rotation.set(Math.PI / 2, 0, rz); }
+    for (const [x, rz] of [[-0.18, 0.3], [0.16, -0.25], [0, 0]]) { const l = add(new THREE.CylinderGeometry(0.07, 0.08, 0.8, 7), M.darkWood, x, 0.2 + (x === 0 ? 0.1 : 0), 0, hearth); l.rotation.set(Math.PI / 2, 0, rz); l.userData.keep = true; hearthLogs.push(l); } // kept out of the merge: the chapter's stage shows or hides them
     // the fire: stacked glowing cones that flicker
     const fireMat = c => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }); // 0.5, not 0.85: seven overlapping additive cones summed to white in the low sit view (focus-sit DIFF, fire clipping)
     for (let i = 0; i < 7; i++) {
@@ -711,6 +712,7 @@ export function buildHollow(scene, opts = {}) {
       seg.set(cam, focus);
       for (const m of roots) { let hit = false; for (const q of m.userData.samples) { seg.closestPointToPoint(q, true, tmp); if (tmp.distanceTo(q) < m.userData.rad + 0.35) { hit = true; break; } } m.visible = !hit; }
     }
+    if (stage) stage.update(t, dt, cam);
     // fire flicker, and the light it throws
     const fl = 0.75 + Math.sin(t * 11.3) * 0.08 + Math.sin(t * 23.7) * 0.06 + Math.sin(t * 5.1) * 0.08;
     hearthFx.k += (hearthFx.want - hearthFx.k) * Math.min(1, dt * (hearthFx.want > hearthFx.k ? 0.9 : 3));
@@ -750,6 +752,7 @@ export function buildHollow(scene, opts = {}) {
   for (const f of anim.flames) f.m.userData.keep = true;
   cushions.forEach(c => c.userData.keep = true);
   mergeStatic(root);
+  const stage = nook ? buildHearthStage(hearth, hearthLogs, anim, hearthFx, emberMesh) : null; // the first chapter's hearth (spec focus-sit-world-growth); a hollow two share has none
 
   /* ---------- the room kit's spots (public/calrunia/room-kit.js): a slot for what is set there, and a glowing ring ----------
      Built after the merge, so what is set on a spot can come and go. A hook carries its own cord and a light that is dark until
@@ -785,8 +788,106 @@ export function buildHollow(scene, opts = {}) {
     ? { shell: "nook", portal: { x: Math.sin(1.35) * 2.9, z: -Math.cos(1.35) * 2.9, yaw: -1.35 }, spawn: [[1.55, 1.55], [-1.55, 1.55]], window: windowAt }
     : { shell: "hollow", portal: { x: 1.3, z: -1.15, yaw: -0.3 }, spawn: [[-0.8, 3.1], [0.8, 3.1]], window: windowAt };
   // what a room style sets (public/calrunia/room-styles.js applyStyle); values only. `spots` is what applyRoom sets.
-  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots, hearth: hearthFx };
+  const handles = { stage, sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots, hearth: hearthFx };
   return { root, update, cushions, handles, layout };
+}
+
+/* ---------- the hearth's chapter (spec focus-sit-world-growth FR-003 to FR-005, FR-012, FR-016; round 3's make/scenes.js) ----------
+   The nook's hearth is drawn at one of five stages, a pure function of the cares done (focus.js hearthStage): 0 the hearth empty
+   under unswept ash with three spirits asleep in the dark under the roof; 1 a coal under swept ash, one spirit down at the hearth's
+   left; 2 sticks laid and a small low flame, a second spirit at the right; 3 a log on the fire and half a fire, the third spirit in
+   the firebox; 4 the fire as built, the three spirits gone into it and two eyes in it. `setCare(n, jump)` sets it; each part eases
+   toward its stage (jump: at once, for reduced motion and for loading). `offer` makes the object to tend glow faintly. A care's
+   act plays through the same easing: the sweep fades the ash, the wood and the log travel in, the turn lets the spirits sink.
+   Positions are in the hearth's own frame (the nook scales it by 0.85). */
+const STAGE_HOMES = [[-0.55, 2.45, 0.7], [0.55, 2.25, 0.7], [0.05, 2.75, 0.6]];   // asleep up in the dark above the mantel
+const STAGE_NEAR = [[-0.62, 0.42, 0.6], [0.8, 0.55, 0.6], [-0.35, 1.25, 0.55]];  // where each stays once woken
+const CARE_AT = [[0, 0.16, 0.4], [1.15, 0.1, 0.62], [-1.15, 0.12, 0.62], [0.02, 0.32, 0.02]]; // the object each care asks you to touch
+const FIRE_K = [0, 0, 0.17, 0.5, 1];                                              // the fire's strength per stage (focus.js HEARTH_K)
+function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
+  const G = new THREE.Group(); G.userData.keep = true; hearth.add(G);
+  const tex = canvasTex(64, 64, (c, w) => { const g = c.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, "rgba(255,255,255,.55)"); g.addColorStop(0.6, "rgba(255,255,255,.12)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, w, w); });
+  const sprite = (size, color, parent = G) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); m.scale.set(size, size, 1); parent.add(m); return m; };
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  // ash: a thin spill over the hearthstone unswept, a small heap to one side swept; a bed on the firebox floor either way
+  const ASH = new THREE.MeshStandardMaterial({ color: 0x8a8580, roughness: 1 }), ASH_D = new THREE.MeshStandardMaterial({ color: 0x5a5552, roughness: 1 });
+  const ashBed = new THREE.Group(), ashFilm = new THREE.Group(), ashHeap = new THREE.Group(); G.add(ashBed, ashFilm, ashHeap);
+  const lump = (mat, x, y, z, sx, sy, sz, to) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); to.add(m); return m; };
+  lump(ASH, 0, 0.12, 0, 0.55, 0.07, 0.32, ashBed); lump(ASH, -0.15, 0.15, -0.05, 0.25, 0.06, 0.16, ashBed); lump(ASH_D, 0.12, 0.18, 0.04, 0.07, 0.035, 0.05, ashBed); lump(ASH_D, -0.2, 0.18, 0, 0.05, 0.03, 0.04, ashBed);
+  const filmMats = [];
+  { let q = 3; const r = () => (q = (q * 16807) % 2147483647) / 2147483647;
+    const film = (x, z, rx, rz, op) => { const mat = new THREE.MeshStandardMaterial({ color: 0xa29d96, roughness: 1, transparent: true, opacity: op, depthWrite: false }); mat.userData.op = op; filmMats.push(mat); const m = new THREE.Mesh(new THREE.CircleGeometry(1, 16), mat); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.135, z); m.scale.set(rx, rz, 1); ashFilm.add(m); };
+    film(0, 0.42, 0.7, 0.22, 0.85); for (let i = 0; i < 6; i++) film((r() - 0.5) * 1.4, 0.45 + r() * 0.3, 0.08 + r() * 0.12, 0.05 + r() * 0.08, 0.7); }
+  lump(ASH, 0.78, 0.13, 0.5, 0.14, 0.05, 0.1, ashHeap); lump(ASH_D, 0.7, 0.13, 0.56, 0.06, 0.03, 0.05, ashHeap);
+  // sticks and a log: split sticks with pale ends
+  const STICK = new THREE.MeshStandardMaterial({ color: 0x7a5636, roughness: 0.9 }), STICK_END = new THREE.MeshStandardMaterial({ color: 0xc9a27a, roughness: 0.9 });
+  const stick = (parent, a, b, rad) => { const d = b.clone().sub(a), L = d.length(), g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.CylinderGeometry(rad, rad * 1.1, L, 7), STICK));
+    for (const sg of [-1, 1]) { const e = new THREE.Mesh(new THREE.CircleGeometry(rad * 1.02, 7), STICK_END); e.position.y = sg * L / 2; e.rotation.x = -sg * Math.PI / 2; g.add(e); }
+    g.position.copy(a).add(b).multiplyScalar(0.5); g.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); parent.add(g); return g; };
+  const sticks = new THREE.Group(); G.add(sticks);
+  [[V(-0.32, 0.2, 0.08), V(0.3, 0.22, -0.06)], [V(-0.28, 0.24, -0.08), V(0.34, 0.2, 0.1)], [V(-0.05, 0.3, -0.2), V(0.02, 0.27, 0.22)], [V(-0.2, 0.33, 0.12), V(0.22, 0.34, -0.12)]].forEach(([a, b]) => stick(sticks, a, b, 0.045));
+  const logBeside = new THREE.Group(); G.add(logBeside); { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.8, 7), logs[0].material); l.rotation.set(Math.PI / 2, 0, 0.2); logBeside.add(l); }
+  // glows: the coal under the swept ash, the care's own faint glow, the fire's two eyes
+  const coal = sprite(0.55, 0xff6a20), coalCore = sprite(0.18, 0xffd090); coal.position.set(0.02, 0.2, 0.1); coalCore.position.copy(coal.position);
+  const careGlow = sprite(0.5, 0xffd49a);
+  const eyes = [-1, 1].map(sg => { const e = sprite(0.075, 0xfff0c8); e.position.set(0.06 * sg, 0.95, 0.12); return e; });
+  // the three spirits: a cool dim glow asleep, a warm one with two small eyes awake, in a frame turned to the world so their eyes face the camera
+  const SPIRIT = new THREE.Group(); SPIRIT.userData.keep = true; hearth.parent.add(SPIRIT);
+  const HS = hearth.scale.x, RY = hearth.rotation.y, HP = hearth.position;
+  const toWorld = a => V(a[0] * HS, a[1] * HS, a[2] * HS).applyAxisAngle(V(0, 1, 0), RY).add(HP);
+  const spirits = [0, 1, 2].map(i => { const g = new THREE.Group(); SPIRIT.add(g);
+    const cool = sprite(0.56, 0x9ab8ff, g), coolC = sprite(0.2, 0xdde8ff, g), warm = sprite(0.7, 0xffb060, g), warmC = sprite(0.25, 0xffe2b0, g), eye = [sprite(0.1, 0xffffff, g), sprite(0.1, 0xffffff, g)];
+    for (const m of [cool, coolC]) m.material.depthTest = false; // asleep in the dark under the roof, drawn over its beams
+    const home = toWorld(STAGE_HOMES[i]), near = toWorld(STAGE_NEAR[i]); g.position.copy(home);
+    return { g, cool, coolC, warm, warmC, eye, home, near, k: 0, out: 0 }; });
+  const st = { care: 0, sweep: 0, wood: 0, log: 0, turn: 0, goal: { sweep: 0, wood: 0, log: 0, turn: 0 } };
+  const ease = (cur, want, dt, rate) => { const d = want - cur; return Math.abs(d) < 0.002 ? want : cur + d * Math.min(1, dt * rate); };
+  const sm = k => k * k * (3 - 2 * k);
+  const API = {
+    care: 0, offer: false,
+    /* The hearth at `care` cares done. jump = at once (loading, reduced motion); otherwise each part eases there (a care's act). */
+    setCare(n, jump = false) {
+      const c = Math.max(0, Math.min(4, Math.floor(+n || 0))); st.care = c; API.care = c;
+      st.goal = { sweep: c >= 1 ? 1 : 0, wood: c >= 2 ? 1 : 0, log: c >= 3 ? 1 : 0, turn: c >= 4 ? 1 : 0 };
+      if (jump) { Object.assign(st, st.goal); for (const sp of spirits) { sp.k = c > spirits.indexOf(sp) && c <= 3 ? 1 : 0; sp.out = c >= 4 ? 1 : 0; } fx.k = FIRE_K[c]; }
+      fx.want = FIRE_K[c]; fx.ember = 0;
+    },
+    /* Where the care to tend stands in the world (to touch), or null once the last is done. */
+    careSpot(c = st.care) { return c < 4 ? toWorld(CARE_AT[c]) : null; },
+    update(t, dt, cam) {
+      const c = st.care, g = st.goal;
+      st.sweep = ease(st.sweep, g.sweep, dt, 0.9); st.wood = ease(st.wood, g.wood, dt, 0.9); st.log = ease(st.log, g.log, dt, 0.9); st.turn = ease(st.turn, g.turn, dt, 0.7);
+      ashBed.visible = c <= 3; ashFilm.visible = st.sweep < 0.99; ashHeap.visible = st.sweep > 0.01 && c <= 3;
+      for (const m of filmMats) m.opacity = m.userData.op * (1 - st.sweep);
+      ashHeap.scale.setScalar(0.2 + 0.8 * st.sweep);
+      // wood: the bundle beside the hearth until it is laid, then crossed in the firebox; the log beside until it is fed to the fire
+      const wk = sm(st.wood), lk = sm(st.log);
+      sticks.visible = c >= 1 && c <= 2; sticks.position.set(1.15 * (1 - wk), 0.02 * (1 - wk) + Math.sin(wk * Math.PI) * 0.35, 0.5 * (1 - wk)); sticks.scale.setScalar(1 - 0.35 * (1 - wk));
+      logBeside.visible = c === 2 || (c === 3 && st.log < 0.99); logBeside.position.set(-1.15 * (1 - lk), 0.1 + Math.sin(lk * Math.PI) * 0.35, 0.62 * (1 - lk) - 0.1 * lk);
+      for (const l of logs) l.visible = c >= 3 && st.log > 0.8; // from the third care on, the fire's own logs are the log the player fed it
+      emberMesh.visible = c >= 3; // the built ember stays a glow below while the fire is out or a coal
+      const flick = 0.85 + Math.sin(t * 2.4) * 0.15, coalK = st.sweep * (1 - Math.min(1, fx.k * 3));
+      coal.material.opacity = 0.75 * coalK * flick; coalCore.material.opacity = 0.9 * coalK * flick;
+      // the care waiting is the drawn object, glowing faintly; nothing else says so
+      const spot = c < 4 ? CARE_AT[c] : null, show = API.offer && !!spot;
+      careGlow.visible = show; if (show) { careGlow.position.set(spot[0], spot[1] + 0.12, spot[2]); careGlow.material.opacity = 0.3 + 0.12 * Math.sin(t * 2.2); }
+      for (const e of eyes) e.material.opacity = 0.9 * st.turn * ((t % 5.3) < 0.12 ? 0.1 : 1); // the hearth spirit's eyes in the fire, the chapter's end
+      if (anim.flies) anim.flies.mat.visible = c >= 4 && st.turn > 0.5; // the room's fireflies come out with the last care
+      const toCam = cam ? V(cam.x - HP.x, 0, cam.z - HP.z).normalize() : V(0, 0, 1), side = V(-toCam.z, 0, toCam.x);
+      spirits.forEach((sp, i) => {
+        sp.k = ease(sp.k, c > i && c <= 3 ? 1 : 0, dt, 0.7); sp.out = ease(sp.out, c >= 4 ? 1 : 0, dt, 0.6);
+        sp.g.position.copy(sp.home).lerp(sp.near, sm(sp.k));
+        if (sp.out > 0) sp.g.position.lerp(toWorld([0, 0.55, 0.05]), sp.out);
+        sp.g.position.y += Math.sin(t * 0.9 + i * 2) * 0.02;
+        const gone = 1 - sp.out, awake = sp.k * gone, blink = ((t + i * 1.7) % 5.3) < 0.12 ? 0.1 : 1;
+        sp.cool.material.opacity = 0.45 * (1 - sp.k) * gone; sp.coolC.material.opacity = 0.6 * (1 - sp.k) * gone;
+        sp.warm.material.opacity = 0.6 * awake; sp.warmC.material.opacity = 0.75 * awake;
+        sp.eye.forEach((e, k) => { e.position.copy(toCam).multiplyScalar(0.15).addScaledVector(side, (k ? 1 : -1) * 0.1).add(V(0, 0.06, 0)); e.material.opacity = awake * blink; });
+      });
+    },
+  };
+  API.setCare(0, true);
+  return API;
 }
 
 /* ---------- the room kit's items, made in code (room-kit.js ITEMS: `make`) ----------
