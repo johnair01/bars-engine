@@ -31,6 +31,7 @@ import type {
 import { GAME_MASTER_FACES, FACE_META } from './types'
 import { getMovesForWaveStage } from './move-assignment'
 import { getFacesForHexagram } from './iching-faces'
+import { CHANNEL_KEYWORDS, SHADOW_VOICE_PATTERNS } from './lexicon'
 
 /** Campaign → action type for the commitment moment. Default: donation (fundraiser). */
 function getActionTypeForCampaign(campaignId?: string): ActionType {
@@ -80,24 +81,6 @@ const WAVE_LABELS: Record<PersonalMoveType, string> = {
 }
 
 const ALL_WAVE_MOVES: PersonalMoveType[] = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp']
-
-const CHANNEL_KEYWORDS: Record<EmotionalChannel, string[]> = {
-  Fear: ['anxious', 'anxiety', 'scared', 'scary', 'worried', 'worry', 'afraid', 'fear', 'nervous'],
-  Anger: ['frustrated', 'frustration', 'angry', 'anger', 'mad', 'rage', 'irritated'],
-  Sadness: ['sad', 'grief', 'loss', 'sorrow', 'melancholy', 'disappointed'],
-  Joy: ['joyful', 'joy', 'happy', 'happiness', 'excited', 'bliss', 'triumphant', 'poignant'],
-  Neutrality: ['neutral', 'calm', 'indifferent', 'detached'],
-}
-
-// Use /i only (no /g) so pattern.test() is deterministic across multiple compileQuest calls
-const SHADOW_VOICE_PATTERNS = [
-  { pattern: /not\s+ready/i, label: "I'm not ready" },
-  { pattern: /not\s+worthy/i, label: "I'm not worthy" },
-  { pattern: /not\s+good\s+enough/i, label: "I'm not good enough" },
-  { pattern: /not\s+capable/i, label: "I'm not capable" },
-  { pattern: /insignificant/i, label: "I'm insignificant" },
-  { pattern: /don'?t\s+belong/i, label: "I don't belong" },
-]
 
 function toText(value: string | string[]): string {
   return Array.isArray(value) ? value.join(' ') : (value ?? '')

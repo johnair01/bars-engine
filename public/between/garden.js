@@ -6,6 +6,7 @@ import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
 import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 /* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
+import { COPY as DECK_COPY, applyCopy as applyDeckCopy } from "./friendcraft/deck.js";
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
@@ -509,8 +510,9 @@ function placeLabel(el, pos) {
   tmpV.copy(pos).project(camera);
   if (tmpV.z > 1 || tmpV.z < -1) { el.style.display = "none"; return; }
   el.style.display = "";
-  el.style.left = ((tmpV.x + 1) / 2 * innerWidth) + "px";
-  el.style.top = ((1 - tmpV.y) / 2 * innerHeight) + "px";
+  const x = (tmpV.x + 1) / 2 * innerWidth, y = (1 - tmpV.y) / 2 * innerHeight;
+  el.style.left = x + "px"; el.style.top = y + "px";
+  if (voiceMod && !voiceMod.inFrame(el, x, y)) el.style.display = "none"; // a name half off the glass is not drawn (hp1-labels-in-frame)
 }
 
 /* ---------- the Between (or the spark): the creature from the concept views (creature.js) ---------- */
@@ -585,7 +587,7 @@ const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands furth
 };
 function roomNow() {
   const g = view().g;
-  return { shell: builtShell, style: (g && g.style) || null, placed: (g ? g.room && g.room.placed : localPlaced) || {} };
+  return { shell: builtShell, style: stylePreview || (g && g.style) || null, placed: (g ? g.room && g.room.placed : localPlaced) || {} };
 }
 function myEarned() {
   if (SATCHEL_ALL) return ITEM_ORDER.filter(id => !ITEMS[id].shelf);
@@ -1137,6 +1139,7 @@ function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
    "Pour a cup" is offered only to someone sat within NEAR of the kettle (tea-look-2, his note 2026-10-29: "the cup is offering
    when they aren't near the teapot"). No qi, no shelf and no music yet: someone who has worked through nothing can sit and pour. */
 let tea = null, teaRoom = null, teaKey = "", teaWas = false, teaSkipped = false, teaK = 0;
+let winTurn = null, winK = 0, stylePreview = null; // the window turn: { was, at } while the room's look is being chosen at the opening
 function teaNow() {
   const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return null;
   if (!tea) tea = buildTea({ THREE, scene, seat: s, groundY });
@@ -1662,6 +1665,20 @@ function frameBody() {
   /* Tea in your hand (tea-cup-look-3, his note 2026-10-29: when you sit to drink, the camera should move so you see yourself
      drinking): the view comes round in front of you, a little to your left and level with your face, so the cup coming up to
      your mouth, your hand on it and the kettle on its stone are all in sight. It eases back behind you when you stand. */
+  /* The window turn (homeroom-poster-1, window-turn): choosing how the homeroom looks turns the camera to the opening, so
+     the weather is chosen where weather is seen. It eases there and back like the tea view. */
+  winK += ((winTurn ? 1 : 0) - winK) * Math.min(1, dt * 2.4);
+  if (winK < 0.002 && !winTurn) winK = 0;
+  if (winK > 0 && hollow && inNook()) {
+    const w = hollow.layout.window, tall = innerWidth < innerHeight, inX = -w.x, inZ = -w.z, n = Math.hypot(inX, inZ) || 1;
+    const ix = inX / n, iz = inZ / n, rx = -iz, rz = ix; // in from the opening, and to its right as you face it
+    // to the left of the opening and a little below its middle, so the opening fills the middle of the frame, the headline
+    // has the dark wall above it and the seals the floor band under the sill (window.__hpWin tunes it for a still)
+    const back = 2.6, side = tall ? -1.3 : -0.9, W = window.__hpWin || {};
+    const p = new THREE.Vector3(w.x + ix * (W.back ?? back) + rx * (W.side ?? side), W.y ?? (tall ? 1.15 : 1.2), w.z + iz * (W.back ?? back) + rz * (W.side ?? side));
+    const f = new THREE.Vector3(w.x, w.y + (W.fy ?? (tall ? -0.3 : -0.1)), w.z);
+    const k = winK * winK * (3 - 2 * winK); cp.lerp(p, k); focus.lerp(f, k);
+  }
   const teaOn = !!(tea && tea.holding() && meState.sitting && seatViewAt && !mirrorOn);
   teaK += ((teaOn ? 1 : 0) - teaK) * Math.min(1, dt * 1.1);
   if (teaK < 0.002 && !teaOn) teaK = 0;
@@ -1782,7 +1799,7 @@ function refreshHud() {
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
   else if (isHome(g) && satchelOpen && minuteOn()) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap the mirror in your satchel, then a glowing spot on the floor.";
   else if (minuteOn()) hintText = minuteHint();
-  else if (isHome(g) && mclock.beat === "open") hintText = "The doorway is open. Choose where you want to go when you are ready. A blank scroll waits on your shelf.";
+  else if (isHome(g) && mclock.beat === "open") hintText = bookWaits() ? DECK_COPY.open : "The doorway is open. Choose where you want to go when you are ready. A blank scroll waits on your shelf.";
   else if (isHome(g) && portalTo && !portalOpen()) hintText = `${portalTo.name ? portalTo.name + " invited you" : "You were invited"} to a room. The doorway opens at the end of your first minute here.`;
   else if (isHome(g) && portalOpen()) hintText = "The doorway by the mirror is open. Walk up to choose a place.";
   else if (isHome(g) && satchelOpen) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap an item in your satchel, then a glowing spot that fits it. Tap a placed item to put it back.";
@@ -2286,7 +2303,7 @@ function hmTick(t, dt) {
   const el = t - h.t0, P = hmPouchAt(F), ending = !hm;
   if (!ending && el > 4 && !h.said.first) { if (EMBER_DEMO || !ls.get(HM_FIRST)) { ls.set(HM_FIRST, 1); hmSay("first"); } else h.said.first = true; } // first time only (a demo preview shows it each time)
   // the satchel loosens a little before the first ember rises, and closes again once none is in flight
-  const open = h.motes.some(m => m.state === "rise" || m.state === "sink" || (m.state === "wait" && t > m.riseAt - 0.8));
+  const open = h.motes.some(m => m.state === "rise" || m.state === "sink" || (m.state === "wait" && t > m.riseAt - 0.8)) || !!(h.fs && h.fs.mote && t - h.fs.mote.t0 > 0.6);
   hmPouch.visible = true; hmPouch.position.copy(P); hmPouch.rotation.y = F.S.yaw;
   const u = hmPouch.userData; u.k = (u.k || 0) + ((open ? 1 : 0) - (u.k || 0)) * Math.min(1, dt * 3);
   u.cord.scale.setScalar(1 + u.k * 0.5); u.neck.scale.set(1 + u.k * 0.45, 1, 1 + u.k * 0.45); u.glow.material.opacity = u.k * 0.55;
@@ -2491,7 +2508,11 @@ function fsTick(t, dt, h, F) {
   }
   for (const fl of fs.flies) if (fl.turn) { const k = Math.min(1, (t - fl.turn.t0) / 1.4); fl.m.rotation.y = fl.turn.from + fl.turn.by * k * k * (3 - 2 * k); fl.m.rotation.x = Math.sin(k * Math.PI) * 0.15; if (k >= 1) fl.turn = null; }
   // the mote of a finished sit: from the ember down into the satchel
-  if (fs.mote) { const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6); if (k > 0) { const e = k * k; fs.mote.g.position.lerpVectors(fs.mote.from, hmPouchAt(F).setY(hmPouchAt(F).y + 0.1), e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.1; fs.mote.g.scale.setScalar(0.09 * (1 - 0.75 * e)); } else fs.mote.g.position.copy(fs.mote.from); if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; } }
+  if (fs.mote) { // lands on the satchel's open mouth, which the low sit view shows lower left of the fire; it keeps its size and flares as it drops in, so it never shrinks to a smear
+    const k = Math.min(1, (t - fs.mote.t0 - 0.8) / 1.6), mouth = hmPouchAt(F).setY(hmPouchAt(F).y + 0.13);
+    if (k > 0) { const e = k * k * (3 - 2 * k); fs.mote.g.position.lerpVectors(fs.mote.from, mouth, e); fs.mote.g.position.y += Math.sin(k * Math.PI) * 0.18; fs.mote.g.scale.setScalar(0.09 - 0.04 * e + 0.05 * Math.max(0, (k - 0.85) / 0.15)); fs.mote.g.material.opacity = 0.9 * (k > 0.93 ? (1 - k) / 0.07 : 1); } else fs.mote.g.position.copy(fs.mote.from);
+    if (k >= 1) { hmGroup.remove(fs.mote.g); fs.mote = null; }
+  }
 }
 /* The laid sticks burn down slowly once nobody is laying: they sink into the fire and go. */
 function fsBurn(dt) { for (const s of fsLaid.children.slice()) { if (hm && hm.fs && hm.fs.flies.some(f => f.m === s)) continue; s.scale.multiplyScalar(Math.pow(0.9, dt)); s.position.y -= dt * 0.004; if (s.scale.x < 0.35) fsLaid.remove(s); } }
@@ -2540,10 +2561,13 @@ function openSheet(name, arg) {
   if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
   if (name === "invite" && g && !isHome(g) && isMember(g) && members(g).length >= 2 && arg !== "list") { openPaper("write", { room: gardenId }); return; } // a scroll, not a form (Still B)
   if (name === "hope") caption(MINUTE_CAPTIONS.hope);
+  if (name === "style" && g && isHome(g) && inNook() && hollow && window.__between.voice) { if (sheetName) closeSheet(); windowTurn(); return; }
+  if (winTurn) windowDown();
   sheetName = name; sheetArg = arg; setMirror(name === "look" || name === "hope"); renderSheet();
 }
 function closeSheet() {
   const wasLook = sheetName === "look" || sheetName === "hope";
+  if (window.__between && window.__between.voice) window.__between.voice.quiet("sheet");
   sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud"); document.body.classList.toggle("seatedmoment", !!hm);
   if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
@@ -2633,6 +2657,7 @@ function renderSheet() {
   const seated = sheetName === "hearth" && seatedAtHearth();
   sh.classList.toggle("seated", seated);
   sh.classList.toggle("dark", seated || ["look", "checkin", "spirits", "hope"].includes(sheetName));
+  if (window.__between.voice) window.__between.voice.say({ hold: true }, "sheet", 4); // what he opened holds the screen alone (hp1-one-owner)
   sh.hidden = false; $("#scrim").hidden = seated || sheetName === "look" || sheetName === "checkin" || sheetName === "hope";
   document.body.classList.toggle("quiethud", sheetName === "checkin");
   document.body.classList.toggle("seatedmoment", seated || !!hm); // the room's own buttons step aside; the strip carries Stand up // the room's own buttons step aside while you walk it
@@ -2864,6 +2889,49 @@ function styleSheet(g) {
     <p class="small muted">${isHome(g) ? "The light and weather of your own room." : shared ? "The light and weather of the place you share. It changes when you both say yes: choose one to ask " + esc(nameOf(o, g)) + "." : "The light and weather of the place. Once they join, a change waits for both of you."}</p>
     ${askLine}
     <div class="choice">${ROOM_STYLES.map(st => { const on = styleOf(g.style).id === st.id; return `<button type="button" class="${on ? "on" : ""}" aria-pressed="${on}" ${on && shared ? "disabled" : ""} data-act="setStyle" data-id="${st.id}"><b>${esc(st.name)}</b>${esc(shared && !on ? "Ask for this. " : "")}${esc(st.line)}</button>`; }).join("")}</div></div>`;
+}
+/* The window turn (Six-faces-council homeroom-poster-1; his A on hp1-look-1): in the homeroom, "How your homeroom looks"
+   is not a sheet. The camera turns to the opening, the headline says what this is, and each weather is a seal in the
+   floor band. Touching one changes the sky in the opening at once (a preview, nothing saved); touching it again keeps it.
+   Put it down (or Escape, or a swipe down) brings the old weather back and turns the camera home. It speaks through the
+   one screen owner as "sheet" at rank 4, so the waiting letter and the map stand wait and come back afterwards. */
+const STYLE_EL = { "dusk-hollow": "earth", moonlit: "metal", "spring-morning": "wood", "ember-rain": "fire" };
+function windowTurn() {
+  const g = view().g; if (!g) return;
+  winTurn = { was: styleOf(g.style).id };
+  stylePreview = null; refresh(); windowSay();
+}
+function windowSay(pick) {
+  const vo = window.__between.voice; if (!vo || !winTurn) return;
+  const now = winTurn.was, shown = stylePreview || now, st = styleOf(shown);
+  const sub = shown === now ? "The light and weather of your own room. Touch one to see it."
+    : `${st.name}. Touch it again to keep it, or put it down for ${styleOf(now).name.toLowerCase()}.`;
+  vo.say({ head: "How your homeroom looks", sub, down: { on: windowDown }, subject: windowBox,
+    actions: ROOM_STYLES.map(x => ({ label: x.name, el: STYLE_EL[x.id] || "earth", sub: x.id === now ? "now" : x.id === shown ? "touch again to keep" : "",
+      on: () => windowTouch(x.id) })) }, "sheet", 4);
+}
+async function windowTouch(id) {
+  if (!winTurn) return;
+  const shown = stylePreview || winTurn.was;
+  if (id !== shown) { stylePreview = id === winTurn.was ? null : id; refresh(); windowSay(); return; }
+  if (id === winTurn.was) { windowDown(); return; } // the weather it already has: nothing to keep
+  const st = styleOf(id);
+  try { await op("garden/main", "update", { style: st.id }); } catch (e) { toast("The room could not keep it. It stays as it was."); windowDown(); return; }
+  winTurn = null; stylePreview = null; refresh();
+  window.__between.voice.quiet("sheet"); toast(st.name + ".");
+}
+function windowDown() {
+  if (!winTurn) return;
+  winTurn = null; stylePreview = null; refresh();
+  if (window.__between.voice) window.__between.voice.quiet("sheet");
+}
+/* the opening on the glass: what the camera looks at, never covered by words */
+function windowBox() {
+  if (!hollow) return null;
+  const w = hollow.layout.window, a = w.clone().setY(w.y - 0.6), b = w.clone().setY(w.y + 0.6);
+  const pa = a.project(camera), pb = b.project(camera);
+  const y0 = (1 - pa.y) / 2 * innerHeight, y1 = (1 - pb.y) / 2 * innerHeight, x = (pa.x + 1) / 2 * innerWidth, h = Math.abs(y0 - y1);
+  return { l: x - h * 0.4, r: x + h * 0.4, t: Math.min(y0, y1), b: Math.max(y0, y1) };
 }
 const ANSWER_TEXT = { yes: "said yes", later: "asked for another time", no: "said no" };
 function inviteSheet(g) {
@@ -3379,7 +3447,12 @@ async function sparkUrl(id) {
   let token = id === gardenId ? myInvite : null;
   if (!token) { const j = await api("/api/between/" + id + "/poll", {}); token = j.invite || null; }
   if (!token) throw fail("unavailable", "no link");
-  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token);
+  return inviteLink(id, token);
+}
+/* A spark's invitation link. A Friendcraft steward's carries `&game=friendcraft`, which the friend's page turns into one
+   enrolment call (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003). Every other link is unchanged. */
+function inviteLink(id, token) {
+  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token) + (list && list.steward ? "&game=friendcraft" : "");
 }
 async function sparkLink(to, note) {
   const link = await sparkUrl(to.id);
@@ -3476,7 +3549,7 @@ function minuteHint() {
   const beat = mclock.beat, st = mstate();
   if (!beat) return "";
   if (beat === "hope" && !mirrorSpot) return "Your mirror is still in your satchel. Set it down to look into it, or leave it for later.";
-  return MINUTE_PROMPTS[beat] || "";
+  return beat === "open" && bookWaits() ? DECK_COPY.open : MINUTE_PROMPTS[beat] || "";
 }
 /* Your shelf, tapped: the blank scroll to write on, a sealed one to open, a keepsake to read again. */
 function shelfTap(kind, i) {
@@ -3643,7 +3716,7 @@ document.addEventListener("click", async ev => {
     else if (a === "endNo" || a === "endWithdraw") await op("garden/main", "update", { ending: null });
     else if (a === "copy") await takeCopy();
     else if (a === "inviteLink") {
-      const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(gardenId) + "&invite=" + encodeURIComponent(myInvite);
+      const link = inviteLink(gardenId, myInvite);
       try { await navigator.clipboard.writeText(link); toast("The invitation link is on your clipboard."); }
       catch { window.prompt("Copy the invitation link:", link); }
     }
@@ -3682,7 +3755,7 @@ document.addEventListener("click", async ev => {
     }
     else if (a === "invBack") { await op("garden/main", "update", { invitations: { [id]: null } }); renderSheet(); }
     else if (a === "joinShare" || a === "joinCopy") {
-      const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(gardenId) + "&invite=" + encodeURIComponent(myInvite);
+      const link = inviteLink(gardenId, myInvite);
       const note = (($("#jNote") || {}).value || "").trim();
       const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
       if (a === "joinShare") { try { await navigator.share({ title: "The Between", text }); } catch {} }
@@ -3772,6 +3845,31 @@ addEventListener("keydown", e => { if (e.key === "Escape" && sheetName && (sheet
 
 /* ---------- the homeroom's private doc and the room list ---------- */
 const homePath = () => "data/users/" + me + "/home";
+/* The friend's own deck: a private doc of its own beside `home` (rules.ts deckWrite), so the hope told at the mirror and the
+   goals a friend means to share never sit in one record (Six-faces-council spec .specify/specs/friendcraft-deck FR-004). */
+let myDeck = {};
+const setDeck = doc => { myDeck = doc && typeof doc === "object" ? { ...doc } : {}; };
+const deckPath = () => "data/users/" + me + "/deck";
+async function deckOp(data) {
+  if (!homeId) throw fail("invalid_argument", "no homeroom");
+  const j = await api("/api/between/" + homeId + "/doc", { path: deckPath(), op: "update", data });
+  setDeck(j.doc); refresh();
+}
+const friendcraftOn = () => !!(list && (list.games || []).includes("friendcraft"));
+const deckEmpty = () => !Object.values(myDeck.goals || {}).some(g => g && g.text);
+/* The first minute's last line names the book, for a friend enrolled in Friendcraft with an empty deck (FR-006). */
+const bookWaits = () => friendcraftOn() && deckEmpty();
+/* The link's &game=friendcraft: one enrolment call, once, on load, for a steward's spark link (FR-003). The page keeps the
+   game in the list so the book shows its goal leaves at once. */
+async function joinFriendcraft(want, wantInvite) {
+  if (!want || !wantInvite || new URLSearchParams(location.search).get("game") !== "friendcraft") return;
+  try {
+    const r = await fetch("/api/friendcraft/join", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ room: want, invite: wantInvite }) });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (list && Array.isArray(j.games)) list.games = j.games;
+  } catch {}
+}
 function setHome(doc) {
   myHome = { ...(doc || {}) };
   if (list && list.home) Object.assign(list.home, { look: myHome.look ?? null, lastCheckin: myHome.lastCheckin ?? null, goals: goalsList().map(([id, x]) => ({ id, ...x })) });
@@ -3791,6 +3889,7 @@ async function fetchList() {
   homeId = j.home ? j.home.id : homeId;
   list = j;
   await fetchCouncil();
+  applyDeckCopy(j.copy);
   if (j.home && !Object.keys(myHome).length) myHome = { look: j.home.look, lastCheckin: j.home.lastCheckin, goals: Object.fromEntries((j.home.goals || []).map(({ id, ...x }) => [id, x])) };
   return j;
 }
@@ -3947,7 +4046,7 @@ function refresh() {
    =================================================================================================== */
 let pollTimer = null, polling = false, pollAgain = false, stopped = false, roomOk = null, storeDown = false;
 function pollSoon() { if (!gardenId || stopped) return; if (polling) { pollAgain = true; return; } clearTimeout(pollTimer); pollTimer = setTimeout(poll, 120); }
-function toLogin() { stopped = true; location.href = "/login?returnTo=" + encodeURIComponent(location.pathname + location.search); }
+function toLogin() { stopped = true; location.href = (new URLSearchParams(location.search).get("invite") ? "/signup" : "/login") + "?returnTo=" + encodeURIComponent(location.pathname + location.search); }
 function stop(msg) {
   stopped = true; clearTimeout(pollTimer);
   $("#loadMsg").textContent = msg; $("#loadStep").textContent = ""; $("#loading").hidden = false; $("#hud").hidden = true;
@@ -3970,6 +4069,7 @@ function take(j) {
   myInvite = j.invite || null;
   myPouch = j.mine && j.mine.pouch && typeof j.mine.pouch === "object" ? j.mine.pouch : null;
   if (isHome(garden) && j.mine && j.mine.home && typeof j.mine.home === "object") setHome(j.mine.home);
+  if (isHome(garden) && j.mine && j.mine.deck && typeof j.mine.deck === "object") setDeck(j.mine.deck);
   gardenLoaded = true;
   refresh();
 }
@@ -4017,6 +4117,7 @@ let booted = false;
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     if (STANDIN_ROOM) throw { code: "standin" };
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
+    await joinFriendcraft(want, wantInvite);
     /* An invitation you opened is kept until you are in its room, so the doorway still offers it when you come back to the
        homeroom without the link (pt1-two-player-check: the link got lost later in the playtest). */
     const keptKey = "between.invited." + me, kept = me ? ls.get(keptKey) : null;
@@ -4048,7 +4149,7 @@ let booted = false;
   }
   if (first) {
     take(first);
-    if (isHome(garden)) setHome((first.mine || {}).home);
+    if (isHome(garden)) { setHome((first.mine || {}).home); setDeck((first.mine || {}).deck); }
     if (isMember(garden)) {
       myPrivate = { ...((first.mine || {}).garden || {}) };
       awaySince = myPrivate.lastSeen || null;
@@ -4099,7 +4200,7 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
-  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data),
+  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
   openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
@@ -4117,5 +4218,6 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
 // ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation); ?nook=1&coins=who&games=flirtcraft sits at the table and stops at who the toss is for
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
+// ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null }); }).catch(e => noteError(e, "coins"));
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null }); }).catch(e => noteError(e, "coins"));

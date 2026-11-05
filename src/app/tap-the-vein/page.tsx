@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
+import { spendableBalance } from '@/lib/economy/bar-mint'
 import { db } from '@/lib/db'
 import { getSeedLibrary, getToday, getUnchosen, listPlayerCampaigns } from '@/actions/tap-the-vein'
 import { UNCHOSEN_SAMPLE } from '@/lib/tap-the-vein/unchosen-sample'
@@ -58,7 +59,7 @@ export default async function TapTheVeinPage({ searchParams }: { searchParams?: 
 
   let vibulons = 0
   try {
-    vibulons = await db.vibulon.count({ where: { ownerId: player.id } })
+    vibulons = await spendableBalance(db, player.id)
   } catch {
     // wallet not provisioned yet — show 0
   }
