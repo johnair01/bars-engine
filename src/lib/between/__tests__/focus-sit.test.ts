@@ -93,7 +93,7 @@ describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
   })
   it('garden.js tends the hearth one care a visit and lets no sit in below the second', () => {
     const garden = readFileSync(path.resolve(__dirname, '../../../../public/between/garden.js'), 'utf8')
-    for (const fn of ['function doCare(', 'const careNow =', 'const sitBlocked =']) expect(garden).toContain(fn)
+    for (const fn of ['function doCare(', 'const hearthCareNow =', 'const sitBlocked =']) expect(garden).toContain(fn)
     expect(garden).toMatch(/careOffered\(c, caredThisVisit\)/)
     expect(garden).toMatch(/caredThisVisit = true/)
     expect(garden).toMatch(/canSitOn = id => !seatTaken\(id\) && !\(sitBlocked\(\)/)
