@@ -561,7 +561,7 @@ const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
 /* The stand-in room (previews only, Six-faces-council hollow-interface, his note on hib2-look-1): a walkable room of two with a
    stand-in partner already in it, so the partner's side can be tested alone. It opens from the nook's doorway ("Stand-in room")
    or at once with ?room=standin. It reads and writes nothing in the store. */
-const STANDIN_ROOM = PREVIEW_HOST && new URLSearchParams(location.search).get("room") === "standin";
+const STANDIN_ROOM = PREVIEW_HOST && (new URLSearchParams(location.search).get("room") === "standin" || (new URLSearchParams(location.search).get("turn") && new URLSearchParams(location.search).get("live") !== "1")); // ?turn= (Friendcraft slice 2) seats you in the stand-in room
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
@@ -4193,4 +4193,4 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null }); }).catch(e => noteError(e, "coins"));
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null, turn: PREVIEW_HOST ? KQ.get("turn") : null, bowls: PREVIEW_HOST ? KQ.get("bowls") : null, as: PREVIEW_HOST ? KQ.get("as") : null, live: PREVIEW_HOST ? KQ.get("live") === "1" : false }); }).catch(e => noteError(e, "coins"));
