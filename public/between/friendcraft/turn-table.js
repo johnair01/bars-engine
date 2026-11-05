@@ -30,7 +30,7 @@ export function mount(B, h) {
   .ft-tea,.ft-slip{top:min(26vh,214px)} .ft-tea{height:40px;align-items:center} .ft-deck{top:min(26vh,214px)}
   .ft-deck{left:16px;width:46px;aspect-ratio:${RATIO};border-radius:5px;background:#5c281a url(${BACK}) center/cover;box-shadow:0 3px 8px rgba(0,0,0,.5)}
   .ft-tea{right:16px;display:flex;gap:4px;color:#f6ecdc;filter:drop-shadow(0 1px 2px #000)} .ft-bowl{width:26px;height:18px}
-  .ft-slip{left:50%;transform:translateX(-50%) rotate(-2deg);width:92px;height:40px;background:var(--paper);color:var(--ink);border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.5);display:grid;place-items:center;font:italic 400 14px var(--ft-f,'EB Garamond',Georgia,serif);opacity:.9}
+  .ft-slip{left:50%;transform:translateX(-50%) rotate(-2deg);width:92px;height:40px;background:var(--paper);color:var(--ink);border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.5);display:grid;align-items:center;justify-items:start;padding-left:12px;box-sizing:border-box;font:italic 400 14px var(--ft-f,'EB Garamond',Georgia,serif);opacity:.9}
   .ft-slip::after{content:"";position:absolute;inset:0;border-radius:3px;background:linear-gradient(100deg,transparent 48%,rgba(90,60,40,.18) 50%,transparent 52%)}
   .ft-path{position:absolute;left:50%;top:calc(min(26vh,214px) + 42px);bottom:calc(50% + min(36vw,160px));width:0;border-left:3px dotted var(--ember);transform:translateX(-1.5px);opacity:.9}
   .ft-card{position:absolute;left:50%;top:46%;width:min(52vw,230px);aspect-ratio:${RATIO};transform:translate(-50%,-50%);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.55);overflow:hidden}
@@ -40,7 +40,7 @@ export function mount(B, h) {
   .ft-card.back{background:#5c281a url(${BACK}) center/cover}
   .ft-card.back::before{content:"";position:absolute;top:0;right:12%;width:14px;height:64px;background:#a0302a;clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);z-index:2}
   .ft-card.front{background:var(--paper);color:var(--ink);padding:9% 9% 7%;box-sizing:border-box;display:flex;flex-direction:column;gap:8px}
-  .ft-card.asked{top:calc(min(26vh,214px) - 14px);width:56px;transform:none;left:calc(50% + 6px);border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.55)}
+  .ft-card.asked{top:calc(min(26vh,214px) - 14px);width:52px;transform:none;left:calc(50% + 16px);border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.55)}
   .ft-card.asked::before{width:7px;height:30px}
   .ft-ribbon{font:italic 400 13px/1.25 'EB Garamond',Georgia,serif;color:#6a5442;border-bottom:1px solid #b9a283;padding-bottom:5px}
   .ft-words{font:italic 400 clamp(16px,4.6vw,21px)/1.35 'EB Garamond',Georgia,serif;text-wrap:pretty}
