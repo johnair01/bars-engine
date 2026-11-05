@@ -950,7 +950,7 @@ function veilSay() {
   const R = realms(), r = R[Math.min(veil.i, R.length - 1)];
   vo.say({ subject: veilBox, head: r.name, sub: r.line,
     actions: [{ label: "Step through", el: r.el, on: () => { veil.going = true; vo.quiet("veil"); r.go(); } },
-      ...(R.length > 1 ? [{ label: "Turn the veil", sub: `${veil.i + 1} of ${R.length} places`, quiet: true, on: () => turnVeil(1) }] : [])],
+      ...(R.length > 1 ? [{ label: "Turn the veil", sub: `${veil.i + 1} of ${R.length} places`, quiet: true, on: () => turnVeil(1) }] : []),],
     down: { label: "Step back", on: closeVeil } }, "veil", 3);
 }
 function veilBox() {
@@ -2161,6 +2161,7 @@ function refreshHud() {
     tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="spirits">Spirits${embersWaiting().length ? `<span class="tembers" title="Embers waiting">${emberDots(3)}</span>` : ""}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="goals">Goals</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="rooms">Rooms</button>`); // the doorway's sheet held "Manage rooms"; the veil keeps to choosing a place
     tools.push(`<button class="glassbtn" type="button" data-open="invitations">Invitations${invs ? '<span class="dot" title="Waiting for your answer"></span>' : ""}</button>`);
     // the style is chosen at the window now (rk-earned-only: the four styles are the light through the window)
   }
@@ -4851,7 +4852,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { brush: () => openBrush(), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => r.key) }, brush: () => openBrush(), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   hearthCare: () => ({ care: hearthCareNow(), stage: hollow && hollow.handles.stage ? hollow.handles.stage.care : null, offer: !!(hollow && hollow.handles.stage && hollow.handles.stage.offer), caredThisVisit, sitBlocked: sitBlocked() }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
