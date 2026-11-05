@@ -680,12 +680,38 @@ const SAT_ICON = {
   rug: '<ellipse cx="15" cy="17" rx="13" ry="6" fill="#3f9e93"/><ellipse cx="15" cy="17" rx="9" ry="3.6" fill="none" stroke="#efe2c4" stroke-width="1.2"/>',
   scroll: '<rect x="6" y="11" width="18" height="8" rx="4" fill="#efe2c4"/><rect x="4" y="12" width="3" height="6" rx="1.5" fill="#7a5236"/><rect x="23" y="12" width="3" height="6" rx="1.5" fill="#7a5236"/><rect x="13.5" y="11" width="3" height="8" fill="#9a5a8e"/>',
 };
+/* The pouch at the satchel: what the keeping chamber's clearings left, carried home (block-metabolize, the satchel slice;
+   position bm6-keepsake-satchel-next). Each keepsake is held here for crafting and spirit husbandry, which come later, so for
+   now it is only shown: its shape in its element's colour, and its name. ?keepsakes=demo on a preview shows four, never saved. */
+const KS_DEMO = PREVIEW_HOST && KQ.get("keepsakes") === "demo" ? { d1: { element: "fire", kind: "ember", state: "held", at: 1 }, d2: { element: "water", kind: "vessel", state: "held", at: 2 },
+  d3: { element: "metal", kind: "key", state: "held", at: 3 }, d4: { element: "earth", kind: "stone", state: "held", at: 4 } } : {};
+const KS_NAME = { vessel: "A small vessel", key: "A key", ember: "An ember", stone: "A stone" };
+const KS_ICON = {
+  vessel: '<path d="M11 6h8M12 7c0 4-5 6-5 12a8 6 0 0 0 16 0c0-6-5-8-5-12" fill="#bfe0ff" stroke="#7fc0ff" stroke-width="1.4"/>',
+  key: '<circle cx="15" cy="9" r="4.5" fill="none" stroke="#e8dcc0" stroke-width="2.4"/><path d="M15 13.5v12M15 21h4M15 25h3" stroke="#e8dcc0" stroke-width="2.4"/>',
+  ember: '<path d="M15 5l8 9-8 11-8-11z" fill="#ff9a4a"/><path d="M15 5l3 9-3 11-3-11z" fill="#ffcf86"/>',
+  stone: '<path d="M8 12l6-5 8 3 2 9-6 5-9-2z" fill="#9a8a70"/><path d="M14 7l2 8 8 4" fill="none" stroke="#c8b08a" stroke-width="1.2"/>',
+};
+function keepsakes() { const p = overlay(pouchPath(), myPouch || {}) || {}; const k = p.keepsakes && typeof p.keepsakes === "object" ? p.keepsakes : {};
+  return Object.entries({ ...k, ...KS_DEMO }).filter(([, x]) => x && typeof x === "object" && x.state === "held" && KS_NAME[x.kind]).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)); }
+/* A keepsake carried while the store did not answer waits in this browser (pouch-keepsake.js); the homeroom takes it in. */
+let ksTaken = false;
+function takeWaitingKeepsakes() {
+  if (ksTaken || !me || !gardenId || !garden || !isHome(garden) || readOnly) return; ksTaken = true;
+  import("./pouch-keepsake.js").then(async m => { const w = m.waiting(), ids = Object.keys(w); if (!ids.length) return;
+    await op(pouchPath(), "update", { keepsakes: w }); m.clearWaiting(ids);
+    toast(ids.length === 1 ? "The keepsake you carried is in your pouch." : "The keepsakes you carried are in your pouch."); }).catch(e => noteError(e, "keepsakes"));
+}
+function pouchRow() {
+  const ks = keepsakes(); if (!ks.length) return "";
+  return `<div class="satpouch"><span class="satlab" id="satpouchlab">In your pouch</span><ul class="satrow" aria-labelledby="satpouchlab">${ks.map(([, k]) => `<li class="satkeep" title="Kept from the chamber, for crafting and feeding spirits"><svg viewBox="0 0 30 30" aria-hidden="true">${KS_ICON[k.kind]}</svg>${KS_NAME[k.kind]}</li>`).join("")}</ul></div>`;
+}
 function renderSatchel() {
   let el = $("#satchel");
   if (!el) { el = document.createElement("div"); el.id = "satchel"; el.className = "satchel"; el.setAttribute("role", "toolbar"); el.setAttribute("aria-label", "Your satchel"); $("#tools").before(el); }
   const items = satchelOpen ? mySatchel() : [];
   if (armed && !items.includes(armed)) armed = null;
-  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem${id === "mirror" && satchelGlows() ? " glow" : ""}" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>`;
+  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem${id === "mirror" && satchelGlows() ? " glow" : ""}" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>${pouchRow()}`;
   el.hidden = !satchelOpen;
   if (el._h !== h) { el.innerHTML = h; el._h = h; }
 }
@@ -2688,6 +2714,7 @@ function destinationsSheet() {
     <p class="muted">Choose where to go. You always return to your Nook.</p>
     ${invited}
     ${PREVIEW_HOST ? `<div class="roomrow"><div><b>Stand-in room</b><span class="small muted">A rehearsal room of two, with a partner already there. Nothing is saved.</span></div><button type="button" data-act="goStandIn">Enter</button></div>` : ""}
+    <div class="roomrow"><div><b>The keeping chamber</b><span class="small muted">What your blocks left when they cleared, each on its own stone.</span></div><button type="button" data-act="goChamber">Enter</button></div>
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
@@ -3589,6 +3616,9 @@ document.addEventListener("click", async ev => {
   if (a === "goRoom") { goRoom(id); return; }
   if (a === "goStandIn") { walkToStandInRoom(); return; }
   if (a === "goDojo") { walkToTriangleWorkshop(); return; }
+  // the keeping chamber opens from the doorway and the map stand (his C on bm-satchel-look-2, 2026-11-04: the arch is gone)
+  if (a === "goChamber") { if (!portalOpen()) { toast("The doorway opens when your first minute here is complete."); return; }
+    closeSheet(); const c = window.__between && window.__between.ctw; if (c && c.chamber) c.chamber(); else location.href = "/between/land.html?place=chamber"; return; }
   // a spark's link, found again from the homeroom (pt1-two-player-check: the link got lost after the first send)
   if (a === "sparkAgain") {
     const r = ((list && list.gardens) || []).find(x => x.id === id);
@@ -3999,7 +4029,7 @@ function refresh() {
     between.visible = !!g && !isHome(g);
     syncRoom(); syncShelf();
     mirror.visible = mirrorShown();
-    syncThings(); syncWalkers(); hmSync();
+    syncThings(); syncWalkers(); hmSync(); takeWaitingKeepsakes();
     if (me && gardenLoaded) ensureMyBody().catch(() => {});
     refreshHud();
     if (sheetName && !["offer", "agreement", "rewrite", "spirit", "setup"].includes(sheetName)) renderSheet();
@@ -4179,9 +4209,6 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
 // Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
 import("./block-room.js").then(m => { window.__between.block = m.mountSigns(window.__between); }).catch(e => noteError(e, "block"));
-// the keeping chamber (block-metabolize slice 2, his "Mix of a and b" on bm-chamber-look-3): an arch of the cave's stone under the
-// shelf leads to /between/land.html?place=chamber, where what the charge left is kept and a season's weather fills the room
-import("./chamber-arch.js").then(m => { window.__between.chamberArch = m.mount(window.__between); }).catch(e => noteError(e, "chamber arch"));
 // letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome

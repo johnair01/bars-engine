@@ -516,7 +516,7 @@ async function build() {
   const ep = await episode(); state.ep = ep; state.p = ep.p;
   const chName = "The keeping chamber";
   $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
-  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
+  $("#placeLand").textContent = PLACE === "chamber" ? "past the nook's doorway, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
   document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
   const M = {}, h = buildHollow(new THREE.Scene(), { lowPower: LOW, shell: "hollow" });   // built only to lend its materials
@@ -790,7 +790,7 @@ function showCard() {
   else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
   else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
   else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
-    html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
+    html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.${st.pc.pouch ? " The piece itself is in your satchel's pouch; this light marks where it lay." : ""}`) : ""; }
   else if (n === "stump") {
     const left = ADD - state.given.length;
     key = "stump:" + state.given.length + (state.done ? "d" : "");
@@ -1136,7 +1136,7 @@ function frame() {
       if (d.dense && d.where === here && (fromNook || qb)) {
         step("the cold comes through with you");
         const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6, basins: [CH.POOL],
-          where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "It goes onto the next stone, and the cave's kit grows beside it.",
+          where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "A stone rises for it here and the cave's kit grows beside it. The piece goes into your satchel's pouch.",
           onKeep: rec => { setTimeout(() => state.ch.add(rec), 1200); } } : {};
         state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
           exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95, ...chRoom,
