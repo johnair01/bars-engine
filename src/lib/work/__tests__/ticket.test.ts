@@ -103,6 +103,15 @@ describe('ticketFromLever', () => {
     expect(t.title).toBe('Draw the tide.')
     expect(t.state).toBeUndefined()
   })
+  it('takes the lane the save names, so a tap can fill the freebuff deck', () => {
+    const t = ticketFromLever('council', 'positions', 'np-serve-data', { move: 'claude_takes_it', savedAt: '2026-11-05T23:00:00Z', lane: 'freebuff' }, null)!
+    expect(t.lanes).toEqual(['freebuff'])
+  })
+  it('lets a row lane stand when the save names none, and takes a typo back to claude', () => {
+    const row = { lanes: ['freebuff'] } as never
+    expect(ticketFromLever('council', 'positions', 'c', { move: 'claude_takes_it', savedAt: '1' }, row)!.lanes).toEqual(['freebuff'])
+    expect(ticketFromLever('council', 'positions', 'c', { move: 'claude_takes_it', savedAt: '1', lane: 'zo' }, null)!.lanes).toEqual(['claude'])
+  })
   it('holds when the save or the card carries a hold', () => {
     expect(ticketFromLever('council', 'positions', 'c1', { ...pull, hold: { text: 'wait', at: 'z' } }, row)!.state).toBe('held')
     const held = { ...row, card: { ...row.card, hold: { text: 'money gate', at: 'z' } } }
