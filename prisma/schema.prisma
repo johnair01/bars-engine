@@ -2165,6 +2165,8 @@ model Instance {
   communityCharacterCorpus     Json?                   @map("community_character_corpus")
   /// GM-overridable CYOA Composer step ordering per campaign (JSON)
   composerStepOverrides        Json?
+  /// Friendcraft: admin/steward-edited default text of the deck pages (public/between/friendcraft/deck.js COPY_FIELDS); null = the built-in text
+  friendcraftCopy              Json?                   @map("friendcraft_copy")
   activeInConfigs              AppConfig[]
   scopedArchetypes             Archetype[]             @relation("ArchetypeInstance")
   barShareExternals            BarShareExternal[]

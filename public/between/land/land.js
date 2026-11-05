@@ -47,6 +47,7 @@ import { stance, clipWeights, FADE, CRATE_SIT, SEAT_PAD } from "../stance.js";
 import { parseLook } from "../../calrunia/look.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
+import { withDraft, people } from "../../calrunia/episode-draft.js";
 import * as SH from "./scale-house.js";
 import * as FF from "./friends-fire.js";
 import * as FS from "./fire-song.js";
@@ -344,13 +345,20 @@ async function episode() {
   if (!WALK) try { const s = sessionStorage.getItem("ctw-charge"); if (s) charge = JSON.parse(s); } catch (e) { /* the sample */ }
   let g = await read(charge);
   if (g.errors) { charge = sample; g = await read(charge); }
+  if (!charge.drafted) { charge = withDraft(charge, g); g = await read(charge); }   // a charge you wrote, drafted by rules (ctw2-draft-from-your-words)
   const md = sheet(charge, g);
   const locs = locations(charge, g), enc = locs.find(l => l.role === "encounter");
   const role = { "scale-house": "villain", "friends-fire": "road-home" }[PLACE];
   const loc = role ? (locs.find(l => l.role === role) || enc) : enc;
   const p = plan(loc, loc === enc ? g.weather : "");   // the week's weather is over the near land only
   const next = locs.find(l => l.role === (PLACE === "clearing" ? "villain" : "road-home"));
-  return { charge, g, md, loc, p, next, start: PLACE === "clearing" ? strongStart(md) : [], secrets: secretsHere(md, p), home: takeHome(md), friend: friendHere(md) };
+  return { charge, g, md, loc, p, next, start: PLACE === "clearing" ? strongStart(md) : [], secrets: secretsHere(md, p), home: takeHome(md), friend: friendOf(md, charge), villain: g.villain };
+}
+/* the friend at the fire: the sheet's NPC called friend, or the first person you named (ctw2-friend-you-named) */
+function friendOf(md, charge) {
+  const f = friendHere(md); if (f.name) return f;
+  const name = people(charge).friend, lines = (charge.drafted || {}).npc_lines || {};
+  return { name, line: lines[name] || "" };
 }
 
 /* ===================================================================================================
@@ -519,7 +527,7 @@ async function build() {
   const ep = await episode(); state.ep = ep; state.p = ep.p;
   const chName = "The keeping chamber";
   $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
-  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}, on the ${ep.p.line} line`;
+  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
   if (WALK) { $("#placeLand").textContent = `The walk, land ${WALK_STOPS.indexOf(PLACE) + 1} of ${WALK_STOPS.length}`; $("#homeBtn").textContent = "Start over"; }
   document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
@@ -761,7 +769,7 @@ function showCard() {
   const n = state.near; let key = n || "", html = "";
   const btn = (act, label) => `<button type="button" data-act="${act}">${label}</button>`;
   const card = (title, text, ...btns) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${btns.join("")}</div>`;
-  if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where the Weigher is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
+  if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where ${esc(state.ep.villain || "the Weigher")} is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
   else if (n === "back") { key = "back"; html = card("The path back", "It runs back through the heavy trees to the clearing.", btn("go:clearing", "Walk back to the clearing")); }
   else if (n === "far") { const there = state.ep.next ? esc(state.ep.next.location) : "the Friends' Fire"; key = "far"; html = card("The far bank", `Past the last trees, a fire is lit, and someone is tuning a guitar. The path runs on to ${there.replace(/^The /, "the ")}.`, btn("go:friends-fire", `Follow the path to ${there.replace(/^The /, "the ")}`), btn("walk:bridge", "Back over the bridge")); }
   else if (n === "ff-back") { key = "ff-back"; html = card("The path back", "It runs back through the trees to the Scale-House and the bridge you mended.", btn("go:scale-house-far", "Walk back to the Scale-House")); }
@@ -770,7 +778,7 @@ function showCard() {
   else if (n === "crate") { const f = esc(state.ep.friend.name || "Your friend"), fs = fireSong();
     key = "crate:" + fs.step + fs.song.played.length + (fs.song.block || "") + state.played + (fs.stay ? "s" : "");
     const seals = () => `<div class="row notes">${[0, 1, 2, 3, 4].map(d => `<button type="button" data-fnote="${d}" class="${fs.stump.includes(d) ? "lit" : ""}" aria-label="note ${d + 1}${NOTE_NAMES[d] ? ", " + NOTE_NAMES[d] : ""}${fs.stump.includes(d) ? ", one you gave the stump" : ""}">${d + 1}</button>`).join("")}</div>`;
-    html = fs.step === "seals" ? `<div><b>Your bar</b><div class="t">${fs.song.played.length ? `${fs.song.played.length === 1 ? "One note" : fs.song.played.length + " notes"} so far. Any seal is right.` : "Play what you have so far. The rings mark the notes you gave the stump."}</div></div>${seals()}<div class="row">${btn("tag", "Hand it to Oriel")}${btn("stand", "Stand up")}</div>`
+    html = fs.step === "seals" ? `<div><b>Your bar</b><div class="t">${fs.song.played.length ? `${fs.song.played.length === 1 ? "One note" : fs.song.played.length + " notes"} so far. Any seal is right.` : "Play what you have so far. The rings mark the notes you gave the stump."}</div></div>${seals()}<div class="row">${btn("tag", `Hand it to ${f}`)}${btn("stand", "Stand up")}</div>`
       : fs.step === "tag" ? `<div><b>Before it goes to ${f}</b><div class="t">What would block you from playing this for someone?</div></div><div class="row blocks">${FS_ORDER.map(c => `<button type="button" data-block="${c}" aria-pressed="${fs.song.block === c}">${FS.BLOCKS[c]}</button>`).join("")}</div><div class="row">${fs.song.block ? btn("give", `Put it in ${f}'s hand`) : ""}${btn("more", "Play a little more")}</div>`
       : fs.step === "oriel" ? card(f, fs.song.passed ? `${f} plays the old bar for you, and its own way home.` : `${f} plays it on from your last note, at your pace. The others have gone quiet.`)
       : fs.step === "card" ? (fs.stay ? card("The fire", `${f} is still turning the song over on the guitar.`, (WALK ? btn("go:chamber", "Carry it to the keeping chamber") : btn("home", "Take it home to your nook")), btn("stand", "Stand up"))
@@ -929,9 +937,9 @@ function fireNote(d) {
   if (state.ff && state.ff.lean) state.ff.lean(1);
 }
 function thisWeek(fs) {
-  const h = state.ep.home, g = secret(/key to the garage/i);
-  const named = fs.song.block ? `<div class="t">You named ${esc(FS.BLOCKS[fs.song.block].toLowerCase())} as what would block you, and it went into Oriel's hand with the song.</div>` : "";
-  return `<div><b>This week</b><div class="t">${esc(h.capability || "Play one unfinished song for one person.")}</div>${h.key ? `<div class="t">The key you carry home: “${esc(h.key)}”</div>` : ""}${g ? `<div class="t">${esc(g)}</div>` : ""}${named}</div><div class="row">${WALK ? '<button type="button" data-act="go:chamber">Carry it to the keeping chamber</button>' : '<button type="button" data-act="home">Take it home to your nook</button>'}<button type="button" data-act="stay">Stay by the fire</button></div>`;
+  const h = state.ep.home, g = secret(/key to the garage|friends already/i), f = esc(state.ep.friend.name || "your friend");
+  const named = fs.song.block ? `<div class="t">You named ${esc(FS.BLOCKS[fs.song.block].toLowerCase())} as what would block you, and it went into ${f}'s hand with the song.</div>` : "";
+  return `<div><b>This week</b><div class="t">${esc(h.capability || "Play one unfinished song for one person.")}</div>${h.key ? `<div class="t">The key you carry home: “${esc(h.key)}”</div>` : ""}${g ? `<div class="t">${esc(g)}</div>` : ""}${named}</div><div class="row"><button type="button" data-act="home">Take it home to your nook</button><button type="button" data-act="stay">Stay by the fire</button></div>`;
 }
 /* Oriel's turn: the timeline's notes plucked on the guitar, one beat after the hand-over, each lighting its seal above
    Oriel; the home note held; a silence; then the friends laugh and the last card comes. */

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
-import { resetWakeThrottle, wakePickup, WAKE_THROTTLE_MS } from '../wake'
+import { resetWakeThrottle, wakePickup, wakeStatus, WAKE_THROTTLE_MS } from '../wake'
 
 describe('answers start the work: the pickup wake', () => {
   afterEach(() => {
@@ -34,5 +34,17 @@ describe('answers start the work: the pickup wake', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('no', { status: 403 })))
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     expect(await wakePickup('x')).toBe('failed')
+  })
+
+  it('reports whether it is set and which routine, never the token', async () => {
+    expect(wakeStatus()).toMatchObject({ urlSet: false, tokenSet: false, routine: null })
+    process.env.PICKUP_ROUTINE_FIRE_URL = 'https://api.anthropic.com/v1/claude_code/routines/trig_abc123/fire'
+    process.env.PICKUP_ROUTINE_TOKEN = 'secret'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('no', { status: 401 })))
+    await wakePickup('x', 5_000_000)
+    const s = wakeStatus()
+    expect(s).toMatchObject({ urlSet: true, tokenSet: true, routine: 'trig_abc123' })
+    expect(s.lastOnThisInstance).toMatchObject({ result: 'failed', status: 401 })
+    expect(JSON.stringify(s)).not.toContain('secret')
   })
 })
