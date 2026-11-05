@@ -17,7 +17,8 @@ import { createAmbient } from "./ambient.js";
 import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
 import { NEAR as TEA_NEAR } from "./tea-pose.js";
-import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS } from "./focus.js";
+import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS, FRAGMENT_ORDER, fragmentFor, hearthRecord, careOf as hearthCareOf, careOffered } from "./focus.js";
+import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from "./fragments.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
 import { figureWrap, figureProbe, lightFigure } from "./figure-light.js";
@@ -1091,7 +1092,9 @@ const seatId = k => /^\d+$/.test(k) ? +k : k;
 const seatPos = id => { const s = seatBy(id); return s ? new THREE.Vector3(s.x, 0, s.z) : meState.pos.clone().setY(0); };
 /* Every cushion is anyone's (pt1-cushion-look-1): you can sit on any seat nobody else is sitting on right now. */
 const seatTaken = id => [...peers.values()].some(p => p.uid !== me && p.sitting && p.seat === id);
-const canSitOn = id => !seatTaken(id);
+/* No sit at your own hearth until its second care is done (FR-018): the fire has to be laid first. A Between's hearth and a store-down preview are unchanged. */
+const sitBlocked = () => inNook() && !!garden && isHome(garden) && !storeDown && hearthCareNow() < 2;
+const canSitOn = id => !seatTaken(id) && !(sitBlocked() && id === hearthSeatId());
 /* The hearth's seat: a cushion you set down in the nook, the one nearest the fire, else the hearth's own cushion. */
 function hearthSeatId() {
   const all = seatsHere(), sp = inNook() ? all.filter(s => s.spot) : [];
@@ -1106,7 +1109,7 @@ function sitOn(id, then = null) {
   meState.seatWant = id; meState.target = seatPos(id); meState.onSeated = then; directCam = null;
   selected = "seat:" + id; refreshHud();
 }
-function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
+function sitAtHearth() { if (sitBlocked()) return; sitOn(hearthSeatId(), () => openSheet("hearth")); }
 /* Tea by the fire (between-tea-1 slice 1, the solo cup). The kettle is drawn by the scene at the hearth's seat, not placed
    through the room kit (bt-tea-needs-a-spot), and stands there from the moment the room is up, with its cup on the stone; the cup
    goes into the right hand of whoever is sat there (bt-cup-is-the-figure) and stays held in the lap until they stand.
@@ -1334,6 +1337,7 @@ function tapAt(cx, cy) {
   if (inNook()) consider("window", hollow.layout.window, 1.0);
   if (portal.visible) consider("portal", PORTAL_AT.clone().setY(DAIS_Y + 0.95), 0.75);
   consider("hearth", HEARTH_AT.clone().setY(0.9), 1.0);
+  if (inNook() && hollow && hollow.handles.stage && hollow.handles.stage.offer) { const sp = hollow.handles.stage.careSpot(); if (sp) consider("hearth", sp, 0.55); } // the object to tend may stand beside the fire
   for (const st of seatsHere()) consider("seat:" + st.id, new THREE.Vector3(st.x, st.top - 0.1, st.z), 0.45);
   for (const [id, t] of things) consider("item:" + id, t.pos.clone().setY(0.4), 0.5);
   for (const [k, w] of walkers) if (w.holder) consider("w:" + k, w.holder.position.clone().setY(w.type === "spirit" ? 0.4 : 0.9), 0.6);
@@ -1867,6 +1871,7 @@ function moveActs(id, it, g) {
 function freeSeatCard(i) {
   const st = seatBy(i); if (!st) return "";
   const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : st.coins ? "The coin table's cushion" : "A cushion";
+  if (!here && st.hearth && sitBlocked()) return `<div class="what"><b>${name}</b></div>`;
   if (!here) return `<div class="what"><b>${name}</b><span class="t">${st.hearth ? "Worn flat from sitting by the fire." : "Set down here for sitting."}</span></div><div class="row"><button type="button" data-act="${st.hearth ? "sitHearth" : "sit"}">Sit here</button></div>`;
   return `<div class="what"><b>${name}</b><span class="t">${fire ? "Sitting by the fire." : "Sitting."}</span></div><div class="row">${fire && (hearthOpen() || storeDown) && sheetName !== "hearth" ? `<button type="button" data-act="sitHearth">Sit with what stirs you</button>` : ""}<button class="glassbtn" type="button" data-act="stand">Stand up</button></div>`;
 }
@@ -1892,6 +1897,7 @@ function nearHtml(key, V, g) {
   if (key && key.startsWith("spot:")) return spotNear(key.slice(5), g);
   if (key === "window" && g && isHome(g)) return `<div class="what"><b>The window</b><span class="t">${esc(styleOf(g.style).name)}: ${esc(styleOf(g.style).line)}</span></div><div class="row"><button type="button" data-open="style">Change the light</button></div>`;
   if (!g && !storeDown) return "";
+  if (key === "hearth" && sitBlocked()) return `<div class="what"><b>The hearth</b></div>`;
   if (key === "hearth") return `<div class="what"><b>The hearth</b><span class="t">When something stirs you, sit with it. What's left is a little glowing ember you keep.</span></div><div class="row"><button type="button" data-act="sitHearth">Sit at the hearth</button></div>`;
   if (key && key.startsWith("seat:") && typeof seatId(key.slice(5)) !== "number") return freeSeatCard(seatId(key.slice(5)));
   if (!g) return "";
@@ -2147,7 +2153,7 @@ function hmSync() {
   hmHud();
 }
 function hmBegin() {
-  if (hm || !seatedAtHearth() || !(hearthOpen() || storeDown || EMBER_DEMO)) return;
+  if (hm || sitBlocked() || !seatedAtHearth() || !(hearthOpen() || storeDown || EMBER_DEMO)) return;
   if (sheetName) closeSheet();
   if (hmGone) hmClear(hmGone);
   const t = performance.now() / 1000;
@@ -2236,6 +2242,7 @@ function hmTap(cx, cy) {
     if (best === hm.held && hm.press && performance.now() / 1000 - hm.press.t0 > 0.35) return true; // the end of a breath, not a touch
     hmHold(best.eid); return true;
   }
+  if (ray.ray.distanceToPoint(HEARTH_AT.clone().setY(0.4)) < 0.45 && fireTouch()) return true;
   const hit = new THREE.Vector3();
   if (bd > 90 && ray.ray.intersectPlane(floorPlane, hit) && hit.distanceTo(HEARTH_AT) > 0.9) { hmStand(); return true; }
   return true; // the fire and the air hold still
@@ -2431,17 +2438,86 @@ async function fsDone() {
     if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], risen: true };
     else if (!storeDown) await op(pouchPath(), "update", { embers: { [m.eid]: { risen: true } } });
   }
+  const told = fsOwn() ? await fsKeep(m ? m.e.feel : null, !!m && isDemoEmber(m.eid)) : null; // a Between's hearth writes nothing (FR-013)
+  if (told) { const h0 = hm; setTimeout(() => { if (hm && hm === h0) fragStart(told, "told"); }, 7000); } // after the rise and the mote's flight are over (FR-008)
   setTimeout(() => { if (!hm || hm.fs !== fs) return; // then everything comes back: the risen one first, out of the satchel
     for (const o of hm.motes) if (o.state === "lip") o.state = "sink";
     setTimeout(() => { if (!hm || hm.fs !== fs) return; for (const o of hm.motes.filter(x => x.state === "gone")) hmDrop(o); hm.motes = hm.motes.filter(x => x.state !== "gone"); hm.riseNext = performance.now() / 1000 + 0.6; hmSync(); fsAgain(); }, 1600);
   }, 2600);
   hmHud();
 }
+/* ---------- the hearth spirit's story (spec focus-sit-world-growth) ----------
+   A finished sit at your own hearth adds to `hearth` in the homeroom doc (sits, at, and the channel it told, once). The first sit
+   in a channel shows that channel's picture in the fire with its line; a touch on the fire with nothing laid shows the told
+   ones again, root first. No count, ring or blank slot is ever drawn. Previews: ?hearth=<sits>&told=earth,wood seed the record. */
+const fsOwn = () => { const g = view().g; return !g || isHome(g); };
+const CARE_SEED = PREVIEW_HOST && /^[0-4]$/.test(KQ.get("care") || "") ? +KQ.get("care") : null; // ?care=0..4 draws the hearth at that stage (this page only)
+const HEARTH_SEED = PREVIEW_HOST && (KQ.get("hearth") || KQ.get("told") || CARE_SEED != null) ? { sits: Math.max(0, parseInt(KQ.get("hearth"), 10) || 0), told: Object.fromEntries((KQ.get("told") || "").split(",").filter(c => FRAGMENT_ORDER.includes(c)).map(c => [c, 1])), ...(CARE_SEED != null ? { care: CARE_SEED } : {}) } : null;
+let hearthLocal = {}; // the record kept on this page only (a demo ember, the store down, a failed write)
+const hearthNow = () => { const mine = myHome.hearth || {}, h = { ...(HEARTH_SEED || {}), ...mine, ...hearthLocal, told: { ...(HEARTH_SEED ? HEARTH_SEED.told : {}), ...(mine.told || {}), ...(hearthLocal.told || {}) } }; if (CARE_SEED != null) h.care = Math.max(CARE_SEED, hearthLocal.care || 0); return h; };
+/* The first chapter (spec focus-sit-world-growth): how many cares the hearth has had (0..4), one a visit. A fire lit before the
+   chapter reads as 4. The stage never falls and a sit never moves it. */
+const hearthCareNow = () => hearthCareOf({ ...myHome, hearth: hearthNow() });
+let caredThisVisit = false, stageSynced = false, wasNook = false; // one care per visit; the first stage set is drawn at once
+const toldNow = () => FRAGMENT_ORDER.filter(c => hearthNow().told[c]);
+/* Writes the finished sit; returns the channel it told, or null when that one was told before. */
+async function fsKeep(feel, demo) {
+  const cur = hearthNow(), c = fragmentFor(feel, cur.told), patch = hearthRecord(cur, c, Date.now());
+  const local = () => { hearthLocal = merge({ ...hearthLocal, told: { ...(hearthLocal.told || {}) } }, patch); };
+  if (demo || EMBER_DEMO || storeDown || !homeId) local();
+  else { try { await homeOp({ hearth: patch }); } catch { local(); } }
+  return c;
+}
+const REDUCED = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })();
+/* A fragment: the fire's own sparks gather into the picture above the flames, the line shows as a caption, then it fades to fire.
+   mode "told" runs by itself; "browse" waits for a touch. */
+function fragStart(c, mode) {
+  if (!hm) return;
+  fragEnd(false);
+  const dots = pictureDots(c), mk = (glow, size, color) => {
+    const pts = dots.filter(d => d[2] === glow), g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pts.length * 3), 3));
+    const p = new THREE.Points(g, new THREE.PointsMaterial({ map: moteMat.map, color, size, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
+    p.frustumCulled = false; hmGroup.add(p);
+    return { p, pts, from: pts.map(() => [(Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.3]) };
+  };
+  hm.frag = { c, mode, t0: performance.now() / 1000, layers: [mk(0, 0.05, 0xffa040), mk(1, 0.09, FS_SAT)] };
+  caption(FRAGMENTS[c].line);
+}
+function fragEnd(clear = true) {
+  const f = hm && hm.frag; if (!f) return;
+  for (const l of f.layers) { hmGroup.remove(l.p); l.p.geometry.dispose(); }
+  hm.frag = null; if (clear) captionOut();
+}
+function fragTick(t, F, h) {
+  const f = h.frag; if (!f) return;
+  const el = t - f.t0, dur = f.mode === "told" ? FRAGMENT_SECONDS : 30;
+  if (el >= dur) { fragEnd(); return; }
+  const k = REDUCED ? 1 : Math.min(1, el / 1.8), e = k * k * (3 - 2 * k), fade = REDUCED ? 1 : Math.min(1, (dur - el) / 1.2);
+  const C = HEARTH_AT.clone().setY(0.85), S = 0.68, base = HEARTH_AT.clone().setY(0.3);
+  for (const l of f.layers) {
+    const a = l.p.geometry.attributes.position;
+    l.pts.forEach((d, i) => {
+      const w = REDUCED ? 0 : Math.sin(t * 1.7 + i) * 0.006, tx = C.x + F.r.x * d[0] * S, ty = C.y + d[1] * S + w, tz = C.z + F.r.z * d[0] * S, o = l.from[i];
+      a.setXYZ(i, base.x + o[0] + (tx - base.x - o[0]) * e, base.y + o[1] + (ty - base.y - o[1]) * e, base.z + o[2] + (tz - base.z - o[2]) * e);
+    });
+    a.needsUpdate = true; l.p.material.opacity = 0.9 * e * fade;
+  }
+}
+/* A touch on the fire with nothing laid and no sit running: the told pictures, root first, one at a time; the last returns to fire. */
+function fireTouch() {
+  const free = !hm.fs || (hm.fs.step === "choose" && !hm.fs.sticks), list = toldNow();
+  if (!free || !list.length) return false;
+  const at = hm.frag && hm.frag.mode === "browse" ? list.indexOf(hm.frag.c) + 1 : 0;
+  if (at >= list.length) fragEnd(); else fragStart(list[at], "browse");
+  return true;
+}
 /* After a sit, the stack waits again (the fire takes what was laid, slowly). */
 function fsAgain() { if (!hm) return; hm.fs = null; for (const l of fsLogs) l.visible = true; hmHud(); }
 /* Getting up: whatever the sit had reached, nothing is written but a rise already made. */
 function fsEnd(h) {
   if (h.fs && h.fs.mote) hmGroup.remove(h.fs.mote.g);
+  if (h.frag) { for (const l of h.frag.layers) { hmGroup.remove(l.p); l.p.geometry.dispose(); } h.frag = null; captionOut(); }
   h.fs = null; for (const l of fsLogs) l.visible = true; fsStack.visible = false;
   if (hollow) { hollow.handles.hearth.bank = 0; hollow.handles.hearth.room = fsRoom; }
 }
@@ -2468,6 +2544,7 @@ function fsTick(t, dt, h, F) {
   fsSpirit.visible = sp.k > 0.01; fsSpirit.position.copy(HEARTH_AT).addScaledVector(F.f, -0.2).setY(0.72 + Math.sin(t * 0.9) * 0.02);
   sp.glow.material.opacity = 0.22 * sp.k * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
   fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink; // its eyes on you
+  fragTick(t, F, h);
   if (!fs) return;
   // sticks in flight: an arc from the stack onto the fire, a puff of sparks as each lands
   for (const fl of fs.flies) { const k = Math.min(1, (t - fl.t0) / 1.1), e = k * k * (3 - 2 * k); fl.m.position.lerpVectors(fl.from, fl.to, e); fl.m.position.y += Math.sin(k * Math.PI) * 0.45; fl.m.rotation.y = F.S.yaw + (fl.yaw - F.S.yaw) * e; if (k >= 1 && !fl.landed) { fl.landed = true; fsPuff(fl.to, 0xffb050, 12); } }
@@ -3113,7 +3190,6 @@ function minuteStart() {
   const fresh = st.step === "ember" && !st.skipped.ember;
   mclock.t0 = now() - (fresh ? 0 : MINUTE_BEATS[st.step] * 1000);
   for (const s of MINUTE_STEPS) if (s !== st.step && (st.done[s] || st.skipped[s])) mclock.resolvedAt[s] = mclock.t0 - 6e4;
-  if (hollow) hollow.handles.hearth.k = st.hearthLit ? 1 : 0;
   vines.forEach((v, i) => { v.state = st.fallen[i] ? "gone" : "up"; v.group.visible = !st.fallen[i]; });
   if (fresh) {
     wakeOnCushion();
@@ -3127,8 +3203,14 @@ function minuteTick(t, dt) {
   if (!hollow) return;
   const home = inNook() && garden && isHome(garden);
   const st = home ? mstate() : null, beat = home ? minuteBeat() : null;
-  const hf = hollow.handles.hearth;
-  if (hf) { hf.want = !home || storeDown || st.hearthLit ? 1 : 0; hf.ember = home && !storeDown && st.emberGlows && (beat === "ember" || st.skipped.ember || !minuteOn()) ? 1 : 0; }
+  const hf = hollow.handles.hearth, stg = hollow.handles.stage, nk = inNook();
+  if (nk && !wasNook) caredThisVisit = false; wasNook = nk; // a new visit to the nook: one more care may be offered
+  if (stg) { // the hearth is drawn by its stage: at your own nook by the cares done, else (not home, store down) as built
+    const c = home && !storeDown ? hearthCareNow() : 4;
+    if (stg.care !== c || !stageSynced) { stg.setCare(c, REDUCED || !stageSynced); stageSynced = true; }
+    stg.offer = home && !storeDown && careOffered(c, caredThisVisit) != null && !hm;
+  } else if (hf) hf.want = 1;
+  if (hf) hf.ember = 0;
   // the vines: up while the minute keeps them; a vine whose step is done falls, slowly
   const vis = home && !storeDown;
   vines.forEach((v, i) => {
@@ -3503,14 +3585,28 @@ function directView(key, tall) {
   return [P, F];
 }
 
+/* One care at your own hearth (the chapter's four cares, one a visit): you walk up, the stage plays it, and the doc keeps one
+   more care. Care 0 on a homeroom whose ember beat is not done is that beat too, in one write (FR-019). A seeded preview
+   (?care=) keeps it on this page only. */
+function doCare(c) {
+  caredThisVisit = true; standUp();
+  const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));
+  const spot = hollow && hollow.handles.stage ? hollow.handles.stage.careSpot(c) : null;
+  burst((spot || HEARTH_AT).clone().setY(0.5), 0xffb060);
+  directCam = { key: "hearth", t0: performance.now() };
+  const patch = { hearth: { care: c + 1, careAt: now() } };
+  if (CARE_SEED != null) { hearthLocal = merge(hearthLocal, patch.hearth); refreshHud(); return; }
+  if (c === 0 && !mstate().done.ember) { minuteAct("ember", "done", patch); if (rehearse) hearthLocal = merge(hearthLocal, patch.hearth); return; }
+  if (rehearse) { hearthLocal = merge(hearthLocal, patch.hearth); refreshHud(); return; }
+  myHome = merge(myHome, patch);
+  homeOp(patch).catch(() => toast("That did not save. Check your connection and try again."));
+  refreshHud();
+}
 /* What a tap on the nook does while the minute (or a step left for later) waits: true when it was the minute's. */
 function minuteTap(key) {
   if (!garden || !isHome(garden) || storeDown) return false;
   const st = mstate(), beat = minuteBeat();
-  if (key === "hearth" && !st.hearthLit) {
-    if (st.emberGlows && (beat === "ember" || !minuteOn() || st.skipped.ember)) { standUp(); const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4))); minuteAct("ember"); }
-    return true;
-  }
+  if (key === "hearth") { const c = hearthCareNow(); if (careOffered(c, caredThisVisit) != null) { doCare(c); return true; } return false; }
   if (key === "portal" && minuteOn()) {
     if (st.step === "vine" && beat === "vine") { standUp(); burst(PORTAL_AT.clone().setY(1.0), 0x8fd08a); minuteAct("vine"); }
     else toast("The vines fall as you learn the room.");
@@ -4161,6 +4257,7 @@ let booted = false;
   pollTimer = setTimeout(poll, 2500);
 })();
 window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+  hearthCare: () => ({ care: hearthCareNow(), stage: hollow && hollow.handles.stage ? hollow.handles.stage.care : null, offer: !!(hollow && hollow.handles.stage && hollow.handles.stage.offer), caredThisVisit, sitBlocked: sitBlocked() }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
