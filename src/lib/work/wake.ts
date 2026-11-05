@@ -15,8 +15,19 @@ import { after } from 'next/server'
  */
 export const WAKE_THROTTLE_MS = 20_000
 let lastSent = 0
+let last: { at: string; result: WakeResult; status?: number } | null = null
 
 export type WakeResult = 'sent' | 'throttled' | 'not-set' | 'failed'
+
+/** What a deployment can say about the wake without exposing it: set or not, which routine, and the last attempt here. */
+export function wakeStatus() {
+  const url = process.env.PICKUP_ROUTINE_FIRE_URL, token = process.env.PICKUP_ROUTINE_TOKEN
+  return {
+    urlSet: !!url, tokenSet: !!token,
+    routine: url?.match(/\/routines\/(trig_[A-Za-z0-9]+)\/fire/)?.[1] ?? null,
+    lastOnThisInstance: last,
+  }
+}
 
 export async function wakePickup(reason: string, now = Date.now()): Promise<WakeResult> {
   const url = process.env.PICKUP_ROUTINE_FIRE_URL, token = process.env.PICKUP_ROUTINE_TOKEN
@@ -36,10 +47,12 @@ export async function wakePickup(reason: string, now = Date.now()): Promise<Wake
       body: JSON.stringify({ text: `Woken by bars-engine: ${reason}` }),
       signal: AbortSignal.timeout(8000),
     })
+    last = { at: new Date().toISOString(), result: res.ok ? 'sent' : 'failed', status: res.status }
     if (res.ok) return 'sent'
     console.error(`[work] pickup wake refused: ${res.status} ${(await res.text().catch(() => '')).slice(0, 200)}`)
   } catch (e) {
     console.error('[work] pickup wake failed', e)
+    last = { at: new Date().toISOString(), result: 'failed' }
   }
   return 'failed'
 }
@@ -51,4 +64,4 @@ export function wakePickupAfter(reason: string) {
 }
 
 /** Test hook: forget the last wake. */
-export function resetWakeThrottle() { lastSent = 0 }
+export function resetWakeThrottle() { lastSent = 0; last = null }
