@@ -27,6 +27,7 @@ import type { UnpackingAnswers, SerializableQuestPacket } from '@/lib/quest-gram
 import { getAlignmentContext, drawAlignedHexagram } from '@/lib/iching-alignment'
 import { getHexagramStructure } from '@/lib/iching-struct'
 import { getStageAction } from '@/lib/kotter'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
@@ -416,8 +417,9 @@ export async function placeBid(slotId: string, amount: number) {
   const highestBid = slot.bids[0]?.amount ?? 0
   if (amount <= highestBid) return { error: `Bid must exceed current highest (${highestBid}v)` }
 
+  await releaseStaleStakes(db, player.id)
   const wallet = await db.vibulon.findMany({
-    where: { ownerId: player.id },
+    where: spendableWhere(player.id),
     orderBy: { createdAt: 'asc' },
     take: amount,
   })
@@ -970,8 +972,9 @@ export async function attachQuestToSlot(
   if (quest.parentId) return { error: 'Quest is already attached as a subquest' }
   if (quest.status !== 'active') return { error: 'Quest must be active' }
 
+  await releaseStaleStakes(db, player.id)
   const wallet = await db.vibulon.findMany({
-    where: { ownerId: player.id },
+    where: spendableWhere(player.id),
     orderBy: { createdAt: 'asc' },
     take: 1,
   })

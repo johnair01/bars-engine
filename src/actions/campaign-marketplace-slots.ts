@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MARKETPLACE_BASE_SLOTS, vibeulonCostForNextSlot } from '@/lib/campaign-marketplace'
 import { getOrCreateMarketplaceProfile } from '@/lib/campaign-marketplace-queries'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 export type AttachArtifactToSlotResult = { success: true } | { error: string }
 
@@ -75,8 +76,9 @@ export async function purchaseAdditionalMarketplaceSlot(campaignRef: string): Pr
   const profile = await getOrCreateMarketplaceProfile(player.id, ref)
   const cost = vibeulonCostForNextSlot(profile.paidExtensions)
 
+  await releaseStaleStakes(db, player.id)
   const wallet = await db.vibulon.findMany({
-    where: { ownerId: player.id },
+    where: spendableWhere(player.id),
     orderBy: { createdAt: 'asc' },
     take: cost,
   })

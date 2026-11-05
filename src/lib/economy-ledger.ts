@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 export type LedgerEventType = 'MINT' | 'ATTUNE' | 'SPEND' | 'TRANSMUTE'
 
@@ -11,8 +12,9 @@ export class LedgerService {
 
         return await db.$transaction(async (tx) => {
             // 1. Check global balance (vibulon tokens)
+            await releaseStaleStakes(tx, playerId)
             const globalTokens = await tx.vibulon.findMany({
-                where: { ownerId: playerId },
+                where: spendableWhere(playerId),
                 take: amount
             })
 

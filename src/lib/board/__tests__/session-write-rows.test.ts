@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { holdOf, sessionWrite } from '../session-write'
+import { holdOf, lookErrors, sessionWrite } from '../session-write'
 
 /** An in-memory boardSave: just enough of Prisma for sessionWrite (findFirst newest, create). */
 function fakeDb() {
@@ -73,5 +73,59 @@ describe('sessionWrite rows (worklist-api)', () => {
     expect(holdOf({ still: `/board/stills/sha/${h}.jpg`, examples: [{ src: `sha/${h}.jpg` }], href: 'i=sha%2F' + 'd'.repeat(64) + '.png' }))
       .toEqual([h, 'd'.repeat(64)])
     expect(holdOf({ still: 'stills/94a1067981bd2ba3.jpg' })).toEqual([])
+  })
+})
+
+describe('the picture gate (a look he cannot see is refused)', () => {
+  const q = { kind: 'questions', pass: 'p', faces: ['regent'], q: 'Does it read?', look: true, options: [{ v: 'A', label: 'Yes' }] }
+  const pic = 'https://example.com/a.png'
+  const yes = async () => true, no = async () => false, none = async () => [] as string[]
+
+  it('refuses a look row with no still, loudly', async () => {
+    const db = fakeDb()
+    const r = await sessionWrite(db as never, [{ collection: 'rows', docId: 'x-look-1', data: q }], false, none, yes)
+    expect(r.written).toEqual([])
+    expect(r.refused[0]).toMatch(/^rows\/x-look-1: LOOK NOT POSTED: its card has no picture/)
+    expect(db.rows).toHaveLength(0)
+  })
+
+  it('refuses by id even without look: true, and a Vercel preview Open it', async () => {
+    const db = fakeDb()
+    const { look: _l, ...nolook } = q
+    const r = await sessionWrite(db as never, [
+      { collection: 'rows', docId: 'y-look-2', data: nolook },
+      { collection: 'rows', docId: 'y-look-3', data: { ...q, still: pic, href: 'https://bars-engine-git-x-team.vercel.app/a' } },
+    ], false, none, yes)
+    expect(r.refused[0]).toMatch(/y-look-2.*LOOK NOT POSTED/)
+    expect(r.refused[1]).toMatch(/Vercel preview/)
+  })
+
+  it('refuses a picture that does not load, writes one that does', async () => {
+    const bad = await sessionWrite(fakeDb() as never, [{ collection: 'rows', docId: 'z-look-1', data: { ...q, still: pic } }], false, none, no)
+    expect(bad.refused[0]).toMatch(/does not answer 200 as an image/)
+    const db = fakeDb()
+    const ok = await sessionWrite(db as never, [{ collection: 'rows', docId: 'z-look-1', data: { ...q, still: pic } }], false, none, yes)
+    expect(ok.written).toEqual(['rows/z-look-1'])
+  })
+
+  it('judges a step update on the merged document, and takes an image file as the picture', async () => {
+    const db = fakeDb()
+    await sessionWrite(db as never, [{ collection: 'steps', docId: 's-look-1', data: { do: 'x', look: true, files: [{ src: pic }] } }], false, none, yes)
+    expect(db.rows).toHaveLength(1)
+    const r = await sessionWrite(db as never, [{ collection: 'steps', docId: 's-look-1', data: { do: 'y' } }], false, none, yes)
+    expect(r.written).toEqual(['steps/s-look-1'])
+    const bare = await sessionWrite(fakeDb() as never, [{ collection: 'steps', docId: 's-look-2', data: { do: 'x', look: true } }], false, none, yes)
+    expect(bare.refused[0]).toMatch(/LOOK NOT POSTED/)
+  })
+
+  it('leaves non-looks alone', () => {
+    expect(lookErrors('plain', { kind: 'positions' })).toEqual([])
+  })
+  it('refuses a bars-engine app page or a /board/look page with no picture as Open it', () => {
+    const still = 'https://bars-engine.vercel.app/board/stills/0123456789abcdef.jpg'
+    expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/ontology-game/between' })[0]).toMatch(/app page/)
+    expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/board/look?t=x' })[0]).toMatch(/names no picture/)
+    expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/board/look?t=x&i=a.jpg',
+      href2: 'https://bars-engine.vercel.app/ontology-game/between' })).toEqual([])
   })
 })

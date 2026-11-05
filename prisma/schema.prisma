@@ -2165,6 +2165,8 @@ model Instance {
   communityCharacterCorpus     Json?                   @map("community_character_corpus")
   /// GM-overridable CYOA Composer step ordering per campaign (JSON)
   composerStepOverrides        Json?
+  /// Friendcraft: admin/steward-edited default text of the deck pages (public/between/friendcraft/deck.js COPY_FIELDS); null = the built-in text
+  friendcraftCopy              Json?                   @map("friendcraft_copy")
   activeInConfigs              AppConfig[]
   scopedArchetypes             Archetype[]             @relation("ArchetypeInstance")
   barShareExternals            BarShareExternal[]
@@ -5349,6 +5351,21 @@ model BetweenPresence {
 
   @@id([gardenId, playerId])
   @@map("between_presence")
+}
+
+/// Lantern Hall (six-faces-council council/callsheets/lantern-hall.md, brief "Lantern Hall, port 1"): one table a player
+/// deals from their intake. `intake` is the reel's `intake/game` doc as `parseIntake` accepts it (goal, want, now, truth,
+/// truthCtx, res, tags); the board state is replayed from it by src/lib/lantern/engine.ts, so nothing else is stored yet.
+/// playerId is Player.id as a plain column, the way the Between keeps its owners.
+model LanternTable {
+  id        String   @id @default(cuid())
+  playerId  String   @map("player_id")
+  intake    Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([playerId, updatedAt])
+  @@map("lantern_tables")
 }
 
 /// The Calrunian passport (six-faces-council pass calrunia-world1, cw-passport): the one record that crosses Calrunia's places,

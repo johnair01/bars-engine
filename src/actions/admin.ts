@@ -9,6 +9,7 @@ import { mintVibulon } from '@/actions/economy'
 import { hashPassword } from '@/lib/auth-utils'
 import { deriveAvatarConfig } from '@/lib/avatar-utils'
 import { getSpriteDirForLayer } from '@/lib/avatar-parts'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
 
 // ===================================
 // ADMIN STATS
@@ -822,8 +823,9 @@ export async function adminTransferVibulons(sourcePlayerId: string, targetPlayer
 
     return await db.$transaction(async (tx) => {
         // 1. Get Source's Wallet (FIFO)
+        await releaseStaleStakes(tx, sourcePlayerId)
         const wallet = await tx.vibulon.findMany({
-            where: { ownerId: sourcePlayerId },
+            where: spendableWhere(sourcePlayerId),
             orderBy: { createdAt: 'asc' },
             take: amount
         })
