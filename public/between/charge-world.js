@@ -12,7 +12,11 @@
 
    Build 3 (his yes on ctw-locations-look-1 and ctw-nook-look-2): once the episode is unrolled, the doorway leads to its
    first land. Walk to the doorway and step through, and /between/land.html builds the encounter location (the sample's
-   Unfinished Clearing) from the sheet; the charge and your look ride over in this tab's sessionStorage, nowhere else. */
+   Unfinished Clearing) from the sheet; the charge and your look ride over in this tab's sessionStorage, nowhere else.
+
+   The visitor's nook (opts.visit, /between/walk; his B on ctw-walk-demo-look-1): the stand already holds the sample's
+   charge, left by someone who wants a garage studio to make music with friends. "Unroll their map" raises the panes, and the
+   doorway leads into the walk through the four lands. A visitor brings no charge of their own, since nothing here is kept. */
 import * as THREE from "three";
 import { densityOf } from "./block-room.js";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
@@ -208,8 +212,8 @@ export function mount(B, opts = {}) {
   function openSheet() {
     const gaps = todo(charge);
     const d = openDlg(md(episode) + (gaps.length ? `<p class="muted">Still to draft: ${esc(gaps.join(", "))}.</p>` : "")
-      + `<div class="foot"><button type="button" data-ctw="charge">Change the charge</button><button type="button" class="q" data-ctw="close">Close</button></div>`);
-    d.querySelector('[data-ctw="charge"]').onclick = openCharge; d.querySelector('[data-ctw="close"]').onclick = closeDlg;
+      + `<div class="foot">${opts.visit ? "" : `<button type="button" data-ctw="charge">Change the charge</button>`}<button type="button" class="q" data-ctw="close">Close</button></div>`);
+    const ch = d.querySelector('[data-ctw="charge"]'); if (ch) ch.onclick = openCharge; d.querySelector('[data-ctw="close"]').onclick = closeDlg;
   }
   function openPane(p) {
     const l = p.loc;
@@ -223,14 +227,18 @@ export function mount(B, opts = {}) {
   card.addEventListener("click", e => {
     const b = e.target.closest("[data-ctw]"); if (!b) return;
     const k = b.dataset.ctw;
-    if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
+    if (k === "sample") unroll(JSON.parse(JSON.stringify(sample)), null); else if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
     else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough();
   });
   function showCard() {
     let key = "", html = "";
     if (near === "stand") {
       key = "stand" + (episode ? "1" : "0");
-      html = episode
+      html = opts.visit
+        ? (episode
+          ? `<div><b>The map stand</b><div class="t">Their charge made the ${esc(g.environment)} under ${esc(g.weather)}, and ${esc(g.villain)} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button></div>`
+          : `<div><b>The map stand</b><div class="t">Someone left their charge here. They want ${esc(sample.q1.words)}. They feel ${esc(sample.q4.weather[0].feeling)}, as strong as ${esc(sample.q4.weather[0].strength)}.</div></div><div class="row"><button type="button" data-ctw="sample">Unroll their map</button></div>`)
+        : episode
         ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button></div>`
         : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button></div>`;
     } else if (near && near.startsWith("pane:")) {
@@ -294,7 +302,9 @@ export function mount(B, opts = {}) {
     closeDlg(); card.hidden = true;
     const fade = document.createElement("div"); fade.style.cssText = "position:fixed;inset:0;z-index:90;background:#1a1210;opacity:0;transition:opacity .6s";
     document.body.appendChild(fade); requestAnimationFrame(() => { fade.style.opacity = "1"; });
-    setTimeout(() => { location.href = href || "/between/land.html"; }, 650);
+    // the visitor's nook: its doorway starts the walk, and the chamber's arch keeps the walk's flag (the walk reads the sample)
+    const to = opts.visit ? (href ? href + (href.includes("?") ? "&" : "?") + "walk=1" : "/between/land.html?walk=1") : href || "/between/land.html";
+    setTimeout(() => { location.href = to; }, 650);
   }
 
   /* ---------- walking: a tap on the stand or a pane walks you there; you stand at the stand, never inside it ---------- */

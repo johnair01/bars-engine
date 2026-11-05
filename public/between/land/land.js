@@ -60,8 +60,11 @@ const PLACE = ["scale-house", "friends-fire", "chamber"].includes(Q.get("place")
 /* The walk (Wendell, 2026-11-04: "we need an end to end demo space of these connected worlds I can use to show people").
    /between/walk opens ?walk=1 in the clearing, and the flag rides each path: the clearing, the Scale-House, the Friends' Fire,
    then the keeping chamber, where the season's frost waits to be melted. The walk reads the sample's charge, never a charge
-   left in the tab by the nook, and keeps nothing: the chamber shows the sample's stones and melts its frost dry. The nook
-   stays behind sign-in, so the walk starts at the arch's far side. */
+   left in the tab by the nook, and keeps nothing: the chamber shows the sample's stones and melts its frost dry.
+   His B on ctw-walk-demo-look-1: the walk starts in a visitor's nook (/between/walk, garden.js VISIT) with no sign-in and
+   no store, where the sample's charge waits on the map stand; the clearing's arch leads back there, and so does "Walk it
+   again". */
+const WALK_NOOK = "/between/walk";
 const WALK = Q.get("walk") === "1";
 const WALK_STOPS = ["clearing", "scale-house", "friends-fire", "chamber"];
 if (WALK && PLACE === "clearing" && !Q.get("at")) { try { sessionStorage.removeItem("ctw-song"); } catch (e) { /* the cadence */ } }
@@ -787,10 +790,10 @@ function showCard() {
     html = state.laid ? card("The footbridge", "One plank, and it holds.", btn("walk:far", "Cross to the far bank"))
       : state.plank ? card("The footbridge", "Its middle planks are gone. The plank you carry is long enough.", btn("lay", "Lay the plank across"))
       : card("The footbridge", "Its middle planks are gone and the gully is deep. Your toolbag is heavy; the balance in the doorway would hold it.", btn("walk:balance", "Walk to the balance"));
-  } else if (n === "arch" && WALK) { key = "arch"; html = card("The doorway", "On this walk your nook stays on the other side. The path out through the far trees leads on.");
+  } else if (n === "arch" && WALK) { key = "arch"; html = card("The doorway back", "The visitor's nook, where the map was unrolled, is through the roots. The path out through the far trees leads on.", btn("home", "Back through to the nook"));
   } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
   else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
-  else if (n === "ch-home" && WALK) { key = n; html = card("The end of the walk", "Four lands from one charge: the clearing's song, the Weigher's plank, the fire where Oriel played it on, and this room, where what the cold leaves is kept.", btn("again", "Walk it again")); }
+  else if (n === "ch-home" && WALK) { key = n; html = card("The end of the walk", "One charge on a map stand, and four lands it made: the clearing's song, the Weigher's plank, the fire where Oriel played it on, and this room, where what the cold leaves is kept.", btn("again", "Walk it again from the nook")); }
   else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
   else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
     html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
@@ -1016,11 +1019,12 @@ function goPlace(where) {
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
   let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
+  if (WALK) back = WALK_NOOK;   // the walk's nook is the visitor's, whoever opened the walk
   setTimeout(() => { location.href = back; }, 700);
 }
 function walkAgain() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  setTimeout(() => { location.href = "/between/land.html?walk=1" + (Q.get("paint") ? "&paint=" + Q.get("paint") : ""); }, 700);
+  setTimeout(() => { location.href = WALK_NOOK; }, 700);
 }
 $("#homeBtn").onclick = () => (WALK ? walkAgain() : goHome());
 $("#soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("between-sound", soundOn ? "1" : "0"); } catch (e) { /* this page only */ }
@@ -1160,7 +1164,7 @@ function frame() {
     if (FFX && state.sat) { const sv = seatView(); camera.position.copy(sv.want); camLook.copy(sv.look); }   // opened seated: no ease from afar
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
-    if (WALK && PLACE === "clearing" && !Q.get("at")) caption("A walk through four lands of the Between, made from one person's charge: this clearing, the Scale-House, the Friends' Fire and the keeping chamber.", 7);
+    if (WALK && PLACE === "clearing" && !Q.get("at")) caption("The first of four lands their charge made: this clearing, then the Scale-House, the Friends' Fire and the keeping chamber.", 7);
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
     if (WALK && CHX) caption("The arch you came in by ends the walk, whenever you are done here.", 6);
     if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);

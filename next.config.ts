@@ -49,8 +49,6 @@ const nextConfig: NextConfig = {
       // /play is the current guided creative loop.
       { source: "/game", destination: "/play", permanent: false },
       { source: "/game/:path*", destination: "/play", permanent: false },
-      // The walk through the Between's lands, open to anyone (Wendell, 2026-11-04: a demo space he can show people).
-      { source: "/between/walk", destination: "/between/land.html?walk=1", permanent: false },
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
       // wendell.masteringallyship.com is on this Vercel project and showed the home page. Its

@@ -27,7 +27,7 @@
    it names none). */
 
 const css = `
-#voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: var(--ui-ink, #f6ecdc); --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); }
+#voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: #f6ecdc; /* the voice floats over the 3D room, dark in either theme, so its ink stays light (a phone in light mode drew it dark on dark) */ --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); }
 #voice[hidden] { display: none; }
 #voice .vw { position: absolute; left: max(16px, 7%); right: max(16px, 7%); transition: top .5s var(--ui-ease, ease), bottom .5s var(--ui-ease, ease), opacity .4s ease; }
 #voice .vh { font: 400 calc(24px + 8px * var(--ui-loud, 0)) / 1.16 var(--display); text-wrap: balance; text-shadow: 0 1px 3px #000, 0 0 18px rgba(0,0,0,.7); }
@@ -53,7 +53,7 @@ const css = `
 #voice .vl b { font: 400 15px var(--display); color: #ffd08a; }
 #voice .vl span { padding-left: 12px; border-left: 2px solid #ffd08a; color: #fff3df; }
 #ui-down { position: fixed; z-index: 46; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; min-height: 44px; min-width: 44px; display: flex; align-items: center; gap: 8px;
-  padding: 0 14px 0 10px; border: 0; border-radius: 22px; background: rgba(10,6,4,.5); color: var(--ui-ink, #f6ecdc); font: 700 14px/1 var(--ui-body, system-ui, sans-serif);
+  padding: 0 14px 0 10px; border: 0; border-radius: 22px; background: rgba(10,6,4,.5); color: #f6ecdc; font: 700 14px/1 var(--ui-body, system-ui, sans-serif);
   letter-spacing: .01em; text-shadow: 0 1px 3px rgba(0,0,0,.9); cursor: pointer; }
 #ui-down[hidden] { display: none; }
 #ui-down svg { width: 22px; height: 22px; flex: none; }
