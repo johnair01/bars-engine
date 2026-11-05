@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest'
 import { FEELINGS } from '../coaching-map'
 import { withSourceTags, readSourceTags } from '../source-tags'
 import * as U from '../unpacking-walk'
-// @ts-expect-error plain ES module in public/, no types
 import * as W from '../../../../public/coaching/walk/data.js'
 
 describe('coaching walk data', () => {
@@ -23,7 +22,7 @@ describe('coaching walk data', () => {
 
   it('carries each feeling’s job from coaching-map.ts', () => {
     for (const [ch, name] of Object.entries(U.CHANNEL_NAME)) {
-      expect(W.JOBS[ch]).toBe(FEELINGS.find((f) => f.name === name)!.job)
+      expect((W.JOBS as Record<string, string>)[ch]).toBe(FEELINGS.find((f) => f.name === name)!.job)
     }
   })
 
