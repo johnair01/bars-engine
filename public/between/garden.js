@@ -26,6 +26,7 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
 import { makeQiSky, qiOf } from "./sky-qi.js";
+import { read as growthRead, standIn as growthStandIn } from "./growth.js";   // friendship-between-growth: health, kept days, bowls, found pots from the Between's own items
 import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
@@ -284,14 +285,27 @@ const possessive = (uid, g) => uid === me ? "yours" : nameOf(uid, g) + "'s";
 /* A lantern counts toward the Between once, when someone other than its maker has said yes (lanternLit in rules.ts). */
 const lanternLit = it => it.kind === "lantern" && !!it.yes && typeof it.yes === "object" && Object.entries(it.yes).some(([k, v]) => k !== it.by && typeof v === "number" && Number.isFinite(v));
 const isFed = it => it.kind === "lantern" ? lanternLit(it) : it.kind !== "agreement" && (it.status === "received" || it.status === "kept");
-function satisfaction(its) {
-  let agreed = 0, fed = 0;
-  for (const it of its.values()) {
-    if (it.kind === "agreement" && it.status === "agreed") agreed++;
-    else if (isFed(it)) fed++;
+/* The Between's health (FR-003): the built inputs (agreements held, offerings fed) plus the feeds of the last seven days and the
+   kept-days lift, all read by growth.js from the shared items and spirits, so both friends compute the same light. ?growth=<feeds>
+   &kept=<days>&lapsed=<days>&cup=1 add a stand-in's items on a preview host only (FR-014); ?growth=0 adds nothing and reads as today. */
+const GROWTH_Q = PREVIEW_HOST_EARLY() ? new URLSearchParams(location.search) : null;
+function PREVIEW_HOST_EARLY() { return location.hostname !== "bars-engine.vercel.app"; }
+function growthOf(V) {
+  const g = V && V.g, items = V ? V.items : new Map();
+  const members = g && g.members ? Object.keys(g.members) : [];
+  if (!g || isHome(g)) return growthRead({ items, spirits: new Map(), garden: g || {}, members: [], now: now() });
+  let garden = g, merged = items;
+  if (GROWTH_Q && GROWTH_Q.get("growth") != null && Number.isFinite(+GROWTH_Q.get("growth"))) {
+    const them = members.find(m => m !== me) || "stand-in";
+    const st = growthStandIn({ feeds: Math.max(0, +GROWTH_Q.get("growth")), kept: +GROWTH_Q.get("kept") || 0, lapsed: +GROWTH_Q.get("lapsed") || 0, now: now(), me, them });
+    merged = new Map([...items, ...st.items]);
+    if (GROWTH_Q.get("cup") === "1") merged.set("preview-cup", { kind: "cup", by: them, at: now() - 60e3, tea: "hearth", status: "poured" });
+    garden = { ...g, betweenSince: now() - 30 * 864e5, startedAt: now() - 30 * 864e5 };
+    return growthRead({ items: merged, spirits: V.spirits, garden, members: [me, them], now: now() });
   }
-  return Math.max(1, Math.min(10, Math.round(3 + Math.min(agreed, 4) * 1.2 + Math.min(fed, 8) * 0.6)));
+  return growthRead({ items: merged, spirits: V.spirits, garden, members, now: now() });
 }
+const healthOf = V => growthOf(V).health;
 const stateOf = s => s <= 4 ? "charged" : s <= 7 ? "steadied" : "allied";
 const STATE_TEXT = { charged: ["Charged", "restless, still carrying more charge than care"], steadied: ["Steadied", "settled, holding"], allied: ["Allied", "fed and in leaf"] };
 const isStale = g => g && g.lastTendedAt && now() - g.lastTendedAt > STALE_DAYS * 864e5;
@@ -1140,6 +1154,7 @@ function teaPour(skip = 0) {
   if (!m.attach(meState.body)) return;
   m.pour(performance.now() / 1000, skip);   // skip: seconds in, or "sip" (tea.js knows where each drink's first sip is)
   toast("A cup, by the fire."); hmHud();
+  if (window.__between && window.__between.growthView) window.__between.growthView.poured();   // the pour feeds the Between, or leaves a covered cup (growth FR-007)
 }
 function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
 function teaFrame(t) {
@@ -1761,7 +1776,7 @@ function refreshHud() {
   else if (isHome(g)) { nc.innerHTML = `<h1>Your homeroom</h1><span class="sub">Only you come in here · ${esc(styleOf(g.style).name)}</span>`; }
   else if (g.phase === "closed") { nc.innerHTML = `<h1>The Between</h1><span class="sub">This garden is closed</span>`; }
   else {
-    const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
+    const s = healthOf(V), st = stateOf(s), stale = isStale(g);
     const nm = betweenName(V.items);
     nc.innerHTML = `<h1>${esc(nm || (g.phase === "spark" ? "The spark" : "The Between"))}</h1>
       <span class="sub">${g.phase === "spark" ? "toward " + esc(g.setup.who) : "you and " + esc(nameOf(other(g), g))} · ${esc(g.setup.kind)}</span>
@@ -1911,7 +1926,7 @@ function nearHtml(key, V, g) {
     return `<div class="what"><b>The mirror</b><span class="t">${lk ? "You, as you made yourself: " + esc(lookWords(lk)) + "." : "You have not chosen a look yet. The mirror shows a traveller in a long violet coat until you do."}</span></div><div class="row"><button type="button" data-open="look">Change how you look</button></div>`;
   }
   if (key === "between") {
-    const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
+    const s = healthOf(V), st = stateOf(s), stale = isStale(g);
     const nm = betweenName(V.items);
     let txt;
     if (g.phase === "spark") txt = `<b>${esc(nm || "The spark")}</b><span class="t">What you carry toward ${esc(g.setup.who)}. ${STATE_TEXT[st][0]}: ${STATE_TEXT[st][1]}. It is yours alone. When they join, a new Between begins for the two of you, and its history starts then.</span>`;
@@ -3033,7 +3048,7 @@ async function takeCopy() {
       history: Object.values(i.history || {}).sort((a, b) => a.at - b.at).map(e => ({ who: nameOf(e.by, g), act: e.act, at: new Date(e.at).toISOString() })) };
   });
   const copy = { what: "A copy of a Between, taken from the Between's 3D garden", takenAt: new Date().toISOString(), name: betweenName(V.items), relationship: g && g.setup,
-    state: STATE_TEXT[stateOf(satisfaction(V.items))][0], items: its,
+    state: STATE_TEXT[stateOf(healthOf(V))][0], items: its,
     spirits: [...V.spirits.values()].map(s => ({ name: s.name, element: s.element, owner: nameOf(s.owner, g) })),
     daemons: [...V.daemons.values()].map(d => ({ daemon: (DAEMONS[d.which] || [d.which])[0], owner: nameOf(d.owner, g) })),
     credit: "Inspired by Eri Kardos, Relationship Agreements (2016)." };
@@ -3999,7 +4014,7 @@ function refresh() {
   queueMicrotask(() => {
     refreshQueued = false;
     const V = view(); const g = V.g;
-    if (g && g.phase !== "closed") { const s = satisfaction(V.items); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
+    if (g && g.phase !== "closed") { const s = healthOf(V); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
     else look = { phase: "spark", state: "steadied", stale: true, sat: 2 };
     between.visible = !!g && !isHome(g);
     syncRoom(); syncShelf();
@@ -4165,7 +4180,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -4203,3 +4218,7 @@ import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__
 // jar shelf, Firefly lead on the dais, Lantern out at the mouth. Previews: &game=found-lights|firefly-lead|lantern-out opens that game's
 // place with a stand-in friend, &jars=<n> seeds left jars, &calls=1 seeds tonight's three calls (e.g. ?room=standin&game=lantern-out&calls=1)
 import("./games/index.js").then(m => { window.__between.games = m.mount(window.__between, { preview: PREVIEW_HOST, game: PREVIEW_HOST ? KQ.get("game") : null, jars: PREVIEW_HOST ? KQ.get("jars") : null, calls: PREVIEW_HOST ? KQ.get("calls") : null, lit: PREVIEW_HOST ? KQ.get("lit") : null, standin: STANDIN_ROOM }); }).catch(e => noteError(e, "games"));
+
+// The Between's growth drawn as things in the hollow (friendship-between-growth FR-004 to FR-008, growth-view.js): bowls of tea on the low table,
+// the mantel's pots found one at a time, a covered cup to drink, the nook's door lantern. Previews: ?growth=<feeds>&kept=<days>&lapsed=<days>&cup=1, ?nook=1&waiting=1
+import("./growth-view.js").then(m => { window.__between.growthView = m.mount(window.__between, { waiting: PREVIEW_HOST && KQ.get("waiting") === "1" }); }).catch(e => noteError(e, "growth"));
