@@ -31,7 +31,7 @@ import {
 import { isLensDomainKey } from '@/lib/lenses/domains'
 import { buildLensGoalSnapshot, resolveLensGoalTrace } from '@/lib/lenses/lineage'
 import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
-import { ACTIVE_TTV_TASK_STATUSES, canCommitTtvTask, nextHistoricalPriorityRank } from '@/lib/tap-the-vein/commit-policy'
+import { ACTIVE_TTV_TASK_STATUSES, canCommitTtvTask, isAlreadyLiveToday, nextHistoricalPriorityRank } from '@/lib/tap-the-vein/commit-policy'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import { growQuestFromBar } from '@/actions/bars'
 import { ensureTodayLens } from '@/lib/lenses/ensure'
@@ -413,6 +413,14 @@ export async function commitTask(input: {
       if (!lensGoal) return { error: 'That lens goal is no longer active.' }
       attachSnapshot = await buildLensGoalSnapshot(lensGoal.id, player.id, 'attach_snapshot')
       if (!attachSnapshot) return { error: 'That lens goal thread could not be traced. Reattach the task before keeping it.' }
+    }
+
+    const liveToday = await db.tapTheVeinTask.findMany({
+      where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] } },
+      select: { originalText: true },
+    })
+    if (isAlreadyLiveToday(liveToday.map((t) => t.originalText), text)) {
+      return { error: 'Already on today’s list.' }
     }
 
     const created = await db.$transaction(async (tx) => {
