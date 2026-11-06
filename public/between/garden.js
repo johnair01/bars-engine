@@ -563,6 +563,10 @@ const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
    stand-in partner already in it, so the partner's side can be tested alone. It opens from the nook's doorway ("Stand-in room")
    or at once with ?room=standin. It reads and writes nothing in the store. */
 const STANDIN_ROOM = PREVIEW_HOST && new URLSearchParams(location.search).get("room") === "standin";
+/* The visitor's nook (Six-faces-council charge-to-world, his B on ctw-walk-demo-look-1, 2026-11-04): /between/walk opens a
+   nook anyone can stand in, with no sign-in and no store. It reads and writes nothing; the map stand holds the sample's
+   charge, and its doorway leads into the walk through the four lands (/between/land.html?walk=1). */
+const VISIT = location.pathname === "/between/walk";
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
@@ -1196,6 +1200,8 @@ function placeMe() {
   const g = view().g;
   const spot = g && g.startedBy && g.startedBy !== me ? SPAWN[1] : SPAWN[0];
   meState.pos.copy(spot); meState.yaw = Math.PI; meState.placed = true;
+  // the visitor's nook: a step further in, so the camera behind them takes in the hearth, the map stand and the window
+  if (VISIT) meState.pos.set(-0.2, 0, 1.3);
 }
 async function ensurePeerBody(p) {
   const hue = hueOf(p.uid, view().g), lk = lookOf(p.uid);
@@ -1756,7 +1762,7 @@ function refreshHud() {
   const hud = $("#hud"); if (hud.hidden) return;
   const V = view(); const g = V.g;
   const nc = $("#namecard");
-  if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">${storeDown ? "The room only: the store did not answer" : "No garden here yet"}</span>`; }
+  if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">${VISIT ? "A visitor's nook" : storeDown ? "The room only: the store did not answer" : "No garden here yet"}</span>`; }
   else if (isHome(g)) { nc.innerHTML = `<h1>Your homeroom</h1><span class="sub">Only you come in here · ${esc(styleOf(g.style).name)}</span>`; }
   else if (g.phase === "closed") { nc.innerHTML = `<h1>The Between</h1><span class="sub">This garden is closed</span>`; }
   else {
@@ -1772,7 +1778,8 @@ function refreshHud() {
 
   const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (STANDIN_ROOM) hintText = "A stand-in room: your partner is here to rehearse with, and nothing is saved. Walk to them, or wait a few breaths for the letter. Tap the floor to walk; drag to look around.";
+  if (VISIT) hintText = "A visitor's nook. Someone left their charge on the map stand by the window: tap the floor to walk there. Nothing here is kept.";
+  else if (STANDIN_ROOM) hintText = "A stand-in room: your partner is here to rehearse with, and nothing is saved. Walk to them, or wait a few breaths for the letter. Tap the floor to walk; drag to look around.";
   else if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
   else if (isHome(g) && satchelOpen && minuteOn()) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap the mirror in your satchel, then a glowing spot on the floor.";
@@ -3466,7 +3473,7 @@ async function answerGold(id) {
   P.busy = false; n.answer = ans; renderPaper();
 }
 async function fetchCouncil() {
-  if (PREVIEW_HOST) return;
+  if (PREVIEW_HOST || VISIT) return;
   try { const r = await fetch("/api/tap-the-vein/scroll", { credentials: "same-origin", cache: "no-store" }); if (r.ok) councilScrolls = ((await r.json()).scrolls || []).slice(0, 3); } catch {}
 }
 /* Pressing the seal: it rolls up, and leaves through the doorway on a gust of leaves. */
@@ -4163,7 +4170,7 @@ let booted = false;
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
   let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
   // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
-  const guessShell = STANDIN_ROOM || (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const guessShell = VISIT ? "nook" : STANDIN_ROOM || (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
   const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
@@ -4181,7 +4188,7 @@ let booted = false;
   try {
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
-    if (STANDIN_ROOM) throw { code: "standin" };
+    if (STANDIN_ROOM || VISIT) throw { code: "standin" };   // the visitor's nook has no store to ask
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
     await joinFriendcraft(want, wantInvite);
     /* An invitation you opened is kept until you are in its room, so the doorway still offers it when you come back to the
@@ -4267,11 +4274,11 @@ window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () =>
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
-  addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
+  visit: VISIT, addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
   openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
-import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null }); }).catch(e => noteError(e, "ctw"));
+import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null, visit: VISIT }); }).catch(e => noteError(e, "ctw"));
 // the block's room (Six-faces-council block-metabolize, his A on bm-room-look-2): a charge on the map stand whose weather is a
 // storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
 // Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
