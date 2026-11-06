@@ -4,8 +4,10 @@
    Slice 1 wrote the block's compost record to the tab's sessionStorage, so closing the tab forgot it. This keeps it in the
    spirit store the caves already share (`oag.spirits.v1`, content/ontology-game/cave/spirit-store.js; cave compost
    capacity 6), as one more list beside the spirits and the purse:
-     kept: [{ id, element, feeling, strength, keepsake, let, stands: [{ stand, taken|passed, lines }], where, at }]
-   `let` is true for a piece let go (it stays in the chamber as one gold light). The record holds the block's element, its
+     kept: [{ id, element, feeling, strength, keepsake, let, pouch, stands: [{ stand, taken|passed, lines }], where, at }]
+   `let` is true for a piece let go (it stays in the chamber as one gold light). `pouch` is true for a piece carried since the
+   satchel slice: the piece itself is in the pouch at your satchel (pouch-keepsake.js), so its stone keeps its growth and the
+   light where it lay. The record holds the block's element, its
    feeling word and its size, which stands were taken and how many lines were written at each (slice 2b); never the charge's own sentences or the player's lines, and never a count shown to the
    player. The keeping chamber (land/chamber.js) reads it; block-room.js writes it at the clearing. Other fields in the
    store are kept as they are, so the caves' spirits and vibeulons are never touched. */
@@ -15,7 +17,7 @@ export function kept() { return (read().kept || []).map(r => ({ ...r })); }
 export function keep(rec) {
   if (!rec || !rec.element) return null;
   const s = read(), r = { id: rec.id || "k" + Date.now().toString(36), element: rec.element, feeling: rec.feeling || "", strength: rec.strength || "",
-    keepsake: rec.keepsake || "", let: !!rec.let, stands: (rec.stands || []).map(x => ({ ...x })), where: rec.where || "the land", at: rec.at || new Date().toISOString() };
+    keepsake: rec.keepsake || "", let: !!rec.let, pouch: !!rec.pouch && !rec.let, stands: (rec.stands || []).map(x => ({ ...x })), where: rec.where || "the land", at: rec.at || new Date().toISOString() };
   s.kept = (s.kept || []).filter(x => x.id !== r.id).concat([r]).slice(-MAX);
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { return null; }
   return { ...r };

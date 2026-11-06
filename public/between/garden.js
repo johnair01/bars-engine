@@ -680,12 +680,38 @@ const SAT_ICON = {
   rug: '<ellipse cx="15" cy="17" rx="13" ry="6" fill="#3f9e93"/><ellipse cx="15" cy="17" rx="9" ry="3.6" fill="none" stroke="#efe2c4" stroke-width="1.2"/>',
   scroll: '<rect x="6" y="11" width="18" height="8" rx="4" fill="#efe2c4"/><rect x="4" y="12" width="3" height="6" rx="1.5" fill="#7a5236"/><rect x="23" y="12" width="3" height="6" rx="1.5" fill="#7a5236"/><rect x="13.5" y="11" width="3" height="8" fill="#9a5a8e"/>',
 };
+/* The pouch at the satchel: what the keeping chamber's clearings left, carried home (block-metabolize, the satchel slice;
+   position bm6-keepsake-satchel-next). Each keepsake is held here for crafting and spirit husbandry, which come later, so for
+   now it is only shown: its shape in its element's colour, and its name. ?keepsakes=demo on a preview shows four, never saved. */
+const KS_DEMO = PREVIEW_HOST && KQ.get("keepsakes") === "demo" ? { d1: { element: "fire", kind: "ember", state: "held", at: 1 }, d2: { element: "water", kind: "vessel", state: "held", at: 2 },
+  d3: { element: "metal", kind: "key", state: "held", at: 3 }, d4: { element: "earth", kind: "stone", state: "held", at: 4 } } : {};
+const KS_NAME = { vessel: "A small vessel", key: "A key", ember: "An ember", stone: "A stone" };
+const KS_ICON = {
+  vessel: '<path d="M11 6h8M12 7c0 4-5 6-5 12a8 6 0 0 0 16 0c0-6-5-8-5-12" fill="#bfe0ff" stroke="#7fc0ff" stroke-width="1.4"/>',
+  key: '<circle cx="15" cy="9" r="4.5" fill="none" stroke="#e8dcc0" stroke-width="2.4"/><path d="M15 13.5v12M15 21h4M15 25h3" stroke="#e8dcc0" stroke-width="2.4"/>',
+  ember: '<path d="M15 5l8 9-8 11-8-11z" fill="#ff9a4a"/><path d="M15 5l3 9-3 11-3-11z" fill="#ffcf86"/>',
+  stone: '<path d="M8 12l6-5 8 3 2 9-6 5-9-2z" fill="#9a8a70"/><path d="M14 7l2 8 8 4" fill="none" stroke="#c8b08a" stroke-width="1.2"/>',
+};
+function keepsakes() { const p = overlay(pouchPath(), myPouch || {}) || {}; const k = p.keepsakes && typeof p.keepsakes === "object" ? p.keepsakes : {};
+  return Object.entries({ ...k, ...KS_DEMO }).filter(([, x]) => x && typeof x === "object" && x.state === "held" && KS_NAME[x.kind]).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)); }
+/* A keepsake carried while the store did not answer waits in this browser (pouch-keepsake.js); the homeroom takes it in. */
+let ksTaken = false;
+function takeWaitingKeepsakes() {
+  if (ksTaken || !me || !gardenId || !garden || !isHome(garden) || readOnly) return; ksTaken = true;
+  import("./pouch-keepsake.js").then(async m => { const w = m.waiting(), ids = Object.keys(w); if (!ids.length) return;
+    await op(pouchPath(), "update", { keepsakes: w }); m.clearWaiting(ids);
+    toast(ids.length === 1 ? "The keepsake you carried is in your pouch." : "The keepsakes you carried are in your pouch."); }).catch(e => noteError(e, "keepsakes"));
+}
+function pouchRow() {
+  const ks = keepsakes(); if (!ks.length) return "";
+  return `<div class="satpouch"><span class="satlab" id="satpouchlab">In your pouch</span><ul class="satrow" aria-labelledby="satpouchlab">${ks.map(([, k]) => `<li class="satkeep" title="Kept from the chamber, for crafting and feeding spirits"><svg viewBox="0 0 30 30" aria-hidden="true">${KS_ICON[k.kind]}</svg>${KS_NAME[k.kind]}</li>`).join("")}</ul></div>`;
+}
 function renderSatchel() {
   let el = $("#satchel");
   if (!el) { el = document.createElement("div"); el.id = "satchel"; el.className = "satchel"; el.setAttribute("role", "toolbar"); el.setAttribute("aria-label", "Your satchel"); $("#tools").before(el); }
   const items = satchelOpen ? mySatchel() : [];
   if (armed && !items.includes(armed)) armed = null;
-  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem${id === "mirror" && satchelGlows() ? " glow" : ""}" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>`;
+  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem${id === "mirror" && satchelGlows() ? " glow" : ""}" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>${pouchRow()}`;
   el.hidden = !satchelOpen;
   if (el._h !== h) { el.innerHTML = h; el._h = h; }
 }
@@ -776,6 +802,133 @@ function walkToTriangleWorkshop() {
   entering = { kind: "dojo", t0: performance.now() };
   burst(PORTAL_AT.clone(), 0x2dd4bf);
   refreshHud();
+}
+
+/* ---------- the veil you turn (Six-faces-council mechanic veil-turn, proposed; position bm10-doorway-redesign) ----------
+   His B on bm-satchel-look-3 (2026-11-04 05:33Z): "the doorway interface needs a redesign to be aesthetically closer to the
+   emergent interface. Looks like a dashboard in the most immersive part of the game. The magical portal between realms".
+   In the homeroom the cream sheet of rows is gone. You choose a place at the doorway itself: the camera comes to it, the
+   veil lights in one place's own colour with a glimpse of what waits there as lights you can count, the lintel carries one
+   light per place, and the place's name is the headline in the dark above (voice.js). A sideways drag across the veil, the
+   arrow keys or the quiet seal turn it to the next place; "Step through" walks you in. One place shows at a time. */
+let veil = null, veilK = 0;
+const VEIL_STILL = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+const VEIL_W = 256, VEIL_H = 512;
+const veilCanvas = document.createElement("canvas"); veilCanvas.width = VEIL_W; veilCanvas.height = VEIL_H;
+const veilTex = new THREE.CanvasTexture(veilCanvas); veilTex.colorSpace = THREE.SRGBColorSpace;
+const veilPips = new THREE.Group(); portal.add(veilPips);
+const KS_LIGHT = { fire: "#ff8a3d", water: "#7fc0ff", metal: "#e8e4dc", earth: "#d8b070", wood: "#8fd07a" };
+const rgbCss = (c, a = 1) => `rgba(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)},${a})`;
+const act0 = a => { const b = document.createElement("button"); b.dataset.act = a; b.hidden = true; document.body.appendChild(b); b.click(); b.remove(); };
+function realms() {
+  const out = [], rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
+  if (portalTo && !rooms.some(r => r.id === portalTo.id))
+    out.push({ key: "invite", name: portalTo.name ? portalTo.name + "'s room" : "The room you were invited to", line: "They asked you in. Their light is already there.",
+      col: styleOf(portalTo.style).sky.low, el: "water", lights: [["#ffe2a8", 1], ["#ffe2a8", 0.35]], go: () => walkThrough(portalTo.id, portalTo.invite) });
+  for (const r of rooms) out.push({ key: "room:" + r.id, name: r.phase === "spark" ? "A spark for " + roomName(r) : roomName(r) + " and you", line: r.phase === "spark" ? "You tend it alone until " + roomName(r) + " comes." : "The Between you share. Your two lights wait at its hearth.",
+    col: styleOf(r.style).sky.low, el: "wood", lights: r.phase === "spark" ? [["#ffe2a8", 1]] : [["#ffe2a8", 1], ["#ffe2a8", 1]], go: () => walkThrough(r.id) });
+  const ks = keepsakes();
+  out.push({ key: "chamber", name: "The keeping chamber", line: ks.length ? `${ks.length} ${ks.length === 1 ? "stone keeps its" : "stones keep their"} light, where your blocks cleared.` : "Where a block clears, it leaves a stone that keeps its light.",
+    col: [0.42, 0.62, 0.86], el: "water", frost: true, lights: ks.length ? ks.map(([, k]) => [KS_LIGHT[k.element] || "#ffe2a8", 1]) : [["#cfe6ff", 0.3]], go: () => act0("goChamber") });
+  out.push({ key: "dojo", name: "The Triangle Workshop", line: "Practice alone: make a triangle visible and choose a clean next move.",
+    col: [0.12, 0.62, 0.56], el: "metal", tri: true, lights: [["#9ff3e6", 1], ["#9ff3e6", 1], ["#9ff3e6", 1]], go: walkToTriangleWorkshop });
+  if (PREVIEW_HOST) out.push({ key: "standin", name: "The stand-in room", line: "A rehearsal for two, with a partner already there. Nothing is kept.",
+    col: [0.62, 0.42, 0.22], el: "earth", lights: [["#ffe2a8", 1], ["#ffd08a", 0.8]], go: walkToStandInRoom });
+  return out;
+}
+/* One place painted on the veil: its colour swirling in from the frame, a far ground, and what waits there as lights. */
+function paintVeil(R, t, turnK) {
+  const g = veilCanvas.getContext("2d"), c = R.col, cx = VEIL_W / 2, cy = VEIL_H * 0.52, lift = x => Math.min(1, x * 1.5 + 0.15);
+  g.globalAlpha = 1; g.fillStyle = "#07050a"; g.fillRect(0, 0, VEIL_W, VEIL_H);
+  const depth = g.createRadialGradient(cx, cy, 8, cx, cy, VEIL_H * 0.6);
+  depth.addColorStop(0, rgbCss(c.map(lift))); depth.addColorStop(0.45, rgbCss(c, 0.9)); depth.addColorStop(1, rgbCss(c, 0.15));
+  g.fillStyle = depth; g.fillRect(0, 0, VEIL_W, VEIL_H);
+  // the swirl at the frame: the edge of the threshold, turning; faster while the veil turns
+  g.lineWidth = 3;
+  for (let i = 0; i < 7; i++) { const a0 = t * (0.4 + turnK * 3) + i * 0.9, rr = 70 + i * 22;
+    g.strokeStyle = `rgba(255,236,200,${0.1 + 0.05 * Math.sin(t + i)})`; g.beginPath(); g.ellipse(cx, cy, rr * 0.72, rr * 1.35, 0, a0, a0 + 1.6); g.stroke(); }
+  if (R.frost) { g.fillStyle = "rgba(220,238,255,.35)"; for (let i = 0; i < 26; i++) { const x = (i * 97) % VEIL_W, y = (i * 61) % VEIL_H; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 7, y + 16); g.lineTo(x - 5, y + 14); g.fill(); } }
+  // the ground beyond: a low horizon, so the glimpse reads as a place and not a colour
+  const hz = VEIL_H * 0.7; g.fillStyle = rgbCss(c.map(x => x * 0.35), 0.85);
+  g.beginPath(); g.moveTo(0, hz + 14); g.quadraticCurveTo(cx, hz - 18, VEIL_W, hz + 10); g.lineTo(VEIL_W, VEIL_H); g.lineTo(0, VEIL_H); g.fill();
+  if (R.tri) { g.strokeStyle = "rgba(159,243,230,.55)"; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, hz - 120); g.lineTo(cx - 70, hz - 10); g.lineTo(cx + 70, hz - 10); g.closePath(); g.stroke(); }
+  // what waits there: one light each, standing on the far ground
+  const L = R.lights, n = L.length, pts = R.tri ? [[cx, hz - 120], [cx - 70, hz - 10], [cx + 70, hz - 10]]
+    : L.map((_, i) => [cx + (i - (n - 1) / 2) * Math.min(46, 180 / Math.max(1, n)), hz - 6 - (i % 2) * 10]);
+  L.forEach(([col, a], i) => { const [x, y] = pts[i] || pts[0], pulse = 0.85 + 0.15 * Math.sin(t * 2 + i);
+    const gl = g.createRadialGradient(x, y, 0, x, y, 26); gl.addColorStop(0, col); gl.addColorStop(0.25, col); gl.addColorStop(1, "rgba(0,0,0,0)");
+    g.globalAlpha = a * pulse; g.fillStyle = gl; g.beginPath(); g.arc(x, y, 26, 0, Math.PI * 2); g.fill();
+    if (R.frost) { g.globalAlpha = 0.7 * a; g.fillStyle = "#3a3440"; g.beginPath(); g.ellipse(x, y + 12, 13, 5, 0, 0, Math.PI * 2); g.fill(); } });
+  g.globalAlpha = 1;
+  // the turn: the old place washes out to the threshold's own light and the new one washes in
+  if (turnK > 0) { g.fillStyle = `rgba(255,232,196,${Math.sin(turnK * Math.PI) * 0.75})`; g.fillRect(0, 0, VEIL_W, VEIL_H); }
+  veilTex.needsUpdate = true;
+}
+function veilStand() {
+  const f = new THREE.Vector3(Math.sin(portal.rotation.y), 0, Math.cos(portal.rotation.y)), side = new THREE.Vector3(f.z, 0, -f.x);
+  return { f, side, at: PORTAL_AT.clone().add(f.clone().multiplyScalar(0.8)).add(side.clone().multiplyScalar(0.82)) };
+}
+function openVeil() {
+  if (!portalOpen()) { toast("The doorway opens when your first minute here is complete."); return; }
+  const R = realms(); if (!R.length) return;
+  closeSheet(); standUp(); selected = "portal";
+  veil = { i: Math.max(0, R.findIndex(r => r.key === "invite")), turnT: 0, from: null, going: false, dragX: 0 };
+  meState.target = veilStand().at; refreshList();
+  portalVeil.map = veilTex; portalVeil.emissiveMap = veilTex; portalVeil.color.setRGB(1, 1, 1); portalVeil.needsUpdate = true;
+  veilSay(); refreshHud();
+}
+function closeVeil() {
+  if (!veil) return; veil = null;
+  portalVeil.map = null; portalVeil.emissiveMap = null; portalVeil.color.setHex(0x1a1420); portalVeil.needsUpdate = true;
+  while (veilPips.children.length) veilPips.remove(veilPips.children[0]);
+  if (window.__between && window.__between.voice) window.__between.voice.quiet("veil");
+  refreshHud();
+}
+function turnVeil(d) {
+  if (!veil || veil.going) return; const n = realms().length; if (n < 2) return;
+  veil.from = veil.i; veil.i = (veil.i + d + n) % n; veil.turnT = performance.now(); veilSay();
+}
+function veilSay() {
+  const vo = window.__between && window.__between.voice; if (!vo || !veil) return;
+  if (veil.going) { vo.quiet("veil"); return; }
+  const R = realms(), r = R[Math.min(veil.i, R.length - 1)];
+  vo.say({ subject: veilBox, head: r.name, sub: r.line,
+    actions: [{ label: "Step through", el: r.el, on: () => { veil.going = true; vo.quiet("veil"); r.go(); } },
+      ...(R.length > 1 ? [{ label: "Turn the veil", sub: `${veil.i + 1} of ${R.length} places`, quiet: true, on: () => turnVeil(1) }] : []),],
+    down: { label: "Step back", on: closeVeil } }, "veil", 3);
+}
+function veilBox() {
+  const pts = [[-0.45, 0], [0.45, 0], [-0.45, 2.05], [0.45, 2.05]].map(([x, y]) => window.__between.screenOf(portal.localToWorld(new THREE.Vector3(x, y, 0))));
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  return { l: Math.min(...xs), r: Math.max(...xs), t: Math.min(...ys), b: Math.max(...ys) };
+}
+function veilTick(t, dt) {
+  veilK += ((veil ? 1 : 0) - veilK) * Math.min(1, dt * 2.4); if (veilK < 0.002 && !veil) veilK = 0;
+  if (VEIL_STILL) veilK = veil ? 1 : 0; // reduced motion: the view cuts to the doorway, and the turn is a cut too
+  if (!veil) return;
+  if (!isHome(garden)) { closeVeil(); return; }
+  const R = realms(); if (veil.i >= R.length) veil.i = 0;
+  const r = R[veil.i], tk = veil.turnT && !VEIL_STILL ? Math.min(1, (performance.now() - veil.turnT) / 450) : 1;
+  const shown = tk < 0.5 && veil.from != null ? R[Math.min(veil.from, R.length - 1)] : r;
+  paintVeil(shown, t, tk < 1 ? tk : 0);
+  // the words follow the camera as it comes to the doorway, so they never sit over the veil
+  const vo = window.__between && window.__between.voice; if (vo && vo.place && !veil.going) vo.place();
+  portalVeil.emissive.setRGB(1, 1, 1); portalVeil.emissiveIntensity = 0.95 + (veil.going ? 0.8 : 0); portalVeil.opacity = 0.96;
+  // the lintel's lights: one per place, the one the veil shows lit in its colour
+  if (veilPips.children.length !== R.length) {
+    while (veilPips.children.length) veilPips.remove(veilPips.children[0]);
+    R.forEach((_, i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffe2a8 }));
+      m.position.set((i - (R.length - 1) / 2) * 0.13, 2.04, 0.04); veilPips.add(m); });
+  }
+  veilPips.children.forEach((m, i) => { const on = i === veil.i; m.material.color.setRGB(...(on ? r.col.map(x => Math.min(1, x * 1.4 + 0.3)) : [0.35, 0.3, 0.26])); m.scale.setScalar(on ? 1.5 : 1); });
+}
+/* Where the camera stands while you look through: before the doorway, a little off your shoulder, the veil in the middle
+   of the frame with the dark above it for the place's name and the floor below for the seals. */
+function veilView(tall) {
+  const { f, side } = veilStand(), base = PORTAL_AT.clone().setY(DAIS_Y);
+  const cp = base.clone().add(f.clone().multiplyScalar(tall ? 3.6 : 3.0)).add(side.clone().multiplyScalar(tall ? -0.1 : 0.2)).setY(DAIS_Y + (tall ? 1.15 : 1.25));
+  const fc = base.clone().add(f.clone().multiplyScalar(0.1)).setY(DAIS_Y + (tall ? 1.15 : 1.05));
+  return [cp, fc];
 }
 
 /* Who the creature notices: the nearest person within reach, you or the other. */
@@ -1269,6 +1422,7 @@ renderer.domElement.addEventListener("pointermove", e => {
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
+  if (veil) { if (pointers.size === 1) { veil.dragX += dx; if (Math.abs(veil.dragX) > 48) { turnVeil(veil.dragX < 0 ? 1 : -1); veil.dragX = 0; } } return; } // a sideways drag across the veil turns it
   if (mirrorOn) { if (pointers.size === 1) mirrorTurn -= dx * 0.012; return; } // the screen is flipped: drag right turns your front to the right
   if (hm && pointers.size === 1) { if (dragMoved > 6 && !hm.press) hm.turnV = Math.max(-1.6, Math.min(1.6, hm.turnV - dx * 0.02)); return; } // by the fire, a sideways drag turns the crescent
   if (carry) {
@@ -1294,7 +1448,7 @@ renderer.domElement.addEventListener("pointerup", endPointer);
 renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; if (carry) { carry.t.group.position.copy(carry.from); carry = null; } });
 renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
 // by the fire, left and right turn the crescent; elsewhere the arrows and WASD walk
-addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (hm && (k === "arrowleft" || k === "arrowright")) { hm.turnV += k === "arrowleft" ? 0.9 : -0.9; e.preventDefault(); return; } if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
+addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (veil && (k === "arrowleft" || k === "arrowright")) { turnVeil(k === "arrowleft" ? -1 : 1); e.preventDefault(); return; } if (veil && k === "escape") { closeVeil(); return; } if (hm && (k === "arrowleft" || k === "arrowright")) { hm.turnV += k === "arrowleft" ? 0.9 : -0.9; e.preventDefault(); return; } if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
 addEventListener("blur", () => meState.keys.clear());
 
@@ -1309,6 +1463,7 @@ function placeAt() {
 }
 function tapAt(cx, cy) {
   if (mirrorOn) return; // in the mirror a tap only chooses; the floor is behind you
+  if (veil) return; // at the veil a tap only chooses; Step back leaves it
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
@@ -1352,7 +1507,7 @@ function tapAt(cx, cy) {
     // the hearth: walk up to it; its card's "Sit at the hearth" takes you to its cushion (no sheet over the room)
     if (best.key === "between" && isHome(view().g)) openSheet(mstate().mirrorGlows ? "hope" : "look");
     if (best.key === "window") { if (isHome(view().g)) openSheet("style"); else toast("The light through the window changes from Style."); }
-    if (best.key === "portal") { openSheet("destinations"); return; }
+    if (best.key === "portal") { openVeil(); return; }
     const dir = meState.pos.clone().sub(best.pos).setY(0); const d = dir.length();
     if (d > 1.3) { dir.normalize(); meState.target = pushOut(best.pos.clone().add(dir.multiplyScalar(1.1))); }
     refreshHud(); return;
@@ -1548,7 +1703,7 @@ function frameBody() {
     w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
-  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t); hmTick(t, dt); fsBurn(dt);
+  stepBetween(t, dt); portalTick(t); veilTick(t, dt); minuteTick(t, dt); gustTick(t); hmTick(t, dt); fsBurn(dt);
   for (const th of things.values()) { if (th.group.userData.sway) th.group.rotation.z = Math.sin(t * 0.7 + th.pos.x) * 0.03; } // a hung lantern sways a little
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
@@ -1593,6 +1748,8 @@ function frameBody() {
     cp.lerp(new THREE.Vector3(meState.pos.x, fy, MIRROR_CAM_Z), me3);
     focus.lerp(new THREE.Vector3(meState.pos.x, fy, meState.pos.z), me3);
   }
+  // looking through the doorway (veil-turn): the camera comes to stand before it
+  if (veilK > 0.001) { const [vp, vf] = veilView(innerWidth < innerHeight), k = veilK * veilK * (3 - 2 * veilK); cp.lerp(vp, k); focus.lerp(vf, k); }
   // the minute's beats and a scroll's flight turn the view to what they are about (directView)
   directK += ((directCam && inNook() && !mirrorOn && roomViewK < 0.5 ? 1 : 0) - directK) * Math.min(1, dt * 1.8);
   if (directK > 0.001) {
@@ -1811,6 +1968,7 @@ function refreshHud() {
     tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="spirits">Spirits${embersWaiting().length ? `<span class="tembers" title="Embers waiting">${emberDots(3)}</span>` : ""}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="goals">Goals</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="rooms">Rooms</button>`); // the doorway's sheet held "Manage rooms"; the veil keeps to choosing a place
     tools.push(`<button class="glassbtn" type="button" data-open="invitations">Invitations${invs ? '<span class="dot" title="Waiting for your answer"></span>' : ""}</button>`);
     // the style is chosen at the window now (rk-earned-only: the four styles are the light through the window)
   }
@@ -1880,7 +2038,7 @@ function nearVoice(el, html) {
   if (!m) { vo.quiet("near"); return; }
   vo.say({ ...m, soft: true, subject: nearBox }, "near", 1);
 }
-const nearHushed = () => !!sheetName || !!hm || ["mirroring", "seatedmoment", "quiethud"].some(c => document.body.classList.contains(c)) || !$("#hud") || $("#hud").hidden;
+const nearHushed = () => !!sheetName || !!hm || !!veil || ["mirroring", "seatedmoment", "quiethud"].some(c => document.body.classList.contains(c)) || !$("#hud") || $("#hud").hidden;
 const NB = new THREE.Vector3();
 function nearBox() {
   const p = nearKey && posOf(nearKey); if (!p) return null;
@@ -2530,6 +2688,8 @@ function openSheet(name, arg) {
   if (name === "hearth" && sheetName !== "hearth") hd = {};
   if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
   if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1 };
+  // in the homeroom the doorway is had at the doorway itself, never as a sheet over the room (veil-turn)
+  if (name === "destinations" && g && isHome(g)) { openVeil(); return; }
   if (name === "invitations" || name === "rooms" || name === "destinations") refreshList();
   if (name === "spirit" || name === "checkin") fetchHome();
   if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
@@ -2688,6 +2848,7 @@ function destinationsSheet() {
     <p class="muted">Choose where to go. You always return to your Nook.</p>
     ${invited}
     ${PREVIEW_HOST ? `<div class="roomrow"><div><b>Stand-in room</b><span class="small muted">A rehearsal room of two, with a partner already there. Nothing is saved.</span></div><button type="button" data-act="goStandIn">Enter</button></div>` : ""}
+    <div class="roomrow"><div><b>The keeping chamber</b><span class="small muted">What your blocks left when they cleared, each on its own stone.</span></div><button type="button" data-act="goChamber">Enter</button></div>
     <div class="roomrow"><div><b>Triangle Workshop</b><span class="small muted">Private practice · make a triangle visible and choose a clean next move.</span></div><button type="button" data-act="goDojo">Enter</button></div>
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
@@ -3589,6 +3750,9 @@ document.addEventListener("click", async ev => {
   if (a === "goRoom") { goRoom(id); return; }
   if (a === "goStandIn") { walkToStandInRoom(); return; }
   if (a === "goDojo") { walkToTriangleWorkshop(); return; }
+  // the keeping chamber opens from the doorway and the map stand (his C on bm-satchel-look-2, 2026-11-04: the arch is gone)
+  if (a === "goChamber") { if (!portalOpen()) { toast("The doorway opens when your first minute here is complete."); return; }
+    closeSheet(); const c = window.__between && window.__between.ctw; if (c && c.chamber) c.chamber(); else location.href = "/between/land.html?place=chamber"; return; }
   // a spark's link, found again from the homeroom (pt1-two-player-check: the link got lost after the first send)
   if (a === "sparkAgain") {
     const r = ((list && list.gardens) || []).find(x => x.id === id);
@@ -3999,7 +4163,7 @@ function refresh() {
     between.visible = !!g && !isHome(g);
     syncRoom(); syncShelf();
     mirror.visible = mirrorShown();
-    syncThings(); syncWalkers(); hmSync();
+    syncThings(); syncWalkers(); hmSync(); takeWaitingKeepsakes();
     if (me && gardenLoaded) ensureMyBody().catch(() => {});
     refreshHud();
     if (sheetName && !["offer", "agreement", "rewrite", "spirit", "setup"].includes(sheetName)) renderSheet();
@@ -4160,7 +4324,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => r.key) }, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -4179,9 +4343,6 @@ import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__
 // storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
 // Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
 import("./block-room.js").then(m => { window.__between.block = m.mountSigns(window.__between); }).catch(e => noteError(e, "block"));
-// the keeping chamber (block-metabolize slice 2, his "Mix of a and b" on bm-chamber-look-3): an arch of the cave's stone under the
-// shelf leads to /between/land.html?place=chamber, where what the charge left is kept and a season's weather fills the room
-import("./chamber-arch.js").then(m => { window.__between.chamberArch = m.mount(window.__between); }).catch(e => noteError(e, "chamber arch"));
 // letters from the nook and the card you act on (Six-faces-council hollow-interface rounds 3 and 4): a garden of two that
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
