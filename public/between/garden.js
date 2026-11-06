@@ -1212,10 +1212,14 @@ let lastPresence = 0, lastSent = "";
 /* Where you stand goes out with each poll, with where you are walking to, so the other screen walks your figure there
    at walking pace instead of jumping it every few seconds. A wave is a time stamp the other screen notices once. */
 let myWave = null;
+/* The hollow's games ride on presence (games/index.js): `gameFeel.extra()` adds where a friend points and the finger's path, and
+   `gameFeel.poll` is the shorter wait while both hands are up (Firefly lead, 250 ms against the usual 2.5 s). */
+const gameFeel = { extra: null, poll: 0 };
+const rawPeers = new Map();
 function presenceNow() {
   if (!me || !meState.placed) return null;
   const t = meState.target;
-  return { x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), h: +meState.yaw.toFixed(2), w: !!(t || meState.keys.size),
+  return { ...(gameFeel.extra ? gameFeel.extra() : null), x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), h: +meState.yaw.toFixed(2), w: !!(t || meState.keys.size),
     tx: t ? +t.x.toFixed(2) : null, tz: t ? +t.z.toFixed(2) : null, wave: myWave, s: meState.sitting ? meState.seatWant : null };
 }
 function sendPresence() { if (meState.wasWalking !== undefined) pollSoon(); }
@@ -1224,7 +1228,7 @@ function onPeers(list) {
   for (const pr of list || []) {
     const uid = pr.uid;
     if (!uid || uid === me || typeof pr.x !== "number" || typeof pr.z !== "number") continue;
-    seen.add(uid);
+    seen.add(uid); rawPeers.set(uid, pr);
     let e = peers.get(uid);
     const fresh = !e;
     if (!e) { e = { peer: uid, uid, pos: new THREE.Vector3(pr.x, 0, pr.z), yaw: pr.h || 0 }; peers.set(uid, e); }
@@ -1237,6 +1241,7 @@ function onPeers(list) {
     if (pr.wave && pr.wave !== e.wave) { if (!fresh && now() - pr.wave < 15000) { burst(new THREE.Vector3(pr.x, groundY(pr.x, pr.z), pr.z), 0xffe2b0); waves.push({ peer: uid, t0: performance.now() / 1000 }); if (e.body) e.body.wave(performance.now() / 1000); } e.wave = pr.wave; }
     ensurePeerBody(e);
   }
+  for (const k of [...rawPeers.keys()]) if (!seen.has(k)) rawPeers.delete(k);
   for (const [k, e] of peers) if (!seen.has(k)) { if (e.body) scene.remove(e.body.holder); peers.delete(k); const l = labels.get("p:" + k); if (l) { l.remove(); labels.delete("p:" + k); } }
   refreshHud();
 }
@@ -4053,7 +4058,7 @@ async function poll() {
     if (e.code === "permission_denied" || e.code === "not_found") return stop(e.message || "This garden is not open to you.");
   } finally {
     polling = false;
-    if (!stopped) { const wait = pollAgain ? 60 : document.hidden ? 20000 : peers.size ? 2500 : 5000; pollAgain = false; pollTimer = setTimeout(poll, wait); }
+    if (!stopped) { const wait = pollAgain ? 60 : document.hidden ? 20000 : gameFeel.poll && peers.size ? gameFeel.poll : peers.size ? 2500 : 5000; pollAgain = false; pollTimer = setTimeout(poll, wait); }
   }
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pollSoon(); });
@@ -4160,7 +4165,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -4194,3 +4199,7 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null }); }).catch(e => noteError(e, "coins"));
+// the hollow's games (Six-faces-council friendship-between-growth, "The hollow's games"; his A on bsp-games-look-1): Found lights on the
+// jar shelf, Firefly lead on the dais, Lantern out at the mouth. Previews: &game=found-lights|firefly-lead|lantern-out opens that game's
+// place with a stand-in friend, &jars=<n> seeds left jars, &calls=1 seeds tonight's three calls (e.g. ?room=standin&game=lantern-out&calls=1)
+import("./games/index.js").then(m => { window.__between.games = m.mount(window.__between, { preview: PREVIEW_HOST, game: PREVIEW_HOST ? KQ.get("game") : null, jars: PREVIEW_HOST ? KQ.get("jars") : null, calls: PREVIEW_HOST ? KQ.get("calls") : null, lit: PREVIEW_HOST ? KQ.get("lit") : null, standin: STANDIN_ROOM }); }).catch(e => noteError(e, "games"));
