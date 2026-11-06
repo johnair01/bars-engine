@@ -54,4 +54,28 @@ describe('sealsFrom', () => {
     ], [], now)
     expect(s.map(x => [x.row, x.state])).toEqual([['rs1-look-1', 'picked']])
   })
+  it('reads a harbour Send by its berth row', () => {
+    const s = sealsFrom([t({ sourceKey: 'harbour-send/fleet@2026-11-02T10:00', basis: { rows: ['harbour:fleet'] } })], [], now)
+    expect(s[0]).toMatchObject({ row: 'harbour:fleet', state: 'sent', stuck: null, ahead: 0 })
+  })
+  it('names a stuck card: Sent with no pickup for two hours, or Claude has it and its lease ran out', () => {
+    const late = new Date('2026-11-02T13:00:00Z')
+    const ready = [
+      { lane: 'claude', createdAt: new Date('2026-11-02T08:00:00Z') },
+      { lane: 'claude', createdAt: new Date('2026-11-02T09:00:00Z') },
+      { lane: 'freebuff', createdAt: new Date('2026-11-02T07:00:00Z') },
+      { lane: 'claude', createdAt: new Date('2026-11-02T10:00:00Z') },
+    ]
+    const s = sealsFrom([
+      t({ basis: { rows: ['a'] } }),
+      t({ basis: { rows: ['b'] }, state: 'claimed', updatedAt: new Date('2026-11-02T10:12:00Z'), leaseUntil: new Date('2026-11-02T12:12:00Z') }),
+      t({ basis: { rows: ['c'] }, state: 'claimed', createdAt: new Date('2026-11-02T12:50:00Z'), leaseUntil: new Date('2026-11-02T14:50:00Z') }),
+      t({ basis: { rows: ['d'] }, createdAt: new Date('2026-11-02T12:30:00Z') }),
+    ], [], late, ready)
+    const by = Object.fromEntries(s.map(x => [x.row, x]))
+    expect(by.a).toMatchObject({ state: 'sent', stuck: 'unpicked', ahead: 2 })
+    expect(by.b).toMatchObject({ state: 'picked', stuck: 'silent', ahead: null })
+    expect(by.c).toMatchObject({ state: 'picked', stuck: null })
+    expect(by.d).toMatchObject({ state: 'sent', stuck: null, ahead: 3 })
+  })
 })
