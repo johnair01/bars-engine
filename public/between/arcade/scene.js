@@ -153,6 +153,38 @@ function playCues(out, g, lit, y, w) {
   out.insert.userData.keep = true;
 }
 
+/* a paper ticket: its cabinet's colour, punched edges and a dashed border; the line's tickets, the tray's and the bundles' */
+function paperTicket(x, w, h, hue) {
+  x.fillStyle = hue; x.fillRect(0, 0, w, h); x.fillStyle = "rgba(255,255,255,.55)"; for (let y = 6; y < h; y += 12) { x.beginPath(); x.arc(0, y, 3, 0, 7); x.arc(w, y, 3, 0, 7); x.fill(); }
+  x.strokeStyle = "rgba(30,20,30,.35)"; x.setLineDash([4, 4]); x.strokeRect(8, 10, w - 16, h - 20); x.setLineDash([]);
+}
+const ticketTexture = (hue, word = "") => canvasTex(64, 128, (x, w, h) => { paperTicket(x, w, h, hue);
+  if (word) { x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.fillStyle = "#1b1222"; x.textAlign = "center"; x.textBaseline = "middle";
+    let fs = 22; x.font = `${fs}px Marcellus, serif`; const tw = x.measureText(word).width; if (tw > h * 0.78) { fs = Math.floor(fs * h * 0.78 / tw); x.font = `${fs}px Marcellus, serif`; }
+    x.fillText(word, 0, 0); x.restore(); } });
+let haloTex = null;
+const halo = () => haloTex || (haloTex = canvasTex(128, 128, (x, w, h) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(0.4, "rgba(255,255,255,.45)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(0, 0, w, h); }));
+
+/* a lit cabinet's ticket tray, under its coin door. The tray holds two things the page switches on:
+   - the paper ticket (level-designer finding 4, 2026-11-06): in the cabinet's colour, it rises 6 cm out of the slot when a
+     round pays and stands there until it is kept or let go;
+   - the waiting glow (position ah-waiting-tray-glows): while the ask's ticket waits for what came back, the tray's lip and
+     a soft halo hold a steady light in the cabinet's colour, bright enough to find from the door alcove. It never blinks,
+     so it does not call after a player who walks on. */
+export const TICKET_DOWN = -0.03, TICKET_UP = 0.045;
+function trayParts(out, g, lit, y) {
+  if (!lit) return;
+  const t = new THREE.Group(); t.position.set(0, y, 0); t.userData.keep = true; g.add(t);
+  box(0.28, 0.07, 0.1, 0, 0, 0.05, M.brass, t);                                            // the tray's lip
+  box(0.2, 0.004, 0.03, 0, 0.036, 0.03, M.trim, t);                                         // its slot
+  out.trayGlow = quad(0.27, 0.06, glow(lit.colour, 2.4, { fog: false }), t, V(0, 0, 0.1015), new THREE.Euler(0, 0, 0));
+  out.trayHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo(), color: new THREE.Color(lit.colour), transparent: true, opacity: 0.9, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  out.trayHalo.position.set(0, 0.08, 0.26); out.trayHalo.scale.set(1.5, 1.0, 1); t.add(out.trayHalo);
+  out.trayGlow.visible = out.trayHalo.visible = false;
+  out.ticket = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.11), new THREE.MeshBasicMaterial({ map: ticketTexture(lit.colour), side: THREE.DoubleSide, color: new THREE.Color(0.95, 0.95, 0.95) }));
+  out.ticket.position.set(0, TICKET_DOWN, 0.03); out.ticket.visible = false; t.add(out.ticket);
+}
+
 /* one cabinet, built in its own frame: the front at z = 0 facing +z (the aisle), the body behind it, x along the
    corridor. arrival.py's cabinet(), with its numbers. Returns the screen's world centre and normal, and its parts. */
 function cabinet({ side, z, kind, lit = null, ch1 = false }) {
@@ -187,6 +219,7 @@ function cabinet({ side, z, kind, lit = null, ch1 = false }) {
     box(0.18, 0.22, 0.02, 0, 0.36, 0.005, M.trim, g);
     out.slots = [-0.04, 0.04].map(dx => box(0.02, 0.04, 0.012, dx, 0.4, 0.016, M.coin, g));
     playCues(out, g, lit, 0.55, w);
+    trayParts(out, g, lit, 0.17);
     if (lit) { // its name on the aisle-facing apron (a cocktail table has no marquee)
       out.marquee = quad(w * 0.86, 0.11, new THREE.MeshBasicMaterial({ map: canvasTex(512, 64, marqueeArt(lit.name, hue)) }), g, V(0, base - 0.1, 0.004), new THREE.Euler(0, 0, 0));
     }
@@ -206,6 +239,7 @@ function cabinet({ side, z, kind, lit = null, ch1 = false }) {
   box(0.22, 0.28, 0.02, 0, doorY, 0.005, M.trim, g);                                         // coin door
   out.slots = [-0.05, 0.05].map(dx => box(0.024, 0.045, 0.012, dx, doorY + 0.06, 0.016, M.coin, g));
   playCues(out, g, lit, doorY + 0.22, w);
+  trayParts(out, g, lit, Math.max(0.16, doorY - 0.22));
   // the screen, leaning back by its type's tilt and standing proud of the body
   const round = lit && lit.round;
   let c;
@@ -268,13 +302,13 @@ export async function build({ today = "ask", still = false } = {}) {
 
   // the cabinets: slice 1's three lit ones and Chapter 1 where CABINETS puts them, arrival.py's random types elsewhere
   const at = new Map(CABINETS.map(c => [c.side + ":" + c.slot, c]));
-  const built = {};
+  const built = { decor: [] };
   for (let s = 0; s <= LAST; s++) {
     for (const side of [-1, 1]) {
       const c = at.get(side + ":" + s);
       if (c && c.type === "ch1") built[c.id] = cabinet({ side, z: SLOT_Z(s), ch1: true, kind: "upright" });
       else if (c) built[c.id] = cabinet({ side, z: SLOT_Z(s), kind: c.type, lit: c });
-      else cabinet({ side, z: SLOT_Z(s), kind: pick(Object.keys(TYPES)) });
+      else { const d = cabinet({ side, z: SLOT_Z(s), kind: pick(Object.keys(TYPES)) }); built.decor.push({ side, slot: s, screenAt: d.screenAt, normal: d.normal }); }
     }
     if (s % 4 === 0) box(0.08, 0.03, 0.9, 0, 3.18, SLOT_Z(s), M.strip);                 // strip lights overhead, receding
   }
@@ -334,9 +368,7 @@ export async function build({ today = "ask", still = false } = {}) {
   box(0.5, 0.25, 1.6, 0, 1.12, 0, M.glass, pc);
   for (const dz of [-0.82, 0.82]) box(0.05, 1.6, 0.05, -0.2, 0.95 + 0.8, dz, M.wood, pc);              // the line's two poles
   const line = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 1.64, 4), M.trim); line.rotation.x = Math.PI / 2; line.position.set(-0.2, 2.5, 0); pc.add(line);
-  const ticketTex = { draw: (x, w, h, hue) => { x.fillStyle = hue; x.fillRect(0, 0, w, h); x.fillStyle = "rgba(255,255,255,.55)"; for (let y = 6; y < h; y += 12) { x.beginPath(); x.arc(0, y, 3, 0, 7); x.arc(w, y, 3, 0, 7); x.fill(); }
-    x.strokeStyle = "rgba(30,20,30,.35)"; x.setLineDash([4, 4]); x.strokeRect(8, 10, w - 16, h - 20); x.setLineDash([]); } };
-  lineAt.group.position.copy(pc.position); scene.add(lineAt.group); lineAt.tex = ticketTex;
+  lineAt.group.position.copy(pc.position); scene.add(lineAt.group); lineAt.ready = true;
   const lpc = new THREE.PointLight(0xffd6a0, 2.2, 4, 1.6); lpc.position.set(AISLE - 0.2, 2.6, 2.7); if (pcLit) scene.add(lpc);
 
   /* light: a low dusk fill, the strip lights' cool wash, each lit cabinet's own screen glow, and one warm lamp over
@@ -360,21 +392,42 @@ export async function build({ today = "ask", still = false } = {}) {
   return built;
 }
 
-/* ---------- the prize counter's line: each kept ticket in its cabinet's colour, its word written small on it ---------- */
-const lineAt = { group: new THREE.Group(), tex: null };
-export function hangLine(line) {
-  const g = lineAt.group; if (!lineAt.tex) return;
-  for (const o of [...g.children]) { g.remove(o); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }
-  const show = line.slice(-14), n = show.length;
+/* ---------- the prize counter's line: each kept ticket in its cabinet's colour, its word written small on it ----------
+   `view` is hall.js lineView(): the tickets hanging on the line (fourteen at most) and the bundles of seven tied beneath
+   it on the glass (position ah-line-ties-bundles). A tap on a bundle fans its tickets out over the counter, words
+   showing; `fan` names that bundle, and -1 ties it back. No count is drawn. */
+const lineAt = { group: new THREE.Group(), ready: false, hits: [] };
+const TWINE = std(0xd8c49a, { roughness: 0.9 });
+const ticketMesh = (t, w = 0.09, h = 0.18) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: ticketTexture(t.colour, t.word), side: THREE.DoubleSide, color: new THREE.Color(0.85, 0.85, 0.85) }));
+export const lineHits = () => lineAt.hits;
+export function hangLine(view, fan = -1) {
+  const g = lineAt.group; if (!lineAt.ready) return;
+  for (const o of [...g.children]) { g.remove(o); o.traverse(c => { if (c.material && c.material !== M.wood && c.material !== TWINE) { if (c.material.map) c.material.map.dispose(); c.material.dispose(); } if (c.geometry) c.geometry.dispose(); }); }
+  lineAt.hits = [];
+  const show = view.hanging, n = show.length;
   show.forEach((t, i) => {
     const dz = n === 1 ? 0 : -0.72 + 1.44 * i / Math.max(1, n - 1);
-    const tex = canvasTex(64, 128, (x, w, h) => { lineAt.tex.draw(x, w, h, t.colour);
-      if (t.word) { x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.fillStyle = "#1b1222"; x.textAlign = "center"; x.textBaseline = "middle";
-        let fs = 22; x.font = `${fs}px Marcellus, serif`; const tw = x.measureText(t.word).width; if (tw > h * 0.78) { fs = Math.floor(fs * h * 0.78 / tw); x.font = `${fs}px Marcellus, serif`; }
-        x.fillText(t.word, 0, 0); x.restore(); } });
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.18), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, color: new THREE.Color(0.85, 0.85, 0.85) }));
-    m.position.set(-0.2, 2.38, dz); m.rotation.set(0, -Math.PI / 2, i % 2 ? 0.08 : -0.06); g.add(m);
+    const m = ticketMesh(t); m.position.set(-0.2, 2.38, dz); m.rotation.set(0, -Math.PI / 2, i % 2 ? 0.08 : -0.06); g.add(m);
     const peg = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, 0.012), M.wood); peg.position.set(-0.2, 2.48, dz); g.add(peg);
+  });
+  // the bundles lie on the glass counter top (1.245 m), seven places along it, then a second layer on the first
+  view.bundles.forEach((b, i) => {
+    const k = i % 7, layer = Math.floor(i / 7), at = V(-0.04, 1.25 + layer * 0.03, -0.66 + k * 0.22);
+    const bg = new THREE.Group(); bg.position.copy(at); bg.rotation.y = ((i * 37) % 11 - 5) * 0.02; g.add(bg);
+    if (fan === i) {   // fanned: the seven stand up over the counter in an arc facing the aisle, words to the player
+      const cz = Math.max(-0.4, Math.min(0.4, at.z));
+      b.forEach((t, j) => { const u = (j - (b.length - 1) / 2) / 3;
+        const m = ticketMesh(t); m.position.set(-0.26, 1.58 - Math.abs(u) * 0.05, cz + u * 0.26); m.rotation.set(0, -Math.PI / 2, -u * 0.32); g.add(m); });
+      g.remove(bg);
+      const hit = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.9), new THREE.MeshBasicMaterial()); hit.visible = false; hit.userData.bundle = i; hit.position.set(-0.26, 1.55, cz); g.add(hit);
+      lineAt.hits.push(hit);
+      return;
+    }
+    b.forEach((t, j) => { const m = ticketMesh(t, 0.08, 0.16); m.rotation.set(-Math.PI / 2, 0, ((j * 53) % 7 - 3) * 0.05); m.position.set(0, j * 0.0035, 0); bg.add(m); });
+    const tie = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.032, 0.012), TWINE); tie.position.set(0, 0.012, 0); bg.add(tie);   // the string round the middle
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 6), TWINE); knot.position.set(-0.046, 0.026, 0); bg.add(knot);
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.2), new THREE.MeshBasicMaterial()); hit.visible = false; hit.userData.bundle = i; hit.position.set(0, 0.05, 0); bg.add(hit);
+    lineAt.hits.push(hit);
   });
 }
 

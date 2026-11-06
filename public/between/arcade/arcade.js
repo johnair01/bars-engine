@@ -17,7 +17,7 @@
 import * as THREE from "three";
 import { parseLook } from "../../calrunia/look.js";
 import { CRATE_SIT, SEAT_PAD } from "../stance.js";
-import { scene, build, figure, hangLine, GATE_Z, AISLE, SLOT_Z, LAST } from "./scene.js";
+import { scene, build, figure, hangLine, lineHits, TICKET_DOWN, TICKET_UP, GATE_Z, AISLE, SLOT_Z, LAST } from "./scene.js";
 import { CABINETS, byId, todaysCabinet } from "./cabinets.js";
 import * as H from "./hall.js";
 import { buildDesk, DESK } from "./ask-desk.js";
@@ -170,7 +170,9 @@ async function runHall() {
   step("building the hall");
   const today = todaysCabinet();
   const built = await build({ today: today.id });
-  hangLine(hall.line);
+  let fan = -1;   // the bundle fanned out over the prize counter, -1 for none
+  const rehang = () => hangLine(H.lineView(hall.line), fan);
+  rehang();
   step("the visitors");
   const look = (() => { try { return parseLook(sessionStorage.getItem("ctw-look") || ""); } catch { return null; } })();
   const me = await figure("me", look);
@@ -183,8 +185,10 @@ async function runHall() {
   puffer.set(true);
 
   /* where things stand: in front of each cabinet's screen, the bench, the gate */
-  const standAt = id => { const b = built[id], n = b.normal.clone().setY(0); if (n.lengthSq() < 0.01) n.set(-Math.sign(b.screenAt.x), 0, 0); n.normalize();
-    return b.screenAt.clone().setY(0).addScaledVector(n, id === "between" ? 0.75 : 0.6); };
+  const standFrom = (b, k = 0.6) => { const n = b.normal.clone().setY(0); if (n.lengthSq() < 0.01) n.set(-Math.sign(b.screenAt.x), 0, 0); n.normalize();
+    return b.screenAt.clone().setY(0).addScaledVector(n, k); };
+  const standAt = id => standFrom(built[id], id === "between" ? 0.75 : 0.6);
+  const COUNTER = V(AISLE - 0.42, 0, 2.7), COUNTER_AT = V(AISLE + 0.3, 1.4, 2.7);   // where the player stands to read the line
   const STAND = Object.fromEntries(CABINETS.map(c => [c.id, standAt(c.id)]));
   // a soft ring of light on the floor where a playable cabinet is played from (his note, 2026-11-03 19:44Z)
   const ringTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
@@ -222,17 +226,23 @@ async function runHall() {
   function tap(cx, cy) {
     if (meS.sat) return;
     ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
-    let best = null, bd = 0.7;
+    let best = null, bd = 0.7; decorFace = -1;
     if (PASS) {
+      // a tap on a bundle of tickets on the prize counter: walk to the counter and fan it out, or tie it back
+      const bh = ray.intersectObjects(lineHits(), false)[0];
+      if (bh) { const i = bh.object.userData.bundle; fan = fan === i ? -1 : i; rehang(); if (fan >= 0) SOUND.ticket();
+        if (Math.hypot(meS.pos.x - COUNTER.x, meS.pos.z - COUNTER.z) > 0.5) { meS.target = COUNTER.clone(); meS.face = "counter"; } else turnTo(COUNTER_AT); return; }
       // a tap anywhere on a lit cabinet: walk to it, or, standing at it already, drop the coin (his note, 2026-11-03 19:44Z)
       const hit = ray.intersectObjects(built.hits, false)[0];
       if (hit) { const id = hit.object.userData.cabinet, s = built[id].screenAt;
         if (Math.hypot(meS.pos.x - s.x, meS.pos.z - s.z) < 1.2 && cardKey === "drop:" + id) { drop(id); return; }
         meS.target = STAND[id].clone(); meS.face = id; info = false; return; }
       for (const c of CABINETS) { const d = ray.ray.distanceToPoint(built[c.id].screenAt); if (d < bd) { bd = d; best = STAND[c.id].clone(); } }
+      // a cabinet that only decorates the corridor: walk to it, read "lights soon", turn back to the aisle (finding 3)
+      if (!best) built.decor.forEach((d, i) => { const k = ray.ray.distanceToPoint(d.screenAt); if (k < bd) { bd = k; best = standFrom(d); decorFace = i; } });
       if (ray.ray.distanceToPoint(V(-(AISLE + 0.2), 0.6, 1.25)) < 0.8 || ray.ray.distanceToPoint(V(-(AISLE + 0.35), 1.2, 2.7)) < 0.7) best = BENCH.clone();
     }
-    meS.face = null;
+    meS.face = decorFace >= 0 && best ? "decor:" + decorFace : null; decorFace = -1;
     if (!best) { const p = ray.ray.intersectPlane(floor, V(0, 0, 0)); if (!p) return; best = p; }
     best.x = Math.max(-HALF + 0.02, Math.min(HALF - 0.02, best.x));
     meS.target = best;
@@ -252,10 +262,13 @@ async function runHall() {
     return true;
   }
   // arriving at a cabinet the player tapped: turn to its screen, and the camera swings round over the shoulder to show it
-  let camTurn = null;
+  let camTurn = null, decorFace = -1, decorBack = 0, held = null;
+  function turnTo(s) { meS.yaw = Math.atan2(s.x - meS.pos.x, s.z - meS.pos.z); camTurn = meS.yaw + Math.PI + 0.75; }
   function arrive() {
-    const id = meS.face; meS.face = null; if (!id) return; const s = built[id].screenAt;
-    meS.yaw = Math.atan2(s.x - meS.pos.x, s.z - meS.pos.z); camTurn = meS.yaw + Math.PI + 0.75;
+    const id = meS.face; meS.face = null; if (!id) return;
+    if (id === "counter") { turnTo(COUNTER_AT); return; }
+    if (id.startsWith("decor:")) { turnTo(built.decor[+id.slice(6)].screenAt); flash("This cabinet lights soon.", 2); decorBack = T + 2; return; }
+    turnTo(built[id].screenAt);
   }
   /* sitting on the bench: stance.js's crate sit, as the Friends' Fire seats a player */
   const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "spine", "neck"]) { const b = me.obj.getObjectByName(n); if (b) bones[n] = b; }
@@ -286,7 +299,9 @@ async function runHall() {
     else if (verb === "keep") { pendingKeep = id; cardKey = ""; }
     else if (verb === "notyet") { pendingKeep = null; cardKey = ""; }
     else if (verb === "walkto") { meS.target = STAND[id].clone(); meS.face = id; cardKey = ""; }
-    else if (verb === "hang") { const w = ($("#ticketWord") || {}).value || ""; commit(H.keep(hall, id, w)); hangLine(hall.line); pendingKeep = null; SOUND.keep(); cardKey = ""; caption("Your ticket hangs on the line over the prize counter.", 4); }
+    else if (verb === "hang") { const w = ($("#ticketWord") || {}).value || "", tied = H.lineView(hall.line).bundles.length; commit(H.keep(hall, id, w)); fan = -1; rehang(); pendingKeep = null; SOUND.keep(); cardKey = "";
+      if (H.lineView(hall.line).bundles.length > tied) caption("The line was full, so its oldest tickets are tied in a bundle on the counter. Tap a bundle to fan it out.", 6);
+      else caption("Your ticket hangs on the line over the prize counter.", 4); }
     else if (verb === "letgo") { commit(H.letGo(hall, id)); SOUND.letgo(); cardKey = ""; caption("The ticket drops into the change machine's hopper.", 4); }
     else if (verb === "answer") { commit(H.answer(hall, id)); SOUND.ticket(); cardKey = ""; }
     else if (verb === "sit") { meS.sat = true; meS.target = null; meS.pos.copy(BENCH_SEAT); meS.yaw = Math.PI / 2; SOUND.sat(); cardKey = ""; }
@@ -324,7 +339,7 @@ async function runHall() {
       if (t && t.waiting) return showCard("ask-wait", card("Your ask's ticket waits", "You asked. What came back?", btn("answer:yes", "A yes"), btn("answer:no", "A no"), btn("answer:silence", "Silence")));
       if (t && pendingKeep === id) return showCard("keep:" + id, `<b>Keep it</b><div class="t">One word for the ticket, if you want one.</div>
         <input id="ticketWord" maxlength="24" autocomplete="off" aria-label="One word"><div class="row">${btn("hang:" + id, "Hang it on the line")}${btn("notyet", "Not yet")}</div>`);
-      if (t) return showCard("ticket:" + id, card("A ticket curls from the tray", "Hang it on the line over the prize counter, or let it drop into the change machine.", btn("keep:" + id, "Keep it"), btn("letgo:" + id, "Let it go")));
+      if (t) return showCard("ticket:" + id, `<b>A ticket curls from the tray</b>${bookLine(near.gameType)}<div class="t">Hang it on the line over the prize counter, or let it drop into the change machine.</div><div class="row">${btn("keep:" + id, "Keep it")}${btn("letgo:" + id, "Let it go")}</div>`);
       if (!near.route) { const open = CABINETS.find(c => c.route && built[c.id]);   // never a dead end: point to a cabinet that plays
         return showCard("soon:" + id, card(near.name, open ? `This one lights soon. ${open.name} takes a coin tonight.` : "This one lights soon.", ...(open ? [btn("walkto:" + open.id, "Walk to " + open.name)] : []))); }
       if (H.canDrop(hall, id, PASS)) return showCard("drop:" + id, card(near.name, KIND[near.gameType] || "", btn("drop:" + id, "Drop a coin")));
@@ -334,6 +349,16 @@ async function runHall() {
       return showCard("bench", card("The change machine", "Rest on the bench, or melt a block in the machine. Either fills the purse.", btn("sit", "Sit a while"), btn("melt", "Melt a block (a short trip out)")));
     showCard("", null);
   }
+
+  /* the book's line for each type of game, from Chapter 0, "The Infinite Arcade", word for word (position
+     ah-book-lines-at-the-cabinets, 2026-11-06). It rides on the ticket's card; the Ask's card carries the chance line
+     after a yes, a no or silence alike. Never reworded: these are his words. */
+  const BOOK = {
+    chance: "You played it honestly. The outcome was not yours to determine. Play the next one.",
+    skill: "mastery is not a state you reach but a direction you move in.",
+    passion: "the playing is what matters to you, regardless of outcome.",
+  };
+  const bookLine = type => BOOK[type] ? `<blockquote class="t" style="margin:6px 0 2px;padding:0 0 0 10px;border-left:2px solid rgba(255,214,160,.55);font-style:italic">\u201c${/^[a-z]/.test(BOOK[type]) ? "\u2026" : ""}${esc(BOOK[type])}\u201d</blockquote>` : "";   // a line taken from inside his sentence opens on an ellipsis
 
   /* the purse at the top of the screen: one coin drawn for each coin held, and a tap tells how coins and tickets work */
   const KIND = { chance: "A game of chance. One coin plays.", skill: "A game of skill. One coin plays.", passion: "A game of passion. One coin plays." };
@@ -367,12 +392,22 @@ async function runHall() {
     // attract loops (held still with reduced motion, FR-014)
     if (!STILL) lit.forEach((l, i) => l.m.color.setScalar(l.k * (0.92 + 0.08 * Math.sin(T * 2.2 + i * 1.7))));
     if (PASS && purseShown !== hall.coins) { purseShown = hall.coins; drawPurse(); }
-    for (const r of rings) r.m.material.opacity = H.canDrop(hall, r.id, PASS) ? (STILL ? 0.55 : 0.4 + 0.25 * Math.sin(T * 3)) : 0.12;
+    for (const r of rings) { const w = hall.tray[r.id] && hall.tray[r.id].waiting;
+      r.m.material.opacity = H.canDrop(hall, r.id, PASS) ? (STILL ? 0.55 : 0.4 + 0.25 * Math.sin(T * 3)) : w ? 0.5 : 0.12; }   // a waiting ask holds its ring lit, steady
+    // the tray: the waiting glow (ah-waiting-tray-glows), steady, and the paper ticket rising 6 cm from the slot (finding 4)
+    for (const b of built.lit) { if (!b.ticket) continue; const t = hall.tray[b.lit.id];
+      b.trayGlow.visible = b.trayHalo.visible = !!(t && t.waiting);
+      b.rise = STILL ? (t ? 1 : 0) : Math.max(0, Math.min(1, (b.rise || 0) + (t ? 1 : -1) * dt * 1.4));
+      const e = b.rise * b.rise * (3 - 2 * b.rise); b.ticket.visible = b.rise > 0.001;
+      b.ticket.position.y = TICKET_DOWN + (TICKET_UP - TICKET_DOWN) * e; b.ticket.rotation.x = -0.28 * e; }
+    if (fan >= 0 && Math.hypot(meS.pos.x - COUNTER.x, meS.pos.z - COUNTER.z) > 1.6) { fan = -1; rehang(); }   // walking off ties the bundle back
+    if (decorBack && T > decorBack) { decorBack = 0; if (!meS.target) { meS.yaw = Math.PI; camTurn = meS.yaw + Math.PI; } }   // back to the aisle
     for (const b of built.lit) if (b.insert) b.insert.visible = STILL || !H.canDrop(hall, b.lit.id, PASS) ? H.canDrop(hall, b.lit.id, PASS) : Math.sin(T * 4) > -0.4;
     if (!STILL) built.mist.forEach((s, i) => { s.position.x += Math.sin(T * 0.2 + i) * dt * 0.05; });
     for (const c of CABINETS) if (hall.known[c.id] === "unknown") { const s = built[c.id].screenAt; if (Math.hypot(meS.pos.x - s.x, meS.pos.z - s.z) < 3) commit(H.glimpse(hall, c.id)); }
     // camera: behind and above, turned by a drag, held inside the hall's walls
-    if (push) {
+    if (held) { camera.position.copy(held.pos); camera.lookAt(held.look); }   // a still for the look, from a fixed eye (preview only)
+    else if (push) {
       push.t += dt / 2.4; const k = Math.min(1, push.t), e = k * k * (3 - 2 * k);
       camera.position.lerpVectors(push.from, push.to, e); camera.fov = THREE.MathUtils.lerp(push.fov, 34, e); camera.updateProjectionMatrix(); camera.lookAt(push.look);
       me.holder.visible = camera.position.distanceTo(push.look) > 0.5;
@@ -389,9 +424,11 @@ async function runHall() {
     renderer.render(scene, camera);
   }
   frame();
-  window.__arcade = { place: "hall", pass: PASS, hall: () => hall, me: meS, act, tap, built, stand: STAND, cam: (y, p) => { camYaw = y; if (p != null) camPitch = p; }, near: () => cardKey, camera, renderer, info: () => info };
+  window.__arcade = { place: "hall", pass: PASS, hall: () => hall, fan: () => fan, hold: (pos, look) => { held = pos ? { pos: V(...pos), look: V(...look) } : null; }, lineHits, counter: COUNTER, me: meS, act, tap, built, stand: STAND, cam: (y, p) => { camYaw = y; if (p != null) camPitch = p; }, near: () => cardKey, camera, renderer, info: () => info };
 }
 
+// a caption that answers a tap: it goes ahead of the queue and replaces the one showing
+function flash(text, secs) { captions.unshift({ text, secs }); capUntil = 0; }
 function captionTick(T) {
   const cap = $("#caption");
   if (T > capUntil) { const c = captions.shift(); if (c) { cap.textContent = c.text; cap.hidden = false; cap.classList.add("on"); capUntil = T + c.secs; } else cap.classList.remove("on"); }

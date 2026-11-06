@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 // The Infinite Arcade hall's engine (council spec .specify/specs/infinite-arcade-hall/, FR-012, task T004).
 import {
-  answer, canDrop, drop, glimpse, keep, letGo, melted, newVisit, returnFrom, save, sit, ticketAt, weight,
+  answer, BUNDLE, canDrop, drop, glimpse, keep, letGo, LINE_MAX, lineView, melted, newVisit, returnFrom, save, sit, ticketAt, weight,
 } from '../../../../public/between/arcade/hall.js'
 import { CABINETS, TYPES, todaysCabinet } from '../../../../public/between/arcade/cabinets.js'
 
@@ -89,5 +89,23 @@ describe('the arcade hall (arcade/hall.js)', () => {
   it("ports arrival.py's six heights and points today's lamp only at a cabinet that takes a coin", () => {
     expect(Object.keys(TYPES).sort()).toEqual(['cabaret', 'candy', 'cocktail', 'deluxe', 'upright', 'vertical'])
     for (let d = 0; d < 7; d++) expect(todaysCabinet(new Date(Date.UTC(2026, 10, 3 + d))).route).toBeTruthy()
+  })
+
+  it('ties the oldest seven into a bundle when a fifteenth ticket hangs, and loses none (ah-line-ties-bundles)', () => {
+    const line = (n: number) => Array.from({ length: n }, (_, i) => ({ cabinet: 'ask', colour: '#e0569a', word: 'w' + i }))
+    expect(lineView([])).toEqual({ bundles: [], hanging: [] })
+    expect(lineView(line(LINE_MAX)).bundles).toHaveLength(0)
+    const v15 = lineView(line(15))
+    expect(v15.bundles).toHaveLength(1)
+    expect(v15.bundles[0].map(t => t.word)).toEqual(['w0', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6'])
+    expect(v15.hanging).toHaveLength(8)
+    expect(lineView(line(21)).bundles).toHaveLength(1)
+    expect(lineView(line(21)).hanging).toHaveLength(LINE_MAX)
+    for (const n of [0, 1, 14, 15, 21, 22, 50, 99]) {
+      const v = lineView(line(n))
+      expect(v.hanging.length).toBeLessThanOrEqual(LINE_MAX)
+      expect(v.bundles.every(b => b.length === BUNDLE)).toBe(true)
+      expect(v.bundles.flat().length + v.hanging.length).toBe(n)
+    }
   })
 })

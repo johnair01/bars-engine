@@ -101,6 +101,18 @@ export function keep(hall, id, w) {
   return { ...hall, tray, line: [...hall.line, { cabinet: id, colour: cab(id).colour, word: word(w) }] };
 }
 
+/* The prize counter's line as it is drawn (position ah-line-ties-bundles, 2026-11-06): the line holds fourteen
+   tickets. When a fifteenth hangs, the oldest seven are tied into a bundle with string that sits on the counter beneath
+   the line, and the line holds the rest; it fills again to fourteen before the next seven are tied. Every kept ticket
+   stays somewhere a player can see it. Nothing counts them on the play surface. */
+export const LINE_MAX = 14, BUNDLE = 7;
+/** @param {Array<any>} line */
+export function lineView(line) {
+  const n = Array.isArray(line) ? line.length : 0;
+  const b = n <= LINE_MAX ? 0 : Math.ceil((n - LINE_MAX) / BUNDLE);
+  return { bundles: Array.from({ length: b }, (_, i) => line.slice(i * BUNDLE, (i + 1) * BUNDLE)), hanging: n ? line.slice(b * BUNDLE) : [] };
+}
+
 /* Let it go: the ticket drops into the change machine's hopper. Only a count stays. */
 export function letGo(hall, id) {
   if (!ticketAt(hall, id)) return hall;
