@@ -11,6 +11,7 @@
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
 import { HOLLOW_CARD, lettersWrite } from './shared-pick'
+import { JAR_KINDS, JAR_SIDE_MAX, LINE_MAX, PLACES, DANCE_MIN_MS, betweenDay, callsFor, doorOfKind, validColour } from '../../../public/between/games/core.js'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -67,7 +68,7 @@ const memberIds = (g: Doc): string[] => (isObj(g.members) ? Object.keys(g.member
  * null when there is none)? Members tend everything shared; only owners move their own walkers, pictures and notes.
  * Someone holding the invite link can only ask to join a spark, or take that request back.
  */
-export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Doc | null, cur: Doc | null, gardenId?: string, now: number = Date.now()): Verdict {
   const me = who.playerId
   const home = garden.kind === 'home'
   if (home && !who.member) return no(403, 'A homeroom is its keeper\'s own.')
@@ -89,6 +90,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op !== 'update' || !data) return no(400, 'The garden is planted once and then only changed.')
       if ('startedBy' in data || 'v' in data) return no(400, 'Who started the garden does not change.')
       if ('kind' in data) return no(400, 'A room stays a room and a homeroom stays a homeroom.')
+      if ('door' in data) return no(400, 'The door a Between came through is set once, when the first spark is planted.')
       if (home && ('members' in data || 'joinRequest' in data || 'phase' in data || 'invitations' in data || 'styleAsk' in data))
         return no(400, 'A homeroom is held by one person.')
       if ('style' in data && !(typeof data.style === 'string' && ID.test(data.style))) return no(400, 'Choose one of the room styles.')
@@ -121,6 +123,9 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (data?.kind === 'turn' || cur?.kind === 'turn' || data?.kind === 'spend' || cur?.kind === 'spend') return turnWrite()
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
       if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
+      if (data?.kind === 'jar' || cur?.kind === 'jar') return home ? no(400, 'A jar is left on a shelf you share.') : jarWrite(me, op, data, cur)
+      if (data?.kind === 'dance' || cur?.kind === 'dance') return home ? no(400, 'A dance is danced with someone.') : danceWrite(me, op, data, cur, garden, target.id, now)
+      if (data?.kind === 'call' || cur?.kind === 'call') return home ? no(400, 'A call is carried with someone.') : callWrite(me, op, data, cur, garden, target.id, gardenId, now)
       return yes
     case 'spirits':
     case 'daemons':
@@ -211,6 +216,70 @@ function lanternWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Ve
   if (op !== 'set' && data && 'yes' in data) return no(400, 'Only the other person says yes.')
   if (op === 'set' && isObj(next.yes) && Object.keys(next.yes).length) return no(400, 'Only the other person says yes.')
   return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
+}
+
+
+/* ---------- the hollow's games (FR-016 to FR-021; his A on bsp-games-look-1) ---------- */
+const JAR_KEYS = new Set(['kind', 'by', 'at', 'what', 'text', 'blob', 'status', 'openedAt', 'openedBy'])
+const memberList = (g: Doc): string[] => memberIds(g)
+const pairOk = (me: string, g: Doc, pair: unknown): pair is string[] => {
+  const m = memberList(g)
+  return Array.isArray(pair) && pair.length === 2 && pair[0] !== pair[1] && pair.every(p => typeof p === 'string' && m.includes(p)) && pair.includes(me)
+}
+
+/** A jar (Found lights): left by one friend, opened by the other, never taken back once opened and never spoiled (FR-018). */
+export function jarWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+  const maker = cur ? cur.by : data?.by
+  if (op === 'delete') return maker === me && cur?.status === 'left' ? yes : no(403, 'Only whoever left a jar takes it back, and only while it waits.')
+  if (maker !== me) {
+    // the other friend opens it: status "opened", the moment, and their own id, nothing else
+    const keys = Object.keys(data!)
+    if (cur?.status !== 'left') return no(400, 'That jar is open already.')
+    if (!keys.every(k => ['status', 'openedAt', 'openedBy'].includes(k)) || data!.status !== 'opened' || data!.openedBy !== me || !isNum(data!.openedAt))
+      return no(400, 'A jar left for you can only be opened.')
+    return yes
+  }
+  if (op === 'update') return no(400, 'A jar stays as it was left.')
+  const next = data!
+  for (const k of Object.keys(next)) if (!JAR_KEYS.has(k)) return no(400, 'A jar carries one thing and nothing else.')
+  if (next.kind !== 'jar' || next.status !== 'left') return no(400, 'A jar is left covered.')
+  if ('openedAt' in next || 'openedBy' in next) return no(400, 'Only the other friend opens a jar.')
+  if (!isNum(next.at)) return no(400, 'Say when it was left.')
+  if (!(JAR_KINDS as readonly string[]).includes(next.what as string)) return no(400, 'A jar holds a sound, a colour, a photo or a line.')
+  const t = next.text
+  if (next.what === 'line' && !(typeof t === 'string' && t.trim().length > 0 && t.length <= LINE_MAX)) return no(400, 'A line is short and not empty.')
+  if (next.what === 'colour' && !validColour(t)) return no(400, 'A colour is one of the colours the page offers.')
+  if (next.what !== 'line' && next.what !== 'colour' && t !== undefined && !(typeof t === 'string' && t.length <= LINE_MAX)) return no(400, 'A note on a jar is short.')
+  if (next.blob !== undefined && !(typeof next.blob === 'string' && next.blob.length <= 256)) return no(400, 'A jar holds a reference, not the thing itself.')
+  return yes
+}
+export const JAR_PER_SIDE = JAR_SIDE_MAX
+
+/** A dance (Firefly lead): written once the two have held it for thirty seconds; one a Between day; no words (FR-019). */
+export function danceWrite(me: string, op: Op, data: Doc | null, cur: Doc | null, g: Doc, id: string, now: number): Verdict {
+  if (op !== 'set' || cur) return no(400, 'A dance is written once and then stays.')
+  const d = data!
+  for (const k of Object.keys(d)) if (!['kind', 'by', 'pair', 'day', 'at', 'ms', 'crossings'].includes(k)) return no(400, 'A dance carries no words.')
+  if (!pairOk(me, g, d.pair)) return no(400, 'A dance is between the two people in this garden.')
+  if (!isNum(d.day) || !Number.isInteger(d.day) || id !== `dance-${d.day}`) return no(400, 'One dance a day.')
+  if (Math.abs(d.day - betweenDay(g, now)) > 1) return no(400, 'That is not today\'s dance.')
+  if (!isNum(d.at) || !isNum(d.ms) || d.ms < DANCE_MIN_MS) return no(400, 'A dance is held for thirty seconds or more.')
+  if (!isNum(d.crossings) || !Number.isInteger(d.crossings) || d.crossings < 0 || d.crossings > 100000) return no(400, 'Not a dance.')
+  return yes
+}
+
+/** A call (Lantern out): both friends carried it to one of tonight's three places; one a Between day (FR-020). */
+export function callWrite(me: string, op: Op, data: Doc | null, cur: Doc | null, g: Doc, id: string, gardenId: string | undefined, now: number): Verdict {
+  if (op !== 'set' || cur) return no(400, 'A call is carried once and then stays.')
+  const d = data!
+  for (const k of Object.keys(d)) if (!['kind', 'by', 'pair', 'day', 'place', 'at'].includes(k)) return no(400, 'A call carries no words.')
+  if (!pairOk(me, g, d.pair)) return no(400, 'A call is carried by the two people in this garden.')
+  if (!isNum(d.day) || !Number.isInteger(d.day) || id !== `call-${d.day}`) return no(400, 'One call a night.')
+  if (Math.abs(d.day - betweenDay(g, now)) > 1) return no(400, 'That is not tonight\'s call.')
+  if (!isNum(d.place) || !Number.isInteger(d.place) || d.place < 0 || d.place >= PLACES.length) return no(400, 'That is not a place in the valley.')
+  if (!isNum(d.at)) return no(400, 'Say when it was carried.')
+  if (gardenId && !(callsFor(gardenId, d.day) as number[]).includes(d.place)) return no(400, 'That is not one of tonight\'s three.')
+  return yes
 }
 
 /** A lantern counts toward the Between once, when someone other than its maker has said yes. */
@@ -539,7 +608,7 @@ const GONE = new Set(['retired', 'composted', 'withdrawn'])
 
 export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
-  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' | 'turn' }[]
+  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' | 'turn' | 'jar' }[]
   revisit: string[]; invitations: { id: string; when: number | null; note: string; at: number | null }[]; lastSatTogether: number | null
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
   keptAgreement: boolean
@@ -577,6 +646,8 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
         waiting.push({ id: iid, what: 'turn' })
       continue
     }
+    if (it.kind === 'jar') { if (it.by !== me && it.status === 'left') waiting.push({ id: iid, what: 'jar' }); continue }
+    if (it.kind === 'dance' || it.kind === 'call') continue
     if (it.kind === 'cast') { if (it.by !== me && !(isObj(it.answer) && isObj(it.answer[me]))) waiting.push({ id: iid, what: 'cast' }); continue }
     if (isObj(it.pending) && it.pending.by !== me) waiting.push({ id: iid, what: 'ask' })
     else if (it.kind === 'agreement' && it.status === 'proposed' && !yesMe) waiting.push({ id: iid, what: 'agreement' })
@@ -616,8 +687,15 @@ export function plantedGarden(me: string, data: Doc, at = Date.now()): Doc | nul
     style: typeof data.style === 'string' && ID.test(data.style) ? data.style : 'dusk-hollow', startedAt: typeof data.startedAt === 'number' ? data.startedAt : at,
     setup: { who, kind: String(setup!.kind ?? 'Something else').slice(0, 60), hopes: String(setup!.hopes ?? '').slice(0, 1000) },
     members: { [me]: { joinedAt: at } }, joinRequest: null, phase: 'spark', ending: null,
+    ...doorField(setup!.kind),
     lastTendedAt: typeof data.lastTendedAt === 'number' ? data.lastTendedAt : at,
   }
+}
+
+/** The door the first spark came through (FR-016): set once at planting, from the relationship kind; a kind with no door sets none. */
+function doorField(kind: unknown): { door?: string } {
+  const d = doorOfKind(typeof kind === 'string' ? kind : '')
+  return d ? { door: d } : {}
 }
 
 /** A garden carried over from the claude.ai artifact store: its member ids become `owner`'s player id. */
