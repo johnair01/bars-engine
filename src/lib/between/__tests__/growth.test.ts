@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error plain browser module
-import { read, isFeed, standIn, keptRun, newPot, POTS, TEAS } from '../../../../public/between/growth.js'
+import * as G from '../../../../public/between/growth.js'
+// the browser module is plain JS; its inferred types are narrower than the tests need
+const { read, isFeed, standIn, keptRun, newPot, POTS, TEAS } = G as any
 
 const DAY = 864e5, T0 = 1_700_000_000_000, A = 'a', B = 'b'
 const garden = { startedAt: T0, betweenSince: T0 }

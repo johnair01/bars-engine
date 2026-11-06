@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mayWrite, homeWrite, pouchWrite, roomSummary, MOVES, type Doc, type Who } from '@/lib/between/rules'
 import { leavesWaiting, noticeCopy, readStopToken, stopToken } from '@/lib/between/notice'
-// @ts-expect-error plain browser module
-import { TEAS } from '../../../../public/between/growth.js'
+import * as G from '../../../../public/between/growth.js'
+const TEAS: string[] = (G as any).TEAS
 
 // friendship-between-growth: the cup, the hearth spirit, the ember that wakes, the notices switch, the lit door, the notice email.
 const A = 'a', B = 'b'
@@ -58,7 +58,7 @@ describe('the hearth spirit (FR-011, FR-012)', () => {
   it('an ember wakes once, after it has risen, as one spirit', () => {
     const ember = { move: Object.keys(MOVES)[0], state: 'lit', risen: true }
     expect(pouchWrite({ embers: { e1: { ...ember, woke: { spirit: 's1', at: 5 } } } }).ok).toBe(true)
-    expect(pouchWrite({ embers: { e1: { ...ember, risen: undefined, woke: { spirit: 's1', at: 5 } } } }).ok).toBe(false)
+    expect(pouchWrite({ embers: { e1: { move: ember.move, state: 'lit', woke: { spirit: 's1', at: 5 } } } }).ok).toBe(false)
     expect(pouchWrite({ embers: { e1: { ...ember, woke: { spirit: 's1', at: 5, text: 'x' } } } }).ok).toBe(false)
   })
 })
