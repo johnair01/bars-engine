@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
 import { settle, viewGarden } from './shared-pick'
 import { cleanCopy } from '../../../public/between/friendcraft/deck.js'
+import { cleanPath } from '../../../public/between/games/core.js'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -65,9 +66,21 @@ export async function snapshot(gardenId: string, who: Who) {
   }
 }
 
+/** The games ride on presence (the Between has no socket): where a friend points on a lantern night, and the finger's path while a hand is up. */
+function gamePresence(p: Doc): Doc {
+  const out: Doc = {}
+  if (p.pt === null || (typeof p.pt === 'number' && Number.isInteger(p.pt) && p.pt >= 0 && p.pt < 3)) out.pt = p.pt as number | null
+  const f = p.f
+  if (f && typeof f === 'object' && !Array.isArray(f)) {
+    const fo = f as Doc
+    out.f = { up: !!fo.up, t0: typeof fo.t0 === 'number' && Number.isFinite(fo.t0) ? Math.round(fo.t0) : 0, p: cleanPath(fo.p) }
+  }
+  return out
+}
+
 export async function setPresence(gardenId: string, playerId: string, p: Doc) {
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null)
-  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: seatOf(p.s) }
+  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: seatOf(p.s), ...gamePresence(p) }
   await db.betweenPresence.upsert({
     where: { gardenId_playerId: { gardenId, playerId } },
     create: { gardenId, playerId, data: asJson(data) },
@@ -135,7 +148,7 @@ export async function write(gardenId: string, who: Who, t: Target, op: Op, data:
     if (!g) return { ok: false as const, status: 404, error: 'There is no garden here.' }
     const garden = asDoc(g.data)
     const cur = t.table === 'garden' ? garden : await current(tx, gardenId, t)
-    const verdict = mayWrite(who, garden, t, op, data, cur)
+    const verdict = mayWrite(who, garden, t, op, data, cur, gardenId)
     if (!verdict.ok) return verdict
     let next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
     // both letters (or both steps) in: the server keeps the overcome obstacle as a story (shared-pick.ts settle)
