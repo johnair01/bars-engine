@@ -148,7 +148,10 @@ export async function write(gardenId: string, who: Who, t: Target, op: Op, data:
     if (!g) return { ok: false as const, status: 404, error: 'There is no garden here.' }
     const garden = asDoc(g.data)
     const cur = t.table === 'garden' ? garden : await current(tx, gardenId, t)
-    const verdict = mayWrite(who, garden, t, op, data, cur, gardenId)
+    // a cup poured while the other friend is in the Between is written drunk at once (growth FR-007): the presence poll is the witness
+    const otherHere = t.table === 'items' && data?.kind === 'cup' && data.status === 'drunk'
+      && !!(await tx.betweenPresence.findFirst({ where: { gardenId, playerId: { not: who.playerId }, updatedAt: { gte: new Date(Date.now() - HERE_MS) } } }))
+    const verdict = mayWrite(who, garden, t, op, data, cur, gardenId, Date.now(), otherHere)
     if (!verdict.ok) return verdict
     let next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
     // both letters (or both steps) in: the server keeps the overcome obstacle as a story (shared-pick.ts settle)

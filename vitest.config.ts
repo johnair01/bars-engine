@@ -127,6 +127,8 @@ export default defineConfig({
       'src/lib/between/__tests__/friendcraft-deck.test.ts',
       'src/lib/between/__tests__/friendcraft-join.test.ts',
       'src/lib/between/__tests__/games.test.ts',
+      'src/lib/between/__tests__/growth.test.ts',
+      'src/lib/between/__tests__/growth-rules.test.ts',
       'src/lib/between/__tests__/land-place.test.ts',
       'src/lib/between/__tests__/fire-song.test.ts',
       'src/lib/between/__tests__/music.test.ts',

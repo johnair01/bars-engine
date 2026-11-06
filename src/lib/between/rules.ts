@@ -11,6 +11,7 @@
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
 import { HOLLOW_CARD, lettersWrite } from './shared-pick'
+import { TEAS, FORM_OF } from '../../../public/between/growth.js'
 import { JAR_KINDS, JAR_SIDE_MAX, LINE_MAX, PLACES, DANCE_MIN_MS, betweenDay, callsFor, doorOfKind, validColour } from '../../../public/between/games/core.js'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
@@ -68,7 +69,7 @@ const memberIds = (g: Doc): string[] => (isObj(g.members) ? Object.keys(g.member
  * null when there is none)? Members tend everything shared; only owners move their own walkers, pictures and notes.
  * Someone holding the invite link can only ask to join a spark, or take that request back.
  */
-export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Doc | null, cur: Doc | null, gardenId?: string, now: number = Date.now()): Verdict {
+export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Doc | null, cur: Doc | null, gardenId?: string, now: number = Date.now(), otherHere = false): Verdict {
   const me = who.playerId
   const home = garden.kind === 'home'
   if (home && !who.member) return no(403, 'A homeroom is its keeper\'s own.')
@@ -122,12 +123,15 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
       if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
+      if (data?.kind === 'cup' || cur?.kind === 'cup') return home ? no(400, 'A cup is poured for someone.') : cupWrite(me, op, data, cur, garden, otherHere)
+      if (data?.kind === 'spend' || cur?.kind === 'spend') return no(400, 'Tea is spent at the table, in the friendship game.')
       if (data?.kind === 'jar' || cur?.kind === 'jar') return home ? no(400, 'A jar is left on a shelf you share.') : jarWrite(me, op, data, cur)
       if (data?.kind === 'dance' || cur?.kind === 'dance') return home ? no(400, 'A dance is danced with someone.') : danceWrite(me, op, data, cur, garden, target.id, now)
       if (data?.kind === 'call' || cur?.kind === 'call') return home ? no(400, 'A call is carried with someone.') : callWrite(me, op, data, cur, garden, target.id, gardenId, now)
       return yes
     case 'spirits':
     case 'daemons':
+      if (target.table === 'spirits' && (data?.hearth || cur?.hearth)) return spiritWrite(me, garden, op, data, cur)
       if (op === 'set') return data && data.owner === me ? yes : no(400, 'You can only bring your own.')
       if (!cur) return no(404, 'That is no longer in the garden.')
       return cur.owner === me ? yes : no(403, 'It stays its owner\'s; you can greet it.')
@@ -164,7 +168,7 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'woke'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -188,6 +192,8 @@ export function pouchWrite(pouch: Doc): Verdict {
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
     if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
+    if (e.woke != null && !(isObj(e.woke) && Object.keys(e.woke).every(k => k === 'spirit' || k === 'at') && typeof e.woke.spirit === 'string' && ID.test(e.woke.spirit) && isNum(e.woke.at) && e.risen === true))
+      return no(400, 'An ember wakes once, after it has risen, as one spirit.')
   }
   return yes
 }
@@ -278,6 +284,60 @@ export function callWrite(me: string, op: Op, data: Doc | null, cur: Doc | null,
   if (!isNum(d.place) || !Number.isInteger(d.place) || d.place < 0 || d.place >= PLACES.length) return no(400, 'That is not a place in the valley.')
   if (!isNum(d.at)) return no(400, 'Say when it was carried.')
   if (gardenId && !(callsFor(gardenId, d.day) as number[]).includes(d.place)) return no(400, 'That is not one of tonight\'s three.')
+  return yes
+}
+
+/* ---------- the Between grows from play (FR-007, FR-011, FR-012; Six-faces-council friendship-between-growth) ---------- */
+const CUP_KEYS = new Set(['kind', 'by', 'at', 'tea', 'status', 'drunkBy', 'drunkAt'])
+
+/** A cup (FR-007): poured by one friend, drunk by the other, no words. Poured while the other is in the Between it is written
+ *  drunk at once, with the other as the one who drank. Only the pourer sets it; only the other writes the drink, once. */
+export function cupWrite(me: string, op: Op, data: Doc | null, cur: Doc | null, g: Doc, otherHere = false): Verdict {
+  const pourer = cur ? cur.by : data?.by
+  if (op === 'delete') return pourer === me && cur?.status === 'poured' ? yes : no(403, 'A cup stays until it is drunk, and only its pourer takes it back.')
+  if (pourer !== me) {
+    if (cur?.status !== 'poured') return no(400, 'That cup is drunk already.')
+    const keys = Object.keys(data!)
+    if (!keys.every(k => ['status', 'drunkBy', 'drunkAt'].includes(k)) || data!.status !== 'drunk' || data!.drunkBy !== me || !isNum(data!.drunkAt))
+      return no(400, 'A cup left for you can only be drunk.')
+    return yes
+  }
+  if (op === 'update') return no(400, 'A cup stays as it was poured.')
+  const next = data!
+  for (const k of Object.keys(next)) if (!CUP_KEYS.has(k)) return no(400, 'A cup carries no words.')
+  if (next.kind !== 'cup' || !isNum(next.at)) return no(400, 'A cup has a pourer and a moment.')
+  if (!(TEAS as readonly string[]).includes(next.tea as string)) return no(400, 'That is not a tea.')
+  const other = memberIds(g).find(m => m !== me)
+  if (next.status === 'drunk') {
+    if (!otherHere || !other || next.drunkBy !== other || !isNum(next.drunkAt)) return no(400, 'A cup is drunk by the other friend, and only while they are here.')
+    return yes
+  }
+  if (next.status !== 'poured' || 'drunkBy' in next || 'drunkAt' in next) return no(400, 'A cup is poured covered.')
+  return yes
+}
+
+const SPIRIT_KEYS = new Set(['owner', 'name', 'element', 'form', 'fromEmber', 'hearth', 'resting', 'at'])
+/** A spirit woken at a hollow's hearth is the hollow's (FR-012): either friend may let it rest or wake it; nobody deletes it;
+ *  only its owner names it. */
+export function spiritWrite(me: string, g: Doc, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+  if (op === 'delete') return no(403, 'A spirit woken at a hearth rests; it is never taken away.')
+  if (cur && !cur.hearth) return no(400, 'That spirit is not the hollow\'s.')
+  if (op === 'set' && cur) return no(400, 'It woke once and stays.')
+  if (cur) {
+    const keys = Object.keys(data!)
+    if (!keys.every(k => k === 'resting' || k === 'name') || (data!.resting !== undefined && typeof data!.resting !== 'boolean')) return no(400, 'It can rest or wake, and its keeper can name it.')
+    if ('name' in data! && cur.owner !== me) return no(403, 'Its keeper names it.')
+    if ('name' in data! && !(data!.name === null || (typeof data!.name === 'string' && data!.name.trim().length > 0 && data!.name.length <= 40 && isNote(data!.name)))) return no(400, 'A name is a short line.')
+    return yes
+  }
+  const d = data!
+  for (const k of Object.keys(d)) if (!SPIRIT_KEYS.has(k)) return no(400, 'A spirit keeps a name, an element and a form.')
+  if (d.owner !== me || d.hearth !== true || d.fromEmber !== true || !isNum(d.at)) return no(400, 'A spirit woken at the hearth is its waker\'s to bring.')
+  if (g.kind === 'home') return no(400, 'A hearth spirit wakes in a room you share.')
+  if (!(ELEMENTS as readonly string[]).includes(d.element as string)) return no(400, 'That is not an element.')
+  if (d.form !== (FORM_OF as Record<string, string>)[d.element as string]) return no(400, 'Its form follows its element.')
+  if (d.name != null && !(typeof d.name === 'string' && d.name.trim().length > 0 && d.name.length <= 40 && isNote(d.name))) return no(400, 'A name is a short line.')
+  if (d.resting != null && typeof d.resting !== 'boolean') return no(400, 'Resting is yes or no.')
   return yes
 }
 
@@ -408,7 +468,7 @@ function roomWrite(me: string, garden: Doc, room: Json): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt', 'notices'])
 
 /* ---------- the coin table (Six-faces-council pass bar-intake-2, brief "Coin table, build 2") ----------
  * Keep writes the move a cast gave you to your homeroom's private doc (`casts`): the hexagram, its lane and suit, the
@@ -512,6 +572,7 @@ export function homeWrite(doc: Doc): Verdict {
   if (doc.lastCheckin != null && !isNum(doc.lastCheckin)) return no(400, 'A check-in has a time.')
   if (doc.oriented != null && !isNum(doc.oriented)) return no(400, 'Your first minute here has a time.')
   if (!minuteOk(doc.minute)) return no(400, 'Your first minute here keeps times, nothing more.')
+  if (doc.notices != null && doc.notices !== 'on' && doc.notices !== 'off') return no(400, 'Notices are on or off.')
   if (doc.bookAt != null && !(doc.bookAt === 'self' || isId(doc.bookAt))) return no(400, 'The book opens at a page.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
@@ -582,7 +643,9 @@ const GONE = new Set(['retired', 'composted', 'withdrawn'])
 
 export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
-  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' | 'jar' }[]
+  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' | 'jar' | 'cup' | 'turn' }[]
+  /** something waits on me here: the nook's door lantern is lit while any room is lit (FR-008) */
+  lit: boolean
   revisit: string[]; invitations: { id: string; when: number | null; note: string; at: number | null }[]; lastSatTogether: number | null
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
   keptAgreement: boolean
@@ -606,7 +669,9 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     const yesMe = isObj(it.yes) ? it.yes[me] : undefined
     if (it.kind === 'lantern') { if (it.by !== me && !isNum(yesMe)) waiting.push({ id: iid, what: 'lantern' }); continue }
     if (it.kind === 'jar') { if (it.by !== me && it.status === 'left') waiting.push({ id: iid, what: 'jar' }); continue }
-    if (it.kind === 'dance' || it.kind === 'call') continue
+    if (it.kind === 'dance' || it.kind === 'call' || it.kind === 'spend') continue
+    if (it.kind === 'cup') { if (it.by !== me && it.status === 'poured') waiting.push({ id: iid, what: 'cup' }); continue }
+    if (it.kind === 'turn') { if (isObj(it.answer) && isObj(it.answer[me]) === false && Object.keys(it.answer).some(k => k !== me)) waiting.push({ id: iid, what: 'turn' }); continue }
     if (it.kind === 'cast') { if (it.by !== me && !(isObj(it.answer) && isObj(it.answer[me]))) waiting.push({ id: iid, what: 'cast' }); continue }
     if (isObj(it.pending) && it.pending.by !== me) waiting.push({ id: iid, what: 'ask' })
     else if (it.kind === 'agreement' && it.status === 'proposed' && !yesMe) waiting.push({ id: iid, what: 'agreement' })
@@ -628,7 +693,7 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
   return {
     id, kind: 'room', phase: g.phase ?? null, who, relKind: setup.kind ?? null, style: g.style ?? null, person,
     stale: g.phase !== 'closed' && isNum(g.lastTendedAt) && now - g.lastTendedAt > STALE_DAYS * 864e5,
-    joinWaiting: g.startedBy === me && !!jr, waiting, revisit, invitations, lastSatTogether,
+    joinWaiting: g.startedBy === me && !!jr, waiting, lit: waiting.length > 0, revisit, invitations, lastSatTogether,
     hereNow: !!opts.hereNow, lastTendedAt: g.lastTendedAt ?? null,
     styleAsk: sa ? { style: sa.style as string, at: isNum(sa.at) ? sa.at : null } : null,
     keptAgreement, keepsakes, personStarted: !!person && g.startedBy === person,
