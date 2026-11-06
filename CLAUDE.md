@@ -90,26 +90,10 @@ The Portland community around this project has a strong allergy to AI. Design ch
 
 TypeScript, Next.js 14+, Prisma (PostgreSQL), Tailwind CSS, AI SDK. Source in `src/`, tests in `tests/`.
 
-## Spec Workflow
+## Spec work
 
-- **Specs**: `.specify/specs/<feature>/` — each feature has spec.md, plan.md, tasks.md
-- **Backlog prompts**: `.specify/backlog/prompts/` — paste into Claude Code for spec-driven work
-- **Objective stack**: [.specify/backlog/BACKLOG.md](.specify/backlog/BACKLOG.md)
-
-### Creating or expanding spec kits (read first)
-
-Before authoring new feature specs, **read** [.agents/skills/spec-kit-translator/SKILL.md](.agents/skills/spec-kit-translator/SKILL.md) and scaffold from [.specify/spec-template.md](.specify/spec-template.md). The three-file folder alone is not enough: include Purpose/Practice where applicable, design decisions, conceptual model (WHO/WHAT/WHERE when relevant), data/API contracts before UI-heavy work, and a **Verification Quest** for user-facing changes (see skill § Verification Quests). After editing `BACKLOG.md`, run `npm run backlog:seed` per the skill. Rule reference: [.cursor/rules/spec-kit-plans.mdc](.cursor/rules/spec-kit-plans.mdc).
-
-## Agent Context Refresh
-
-Run when switching branches or after pulling new specs:
-
-```bash
-./.specify/scripts/bash/update-agent-context.sh claude
-```
-
-- On a feature branch: uses that spec's plan.md
-- On main: uses specs/main/plan.md
+Spec kits (`.specify/specs/`), the backlog, the agent-context refresh and Ouroboros (`ooo`) are in the skill
+`.claude/skills/spec-workflow/SKILL.md`; load it when the work touches a spec.
 
 ## Fail-Fix Workflow
 
@@ -136,6 +120,4 @@ See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 <!-- ooo:START -->
 <!-- ooo:VERSION:0.14.0 -->
 
-## Ouroboros
-
-Specification-first `ooo` commands and agents: [docs/OUROBOROS.md](docs/OUROBOROS.md) (moved out of this file 2026-10-30 so every session that attaches this repo opens smaller).
+Ouroboros (`ooo`): `.claude/skills/spec-workflow/SKILL.md`.
