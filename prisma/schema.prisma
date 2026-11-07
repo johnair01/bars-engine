@@ -5260,6 +5260,7 @@ model BetweenGarden {
   shown    BetweenShown[]
   privates BetweenPrivate[]
   presence BetweenPresence[]
+  notices  BetweenNotice[]
 
   @@index([startedById])
   @@map("between_gardens")
@@ -5274,6 +5275,18 @@ model BetweenMember {
   @@id([gardenId, playerId])
   @@index([playerId])
   @@map("between_members")
+}
+
+/// One notice email per Between per day of the Between per friend (friendship-between-growth FR-009). Written before the send.
+model BetweenNotice {
+  gardenId String   @map("garden_id")
+  playerId String   @map("player_id")
+  day      Int
+  sentAt   DateTime @default(now()) @map("sent_at")
+  garden   BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId, day])
+  @@map("between_notices")
 }
 
 /// Agreements and offerings (kind, status and who planted it are inside data, as the page writes them).

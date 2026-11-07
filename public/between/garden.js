@@ -26,6 +26,7 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
 import { makeQiSky, qiOf } from "./sky-qi.js";
+import { read as growthRead, standIn as growthStandIn, FORM_OF } from "./growth.js";   // friendship-between-growth: health, kept days, bowls, found pots from the Between's own items
 import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
@@ -284,14 +285,28 @@ const possessive = (uid, g) => uid === me ? "yours" : nameOf(uid, g) + "'s";
 /* A lantern counts toward the Between once, when someone other than its maker has said yes (lanternLit in rules.ts). */
 const lanternLit = it => it.kind === "lantern" && !!it.yes && typeof it.yes === "object" && Object.entries(it.yes).some(([k, v]) => k !== it.by && typeof v === "number" && Number.isFinite(v));
 const isFed = it => it.kind === "lantern" ? lanternLit(it) : it.kind !== "agreement" && (it.status === "received" || it.status === "kept");
-function satisfaction(its) {
-  let agreed = 0, fed = 0;
-  for (const it of its.values()) {
-    if (it.kind === "agreement" && it.status === "agreed") agreed++;
-    else if (isFed(it)) fed++;
+/* The Between's health (FR-003): the built inputs (agreements held, offerings fed) plus the feeds of the last seven days and the
+   kept-days lift, all read by growth.js from the shared items and spirits, so both friends compute the same light. ?growth=<feeds>
+   &kept=<days>&lapsed=<days>&cup=1 add a stand-in's items on a preview host only (FR-014); ?growth=0 adds nothing and reads as today. */
+const GROWTH_Q = PREVIEW_HOST_EARLY() ? new URLSearchParams(location.search) : null;
+function PREVIEW_HOST_EARLY() { return location.hostname !== "bars-engine.vercel.app"; }
+function growthOf(V) {
+  const g = V && V.g, items = V ? V.items : new Map();
+  const members = g && g.members ? Object.keys(g.members) : [];
+  const wantStand = !!GROWTH_Q && GROWTH_Q.get("growth") != null && Number.isFinite(+GROWTH_Q.get("growth")) && (STANDIN_ROOM || (g && !isHome(g)));
+  if ((!g && !wantStand) || (g && isHome(g))) return growthRead({ items, spirits: new Map(), garden: g || {}, members: [], now: now() });
+  let garden = g || {}, merged = items;
+  if (wantStand) {   // the stand-in room has no stored Between, so it borrows one with a stand-in friend in it
+    const them = members.find(m => m !== me) || "stand-in";
+    const st = growthStandIn({ feeds: Math.max(0, +GROWTH_Q.get("growth")), kept: +GROWTH_Q.get("kept") || 0, lapsed: +GROWTH_Q.get("lapsed") || 0, now: now(), me, them });
+    merged = new Map([...items, ...st.items]);
+    if (GROWTH_Q.get("cup") === "1") merged.set("preview-cup", { kind: "cup", by: them, at: now() - 60e3, tea: "hearth", status: "poured" });
+    garden = { ...garden, betweenSince: now() - 30 * 864e5, startedAt: now() - 30 * 864e5 };
+    return growthRead({ items: merged, spirits: (V && V.spirits) || new Map(), garden, members: [me, them], now: now() });
   }
-  return Math.max(1, Math.min(10, Math.round(3 + Math.min(agreed, 4) * 1.2 + Math.min(fed, 8) * 0.6)));
+  return growthRead({ items: merged, spirits: V.spirits, garden, members, now: now() });
 }
+const healthOf = V => growthOf(V).health;
 const stateOf = s => s <= 4 ? "charged" : s <= 7 ? "steadied" : "allied";
 const STATE_TEXT = { charged: ["Charged", "restless, still carrying more charge than care"], steadied: ["Steadied", "settled, holding"], allied: ["Allied", "fed and in leaf"] };
 const isStale = g => g && g.lastTendedAt && now() - g.lastTendedAt > STALE_DAYS * 864e5;
@@ -572,6 +587,7 @@ const WAKE_SKIP = PREVIEW_HOST && KQ.get("wake") === "1";        // previews: wa
 const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOST ? KQ.get("cushion") : null;
 // previews: ?embers=demo puts four held embers in your pouch on this page only (never saved), so the seated hearth moment shows
 // with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
+const EMBER_RISEN = PREVIEW_HOST && KQ.get("ember") === "risen";   // previews: ?ember=risen puts a risen ember in the satchel (a sit with it wakes it)
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 // previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
 // E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
@@ -988,6 +1004,10 @@ function waypoint(seed, k, mode) {
 }
 function walkerPos(w, tSec) {
   const d = w.doc;
+  if (w.type === "spirit" && d.hearth) {   // a spirit woken at the hollow's hearth stays beside it (growth FR-012); resting, it lies still
+    const r = Math.hypot(HEARTH.x, HEARTH.z) || 1, ux = HEARTH.x / r, uz = HEARTH.z / r, side = hash(w.id) % 2 ? 1 : -1;
+    return { p: new THREE.Vector2(HEARTH.x - ux * 1.5 - uz * 0.95 * side, HEARTH.z - uz * 1.5 + ux * 0.95 * side), moving: false, dir: new THREE.Vector2(ux, uz).multiplyScalar(-1) };
+  }
   if (d.stay && d.stay.until > now()) {
     const since = (now() - d.stay.at) / 1000;
     const from = typeof d.stay.fx === "number" ? new THREE.Vector2(d.stay.fx, d.stay.fz) : new THREE.Vector2(d.stay.x, d.stay.z);
@@ -1138,8 +1158,10 @@ function teaPour(skip = 0) {
   if (!teaNear()) return;
   const m = tea; if (m.running() || m.holding()) return;
   if (!m.attach(meState.body)) return;
+  const gv = window.__between && window.__between.growthView; if (m.tint) m.tint(gv && gv.nextTea ? gv.nextTea() : null);   // each pot's tea is its own colour
   m.pour(performance.now() / 1000, skip);   // skip: seconds in, or "sip" (tea.js knows where each drink's first sip is)
   toast("A cup, by the fire."); hmHud();
+  if (window.__between && window.__between.growthView) window.__between.growthView.poured();   // the pour feeds the Between, or leaves a covered cup (growth FR-007)
 }
 function teaSip() { if (tea && teaNear() && tea.sip(performance.now() / 1000)) hmHud(); }
 function teaFrame(t) {
@@ -1212,10 +1234,14 @@ let lastPresence = 0, lastSent = "";
 /* Where you stand goes out with each poll, with where you are walking to, so the other screen walks your figure there
    at walking pace instead of jumping it every few seconds. A wave is a time stamp the other screen notices once. */
 let myWave = null;
+/* The hollow's games ride on presence (games/index.js): `gameFeel.extra()` adds where a friend points and the finger's path, and
+   `gameFeel.poll` is the shorter wait while both hands are up (Firefly lead, 250 ms against the usual 2.5 s). */
+const gameFeel = { extra: null, poll: 0 };
+const rawPeers = new Map();
 function presenceNow() {
   if (!me || !meState.placed) return null;
   const t = meState.target;
-  return { x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), h: +meState.yaw.toFixed(2), w: !!(t || meState.keys.size),
+  return { ...(gameFeel.extra ? gameFeel.extra() : null), x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), h: +meState.yaw.toFixed(2), w: !!(t || meState.keys.size),
     tx: t ? +t.x.toFixed(2) : null, tz: t ? +t.z.toFixed(2) : null, wave: myWave, s: meState.sitting ? meState.seatWant : null };
 }
 function sendPresence() { if (meState.wasWalking !== undefined) pollSoon(); }
@@ -1224,7 +1250,7 @@ function onPeers(list) {
   for (const pr of list || []) {
     const uid = pr.uid;
     if (!uid || uid === me || typeof pr.x !== "number" || typeof pr.z !== "number") continue;
-    seen.add(uid);
+    seen.add(uid); rawPeers.set(uid, pr);
     let e = peers.get(uid);
     const fresh = !e;
     if (!e) { e = { peer: uid, uid, pos: new THREE.Vector3(pr.x, 0, pr.z), yaw: pr.h || 0 }; peers.set(uid, e); }
@@ -1237,6 +1263,7 @@ function onPeers(list) {
     if (pr.wave && pr.wave !== e.wave) { if (!fresh && now() - pr.wave < 15000) { burst(new THREE.Vector3(pr.x, groundY(pr.x, pr.z), pr.z), 0xffe2b0); waves.push({ peer: uid, t0: performance.now() / 1000 }); if (e.body) e.body.wave(performance.now() / 1000); } e.wave = pr.wave; }
     ensurePeerBody(e);
   }
+  for (const k of [...rawPeers.keys()]) if (!seen.has(k)) rawPeers.delete(k);
   for (const [k, e] of peers) if (!seen.has(k)) { if (e.body) scene.remove(e.body.holder); peers.delete(k); const l = labels.get("p:" + k); if (l) { l.remove(); labels.delete("p:" + k); } }
   refreshHud();
 }
@@ -1756,7 +1783,7 @@ function refreshHud() {
   else if (isHome(g)) { nc.innerHTML = `<h1>Your homeroom</h1><span class="sub">Only you come in here · ${esc(styleOf(g.style).name)}</span>`; }
   else if (g.phase === "closed") { nc.innerHTML = `<h1>The Between</h1><span class="sub">This garden is closed</span>`; }
   else {
-    const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
+    const s = healthOf(V), st = stateOf(s), stale = isStale(g);
     const nm = betweenName(V.items);
     nc.innerHTML = `<h1>${esc(nm || (g.phase === "spark" ? "The spark" : "The Between"))}</h1>
       <span class="sub">${g.phase === "spark" ? "toward " + esc(g.setup.who) : "you and " + esc(nameOf(other(g), g))} · ${esc(g.setup.kind)}</span>
@@ -1906,7 +1933,7 @@ function nearHtml(key, V, g) {
     return `<div class="what"><b>The mirror</b><span class="t">${lk ? "You, as you made yourself: " + esc(lookWords(lk)) + "." : "You have not chosen a look yet. The mirror shows a traveller in a long violet coat until you do."}</span></div><div class="row"><button type="button" data-open="look">Change how you look</button></div>`;
   }
   if (key === "between") {
-    const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
+    const s = healthOf(V), st = stateOf(s), stale = isStale(g);
     const nm = betweenName(V.items);
     let txt;
     if (g.phase === "spark") txt = `<b>${esc(nm || "The spark")}</b><span class="t">What you carry toward ${esc(g.setup.who)}. ${STATE_TEXT[st][0]}: ${STATE_TEXT[st][1]}. It is yours alone. When they join, a new Between begins for the two of you, and its history starts then.</span>`;
@@ -2012,6 +2039,8 @@ const pouchPath = () => "data/users/" + me + "/pouch";
 const hearthOpen = () => { const g = view().g; return !!(g && isMember(g) && !readOnly && g.phase !== "closed"); };
 const demoPouch = EMBER_DEMO ? { demo1: { move: "wood_fire", feel: "wood", glow: 2, state: "held", at: 1 }, demo2: { move: "water_transcend", feel: "water", glow: 5, state: "held", at: 2 },
   demo3: { move: "earth_metal", feel: "earth", glow: null, state: "held", at: 3 }, demo4: { move: "fire_earth", feel: "fire", glow: 4, state: "held", at: 4 } } : {};
+if (EMBER_RISEN && !EMBER_DEMO) demoPouch.demo1 = { move: "wood_fire", feel: "wood", glow: 3, state: "held", at: 1 };
+if (EMBER_RISEN) for (const k of Object.keys(demoPouch)) demoPouch[k] = { ...demoPouch[k], risen: true };
 function embers() { const p = overlay(pouchPath(), myPouch || {}) || {}; const e = p.embers && typeof p.embers === "object" ? p.embers : {}; return Object.entries({ ...e, ...demoPouch }).filter(([, x]) => x && typeof x === "object" && MOVES[x.move]); }
 /* A lantern made from a preview's demo ember (or where no lantern can be saved) lives on this page only, kept across polls. */
 const localItems = new Map();
@@ -2426,6 +2455,7 @@ async function fsDone() {
   if (F) fsPuff(m ? m.pos.clone() : HEARTH_AT.clone().setY(0.5), FS_SAT, 16);
   fs.mote = { t0: performance.now() / 1000, from: (m ? m.pos : HEARTH_AT.clone().setY(0.5)).clone(), g: new THREE.Sprite(hmGlowMat(FS_SAT, 0.9)) }; fs.mote.g.scale.setScalar(0.09); hmGroup.add(fs.mote.g);
   hmSay("done", m ? "It warmed while you were away." : "The fire kept you company.");
+  if (m && m.e.risen && !m.e.woke) wakeEmber(m).catch(() => {});   // already risen once: this sit wakes it (growth FR-011)
   if (m && !m.e.risen) {
     m.e = { ...m.e, risen: true };
     if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], risen: true };
@@ -2436,6 +2466,19 @@ async function fsDone() {
     setTimeout(() => { if (!hm || hm.fs !== fs) return; for (const o of hm.motes.filter(x => x.state === "gone")) hmDrop(o); hm.motes = hm.motes.filter(x => x.state !== "gone"); hm.riseNext = performance.now() / 1000 + 0.6; hmSync(); fsAgain(); }, 1600);
   }, 2600);
   hmHud();
+}
+/* A sit with an ember that had already risen wakes it into a spirit (growth FR-011): in the homeroom a spirit of the home, in a Between
+   the hollow's, drawn beside the hearth. Then the sit asks "Give it a name?" with one line and "Leave it be". It wakes once. */
+let wakeSpirit = null;
+async function wakeEmber(m) {
+  const to = (MOVES[m.e.move] || [])[2] || "fire", sid = "s" + hkey(), at = now(), home = isHome(view().g);
+  const spirit = { owner: me, name: "A spirit by the fire", element: to[0].toUpperCase() + to.slice(1), form: FORM_OF[to] || "fox", fromEmber: true, ...(home ? { note: "Woke by the fire from an ember." } : { hearth: true }), at };
+  if (!home) spirit.element = to;   // a Between's hearth spirit keeps the move's own element word (rules.ts spiritWrite)
+  m.e = { ...m.e, woke: { spirit: sid, at } };
+  if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], woke: { spirit: sid, at } };
+  else if (!storeDown) { await op("spirits/" + sid, "set", spirit); await op(pouchPath(), "update", { embers: { [m.eid]: { risen: true, woke: { spirit: sid, at } } } }); }
+  wakeSpirit = { sid, home, demo: isDemoEmber(m.eid) || storeDown };
+  setTimeout(() => { if (hm) { hmSay("woke", "Something small stirs by the coals."); setTimeout(() => { if (wakeSpirit && !sheetName) openSheet("wake"); }, 2400); } }, 3200);
 }
 /* After a sit, the stack waits again (the fire takes what was laid, slowly). */
 function fsAgain() { if (!hm) return; hm.fs = null; for (const l of fsLogs) l.visible = true; hmHud(); }
@@ -2583,6 +2626,10 @@ function renderSheet() {
       <label for="spForm">Its form<select id="spForm">${Object.entries(FORMS).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
       <label for="spNote">What it brings to the garden<textarea id="spNote" maxlength="600"></textarea></label>
       <div class="row"><button type="submit">${isHome(g) ? "Welcome it home" : "Bring it in"}</button>${close}</div></form>`; break;
+    case "wake": h = `<form class="stack" id="wakeForm"><h2>Give it a name?</h2>
+      <p class="muted small">It woke by the fire and stays.</p>
+      <label for="wkName">Its name<input id="wkName" maxlength="40" placeholder="One line, in your own ink"></label>
+      <div class="row"><button type="submit">Name it</button><button class="quiet" type="button" data-close>Leave it be</button></div></form>`; break;
     case "spirits": if (!g || !isHome(g)) { closeSheet(); return; } h = spiritsSheet() + close; break;
     case "daemon": { const mine = new Set([...V.daemons.values()].filter(d => d.owner === me).map(d => d.which));
       h = `<div class="stack"><h2>Bring a daemon</h2>
@@ -2671,7 +2718,9 @@ function roomsSheet() {
     <p class="small muted">One room for each relationship. Each starts as a spark you tend alone, and becomes your Between once they join.</p>
     ${open.length ? open.map(row).join("") : `<p class="muted">No rooms yet. Make one for someone you want to work on things with.</p>`}
     <div class="row"><button type="button" data-open="setup">Make a new room</button></div>
-    ${closed.length ? `<details><summary>Closed rooms</summary>${closed.map(row).join("")}</details>` : ""}</div>`;
+    ${closed.length ? `<details><summary>Closed rooms</summary>${closed.map(row).join("")}</details>` : ""}
+    <label class="row small" for="noticeSwitch"><input id="noticeSwitch" type="checkbox" data-notice="1" ${myHome.notices === "off" ? "" : "checked"}> <span>Tell me when a friend answers</span></label>
+    <p class="small muted">One short email, at most once a day, and only when something waits on you.</p></div>`;
 }
 function destinationsSheet() {
   const rooms = (list && list.gardens) || [];
@@ -3028,7 +3077,7 @@ async function takeCopy() {
       history: Object.values(i.history || {}).sort((a, b) => a.at - b.at).map(e => ({ who: nameOf(e.by, g), act: e.act, at: new Date(e.at).toISOString() })) };
   });
   const copy = { what: "A copy of a Between, taken from the Between's 3D garden", takenAt: new Date().toISOString(), name: betweenName(V.items), relationship: g && g.setup,
-    state: STATE_TEXT[stateOf(satisfaction(V.items))][0], items: its,
+    state: STATE_TEXT[stateOf(healthOf(V))][0], items: its,
     spirits: [...V.spirits.values()].map(s => ({ name: s.name, element: s.element, owner: nameOf(s.owner, g) })),
     daemons: [...V.daemons.values()].map(d => ({ daemon: (DAEMONS[d.which] || [d.which])[0], owner: nameOf(d.owner, g) })),
     credit: "Inspired by Eri Kardos, Relationship Agreements (2016)." };
@@ -3742,7 +3791,8 @@ document.addEventListener("click", async ev => {
   } catch (e) { toast("That did not save. Check your connection and try again."); }
   finally { b.disabled = false; refresh(); }
 });
-document.addEventListener("change", async ev => {
+document.addEventListener("change", async ev => {   // the notices switch (growth FR-010): home.notices, on unless turned off
+  if (ev.target.dataset && ev.target.dataset.notice) { try { await homeOp({ notices: ev.target.checked ? "on" : "off" }); toast(ev.target.checked ? "You will hear when a friend answers." : "No emails about answers."); } catch { toast("That did not save. Try again."); } return; }
   const k = ev.target.dataset && ev.target.dataset.keep; if (!k) return;
   const keeps = new Set(myPrivate.keeps || []); ev.target.checked ? keeps.add(k) : keeps.delete(k);
   myPrivate.keeps = [...keeps];
@@ -3776,6 +3826,10 @@ document.addEventListener("submit", async ev => {
       const t = $("#rwText").value.trim(); if (t) await itemAct(sheetArg, "edit", t); closeSheet();
     } else if (f.id === "picForm") {
       ls.set("between.pic." + me, readPic()); toast("Kept in this browser only.");
+    } else if (f.id === "wakeForm") {
+      const name = $("#wkName").value.trim(), w = wakeSpirit; wakeSpirit = null;
+      if (w && name && !w.demo) await op("spirits/" + w.sid, "update", { name });
+      closeSheet(); if (name) toast(name + " has a name now.");
     } else if (f.id === "spiritForm") {
       const name = $("#spName").value.trim(); if (!name) return;
       const spot = spotAhead(1.2), home = isHome(view().g);
@@ -3994,7 +4048,7 @@ function refresh() {
   queueMicrotask(() => {
     refreshQueued = false;
     const V = view(); const g = V.g;
-    if (g && g.phase !== "closed") { const s = satisfaction(V.items); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
+    if (g && g.phase !== "closed") { const s = healthOf(V); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
     else look = { phase: "spark", state: "steadied", stale: true, sat: 2 };
     between.visible = !!g && !isHome(g);
     syncRoom(); syncShelf();
@@ -4053,7 +4107,7 @@ async function poll() {
     if (e.code === "permission_denied" || e.code === "not_found") return stop(e.message || "This garden is not open to you.");
   } finally {
     polling = false;
-    if (!stopped) { const wait = pollAgain ? 60 : document.hidden ? 20000 : peers.size ? 2500 : 5000; pollAgain = false; pollTimer = setTimeout(poll, wait); }
+    if (!stopped) { const wait = pollAgain ? 60 : document.hidden ? 20000 : gameFeel.poll && peers.size ? gameFeel.poll : peers.size ? 2500 : 5000; pollAgain = false; pollTimer = setTimeout(poll, wait); }
   }
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pollSoon(); });
@@ -4160,7 +4214,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
@@ -4194,3 +4248,11 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null }); }).catch(e => noteError(e, "coins"));
+// the hollow's games (Six-faces-council friendship-between-growth, "The hollow's games"; his A on bsp-games-look-1): Found lights on the
+// jar shelf, Firefly lead on the dais, Lantern out at the mouth. Previews: &game=found-lights|firefly-lead|lantern-out opens that game's
+// place with a stand-in friend, &jars=<n> seeds left jars, &calls=1 seeds tonight's three calls (e.g. ?room=standin&game=lantern-out&calls=1)
+import("./games/index.js").then(m => { window.__between.games = m.mount(window.__between, { preview: PREVIEW_HOST, game: PREVIEW_HOST ? KQ.get("game") : null, jars: PREVIEW_HOST ? KQ.get("jars") : null, calls: PREVIEW_HOST ? KQ.get("calls") : null, lit: PREVIEW_HOST ? KQ.get("lit") : null, standin: STANDIN_ROOM }); }).catch(e => noteError(e, "games"));
+
+// The Between's growth drawn as things in the hollow (friendship-between-growth FR-004 to FR-008, growth-view.js): bowls of tea on the low table,
+// the mantel's pots found one at a time, a covered cup to drink, the nook's door lantern. Previews: ?growth=<feeds>&kept=<days>&lapsed=<days>&cup=1, ?nook=1&waiting=1
+import("./growth-view.js").then(m => { window.__between.growthView = m.mount(window.__between, { waiting: PREVIEW_HOST && KQ.get("waiting") === "1", standin: STANDIN_ROOM }); }).catch(e => noteError(e, "growth"));
