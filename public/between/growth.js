@@ -89,7 +89,8 @@ export function keptRun(keptSet, today) {
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-/** Reads the Between. `items` and `spirits` may be a Map, an array or an object of docs. */
+/** Reads the Between. `items` and `spirits` may be a Map, an array or an object of docs.
+ * @param {{ items?: any, spirits?: any, garden?: any, members?: any[], now?: number }} [arg] */
 export function read({ items = [], spirits = [], garden = {}, members = [], now = 0 } = {}) {
   const its = listOf(items), sps = listOf(spirits);
   const feeds = [...its.map(isFeed), ...sps.map(spiritFeed)].filter(Boolean).sort((a, b) => a.at - b.at);
