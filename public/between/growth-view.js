@@ -60,7 +60,7 @@ export function mount(B, opts = {}) {
   }
 
   /* ---------- reading the Between and drawing it ---------- */
-  let lastBowls = -1, glow = null;
+  let lastBowls = -1, glow = null, previewDrunk = false;
   const seenOf = gid => { try { return +(localStorage.getItem(SEEN_KEY + gid) || 0); } catch { return 0; } };
   const sawNow = (gid, n) => { try { localStorage.setItem(SEEN_KEY + gid, String(n)); } catch {} };
   function mineWaiting(V, me) {
@@ -70,7 +70,7 @@ export function mount(B, opts = {}) {
   }
   function sync() {
     const V = B.view(), { me, gardenId } = B.ids();
-    const g = V && V.g, here = !!g && g.kind !== "home" && g.members && Object.keys(g.members).length >= 2;
+    const g = V && V.g, here = !!opts.standin || (!!g && g.kind !== "home" && g.members && Object.keys(g.members).length >= 2);
     grp.visible = here;
     if (here) {
       const r = B.growth();
@@ -90,7 +90,9 @@ export function mount(B, opts = {}) {
       const seen = seenOf(gardenId);
       if (r.potsFound > seen) { glow = { i: r.potsFound - 1, t0: performance.now() }; sawNow(gardenId, r.potsFound); }
       // the covered cup (FR-007)
-      const waiting = mineWaiting(V, me), mine = [...V.items.values()].some(it => it && it.kind === "cup" && it.status === "poured" && it.by === me);
+      const waiting = mineWaiting(V, me);
+      if (opts.standin && !previewDrunk && new URLSearchParams(location.search).get("cup") === "1") waiting.push(["preview-cup", { by: "stand-in" }]);
+      const mine = [...V.items.values()].some(it => it && it.kind === "cup" && it.status === "poured" && it.by === me);
       cup.visible = waiting.length > 0 || mine;
       if (waiting.length) { say.textContent = COPY.cupFor(B.nameOf(waiting[0][1].by)); bar.hidden = false; bar.dataset.id = waiting[0][0]; }
       else if (r.potsFound && newPot(r, V.items) && !bar.dataset.id) { say.textContent = COPY.newPot; bar.hidden = false; drinkBtn.hidden = true; }
@@ -108,6 +110,7 @@ export function mount(B, opts = {}) {
   drinkBtn.addEventListener("click", async () => {
     const id = bar.dataset.id; if (!id) return;
     bar.hidden = true; delete bar.dataset.id;
+    if (id === "preview-cup") { previewDrunk = true; B.toast("It feeds the Between."); sync(); return; }
     try { await B.op("items/" + id, "update", { status: "drunk", drunkBy: B.ids().me, drunkAt: Date.now() }); B.toast("It feeds the Between."); } catch { B.toast("The cup stays covered. Try again."); }
     sync();
   });
@@ -123,13 +126,22 @@ export function mount(B, opts = {}) {
 
   /* Pouring a cup (FR-007): the pot's tea is poured from the kettle like the first. While the other friend is here it feeds at once;
      alone, it leaves a covered cup on the table for them. Called by garden.js teaPour. */
-  async function poured() {
-    const V = B.view(), g = V && V.g; if (!g || g.kind === "home" || !g.members || Object.keys(g.members).length < 2) return;
-    const { me } = B.ids(), r = B.growth();
+  function pick(V, me, r) {
     const mineCount = [...V.items.values()].filter(it => it && it.kind === "cup" && it.by === me).length;
-    const tea = newPot(r, V.items) ? TEAS[r.potsFound] : TEAS[(mineCount % (r.potsFound + 1))];
+    return newPot(r, V.items) ? TEAS[r.potsFound] : TEAS[(mineCount % (r.potsFound + 1))];
+  }
+  /* The colour of the tea the next pour makes, so the kettle's stream and the cup take the pot's own colour (tea.js tint). */
+  function nextTea() {
+    const V = B.view(), { me } = B.ids(); if (!V) return null;
+    return TEA_COLOUR[pick(V, me, B.growth())] || null;
+  }
+  async function poured() {
+    const V = B.view(), g = V && V.g;
+    if (!opts.standin && (!g || g.kind === "home" || !g.members || Object.keys(g.members).length < 2)) return;
+    const { me } = B.ids(), r = B.growth();
+    const tea = pick(V, me, r);
     if (r.potsFound && tea !== TEAS[0]) B.toast(TEA_NAME[tea] + ".");
-    const other = Object.keys(g.members).find(m => m !== me);
+    const other = g && g.members ? Object.keys(g.members).find(m => m !== me) : "stand-in";
     const hereNow = B.peers && [...B.peers.values()].some(p => p.uid === other);
     const at = Date.now(), item = { kind: "cup", by: me, at, tea, status: hereNow ? "drunk" : "poured" };
     if (hereNow) { item.drunkBy = other; item.drunkAt = at; }
@@ -137,5 +149,5 @@ export function mount(B, opts = {}) {
     sync();
   }
   sync();
-  return { sync, poured };
+  return { sync, poured, nextTea };
 }
