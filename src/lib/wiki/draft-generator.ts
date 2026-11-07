@@ -10,6 +10,7 @@ import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { getArtifactLineage, getLineageStats, type EntityType, type LineageNode } from './lineage-queries';
 import { db } from '@/lib/db';
+import { RELATION_RULE } from '@/lib/editorial/relation-rule';
 
 // Re-export EntityType for external use
 export type { EntityType } from './lineage-queries';
@@ -329,6 +330,8 @@ ${includeExamples ? `
 ` : ''}
 
 Tone: ${tone}
+
+Editorial rule: ${RELATION_RULE}
 
 Format your response with clear section headers using "###" for each section.`;
 }
