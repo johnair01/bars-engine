@@ -39,7 +39,7 @@ export default async function HandQuestsRoomPage(props: { searchParams: Promise<
                 moves={{
                     wakeUp: {
                         label: 'Survey unplaced quests',
-                        note: 'All your unplaced personal quests are listed below.',
+                        note: 'You keep these personal quests in your sea chest until you place them.',
                         href: '#quest-list',
                     },
                     cleanUp: {
