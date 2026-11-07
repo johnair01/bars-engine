@@ -1,3 +1,4 @@
+import { recordErrors } from './records'
 import { rowErrors } from './rows'
 
 /**
@@ -8,7 +9,7 @@ import { rowErrors } from './rows'
 export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
-  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws',
+  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws', 'records',
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
@@ -59,6 +60,11 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (s.board !== 'council') errors.push('rows are the Council Board\'s')
     if (s.mode === 'update') errors.push('a row is posted whole: mode set (a revision is a new id)')
     errors.push(...rowErrors(data))
+  }
+  if (s.collection === 'records') { // the council's record-only files, stored not mirrored (store-only FR-001)
+    if (s.board !== 'council') errors.push('records are the Council Board\'s')
+    if (s.mode === 'update') errors.push('a record is posted whole: mode set (a revision is a new docId)')
+    errors.push(...recordErrors(data))
   }
   if (s.mode !== 'update') {
     const c = s.collection as string
