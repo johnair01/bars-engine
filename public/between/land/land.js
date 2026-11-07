@@ -58,6 +58,17 @@ installPaint();
 
 const Q = new URLSearchParams(location.search);
 const PLACE = ["scale-house", "friends-fire", "chamber"].includes(Q.get("place")) ? Q.get("place") : "clearing";
+/* The walk (Wendell, 2026-11-04: "we need an end to end demo space of these connected worlds I can use to show people").
+   /between/walk opens ?walk=1 in the clearing, and the flag rides each path: the clearing, the Scale-House, the Friends' Fire,
+   then the keeping chamber, where the season's frost waits to be melted. The walk reads the sample's charge, never a charge
+   left in the tab by the nook, and keeps nothing: the chamber shows the sample's stones and melts its frost dry.
+   His B on ctw-walk-demo-look-1: the walk starts in a visitor's nook (/between/walk, garden.js VISIT) with no sign-in and
+   no store, where the sample's charge waits on the map stand; the clearing's arch leads back there, and so does "Walk it
+   again". */
+const WALK_NOOK = "/between/walk";
+const WALK = Q.get("walk") === "1";
+const WALK_STOPS = ["clearing", "scale-house", "friends-fire", "chamber"];
+if (WALK && PLACE === "clearing" && !Q.get("at")) { try { sessionStorage.removeItem("ctw-song"); } catch (e) { /* the cadence */ } }
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -331,7 +342,7 @@ function plant(src, x, z, h, yaw = 0, parent = G) {
 async function episode() {
   const sample = await fetch("/between/ctw/sample-player.json").then(r => r.json());
   let charge = sample;
-  try { const s = sessionStorage.getItem("ctw-charge"); if (s) charge = JSON.parse(s); } catch (e) { /* the sample */ }
+  if (!WALK) try { const s = sessionStorage.getItem("ctw-charge"); if (s) charge = JSON.parse(s); } catch (e) { /* the sample */ }
   let g = await read(charge);
   if (g.errors) { charge = sample; g = await read(charge); }
   if (!charge.drafted) { charge = withDraft(charge, g); g = await read(charge); }   // a charge you wrote, drafted by rules (ctw2-draft-from-your-words)
@@ -517,6 +528,7 @@ async function build() {
   const chName = "The keeping chamber";
   $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
   $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
+  if (WALK) { $("#placeLand").textContent = `The walk, land ${WALK_STOPS.indexOf(PLACE) + 1} of ${WALK_STOPS.length}`; $("#homeBtn").textContent = "Start over"; }
   document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
   const M = {}, h = buildHollow(new THREE.Scene(), { lowPower: LOW, shell: "hollow" });   // built only to lend its materials
@@ -573,7 +585,7 @@ async function build() {
     ground(M, 0x5e4e44, 0x4a3e36, CH.R + 0.5);
     { const t = new THREE.TextureLoader().load("/ontology-game/cave/textures/dry_stone.jpg"); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 8);
       groundMesh.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x5e4e44).multiplyScalar(1.35), map: t, roughness: 0.95 }); }
-    state.kept = Q.get("kept") === "sample" ? KEPT_SAMPLE.map(x => ({ ...x })) : keptPieces();
+    state.kept = Q.get("kept") === "sample" || WALK ? KEPT_SAMPLE.map(x => ({ ...x })) : keptPieces();
     state.ch = await CH.build({ THREE, V, scene, glowSprite, LOW, pieces: state.kept });
     state.fog = state.ch.fog; state.flies = null; state.rain = null;
   } else {
@@ -769,7 +781,7 @@ function showCard() {
     html = fs.step === "seals" ? `<div><b>Your bar</b><div class="t">${fs.song.played.length ? `${fs.song.played.length === 1 ? "One note" : fs.song.played.length + " notes"} so far. Any seal is right.` : "Play what you have so far. The rings mark the notes you gave the stump."}</div></div>${seals()}<div class="row">${btn("tag", `Hand it to ${f}`)}${btn("stand", "Stand up")}</div>`
       : fs.step === "tag" ? `<div><b>Before it goes to ${f}</b><div class="t">What would block you from playing this for someone?</div></div><div class="row blocks">${FS_ORDER.map(c => `<button type="button" data-block="${c}" aria-pressed="${fs.song.block === c}">${FS.BLOCKS[c]}</button>`).join("")}</div><div class="row">${fs.song.block ? btn("give", `Put it in ${f}'s hand`) : ""}${btn("more", "Play a little more")}</div>`
       : fs.step === "oriel" ? card(f, fs.song.passed ? `${f} plays the old bar for you, and its own way home.` : `${f} plays it on from your last note, at your pace. The others have gone quiet.`)
-      : fs.step === "card" ? (fs.stay ? card("The fire", `${f} is still turning the song over on the guitar.`, btn("home", "Take it home to your nook"), btn("stand", "Stand up"))
+      : fs.step === "card" ? (fs.stay ? card("The fire", `${f} is still turning the song over on the guitar.`, (WALK ? btn("go:chamber", "Carry it to the keeping chamber") : btn("home", "Take it home to your nook")), btn("stand", "Stand up"))
         : thisWeek(fs))
       : fs.step === "after" ? card(f, "The last note hangs over the fire.")
       : card(f, `“${esc(state.ep.friend.line || "Play what you have so far?")}”`, btn("play", "Open the toolbag and play"), btn("listen", "Just listen tonight"), btn("stand", "Stand up")); }
@@ -786,8 +798,10 @@ function showCard() {
     html = state.laid ? card("The footbridge", "One plank, and it holds.", btn("walk:far", "Cross to the far bank"))
       : state.plank ? card("The footbridge", "Its middle planks are gone. The plank you carry is long enough.", btn("lay", "Lay the plank across"))
       : card("The footbridge", "Its middle planks are gone and the gully is deep. Your toolbag is heavy; the balance in the doorway would hold it.", btn("walk:balance", "Walk to the balance"));
+  } else if (n === "arch" && WALK) { key = "arch"; html = card("The doorway back", "The visitor's nook, where the map was unrolled, is through the roots. The path out through the far trees leads on.", btn("home", "Back through to the nook"));
   } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
   else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
+  else if (n === "ch-home" && WALK) { key = n; html = card("The four lands, walked", "One charge on a map stand, and four lands it made: the clearing's song, the Weigher's plank, the fire where Oriel played it on, and this room, where what the cold leaves is kept. A friend waits in the Hollow, past your nook.", btn("walkhome", "Home to the nook, then the Hollow")); }
   else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
   else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
     html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
@@ -818,6 +832,8 @@ $("#card").addEventListener("click", e => {
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
   else if (b.dataset.act === "home") goHome();
+  else if (b.dataset.act === "again") walkAgain();
+  else if (b.dataset.act === "walkhome") { const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on")); setTimeout(() => { location.href = WALK_NOOK + "?home=1"; }, 700); }
   else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
     me.target = w === "balance" ? V(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05) : w === "bridge" ? V(SH.BRIDGE_END.x + 0.5, 0, SH.BRIDGE_END.z) : V(SH.FAR_BANK.x, 0, SH.FAR_BANK.z); }
@@ -1004,16 +1020,22 @@ function frameSeals(dt) {
 }
 function goPlace(where) {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  const q = new URLSearchParams(); if (where === "scale-house" || where === "friends-fire") q.set("place", where);
+  const q = new URLSearchParams(); if (where === "scale-house" || where === "friends-fire" || where === "chamber") q.set("place", where);
   if (where === "scale-house-far") { q.set("place", "scale-house"); q.set("at", "far"); } if (Q.get("paint")) q.set("paint", Q.get("paint"));
+  if (WALK) q.set("walk", "1");
   setTimeout(() => { location.href = "/between/land.html" + (q.toString() ? "?" + q : ""); }, 700);
 }
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
   let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
+  if (WALK) back = WALK_NOOK;   // the walk's nook is the visitor's, whoever opened the walk
   setTimeout(() => { location.href = back; }, 700);
 }
-$("#homeBtn").onclick = goHome;
+function walkAgain() {
+  const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
+  setTimeout(() => { location.href = WALK_NOOK; }, 700);
+}
+$("#homeBtn").onclick = () => (WALK ? walkAgain() : goHome());
 $("#soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("between-sound", soundOn ? "1" : "0"); } catch (e) { /* this page only */ }
   $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off"; $("#soundBtn").setAttribute("aria-pressed", String(soundOn)); if (audio()) master.gain.value = soundOn ? 0.5 : 0; };
 $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
@@ -1128,8 +1150,8 @@ function frame() {
     // the block's room: a dense charge from the nook's doorway, or the ?block= preview with the sample's charge
     // slice 2: a storm fills the land, a season fills the keeping chamber (densityOf().where); ?block= previews either
     if (!SHX) {
-      let fromNook = false; try { fromNook = !!sessionStorage.getItem("ctw-charge"); } catch (e) { /* the sample */ }
-      const qb = Q.get("block"), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1, here = CHX ? "chamber" : "land";
+      let fromNook = false; if (!WALK) try { fromNook = !!sessionStorage.getItem("ctw-charge"); } catch (e) { /* the sample */ }
+      const qb = Q.get("block") || (WALK && CHX ? "ice" : null), startK = { ice: 1, water: 0.66, gas: 0.33, clear: 0 }[qb] ?? 1, here = CHX ? "chamber" : "land";
       let d = densityOf(state.ep.charge);
       if (qb && !(d.dense && d.where === here)) d = densityOf({ q4: { weather: [{ feeling: CHX ? "frustrated" : "disappointed", strength: CHX ? "a season" : "a storm" }] } });
       // the chamber resets each time someone enters it (his B on bm-build-look-3, 2026-11-03): the frost is back, the stands are fresh
@@ -1151,7 +1173,9 @@ function frame() {
     if (FFX && state.sat) { const sv = seatView(); camera.position.copy(sv.want); camLook.copy(sv.look); }   // opened seated: no ease from afar
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
+    if (WALK && PLACE === "clearing" && !Q.get("at")) caption("The first of four lands their charge made: this clearing, then the Scale-House, the Friends' Fire and the keeping chamber.", 7);
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
+    if (WALK && CHX) caption("The arch you came in by leads home to the nook, and on to the Hollow, whenever you are done here.", 6);
     if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);
     if (FFX) { caption("The road home, at the homeroom's rim.", 5); caption("Round the fire, someone is tuning a guitar, and the others laugh at something said.", 6); }
     if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }
