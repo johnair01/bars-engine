@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The diary, on paper</title>
+<!-- The paper route (healing-journey spec FR-012, T011). One printable sheet with the diary's questions in the same order and the same
+     words as the nook's diary (journey.js DIARY, which journey.test.ts holds to the built 3-2-1). It stores nothing and sends nothing:
+     what is written on it stays on the paper. The coach adds a move made on paper from the coach page. -->
+<style>
+  :root { --ink: #2a1a12; --paper: #f7efdc; --line: #c9b78d; --muted: #6a5a44; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 20px 48px; }
+  h1 { font: 400 1.8rem Marcellus, Georgia, serif; margin: 0 0 4px; }
+  h2 { font: 400 1.25rem Marcellus, Georgia, serif; margin: 28px 0 2px; }
+  .cap { font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  p { margin: 6px 0 0; }
+  .lines { margin-top: 10px; height: var(--h, 7.5em); background: repeating-linear-gradient(transparent 0 1.9em, var(--line) 1.9em calc(1.9em + 1px)); }
+  .name { margin-top: 10px; height: 2em; border-bottom: 1px solid var(--line); }
+  .pile { margin-top: 10px; height: 9em; border: 1px dashed var(--line); border-radius: 8px; }
+  .note { color: var(--muted); font-size: .9rem; }
+  .print { margin-top: 18px; font: 700 .95rem inherit; padding: 10px 18px; border-radius: 999px; border: 1px solid #6a4a30; background: #6a4a30; color: #fbf2df; cursor: pointer; }
+  @media print { .print { display: none; } main { padding: 0; } body { background: #fff; } h2 { break-after: avoid; } section { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main id="sheet">
+  <h1>The diary, on paper</h1>
+  <p class="note">The same questions, in the same order, as the diary in your room. Write by hand and keep this page. Nothing here is stored or sent. Skip anything, stop at any line, and come back to the same page.</p>
+  <button class="print" type="button" onclick="window.print()">Print this page</button>
+  <noscript><p>This page needs scripts on to show its questions.</p></noscript>
+</main>
+<script type="module">
+  import { DIARY, OPENERS } from "./journey.js";
+  const el = document.getElementById("sheet"), add = html => el.insertAdjacentHTML("beforeend", html), t = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  add(`<section><p class="cap">The object</p><h2>What you carried</h2><p>What set it off, where it sits in the body, and which of the five feelings it is: joy, anger, calm, fear or sadness.</p><div class="lines" style="--h:5.7em"></div></section>`);
+  add(`<section><p class="cap">${t(DIARY.face.caption)}</p><h2>${DIARY.face.num} · ${t(DIARY.face.title)}</h2><p>${t(DIARY.face.ask)}</p><div class="lines" style="--h:11.4em"></div></section>`);
+  add(`<section><p class="cap">${t(DIARY.name.caption)}</p><h2>${DIARY.name.num} · ${t(DIARY.name.title)}</h2><p>${t(DIARY.name.ask)}</p><div class="name"></div><p>${t(DIARY.talk.ask)}</p><p class="note">If you want an opener: ${OPENERS.map(t).join(" · ")}</p><div class="lines" style="--h:15.2em"></div></section>`);
+  add(`<section><p class="cap">${t(DIARY.be.caption)}</p><h2>${DIARY.be.num} · ${t(DIARY.be.title)}</h2><p>${t(DIARY.be.ask(""))}</p><div class="lines" style="--h:11.4em"></div><p>${t(DIARY.be.shift)}</p><div class="lines" style="--h:5.7em"></div></section>`);
+  add(`<section><p class="cap">The woodpile</p><h2>One log for every time you made a move</h2><p>Draw a log each time you make one of the seven: the floorboards, the window, the visitor's chair, the workbench, the doorway, the hearth, the diary. Never draw one away.</p><div class="pile"></div></section>`);
+</script>
+</body>
+</html>

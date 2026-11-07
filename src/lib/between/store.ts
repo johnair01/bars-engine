@@ -261,3 +261,26 @@ export async function saveFriendcraftCopy(edit: unknown): Promise<Record<string,
   const done = await db.instance.updateMany({ where: { slug: 'friendcraft' }, data: { friendcraftCopy: kept } })
   return done.count ? kept : null
 }
+
+/* ---------- the healing journey's coach side (Six-faces-council spec .specify/specs/healing-journey, FR-010 to FR-012) ----------
+ * The journey is the player's private doc in their homeroom. Only the coach the program names reads it through these;
+ * anyone else, a stranger or the player on a coach route, gets null so the route answers 404. */
+async function journeyRow(playerId: string) {
+  return db.betweenPrivate.findFirst({ where: { playerId, key: 'journey', garden: { members: { some: { playerId } } } }, orderBy: { updatedAt: 'desc' } })
+}
+
+/** The player's journey, only for the coach its program names. */
+export async function journeyFor(coachId: string, playerId: string): Promise<{ gardenId: string; doc: Doc } | null> {
+  if (!ID_OK.test(playerId)) return null
+  const row = await journeyRow(playerId)
+  if (!row) return null
+  const doc = asDoc(row.data)
+  const program = doc.program && typeof doc.program === 'object' && !Array.isArray(doc.program) ? (doc.program as Doc) : null
+  return program && program.coachId === coachId ? { gardenId: row.gardenId, doc } : null
+}
+const ID_OK = /^[A-Za-z0-9_-]{1,64}$/
+
+/** Keeps a journey the coach changed (a paper move, or the close). The rules were checked by the caller. */
+export async function saveJourney(gardenId: string, playerId: string, doc: Doc) {
+  await db.betweenPrivate.update({ where: { gardenId_playerId_key: { gardenId, playerId, key: 'journey' } }, data: { data: asJson(doc) } })
+}
