@@ -1,5 +1,5 @@
 import type { MaturityPhase, SeedMetabolizationState } from './types'
-import { isMaturityPhase, isSoilKind } from './types'
+import { isMaturityPhase, isSeedPlant, isSoilKind } from './types'
 
 const DEFAULT_MATURITY: MaturityPhase = 'captured'
 
@@ -27,6 +27,7 @@ export function parseSeedMetabolization(raw: string | null | undefined): SeedMet
           : o.releaseNote === null
             ? null
             : undefined,
+      plant: isSeedPlant(o.plant) ? o.plant : o.plant === null ? null : undefined,
     }
     return out
   } catch {
@@ -52,6 +53,7 @@ export function serializeSeedMetabolization(state: SeedMetabolizationState): str
   if (state.releaseNote !== undefined && state.releaseNote !== null && state.releaseNote.trim() !== '') {
     payload.releaseNote = state.releaseNote.trim().slice(0, 2000)
   }
+  if (state.plant) payload.plant = state.plant
   if (Object.keys(payload).length === 0) return null
   return JSON.stringify(payload)
 }
@@ -63,7 +65,7 @@ export function mergeSeedMetabolization(
   const current = parseSeedMetabolization(raw)
   const next: SeedMetabolizationState = { ...current, ...patch }
   // Allow explicit null clears for optional fields
-  for (const key of ['soilKind', 'contextNote', 'maturity', 'compostedAt', 'releaseNote'] as const) {
+  for (const key of ['soilKind', 'contextNote', 'maturity', 'compostedAt', 'releaseNote', 'plant'] as const) {
     if (key in patch && patch[key] === null) {
       ;(next as Record<string, unknown>)[key] = undefined
     }
