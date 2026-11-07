@@ -204,13 +204,13 @@ export function mount(B, opts = {}) {
   .jn .wr.big{font-weight:600;font-size:1.28rem;font-style:normal;text-decoration:none}
   .jn .wr:disabled{opacity:.45;cursor:default}
   /* the hand */
-  .jh{position:fixed;left:50%;bottom:0;z-index:34;width:0;height:0;pointer-events:none}
-  .jh .c{position:absolute;left:calc(var(--w) / -2);bottom:calc(var(--h) * -.36);width:var(--w);height:var(--h);pointer-events:auto;
+  .jh{position:fixed;left:50%;bottom:calc(60px + env(safe-area-inset-bottom,0px));z-index:34;width:0;height:0;pointer-events:none}
+  .jh .c{background:none;border:0;padding:0;font:inherit;color:inherit;border-radius:0;position:absolute;left:calc(var(--w) / -2);bottom:calc(var(--h) * -.1);width:var(--w);height:var(--h);pointer-events:auto;
     transform-origin:50% 160%;transform:translateX(var(--x)) rotate(var(--r));transition:transform .28s cubic-bezier(.2,.8,.2,1),filter .28s;
     filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
   .jh .c:hover,.jh .c:focus-visible{transform:translateX(var(--x)) rotate(var(--r)) translateY(calc(var(--h) * -.3));z-index:2}
   .jh{--w:96px;--h:136px;--gap:74px}
-  @media (max-width:520px){.jh{--w:74px;--h:106px;--gap:46px}}
+  @media (max-width:520px){.jh{--w:68px;--h:104px;--gap:53px}}
   .jcard{box-sizing:border-box;width:100%;height:100%;border-radius:9px;background:#f2e4c4 radial-gradient(120% 90% at 30% 10%,#f8eed6 0,#efdcb6 60%,#e2c999 100%);
     border:1px solid #b9995f;box-shadow:inset 0 0 0 3px #f6ead0,inset 0 0 0 4px #c8aa70;padding:5px;display:flex;flex-direction:column;gap:3px;color:#3a2616;text-align:center;overflow:hidden}
   .jcard svg.pic{width:100%;flex:1 1 auto;min-height:0;border-radius:5px;display:block}
@@ -219,7 +219,7 @@ export function mount(B, opts = {}) {
   .jcard .notch{display:flex;flex-wrap:wrap;justify-content:center;gap:1px 0;min-height:9px;max-height:19px;overflow:hidden}
   .jcard .notch i{display:block;width:5px;height:9px;margin-right:1px;background:linear-gradient(90deg,#8a5a30 0 45%,#c9935a 45% 100%);clip-path:polygon(0 12%,100% 0,100% 100%,0 88%);border-radius:1px}
   .jcard .notch i:nth-child(5n){margin-right:4px}
-  @media (max-width:520px){.jcard .nm{font-size:.7rem}.jcard .at{font-size:.6rem}.jcard{padding:4px}}
+  @media (max-width:520px){.jh .jcard .nm{font-size:.62rem;line-height:1}.jh .jcard .at{font-size:.52rem}.jh .jcard{padding:3px}.jh .jcard .at{display:none}}
   /* the lifted card */
   .jl{perspective:1400px;margin-bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(92vw,340px);height:min(78vh,480px)}
   .jl .in{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:jturn .35s ease-in-out both}
@@ -243,7 +243,7 @@ export function mount(B, opts = {}) {
   /* the bundle's paper tag */
   .jt{position:relative;width:min(92vw,380px);margin-bottom:calc(18px + env(safe-area-inset-bottom,0px));filter:drop-shadow(0 14px 26px rgba(0,0,0,.55));animation:jswing .5s cubic-bezier(.2,.9,.3,1.2) both;transform-origin:8% 50%}
   @keyframes jswing{from{transform:translateY(30px) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
-  .jt .paper{background:#eedfbd radial-gradient(130% 120% at 70% 20%,#f6ead0 0,#ead8b0 55%,#dcc493 100%);clip-path:polygon(0 18%,11% 0,100% 0,100% 100%,11% 100%,0 82%);padding:18px 22px 16px 64px;color:#2e1d10;min-height:220px;display:grid;gap:6px}
+  .jt .tgp{background:#eedfbd radial-gradient(130% 120% at 70% 20%,#f6ead0 0,#ead8b0 55%,#dcc493 100%);clip-path:polygon(0 18%,11% 0,100% 0,100% 100%,11% 100%,0 82%);padding:18px 22px 16px 64px;color:#2e1d10;min-height:220px;display:grid;gap:6px}
   .jt .hole{position:absolute;left:22px;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:#3a2a1e;box-shadow:inset 0 0 0 3px #c9ad78,inset 0 2px 3px #000}
   .jt .cord{position:absolute;left:-40px;top:calc(50% - 2px);width:72px;height:4px;border-radius:2px;background:repeating-linear-gradient(60deg,#d9c49a 0 3px,#b39a6c 3px 6px);transform:rotate(-8deg);transform-origin:right center}
   .jt .seal{position:absolute;right:16px;bottom:14px;width:54px;height:54px;border-radius:47% 53% 50% 50%/52% 48% 52% 48%;box-shadow:inset 0 0 0 5px rgba(0,0,0,.12),inset 0 0 0 9px rgba(255,255,255,.12),inset -4px -6px 10px rgba(0,0,0,.3),0 2px 3px rgba(0,0,0,.35)}
@@ -412,7 +412,7 @@ export function mount(B, opts = {}) {
   function tagHtml() {
     const o = objectOf(card); if (!o) return "";
     const f = FEEL[o.feeling] || FEEL.water, wax = "#" + new THREE.Color(f.cloth).getHexString(), hi = "#" + new THREE.Color(f.light).getHexString();
-    return `<div class="jt" role="dialog" aria-label="Something you carried: ${FEELING_NAMES[o.feeling] || o.feeling}"><span class="cord" aria-hidden="true"></span><div class="paper">
+    return `<div class="jt" role="dialog" aria-label="Something you carried: ${FEELING_NAMES[o.feeling] || o.feeling}"><span class="cord" aria-hidden="true"></span><div class="tgp">
       <h2 style="color:${f.ink}">${FEELING_NAMES[o.feeling] || o.feeling}</h2>
       ${o.setOff ? `<p class="lb">what set it off</p><p class="hand">${esc(o.setOff)}</p>` : ""}
       ${o.body ? `<p class="lb">where it sits in the body</p><p class="hand">${esc(o.body)}</p>` : ""}
