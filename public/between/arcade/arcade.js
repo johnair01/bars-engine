@@ -325,7 +325,7 @@ async function runHall() {
     // the purse card says only what the player has met so far (critique 2026-11-03: four ideas in one block was too many)
     if (info) { const met = hall.line.length > 0 || Object.keys(hall.tray).some(k => hall.tray[k]);
       return showCard("info:" + hall.coins + met, card("Coins and tickets",
-        "Three coins a visit. A cabinet marked INSERT COIN takes one." + (met ? " Each game pays a ticket: hang it on the line over the prize counter, or let it go." : "") + " Out of coins? Sit on the bench by the gate.",
+        "Three coins a visit. A cabinet marked INSERT COIN takes one." + (met ? " Each game pays a ticket: hang it on the line over the prize counter, or let it go." : "") + " Sit on the bench by the gate, and the purse fills as you rest.",
         btn("tobench", "Walk to the bench"), btn("gotit", "Got it"))); }
     if (meS.sat) {
       const full = hall.coins >= H.FULL;
@@ -343,7 +343,7 @@ async function runHall() {
       if (!near.route) { const open = CABINETS.find(c => c.route && built[c.id]);   // never a dead end: point to a cabinet that plays
         return showCard("soon:" + id, card(near.name, open ? `This one lights soon. ${open.name} takes a coin tonight.` : "This one lights soon.", ...(open ? [btn("walkto:" + open.id, "Walk to " + open.name)] : []))); }
       if (H.canDrop(hall, id, PASS)) return showCard("drop:" + id, card(near.name, KIND[near.gameType] || "", btn("drop:" + id, "Drop a coin")));
-      return showCard("light:" + id, card(near.name, "Your purse is empty. The bench by the change machine fills it.", btn("tobench", "Walk to the bench")));
+      return showCard("light:" + id, card(near.name, "The bench by the change machine fills your purse. Rest there, then come back.", btn("tobench", "Walk to the bench")));
     }
     if (Math.hypot(p.x - BENCH.x, p.z - BENCH.z) < 0.9 && hall.coins < H.FULL)
       return showCard("bench", card("The change machine", "Rest on the bench, or melt a block in the machine. Either fills the purse.", btn("sit", "Sit a while"), btn("melt", "Melt a block (a short trip out)")));
@@ -420,7 +420,7 @@ async function runHall() {
       if (PASS) { want.x = Math.max(-(AISLE - 0.2), Math.min(AISLE - 0.2, want.x)); want.z = Math.min(want.z, GATE_Z - 0.2); want.y = Math.min(want.y, 2.9); }
       camera.position.lerp(want, 1 - Math.exp(-dt * 6)); camera.lookAt(meS.pos.clone().add(V(0, 1.2, 0)));
     }
-    cards(); captionTick(T);
+    cards(); captionTick(T); fpsTick(clock.elapsedTime - (frame.last ?? clock.elapsedTime)); frame.last = clock.elapsedTime;
     renderer.render(scene, camera);
   }
   frame();
@@ -429,6 +429,14 @@ async function runHall() {
 
 // a caption that answers a tap: it goes ahead of the queue and replaces the one showing
 function flash(text, secs) { captions.unshift({ text, secs }); capUntil = 0; }
+/* ?fps=1: a small frame counter, so a phone can be timed against the 30 fps the spec asks for (falsify, council #1123) */
+const fpsEl = Q.get("fps") === "1" ? Object.assign(document.createElement("div"), { id: "fps" }) : null;
+if (fpsEl) { fpsEl.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:50;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;font:12px/1.2 ui-monospace,monospace;pointer-events:none"; document.body.appendChild(fpsEl); }
+let fpsN = 0, fpsT = 0, fpsLow = Infinity;
+function fpsTick(dt) {
+  if (!fpsEl) return; fpsN++; fpsT += dt;
+  if (fpsT >= 1) { const f = fpsN / fpsT; if (performance.now() > 5000) fpsLow = Math.min(fpsLow, f); fpsEl.textContent = `${f.toFixed(0)} fps · low ${isFinite(fpsLow) ? fpsLow.toFixed(0) : "-"}`; fpsN = 0; fpsT = 0; }
+}
 function captionTick(T) {
   const cap = $("#caption");
   if (T > capUntil) { const c = captions.shift(); if (c) { cap.textContent = c.text; cap.hidden = false; cap.classList.add("on"); capUntil = T + c.secs; } else cap.classList.remove("on"); }
