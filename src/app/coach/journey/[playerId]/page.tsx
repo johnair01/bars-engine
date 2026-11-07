@@ -28,6 +28,7 @@ export default async function CoachJourneyPage({ params }: { params: Promise<{ p
   const pages = pagesReadable(program, today) ? ((d.pages ?? []) as { id: string; startedOn?: string; pass?: ThreeTwoOnePass }[]) : []
   const closed = !!program.closedAt
   return (
+    <div className="min-h-screen bg-zinc-950">
     <main className="mx-auto max-w-2xl px-4 py-8 text-zinc-100">
       <h1 className="text-xl font-semibold">What was made</h1>
       <p className="mt-1 text-sm text-zinc-400">{program.startsOn} to {program.endsOn}{closed ? ', closed' : ''}</p>
@@ -42,7 +43,7 @@ export default async function CoachJourneyPage({ params }: { params: Promise<{ p
       <section className="mt-6">
         <h2 className="text-sm font-medium text-zinc-300">By day</h2>
         <ul className="mt-2 space-y-1 text-sm">
-          {days.map(day => (
+          {days.filter(day => day.on <= today).map(day => (
             <li key={day.on}>{day.on}: {day.didMake ? day.made.map(m => MOVE_WORDS[m]).join(', ') : 'none made'}</li>
           ))}
         </ul>
@@ -55,7 +56,10 @@ export default async function CoachJourneyPage({ params }: { params: Promise<{ p
         ))}
       </section>
 
+      <p className="mt-6 text-sm text-zinc-400">For a player on paper: <a className="underline" href="/between/journey-diary-sheet.html" target="_blank" rel="noreferrer">the printable diary sheet</a>. Add a move they made on paper below.</p>
+
       {!closed && <CoachActions playerId={playerId} startsOn={program.startsOn} endsOn={program.endsOn} moves={MOVES.map((m: string) => ({ id: m, label: MOVE_WORDS[m] }))} />}
     </main>
+    </div>
   )
 }

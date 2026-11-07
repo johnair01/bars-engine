@@ -86,3 +86,96 @@ export function close(doc, at) {
   const world = { ...src, program, pages: [] };
   return { doc: world, pages };
 }
+
+/* ---------- the nook's pieces (slice 1, T006 to T009): what the shelf, diary, woodpile and sheet read ---------- */
+
+export const MOVE_NAMES = { floorboards: "The floorboards", window: "The window", chair: "The visitor's chair", workbench: "The workbench", doorway: "The doorway", hearth: "The hearth", diary: "The diary" };
+export const FEELING_NAMES = { wood: "joy", fire: "anger", earth: "calm", metal: "fear", water: "sadness" };
+
+/* The diary's words are the built 3-2-1's, word for word (FR-004, hj-diary-ink): src/components/clean-up/ThreeTwoOnePasses.tsx.
+   journey.test.ts reads that file and fails if any of these drift from it. No line here is written by a model. */
+export const DIARY = {
+  face: { num: "3", title: "Face it", caption: "third person · it",
+    ask: "What does this charge look like if it were a person? Where are they from? How do they move through the world? Just write down what comes up and let yourself be surprised.",
+    hint: "They’re the kind of person who…" },
+  name: { num: "2", title: "Talk to it", caption: "second person · you · a thread",
+    ask: "Before you speak to them, what do you call them? Not a clinical label — a name that fits their nature.",
+    hint: "e.g. The Cynic, The Protector, The Lookout" },
+  talk: { ask: "Now go back and forth. Ask them something, switch voices, and let them answer in their own words. Keep going until they say something you didn’t already know.",
+    meHint: "Ask it something, or say the thing you’d say if there were no cost…" },
+  be: { num: "1", title: "Be it", caption: "first person · I · no one else in the room",
+    ask: (name) => "Drop the dialogue. You are " + (String(name || "").trim() || "the part") + " now, alone, with nobody to convince and nothing to ask for. Say what is true when there’s no one listening.",
+    hint: "I am… / What is true about me is…",
+    shift: "Come back to yourself. Holding this presence with awareness — what shifted?", shiftHint: "What feels different now…" },
+};
+export const OPENERS = ["What do you want from me?", "If you got that, what would you have then?", "What is life like for you right now?", "What would have to be true for you to settle?", "What are you most afraid would happen?"];
+
+/* The local day, "YYYY-MM-DD" (a move belongs to the player's own day, not Greenwich's). */
+export function dayOf(d = new Date()) {
+  const p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+
+/* The nook shows the journey only to a player whose program stands (an enrolled player); nobody else sees a new thing. */
+export function enrolled(doc) { return !!(doc && typeof doc === "object" && doc.program && typeof doc.program === "object" && !doc.program.closedAt); }
+
+/* One move record (FR-007): which, which day, when. `life` marks "I did it in my life". Keeps no text. */
+export function moveRecord(move, life, now = new Date()) {
+  if (!MOVES.includes(move)) return null;
+  const r = { move, on: dayOf(now), at: now.toISOString() };
+  if (life === true) r.life = true;
+  return r;
+}
+export function withMove(doc, move, life, now) {
+  const r = moveRecord(move, life, now);
+  return r ? [...arr(doc && doc.moves), r] : arr(doc && doc.moves);
+}
+
+/* The woodpile's slots (stills round make/scenes.js pileSlots): a half-offset stack against the hearth's left jamb. Slots fill
+   by diagonal (column + layer), lowest diagonal first and the higher layer first within it, so the pile is a heap from its
+   first log; at most five layers high, then it grows out along the wall. Never a gap, never a removal: the pile at n is the
+   pile at n-1 plus one log. */
+export function pileSlots(n, maxLayer = 4) {
+  const out = [];
+  for (let d = 0; out.length < n; d++) for (let l = Math.min(d, maxLayer); l >= 0 && out.length < n; l--) out.push([d - l, l]);
+  return out;
+}
+
+/* On the shelf: objects carried or held, oldest first. The nook's shelf holds three beside the book; the rest wait in the pack. */
+export const SHELF_HOLDS = 3;
+export function onShelf(pack) { return arr(pack).filter((o) => o && (o.state === "carried" || o.state === "held")); }
+export function shelfShown(pack) { return onShelf(pack).slice(0, SHELF_HOLDS); }
+export function furnishings(pack) { return arr(pack).filter((o) => o && o.state === "worked" && o.furnishing); }
+
+/* The diary page for an object: the unfinished one if it is there, else a new one (FR-005: it reopens on the same page). */
+export const blankPass = () => ({ subject: null, faceCharge: "", maskName: "", thread: [], beVoice: "", beShift: "", ownIt: { quality: "", move: "" } });
+export function pageFor(doc, objectId) {
+  return arr(doc && doc.pages).find((p) => p && p.objectId === objectId && !p.doneOn) || null;
+}
+export function newPage(objectId, now = new Date()) {
+  return { id: "pg" + now.getTime().toString(36), objectId, pass: blankPass(), startedOn: dayOf(now), doneOn: null };
+}
+/* Which part of the diary a page is at: the first one not yet written (the player may still step to any). */
+export function diaryAt(pass) {
+  const p = pass || blankPass();
+  if (!String(p.faceCharge).trim()) return "face";
+  if (!String(p.maskName).trim()) return "name";
+  if (!String(p.beVoice).trim()) return "talk";
+  return "be";
+}
+/* The next voice in the thread: the player speaks first, then the object, alternating (the coaching page's two-voice thread). */
+export function nextVoice(thread) { const t = arr(thread); return t.length && t[t.length - 1].from === "me" ? "it" : "me"; }
+export function withTurn(pass, text, from) {
+  const t = String(text || "").trim().slice(0, 600);
+  return t ? { ...pass, thread: [...arr(pass.thread), { from: from === "it" ? "it" : "me", text: t }] } : pass;
+}
+/* The diary's last pass done: the page closes, the object leaves the shelf and becomes a furnishing by its feeling (FR-006). */
+export function finishPage(doc, pageId, now = new Date()) {
+  const src = doc && typeof doc === "object" ? doc : {};
+  const pg = arr(src.pages).find((p) => p && p.id === pageId);
+  if (!pg) return src;
+  const day = dayOf(now);
+  const pages = arr(src.pages).map((p) => (p === pg ? { ...p, doneOn: day } : p));
+  const pack = arr(src.pack).map((o) => (o && o.id === pg.objectId ? { ...o, state: "worked", furnishing: furnishingOf(o.feeling) || undefined } : o));
+  return { ...src, pages, pack, moves: withMove(src, "diary", false, now) };
+}
