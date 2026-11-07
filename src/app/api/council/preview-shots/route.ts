@@ -20,7 +20,6 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { db } from '@/lib/db'
 import { sessionWrite } from '@/lib/board/session-write'
-import { dispatchBoardPull } from '@/lib/board/dispatch'
 
 /**
  * Wendell, 2026-10-24 (board note, on the Between freezing as he stepped onto the dais): he wants a way to upload
@@ -129,7 +128,7 @@ export async function POST(req: NextRequest) {
 }
 
 /** The mark as a Council Board row, `causes` (the board's list of things gone wrong, and the only kind a description
- * alone makes), written the way /api/board/session-writes writes one, then a board-pull to land it on main. */
+ * alone makes), written the way /api/board/session-writes writes one; a session's live_pull lands it on main. */
 async function landRow(stamp: string, meta: Record<string, unknown>, note: string, page: string, look: string | null): Promise<boolean> {
   const pr = meta.pr as string | null
   const line = note.trim() || 'A spot marked without a line'
@@ -143,7 +142,6 @@ async function landRow(stamp: string, meta: Record<string, unknown>, note: strin
   if (look) data.look = look
   const r = await sessionWrite(db, [{ collection: 'rows', docId: `mark-${stamp}`, mode: 'set', data }])
   if (r.refused.length) { console.error('[preview-shots] row refused', r.refused.join('; ')); return false }
-  await dispatchBoardPull().catch(() => undefined)
   return true
 }
 

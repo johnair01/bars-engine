@@ -7,8 +7,6 @@ const auth = vi.hoisted(() => ({ getCurrentPlayer: vi.fn() }))
 vi.mock('@/lib/auth', () => auth)
 const dbm = vi.hoisted(() => ({ boardSave: { findFirst: vi.fn(), create: vi.fn() } }))
 vi.mock('@/lib/db', () => ({ db: dbm }))
-const dispatch = vi.hoisted(() => ({ dispatchBoardPull: vi.fn() }))
-vi.mock('@/lib/board/dispatch', () => dispatch)
 
 import { POST } from '../route'
 
@@ -23,7 +21,6 @@ describe('/api/council/preview-shots POST', () => {
     blob.put.mockImplementation(async (path: string) => ({ url: `https://blob.test/${path}`, pathname: path }))
     dbm.boardSave.findFirst.mockResolvedValue(null)
     dbm.boardSave.create.mockResolvedValue({})
-    dispatch.dispatchBoardPull.mockResolvedValue('sent')
     vi.stubEnv('VERCEL_ENV', 'preview')
     vi.stubEnv('VERCEL_GIT_PULL_REQUEST_ID', '512')
     vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'abc123')
@@ -46,7 +43,6 @@ describe('/api/council/preview-shots POST', () => {
     expect(saved.data).toMatchObject({ kind: 'causes', pass: 'preview-marks', pr: '512', look: 'pm-mark-look-1',
       desc: "camera's under the table edge (on /ontology-game/between, preview of pull request #512)" })
     expect(saved.data.mark).not.toHaveProperty('image')
-    expect(dispatch.dispatchBoardPull).toHaveBeenCalledTimes(1)
   })
 
   it('takes an unsigned mark on a preview but not in production', async () => {

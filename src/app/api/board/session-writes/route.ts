@@ -5,7 +5,7 @@
  *   to the Council Board's store here, so bars-engine's /board/council stops drifting from what sessions publish
  *   (board-home step 5). Update merges onto the latest document; a write that changes nothing is skipped
  *   (src/lib/board/session-write.ts). A row (collection rows, one document per row, six-faces-council
- *   docs/worklist-api.md) shows on /board/council at its next load and starts a board-pull, which lands it on main.
+ *   docs/worklist-api.md) shows on /board/council at its next load, and a session's board/live_pull.py lands it on main.
  *   A draw (collection draws, docId <deck>--<card id>, data deck, card and at) is a project deck's top card turned up;
  *   board/pull.py records it on main.
  * @permissions COUNCIL_MENU_TOKEN, as a bearer token or ?token= (the egress proxy injects it for sessions)
@@ -27,7 +27,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { latestDocs } from '@/lib/board/store'
-import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { docHash, sessionWrite, SESSION_COLLECTIONS, type SessionDoc } from '@/lib/board/session-write'
 
 export const dynamic = 'force-dynamic'
@@ -69,6 +68,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Expected {docs: [{collection, docId, mode?, data}] (at most ${MAX_DOCS})}` },
       { status: 400 })
   const r = await sessionWrite(db, b.docs as SessionDoc[], b.dry === true)
-  if (b.dry !== true && r.written.some(k => k.startsWith('rows/'))) await dispatchBoardPull().catch(() => undefined)
   return NextResponse.json({ board: 'council', dry: b.dry === true, ...r }, { headers: NO_STORE })
 }
