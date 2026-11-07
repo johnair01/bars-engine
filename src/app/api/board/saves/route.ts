@@ -11,7 +11,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { boardOwnerId, isBoardOwner } from '@/lib/board/owner'
 import { applyWrite, MAX_SAVE_BYTES, RECORD_KINDS, validateSave } from '@/lib/board/save'
-import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { lastPull, latestDoc, latestDocs, settledSeq, unrecordedSaves } from '@/lib/board/store'
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
 import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
@@ -82,7 +81,6 @@ export async function POST(req: NextRequest) {
         return tx.boardSave.create({ data: { ...data, data: doc as object }, select: { receivedAt: true } })
       })
     : await db.boardSave.create({ data: { ...data, data: doc as object }, select: { receivedAt: true } })
-  if (RECORD_KINDS.has(collection)) await dispatchBoardPull().catch(() => undefined)
   // Push from the board: his answer to a council question goes to the work lanes as it is saved (work queues, slice 1).
   const work = await ticketFromSave(db, board, collection, docId, doc)
   // His answer starts the work: a new Claude-lane ticket wakes the pickup now, not at the next hourly run.
