@@ -633,6 +633,12 @@ export function mount(B, opts = {}) {
         actions: [...DEPTHS.map(d => ({ label: c.prompts[d], sub: DEPTH_NAMES[d], on: () => answer(d) })), { label: "Not now", quiet: true, on: () => { s.answering = null; s.card = null; cardKey = ""; } }] };
     }
     if (!atBook && turnsHere()) { const tm = tt.momentFor(subject, leave); if (tm) return tm; } // a card of ours in play comes first
+    // the walk's Hollow (hollow-demo): no book to learn first; the table offers Mara's deck, and a kept card sends you on
+    if (opts.turn === "walk" && !atBook && !s.who && turnsHere()) {
+      const kept = tt.turns().find(t => t.status === "kept"), dr = tt.drawAction();
+      if (kept) { const hers = kept.lines && kept.lines[kept.owner]; return { subject, head: "Kept in both your books", sub: hers ? `Mara wrote back: "${hers.words}"` : "", actions: [leave] }; }
+      if (dr) return { subject, head: "Mara's deck", sub: "Everything she wants from a friend, written as cards. Draw one: a light card turns face up, and you both write a line.", actions: [dr, leave] };
+    }
     if (!s.who) {
       const fu = !atBook && faceUp(), me = ids().me || "you";
       const L = leaves(); if (s.at == null) s.at = openAt(L, homeNow()); s.at = Math.min(s.at, L.length - 1);
@@ -787,8 +793,9 @@ export function mount(B, opts = {}) {
         localBookAt = "stand-in-goal";
       } else localBookAt = "goal";
     }
-    if (opts.turn) { while (builtFor !== "hollow") await new Promise(r => setTimeout(r, 250)); tt.seed(String(opts.turn)); }
+    if (opts.turn && opts.turn !== "walk") { while (builtFor !== "hollow") await new Promise(r => setTimeout(r, 250)); tt.seed(String(opts.turn)); }
     if (!opts.open && !opts.book && !opts.deck && !opts.turn) return;
+    if (opts.turn === "walk") return;   // the walk's Hollow: you walk to the table yourself
     while (!B.meState.placed) await new Promise(r => setTimeout(r, 250)); // the page sets you down where you wake first
     await new Promise(r => setTimeout(r, 600));
     if (opts.open === "faceup") { // the stand-in left a cast for you face up on this hollow's table
@@ -816,6 +823,7 @@ export function mount(B, opts = {}) {
     tableGame = "flirtcraft"; doorWords = true; go();
   }
   return {
+    turns: () => tt.turns(),
     toss, keep, letGo, leaveFaceUp, answer, choose, sit, go, openBook, end, choices, leaves, turnTo, chooseLeaf,
     write: name => { if (s && !s.who) { s.draft = String(name); bookSig = ""; cardKey = ""; } },
     view: () => ({ shell: builtFor, near, sitting: sittingHere(), source: s && s.source, who: s && s.who && { kind: s.who.kind, room: s.who.room || null },

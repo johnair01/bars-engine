@@ -268,6 +268,10 @@ export function mount(B, opts = {}) {
       const p = panes[+near.slice(5)];
       key = near; html = `<div><b>${esc(p.loc.location)}</b><div class="t">${esc(p.loc.aspects[0])}</div></div><div class="row"><button type="button" data-ctw="${near}">Look into it</button></div>`;
     }
+    else if (near === "door" && opts.home) {   // home from the four lands (hollow-demo, his A on hdw-route): the doorway leads on to the Hollow
+      key = "door-hollow";
+      html = `<div><b>The doorway, to the Hollow</b><div class="t">Mara, whose charge made the four lands, waits there. The Hollow is the room two friends share: you draw from each other's decks and carry lanterns out together.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
+    }
     else if (near === "door") {
       const first = firstLand(), shut = grownOver();
       key = "door" + (shut ? "0" : "1") + (dense() ? "c" : "");
@@ -326,7 +330,7 @@ export function mount(B, opts = {}) {
     const fade = document.createElement("div"); fade.style.cssText = "position:fixed;inset:0;z-index:90;background:#1a1210;opacity:0;transition:opacity .6s";
     document.body.appendChild(fade); requestAnimationFrame(() => { fade.style.opacity = "1"; });
     // the visitor's nook: its doorway starts the walk, and the chamber's arch keeps the walk's flag (the walk reads the sample)
-    const to = opts.visit ? (href ? href + (href.includes("?") ? "&" : "?") + "walk=1" : "/between/land.html?walk=1") : href || "/between/land.html";
+    const to = opts.home && !href ? "/between/walk/hollow" : opts.visit ? (href ? href + (href.includes("?") ? "&" : "?") + "walk=1" : "/between/land.html?walk=1") : href || "/between/land.html";
     setTimeout(() => { location.href = to; }, 650);
   }
 
