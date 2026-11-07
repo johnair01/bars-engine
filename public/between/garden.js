@@ -1789,7 +1789,7 @@ function refreshHud() {
   const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
   if (VISIT && WALK_HOME) hintText = "Home in the nook, with the four lands walked. The doorway now leads to the Hollow, where a friend waits: walk to it.";
-  else if (VISIT_HOLLOW) hintText = window.__between && window.__between.walkHollow ? window.__between.walkHollow.hint() : "The Hollow, the room two friends share. Tap the floor to walk; drag to look around. Nothing here is kept.";
+  else if (VISIT_HOLLOW) hintText = window.__between && window.__between.walkHollow ? window.__between.walkHollow.hint() : "The Hollow, where two friends meet. Tap the floor to walk; drag to look around. Nothing here is kept.";
   else if (VISIT) hintText = "A visitor's nook. Someone left their charge on the map stand by the window: tap the floor to walk there. Nothing here is kept.";
   else if (STANDIN_ROOM) hintText = "A stand-in room: your partner is here to rehearse with, and nothing is saved. Walk to them, or wait a few breaths for the letter. Tap the floor to walk; drag to look around.";
   else if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");

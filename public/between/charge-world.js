@@ -270,7 +270,7 @@ export function mount(B, opts = {}) {
     }
     else if (near === "door" && opts.home) {   // home from the four lands (hollow-demo, his A on hdw-route): the doorway leads on to the Hollow
       key = "door-hollow";
-      html = `<div><b>The doorway, to the Hollow</b><div class="t">Mara, whose charge made the four lands, waits there. The Hollow is the room two friends share: you draw from each other's decks and carry lanterns out together.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
+      html = `<div><b>The doorway, to the Hollow</b><div class="t">Mara, whose charge made the four lands, waits there. The Hollow is where two friends meet: they draw from each other's decks and carry lanterns out together.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
     }
     else if (near === "door") {
       const first = firstLand(), shut = grownOver();

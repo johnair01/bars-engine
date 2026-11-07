@@ -16,7 +16,7 @@ const CSS = `
 `;
 
 export const STEP_WORDS = {
-  table: "The Hollow is the room two friends share. Mara sits across the low table: walk to it, sit, and draw a card from her deck.",
+  table: "The Hollow is where two friends meet. Mara sits across the low table: walk to it, sit, and draw a card from her deck.",
   mouth: "The card is kept in both your books. Now walk out to the hollow's mouth, past the rope fence, where the valley's calls wait.",
   lantern: "The lantern goes where you both look. Point at the same call as Mara.",
   carry: "The lantern lifts between you. Carry it out along the stones to the lookout, together.",
