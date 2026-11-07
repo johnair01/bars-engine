@@ -1,8 +1,9 @@
 // The healing journey, slice 1 (Six-faces-council spec .specify/specs/healing-journey, T004 and T005). The invariants:
 // one log per move made and never fewer, a missed day is simply "not made", the bands never gate, three objects or the
 // coach's hand light the next place, no page is kept before the storage rule is agreed, and closing keeps the world.
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { close, countsByMove, daysOf, furnishingOf, logsOf, MOVES, pagesReadable, placeLit, steadiness } from '../../../../public/between/journey.js'
+import { close, countsByMove, daysOf, DIARY, diaryAt, enrolled, finishPage, furnishingOf, furnishings, logsOf, MOVES, newPage, nextVoice, OPENERS, pageFor, pagesReadable, pileSlots, placeLit, shelfShown, steadiness, withMove, withTurn } from '../../../../public/between/journey.js'
 import { journeyWrite, mayWrite, parsePath, plantedHome, type Doc, type Who } from '@/lib/between/rules'
 
 const mv = (move: string, on: string, life = false) => ({ move, life, on, at: `${on}T10:00:00Z` })
@@ -108,5 +109,78 @@ describe('rules.ts: the journey key', () => {
   it('an object is a tag in one of five feelings', () => {
     expect(journeyWrite(doc({ pack: [{ ...obj('a'), feeling: 'rage' }] as never })).ok).toBe(false)
     expect(journeyWrite(doc({ pack: [{ ...obj('a', 'worked'), furnishing: 'lamp' }] as never })).ok).toBe(true)
+  })
+})
+
+describe('journey.js: the nook draws only what the rules say (T006 to T009)', () => {
+  it('the woodpile at n is the pile at n-1 plus one log: slots never repeat and the old ones stay', () => {
+    for (let n = 1; n <= 60; n++) {
+      const a = pileSlots(n), b = pileSlots(n + 1)
+      expect(a).toHaveLength(n)
+      expect(b.slice(0, n)).toEqual(a)
+      expect(new Set(b.map(([c, l]) => c + ',' + l)).size).toBe(n + 1)
+    }
+    expect(Math.max(...pileSlots(60).map(([, l]) => l))).toBeLessThanOrEqual(4)
+    expect(pileSlots(0)).toEqual([])
+  })
+  it('a move made adds one record and nothing else changes; an unknown move adds none', () => {
+    const at = new Date('2026-11-10T09:00:00')
+    const m1 = withMove({ moves: [] }, 'hearth', false, at)
+    expect(m1).toHaveLength(1)
+    expect(m1[0]).toMatchObject({ move: 'hearth', on: '2026-11-10' })
+    expect(Object.keys(m1[0]).sort()).toEqual(['at', 'move', 'on'])
+    expect(withMove({ moves: m1 }, 'window', true, at)[1]).toMatchObject({ move: 'window', life: true })
+    expect(withMove({ moves: m1 }, 'swim', false, at)).toHaveLength(1)
+    expect(logsOf(withMove({ moves: m1 }, 'window', true, at))).toBe(2)
+  })
+  it('the shelf shows carried and held objects, three at most; worked ones become furnishings', () => {
+    const pack = [obj('a'), obj('b', 'held'), obj('c'), obj('d'), obj('e', 'worked', 'water'), obj('f', 'left')].map((o) => (o.state === 'worked' ? { ...o, furnishing: 'lamp' } : o))
+    expect(shelfShown(pack).map((o) => o.id)).toEqual(['a', 'b', 'c'])
+    expect(furnishings(pack).map((o) => o.id)).toEqual(['e'])
+    expect(enrolled(null)).toBe(false)
+    expect(enrolled({ program: { closedAt: 'x' } })).toBe(false)
+    expect(enrolled({ program: { id: 'p' } })).toBe(true)
+  })
+  it('the diary reopens on the same page and finishing it makes a furnishing and one diary log', () => {
+    const at = new Date('2026-11-10T20:00:00')
+    const page = newPage('o1', at)
+    const doc = { pack: [obj('o1', 'carried', 'water')], pages: [page], moves: [] }
+    expect(pageFor(doc, 'o1')?.id).toBe(page.id)
+    expect(pageFor(doc, 'other')).toBeNull()
+    const done = finishPage(doc, page.id, at)
+    expect(pageFor(done, 'o1')).toBeNull()
+    expect(done.pack[0]).toMatchObject({ state: 'worked', furnishing: 'lamp' })
+    expect(done.moves).toHaveLength(1)
+    expect(done.moves[0].move).toBe('diary')
+    expect(journeyWrite({ program: { id: 'p', coachId: 'c', startsOn: '2026-11-10', endsOn: '2027-02-02', agreedOn: '2026-11-10', closedAt: null }, ...done } as never).ok).toBe(true)
+  })
+  it('a longer page adds nothing: the pile counts the making, not the words', () => {
+    let pass = newPage('o1').pass
+    for (let i = 0; i < 20; i++) pass = withTurn(pass, 'a long line '.repeat(20), nextVoice(pass.thread))
+    expect(pass.thread).toHaveLength(20)
+    expect(logsOf([])).toBe(0)
+  })
+  it('the voices alternate from the player, and a blank line is not a turn', () => {
+    let pass = newPage('o1').pass
+    expect(nextVoice(pass.thread)).toBe('me')
+    pass = withTurn(pass, 'Why are you here?', 'me')
+    expect(nextVoice(pass.thread)).toBe('it')
+    expect(withTurn(pass, '   ', 'it').thread).toHaveLength(1)
+  })
+  it('the diary sits at the first part not yet written', () => {
+    const p = newPage('o1').pass
+    expect(diaryAt(p)).toBe('face')
+    expect(diaryAt({ ...p, faceCharge: 'x' })).toBe('name')
+    expect(diaryAt({ ...p, faceCharge: 'x', maskName: 'y' })).toBe('talk')
+    expect(diaryAt({ ...p, faceCharge: 'x', maskName: 'y', beVoice: 'z' })).toBe('be')
+  })
+  it('the diary asks the built 3-2-1 questions word for word (FR-004)', () => {
+    const tsx = readFileSync('src/components/clean-up/ThreeTwoOnePasses.tsx', 'utf8').replace(/&rsquo;/g, '’').replace(/&lsquo;/g, '‘').replace(/\s+/g, ' ')
+    const strings = [DIARY.face.title, DIARY.face.caption, DIARY.face.ask, DIARY.name.title, DIARY.name.ask, DIARY.talk.ask, DIARY.be.title, DIARY.be.caption, DIARY.be.shift, DIARY.face.hint, DIARY.be.hint, DIARY.talk.meHint, DIARY.be.shiftHint]
+    for (const s of strings) expect(tsx, s).toContain(s)
+    expect(tsx).toContain('Drop the dialogue. You are {partName} now, alone, with nobody to convince and nothing to ask for. Say what is true when there’s no one listening.')
+    expect(DIARY.be.ask('The Lookout')).toContain('You are The Lookout now, alone')
+    const content = readFileSync('src/lib/clean-up/check-content.ts', 'utf8')
+    for (const o of OPENERS) expect(content).toContain(o)
   })
 })
