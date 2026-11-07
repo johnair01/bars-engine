@@ -60,12 +60,21 @@ Review only the exact card text below. Apply the established MTGOA relation rule
 
 CARD TEXT:
 ${text}`
-  const { ticket, created } = await pushTicket(db, {
-    sourceKey, title: `Editorial review: ${cardId}`, brief,
-    basis: { rows: [cardId], answer: 'editorial_review', label: 'Send to Editorial Review',
-      steer: '', savedAt: new Date().toISOString() },
-    lanes: ['claude'],
-  })
+  let queued
+  try {
+    queued = await pushTicket(db, {
+      sourceKey, title: `Editorial review: ${cardId}`, brief,
+      basis: { rows: [cardId], answer: 'editorial_review', label: 'Send to Editorial Review',
+        steer: '', savedAt: new Date().toISOString() },
+      lanes: ['claude'],
+    })
+  } catch (error) {
+    // Two taps may race between the helper's read and insert. The unique source key still means one review.
+    const existing = await db.workTicket.findUnique({ where: { sourceKey } })
+    if (!existing) throw error
+    queued = { ticket: existing, created: false }
+  }
+  const { ticket, created } = queued
   if (created) wakePickupAfter(`editorial review of ${cardId}`)
   return NextResponse.json({ review: view(ticket), created }, { status: created ? 201 : 200, headers: NO_STORE })
 }
