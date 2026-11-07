@@ -54,7 +54,7 @@ try {
   // camera: orbit about the sitter's middle; ?cam=mid|glow|wide|side picks a start for stills
   const tg = S.glowAt.clone().add(new THREE.Vector3(0, 0.1, 0));
   const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 80);
-  const start = { mid: [0.35, 0.2, 3.0], wide: [0.5, 0.22, 5.2], glow: [0.5, 0.18, 1.5], side: [1.5, 0.15, 3.2] }[Q.get("cam")] || [0.35, 0.2, 3.4];
+  const start = { mid: [0.35, 0.2, 3.0], wide: [0.5, 0.22, 5.2], glow: [0.5, 0.18, 1.5], knee: [0.45, 0.05, 1.7], side: [1.5, 0.15, 3.2] }[Q.get("cam")] || [0.35, 0.2, 3.4];
   let az = start[0], el = start[1], dist = start[2];
   const place = () => { cam.position.set(tg.x + dist * Math.sin(az) * Math.cos(el), tg.y + dist * Math.sin(el), tg.z + dist * Math.cos(az) * Math.cos(el)); cam.lookAt(tg); };
   let drag = null;

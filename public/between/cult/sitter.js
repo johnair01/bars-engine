@@ -38,7 +38,7 @@ function makeJian() {
   return J0;
 }
 
-export async function makeSitter({ who = "f", outfit = "C1", layer = 1, jian = true, thighC = 0.10, thighR = 0.15, glowUp = 0.55, jianTurn = -1.42 } = {}) {
+export async function makeSitter({ who = "f", outfit = "C1", layer = 1, jian = true, thighC = 0.10, thighR = 0.15, glowUp = 0.55, jianTurn = -1.42, hemMore = 0.14 } = {}) {
   if (!REG) REG = await fetch(new URL("./make/parts.json", import.meta.url)).then(r => r.json());
   const X = await M.build({ ...BODIES[who], direction: outfit[0], outfit }, REG);
   const F = X.F, { f, l } = F.fr, up = V(0, 1, 0), dn = V(0, -1, 0), k = F.stature / 1.75, r = l.clone().negate();
@@ -82,7 +82,7 @@ export async function makeSitter({ who = "f", outfit = "C1", layer = 1, jian = t
   const seatTop = seat + 0.006, hs = H1.y - seatTop;
   const q = V(), fr = V(), bk = V(), sk = V();
   const DRAPE = /^(robe|outer$|sash-tail|whisk-hair|cape)/;
-  let draped = 0;
+  let draped = 0, hemD = 0; for (const pt of X.parts) if (/^(robe|outer)$/.test(pt.name)) { const S0 = STAND.get(pt); for (let i = 1; i < S0.length; i += 3) hemD = Math.max(hemD, H0.y - S0[i]); }
   for (const pt of X.parts) {
     if (!DRAPE.test(pt.name)) continue;
     const S0 = STAND.get(pt), S1 = M.partWorld(pt), W = new Float32Array(S1.length);
@@ -90,7 +90,7 @@ export async function makeSitter({ who = "f", outfit = "C1", layer = 1, jian = t
       q.set(S0[i * 3], S0[i * 3 + 1], S0[i * 3 + 2]).sub(H0); const d = -q.y, a = q.dot(f), b = q.dot(l);
       sk.set(S1[i * 3], S1[i * 3 + 1], S1[i * 3 + 2]);
       const below = sm(-0.02 * k, 0.06 * k, d); if (below <= 0) { W.set([sk.x, sk.y, sk.z], i * 3); continue; }
-      const tc = thighC * k, R = thighR * k, c = Math.abs(b) - tc, ac = Math.abs(c), dd = Math.max(d, 0);
+      const tc = thighC * k, R = thighR * k, c = Math.abs(b) - tc, ac = Math.abs(c), dd = Math.max(d, 0) + hemMore * k * sm(hemD - 0.25 * k, hemD, d) * sm(-0.02 * k, 0.12 * k, a + 0.1 * k); // the hem is let down over the knee: the black trouser knee does not dome out below it
       let lift, bs, fall = 0;
       if (ac <= R) { lift = Math.sqrt(R * R - ac * ac); bs = b; }
       else if (c > 0) { lift = 0; bs = Math.sign(b) * (tc + R); fall = c - R; }
@@ -104,6 +104,32 @@ export async function makeSitter({ who = "f", outfit = "C1", layer = 1, jian = t
       fr.lerp(bk, 1 - sm(-0.07 * k, 0.05 * k, a));
       const fwd = fr.clone().sub(H1).dot(f); if (fwd < 0.20 * k && fr.y < seatTop + 0.004) fr.y = seatTop + 0.004;
       sk.lerp(fr, below); W.set([sk.x, sk.y, sk.z], i * 3); draped++;
+    }
+    pt.settled = W;
+  }
+  // the sleeves: a wide sleeve's bell is skinned to the forearm, so with the hands cupped over the belly it hangs
+  // forward over the hands and the glow. Hang it from the middle of the forearm instead: the cloth bends there and falls
+  // down and out beside the wrist onto the thigh, the hand and the glow clear. Sleeve points are skinned to the arm, so
+  // they are placed from the seated arm line (elbow to wrist), not from the skirt's hoop.
+  for (const [s, sg] of [["L", 1], ["R", -1]]) {
+    const pt = X.parts.find(x => x.name === "bell" + s); if (!pt) continue;
+    const el = wp(F.bones["elbow" + s]), wr = wp(F.bones["wrist" + s]), ax = wr.clone().sub(el), La = ax.length(); ax.normalize();
+    const hang = dn.clone().addScaledVector(l, sg * 0.55).addScaledVector(f, 0.1), hp = hang.addScaledVector(ax, -hang.dot(ax)).normalize();
+    const s0 = 0.5 * La, rho = 0.09 * k, centre = el.clone().addScaledVector(ax, s0);
+    const S1 = M.partWorld(pt), W = new Float32Array(S1.length), o = V(), out = V(), T = V(), qr = new THREE.Quaternion();
+    for (let i = 0; i < S1.length / 3; i++) {
+      q.set(S1[i * 3], S1[i * 3 + 1], S1[i * 3 + 2]); const t = q.clone().sub(el).dot(ax), e = t - s0;
+      if (e <= 0) { W.set([q.x, q.y, q.z], i * 3); continue; }
+      o.copy(q).sub(el).addScaledVector(ax, -t);
+      const th = Math.min(e / rho, Math.PI / 2);
+      T.copy(ax).multiplyScalar(Math.cos(th)).addScaledVector(hp, Math.sin(th));
+      out.copy(centre).addScaledVector(ax, rho * Math.sin(th)).addScaledVector(hp, rho * (1 - Math.cos(th))).addScaledVector(hp, Math.max(0, e - rho * Math.PI / 2));
+      qr.setFromUnitVectors(ax, T.normalize()); out.add(o.applyQuaternion(qr));
+      // the thigh is under the cloth: lie on it, never in it
+      const dq = out.clone().sub(H1), fw = dq.dot(tdir), b = dq.dot(l), c = Math.abs(b) - thighC * k, ac = Math.abs(c);
+      if (fw > 0 && fw < L + 0.1 * k) { const top = H1.y + (ac <= thighR * k ? Math.sqrt((thighR * k) ** 2 - ac * ac) : 0) + 0.018 * k; if (out.y < top && ac <= thighR * k + 0.05 * k) out.y = top; }
+      if (out.y < seatTop + 0.01) out.y = seatTop + 0.01;
+      W.set([out.x, out.y, out.z], i * 3);
     }
     pt.settled = W;
   }
@@ -123,7 +149,7 @@ export async function makeSitter({ who = "f", outfit = "C1", layer = 1, jian = t
   for (const pt of X.parts) {
     const W = pt.settled; if (!W) continue;
     const g = pt.geo.clone(); g.setAttribute("position", new THREE.BufferAttribute(W, 3)); g.deleteAttribute("skinIndex"); g.deleteAttribute("skinWeight"); g.computeVertexNormals();
-    const a = new THREE.Mesh(g, pt.mesh.material), b = new THREE.Mesh(g, pt.back.material); a.frustumCulled = b.frustumCulled = false; b.visible = pt.back.visible;
+    const a = new THREE.Mesh(g, pt.mesh.material), b = new THREE.Mesh(g, pt.back.material); a.frustumCulled = b.frustumCulled = false; a.name = b.name = "draped-" + pt.name; b.visible = pt.back.visible;
     holder.add(a, b); drapedMeshes.push(g); pt.mesh.visible = pt.back.visible = false;
   }
 
