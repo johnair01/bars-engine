@@ -22,6 +22,8 @@ import { PAGE_PATHS, pushedSha } from '@/lib/board/content-store'
 import { carriesLink, leanDoc, leanDocs, originOf, restorePictures } from '@/lib/board/pictures'
 
 export const dynamic = 'force-dynamic'
+// The pickup wake sleeps out its batching window after the response (src/lib/work/wake.ts), so the function must live longer.
+export const maxDuration = 180
 const NO_STORE = { 'Cache-Control': 'no-store' }
 
 export async function GET(req: NextRequest) {
