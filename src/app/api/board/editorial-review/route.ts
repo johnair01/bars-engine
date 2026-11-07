@@ -36,9 +36,16 @@ export async function GET(req: NextRequest) {
   const hash = req.nextUrl.searchParams.get('hash')
   if (typeof cardId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(cardId) || !/^[a-f0-9]{64}$/.test(hash ?? ''))
     return NextResponse.json({ error: 'Card and version required' }, { status: 400 })
-  const ticket = await db.workTicket.findUnique({ where: { sourceKey: key(cardId, hash!) },
-    select: { id: true, state: true, result: true, createdAt: true, updatedAt: true } })
-  return NextResponse.json({ review: ticket ? view(ticket) : null }, { headers: NO_STORE })
+  const sourceKey = key(cardId, hash!)
+  const [ticket, latest] = await Promise.all([
+    db.workTicket.findUnique({ where: { sourceKey },
+      select: { id: true, state: true, result: true, createdAt: true, updatedAt: true } }),
+    db.workTicket.findFirst({ where: { sourceKey: { startsWith: 'council/editorial/' + cardId + '@' } },
+      orderBy: { createdAt: 'desc' },
+      select: { sourceKey: true, id: true, state: true, result: true, createdAt: true, updatedAt: true } }),
+  ])
+  return NextResponse.json({ review: ticket ? view(ticket) : null,
+    previous: latest && latest.sourceKey !== sourceKey ? view(latest) : null }, { headers: NO_STORE })
 }
 
 export async function POST(req: NextRequest) {
