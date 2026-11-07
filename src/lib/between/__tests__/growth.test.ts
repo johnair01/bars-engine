@@ -8,7 +8,7 @@ const { read, isFeed, standIn, keptRun, newPot, POTS, TEAS } = G as any
 const DAY = 864e5, T0 = 1_700_000_000_000, A = 'a', B = 'b'
 const garden = { startedAt: T0, betweenSince: T0 }
 const cast = (id: string, answerer: string, at: number) => [id, { kind: 'cast', by: answerer === A ? B : A, at: at - 1, status: 'face-up', answer: { [answerer]: { card: 'c', depth: 'easy', at } } }]
-const R = (items: any[], now: number, extra: any = {}) => read({ items: new Map(items), garden, members: [A, B], now, ...extra })
+const R = (items: any[], now: number, extra: any = {}) => read({ items: new Map(items as any), garden, members: [A, B], now, ...extra })
 
 describe('growth: the Between reads its own items', () => {
   it('an empty Between reads exactly as today: health 3, nothing found, no bowls', () => {
@@ -44,7 +44,7 @@ describe('growth: the Between reads its own items', () => {
     expect([2, 3, 8, 15, 40].map(n => R(many(n), T0 + DAY).potsFound)).toEqual([0, 1, 2, 3, 4])
     expect(POTS.length).toBe(4); expect(TEAS.length).toBe(5)
     const r = R(many(3), T0 + DAY)
-    expect(newPot(r, new Map(many(3)))).toBe(true)
+    expect(newPot(r, new Map(many(3) as any))).toBe(true)
     expect(newPot(r, new Map([...many(3), ['p', { kind: 'cup', tea: 'smoke' }]] as any))).toBe(false)
   })
   it('a day is kept when both friends took part; kept days lift the light', () => {
