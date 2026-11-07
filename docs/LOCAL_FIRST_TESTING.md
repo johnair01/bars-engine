@@ -129,6 +129,11 @@ He looks at a change in one of three ways, in this order:
    pictures yourself first (check-before-he-sees-it). Then attach them to the thread reply, or carry them into a look
    row the usual way (six-faces-council `docs/stills-round.md`, `docs/merging.md` "A look row is checked"): a look's
    Open it shows its stills through `/board/look`, which needs no preview.
+   For a PR that waits on Wendell's visual review, put that hosted `/board/look` URL and the direct frame URLs in the
+   PR body, with the source commit and what each frame shows. A `/mnt/project-files/...` path may explain where the
+   session captured it; it is not the review link. Check the PR text with six-faces-council's
+   `python3 board/look_gate.py --pr-body <saved-pr-body>`, then open the hosted look from another environment at phone
+   width. A reachable image does not prove the intended element appears; name any missing view in the PR.
 2. **The app on his Mac (Remote Control).** When he wants to click through it himself, a Remote Control session
    starts the branch on his Mac and replies with the `http://localhost:<port>` URL.
 3. **Production, after the daily deploy.** Once the change ships (section 7) it is on bars-engine.vercel.app.
