@@ -134,7 +134,14 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
-      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!)) : yes
+      if (target.key === 'pouch' && op !== 'delete') {
+        const next = op === 'set' ? data! : merge(cur ?? {}, data!)
+        // Mana is left by a friendcraft card finished with a real friend and spent at the seed bed (bars-garden slice 1,
+        // bgb-mana-and-embers), both on the server; the page never adds to it.
+        if (!manaNotRaised(cur?.mana, next.mana)) return no(400, 'Mana comes from time with a friend.')
+        return pouchWrite(next)
+      }
+      return yes
   }
 }
 
@@ -164,9 +171,19 @@ const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'sta
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
+/** Did a write from the page add mana of any element? Only the server's own writes add it. */
+export function manaNotRaised(was: Json | undefined, next: Json | undefined): boolean {
+  const w = isObj(was) ? was : {}, n = isObj(next) ? next : {}
+  return Object.entries(n).every(([k, v]) => !isNum(v) || v <= (isNum(w[k]) ? (w[k] as number) : 0))
+}
+
 /** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
 export function pouchWrite(pouch: Doc): Verdict {
-  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
+  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow' && k !== 'mana') return no(400, 'The pouch holds embers only.')
+  // Mana by element, whole and never below nought (bars-garden slice 1).
+  const mana = pouch.mana
+  if (mana != null && !(isObj(mana) && Object.entries(mana).every(([k, v]) => (ELEMENTS as readonly string[]).includes(k) && isNum(v) && Number.isInteger(v) && v >= 0)))
+    return no(400, 'Mana is held by element, in whole drops.')
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
   if (h != null && !(isObj(h) && Object.keys(h).every(k => k === 'card' || k === 'at') && h.card === HOLLOW_CARD && isNum(h.at)))
