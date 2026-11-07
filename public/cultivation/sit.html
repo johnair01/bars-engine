@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a2622">
+<title>Sitting: the cultivated character</title>
+<meta name="description" content="The cultivation figure sat on a stone step, the qi glow below the navel brightening as layers open, a jian at the side.">
+<!-- cultivated character, first slice (sit, glow, jian), 2026-11-07. Ported from the council's gate round; the figure comes from /between/cult/. -->
+<style>
+  html, body { margin: 0; height: 100%; background: #2a2622; color: #f3ece2; font: 1rem/1.4 "Atkinson Hyperlegible", system-ui, sans-serif; }
+  #stage { position: fixed; inset: 0; touch-action: none; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  .bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; z-index: 5; }
+  .bar button { font: inherit; color: #f3ece2; background: rgba(20, 17, 13, .78); border: 1px solid rgba(255, 255, 255, .28); border-radius: 12px; padding: 10px 16px; min-height: 44px; cursor: pointer; backdrop-filter: blur(6px); }
+  .bar button:focus-visible { outline: 2px solid #ffc46a; outline-offset: 2px; }
+  .bar button:disabled { opacity: .45; cursor: default; }
+  .msg { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; background: #2a2622; z-index: 9; transition: opacity .8s; }
+  .msg.gone { opacity: 0; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .msg { transition: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
+} }
+</script>
+</head><body>
+<div id="stage" aria-label="A figure sitting on a stone step with a warm glow below the navel and a sheathed sword beside. Drag to look around."></div>
+<div class="msg" id="msg"><p id="msgText">Setting the figure down.</p></div>
+<div class="bar"><button id="ease" type="button" aria-label="Ease the glow back one layer">Ease back</button><button id="open" type="button" aria-label="Open the next layer">Open a layer</button></div>
+<script type="module">
+import * as THREE from "three";
+import { makeSitter } from "/between/cult/sitter.js";
+import { LAYERS } from "/between/cult/glow.js";
+const Q = new URLSearchParams(location.search);
+const who = Q.get("who") === "m" ? "m" : "f", outfit = Q.get("outfit") || "C1";
+let layer = Math.min(LAYERS, Math.max(1, +Q.get("layer") || 1));
+const stage = document.getElementById("stage"), msg = document.getElementById("msg");
+try {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: !!Q.get("shot") });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; stage.appendChild(renderer.domElement);
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x2e2a26); scene.fog = new THREE.Fog(0x2e2a26, 8, 24);
+  scene.add(new THREE.HemisphereLight(0xdfe4f0, 0x5a4a38, 1.7));
+  const S = await makeSitter({ who, outfit, layer });
+  scene.add(S.holder);
+  // the step: a stone slab whose top is the seat, wide enough for the jian
+  const step = new THREE.Mesh(new THREE.BoxGeometry(2.3, S.seatTop, 1.1), new THREE.MeshStandardMaterial({ color: 0x6b655c, roughness: 0.95 }));
+  step.position.set(0, S.seatTop / 2, -0.05); scene.add(step);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(12, 48), new THREE.MeshStandardMaterial({ color: 0x40382f, roughness: 1 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.002; scene.add(floor);
+  const key = new THREE.DirectionalLight(0xffd6a0, 1.1); key.position.set(2.5, 1.9, 2.8); scene.add(key);
+  // camera: orbit about the sitter's middle; ?cam=mid|glow|wide|side picks a start for stills
+  const tg = S.glowAt.clone().add(new THREE.Vector3(0, 0.1, 0));
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 80);
+  const start = { mid: [0.35, 0.2, 3.0], wide: [0.5, 0.22, 5.2], glow: [0.5, 0.18, 1.5], side: [1.5, 0.15, 3.2] }[Q.get("cam")] || [0.35, 0.2, 3.4];
+  let az = start[0], el = start[1], dist = start[2];
+  const place = () => { cam.position.set(tg.x + dist * Math.sin(az) * Math.cos(el), tg.y + dist * Math.sin(el), tg.z + dist * Math.cos(az) * Math.cos(el)); cam.lookAt(tg); };
+  let drag = null;
+  stage.addEventListener("pointerdown", e => { drag = [e.clientX, e.clientY]; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener("pointermove", e => { if (!drag) return; az -= (e.clientX - drag[0]) * 0.008; el = Math.min(1.1, Math.max(-0.05, el + (e.clientY - drag[1]) * 0.006)); drag = [e.clientX, e.clientY]; });
+  stage.addEventListener("pointerup", () => { drag = null; });
+  stage.addEventListener("wheel", e => { dist = Math.min(8, Math.max(1.0, dist * (1 + e.deltaY * 0.001))); e.preventDefault(); }, { passive: false });
+  const resize = () => { const w = innerWidth, h = innerHeight; renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); };
+  addEventListener("resize", resize); resize();
+  const ease = document.getElementById("ease"), open = document.getElementById("open");
+  const sync = () => { ease.disabled = layer <= 1; open.disabled = layer >= LAYERS; };
+  ease.onclick = () => { layer--; S.setLayer(layer); sync(); }; open.onclick = () => { layer++; S.setLayer(layer); sync(); }; sync();
+  let last = performance.now();
+  renderer.setAnimationLoop(t => { const dt = Math.min(0.1, (t - last) / 1000); last = t; S.update(dt); place(); renderer.render(scene, cam); });
+  window.SIT = { ready: true, layer: () => layer, draped: S.draped };
+  msg.classList.add("gone");
+} catch (e) {
+  console.error(e); document.getElementById("msgText").textContent = "The figure did not load on this device.";
+  window.SIT = { error: String(e && e.message || e) };
+}
+</script>
+</body></html>
