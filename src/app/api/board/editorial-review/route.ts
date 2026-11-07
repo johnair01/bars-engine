@@ -81,7 +81,11 @@ ${text}`
     if (!existing) throw error
     queued = { ticket: existing, created: false }
   }
-  const { ticket, created } = queued
-  if (created) wakePickupAfter(`editorial review of ${cardId}`)
-  return NextResponse.json({ review: view(ticket), created }, { status: created ? 201 : 200, headers: NO_STORE })
+  let { ticket, created } = queued
+  const retried = !created && ticket.state === 'failed'
+  if (retried) ticket = await db.workTicket.update({ where: { id: ticket.id },
+    data: { state: 'ready', result: null, claimedBy: null, leaseUntil: null } })
+  if (created || retried) wakePickupAfter(`editorial review of ${cardId}`)
+  return NextResponse.json({ review: view(ticket), created, retried },
+    { status: created ? 201 : 200, headers: NO_STORE })
 }
