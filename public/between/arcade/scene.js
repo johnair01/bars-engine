@@ -400,9 +400,14 @@ const lineAt = { group: new THREE.Group(), ready: false, hits: [] };
 const TWINE = std(0xd8c49a, { roughness: 0.9 });
 const ticketMesh = (t, w = 0.09, h = 0.18) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: ticketTexture(t.colour, t.word), side: THREE.DoubleSide, color: new THREE.Color(0.85, 0.85, 0.85) }));
 export const lineHits = () => lineAt.hits;
+/* the saved line has no cap: every kept ticket stays somewhere a player can see it (ah-line-ties-bundles), so after long
+   play it can hold thousands. A tied ticket shows no word, so all tied tickets of one colour share one texture and one
+   geometry; only the fanned bundle and the line draw their own (falsify, council #1123: 2,002 tickets after long play). */
+const BUNDLE_GEO = new THREE.PlaneGeometry(0.08, 0.16), TIE_GEO = new THREE.BoxGeometry(0.09, 0.032, 0.012), KNOT_GEO = new THREE.SphereGeometry(0.009, 8, 6), bundleMats = new Map();
+const bundleMat = hue => { if (!bundleMats.has(hue)) bundleMats.set(hue, new THREE.MeshBasicMaterial({ map: ticketTexture(hue), side: THREE.DoubleSide, color: new THREE.Color(0.85, 0.85, 0.85) })); return bundleMats.get(hue); };
 export function hangLine(view, fan = -1) {
   const g = lineAt.group; if (!lineAt.ready) return;
-  for (const o of [...g.children]) { g.remove(o); o.traverse(c => { if (c.material && c.material !== M.wood && c.material !== TWINE) { if (c.material.map) c.material.map.dispose(); c.material.dispose(); } if (c.geometry) c.geometry.dispose(); }); }
+  for (const o of [...g.children]) { g.remove(o); o.traverse(c => { if (c.material && c.material !== M.wood && c.material !== TWINE && ![BUNDLE_GEO, TIE_GEO, KNOT_GEO].includes(c.geometry)) { if (c.material.map) c.material.map.dispose(); c.material.dispose(); } if (c.geometry && ![BUNDLE_GEO, TIE_GEO, KNOT_GEO].includes(c.geometry)) c.geometry.dispose(); }); }
   lineAt.hits = [];
   const show = view.hanging, n = show.length;
   show.forEach((t, i) => {
@@ -410,6 +415,7 @@ export function hangLine(view, fan = -1) {
     const m = ticketMesh(t); m.position.set(-0.2, 2.38, dz); m.rotation.set(0, -Math.PI / 2, i % 2 ? 0.08 : -0.06); g.add(m);
     const peg = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, 0.012), M.wood); peg.position.set(-0.2, 2.48, dz); g.add(peg);
   });
+  const tied = new Map(), ties = [], knots = [], tmp = new THREE.Object3D();   // tied tickets drawn as one instanced mesh per colour
   // the bundles lie on the glass counter top (1.245 m), seven places along it, then a second layer on the first
   view.bundles.forEach((b, i) => {
     const k = i % 7, layer = Math.floor(i / 7), at = V(-0.04, 1.25 + layer * 0.03, -0.66 + k * 0.22);
@@ -423,12 +429,18 @@ export function hangLine(view, fan = -1) {
       lineAt.hits.push(hit);
       return;
     }
-    b.forEach((t, j) => { const m = ticketMesh(t, 0.08, 0.16); m.rotation.set(-Math.PI / 2, 0, ((j * 53) % 7 - 3) * 0.05); m.position.set(0, j * 0.0035, 0); bg.add(m); });
-    const tie = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.032, 0.012), TWINE); tie.position.set(0, 0.012, 0); bg.add(tie);   // the string round the middle
-    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 6), TWINE); knot.position.set(-0.046, 0.026, 0); bg.add(knot);
+    bg.updateMatrix();
+    b.forEach((t, j) => { tmp.rotation.set(-Math.PI / 2, 0, ((j * 53) % 7 - 3) * 0.05); tmp.position.set(0, j * 0.0035, 0); tmp.updateMatrix();
+      if (!tied.has(t.colour)) tied.set(t.colour, []); tied.get(t.colour).push(new THREE.Matrix4().multiplyMatrices(bg.matrix, tmp.matrix)); });
+    tmp.rotation.set(0, 0, 0); tmp.position.set(0, 0.012, 0); tmp.updateMatrix(); ties.push(new THREE.Matrix4().multiplyMatrices(bg.matrix, tmp.matrix));   // the string round the middle
+    tmp.position.set(-0.046, 0.026, 0); tmp.updateMatrix(); knots.push(new THREE.Matrix4().multiplyMatrices(bg.matrix, tmp.matrix));
     const hit = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.2), new THREE.MeshBasicMaterial()); hit.visible = false; hit.userData.bundle = i; hit.position.set(0, 0.05, 0); bg.add(hit);
     lineAt.hits.push(hit);
   });
+  const inst = (geo, mat, ms) => { if (!ms.length) return; const im = new THREE.InstancedMesh(geo, mat, ms.length); ms.forEach((m, k) => im.setMatrixAt(k, m)); g.add(im); };
+  for (const [hue, ms] of tied) inst(BUNDLE_GEO, bundleMat(hue), ms);
+  inst(TIE_GEO, TWINE, ties); inst(KNOT_GEO, TWINE, knots);
+
 }
 
 /* ---------- the visitors: real people in their own street clothes (his note on round 1, 2026-11-03: "they should look
