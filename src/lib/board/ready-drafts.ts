@@ -10,7 +10,7 @@ import { answerOf, type AnswerDoc, type RowDoc } from '@/lib/work/ticket'
  * branch names the look and every look it names has a plain yes (an answer, no steer, nothing negative in what he
  * chose). It never throws: the save is already stored, and gates.py --ready still works as the fallback.
  *
- * Token: BOARD_GITHUB_TOKEN, else BOARD_DISPATCH_TOKEN (the token that already dispatches board-pull). Marking a pull
+ * Token: BOARD_GITHUB_TOKEN, else BOARD_DISPATCH_TOKEN. Marking a pull
  * request ready needs pull-requests: write; a 403 is logged as `ready-drafts refused` and nothing else happens.
  */
 const REPO = 'wendell-britt/Six-faces-council'

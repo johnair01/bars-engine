@@ -1,7 +1,7 @@
 /**
  * The Council Board page needs three things at serve time that the claude.ai artifact got from its runtime.
- * Its Send button fires a Claude Code Remote routine through `mcp.callTool`, which bars-engine does not offer: a save
- * here starts its own board-pull (src/lib/board/dispatch.ts), so Send has nothing left to ask for. The same
+ * Its Send button fires a Claude Code Remote routine through `mcp.callTool`, which bars-engine does not offer: the save
+ * itself reaches the board, so Send has nothing left to ask for. The same
  * substitutions as six-faces-council board/nonprofit/build.py make the bar say so. Each replacement is optional, so a
  * template change in six-faces-council degrades to the shim's "sending is turned off" message instead of a 503;
  * `missingCouncilPatches` names what no longer matched so a test (and a log line) can say so.
