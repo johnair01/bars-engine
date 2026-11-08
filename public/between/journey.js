@@ -76,6 +76,30 @@ export function pagesReadable(program, today) {
   return true;
 }
 
+/* What the coach may read: only pages the player marked to send, and only while pages are readable (the storage rule,
+   Wendell 2026-11-07). A page sent and then written on again is no longer sent: the player sends it again. */
+export function sentPages(doc, today) {
+  const src = doc && typeof doc === "object" ? doc : {};
+  if (!pagesReadable(src.program, today)) return [];
+  return arr(src.pages).filter((p) => p && typeof p.sentAt === "string" && p.sentAt);
+}
+
+/* May this player send a page? Only after signing that sending pages the coach must act on consents to that action. */
+export function mayMarkToSend(program) {
+  return !!(program && typeof program === "object" && program.agreedOn && program.sendAgreedOn && !program.closedAt);
+}
+
+/* Mark one page sent, or take the mark off. The input is not changed. */
+export function markSent(doc, pageId, at, sent) {
+  const src = doc && typeof doc === "object" ? doc : {};
+  const pages = arr(src.pages).map((p) => {
+    if (!p || p.id !== pageId) return p;
+    const { sentAt, ...rest } = p;
+    return sent === false ? rest : { ...rest, sentAt: typeof at === "string" ? at : new Date().toISOString() };
+  });
+  return { ...src, pages };
+}
+
 /* Close the program by the coach's hand (FR-011). Returns the document with its pages gone and the world kept
    (pack, moves, places, learned), and the removed pages so the route can offer the player their copy first. */
 export function close(doc, at) {

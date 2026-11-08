@@ -3,7 +3,7 @@
 // coach's hand light the next place, no page is kept before the storage rule is agreed, and closing keeps the world.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { close, countsByMove, daysOf, DIARY, diaryAt, enrolled, finishPage, furnishingOf, furnishings, logsOf, MOVES, newPage, nextVoice, OPENERS, pageFor, pagesReadable, pileSlots, placeLit, shelfShown, steadiness, withMove, withTurn } from '../../../../public/between/journey.js'
+import { close, countsByMove, daysOf, DIARY, diaryAt, enrolled, finishPage, furnishingOf, furnishings, logsOf, MOVES, newPage, nextVoice, OPENERS, pageFor, markSent, mayMarkToSend, pagesReadable, pileSlots, placeLit, sentPages, shelfShown, steadiness, withMove, withTurn } from '../../../../public/between/journey.js'
 import { journeyWrite, mayWrite, parsePath, plantedHome, type Doc, type Who } from '@/lib/between/rules'
 
 const mv = (move: string, on: string, life = false) => ({ move, life, on, at: `${on}T10:00:00Z` })
@@ -182,5 +182,37 @@ describe('journey.js: the nook draws only what the rules say (T006 to T009)', ()
     expect(DIARY.be.ask('The Lookout')).toContain('You are The Lookout now, alone')
     const content = readFileSync('src/lib/clean-up/check-content.ts', 'utf8')
     for (const o of OPENERS) expect(content).toContain(o)
+  })
+})
+
+describe('the storage rule: the coach reads only pages the player sends', () => {
+  const program = { id: 'p1', coachId: 'coach', startsOn: '2026-11-10', endsOn: '2027-02-01', agreedOn: '2026-11-10', sendAgreedOn: '2026-11-11', closedAt: null }
+  const pg = (id: string, sentAt?: string) => ({ id, objectId: 'a', pass: {}, startedOn: '2026-11-10', doneOn: null, ...(sentAt ? { sentAt } : {}) })
+  it('a coach sees only sent pages, and none once the program is closed or past its end', () => {
+    const doc = { program, pages: [pg('one'), pg('two', '2026-11-12T10:00:00Z')] }
+    expect(sentPages(doc, '2026-12-01').map((p: { id: string }) => p.id)).toEqual(['two'])
+    expect(sentPages({ ...doc, program: { ...program, closedAt: '2026-12-02T00:00:00Z' } }, '2026-12-01')).toEqual([])
+    expect(sentPages(doc, '2027-02-02')).toEqual([])
+    expect(sentPages(undefined, '2026-12-01')).toEqual([])
+  })
+  it('markSent marks one page, can take the mark off, and leaves the input alone', () => {
+    const doc = { program, pages: [pg('one'), pg('two')] }
+    const sent = markSent(doc, 'two', '2026-11-12T10:00:00Z', true)
+    expect(sent.pages[1].sentAt).toBe('2026-11-12T10:00:00Z')
+    expect(sent.pages[0].sentAt).toBeUndefined()
+    expect(markSent(sent, 'two', undefined, false).pages[1].sentAt).toBeUndefined()
+    expect(doc.pages[1]).not.toHaveProperty('sentAt')
+  })
+  it('the player may send only after signing what sending means', () => {
+    expect(mayMarkToSend(program)).toBe(true)
+    expect(mayMarkToSend({ ...program, sendAgreedOn: null })).toBe(false)
+    expect(mayMarkToSend({ ...program, closedAt: '2026-12-02T00:00:00Z' })).toBe(false)
+  })
+  it('the store refuses a sent page without the sending agreement, and takes it with', () => {
+    const base = { pack: [], moves: [], places: [], learned: [] }
+    const sentPage = { id: 'pg1', objectId: 'a', pass: {}, sentAt: '2026-11-12T10:00:00Z' }
+    expect(journeyWrite({ ...base, program: { ...program, sendAgreedOn: null }, pages: [sentPage] }).ok).toBe(false)
+    expect(journeyWrite({ ...base, program, pages: [sentPage] }).ok).toBe(true)
+    expect(journeyWrite({ ...base, program, pages: [{ ...sentPage, sentAt: 5 }] }).ok).toBe(false)
   })
 })

@@ -17,7 +17,7 @@
 import * as THREE from "three";
 import { SHELLS } from "../calrunia/room-kit.js";
 import { WAVE_STEPS } from "../calrunia/spirit-care.js";
-import { DIARY, OPENERS, MOVES, MOVE_NAMES, FEELING_NAMES, countsByMove, logsOf, enrolled, shelfShown, furnishings, pileSlots, pageFor, newPage, diaryAt, nextVoice, withTurn, finishPage, withMove, dayOf } from "./journey.js";
+import { DIARY, OPENERS, MOVES, MOVE_NAMES, FEELING_NAMES, countsByMove, logsOf, enrolled, shelfShown, furnishings, pileSlots, pageFor, newPage, diaryAt, nextVoice, withTurn, finishPage, withMove, dayOf, markSent } from "./journey.js";
 
 /* The five feelings' colours (garden.js ELEMENTS and FEELS). `cloth` is the dyed cloth, `ink` the diary's ink, deepened to hold on paper. */
 const FEEL = {
@@ -373,8 +373,16 @@ export function mount(B, opts = {}) {
   }
 
   async function saveField(pageId, mut) { // every line is saved as it is written (FR-005)
-    const pages = pagesNow().map(p => p.id === pageId ? { ...p, pass: mut(p.pass) } : p);
+    const pages = pagesNow().map(p => { if (p.id !== pageId) return p; const { sentAt, ...rest } = p; return { ...rest, pass: mut(p.pass) }; }); // a page written on again is no longer sent
     await write({ pages });
+  }
+  const SEND_WORDS = "Sending a page lets your coach read it, and means you agree they may act on what it says. Pages you do not send stay yours. Your coach deletes their copy when the program ends or if you stop meeting.";
+  async function sendPage(pageId, sent) {
+    const p = doc().program || {};
+    if (sent && !p.sendAgreedOn) await write({ program: { ...p, sendAgreedOn: dayOf(new Date()) } });
+    await write({ pages: markSent(docNow(), pageId, new Date().toISOString(), sent).pages });
+    sig = ""; draw();
+    B.toast(sent ? "Sent to your coach." : "Kept to yourself again.");
   }
   async function closePage(pageId) {
     const next = finishPage(docNow(), pageId);
@@ -447,8 +455,12 @@ export function mount(B, opts = {}) {
       <p class="ask">${DIARY.be.shift}</p>
       ${pass.beShift ? line(pass.beShift, "", OWN_INK, 1) : `<textarea rows="2" data-f="shift" style="color:${OWN_INK}" aria-label="What shifted" placeholder="${esc(DIARY.be.shiftHint)}"></textarea>`}
       <div class="tools">${pass.beVoice && pass.beShift ? "" : `<button type="button" class="wr" data-save="be">Set it down</button>`}<button type="button" class="wr" data-done="1">Close the page</button></div>`;
+    const canSend = agreed() && !local && !(doc().program || {}).closedAt;
+    const sendBlock = !canSend ? "" : pg.sentAt
+      ? `<p class="note">Sent to your coach. <button type="button" class="pencil" data-send="0">keep it to myself again</button></p>`
+      : `<details class="note"><summary>Send this page to my coach</summary><p>${SEND_WORDS}</p><button type="button" class="wr" data-send="1">${(doc().program || {}).sendAgreedOn ? "Send this page" : "I agree, send this page"}</button></details>`;
     const keep = agreed() || local ? "" : `<p class="note">These pages stay in this tab for now. They are not stored anywhere yet.</p>`;
-    return `<div class="jd" role="dialog" aria-label="Your diary"><div class="rib">${ribs}</div><div class="pg">${body}${keep}</div>
+    return `<div class="jd" role="dialog" aria-label="Your diary"><div class="rib">${ribs}</div><div class="pg">${body}${sendBlock}${keep}</div>
       <div class="shut" style="left:76px;right:36px;bottom:12px"><button type="button" class="pencil" data-shut="1">shut the diary</button><span></span></div></div>`;
   }
   let diaryVoice = null, diaryDraft = "";
@@ -468,6 +480,7 @@ export function mount(B, opts = {}) {
     q("[data-step]", b => b.addEventListener("click", () => { diaryStep = b.dataset.step; soakAt = -1; sig = ""; draw(); }));
     q("[data-voice]", b => b.addEventListener("click", () => { const t = root.querySelector("[data-f=talk]"); diaryDraft = t ? t.value : ""; diaryVoice = b.dataset.voice; sig = ""; draw(); }));
     q("[data-opener]", b => b.addEventListener("click", () => { diaryDraft = b.dataset.opener; diaryVoice = "me"; sig = ""; draw(); }));
+    q("[data-send]", b => b.addEventListener("click", () => sendPage(diaryOpen, b.dataset.send === "1")));
     q("[data-done]", b => b.addEventListener("click", () => closePage(diaryOpen)));
     q("[data-save]", b => b.addEventListener("click", async () => {
       const id = diaryOpen, v = k => { const e = root.querySelector(`[data-f=${k}]`); return e ? e.value.trim() : ""; }, kind = b.dataset.save;

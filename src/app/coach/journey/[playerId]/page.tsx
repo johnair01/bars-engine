@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation'
 import { currentPlayer, journeyFor } from '@/lib/between/store'
 import { composeSummary, type ThreeTwoOnePass } from '@/lib/coaching/three-two-one'
-import { countsByMove, daysOf, MOVES, pagesReadable } from '../../../../../public/between/journey.js'
+import { countsByMove, daysOf, MOVES, sentPages } from '../../../../../public/between/journey.js'
 import { CoachActions } from './CoachActions'
 
 export const dynamic = 'force-dynamic'
 
 /**
  * The coach's record (healing-journey spec FR-010 to FR-012): each day of the program as moves made or none made, how
- * many times each move was made, and the diary pages while they may be read. It says what was made and never what was
+ * many times each move was made, and the diary pages the player marked to send. It says what was made and never what was
  * missed: no streak, no score, no warning. Only the coach the program names sees it; anyone else gets a 404.
  */
 const MOVE_WORDS: Record<string, string> = {
@@ -25,7 +25,7 @@ export default async function CoachJourneyPage({ params }: { params: Promise<{ p
   const days = daysOf(d.moves, program.startsOn, program.endsOn) as { on: string; made: string[]; didMake: boolean }[]
   const counts = countsByMove(d.moves) as Record<string, number>
   const today = new Date().toISOString().slice(0, 10)
-  const pages = pagesReadable(program, today) ? ((d.pages ?? []) as { id: string; startedOn?: string; pass?: ThreeTwoOnePass }[]) : []
+  const pages = sentPages(d, today) as { id: string; startedOn?: string; sentAt?: string; pass?: ThreeTwoOnePass }[]
   const closed = !!program.closedAt
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -51,8 +51,8 @@ export default async function CoachJourneyPage({ params }: { params: Promise<{ p
 
       <section className="mt-6">
         <h2 className="text-sm font-medium text-zinc-300">Pages</h2>
-        {pages.length === 0 ? <p className="mt-2 text-sm text-zinc-400">No pages to read.</p> : pages.map(p => (
-          <pre key={p.id} className="mt-3 whitespace-pre-wrap rounded border border-zinc-700 p-3 text-sm">{`${p.startedOn ?? ''}\n${p.pass ? composeSummary(p.pass) : ''}`.trim()}</pre>
+        {pages.length === 0 ? <p className="mt-2 text-sm text-zinc-400">No pages sent.</p> : pages.map(p => (
+          <pre key={p.id} className="mt-3 whitespace-pre-wrap rounded border border-zinc-700 p-3 text-sm">{`${p.startedOn ?? ''}${p.sentAt ? `, sent ${p.sentAt.slice(0, 10)}` : ''}\n${p.pass ? composeSummary(p.pass) : ''}`.trim()}</pre>
         ))}
       </section>
 

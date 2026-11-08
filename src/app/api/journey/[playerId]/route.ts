@@ -1,7 +1,7 @@
 /**
  * @route GET /api/journey/[playerId]
  * @entity PLAYER
- * @description The coach's record of a healing-journey program: each day of the program as made or not made, the move counts, and the diary pages while they may be read. No streak, score or warning
+ * @description The coach's record of a healing-journey program: each day of the program as made or not made, the move counts, and only the diary pages the player marked to send, while they may be read. No streak, score or warning
  * @permissions signed-in player named as the program's coach; anyone else gets 404
  * @relationships PLAYER (BetweenPrivate journey)
  * @example GET /api/journey/cmplayer123
@@ -9,7 +9,7 @@
  */
 import { NextResponse } from 'next/server'
 import { currentPlayer, journeyFor } from '@/lib/between/store'
-import { countsByMove, daysOf, pagesReadable } from '../../../../../public/between/journey.js'
+import { countsByMove, daysOf, sentPages } from '../../../../../public/between/journey.js'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +27,6 @@ export async function GET(_req: Request, { params }: Ctx) {
     program,
     days: daysOf(d.moves, program.startsOn, program.endsOn),
     counts: countsByMove(d.moves),
-    pages: pagesReadable(program, today) ? d.pages ?? [] : [],
+    pages: sentPages(d, today),
   })
 }
