@@ -20,12 +20,12 @@
     "record": {
       "properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
         "required": ["kind", "path", "body"],
-        "properties": {"kind": {"enum": ["callsheet", "pass", "ledger"]},
-                       "path": {"type": "string", "pattern": "^council/."},
+        "properties": {"kind": {"enum": ["callsheet", "pass", "ledger", "rows", "resolved"]},
+                       "path": {"type": "string", "pattern": "^(council|board)/."},
                        "body": {"type": "string", "maxLength": 1048576}}}}},
   "row": {
       "properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
-        "required": ["kind", "pass"], "not": {"required": ["id"]},
+        "required": ["kind"], "not": {"required": ["id"]},
         "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
                        "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"}},
         "allOf": [

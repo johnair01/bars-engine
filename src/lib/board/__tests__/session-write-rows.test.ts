@@ -24,6 +24,12 @@ describe('sessionWrite rows (worklist-api)', () => {
     expect(r).toEqual({ written: ['rows/wl-probe'], same: 0, refused: [] })
     expect(db.rows[0]).toMatchObject({ collection: 'rows', docId: 'wl-probe', data: row, recordedAt: null, record: null })
   })
+  it('accepts a pre-pass row with no pass (the backfill relocates history)', async () => {
+    const db = fakeDb()
+    const r = await sessionWrite(db as never, [{ collection: 'rows', docId: 'ancient', mode: 'set',
+                                                 data: { kind: 'positions', faces: ['sage'], pos: 'Older than passes.' } }])
+    expect(r).toEqual({ written: ['rows/ancient'], same: 0, refused: [] })
+  })
 
   it('refuses a malformed row and writes nothing', async () => {
     const db = fakeDb()
