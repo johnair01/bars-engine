@@ -4,7 +4,8 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/board/owner', () => ({ isBoardOwner: vi.fn(async () => true) }))
 vi.mock('@/lib/auth', () => ({ getCurrentPlayer: vi.fn(async () => null) }))
 
-import { DATA_PATH, GET } from '../route'
+import { GET } from '../route'
+import { DATA_PATH } from '@/lib/board/data-script'
 import { setBackend } from '@/lib/board/content-store'
 import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 import { isBoardOwner } from '@/lib/board/owner'

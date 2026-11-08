@@ -11,12 +11,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isBoardOwner } from '@/lib/board/owner'
 import { getCurrentPlayer } from '@/lib/auth'
 import { readText } from '@/lib/board/content-store'
+import { DATA_PATH, script } from '@/lib/board/data-script'
 import { streamed } from '../serve'
 
 export const dynamic = 'force-dynamic'
-
-/** The repo path six-faces-council pushes board_data.json under (content-store's ALLOWED list). */
-export const DATA_PATH = 'board/board_data.json'
 
 /** The page's own rule: a push that lands in the store shows on the next load of the page and of this script together. */
 const HEADERS = {
@@ -28,13 +26,6 @@ const HEADERS = {
 
 /** A script that assigns nothing, so the page falls back to the copy it carries instead of drawing an empty board. */
 const NOTHING = 'window.__BOARD_DATA__ = null;\n'
-
-/** The pushed JSON as the script body. The page reads it before its data tag, so a board that grows past the page's
- * own size arrives here whole; U+2028 and U+2029 are legal JSON and were once illegal inside a JS object literal. */
-export function script(json: string): string {
-  const body = json.trim().replace(/;\s*$/, '').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
-  return `window.__BOARD_DATA__ = ${body};\n`
-}
 
 export async function GET(req: NextRequest) {
   if (!(await isBoardOwner())) {
