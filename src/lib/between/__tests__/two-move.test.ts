@@ -61,3 +61,14 @@ describe('the two slips', () => {
     expect(snapshotOf(13, inner, 'c1', '2026-11-08T00:00:00Z')).toEqual({ source: 'iching-two-move', hexagram: 13, side: 'inner', trigram: inner.trigram, good: inner.good, chargeId: 'c1', drawnAt: '2026-11-08T00:00:00Z' })
   })
 })
+
+describe('the lean on a kept cast (FR-006)', () => {
+  const kept = { n: 11, becomes: null, lane: 'yourself', suit: 'WU', room: null, line: 'x', at: 1, done: null }
+  it('takes the taken slip as a lean of side, trigram and good, and nothing else', async () => {
+    const { homeWrite } = await import('@/lib/between/rules')
+    const ok = (lean: unknown) => homeWrite({ casts: { c1: { ...kept, lean } } } as never)
+    expect(ok({ side: 'inner', trigram: 'Heaven', good: 'Restraint' }).ok).toBe(true)
+    expect(ok({ side: 'inner', trigram: 'Heaven', good: 'Nurture' }).ok).toBe(false)
+    expect(ok({ side: 'inner', trigram: 'Heaven', good: 'Restraint', note: 'words' }).ok).toBe(false)
+  })
+})
