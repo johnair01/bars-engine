@@ -23,7 +23,7 @@ import { latestDoc } from '@/lib/board/store'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
-export const RECEIPT_BOARD = 'browser-receipts'
+const RECEIPT_BOARD = 'browser-receipts'
 const SHA = /^[0-9a-f]{40}$/
 const count = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 1_000_000
 

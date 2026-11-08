@@ -133,6 +133,8 @@ export default defineConfig({
       'src/lib/between/__tests__/music.test.ts',
       'src/lib/between/__tests__/sky-qi.test.ts',
       'src/lib/board/__tests__/outreach.test.ts',
+      'src/lib/board/__tests__/spec-packet.test.ts',
+      'src/app/api/board/spec/[sha]/__tests__/route.test.ts',
       'src/lib/studio/__tests__/deck.test.ts',
       'src/lib/studio/__tests__/fleet.test.ts',
       'src/lib/studio/__tests__/shaman.test.ts',
