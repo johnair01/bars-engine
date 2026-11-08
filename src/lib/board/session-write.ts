@@ -4,9 +4,10 @@ import { applyWrite, validateSave } from './save'
 import { missingObjects } from './content-store'
 
 /** What a Claude session writes to the Council Board: the Your steps lists and steps, Outreach's contacts and shows,
- * and the council's rows (src/lib/board/rows.ts). His answers (positions, questions, ...) are his to save, never a
- * session's. */
-export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws'])
+ * the council's rows (src/lib/board/rows.ts), and the council's records — its callsheets, passes and ledger as
+ * whole documents (src/lib/board/records.ts, born recorded). His answers (positions, questions, ...) are his to
+ * save, never a session's. */
+export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws', 'records'])
 /** Collections whose session writes the board-pull Action lands on main, so they are born unrecorded: a posted row
  * waits for board-pull to put it in board_data.json and acknowledge it, and the staleness check alarms if it does not. */
 export const UNRECORDED_COLLECTIONS = new Set(['rows'])
@@ -89,7 +90,7 @@ export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: Se
     missing: (shas: string[]) => Promise<string[]> = missingObjects,
     loads: (url: string) => Promise<boolean> = pictureLoads): Promise<SessionResult> {
   const out: SessionResult = { written: [], same: 0, refused: [] }
-  for (const { collection, docId, mode = collection === 'rows' ? 'set' : 'update', data } of docs) {
+  for (const { collection, docId, mode = collection === 'rows' || collection === 'records' ? 'set' : 'update', data } of docs) {
     const key = `${collection}/${docId}`
     if (!SESSION_COLLECTIONS.has(collection)) { out.refused.push(`${key}: sessions write ${[...SESSION_COLLECTIONS].join(', ')}`); continue }
     const v = validateSave({ board: 'council', collection, docId, mode, data })
