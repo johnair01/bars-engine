@@ -9,7 +9,7 @@
   "properties": {
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
-                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws"]},
+                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws", "records"]},
     "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\\\u0000-\\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}
@@ -17,9 +17,15 @@
   "$defs": {
     "text": {"type": "string", "pattern": "\\S"},
     "faces": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-    "row": {
+    "record": {
       "properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
-        "required": ["kind", "pass"], "not": {"required": ["id"]},
+        "required": ["kind", "path", "body"],
+        "properties": {"kind": {"enum": ["callsheet", "pass", "ledger", "rows", "resolved"]},
+                       "path": {"type": "string", "pattern": "^(council|board)/."},
+                       "body": {"type": "string", "maxLength": 1048576}}}}},
+  "row": {
+      "properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
+        "required": ["kind"], "not": {"required": ["id"]},
         "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
                        "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"}},
         "allOf": [
@@ -47,6 +53,7 @@
   },
   "allOf": [
     {"if": {"properties": {"collection": {"const": "rows"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/row"}},
+    {"if": {"properties": {"collection": {"const": "records"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/record"}},
     {"if": {"properties": {"mode": {"const": "update"}}, "required": ["mode"]}, "then": {}, "else": {"allOf": [
       {"if": {"properties": {"collection": {"enum": ["positions", "questions", "terms", "causes", "picks", "blockers"]}}},
        "then": {"properties": {"data": {"required": ["savedAt"], "properties": {"savedAt": {"$ref": "#/$defs/iso"}}}}}},

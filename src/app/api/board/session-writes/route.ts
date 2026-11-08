@@ -27,7 +27,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { latestDocs } from '@/lib/board/store'
-import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { docHash, sessionWrite, SESSION_COLLECTIONS, type SessionDoc } from '@/lib/board/session-write'
 
 export const dynamic = 'force-dynamic'
@@ -69,6 +68,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Expected {docs: [{collection, docId, mode?, data}] (at most ${MAX_DOCS})}` },
       { status: 400 })
   const r = await sessionWrite(db, b.docs as SessionDoc[], b.dry === true)
-  if (b.dry !== true && r.written.some(k => k.startsWith('rows/'))) await dispatchBoardPull().catch(() => undefined)
   return NextResponse.json({ board: 'council', dry: b.dry === true, ...r }, { headers: NO_STORE })
 }
