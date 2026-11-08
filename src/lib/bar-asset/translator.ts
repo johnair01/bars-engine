@@ -31,6 +31,7 @@ import { dispatchAI } from './dispatcher'
 import { buildUserPrompt, SYSTEM_PROMPT } from './prompts/blessed-object'
 import { buildStructuredBarId, type BarType } from './id'
 import { resolveEmotionalVector } from '../quest-grammar/emotional-vector-resolver'
+import { runQualityGate } from './quality-gate'
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -103,6 +104,9 @@ export async function translateBarSeedToAsset(
     const current = meta?.metabolization?.maturity ?? 'undefined'
     throw new SeedMaturityError(current)
   }
+  // Jev quality gate (SPEC-jev-quality-gate-001): shadow logs and proceeds;
+  // enforce rejects below the calibrated threshold; Jev failure always proceeds.
+  await runQualityGate(seed)
 
   // Build NL prompt
   const prompt = buildUserPrompt(seed)
