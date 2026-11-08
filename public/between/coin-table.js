@@ -52,6 +52,7 @@ import { inFrame } from "./voice.js";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { SUITS, SELF, PLANT, withPlant, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
+import { twoMovesFor, turnSlip, leanOf } from "./iching/two-move.js";
 import { leavesOf, castsOn, openAt, pageKeys, whoOf, lineOn, newPage, tabName, NAME_MAX } from "./iching/book.js";
 import { DEPTHS as CARD_DEPTHS, DEPTH_NAMES as CARD_NAMES, COST as CARD_COST, COPY as DECK_COPY, HINTS as CARD_HINTS, WORDS_MAX, newGoal, wordCard, cardsOf, mirrorHope } from "./friendcraft/deck.js";
 
@@ -369,6 +370,8 @@ export function mount(B, opts = {}) {
     if (!hexTable || !readings) return;
     s.cast = castFromTosses(s.tosses, hexTable, "coin-table");
     s.move = moveOf(s.cast, s.who, readings);
+    s.slips = s.move.invite ? null : twoMovesFor(hexTable, s.move.n, { text: s.move.reading }); // the two slips (iching-two-move FR-002, FR-007): same cast, same slips
+    s.slip = null;
     cardKey = "";
     if (s.move.invite) layLink(s);
   }
@@ -393,13 +396,23 @@ export function mount(B, opts = {}) {
     if (!s || !s.move || s.did) return;
     // a named page's move is kept with {name} in it: the name lives only in the book's pages (FR-006)
     const stored = s.leaf && s.leaf.kind === "named" && s.cast ? moveOf(s.cast, whoOf(s.leaf, { store: true }), readings) : s.move;
-    const id = "c" + hkey(), entry = pageKeys(keptEntry(stored, Date.now()), s.leaf);
+    const id = "c" + hkey(), entry = pageKeys(keptEntry(s.slip ? { ...stored, line: s.slip.move } : stored, Date.now()), s.leaf);
+    if (s.slip) entry.lean = leanOf(s.move.n, s.slip); // the lean the charge keeps (FR-006)
     s.did = "kept"; cardKey = "";
+    if (s.slip && !down() && !s.who.standIn) plantSlip(s.move.n, s.slip); // the slip is a BAR seed in the satchel (FR-008); nothing waits on it
     if (s.leaf) localBookAt = s.leaf.key;
     if (down() || s.who.standIn) { localKept[id] = entry; return; }
     try { await B.homeWrite({ casts: { [id]: entry }, ...(s.leaf ? { bookAt: s.leaf.key } : {}) }); }
     catch (e) { s.did = null; cardKey = ""; if (B.toast) B.toast("That did not save. Check your connection and try again."); }
   }
+  /** Taking a slip plants it in the satchel as a BAR seed (bars-engine /api/between/slip). A failed plant leaves the kept cast as it is. */
+  function plantSlip(hexagram, slip) {
+    const sit = s;
+    fetch("/api/between/slip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ do: "take", hexagram, slip: { side: slip.side, trigram: slip.trigram, good: slip.good } }) })
+      .then(r => r.json()).then(r => { if (sit && r && r.barId) { sit.seedId = r.barId; cardKey = ""; } }).catch(() => {});
+  }
+  function takeSlip(i) { if (!s || !s.slips || s.did) return; s.slip = s.slips[i]; keep(); }
+  function turnTo2(i) { if (!s || !s.slips || s.did) return; s.slips[i] = turnSlip(s.slips[i]); cardKey = ""; }
   function letGo() { if (!s || !s.move || s.did) return; s.did = "let"; coinsHome(); cardKey = ""; }
   async function leaveFaceUp() {
     if (!s || !s.move || s.did || s.who.kind !== "them" || !(hereRoom() === s.who.room || (down() && s.who.standIn))) return;
@@ -661,7 +674,7 @@ export function mount(B, opts = {}) {
     if (s.did) {
       const said = { kept: s.leaf && s.leaf.kind === "named" ? `Kept on ${s.leaf.name}'s page in your book.` : `Kept on ${s.leaf && s.leaf.kind !== "self" ? s.leaf.name + "'s" : "your own"} page, and it waits in ${MOVE_LANES[keptEntry(m, 0).lane]} among your next moves for a week.`, let: "Let go. The coins are back on the table.", faceup: `Left face up. ${m.who.name} sees its lines on the table and can answer it with a turn.` }[s.did];
       const again = m.invite && !s.sent ? [{ label: "Copy or share the link", sub: "You send it yourself, when it feels right", on: sendLink }] : [];
-      return { subject, head, sub: `${m.line} ${said}`, foot: atBook ? "" : "One cast a sitting. Stand and sit again to toss again.", actions: [...again, leave] };
+      return { subject, head, sub: `${s.slip ? s.slip.move : m.line} ${said}${s.slip ? " It is a seed in your satchel now; when you have done it, it grows." : ""}`, foot: atBook ? "" : "One cast a sitting. Stand and sit again to toss again.", actions: [...again, leave] };
     }
     if (m.invite) { // Show Up for a spark: the invitation, laid with the link; nothing leaves the table unless you send it
       const link = s.link === null ? "The link is coming." : s.link ? s.link : "The link did not come. Go into the spark's room and use Invite.";
@@ -669,7 +682,11 @@ export function mount(B, opts = {}) {
         actions: [{ label: s.sent ? "Copy or share it again" : "Copy or share the link", sub: "Nothing is sent until you send it", on: sendLink },
           { label: "Keep it for later", sub: `${MOVE_LANES.invite} · waits among your next moves`, on: keep }, { label: "Let it go", quiet: true, on: letGo }] };
     }
-    const acts = [{ label: m.line, sub: `Keep it · ${MOVE_LANES[m.lane]} · draw from ${suit.name} next`, on: keep }];
+    const acts = [];
+    if (s.slips) for (const [i, sl] of s.slips.entries()) { // the two slips: inner from the lower trigram, outer from the upper (ic2-which-trigram B)
+      acts.push({ label: sl.move, sub: `${sl.side === "inner" ? "Inward" : "Outward"} · ${sl.good}, ${sl.trigram}. Take it and it waits in your satchel as a seed`, on: () => takeSlip(i) });
+      acts.push({ label: `Turn it to ${sl.otherGood}`, sub: `${sl.overdone}`, quiet: true, on: () => turnTo2(i) });
+    } else acts.push({ label: m.line, sub: `Keep it · ${MOVE_LANES[m.lane]} · draw from ${suit.name} next`, on: keep });
     if (m.who.kind === "them" && (hereRoom() === m.who.room || (down() && s.who.standIn && !hereRoom() && builtFor === "hollow"))) acts.push({ label: "Leave it face up", sub: `${m.who.name} sees it when they sit here`, on: leaveFaceUp });
     acts.push({ label: "Let it go", quiet: true, on: letGo });
     return { subject, head, sub: m.reading + heading, actions: acts };

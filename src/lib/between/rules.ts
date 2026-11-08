@@ -11,6 +11,7 @@
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
 import { HOLLOW_CARD, lettersWrite } from './shared-pick'
+import { PAIRS as TWO_MOVE_PAIRS } from '../../../public/between/iching/two-move.js'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -349,7 +350,13 @@ const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers',
 export const CAST_LANES = ['yourself', 'between', 'partner'] as const
 export const CAST_SUITS = ['WU', 'CU', 'GU', 'SU'] as const
 const hexN = (v: unknown) => isNum(v) && Number.isInteger(v) && v >= 1 && v <= 64
-const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'page', 'line', 'at', 'done'])
+const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'page', 'line', 'at', 'done', 'lean'])
+/** The taken slip's lean on a kept cast (iching-two-move FR-006): which trigram, which good, inner or outer; no words. */
+function leanOk(l: unknown): boolean {
+  if (!isObj(l) || !Object.keys(l).every(k => k === 'side' || k === 'trigram' || k === 'good')) return false
+  const pair = (TWO_MOVE_PAIRS as Record<string, string[]>)[l.trigram as string]
+  return (l.side === 'inner' || l.side === 'outer') && !!pair && pair.includes(l.good as string)
+}
 /* The record book (Six-faces-council spec .specify/specs/record-book; his A on rb-new-page and on rb-ad-look-1): one page
  * per person you toss for. A name you write on the blank page lives here only, in `pages` (a name, the spark planted for it
  * later or null, when it was written); `bookAt` is the page the book opens to. A kept cast never carries a name: it names
@@ -366,6 +373,7 @@ function homeCastOk(c: Doc, pages: Doc = {}): boolean {
   if (!hexN(c.n) || (c.becomes != null && !hexN(c.becomes))) return false
   if (!(CAST_LANES as readonly string[]).includes(c.lane as string) || !(CAST_SUITS as readonly string[]).includes(c.suit as string)) return false
   if (c.page != null && !isId(c.page)) return false
+  if (c.lean != null && !leanOk(c.lean)) return false
   if (c.lane === 'yourself') { if (c.room != null) return false }
   else if (c.page != null ? c.room != null || !isObj(pages[c.page as string]) : !isId(c.room)) return false
   return typeof c.line === 'string' && c.line.length > 0 && isNote(c.line) && isNum(c.at) && (c.done == null || isNum(c.done))
