@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 // The I Ching two-move card (Six-faces-council .specify/specs/iching-two-move): two slips from a cast, inner from the
 // lower trigram and outer from the upper, each the good of its trigram's pair the charge is short of.
-import { leanOf, PAIRS, shortOf, snapshotOf, STOCK, trigramsOf, turnSlip, twoMovesFor } from '../../../../public/between/iching/two-move.js'
+import { leanOf, openSlip, PAIRS, shortOf, snapshotOf, STOCK, trigramsOf, turnSlip, twoMovesFor } from '../../../../public/between/iching/two-move.js'
 import { TRIGRAM_RELATIONAL_PAIR2 } from '@/lib/creator-scene-grid-deck/archetype-trigram-polarities'
 
 const table = JSON.parse(readFileSync(join(__dirname, '../../../../public/between/iching/hexagrams.json'), 'utf8'))
@@ -70,5 +70,21 @@ describe('the lean on a kept cast (FR-006)', () => {
     expect(ok({ side: 'inner', trigram: 'Heaven', good: 'Restraint' }).ok).toBe(true)
     expect(ok({ side: 'inner', trigram: 'Heaven', good: 'Nurture' }).ok).toBe(false)
     expect(ok({ side: 'inner', trigram: 'Heaven', good: 'Restraint', note: 'words' }).ok).toBe(false)
+  })
+})
+
+describe('one draw per charge until met (FR-005)', () => {
+  const now = Date.parse('2026-11-08T12:00:00Z'), day = 864e5
+  const open = { n: 11, lean: { side: 'inner', trigram: 'Heaven', good: 'Restraint' }, at: now - day, done: null }
+  it('holds the page while a taken slip is not done', () => {
+    expect(openSlip([open], now)).toBe(open)
+  })
+  it('frees the page once the slip is done, or after a week', () => {
+    expect(openSlip([{ ...open, done: now }], now)).toBeNull()
+    expect(openSlip([{ ...open, at: now - 8 * day }], now)).toBeNull()
+  })
+  it('ignores kept casts that took no slip, and an empty page', () => {
+    expect(openSlip([{ ...open, lean: undefined }], now)).toBeNull()
+    expect(openSlip([], now)).toBeNull()
   })
 })

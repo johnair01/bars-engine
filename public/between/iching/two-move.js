@@ -103,3 +103,10 @@ export function leanOf(hexagram, slip) {
 export function snapshotOf(hexagram, slip, chargeId, drawnAt) {
   return { source: "iching-two-move", hexagram, side: slip.side, trigram: slip.trigram, good: slip.good, chargeId: chargeId || null, drawnAt: drawnAt || new Date().toISOString() };
 }
+
+/** One draw per charge until its spirit is met (FR-005): of the casts kept on a page, the one still holding an open slip
+    (it has a lean, is not done, and is under a week old, the same window as openCasts), or null. The page is closed to a
+    new toss while it returns one. @param {Array<{ lean?: unknown, done?: number | null, at?: number }>} casts the page's casts, newest first */
+export function openSlip(casts, now = Date.now()) {
+  return (casts || []).find(c => c && c.lean && !c.done && typeof c.at === "number" && now - c.at < 7 * 864e5) || null;
+}
