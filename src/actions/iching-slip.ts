@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization'
+import { gardensOf } from '@/lib/between/store'
 import { PAIRS, snapshotOf, STOCK } from '../../public/between/iching/two-move.js'
 
 /**
@@ -101,9 +102,24 @@ export async function markSlipDone(barId: string, input: { whatHappened: string 
       inputs: JSON.stringify({ ...prev, whatHappened: line }),
     },
   })
+  await freeCharge(playerId, (got.bar.plantSnapshot as { chargeId?: string | null } | null)?.chargeId)
   revalidatePath('/bars')
   revalidatePath(`/bars/${barId}`)
   return { ok: true }
+}
+
+/** FR-005: a charge is drawn on once until its spirit is met. Doing the slip stamps `done` on the kept cast in the
+ *  player's homeroom doc, which opens that page to a new toss. A missing cast or homeroom changes nothing. */
+async function freeCharge(playerId: string, chargeId: string | null | undefined) {
+  if (!chargeId || !/^[A-Za-z0-9_-]{1,64}$/.test(chargeId)) return
+  const homeId = (await gardensOf(playerId)).home?.id
+  if (!homeId) return
+  const where = { gardenId_playerId_key: { gardenId: homeId, playerId, key: 'home' as const } }
+  const row = await db.betweenPrivate.findUnique({ where })
+  const doc = row && row.data && typeof row.data === 'object' && !Array.isArray(row.data) ? (row.data as Record<string, any>) : null
+  const cast = doc?.casts?.[chargeId]
+  if (!doc || !cast || cast.done) return
+  await db.betweenPrivate.update({ where, data: { data: { ...doc, casts: { ...doc.casts, [chargeId]: { ...cast, done: Date.now() } } } } })
 }
 
 /** "Where this fits in the story": only the player writes it (FR-010); the game never fills it. */

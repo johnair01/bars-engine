@@ -52,7 +52,7 @@ import { inFrame } from "./voice.js";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { SUITS, SELF, PLANT, withPlant, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
-import { twoMovesFor, turnSlip, leanOf } from "./iching/two-move.js";
+import { twoMovesFor, turnSlip, leanOf, openSlip } from "./iching/two-move.js";
 import { leavesOf, castsOn, openAt, pageKeys, whoOf, lineOn, newPage, tabName, NAME_MAX } from "./iching/book.js";
 import { DEPTHS as CARD_DEPTHS, DEPTH_NAMES as CARD_NAMES, COST as CARD_COST, COPY as DECK_COPY, HINTS as CARD_HINTS, WORDS_MAX, newGoal, wordCard, cardsOf, mirrorHope } from "./friendcraft/deck.js";
 
@@ -355,7 +355,7 @@ export function mount(B, opts = {}) {
     B.homeWrite({ pages: { [want.pid]: { room: r.id } } }).catch(() => {});
   }
   function toss(fixed) {
-    if (!s || !s.who || s.cast || flipping || s.tosses.length >= 6 || s.source !== "table") return;
+    if (!s || !s.who || s.cast || flipping || s.tosses.length >= 6 || s.source !== "table" || heldSlip()) return;
     const t = fixed || tossThree();
     s.tosses.push(t);
     const { T } = place;
@@ -363,7 +363,10 @@ export function mount(B, opts = {}) {
     if (s.tosses.length === 6) settle();
     cardKey = "";
   }
+  /** One draw per charge until its spirit is met (iching-two-move FR-005): a page holding an open slip takes no new toss. */
+  function heldSlip() { return s && s.who && s.leaf && !s.cast ? openSlip(castsOn(s.leaf, homeNow())) : null; }
   function castAll(fixed) { // the book: the whole cast in one breath
+    if (heldSlip()) return;
     s.tosses = (fixed || Array.from({ length: 6 }, () => tossThree())).map(t => [...t]); settle();
   }
   function settle() {
@@ -397,18 +400,18 @@ export function mount(B, opts = {}) {
     // a named page's move is kept with {name} in it: the name lives only in the book's pages (FR-006)
     const stored = s.leaf && s.leaf.kind === "named" && s.cast ? moveOf(s.cast, whoOf(s.leaf, { store: true }), readings) : s.move;
     const id = "c" + hkey(), entry = pageKeys(keptEntry(s.slip ? { ...stored, line: s.slip.move } : stored, Date.now()), s.leaf);
-    if (s.slip) entry.lean = leanOf(s.move.n, s.slip); // the lean the charge keeps (FR-006)
+    if (s.slip) { const { hexagram, ...lean } = leanOf(s.move.n, s.slip); entry.lean = lean; } // the lean the charge keeps (FR-006); the cast already names the hexagram (n)
     s.did = "kept"; cardKey = "";
-    if (s.slip && !down() && !s.who.standIn) plantSlip(s.move.n, s.slip); // the slip is a BAR seed in the satchel (FR-008); nothing waits on it
+    if (s.slip && !down() && !s.who.standIn) plantSlip(s.move.n, s.slip, id); // the slip is a BAR seed in the satchel (FR-008); nothing waits on it
     if (s.leaf) localBookAt = s.leaf.key;
     if (down() || s.who.standIn) { localKept[id] = entry; return; }
     try { await B.homeWrite({ casts: { [id]: entry }, ...(s.leaf ? { bookAt: s.leaf.key } : {}) }); }
     catch (e) { s.did = null; cardKey = ""; if (B.toast) B.toast("That did not save. Check your connection and try again."); }
   }
   /** Taking a slip plants it in the satchel as a BAR seed (bars-engine /api/between/slip). A failed plant leaves the kept cast as it is. */
-  function plantSlip(hexagram, slip) {
+  function plantSlip(hexagram, slip, chargeId) { // chargeId is the kept cast's id: doing the slip frees that page for a new toss (FR-005)
     const sit = s;
-    fetch("/api/between/slip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ do: "take", hexagram, slip: { side: slip.side, trigram: slip.trigram, good: slip.good } }) })
+    fetch("/api/between/slip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ do: "take", hexagram, chargeId, slip: { side: slip.side, trigram: slip.trigram, good: slip.good } }) })
       .then(r => r.json()).then(r => { if (sit && r && r.barId) { sit.seedId = r.barId; cardKey = ""; } }).catch(() => {});
   }
   function takeSlip(i) { if (!s || !s.slips || s.did) return; s.slip = s.slips[i]; keep(); }
@@ -662,6 +665,8 @@ export function mount(B, opts = {}) {
       const sub = ans ? `They answered your cast with a turn: ${cardTitle(ans[1].card)}, ${DEPTH_NAMES[ans[1].depth].toLowerCase()}. Ask them for it when you next sit together.` : first.trim();
       return { subject: bookRect, book: true, head: "", sub, actions: [...acts, away] };
     }
+    const held = heldSlip();
+    if (held) return { subject, head: `For ${forName(s.who)}`, sub: `${held.line} You took this slip and it is still waiting in your satchel. A new toss for this page opens once you have done it, or in a week.`, actions: [leave] };
     if (!s.move || flipping) {
       const n = s.tosses.length;
       if (n === 6) return { subject, head: `For ${forName(s.who)}`, sub: "The sixth line is falling.", actions: [] };
