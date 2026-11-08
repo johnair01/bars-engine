@@ -125,6 +125,7 @@ export default defineConfig({
     'src/lib/between/__tests__/pick.test.ts',
       'src/lib/between/__tests__/iching-cast.test.ts',
       'src/lib/between/__tests__/coin-connection.test.ts',
+      'src/lib/between/__tests__/two-move.test.ts',
       'src/lib/between/__tests__/record-book.test.ts',
       'src/lib/between/__tests__/friendcraft-deck.test.ts',
       'src/lib/between/__tests__/friendcraft-join.test.ts',
