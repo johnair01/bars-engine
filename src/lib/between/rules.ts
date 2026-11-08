@@ -519,9 +519,10 @@ export function journeyWrite(doc: Doc): Verdict {
   for (const k of Object.keys(doc)) if (!(JOURNEY_KEYS as readonly string[]).includes(k)) return bad('Your journey keeps the program, pack, pages, moves and places, nothing more.')
   const program = doc.program
   if (program != null) {
-    if (!isObj(program) || !noKeysBeyond(program, ['id', 'coachId', 'startsOn', 'endsOn', 'agreedOn', 'closedAt'])) return bad('A program is its people and its dates.')
+    if (!isObj(program) || !noKeysBeyond(program, ['id', 'coachId', 'startsOn', 'endsOn', 'agreedOn', 'sendAgreedOn', 'closedAt'])) return bad('A program is its people and its dates.')
     if (!dayOk(program.startsOn) || !dayOk(program.endsOn)) return bad('A program has a start date and an end date.')
     if (program.agreedOn != null && !dayOk(program.agreedOn)) return bad('The day you agreed to the storage rule is a date.')
+    if (program.sendAgreedOn != null && !dayOk(program.sendAgreedOn)) return bad('The day you agreed to what sending a page means is a date.')
   }
   const pages = listOf(doc.pages), pack = listOf(doc.pack), moves = listOf(doc.moves), places = listOf(doc.places), learned = listOf(doc.learned)
   if (!pages || !pack || !moves || !places || !learned) return bad('Your journey keeps lists.')
@@ -544,7 +545,14 @@ export function journeyWrite(doc: Doc): Verdict {
     if (!isObj(pl) || !noKeysBeyond(pl, ['id', 'state']) || typeof pl.id !== 'string' || !ID.test(pl.id) || typeof pl.state !== 'string' || !JOURNEY_PLACES.has(pl.state)) return bad('A place is lit, dark, ajar or befriended.')
   }
   for (const l of learned) if (typeof l !== 'string' || !ID.test(l)) return bad('A learned move is a name.')
-  for (const pg of pages) if (!isObj(pg) || typeof pg.id !== 'string' || !ID.test(pg.id) || typeof pg.objectId !== 'string' || !isObj(pg.pass as Json)) return bad('A page is a 3-2-1 pass on one object.')
+  const mayShare = isObj(program) && dayOk(program.agreedOn) && dayOk(program.sendAgreedOn)
+  for (const pg of pages) {
+    if (!isObj(pg) || typeof pg.id !== 'string' || !ID.test(pg.id) || typeof pg.objectId !== 'string' || !isObj(pg.pass as Json)) return bad('A page is a 3-2-1 pass on one object.')
+    if (pg.sentAt != null) {
+      if (typeof pg.sentAt !== 'string' || pg.sentAt.length > 40) return bad('A page is sent at a time.')
+      if (!mayShare) return no(403, 'A page goes to your coach only after you have agreed to what sending a page means.')
+    }
+  }
   return yes
 }
 
