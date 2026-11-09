@@ -164,6 +164,7 @@ export const FAR_SPINES = FAR_PEAKS.map((p, i) => {
   FAR_PEAKS.forEach((q, k) => { if (k === i || Math.hypot(q[0] - _C[0], q[1] - _C[1]) >= dp) return; const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = q; } });
   return best && bd < 700 ? [p, best] : null;
 }).filter(Boolean);
+let _stairFoot = 0; // the road's height where the Watch's stair begins, set once below
 export function farHeight(x, z) {
   // foothill floor: low hills that climb gently from the sect's skirt out to the ranges
   const dc = Math.hypot(x - _C[0], z - _C[1]), rn = ridged(x, z);
@@ -185,9 +186,17 @@ export function farHeight(x, z) {
     const crest = a[2] + (b[2] - a[2]) * (t * t * (3 - 2 * t));
     h = Math.max(h, crest - Math.max(0, d - 6) * (0.55 + 0.4 * rn));
   }
+  // Round 14d: the Watch's summit is a flat plinth top 9 m across, and its stair (far.js) climbs the last 20 m of the
+  // road in a straight even pitch, so the avatar's feet follow the steps instead of the slope under them.
+  { const a = FAR_ROAD[FAR_ROAD.length - 2], W = FAR_ROAD[FAR_ROAD.length - 1], dx = W[0] - a[0], dz = W[1] - a[1], D = Math.hypot(dx, dz);
+    const dw = Math.hypot(x - W[0], z - W[1]); if (dw < 9.5) h = Math.max(h, W[2] + 0.1);
+    const along = ((W[0] - x) * dx + (W[1] - z) * dz) / D, side = Math.abs(((x - W[0]) * dz - (z - W[1]) * dx) / D);
+    if (side < 3 && along > 8 && along < 20) h = Math.max(h, _stairFoot + (W[2] + 0.1 - _stairFoot) * Math.min(1, (20 - along) / 11)); }
   return h;
 }
 export const FAR_EXTENT = 1900;
+{ const a = FAR_ROAD[FAR_ROAD.length - 2], W = FAR_ROAD[FAR_ROAD.length - 1], D = Math.hypot(W[0] - a[0], W[1] - a[1]);
+  _stairFoot = farHeight(W[0] - (W[0] - a[0]) * 20 / D, W[1] - (W[1] - a[1]) * 20 / D); }
 
 // One heightfield from the pads: inverse distance to each pad's rim, flat inside every pad.
 function rawHeight(x, z) {

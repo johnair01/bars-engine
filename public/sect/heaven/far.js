@@ -3,6 +3,8 @@
 import * as THREE from 'three';
 import { heightAt, GRID, FAR_ROAD, FAR_EXTENT, WATCH } from './layout.js';
 import { materials, hall } from './kit.js';
+// the road's ribbon ends this far short of the Watch; a stone stair climbs the rest to the plinth top
+const STAIR_FOOT = 20, PLINTH_TOP = 9;
 
 export function farLand(S, floors) {
   const E = FAR_EXTENT, N = 300, cx = 24, cz = -9;
@@ -45,7 +47,9 @@ export function farLand(S, floors) {
   { const v = [], idx = [], wHalf = 3;
     for (let k = 1; k < FAR_ROAD.length; k++) { const a = FAR_ROAD[k - 1], b = FAR_ROAD[k], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
       const nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L;
-      for (let s = k === 1 ? 0 : 2; s <= L; s += 2) { const x = a[0] + (b[0] - a[0]) * s / L, z = a[1] + (b[1] - a[1]) * s / L;
+      // round 14d: the last leg stops at the foot of the Watch's stair instead of ramping up the plinth's side
+      const Le = k === FAR_ROAD.length - 1 ? L - STAIR_FOOT : L;
+      for (let s = k === 1 ? 0 : 2; s <= Le; s += 2) { const x = a[0] + (b[0] - a[0]) * s / L, z = a[1] + (b[1] - a[1]) * s / L;
         for (const o of [-wHalf, wHalf]) { const px = x + nx * o, pz = z + nz * o; v.push(px, heightAt(px, pz) + 0.3, pz); } } }
     for (let i = 0; i + 3 < v.length / 3; i += 2) idx.push(i, i + 1, i + 2, i + 1, i + 3, i + 2);
     const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); rg.setIndex(idx); rg.computeVertexNormals();
@@ -55,13 +59,37 @@ export function farLand(S, floors) {
   { const y0 = heightAt(WATCH[0], WATCH[1]);
     const pl = new THREE.Mesh(new THREE.CylinderGeometry(9, 11, 9, 8), new THREE.MeshStandardMaterial({ color: '#a59a86', roughness: 1 }));
     pl.position.set(WATCH[0], y0 - 4.4, WATCH[1]); pl.receiveShadow = pl.castShadow = true; S.add(pl); }
+  // Round 14d: a stone stair from the road's end up the last steep pitch to the plinth top, each step a block down to
+  // the slope so no gap shows under it. The stair joins the walkable floors.
+  { const a = FAR_ROAD[FAR_ROAD.length - 2], dx = WATCH[0] - a[0], dz = WATCH[1] - a[1], D = Math.hypot(dx, dz), ux = dx / D, uz = dz / D;
+    const y0 = heightAt(WATCH[0], WATCH[1]) + 0.1, fx = WATCH[0] - ux * STAIR_FOOT, fz = WATCH[1] - uz * STAIR_FOOT, yf = heightAt(fx, fz) + 0.3;
+    const run = STAIR_FOOT - PLINTH_TOP, n = Math.max(6, Math.round((y0 - yf) / 0.6)), geo = [];
+    const sm = new THREE.MeshStandardMaterial({ color: '#b3a68c', roughness: 1 }), G = new THREE.Group();
+    // pale treads and dark risers, so each step reads from the road below instead of one brown ramp
+    const tread = new THREE.MeshStandardMaterial({ color: '#d6cbb2', roughness: 1 }), riser = new THREE.MeshStandardMaterial({ color: '#7d725f', roughness: 1 });
+    const stepM = [sm, sm, tread, sm, sm, riser];
+    for (let i = 0; i < n; i++) { const d = STAIR_FOOT - (i + 0.5) * run / n, x = WATCH[0] - ux * d, z = WATCH[1] - uz * d;
+      const top = yf + (y0 - yf) * (i + 1) / n, bot = Math.min(heightAt(x, z), top) - 1.5;
+      const st = new THREE.Mesh(new THREE.BoxGeometry(6, top - bot, run / n + 0.05), stepM);
+      st.position.set(x, (top + bot) / 2, z); st.rotation.y = Math.atan2(ux, uz); st.castShadow = st.receiveShadow = true; G.add(st); }
+    // low parapets either side of the stair
+    for (const o of [-3.4, 3.4]) { const mx = WATCH[0] - ux * (STAIR_FOOT + PLINTH_TOP) / 2 - uz * o, mz = WATCH[1] - uz * (STAIR_FOOT + PLINTH_TOP) / 2 + ux * o;
+      const len = Math.hypot(run, y0 - yf), wall = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, len), sm);
+      wall.position.set(mx, (yf + y0) / 2 + 0.5, mz); wall.rotation.set(0, Math.atan2(ux, uz), 0, 'YXZ'); wall.rotateX(-Math.atan2(y0 - yf, run)); G.add(wall); }
+    G.name = 'watchStair'; S.add(G); G.children.forEach(c => floors.push(c)); }
   // stone lantern posts every 40 m along the road, so its line reads from the court
   const post = new THREE.CylinderGeometry(0.5, 0.7, 3, 6); post.translate(0, 1.5, 0);
   const pts = [];
   for (let k = 1; k < FAR_ROAD.length; k++) { const a = FAR_ROAD[k - 1], b = FAR_ROAD[k], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    for (let s = 0; s < L; s += 40) { const u = s / L, x = a[0] + (b[0] - a[0]) * u + 4, z = a[1] + (b[1] - a[1]) * u; pts.push([x, z]); } }
+    const nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L; // round 14d: set beside the road on its normal, not 4 m east (which put some in the road)
+    for (let s = 0; s < (k === FAR_ROAD.length - 1 ? L - STAIR_FOOT : L); s += 40) { const u = s / L, x = a[0] + (b[0] - a[0]) * u + nx * 5, z = a[1] + (b[1] - a[1]) * u + nz * 5; pts.push([x, z, k >= FAR_ROAD.length - 3]); } }
   const I = new THREE.InstancedMesh(post, new THREE.MeshStandardMaterial({ color: '#d8c9a6', emissive: '#ffb860', emissiveIntensity: 0.25 }), pts.length);
   const m4 = new THREE.Matrix4();
   pts.forEach(([x, z], i) => { m4.makeTranslation(x, heightAt(x, z), z); I.setMatrixAt(i, m4); }); S.add(I);
+  // Round 14d: the posts on the Watch's switchbacks carry lit lantern heads, so the zigzag up its face shows from the
+  // anchor as a line of lights climbing to the pavilion's lamp.
+  { const lit = pts.filter(p => p[2]), head = new THREE.BoxGeometry(1.4, 1.6, 1.4); head.translate(0, 3.9, 0);
+    const H = new THREE.InstancedMesh(head, new THREE.MeshStandardMaterial({ color: '#ffd9a0', emissive: '#ffb050', emissiveIntensity: 1.6 }), lit.length);
+    lit.forEach(([x, z], i) => { m4.makeTranslation(x, heightAt(x, z), z); H.setMatrixAt(i, m4); }); S.add(H); }
   return { T, W };
 }
