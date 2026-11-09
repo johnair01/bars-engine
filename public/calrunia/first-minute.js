@@ -20,7 +20,7 @@
    What is kept: the homeroom's private doc (rules.ts homeWrite) holds `minute` = { ember, mirror, hope, vine: time done,
    skip: { ember, mirror, hope: time skipped } }, and `oriented`, the time the last vine fell. */
 
-import { careOf } from "../between/focus.js";
+import { stageOf as careOf } from "../between/focus.js";
 
 /** The beats in order, and the second each one may start at, as the still's storyboard times them. */
 export const STEPS = ["wake", "ember", "mirror", "hope", "vine", "open"];

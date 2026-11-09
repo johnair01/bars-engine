@@ -110,9 +110,17 @@ describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
     expect(garden).toMatch(/canSitOn = id => !seatTaken\(id\) && !\(sitBlocked\(\)/)
     expect(garden).toMatch(/function sitAtHearth\(\) \{ if \(sitBlocked\(\)\) return;/)
     expect(garden).toMatch(/if \(hm \|\| sitBlocked\(\)/)
-    expect(garden).toMatch(/PREVIEW_HOST && \/\^\[0-4\]\$\/\.test\(KQ\.get\("care"\)/) // ?care= is a preview only
+    expect(garden).toMatch(/PREVIEW_HOST && \/\^\[0-4\]\$\/\.test\(KQ\.get\("stage"\) \|\| KQ\.get\("care"\)/) // ?stage= (alias ?care=) is a preview only
+    expect(garden).toMatch(/SPIRIT_SEED = PREVIEW_HOST/) // ?spirit=<days> too (FR-031)
     const doCare = garden.slice(garden.indexOf('function doCare('), garden.indexOf('/* What a tap on the nook does'))
     expect(doCare).toContain('minuteAct("ember", "done", patch)') // care 0 and the ember beat are one write (FR-019)
     expect(doCare).not.toMatch(/care: c \+ 2|care: 4/)
+    expect(doCare).toMatch(/stage: c \+ 1, stageAt: at, spirit: spiritFed\(/) // one write: the stage and the hearth spirit's feeding (FR-023, FR-024)
+    expect(doCare).toContain('given: { spirit: "hearth", room: null, at }')
+    expect(garden).toContain('case "hearthgive"')
+    expect(garden).toContain('data-act="hearthGive"')
+    expect(garden).toContain("No ember waits. Checking in leaves one.")
+    expect(garden).toContain("Go do it. The fire keeps your ember warm until you're back.")
+    expect(garden).not.toMatch(/Sit at the hearth|sit with it/i)
   })
 })
