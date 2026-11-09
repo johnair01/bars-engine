@@ -3,6 +3,7 @@
 // built from rooms.json so their metres match round 4's plans.
 import * as THREE from 'three';
 import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
+import { greatCourt } from './anchor.js';
 import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE } from './layout.js';
 
 export const PAL = {
@@ -38,6 +39,7 @@ const dressed = (w, h, d, col) => {
 // Everything that blocks the avatar, as oriented boxes; and every room whose roof lifts when you step inside.
 export const colliders = [];
 export const interiors = [];
+export const GREAT = {}; // the great court's frame and marks, for the anchor view and its students
 export const floors = []; // meshes tap-to-walk may land on
 
 // A frame: a group at (x, z) on the ground, turned so local -z faces `face` ([x, z]) and local +z points away.
@@ -207,13 +209,9 @@ export function places(S, rooms) {
   { const G = frame(S, P.gate, 0, AXIS[7]); paifang(G, 0, 0, 9, 6.5); box(G, -9, 6, 5, 4, 3, PAL.plaster); }
   // Arrival court: gatehouse, arrival hall (12 bunks), notice wall
   { const G = frame(S, P.arrival, 12, P.summit); inside(G, 0, 10, 'arrival-hall', 'The arrival court'); hall(G, -12, -6, 7, 6, 3.4); box(G, 10, -8, 6, 0.4, 2.2, PAL.paper); }
-  // Great court: censer, chore board, the lathe bell in its frame
-  { const G = frame(S, P.great, 25, P.summit);
-    box(G, 0, 0, 1.4, 1.4, 1.2, '#7d6a3a'); box(G, 12, -2, 4, 0.3, 2.4, PAL.wood);
-    for (const sx of [-1, 1]) box(G, -12 + sx * 1.8, 6, 0.4, 0.4, 4.6, PAL.wood);
-    box(G, -12, 6, 4.4, 0.5, 0.5, PAL.beam, { y0: 4.6, collide: false });
-    const bell = new THREE.Mesh(new THREE.LatheGeometry([[0.0, 0], [0.75, 0], [0.72, 0.15], [0.6, 0.6], [0.55, 1.4], [0.42, 1.75], [0.12, 1.85], [0, 1.85]].map(([r, y]) => new THREE.Vector2(r, y)), 28), mat('#7d6a3a', { metalness: 0.6, roughness: 0.45 }));
-    bell.position.set(-12, 2.6, 6); bell.castShadow = true; G.add(bell);
+  // Great court (round 11): drawn toward the anchor painting at eye height (anchor.js); round 10's censer and post bell are gone.
+  { const G = frame(S, P.great, 25, P.summit); GREAT.G = G;
+    Object.assign(GREAT, greatCourt(G, { collide: (x, z, w, d, y0, h) => pushCollider(G, x, z, w, d, y0, h) }));
   }
   // Summit: the founder's hall (its south doors face the great court) and the Heaven altar, open sky, behind it
   { const G = frame(S, P.summit, 90, P.great, true);
@@ -275,7 +273,7 @@ export function forest(S) {
 export function routePosts(S) {
   for (const r of ROUTE) {
     const y = heightAt(...r.at);
-    const px = r.at[0] + 3, pz = r.at[1] - 1; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.2, 8), mat(PAL.plaster)); post.position.set(px, heightAt(px, pz) + 1.6, pz); post.castShadow = true; S.add(post);
+    const px = r.at[0] + 3, pz = r.at[1] - 1; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.2, 8), mat(PAL.plaster)); post.position.set(px, heightAt(px, pz) + 1.6, pz); post.userData.routeBadge = true; post.castShadow = true; S.add(post);
     const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
     x.fillStyle = '#a3322a'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill(); x.strokeStyle = '#fff8ea'; x.lineWidth = 6; x.stroke();
     x.fillStyle = '#fff8ea'; x.font = 'bold 64px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(r.n), 64, 68);

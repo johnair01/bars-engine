@@ -25,7 +25,7 @@ export function atmosphere(S, R, { sun, hemi, fog }) {
         vec3 hor = vec3(0.98, 0.80, 0.60), mid = vec3(0.86, 0.80, 0.74), top = vec3(0.50, 0.62, 0.76);
         vec3 c = mix(hor, mid, smoothstep(0.0, 0.18, h)); c = mix(c, top, smoothstep(0.18, 0.75, h));
         float s = max(dot(normalize(vD), sunDir), 0.0);
-        c += vec3(1.0, 0.78, 0.45) * (pow(s, 6.0) * 0.35 + pow(s, 60.0) * 0.6) + vec3(1.0, 0.95, 0.85) * smoothstep(0.9985, 0.9995, s);
+        c += vec3(1.0, 0.78, 0.45) * (pow(s, 12.0) * 0.16 + pow(s, 90.0) * 0.35) + vec3(1.0, 0.95, 0.85) * smoothstep(0.9985, 0.9995, s);
         if (h < 0.0) c = mix(c, vec3(0.93, 0.86, 0.78), smoothstep(0.0, -0.1, h));
         gl_FragColor = vec4(c, 1.0); }`,
   }));
