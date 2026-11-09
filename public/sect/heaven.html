@@ -37,6 +37,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { heightAt, ROUTE, P, COURTS } from './heaven/layout.js';
 import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors, colliders, GREAT } from './heaven/world.js';
 import { ANCHOR_VIEW } from './heaven/anchor.js';
+import { farLand } from './heaven/far.js';
 import { people } from './heaven/people.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
 import { atmosphere, placeSun } from './heaven/atmo.js';
@@ -59,6 +60,7 @@ atmosphere(S, R, { sun, hemi, fog });
 
 const rooms = await (await fetch('./heaven/rooms.json')).json();
 terrain(S);
+farLand(S, floors); // round 14b: the far region as land, with the ridge road to the Watch
 for (const c of COURTS) court(S, c, rooms);
 places(S, rooms);
 forest(S);
@@ -188,7 +190,7 @@ function shot(name) {
   cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { shot, ready, jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun };
+window.heaven = { shot, ready, jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 </script>
 </body></html>

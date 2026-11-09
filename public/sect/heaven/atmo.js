@@ -14,7 +14,7 @@ export function atmosphere(S, R, { sun, hemi, fog }) {
   R.toneMappingExposure = 1.12;
   sun.color.set('#ffc98a'); sun.intensity = 3.1;
   hemi.color.set('#ffe6c4'); hemi.groundColor.set('#5a4a3c'); hemi.intensity = 1.5;
-  fog.color.set('#e9cfae'); fog.near = 90; fog.far = 1300;
+  fog.color.set('#b7c4d1'); fog.near = 80; fog.far = 1800; // round 14b: blue-grey haze so the real far peaks layer like the painting's ranges
   S.background = null;
 
   // sky dome: a gradient with a glow round the sun
@@ -35,9 +35,10 @@ export function atmosphere(S, R, { sun, hemi, fog }) {
 
   // the ranges: rings of ridge cards, nearer rings darker and bluer, farther ones paler into the haze
   const ranges = new THREE.Group(); S.add(ranges);
+  // Round 14b: the two nearer rings are gone; real peaks stand there now (far.js). Only the farthest haze stays painted.
   // Round 13b: about twice as tall, so from the great court they rise over the ring's green shoulders into the sky as the
   // painting's do (at round 13 their tops sat at eye height behind the ring and barely showed).
-  const layers = [[1100, 520, '#5d6e7c', 0.95, 0.42], [1500, 640, '#7d8c98', 0.85, 0.34], [1950, 760, '#a7b0b6', 0.75, 0.28], [2350, 880, '#c9c4bd', 0.6, 0.22]];
+  const layers = [[2050, 760, '#aebdcb', 0.8, 0.28], [2400, 880, '#c8d2dc', 0.7, 0.22]];
   layers.forEach(([r, h, col, a, rough], li) => {
     const n = 14;
     for (let i = 0; i < n; i++) {

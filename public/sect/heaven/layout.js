@@ -107,6 +107,47 @@ export const ROUTE = [
 export const CRAG = { rim: 38 };
 export function cragNoise(th) { return 0.5 * Math.sin(th * 3 + 0.7) + 0.3 * Math.sin(th * 7 + 2.1) + 0.2 * Math.sin(th * 13 + 4.4); }
 
+// Round 14b: the far region, laid out as land (Wendell on cc-heaven-anchor-13, 4/10: "the distant space doesn't look
+// reachable ... lay the region out topographically"). The ranges were painted cards; now they are peaks and ridges in
+// one heightfield with the sect, rising out of the cloud sea, and a ridge road leaves the ring's west side, drops to a
+// saddle and climbs to the Watch, a pavilion on the nearest far peak. Peaks are placed by bearing from the great court
+// as the anchor view sees them (degrees left of its axis, metres out), so the left of the frame opens on real ranges.
+const _gf = (() => { const g = P.great, f = GREAT_FACE, u = [f[0] - g[0], f[1] - g[1]], L = Math.hypot(...u); return [u[0] / L, u[1] / L]; })();
+const bearing = (deg, d) => { const a = deg * Math.PI / 180, [fx, fz] = _gf, lx = fz, lz = -fx;
+  return [P.great[0] + (fx * Math.cos(a) + lx * Math.sin(a)) * d, P.great[1] + (fz * Math.cos(a) + lz * Math.sin(a)) * d]; };
+// [x, z, top m, slope, seed]
+export const FAR_PEAKS = [
+  [...bearing(14, 760), 140, 0.8, 1],   // the Watch
+  [...bearing(25, 1050), 230, 0.75, 2], [...bearing(5, 1250), 280, 0.7, 3], [...bearing(36, 1450), 330, 0.65, 4],
+  [...bearing(17, 1700), 390, 0.6, 5], [...bearing(46, 1100), 200, 0.75, 6], [...bearing(-3, 1650), 360, 0.6, 7],
+  [...bearing(28, 1750), 360, 0.6, 17], [...bearing(9, 1500), 330, 0.65, 18],
+  [...bearing(-24, 950), 220, 0.75, 8], [...bearing(-34, 1350), 320, 0.65, 9], [...bearing(-16, 1550), 360, 0.6, 10],
+  [...bearing(-50, 1150), 250, 0.7, 11], [...bearing(-70, 1450), 330, 0.6, 12], [...bearing(-95, 1250), 240, 0.7, 13],
+  [...bearing(62, 1350), 280, 0.65, 14], [...bearing(80, 1600), 340, 0.6, 15], [...bearing(-120, 1500), 300, 0.6, 16],
+];
+export const WATCH = FAR_PEAKS[0];
+// The ridge road: from the ring walk at its west side, down to a saddle, up to the Watch. [x, z, crest height]
+const _rs = ringAt(160), _wt = [WATCH[0], WATCH[1]], _mid = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+export const FAR_ROAD = [[..._rs, ringHeight(160)], [..._mid(_rs, _wt, 0.18), 40], [..._mid(_rs, _wt, 0.4), 22],
+  [..._mid(_rs, _wt, 0.6), 34], [..._mid(_rs, _wt, 0.82), 90], [WATCH[0], WATCH[1], WATCH[2]]];
+const spur = (th, s) => 0.5 * Math.sin(th * 5 + s) + 0.3 * Math.sin(th * 9 + s * 2.3) + 0.2 * Math.sin(th * 17 + s * 0.7);
+export function farHeight(x, z) {
+  let h = -230;
+  for (const [px, pz, top, sl, sd] of FAR_PEAKS) {
+    const d = Math.hypot(x - px, z - pz); if (d > (top + 230) / (sl * 0.6)) continue; // beyond its foot
+    const th = Math.atan2(z - pz, x - px);
+    h = Math.max(h, top - d * sl * (1 + 0.38 * spur(th, sd)) + 6 * Math.sin(x * 0.05 + sd) * Math.sin(z * 0.043 - sd));
+  }
+  for (let i = 1; i < FAR_ROAD.length; i++) {
+    const a = FAR_ROAD[i - 1], b = FAR_ROAD[i], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
+    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2)), d = Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz);
+    const crest = a[2] + (b[2] - a[2]) * (t * t * (3 - 2 * t));
+    h = Math.max(h, crest - Math.max(0, d - 5) * 0.8);
+  }
+  return h;
+}
+export const FAR_EXTENT = 1900;
+
 // One heightfield from the pads: inverse distance to each pad's rim, flat inside every pad.
 function rawHeight(x, z) {
   let num = 0, den = 0;
@@ -147,6 +188,7 @@ function buildGrid() {
       H[j * nx + i] = h + (Math.max(cliff, low) - h) * k;
     }
   }
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) H[j * nx + i] = Math.max(H[j * nx + i], farHeight(x0 + i * step, z0 + j * step)); // round 14b
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const x = x0 + i * step, z = z0 + j * step;
     for (const p of PADS) { const d = Math.hypot(x - p[0], z - p[1]) - p[3];
@@ -156,6 +198,7 @@ function buildGrid() {
 export function heightAt(x, z) {
   if (!H) buildGrid();
   const { x0, z0, step, nx, nz } = GRID;
+  if (x < x0 || z < z0 || x > x0 + (nx - 1) * step || z > z0 + (nz - 1) * step) return farHeight(x, z); // round 14b: the far region
   const fx = Math.min(nx - 1.001, Math.max(0, (x - x0) / step)), fz = Math.min(nz - 1.001, Math.max(0, (z - z0) / step));
   const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = j * nx + i;
   return (H[a] * (1 - u) + H[a + 1] * u) * (1 - v) + (H[a + nx] * (1 - u) + H[a + nx + 1] * u) * v;

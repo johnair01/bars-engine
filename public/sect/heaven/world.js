@@ -103,14 +103,14 @@ export function terrain(S) {
     { const dG = Math.hypot(x - P.great[0], z - P.great[1]);
       // round 13b: and the slopes that rise straight out of the court (up to 45 m) go grey-blue with height, so from the
       // anchor view they read as the painting's ranges in haze behind the hall instead of a green hill
-      const far = Math.min(1, Math.max(0, (dG - 32) / 60, dG < 160 ? (y - 28) / 10 : 0)); if (far > 0) c.lerp(t.set('#93a2af'), far); if (dG < 160 && y > 30) c.lerp(t.set('#aebdcc'), Math.min(0.7, (y - 30) / 25)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
+      const far = Math.min(1, Math.max(0, (dG - 32) / 60, dG < 160 ? (y - 28) / 10 : 0)); if (far > 0) c.lerp(t.set('#9cafc2'), far); if (dG < 160 && y > 22) c.lerp(t.set('#b4c3d2'), Math.min(0.85, (y - 22) / 22)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
     let steep = false;
     { // round 13: cliffs are bare rock, banded and streaked like the painting's crag; its crown keeps a little moss
       const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;
       const dS = Math.hypot(x - P.summit[0], z - P.summit[1]);
       if (sl > 0.7 || (dS < 60 && y > 52)) {
         const band = 0.5 + 0.5 * Math.sin(y * 0.9 + Math.sin(Math.atan2(z - P.summit[1], x - P.summit[0]) * 23) * 2.2);
-        c.set(band > 0.6 ? '#b9bec2' : band > 0.3 ? '#9aa1a8' : '#79828b'); // round 13b, 13c: pale blue-grey rock in the haze, so the warm sun doesn't turn it tan
+        c.set(band > 0.6 ? '#ccd1d5' : band > 0.3 ? '#b0b8bf' : '#8f99a3'); // round 13b, 13c: pale blue-grey rock in the haze, so the warm sun doesn't turn it tan
         { const m = 0.5 + 0.5 * Math.sin(x * 0.21 + Math.sin(z * 0.17) * 3) * Math.sin(z * 0.19 + y * 0.31); if (m > 0.72) c.lerp(t.set('#5d7a4e'), Math.min(0.8, (m - 0.72) * 4)); } // round 13c: moss and shrubs clinging in the cliff's ledges, as the painting's crag has
         if (sl < 1.1 && dS < 60) c.lerp(t.set('#6f8355'), 0.45);
         steep = sl > 0.7;
