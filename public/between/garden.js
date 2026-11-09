@@ -3682,8 +3682,12 @@ function directView(key, tall) {
 function doCare(c, eid) {
   const e = eid && embersWaiting().find(([id]) => id === eid), at = now();
   if (!e) { toast("No ember waits. Checking in leaves one."); return; }
-  caredThisVisit = true; standUp();
-  const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));
+  caredThisVisit = true;
+  /* hearth give (his A on hw5-hearth-give-look-2): a figure that kneels at the hearth stays knelt and holds the ember
+     out to the fire (cult/kneel.js); any other figure gets up and walks to the hearth as before */
+  const knelt = meState.sitting && meState.body && meState.body.give && meState.body.kneeling;
+  if (knelt) meState.body.give(); else standUp();
+  const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (!knelt && d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));
   const spot = hollow && hollow.handles.stage ? hollow.handles.stage.careSpot(c) : null;
   burst((spot || HEARTH_AT).clone().setY(0.5), elHex(e[1].feel));
   directCam = { key: "hearth", t0: performance.now() };
