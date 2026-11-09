@@ -5,6 +5,9 @@
 The pack names what the object is made of, in metres, and the scene it should sit in. This builds the candidate,
 measures the parts it made, and fails the checks the numbers can settle. It does not judge how the object looks;
 that stays Wendell's look.
+
+Sizes come from each part's own dimensions, not its world bounding box: a shaft tilted 8 degrees would otherwise
+measure a third of a metre wide and fail as too thick to be a shaft.
 """
 import json
 import os
@@ -39,50 +42,50 @@ def parts():
     for o in bpy.data.objects:
         if o.type != "MESH":
             continue
-        pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
-        lo = Vector(tuple(min(p[i] for p in pts) for i in range(3)))
-        hi = Vector(tuple(max(p[i] for p in pts) for i in range(3)))
-        dim = hi - lo
-        out.append({"name": o.name, "lo": lo, "hi": hi, "height": dim[2],
-                    "span": max(dim[0], dim[1]), "thin": max(dim[0], dim[1])})
+        zs = [(o.matrix_world @ Vector(c)).z for c in o.bound_box]
+        dims = sorted((float(d) for d in o.dimensions), reverse=True)
+        out.append({"name": o.name, "lo_z": min(zs), "hi_z": max(zs),
+                    "long": dims[0], "mid": dims[1], "short": dims[2]})
     return out
 
 
 def measure(pack, ps):
     c = pack["object_checks"]
     checks = []
-    shaft = max((p for p in ps if p["height"] >= c["shaft"]["min_height"]
-                 and p["height"] / max(p["thin"], 1e-6) >= c["shaft"]["min_aspect"]),
-                key=lambda p: p["height"], default=None)
+    sh = c["shaft"]
+    shaft = max((p for p in ps if sh["min_height"] <= p["long"] <= sh["max_height"]
+                 and p["long"] / max(p["short"], 1e-6) >= sh["min_aspect"]),
+                key=lambda p: p["long"], default=None)
     checks.append({"check": "shaft", "ok": bool(shaft),
-                   "detail": (f"{shaft['name']} {shaft['height']:.2f} m tall, "
-                              f"{shaft['height'] / max(shaft['thin'], 1e-6):.0f}x its thickness") if shaft
-                   else f"no part at least {c['shaft']['min_height']} m tall and {c['shaft']['min_aspect']}x thin"})
+                   "detail": (f"{shaft['name']} {shaft['long']:.2f} m long, "
+                              f"{shaft['long'] / max(shaft['short'], 1e-6):.0f}x its thickness") if shaft
+                   else f"no part between {sh['min_height']} and {sh['max_height']} m long and {sh['min_aspect']}x thin"})
+    bl = c["blade"]
     blade = None
     if shaft:
-        above = [p for p in ps if p is not shaft and p["lo"].z >= shaft["hi"].z - 0.05]
-        blade = max((p for p in above if p["height"] >= c["blade"]["min_length"]
-                     and p["span"] >= c["blade"]["min_width"]), key=lambda p: p["hi"].z, default=None)
+        above = [p for p in ps if p is not shaft and p["lo_z"] >= shaft["hi_z"] - 0.05]
+        blade = max((p for p in above if p["long"] >= bl["min_length"] and p["mid"] >= bl["min_width"]),
+                    key=lambda p: p["hi_z"], default=None)
     checks.append({"check": "blade", "ok": bool(blade),
-                   "detail": (f"{blade['name']} {blade['height']:.2f} m by {blade['span']:.2f} m above the shaft")
+                   "detail": (f"{blade['name']} {blade['long']:.2f} m by {blade['mid']:.2f} m above the shaft")
                    if blade else "no blade above the shaft at the pack's size"})
     gap = None
     if blade:
-        below = [p for p in ps if p is not blade and p["hi"].z <= blade["lo"].z + 0.001]
+        below = [p for p in ps if p is not blade and p["hi_z"] <= blade["lo_z"] + 0.001]
         if below:
-            gap = round(blade["lo"].z - max(p["hi"].z for p in below), 3)
-    ok = gap is not None and gap <= c["contact_max_gap"]
-    checks.append({"check": "contact", "ok": ok,
+            gap = round(blade["lo_z"] - max(p["hi_z"] for p in below), 3)
+    tol = c["contact_max_gap"]
+    checks.append({"check": "contact", "ok": gap is not None and gap <= tol,
                    "detail": (f"blade sits {gap * 100:.0f} cm above the nearest part below it"
                               if gap is not None else "no part below the blade"),
-                   "tolerance_cm": c["contact_max_gap"] * 100})
+                   "tolerance_cm": tol * 100})
     lo_z, hi_z = c["rack"]["top_between"]
-    rack = max((p for p in ps if lo_z <= p["hi"].z <= hi_z and p["span"] >= c["rack"]["min_span"]),
-               key=lambda p: p["span"], default=None)
+    rack = max((p for p in ps if lo_z <= p["hi_z"] <= hi_z and p["long"] >= c["rack"]["min_span"]),
+               key=lambda p: p["long"], default=None)
     checks.append({"check": "rack", "ok": bool(rack),
-                   "detail": (f"{rack['name']} spans {rack['span']:.2f} m with its top at {rack['hi'].z:.2f} m")
-                   if rack else f"no rack spanning {c['rack']['min_span']} m with a top between {lo_z} and {hi_z} m"})
-    top = max((p["hi"].z for p in ps), default=0.0)
+                   "detail": (f"{rack['name']} {rack['long']:.2f} m wide with its top at {rack['hi_z']:.2f} m")
+                   if rack else f"no rack {c['rack']['min_span']} m wide with a top between {lo_z} and {hi_z} m"})
+    top = max((p["hi_z"] for p in ps), default=0.0)
     th = c["total_height"]
     checks.append({"check": "total height", "ok": th["min"] <= top <= th["max"],
                    "detail": f"{top:.2f} m against the pack's {th['min']} to {th['max']} m"})
@@ -93,15 +96,15 @@ def scene(pack, ps):
     s = pack.get("scene") or {}
     out = []
     if "floor" in s:
-        floor = max((p for p in ps if p["height"] <= s["floor"]["max_thickness"]
-                     and p["span"] >= s["floor"]["min_span"]), key=lambda p: p["span"], default=None)
+        floor = max((p for p in ps if (p["hi_z"] - p["lo_z"]) <= s["floor"]["max_thickness"]
+                     and p["long"] >= s["floor"]["min_span"]), key=lambda p: p["long"], default=None)
         out.append({"check": "floor under it", "ok": bool(floor),
-                    "detail": f"{floor['name']} spans {floor['span']:.2f} m" if floor else "no floor"})
+                    "detail": f"{floor['name']} {floor['long']:.2f} m across" if floor else "no floor"})
     if "wall" in s:
-        wall = max((p for p in ps if p["height"] >= s["wall"]["min_height"]
-                    and p["span"] >= s["wall"]["min_span"]), key=lambda p: p["height"], default=None)
+        wall = max((p for p in ps if (p["hi_z"] - p["lo_z"]) >= s["wall"]["min_height"]
+                    and p["long"] >= s["wall"]["min_span"]), key=lambda p: p["hi_z"] - p["lo_z"], default=None)
         out.append({"check": "wall behind it", "ok": bool(wall),
-                    "detail": f"{wall['name']} {wall['height']:.2f} m tall" if wall else "no wall"})
+                    "detail": f"{wall['name']} {wall['hi_z'] - wall['lo_z']:.2f} m tall" if wall else "no wall"})
     return out
 
 
@@ -115,8 +118,8 @@ def main():
     extras = scene(pack, ps)
     result = {"candidate": os.path.basename(src), "pack": pack["id"],
               "ok": all(c["ok"] for c in checks), "checks": checks, "scene": extras,
-              "parts": sorted(({"name": p["name"], "height": round(p["height"], 2),
-                                "lo_z": round(p["lo"].z, 2), "hi_z": round(p["hi"].z, 2)} for p in ps),
+              "parts": sorted(({"name": p["name"], "long": round(p["long"], 2),
+                                "lo_z": round(p["lo_z"], 2), "hi_z": round(p["hi_z"], 2)} for p in ps),
                               key=lambda p: -p["hi_z"])[:8]}
     if "--json" in sys.argv:
         with open(sys.argv[sys.argv.index("--json") + 1], "w", encoding="utf-8") as fh:
