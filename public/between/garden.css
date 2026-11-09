@@ -185,6 +185,7 @@ body.seatedmoment .mcap { top: auto; bottom: calc(22vh + env(safe-area-inset-bot
 .hm { position: fixed; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 5; display: flex; justify-content: center; pointer-events: none; padding: 0 16px; }
 .hm[hidden] { display: none; }
 .hmrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; pointer-events: auto; }
+.hmlit { margin: 0 0 6px; text-align: center; font-size: 13px; color: #ffb866; pointer-events: none; }
 .hm .hmlink { background: none; border: 0; box-shadow: none; padding: 10px 6px; min-height: 44px; color: rgba(251,239,220,.62); font: italic 400 1rem/1.2 var(--display);
   text-shadow: 0 1px 8px rgba(0,0,0,.8); letter-spacing: .01em; }
 .hm .hmlink:hover, .hm .hmlink:focus-visible { color: #fbefdc; }
