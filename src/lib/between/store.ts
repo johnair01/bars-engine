@@ -9,6 +9,11 @@ import { cleanCopy } from '../../../public/between/friendcraft/deck.js'
 import { bowls } from '../../../public/between/growth.js'
 import { COST } from '../../../public/between/friendcraft/deck.js'
 import { draw, forYou, isMove, move, seen, worded } from './turn'
+import { lightEmber } from '@/lib/economy/ember'
+import { energyFeel } from '@/lib/economy/coin-marks'
+
+/** The place name a kept turn gives its embers and coins (Calrunia's name; the economy never says "friendcraft"). */
+export const TABLE_TURN = 'table-turn'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -64,7 +69,17 @@ export async function snapshot(gardenId: string, who: Who) {
   // a card asked of its owner (or opened with tea) reaches her with her own words, from her own deck, for her alone (turn.ts forYou)
   const waitingOnMe = items.some(r => { const d = asDoc(r.data); return d.kind === 'turn' && d.owner === who.playerId && (d.status === 'asked' || d.status === 'opened') })
   const myDeck = waitingOnMe ? await deckOf(who.playerId) : null
-  const itemView = (id: string, d: Doc): Doc => { const base = itemFor(who.playerId, d), fy = forYou(d, who.playerId, myDeck); return fy ? { ...base, forYou: fy } : base }
+  // a kept turn carries the coins resting on its page: `{ id, by, feel, mine }` and nothing else until the story is opened (FR-012)
+  const keptBars = items.map(r => asDoc(r.data)).filter(d => d.kind === 'turn' && d.status === 'kept' && typeof d.bar === 'string').map(d => d.bar as string)
+  const resting = keptBars.length ? await db.vibulon.findMany({ where: { stakedOnBarId: { in: keptBars } }, orderBy: { createdAt: 'asc' }, select: { id: true, ownerId: true, stakedOnBarId: true, energy: true } }) : []
+  const coinsOn = (barId: unknown) => resting.filter(c => c.stakedOnBarId === barId).slice(0, 2)
+    .map(c => ({ id: c.id, by: c.ownerId, feel: energyFeel(c.energy), mine: c.ownerId === who.playerId }))
+  const itemView = (id: string, d: Doc): Doc => {
+    let base = itemFor(who.playerId, d)
+    if (d.kind === 'turn' && d.status === 'kept') base = { ...base, coins: coinsOn(d.bar) }
+    const fy = forYou(d, who.playerId, myDeck)
+    return fy ? { ...base, forYou: fy } : base
+  }
   return {
     member: true, invite: g.inviteToken, garden: viewGarden(data, who.playerId), names, peers,
     items: Object.fromEntries(items.map(r => [r.id, itemView(r.id, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
@@ -353,6 +368,9 @@ async function applyMove(tx: Prisma.TransactionClient, gardenId: string, items: 
     })
     await tx.barShare.create({ data: { barId: bar.id, fromUserId: owner, toUserId: drawer } })
     next = { ...next, bar: bar.id }
+    // Each friend finds a lit ember in their own pouch (FR-003). Keyed by turn and player, so lighting twice changes nothing.
+    await lightEmber(tx, { playerId: owner, place: TABLE_TURN, from: { id: tid, with: drawer } })
+    await lightEmber(tx, { playerId: drawer, place: TABLE_TURN, from: { id: tid, with: owner } })
   }
   await put(tx, gardenId, { table: 'items', id: tid }, next)
   return { ok: true, turn: seen(next), id: tid }
