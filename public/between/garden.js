@@ -3685,7 +3685,7 @@ function doCare(c, eid) {
   caredThisVisit = true;
   /* hearth give (his A on hw5-hearth-give-look-2): a figure that kneels at the hearth stays knelt and holds the ember
      out to the fire (cult/kneel.js); any other figure gets up and walks to the hearth as before */
-  const knelt = meState.sitting && meState.body && meState.body.give && meState.body.kneeling;
+  const knelt = meState.sitting && meState.body && meState.body.give && (meState.body.kneeling || (meState.body.stance && meState.body.stance() === "sit"));
   if (knelt) meState.body.give(); else standUp();
   const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (!knelt && d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));
   const spot = hollow && hollow.handles.stage ? hollow.handles.stage.careSpot(c) : null;
