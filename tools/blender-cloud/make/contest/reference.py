@@ -7,7 +7,8 @@ measures the parts it made, and fails the checks the numbers can settle. It does
 that stays Wendell's look.
 
 Sizes come from each part's own dimensions, not its world bounding box: a shaft tilted 8 degrees would otherwise
-measure a third of a metre wide and fail as too thick to be a shaft.
+measure a third of a metre wide and fail as too thick to be a shaft. Widths that must lie flat in the world, like a
+rack crossbar, come from the world box instead.
 """
 import json
 import os
@@ -42,9 +43,12 @@ def parts():
     for o in bpy.data.objects:
         if o.type != "MESH":
             continue
-        zs = [(o.matrix_world @ Vector(c)).z for c in o.bound_box]
+        pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        zs = [v.z for v in pts]
+        wx = max(v.x for v in pts) - min(v.x for v in pts)
+        wy = max(v.y for v in pts) - min(v.y for v in pts)
         dims = sorted((float(d) for d in o.dimensions), reverse=True)
-        out.append({"name": o.name, "lo_z": min(zs), "hi_z": max(zs),
+        out.append({"name": o.name, "lo_z": min(zs), "hi_z": max(zs), "wx": wx, "wy": wy,
                     "long": dims[0], "mid": dims[1], "short": dims[2]})
     return out
 
@@ -80,10 +84,11 @@ def measure(pack, ps):
                               if gap is not None else "no part below the blade"),
                    "tolerance_cm": tol * 100})
     lo_z, hi_z = c["rack"]["top_between"]
-    rack = max((p for p in ps if lo_z <= p["hi_z"] <= hi_z and p["long"] >= c["rack"]["min_span"]),
-               key=lambda p: p["long"], default=None)
+    rack = max((p for p in ps if lo_z <= p["hi_z"] <= hi_z
+                and max(p["wx"], p["wy"]) >= c["rack"]["min_span"]),
+               key=lambda p: max(p["wx"], p["wy"]), default=None)
     checks.append({"check": "rack", "ok": bool(rack),
-                   "detail": (f"{rack['name']} {rack['long']:.2f} m wide with its top at {rack['hi_z']:.2f} m")
+                   "detail": (f"{rack['name']} {max(rack['wx'], rack['wy']):.2f} m wide with its top at {rack['hi_z']:.2f} m")
                    if rack else f"no rack {c['rack']['min_span']} m wide with a top between {lo_z} and {hi_z} m"})
     top = max((p["hi_z"] for p in ps), default=0.0)
     th = c["total_height"]
@@ -97,12 +102,16 @@ def scene(pack, ps):
     out = []
     if "floor" in s:
         floor = max((p for p in ps if (p["hi_z"] - p["lo_z"]) <= s["floor"]["max_thickness"]
-                     and p["long"] >= s["floor"]["min_span"]), key=lambda p: p["long"], default=None)
+                     and max(p["wx"], p["wy"]) >= s["floor"]["min_span"]),
+                    key=lambda p: max(p["wx"], p["wy"]), default=None)
         out.append({"check": "floor under it", "ok": bool(floor),
-                    "detail": f"{floor['name']} {floor['long']:.2f} m across" if floor else "no floor"})
+                    "detail": f"{floor['name']} {max(floor['wx'], floor['wy']):.2f} m across"
+                    if floor else "no floor"})
     if "wall" in s:
         wall = max((p for p in ps if (p["hi_z"] - p["lo_z"]) >= s["wall"]["min_height"]
-                    and p["long"] >= s["wall"]["min_span"]), key=lambda p: p["hi_z"] - p["lo_z"], default=None)
+                    and max(p["wx"], p["wy"]) >= s["wall"]["min_span"]
+                    and min(p["wx"], p["wy"]) <= 0.6),
+                   key=lambda p: p["hi_z"] - p["lo_z"], default=None)
         out.append({"check": "wall behind it", "ok": bool(wall),
                     "detail": f"{wall['name']} {wall['hi_z'] - wall['lo_z']:.2f} m tall" if wall else "no wall"})
     return out
