@@ -43,6 +43,13 @@ export const COPY = {
   takeBack: "Take my coin back",
   storyNone: "This coin has no story yet.",
   restFail: "That did not land. Try again in a moment.",
+  openFull: "Open this card full screen",
+  fullLabel: "Your card, full screen",
+  closeFull: "Back to the book",
+  nextKick: "What the two of you can do next",
+  nextOne: "Read the card aloud to each other. Name the line that is hardest to live up to today.",
+  nextTwo: "Say what is in the way between you and that line, in one sentence each.",
+  nextThree: "Pick one small thing each of you will do before the next tea. When yours is done, set an ember into this BAR.",
 };
 export const HINTS = {
   light: "Write a small ask a friend could make of you, or an easy hour you could spend together.",
@@ -54,7 +61,7 @@ export const HINTS = {
    stays the fallback, so an empty field returns to it. `hopeOnly` and `hope` are joined to the player's own words and stay
    fixed. Every edit keeps the keep list: no digit, no markup, one short line (keep list 5). */
 export const COPY_FIELDS = ["ask", "anyone", "add", "another", "takeOut", "open", "hint.light", "hint.middle", "hint.deep",
-  "draw", "askRoad", "earn", "back", "openTea", "asked", "offer", "notToday", "lineDrawer", "lineOwner", "kept", "sees", "sealed", "barKick", "emberHeld", "setIn", "takeBack", "storyNone", "restFail"];
+  "draw", "askRoad", "earn", "back", "openTea", "asked", "offer", "notToday", "lineDrawer", "lineOwner", "kept", "sees", "sealed", "barKick", "emberHeld", "setIn", "takeBack", "storyNone", "restFail", "openFull", "fullLabel", "closeFull", "nextKick", "nextOne", "nextTwo", "nextThree"];
 export const COPY_MAX = 200;
 export const DEFAULT_COPY = { ...COPY, ...Object.fromEntries(DEPTHS.map(d => ["hint." + d, HINTS[d]])) };
 /** An edit as the server keeps it: only known fields, trimmed single lines under COPY_MAX, no digit, no angle bracket. */

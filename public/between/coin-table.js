@@ -295,7 +295,7 @@ export function mount(B, opts = {}) {
   }
   function turnTo(i) {
     if (!s || s.who) return;
-    const L = leaves(); s.at = Math.max(0, Math.min(L.length - 1, i)); bookSig = ""; cardKey = "";
+    const L = leaves(); s.at = Math.max(0, Math.min(L.length - 1, i)); fullOpen = false; bookSig = ""; cardKey = "";
     const leaf = L[s.at]; // the red ribbon marks the goal page last opened
     if (leaf && leaf.kind === "goal") { localBookAt = leaf.key; if (!down()) B.homeWrite({ bookAt: leaf.key }).catch(() => {}); }
     if (!bookEl.hidden) drawBook();
@@ -517,6 +517,13 @@ export function mount(B, opts = {}) {
   .rb-restact:focus-visible{outline:3px solid #5fc2ba;outline-offset:3px}
   .rb-bheld{display:flex;align-items:center;gap:12px;margin:18px 0 0;align-self:stretch;padding:0 4px}
   .rb-bheld p{margin:0;font:italic 400 14px/1.3 var(--rb-serif);color:#4a3826}
+  .rb-bar[data-rest=full]{cursor:pointer} .rb-bar[data-rest=full]:focus-visible{outline:3px solid #5fc2ba;outline-offset:4px}
+  .rb-full{position:fixed;inset:0;z-index:30;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(120% 70% at 50% 100%,rgba(232,170,96,.2),transparent 70%),#efdcbc;color:var(--ink,#3a2a1c);display:flex;justify-content:center}
+  .rb-fbody{width:min(92vw,460px);padding:56px 0 40px;display:flex;flex-direction:column;align-items:center}
+  .rb-full .rb-bar{width:min(78vw,340px);transform:none;padding:12px 14px 14px;margin-bottom:34px} .rb-full .rb-bwords{font-size:21px} .rb-full .rb-blines span{font-size:15px} .rb-full .rb-blines small{font-size:12px}
+  .rb-fclose{position:fixed;top:10px;left:12px;z-index:31;min-width:44px;min-height:44px;padding:0 14px;font:italic 400 16px/1 var(--rb-serif);color:inherit;background:rgba(251,243,227,.9);border:1px solid #c9b08a;border-radius:22px;cursor:pointer} .rb-fclose:focus-visible{outline:3px solid #5fc2ba;outline-offset:3px}
+  .rb-fkick{margin:26px 0 8px;font:400 18px/1.2 Marcellus,var(--rb-serif);align-self:flex-start}
+  .rb-fsteps{margin:0;padding:0 0 0 22px;align-self:stretch;display:grid;gap:10px;font:italic 400 16px/1.4 var(--rb-serif);color:#4a3826}
   .rb-ember{display:inline-block;flex:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 45% 40%,#fff6d8 0 18%,#ffd27a 40%,rgba(230,120,40,.9) 70%,rgba(160,60,20,0) 72%);box-shadow:0 0 14px 4px rgba(255,170,60,.85),0 0 30px 8px rgba(255,170,60,.85)}`;
   document.head.appendChild(bookCss);
   const bookEl = document.createElement("div"); bookEl.className = "rb"; bookEl.hidden = true; document.body.appendChild(bookEl);
@@ -533,24 +540,37 @@ export function mount(B, opts = {}) {
   /* the kept turn drawn as a BAR at the deck's 5:7 with the tea-bowl art (T013, FR-012 FR-013 FR-019 FR-020). A coin rests on its corner
      (its glow is the feeling it was minted with); touching it opens the story. Your worked ember for this turn waits under it. */
   const stories = {};          // coin id -> story lines, read when the coin is touched
-  let restOpen = null, restBusy = false;
+  let restOpen = null, restBusy = false, fullOpen = false;
   const mineKey = leaf => (B.workedEmberFor && leaf.tid && B.workedEmberFor(leaf.tid)) || null;
-  const restSig = () => JSON.stringify([restOpen, Object.keys(stories).length, restBusy]);
-  function barLeafHtml(leaf, open, side) {
+  const restSig = () => JSON.stringify([restOpen, Object.keys(stories).length, restBusy, fullOpen]);
+  function barParts(leaf, open, full) {
     const coins = (leaf.coins || []).slice(0, 2), ember = open && !coins.some(c => c.mine) ? mineKey(leaf) : null;
     const coinHtml = coins.length ? `<button type="button" class="rb-bcoin" data-rest="story" data-coin="${esc(coins[0].id)}" aria-label="Read this coin's story">${coins.map(c => VIB(glowOf(c.feel), coins.length > 1 ? 46 : 50)).join("")}</button>` : "";
     const lines = leaf.lines.map(l => `<li><span>${esc(l.words)}</span><small>${esc(l.name)}</small></li>`).join("");
     const art = `<div class="rb-bart${coins.length ? " lit" : ""}">${BOWLS}</div>`;
-    const card = `<div class="rb-bar${coins.length ? " warm" : ""}">${art}<p class="rb-bkick">${esc(DECK_COPY.barKick)}</p><h3 class="rb-bwords">${esc(leaf.words)}</h3><ul class="rb-blines">${lines}</ul>${coinHtml}</div>`;
+    const grab = open && !full ? ` data-rest="full" role="button" tabindex="0" aria-label="${esc(DECK_COPY.openFull)}"` : "";
+    const card = `<div class="rb-bar${coins.length ? " warm" : ""}"${grab}>${art}<p class="rb-bkick">${esc(DECK_COPY.barKick)}</p><h3 class="rb-bwords">${esc(leaf.words)}</h3><ul class="rb-blines">${lines}</ul>${coinHtml}</div>`;
     let below = "";
     const cid = restOpen && coins.find(c => c.id === restOpen);
     if (cid && stories[cid.id]) below += `<div class="rb-story">${stories[cid.id].map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
     if (open && ember && leaf.bar) below += `<div class="rb-bheld"><span class="rb-ember" aria-hidden="true"></span><p>${esc(DECK_COPY.emberHeld)}</p></div><button class="rb-restact" type="button" data-rest="catch" data-bar="${esc(leaf.bar)}" data-ember="${esc(ember[0])}" data-turn-id="${esc(leaf.tid)}"${restBusy ? " disabled" : ""}>${esc(DECK_COPY.setIn)}</button>`;
     else if (open && coins.some(c => c.mine) && leaf.bar) below += `<button class="rb-restact" type="button" data-rest="takeBack" data-bar="${esc(leaf.bar)}"${restBusy ? " disabled" : ""}>${esc(DECK_COPY.takeBack)}</button>`;
+    return { card, below };
+  }
+  function barLeafHtml(leaf, open, side) {
+    const { card, below } = barParts(leaf, open, false);
     return `<div class="rb-leaf ${side} rb-barleaf"${open ? "" : ` data-turn="-1"`}>${card}${below}</div>`;
+  }
+  /* a pulled card goes full screen with the next steps the two of you can take in the Between (Wendell, hi3-look-1, 2026-10-30:
+     "if you pull a card up it goes full screen with next steps the player can take in the between"). */
+  function fullHtml(leaf) {
+    const { card, below } = barParts(leaf, true, true);
+    const steps = [DECK_COPY.nextOne, DECK_COPY.nextTwo, DECK_COPY.nextThree].map(t => `<li>${esc(t)}</li>`).join("");
+    return `<div class="rb-full" role="dialog" aria-label="${esc(DECK_COPY.fullLabel)}"><button type="button" class="rb-fclose" data-rest="close">${esc(DECK_COPY.closeFull)}</button><div class="rb-fbody">${card}${below}<h4 class="rb-fkick">${esc(DECK_COPY.nextKick)}</h4><ol class="rb-fsteps">${steps}</ol></div></div>`;
   }
   async function restAct(el) {
     const kind = el.dataset.rest;
+    if (kind === "full" || kind === "close") { fullOpen = kind === "full"; bookSig = ""; if (s) drawBook(); return; }
     if (kind === "story") {
       const id = el.dataset.coin; if (restOpen === id) { restOpen = null; bookSig = ""; if (s) drawBook(); return; }
       restOpen = id; bookSig = "";
@@ -640,7 +660,7 @@ export function mount(B, opts = {}) {
     bookEl.classList.toggle("one", one);
     bookEl.innerHTML = `<div class="rb-book" role="dialog" aria-label="Your record book">${leafHtml(i > 0 ? L[i - 1] : null, false, home)}${leafHtml(L[i], true, home)}
       <nav class="rb-tabs" aria-label="Pages">${L.map((l, k) => `<button type="button" class="rb-tab${l.kind === "goal" || l.kind === "goalblank" ? " goal" : ""}${l.kind === "goal" && l.key === home.bookAt ? " mark" : ""}" data-at="${k}"${k === i ? ` aria-current="page"` : ""} aria-label="${l.kind === "blank" ? "A blank page" : l.kind === "goalblank" ? "A blank goal page" : l.kind === "goal" ? "Goal: " + esc(l.name) : esc(l.name)}">${esc(tabName(l, L.length))}</button>`).join("")}</nav>
-      <button type="button" class="rb-turn prev" data-turn="-1" aria-label="Turn back a page"${i > 0 ? "" : " hidden"}>${CHEV(-1)}</button><button type="button" class="rb-turn next" data-turn="1" aria-label="Turn the page"${i < L.length - 1 ? "" : " hidden"}>${CHEV(1)}</button></div>`;
+      ${fullOpen && L[i].kind === "turn" ? fullHtml(L[i]) : ""}<button type="button" class="rb-turn prev" data-turn="-1" aria-label="Turn back a page"${i > 0 ? "" : " hidden"}>${CHEV(-1)}</button><button type="button" class="rb-turn next" data-turn="1" aria-label="Turn the page"${i < L.length - 1 ? "" : " hidden"}>${CHEV(1)}</button></div>`;
     wireGoal(L, i);
     const inp = bookEl.querySelector(".rb-input");
     if (inp) { inp.value = s.draft || ""; inp.addEventListener("input", () => { if (s) { s.draft = inp.value; cardKey = ""; } });
@@ -658,6 +678,11 @@ export function mount(B, opts = {}) {
   bookEl.addEventListener("touchstart", e => { const p = e.touches[0]; swipe = p ? { x: p.clientX, y: p.clientY, t: performance.now() } : null; }, { passive: true });
   bookEl.addEventListener("touchend", e => { const p = e.changedTouches[0], w = swipe; swipe = null; if (!w || !p || !s) return;
     const dx = p.clientX - w.x, dy = Math.abs(p.clientY - w.y); if (Math.abs(dx) > 60 && dy < Math.abs(dx) * 0.6 && performance.now() - w.t < 700) turnTo((s.at || 0) + (dx < 0 ? 1 : -1)); });
+  addEventListener("keydown", e => { // Escape puts a full-screen card down; Enter or Space on the card picks it up
+    if (bookEl.hidden || !s) return;
+    if (e.key === "Escape" && fullOpen) { e.preventDefault(); e.stopPropagation(); restAct({ dataset: { rest: "close" } }); return; }
+    const g = e.target && e.target.closest && e.target.closest('[data-rest="full"]');
+    if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); restAct(g); } }, true);
   addEventListener("keydown", e => { // the arrows turn the pages while the book is open (the room's own arrows would stand you up)
     if (bookEl.hidden || !s || /input|textarea|select/i.test(e.target.tagName || "")) return;
     const k = e.key; if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(k)) return;
