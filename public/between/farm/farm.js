@@ -45,7 +45,7 @@ dayLight();
   g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.computeVertexNormals(); const m = mesh(g, toon('#ffffff', { vertexColors: true }), false); m.name = 'ground'; scene.add(m); }
 const groundPlane = new THREE.Plane(V(0, 1, 0), 0);
 // trees and a fence line at the far edge
-function tree(x, z, s = 1) { const G = new THREE.Group(); G.add(Object.assign(mesh(new THREE.CylinderGeometry(0.16 * s, 0.26 * s, 1.6 * s, 7), toon(PAL.bark)), { position: V(0, 0.8 * s, 0) }));
+function tree(x, z, s = 1) { const G = new THREE.Group(); { const tr = mesh(new THREE.CylinderGeometry(0.16 * s, 0.26 * s, 1.6 * s, 7), toon(PAL.bark)); tr.position.set(0, 0.8 * s, 0); G.add(tr); }
   for (let i = 0; i < 4; i++) { const b = mesh(new THREE.IcosahedronGeometry(rr(0.8, 1.15) * s, 2), toon([PAL.leafA, PAL.leafB, '#4f8a3a'][i % 3])); b.position.set(rr(-0.6, 0.6) * s, (1.9 + rr(0, 0.9)) * s, rr(-0.6, 0.6) * s); G.add(b); } G.position.set(x, 0, z); scene.add(G); }
 for (let i = 0; i < 9; i++) { const a = Math.PI * (0.1 + 0.8 * i / 8) + Math.PI; tree(Math.cos(a) * 12 + rr(-1, 1), Math.sin(a) * 9 - 1 + rr(-1, 1), rr(0.9, 1.4)); }
 tree(-11, 2, 1.3); tree(11.5, 1, 1.2);
@@ -53,7 +53,7 @@ tree(-11, 2, 1.3); tree(11.5, 1, 1.2);
 const portal = new THREE.Group();
 { const curve = new THREE.CatmullRomCurve3([V(-1, 0, 0), V(-1.1, 1.2, 0), V(-.6, 2.2, 0), V(0, 2.5, 0), V(.6, 2.2, 0), V(1.1, 1.2, 0), V(1, 0, 0)]);
   portal.add(mesh(new THREE.TubeGeometry(curve, 40, 0.16, 8), toon(PAL.bark))); const inner = mesh(new THREE.CircleGeometry(1, 24), glow(PAL.portal, { transparent: true, opacity: 0.55, side: THREE.DoubleSide }), false); inner.scale.set(0.95, 1.2, 1); inner.position.y = 1.25; portal.add(inner);
-  portal.position.set(0, 0, 8.6); scene.add(portal); }
+  portal.position.set(0, 0, 9.9); scene.add(portal); }
 
 // ---------- the slots ----------
 const slotGroup = new THREE.Group(); scene.add(slotGroup);
@@ -93,7 +93,7 @@ const avatar = new THREE.Group(); const arm = new THREE.Group(); let hoe;
   arm.position.set(0.2, 1.15, 0); hoe = new THREE.Group(); const shaft = mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 6), toon(PAL.wood)); shaft.position.set(0, -0.2, 0.3); shaft.rotation.x = 0.9; hoe.add(shaft);
   const blade = mesh(new THREE.BoxGeometry(0.2, 0.05, 0.1), toon('#8a8f98')); blade.position.set(0, -0.62, 0.62); hoe.add(blade); arm.add(hoe);
   const a = mesh(new THREE.CapsuleGeometry(0.05, 0.3, 3, 8), toon(PAL.skin)); a.position.set(0, -0.1, 0.05); arm.add(a); avatar.add(arm); }
-scene.add(avatar); avatar.position.set(0, 0, 7.2); avatar.rotation.y = Math.PI;
+scene.add(avatar); avatar.position.set(0, 0, 6.6); avatar.rotation.y = Math.PI;
 let goal = null, faceTo = null, swing = 0, bob = 0;
 function walkTo(i) { const [x, z] = slotXZ(i); const d = V(avatar.position.x - x, 0, avatar.position.z - z); if (d.length() < 0.01) d.set(0, 0, 1); d.setLength(0.85); goal = V(x + d.x, 0, z + d.z); faceTo = V(x, 0, z); }
 
@@ -104,11 +104,11 @@ let deep = null, camT = 0;
 const camPos = V(0, 7, 13), camLook = V(0, 0.5, 2);
 function frame(dt) {
   let wantP, wantL;
-  if (deep != null) { const [x, z] = slotXZ(deep); wantP = V(x - 0.35, 1.0, z + 2.6); wantL = V(x + 0.25, 0.55, z); }
+  if (deep != null) { const [x, z] = slotXZ(deep); const far = innerWidth < 700; wantP = V(x - (far ? 0.9 : 0.35), far ? 1.5 : 1.0, z + (far ? 5.2 : 2.6)); wantL = V(x - (far ? 0.3 : -0.25), 0.55, z); }
   else { const p = avatar.position; wantP = V(p.x * 0.6, 6.2, p.z + 7.5); wantL = V(p.x * 0.6, 0.4, p.z - 2); }
   const k = 1 - Math.pow(0.002, dt); camPos.lerp(wantP, k); camLook.lerp(wantL, k); camera.position.copy(camPos); camera.lookAt(camLook);
   const w = innerWidth, h = innerHeight; camera.aspect = w / h;
-  if (deep != null && w > 700) camera.setViewOffset(w, h, w * 0.14, 0, w, h); else camera.clearViewOffset();   // the plant sits left of centre, clear of the card on the right
+  if (deep != null && w > 700) camera.setViewOffset(w, h, w * 0.05, 0, w, h); else if (deep != null) camera.setViewOffset(w, h, 0, h * 0.26, w, h); else camera.clearViewOffset();   // the plant sits left of centre, clear of the card on the right
   camera.updateProjectionMatrix();
 }
 function resize() { renderer.setSize(innerWidth, innerHeight); } addEventListener('resize', resize); resize();
@@ -187,7 +187,7 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
   const r = await fetch('/api/between/farm?today=' + localDay()); if (!r.ok) { $('loading').textContent = r.status === 401 ? 'Sign in to bars-engine to open your farm' : 'The farm could not open'; return; }
   const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); fieldSpirits();
   await api({ act: 'enter' });
-  if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land. Every slot is grass until you till it.', 7000); avatar.position.set(0, 0, 7.2); setTimeout(() => { goal = V(0, 0, 5.2); }, 3500); }
+  if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land. Every slot is grass until you till it.', 7000); avatar.position.set(0, 0, 6.6); setTimeout(() => { goal = V(0, 0, 5.2); }, 3500); }
   else { avatar.position.set(0, 0, 8.4); goal = V(0, 0, 6.2); }
   $('loading').classList.add('gone'); tick();
   if (Q.get('deepen') != null) openDeepen(+Q.get('deepen'));
