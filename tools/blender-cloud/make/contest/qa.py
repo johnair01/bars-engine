@@ -4,7 +4,7 @@ Usage: python3 qa.py <candidate.py> [render_dir]
 
 Static tier (always runs):
   1. parses (ast)
-  2. has build() entrypoint
+  2. has build_object() entrypoint
   3. no network imports (requests, urllib, socket, http)
   4. no nondeterminism without fixed seed (random/np.random guarded)
 
@@ -27,10 +27,10 @@ def static_checks(path):
     src = open(path).read()
     tree = ast.parse(src)
     names = {n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
-    if "build" not in names:
-        return False, "no build() entrypoint"
-    bad = [a.module for a in ast.walk(tree) if isinstance(a, ast.Import) and a.module and a.module.split(".")[0] in FORBIDDEN_IMPORTS]
-    bad += [a.name.split(".")[0] for a in ast.walk(tree) if isinstance(a, ast.ImportFrom) and a.module and a.module.split(".")[0] in FORBIDDEN_IMPORTS]
+    if "build_object" not in names:
+        return False, "no build_object() entrypoint"
+    bad = [al.name.split(".")[0] for a in ast.walk(tree) if isinstance(a, ast.Import) for al in a.names if al.name.split(".")[0] in FORBIDDEN_IMPORTS]
+    bad += [a.module.split(".")[0] for a in ast.walk(tree) if isinstance(a, ast.ImportFrom) and a.module and a.module.split(".")[0] in FORBIDDEN_IMPORTS]
     if bad:
         return False, f"forbidden import(s): {sorted(set(bad))}"
     rngs = [n for n in ast.walk(tree) if (isinstance(n, ast.Attribute) and n.attr in {"seed", "randint", "random", "uniform", "normal", "choice"}) or (isinstance(n, ast.Call) and getattr(getattr(n.func, "attr", getattr(n.func, "id", "")), "lower", lambda: "") in {"random", "randint", "uniform", "normal", "choice"})]
@@ -53,7 +53,7 @@ def blender_checks(path, render_dir):
     for o in meshes:
         tris += len(o.data.polygons) if o.data.polygons else 0
     if not meshes:
-        return False, {"error": "no mesh objects after build()"}
+        return False, {"error": "no mesh objects after build_object()"}
     if tris > 200_000:
         return False, {"error": f"triangle budget exceeded: {tris}"}
     render = None

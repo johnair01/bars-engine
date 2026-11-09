@@ -1,0 +1,37 @@
+[
+ {
+  "oid": "obj1",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj1.py",
+  "size": 8772,
+  "ok": true,
+  "seconds": 12.3
+ },
+ {
+  "oid": "obj2",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj2.py",
+  "size": 16076,
+  "ok": true,
+  "seconds": 26.8
+ },
+ {
+  "oid": "obj3",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj3.py",
+  "size": 9290,
+  "ok": true,
+  "seconds": 13.6
+ },
+ {
+  "oid": "obj4",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj4.py",
+  "size": 9559,
+  "ok": true,
+  "seconds": 14.1
+ },
+ {
+  "oid": "obj5",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj5.py",
+  "size": 12738,
+  "ok": true,
+  "seconds": 17.6
+ }
+]
