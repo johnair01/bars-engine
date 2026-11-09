@@ -30,6 +30,8 @@ VM runs the bpy wheel, so the tier could finally be measured.
   `set_in()` colour helper. Not repaired here, because the contest measures what the contenders' code does.
 - Every added camera, light or world is named in that object's `render.added`, so the record separates what a candidate
   drew from what the harness supplied.
+- Both `results.json` files carry these numbers object by object in this branch. I diffed each committed file against
+  the one the VM wrote: byte-identical, and both parse.
 - Not checked: the objects on the sect's route, in motion, at courtyard scale in the game build, or on a GPU renderer.
   No quality call is made here; the look gate is Wendell's.
 
@@ -39,9 +41,6 @@ Nine stills sit in bars-engine's picture store, carried by the two look rows `he
 `heaven-sect-contest-glm-look-1`, each beside the round-4 courtyard anchor. They are not committed: the council repo
 ignores PNGs inside its stills folders and keeps frames in the store, and its round note for these renders lives at
 `council/callsheets/stills/2026-11-09-heaven-sect-contest-renders/`.
-
-The run's two `results.json` files are not in this branch either. This VM holds no git credential for bars-engine, so
-they wait with local commit d31174f7, and this report carries their numbers.
 
 ## Board rows
 
