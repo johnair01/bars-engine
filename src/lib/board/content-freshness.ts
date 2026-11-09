@@ -21,8 +21,10 @@ export type Freshness = {
   pages: Record<string, PageFreshness | null>
 }
 
-/** A board rebuilt on every push to main should not sit an hour and a half behind it. */
-export const DEFAULT_STALE_MINUTES = 90
+/** The board rebuilds on every push to main, so half an hour is already many pushes late: at 30 minutes a stall is
+ * loud enough to be worth looking at, and BOARD_CONTENT_STALE_MINUTES covers a season when the council is quiet on
+ * purpose (Wendell, 2026-11-09: "set it to 30 minutes so it fails louder"). */
+export const DEFAULT_STALE_MINUTES = 30
 
 /** BOARD_CONTENT_STALE_MINUTES, for a season when the council is quiet on purpose. */
 export function staleAfterMinutes(env: Record<string, string | undefined> = process.env): number {
