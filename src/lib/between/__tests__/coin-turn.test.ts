@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { COIN_COLORS, COIN_MATS } from '@/lib/economy/coin-face'
-// @ts-expect-error plain browser module
-import * as D from '../../../../public/between/coin-data.js'
+import * as Raw from '../../../../public/between/coin-data.js'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const D: any = Raw
 
 describe('coin turn data (FR-010 to FR-013)', () => {
     it('offers exactly the six colours and six materials the server accepts', () => {
