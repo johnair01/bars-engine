@@ -421,7 +421,7 @@ async function makeRoadFigure() {
   const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
   const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
   scene.add(W.holder);
-  const bag = new THREE.Group(); bag.position.set(0, 1.18, -0.2); W.holder.add(bag);
+  const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
   const plank = new THREE.Group();
   return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, update(dt, moving) { W.update(dt, moving); } };
 }
