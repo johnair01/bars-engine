@@ -2542,8 +2542,8 @@ function fsTick(t, dt, h, F) {
   // the spirit: a warm presence at the fire with two small eyes, there while you sit
   const sp = fsSpirit.userData; sp.k += ((sitting && live ? 1 : 0) - sp.k) * Math.min(1, dt * 0.8);
   fsSpirit.visible = sp.k > 0.01; fsSpirit.position.copy(HEARTH_AT).addScaledVector(F.f, -0.2).setY(0.72 + Math.sin(t * 0.9) * 0.02);
-  sp.glow.material.opacity = 0.22 * sp.k * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
-  fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink; // its eyes on you
+  sp.glow.material.opacity = 0.22 * sp.k * (hollow && hollow.handles.stage ? hollow.handles.stage.dim : 1) * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
+  fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink * (hollow && hollow.handles.stage ? hollow.handles.stage.dim : 1); // its eyes on you
   fragTick(t, F, h);
   if (!fs) return;
   // sticks in flight: an arc from the stack onto the fire, a puff of sparks as each lands
@@ -3209,6 +3209,7 @@ function minuteTick(t, dt) {
     const c = home && !storeDown ? hearthCareNow() : 4;
     if (stg.care !== c || !stageSynced) { stg.setCare(c, REDUCED || !stageSynced); stageSynced = true; }
     stg.offer = home && !storeDown && careOffered(c, caredThisVisit) != null && !hm;
+    stg.dim = home && !storeDown ? spiritGlow({ ...myHome, hearth: hearthNow() }, Date.now()) : 1; // the hearth spirit's glow and eyes follow its care word (FR-025)
   } else if (hf) hf.want = 1;
   if (hf) hf.ember = 0;
   // the vines: up while the minute keeps them; a vine whose step is done falls, slowly
