@@ -32,8 +32,9 @@ export function makeKneeler(THREE, obj, holder) {
   }
   const reset = () => { for (const n of names) b[n].quaternion.copy(rest[n]); b.hips.position.copy(hipsPos); holder.updateMatrixWorld(true); };
   const frame = () => { obj.updateMatrixWorld(true); const l = wp(b.shoulderL).sub(wp(b.shoulderR)); l.y = 0; l.normalize(); return { l, f: l.clone().cross(UP).normalize() }; };
+  /* Only the body's own mesh ("Figure"): the robe's panels hang below the knee and would read as the floor. */
   const lowest = () => { let m = Infinity; const v = new THREE.Vector3(); holder.updateMatrixWorld(true);
-    holder.traverse(o => { if (!o.isSkinnedMesh || !o.visible || !o.geometry.attributes.position) return; const pos = o.geometry.attributes.position, st = Math.max(1, Math.floor(pos.count / 4000));
+    holder.traverse(o => { if (!o.isSkinnedMesh || !o.visible || o.name !== "Figure" || !o.geometry.attributes.position) return; const pos = o.geometry.attributes.position, st = Math.max(1, Math.floor(pos.count / 4000));
       for (let i = 0; i < pos.count; i += st) { v.fromBufferAttribute(pos, i); o.applyBoneTransform(i, v); v.applyMatrix4(o.matrixWorld); m = Math.min(m, v.y); } });
     return m; };
 
@@ -57,12 +58,12 @@ export function makeKneeler(THREE, obj, holder) {
   function play(t, fitting = false) {
     reset(); const d = dims, fr = frame(), fy = holder.position.y;
     const O = holder.localToWorld(d.Oloc.clone()); O.y = fy;
-    const p = kneelPose(d, t);
+    const p = kneelPose(d, t), stand = { L: wp(b.ankleL), R: wp(b.ankleR) };   // where each foot stands in the bind pose, before the hips drop
     b.hips.position.copy(b.hips.parent.worldToLocal(P(fr, O, p.hip.l, p.hip.y, p.hip.f).add(d.hoff))); holder.updateMatrixWorld(true);
     aim(b.spine, b.neck, UP.clone().addScaledVector(fr.f, Math.tan(p.lean)));
     aim(b.neck, b.head, UP.clone().addScaledVector(fr.f, Math.tan(p.lean) * 0.6 + 0.04));
     for (const s of ["L", "R"]) {
-      const A = p.A[s] ? P(fr, O, p.A[s].l, p.A[s].y, p.A[s].f) : wp(b["ankle" + s]), K = P(fr, O, p.K[s].l, p.K[s].y, p.K[s].f);
+      const A = p.A[s] ? P(fr, O, p.A[s].l, p.A[s].y, p.A[s].f) : stand[s], K = P(fr, O, p.K[s].l, p.K[s].y, p.K[s].f);
       solve2(b["hip" + s], b["knee" + s], b["ankle" + s], A, K.clone().sub(wp(b["hip" + s])));
     }
     const h = b.head, tuck = new THREE.Quaternion().setFromAxisAngle(fr.l, 0.10 * sm(2.6, 4, t)), q = tuck.multiply(d.headQ.clone());
