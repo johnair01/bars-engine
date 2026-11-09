@@ -18,8 +18,11 @@ One contender, one file. Produce a single Python script per object that builds i
 
 ## Deliverable shape
 
-Each script: `build_<slug>() -> bpy scene state`, runs standalone (`python3 script.py`) writing `render_<slug>.png` at 640x360 (workbench/Eevee), plus a `--check` mode printing poly counts and material list. Deterministic: fixed seeds, no randomness.
+Each script defines `build_object()`, which builds the object into a fresh scene, and runs standalone (`python3 script.py`) writing `render_<slug>.png` at 640x360, plus a `--check` mode printing poly counts and material list. The gate calls `build_object()`; it refuses any other entrypoint name, and every candidate submitted so far uses it. Deterministic: fixed seeds, no randomness.
 
 ## QA gate (run after generation)
 
-python3 tools/blender-cloud/contest_qa.py <script.py>  — geometry checks, render check, palette check.
+```
+python3 tools/blender-cloud/make/contest/qa.py <script.py>            # geometry and palette checks
+python3 tools/blender-cloud/make/contest/qa.py --render <script.py>   # plus one 640x360 still and the blank-frame check
+```
