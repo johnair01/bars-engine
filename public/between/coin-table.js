@@ -52,6 +52,7 @@ import { inFrame } from "./voice.js";
 import { castFromTosses, loadTable, lineOf, tossThree } from "./iching/cast.js";
 import { SUITS, SELF, PLANT, withPlant, INVITE_WORDS, MOVE_LANES, whoChoices, mayAsk, moveOf, keptEntry, faceUpItem, answerOf, cardFor, DEPTHS } from "./iching/connection.js";
 import { SHELLS } from "../calrunia/room-kit.js";
+import { VIB, glowOf } from "./vibeulon.js";
 import { mount as mountTurns } from "./friendcraft/turn-table.js";
 import { leavesOf, castsOn, openAt, pageKeys, whoOf, lineOn, newPage, tabName, NAME_MAX } from "./iching/book.js";
 import { DEPTHS as CARD_DEPTHS, DEPTH_NAMES as CARD_NAMES, COST as CARD_COST, COPY as DECK_COPY, HINTS as CARD_HINTS, WORDS_MAX, newGoal, wordCard, cardsOf, mirrorHope } from "./friendcraft/deck.js";
@@ -273,7 +274,7 @@ export function mount(B, opts = {}) {
   const otherId = () => { if (preview && !opts.live) return "stand-in"; const g = B.view && B.view().g, me = ids().me; return g && g.members && g.members[me] ? Object.keys(g.members).find(u => u !== me) || null : null; };
   const tt = mountTurns(B, { preview: preview && !opts.live, opts, ids, other: otherId, otherName: () => (preview && !opts.live ? "Mara" : (otherId() && B.nameOf ? B.nameOf(otherId()) : "your friend")),
     refresh: () => { cardKey = ""; bookSig = ""; } });
-  const keptTurns = () => { const here = hereRoom(); return friendcraftOn() ? (here || (preview && !opts.live && opts.turn) ? tt.kept() : rooms().flatMap(r => r.turns || [])) : []; };
+  const keptTurns = () => { const here = hereRoom(); return friendcraftOn() ? (here || (preview && !opts.live && opts.turn) ? tt.kept().map(t => preview && !opts.live ? { ...t, coins: pvCoins[t.id] || (pvCoins[t.id] = previewCoinList()) } : t) : rooms().flatMap(r => r.turns || [])) : []; };
   function leaves() { const here = hereRoom(); return leavesOf(here ? rawChoices() : choices(), homeNow(), { blank: !here, deck: !here && friendcraftOn() ? deckNow() : null, turns: keptTurns(), nameOf: u => (u === ids().me ? "You" : B.nameOf ? B.nameOf(u) : "them") }); }
   async function homeSave(data) { // the homeroom's private doc; a preview or a store that is down keeps it on this page
     if (down()) { Object.assign(localPages, data.pages || {}); if (data.bookAt) localBookAt = data.bookAt; return true; }
@@ -492,7 +493,31 @@ export function mount(B, opts = {}) {
   .rb-anyone{margin:.7em 0 0;font:italic 400 clamp(14px,1.35vw,18px)/1.3 var(--rb-serif);color:var(--ink);text-align:center;text-wrap:balance}
   .rb-gin:focus-visible,.rb-line:focus-visible{outline:3px solid #5fc2ba;outline-offset:3px}
   .rb.one .rb-deck{gap:.6em}
-  .rb-said span{display:block;font:italic 400 clamp(16px,1.6vw,20px)/1.38 var(--rb-serif);text-wrap:pretty} .rb-said small{display:block;font:400 14px/1.3 var(--rb-serif);color:var(--faint)}`;
+  .rb-said span{display:block;font:italic 400 clamp(16px,1.6vw,20px)/1.38 var(--rb-serif);text-wrap:pretty} .rb-said small{display:block;font:400 14px/1.3 var(--rb-serif);color:var(--faint)}
+  .rb-restcoin{position:relative;display:inline-block;border-radius:50%;filter:drop-shadow(0 0 10px var(--glow)) drop-shadow(0 0 3px var(--glow))}
+  .rb-vib{border-radius:0} .rb-vib svg{display:block;width:100%;height:100%}
+  .rb-barleaf{align-items:center;justify-content:flex-start;padding:5% 6% 4%;background:radial-gradient(120% 80% at 50% 92%,rgba(232,170,96,.16),transparent 70%),#efdcbc}
+  .rb-barleaf>*{flex-shrink:0}
+  .rb-bar{position:relative;width:66%;aspect-ratio:5/7;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;padding:7px 9px 9px;border-radius:10px;background:#fbf3e3;border:1px solid #c9b08a;box-shadow:0 1px 0 #fff inset,0 10px 22px rgba(70,40,20,.28),0 2px 4px rgba(70,40,20,.25);transform:rotate(-1.2deg)}
+  .rb-bar.warm{background:radial-gradient(110% 70% at 50% 100%,rgba(232,170,96,.22),transparent 70%),#fbf3e3}
+  .rb-bart{position:relative;width:100%;height:30%;border-radius:6px;background:linear-gradient(#efe0c2,#e6d2ad);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .rb-bart svg{width:76%;height:auto}
+  .rb-bart.lit{background:radial-gradient(70% 90% at 50% 70%,rgba(170,205,110,.45),transparent 75%),linear-gradient(#efe0c2,#e6d2ad)}
+  .rb-bkick{margin:6px 0 0;font:italic 400 11px/1.2 var(--rb-serif);color:var(--faint);letter-spacing:.02em}
+  .rb-bwords{margin:3px 0 0;font:400 14.5px/1.2 Marcellus,var(--rb-serif);color:var(--ink);text-align:center;text-wrap:balance}
+  .rb-blines{list-style:none;margin:7px 0 0;padding:6px 0 0;border-top:1px solid #d8c4a2;width:100%;display:grid;gap:4px}
+  .rb-blines span{display:block;font:italic 400 13px/1.25 var(--rb-serif);color:var(--ink)}
+  .rb-blines small{display:block;font:400 10.5px/1.2 var(--rb-serif);color:var(--faint)}
+  .rb-bcoin{position:absolute;right:-14px;bottom:-12px;transform:rotate(1.2deg);display:flex;gap:2px;background:none;border:0;padding:0;cursor:pointer}
+  .rb-bcoin:focus-visible{outline:3px solid #5fc2ba;outline-offset:4px;border-radius:8px}
+  .rb-bcoin .rb-vib:first-child:not(:last-child){transform:rotate(-8deg) translateY(4px)}
+  .rb-story{flex:none;margin:16px 4px 0;align-self:stretch;padding:8px 12px;border-left:2px solid rgba(110,150,80,.7);background:rgba(255,248,232,.55)}
+  .rb-story p{margin:0 0 4px;font:italic 400 14px/1.35 var(--rb-serif);color:#4a3826} .rb-story p:last-child{margin-bottom:0}
+  .rb-restact{display:block;flex:none;margin:12px auto 0;font:italic 400 16px/1.3 var(--rb-serif);color:var(--ink,#3a2a1c);background:none;border:0;border-bottom:1px solid currentColor;border-radius:0;padding:2px 0;cursor:pointer}
+  .rb-restact:focus-visible{outline:3px solid #5fc2ba;outline-offset:3px}
+  .rb-bheld{display:flex;align-items:center;gap:12px;margin:18px 0 0;align-self:stretch;padding:0 4px}
+  .rb-bheld p{margin:0;font:italic 400 14px/1.3 var(--rb-serif);color:#4a3826}
+  .rb-ember{display:inline-block;flex:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 45% 40%,#fff6d8 0 18%,#ffd27a 40%,rgba(230,120,40,.9) 70%,rgba(160,60,20,0) 72%);box-shadow:0 0 14px 4px rgba(255,170,60,.85),0 0 30px 8px rgba(255,170,60,.85)}`;
   document.head.appendChild(bookCss);
   const bookEl = document.createElement("div"); bookEl.className = "rb"; bookEl.hidden = true; document.body.appendChild(bookEl);
   let bookSig = "";
@@ -504,6 +529,50 @@ export function mount(B, opts = {}) {
   }
   const CHEV = d => `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="${d > 0 ? "M7 4l6 6-6 6" : "M13 4l-6 6 6 6"}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const hexName = n => { const h = hexTable && hexTable.hexagrams.find(x => x.n === n); return h ? h.name : ""; };
+  const BOWLS = `<svg viewBox="0 0 120 64" aria-hidden="true"><g fill="none" stroke="#5a3a26" stroke-width="1.6" stroke-linecap="round"><path d="M14 34h36c-1 12-8 20-18 20S15 46 14 34z"/><path d="M70 34h36c-1 12-8 20-18 20S71 46 70 34z"/><path d="M8 57h104" opacity=".5"/><path d="M30 28c-3-5 3-8 0-13M86 28c3-5-3-8 0-13" opacity=".55"/></g><path d="M18 36h28c-2 8-7 13-14 13s-12-5-14-13z" fill="#c98a4a" opacity=".35"/><path d="M74 36h28c-2 8-7 13-14 13s-12-5-14-13z" fill="#c98a4a" opacity=".35"/></svg>`;
+  /* the kept turn drawn as a BAR at the deck's 5:7 with the tea-bowl art (T013, FR-012 FR-013 FR-019 FR-020). A coin rests on its corner
+     (its glow is the feeling it was minted with); touching it opens the story. Your worked ember for this turn waits under it. */
+  const stories = {};          // coin id -> story lines, read when the coin is touched
+  let restOpen = null, restBusy = false;
+  const mineKey = leaf => (B.workedEmberFor && leaf.tid && B.workedEmberFor(leaf.tid)) || null;
+  const restSig = () => JSON.stringify([restOpen, Object.keys(stories).length, restBusy]);
+  function barLeafHtml(leaf, open, side) {
+    const coins = (leaf.coins || []).slice(0, 2), ember = open && !coins.some(c => c.mine) ? mineKey(leaf) : null;
+    const coinHtml = coins.length ? `<button type="button" class="rb-bcoin" data-rest="story" data-coin="${esc(coins[0].id)}" aria-label="Read this coin's story">${coins.map(c => VIB(glowOf(c.feel), coins.length > 1 ? 46 : 50)).join("")}</button>` : "";
+    const lines = leaf.lines.map(l => `<li><span>${esc(l.words)}</span><small>${esc(l.name)}</small></li>`).join("");
+    const art = `<div class="rb-bart${coins.length ? " lit" : ""}">${BOWLS}</div>`;
+    const card = `<div class="rb-bar${coins.length ? " warm" : ""}">${art}<p class="rb-bkick">${esc(DECK_COPY.barKick)}</p><h3 class="rb-bwords">${esc(leaf.words)}</h3><ul class="rb-blines">${lines}</ul>${coinHtml}</div>`;
+    let below = "";
+    const cid = restOpen && coins.find(c => c.id === restOpen);
+    if (cid && stories[cid.id]) below += `<div class="rb-story">${stories[cid.id].map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
+    if (open && ember && leaf.bar) below += `<div class="rb-bheld"><span class="rb-ember" aria-hidden="true"></span><p>${esc(DECK_COPY.emberHeld)}</p></div><button class="rb-restact" type="button" data-rest="catch" data-bar="${esc(leaf.bar)}" data-ember="${esc(ember[0])}" data-turn-id="${esc(leaf.tid)}"${restBusy ? " disabled" : ""}>${esc(DECK_COPY.setIn)}</button>`;
+    else if (open && coins.some(c => c.mine) && leaf.bar) below += `<button class="rb-restact" type="button" data-rest="takeBack" data-bar="${esc(leaf.bar)}"${restBusy ? " disabled" : ""}>${esc(DECK_COPY.takeBack)}</button>`;
+    return `<div class="rb-leaf ${side} rb-barleaf"${open ? "" : ` data-turn="-1"`}>${card}${below}</div>`;
+  }
+  async function restAct(el) {
+    const kind = el.dataset.rest;
+    if (kind === "story") {
+      const id = el.dataset.coin; if (restOpen === id) { restOpen = null; bookSig = ""; if (s) drawBook(); return; }
+      restOpen = id; bookSig = "";
+      if (!stories[id]) { try { const r = await fetch("/api/vibeulons/" + encodeURIComponent(id) + "/story", { credentials: "same-origin" }); const j = r.ok ? await r.json() : null; stories[id] = preview && !opts.live ? ["Minted when this BAR caught an ember of Declare Intention, wood to fire.", "Set here at your table with Mara."] : j && Array.isArray(j.story) && j.story.length ? j.story : [DECK_COPY.storyNone]; } catch { stories[id] = [DECK_COPY.storyNone]; } }
+      bookSig = ""; if (s) drawBook(); return;
+    }
+    if (restBusy) return; restBusy = true; bookSig = ""; if (s) drawBook();
+    try {
+      if (preview && !opts.live) { previewCoin(kind, el.dataset.turnId); }
+      else {
+        const body = kind === "catch" ? { do: "catch", barId: el.dataset.bar, emberKey: el.dataset.ember, place: "table-turn" } : { do: kind, barId: el.dataset.bar, place: "table-turn" };
+        const r = await fetch("/api/vibeulons/rest", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) });
+        if (!r.ok) { const j = await r.json().catch(() => null); if (B.toast) B.toast((j && j.error) || DECK_COPY.restFail); }
+        else if (B.repoll) await B.repoll();
+      }
+    } catch { if (B.toast) B.toast(DECK_COPY.restFail); }
+    restBusy = false; bookSig = ""; cardKey = ""; if (s) drawBook();
+  }
+  /* a preview keeps its coins on this page only: ?turn=kept&coins=mine|theirs|both */
+  const pvCoins = {};
+  function previewCoin(kind, turnId) { const k = turnId || "t1"; const cur = pvCoins[k] || (pvCoins[k] = previewCoinList()); if (kind === "catch") cur.push({ id: "pv-" + cur.length, by: "me", feel: "wood", mine: true }); else if (kind === "takeBack") pvCoins[k] = cur.filter(c => !c.mine); }
+  function previewCoinList() { const m = opts.open; const mk = (mine, i) => ({ id: "pv-" + i, by: mine ? "me" : "stand-in", feel: "wood", mine }); return m === "mine" ? [mk(true, 0)] : m === "theirs" ? [mk(false, 0)] : m === "both" ? [mk(true, 0), mk(false, 1)] : []; }
   function leafHtml(leaf, open, home) {
     if (!leaf) return `<div class="rb-leaf l cover" aria-hidden="true"></div>`;
     const side = open ? "r" : "l";
@@ -511,7 +580,7 @@ export function mount(B, opts = {}) {
       return `<div class="rb-leaf ${side}"${open ? "" : ` data-turn="-1"`}><p class="rb-write">Write a name</p>${open ? `<input class="rb-input" maxlength="${NAME_MAX}" autocomplete="off" spellcheck="false" aria-label="Write a name" placeholder="A name">` : ""}${open ? `<div class="rb-coins">${COIN + COIN + COIN}</div><p class="rb-only">Only you read this book.</p>` : ""}</div>`;
     }
     if (leaf.kind === "goalblank" || leaf.kind === "goal") return goalLeafHtml(leaf, open, side);
-    if (leaf.kind === "turn") return `<div class="rb-leaf ${side}"${open ? "" : ` data-turn="-1"`}>${leaf.goalText ? `<p class="rb-hope" style="margin-top:0">${esc(leaf.goalText)}</p>` : ""}<h2 class="rb-goalname">${esc(leaf.words)}</h2><div class="rb-rule"></div><ul class="rb-deck">${leaf.lines.map(l => `<li class="rb-dcard rb-said"><span>${esc(l.words)}</span><small>${esc(l.name)}</small></li>`).join("")}</ul></div>`;
+    if (leaf.kind === "turn") return barLeafHtml(leaf, open, side);
     const cs = castsOn(leaf, home);
     const list = cs.length ? `<ul class="rb-casts">${cs.map(c => `<li class="rb-cast">${hexSvg(c.n)}<div><small>${esc(hexName(c.n))}</small><span>${esc(lineOn(c, leaf))}</span></div></li>`).join("")}</ul>` : "";
     return `<div class="rb-leaf ${side}"${open ? "" : ` data-turn="-1"`}><h2 class="rb-name">${esc(leaf.name)}</h2><div class="rb-rule"></div>${list}${open ? `<div class="rb-coins">${COIN + COIN + COIN}</div><p class="rb-only">Only you read this book.</p>` : ""}</div>`;
@@ -565,7 +634,7 @@ export function mount(B, opts = {}) {
     const L = leaves(), i = Math.min(s.at || 0, L.length - 1), home = homeNow(), one = innerWidth < 760;
     const gs = deckNow().goals || {}, nb = i > 0 && L[i - 1].kind === "goal" ? gs[L[i - 1].key] : null; // typed card words never redraw the open leaf
     const deckSig = JSON.stringify([Object.entries(gs).map(([k, g]) => [k, g && g.text]), nb && nb.cards, home.bookAt, s.g && [s.g.text, s.g.step, draftReady()], s.focus]);
-    const sig = JSON.stringify([i, one, L.map(l => [l.key, l.name]), castsOn(L[i], home).map(c => c.id), i > 0 ? castsOn(L[i - 1], home).map(c => c.id) : 0, !!hexTable, deckSig]);
+    const sig = JSON.stringify([i, one, L.map(l => [l.key, l.name]), castsOn(L[i], home).map(c => c.id), i > 0 ? castsOn(L[i - 1], home).map(c => c.id) : 0, !!hexTable, deckSig, restSig()]);
     bookEl.hidden = false;
     if (sig === bookSig) return; bookSig = sig;
     bookEl.classList.toggle("one", one);
@@ -579,6 +648,7 @@ export function mount(B, opts = {}) {
       setTimeout(() => inp.focus({ preventScroll: true }), 60); }
   }
   bookEl.addEventListener("click", e => {
+    const rest = e.target.closest("[data-rest]"); if (rest && s) { restAct(rest); return; }
     const t = e.target.closest("[data-at],[data-turn]"); if (!t || !s) return;
     if (t.dataset.at != null) turnTo(+t.dataset.at); else turnTo((s.at || 0) + (+t.dataset.turn));
   });
