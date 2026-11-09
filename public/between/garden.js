@@ -2159,7 +2159,7 @@ function hmSync() {
   const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (a[1].at || 0) - (b[1].at || 0)), ids = new Set(held.map(([k]) => k));
   const t = performance.now() / 1000;
   for (const [k, e] of held) if (!hm.motes.some(m => m.eid === k)) { const m = hmMote(k, e); m.riseAt = Math.max(hm.riseNext, t); hm.riseNext = m.riseAt + 0.8; hm.motes.push(m); }
-  for (const m of hm.motes) if (!ids.has(m.eid) && m.state !== "lantern" && m.state !== "lit") m.state = "sink";
+  for (const m of hm.motes) if (!ids.has(m.eid) && m.state !== "lantern" && m.state !== "lit") { m.state = "sink"; if (hm.held === m) hm.held = null; } // a written ember leaves your hands
   hmHud();
 }
 function hmBegin() {
