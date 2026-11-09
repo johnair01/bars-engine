@@ -9,6 +9,7 @@
  */
 import type { Prisma, PrismaClient } from '@prisma/client'
 import { markCoins, type CoinEnergy } from './coin-marks'
+import { coinFace, type CoinStyle } from './coin-face'
 
 /** A Prisma client or an interactive transaction client. */
 export type Tx = Prisma.TransactionClient | PrismaClient
@@ -28,10 +29,22 @@ export const EMBER_CATCH_SOURCE = 'ember_catch'
  * Mint the one vibeulon a new BAR gives its maker. Call inside the transaction that creates the BAR.
  * `source` defaults to `bar_mint`; `ember_catch` is a worked ember set into a BAR (ember.ts). `energy` is the ember's
  * move and feel (FR-007). The mint writes its `minted` mark.
+ * The coin also carries a face (ember-to-vibeulon FR-009): `ember.move` sets its ring and texture, `seal` its bezel, and
+ * `style` (the player's coin style, FR-011) its colour and material; no style leaves the coin bare for the coin turn.
  */
 export async function mintBarVibulon(
     tx: Tx,
-    input: { barId: string; playerId: string; title: string; source?: string; energy?: CoinEnergy; place?: string },
+    input: {
+        barId: string
+        playerId: string
+        title: string
+        source?: string
+        energy?: CoinEnergy
+        place?: string
+        ember?: { move: string } | null
+        seal?: string | null
+        style?: CoinStyle | null
+    },
 ): Promise<string> {
     const source = input.source ?? BAR_MINT_SOURCE
     const v = await tx.vibulon.create({
@@ -42,6 +55,7 @@ export async function mintBarVibulon(
             originId: input.barId,
             originTitle: input.title.slice(0, 200),
             ...(input.energy ? { energy: input.energy as Prisma.InputJsonValue } : {}),
+            face: coinFace(input.ember?.move, input.seal, input.style),
         },
         select: { id: true, originSource: true, originId: true, originTitle: true, energy: true },
     })

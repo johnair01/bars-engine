@@ -15,6 +15,8 @@ export default defineConfig({
       'src/actions/__tests__/npc-from-321-part-quest.test.ts',
       'src/lib/economy/__tests__/coin-marks.test.ts',
       'src/lib/economy/__tests__/marks-everywhere.test.ts',
+      'src/lib/economy/__tests__/coin-face.test.ts',
+      'src/lib/between/__tests__/coin.test.ts',
       'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
       'src/lib/mtgoa-course/__tests__/round-two.test.ts',
       'src/lib/mtgoa-course/__tests__/day-eight.test.ts',
