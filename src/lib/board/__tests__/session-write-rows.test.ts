@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { holdOf, lookErrors, sessionWrite } from '../session-write'
+import { BACKFILL_LOOK_IDS } from '../backfill-looks'
 
 /** An in-memory boardSave: just enough of Prisma for sessionWrite (findFirst newest, create). */
 function fakeDb() {
@@ -112,6 +113,18 @@ describe('the picture gate (a look he cannot see is refused)', () => {
     const db = fakeDb()
     const ok = await sessionWrite(db as never, [{ collection: 'rows', docId: 'z-look-1', data: { ...q, still: pic } }], false, none, yes)
     expect(ok.written).toEqual(['rows/z-look-1'])
+  })
+
+  it('the backfill marker skips the gate only for a frozen pre-gate id', async () => {
+    const [id] = [...BACKFILL_LOOK_IDS]
+    const marked = { ...q, backfill: 'pre-gate-2026-11-04' }
+    const db = fakeDb()
+    const ok = await sessionWrite(db as never, [{ collection: 'rows', docId: id, data: marked }], false, none, no)
+    expect(ok.written).toEqual([`rows/${id}`])
+    const late = await sessionWrite(fakeDb() as never, [{ collection: 'rows', docId: 'new-look-1', data: marked }], false, none, yes)
+    expect(late.refused[0]).toMatch(/new-look-1.*LOOK NOT POSTED/)
+    const unmarked = await sessionWrite(fakeDb() as never, [{ collection: 'rows', docId: id, data: q }], false, none, yes)
+    expect(unmarked.refused[0]).toMatch(/LOOK NOT POSTED/)
   })
 
   it('judges a step update on the merged document, and takes an image file as the picture', async () => {
