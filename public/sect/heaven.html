@@ -35,7 +35,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { heightAt, ROUTE, P, COURTS } from './heaven/layout.js';
-import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors, colliders } from './heaven/world.js';
+import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors, colliders, GREAT } from './heaven/world.js';
+import { ANCHOR_VIEW } from './heaven/anchor.js';
+import { people } from './heaven/people.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
 import { atmosphere, placeSun } from './heaven/atmo.js';
 
@@ -87,6 +89,9 @@ const models = Promise.all(['Stone_Fire_Pit.glb', 'Ceramic_Pot.glb', 'Antique_Ce
 }).catch(e => console.warn('models', e));
 
 const A = avatar(S);
+// Round 11: robed students in the great court and a robed avatar (people.js); the frame loop dresses them.
+let dressAll = null;
+const ready = people(S, gl, { court: GREAT.G, avatar: A }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
 const cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 3000);
 const orbit = new OrbitControls(cam, R.domElement);
 orbit.enableDamping = true; orbit.maxPolarAngle = Math.PI * 0.49; orbit.minDistance = 2; orbit.maxDistance = 120; orbit.enablePan = false;
@@ -139,6 +144,7 @@ function frame(now) {
   step(A, input, dt, yaw);
   const d = A.position.clone().sub(prev); cam.position.add(d); orbit.target.add(d);
   orbit.update();
+  if (dressAll) dressAll(dt);
   placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
   requestAnimationFrame(frame);
@@ -169,7 +175,20 @@ function enter(key, { up = 3.2, back = 1.6 } = {}) {
   }
   sel.onchange = () => { if (sel.value) { if (topView) document.getElementById('topBtn').click(); enter(sel.value); } sel.value = ''; sel.blur(); };
 }
-window.heaven = { jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun };
+// Round 11: the anchor view, the painting's camera at eye height inside the great court's gate (Wendell's C on
+// cs-heaven-inside-1: draw the rooms at eye height).
+function shot(name) {
+  if (name !== 'anchor') return;
+  const G = GREAT.G; G.updateWorldMatrix(true, false);
+  const w = ([x, y, z]) => G.localToWorld(new THREE.Vector3(x, y, z));
+  const a = w([ANCHOR_VIEW.avatar[0], 0, ANCHOR_VIEW.avatar[1]]);
+  A.position.set(a.x, groundAt(a.x, a.z), a.z);
+  S.traverse(o => { if (o.userData.routeBadge) o.visible = false; });
+  orbit.maxPolarAngle = Math.PI * 0.62; orbit.minDistance = 0.1;
+  cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
+  hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
+}
+window.heaven = { shot, ready, jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun };
 requestAnimationFrame(frame);
 </script>
 </body></html>

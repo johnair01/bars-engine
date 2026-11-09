@@ -57,6 +57,12 @@ export function greatCourt(G, { collide = () => {} } = {}) {
   for (const sx of [-1, 1]) { const b = banner(M, { h: 3, w: 0.7 }); b.position.set(sx * 5.2, 0, TZ + TD / 2 + 4.2); G.add(b); }
   [[-19, -14, 9, 0.2, 3], [19.5, -15, 10, -0.15, 7], [-23.5, 8, 8, 0.25, 13], [23.5, 4, 9, -0.2, 17]].forEach(([x, z, h, lean, s]) => { const p = pine(M, h, lean, s); p.position.set(x, 0, z); G.add(p); });
 
+  // the gate the painting is seen through: two lacquered posts, a lintel and a rafter row, at the court's south edge
+  const GZ = 12, GX = 3.15, DW = new THREE.MeshStandardMaterial({ color: 0x3e2416, roughness: 0.8 });
+  for (const sx of [-1, 1]) { box(G, 0.42, 4.7, 0.42, M.lacR, sx * GX, 2.35, GZ); box(G, 0.8, 0.3, 0.8, M.stone, sx * GX, 0.15, GZ); collide(sx * GX, GZ, 0.5, 0.5, 0, 4.7); }
+  box(G, GX * 2 + 1.2, 0.4, 0.5, DW, 0, 4.9, GZ);
+  for (let x = -GX - 0.4; x <= GX + 0.41; x += 0.5) box(G, 0.18, 0.18, 1.6, DW, x, 5.2, GZ);
+
   // timber stacked by the scaffold, a cart of stone by the stair
   for (let i = 0; i < 5; i++) box(G, 3.4, 0.24, 0.24, M.raw, -12.5, 0.12 + Math.floor(i / 2) * 0.24, 0.4 + (i % 2) * 0.28 + (i > 3 ? 0.14 : 0));
   return { stairFoot: [0, TZ + TD / 2 + 3.8], bell: [BX, BZ] };
