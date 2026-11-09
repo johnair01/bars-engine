@@ -19,6 +19,7 @@ export function greatCourt(G, { collide = () => {} } = {}) {
   // paving over the whole court, a curb of stone at its edge
   const pave = new THREE.Mesh(new THREE.PlaneGeometry(44, 46), M.paving.clone());
   pave.material.map = M.paving.map.clone(); pave.material.map.needsUpdate = true; pave.material.map.repeat.set(7, 7);
+  pave.material.color.setRGB(1.38, 1.2, 0.98); // round 13b: warm sunlit flagstones, as the painting's
   pave.rotation.x = -Math.PI / 2; pave.position.set(0, 0.04, 0); pave.receiveShadow = true; G.add(pave);
   // low parapets down both sides, with a gap at the gate
   for (const sx of [-1, 1]) { box(G, 0.7, 1.1, 34, M.stone, sx * 21.6, 0.55, 2); collide(sx * 21.6, 2, 0.7, 34, 0, 1.1); }
@@ -49,10 +50,19 @@ export function greatCourt(G, { collide = () => {} } = {}) {
   for (let i = 0; i < 3; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.6 - i * 0.03, 0.035, 6, 32), M.brass); r.rotation.x = Math.PI / 2; r.position.set(BX, 1.25 + i * 0.42, BZ); G.add(r); }
   collide(BX, BZ, 2.2, 2.2, 0, 2.7);
 
-  // the circle a student chalks on the paving (the painting's glowing sigil, here a pale ring)
-  const sig = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.4, 48), new THREE.MeshBasicMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.75 }));
-  sig.rotation.x = -Math.PI / 2; sig.position.set(-2.4, 0.06, 8.6); G.add(sig);
-  const star = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.92, 5, 1), sig.material); star.rotation.x = -Math.PI / 2; star.position.set(-2.4, 0.061, 8.6); G.add(star);
+  // the sigil a student chalks on the paving. Round 13b: the painting's glowing blue star in a double circle, larger and
+  // nearer the gate (round 13 had a pale ring and a pentagon), with a soft glow under it.
+  { const SX = -2.9, SZ = 10.2, R = 1.9, glow = new THREE.MeshBasicMaterial({ color: 0x6cc8ff, transparent: true, opacity: 0.95, depthWrite: false });
+    const flat = (m, y) => { m.rotation.x = -Math.PI / 2; m.position.set(SX, y, SZ); G.add(m); return m; };
+    flat(new THREE.Mesh(new THREE.RingGeometry(R - 0.1, R, 64), glow), 0.06); flat(new THREE.Mesh(new THREE.RingGeometry(R * 0.82 - 0.06, R * 0.82, 64), glow), 0.06);
+    const pts = Array.from({ length: 5 }, (_, k) => { const a = k * 4 * Math.PI / 5 + Math.PI / 2; return [Math.cos(a) * R * 0.8, Math.sin(a) * R * 0.8]; });
+    for (let k = 0; k < 5; k++) { const [x0, z0] = pts[k], [x1, z1] = pts[(k + 1) % 5], L = Math.hypot(x1 - x0, z1 - z0);
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.09), glow); b.rotation.x = -Math.PI / 2; b.rotation.z = Math.atan2(z1 - z0, x1 - x0) * -1;
+      b.position.set(SX + (x0 + x1) / 2, 0.062, SZ + (z0 + z1) / 2); G.add(b); }
+    const halo = document.createElement('canvas'); halo.width = halo.height = 128; const hx = halo.getContext('2d'), gr = hx.createRadialGradient(64, 64, 8, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(90,180,255,0.6)'); gr.addColorStop(0.75, 'rgba(70,150,255,0.25)'); gr.addColorStop(1, 'rgba(110,190,255,0)'); hx.fillStyle = gr; hx.fillRect(0, 0, 128, 128);
+    flat(new THREE.Mesh(new THREE.PlaneGeometry(R * 2.8, R * 2.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(halo), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })), 0.055);
+  }
 
   // banners at the stair foot, pines at the court's back corners and over the parapets
   for (const sx of [-1, 1]) { const b = banner(M, { h: 3, w: 0.7 }); b.position.set(sx * 5.2, 0, TZ + TD / 2 + 4.2); G.add(b); }
@@ -60,9 +70,11 @@ export function greatCourt(G, { collide = () => {} } = {}) {
 
   // the gate the painting is seen through: two lacquered posts, a lintel and a rafter row, at the court's south edge
   const GZ = 12, GX = 3.15, DW = new THREE.MeshStandardMaterial({ color: 0x3e2416, roughness: 0.8 });
-  for (const sx of [-1, 1]) { box(G, 0.42, 4.7, 0.42, M.lacR, sx * GX, 2.35, GZ); box(G, 0.8, 0.3, 0.8, M.stone, sx * GX, 0.15, GZ); collide(sx * GX, GZ, 0.5, 0.5, 0, 4.7); }
-  box(G, GX * 2 + 1.2, 0.4, 0.5, DW, 0, 4.9, GZ);
-  for (let x = -GX - 0.4; x <= GX + 0.41; x += 0.5) box(G, 0.18, 0.18, 1.6, DW, x, 5.2, GZ);
+  // Round 13b: posts and lintel raised to 6 m so the lintel is a thin strip at the top of the anchor frame and the sky
+  // shows under it, as in the painting (at 4.9 m the lintel and rafters filled the top fifth of the frame).
+  for (const sx of [-1, 1]) { box(G, 0.42, 6.2, 0.42, M.lacR, sx * GX, 3.1, GZ); box(G, 0.8, 0.3, 0.8, M.stone, sx * GX, 0.15, GZ); collide(sx * GX, GZ, 0.5, 0.5, 0, 6.2); }
+  box(G, GX * 2 + 1.2, 0.4, 0.5, DW, 0, 6.0, GZ);
+  for (let x = -GX - 0.4; x <= GX + 0.41; x += 0.5) box(G, 0.18, 0.18, 1.6, DW, x, 6.3, GZ);
 
   // timber stacked by the scaffold, a cart of stone by the stair
   for (let i = 0; i < 5; i++) box(G, 3.4, 0.24, 0.24, M.raw, -12.5, 0.12 + Math.floor(i / 2) * 0.24, 0.4 + (i % 2) * 0.28 + (i > 3 ? 0.14 : 0));
@@ -89,5 +101,5 @@ export const STUDENTS = [
   [-1.8, -9.2, 20, { outfit: 'coat', dye: 'saffron', skin: 'amber', style: 'page', colour: 'black', shape: 'b', build: 'average', tint: ROBE.slate }],
   [-13.2, -2, 90, { outfit: 'jacket', dye: 'violet', skin: 'umber', style: 'afro', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.brown }],
   [8.5, -10.5, 300, { outfit: 'jacket', dye: 'saffron', skin: 'chestnut', style: 'sweep', colour: 'gray', shape: 'b', build: 'slender', tint: ROBE.moss }],
-  [-0.9, 8.9, 270, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
+  [-1.1, 10.4, 270, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
 ];

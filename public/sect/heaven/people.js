@@ -23,8 +23,27 @@ export async function people(S, gl, { court, avatar }) {
   STUDENTS.forEach(([x, z, deg, look], i) => {
     const f = make(look, i * 0.7), h = new THREE.Group(); h.add(f.obj);
     h.position.set(x, 0.04, z); h.rotation.y = Math.PI - deg * Math.PI / 180; court.add(h); out.push(f);
+    if (look.kneel) f.pose = kneeler(f.obj, h);
   });
   // the avatar wears the creator's default look in place of the capsule
   if (avatar) { avatar.children.forEach(c => { c.visible = false; }); const f = make(null, 0); f.obj.rotation.y = Math.PI; avatar.add(f.obj); out.push(f); }
-  return dt => { for (const f of out) { f.mixer.update(dt); f.w.dress(dt); } };
+  return dt => { for (const f of out) { f.mixer.update(dt); if (f.pose) f.pose(); f.w.dress(dt); } };
+}
+
+// Round 13b: the painting's student kneels on the paving to chalk the sigil; round 13's stood (the Idle clip has no
+// kneel). Bent over the clip each frame with the garden's bone axes (between/garden.js: hip X lifts the thigh forward,
+// knee X folds the shin): sat back on the heels, leaning in, the right hand reaching down to the chalk.
+const KNEEL = [['hipL', -1.25, 0, -0.08], ['hipR', -1.55, 0, 0.08], ['kneeL', 2.55, 0, 0], ['kneeR', 2.3, 0, 0], ['spine', 0.45, 0, 0],
+  ['neck', 0.3, 0, 0], ['shoulderR', -1.15, 0, 0.15], ['elbowR', -0.35, 0, 0], ['shoulderL', -0.5, 0, -0.2], ['elbowL', -1.1, 0, 0]];
+const KNEEL_HIP = 0.5; // metres from the paving to the hip joints, sat on the heels
+function kneeler(obj, holder) {
+  const B = {}; for (const [n] of KNEEL) { const b = obj.getObjectByName(n); if (b) B[n] = { b, q: b.quaternion.clone() }; }
+  const hips = obj.getObjectByName('hips'), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3();
+  return () => {
+    for (const [n, x, y, z] of KNEEL) if (B[n]) B[n].b.quaternion.copy(B[n].q).multiply(q.setFromEuler(e.set(x, y, z, 'XYZ')));
+    if (!hips) return;
+    holder.updateMatrixWorld(true);
+    const hw = hips.getWorldPosition(v).y - holder.getWorldPosition(new THREE.Vector3()).y, sy = hips.parent.getWorldScale(v).y || 1;
+    hips.position.y -= (hw - KNEEL_HIP) / sy;
+  };
 }
