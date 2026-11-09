@@ -5,16 +5,9 @@
    satisfaction (3 or less) is unsettled, never corrupted. Nothing here dies: that waits for a later round.
    Plain module, no three.js, so the caves and Big Mind can take it as it is. */
 
-// The seven steps, word for word from the Cave of Lessons (content/ontology-game/cave/cave.js, WAVE).
-export const WAVE_STEPS = [
-  { id: "welcome", name: "Welcome", line: "Let whatever's here be here for a moment, without needing it to be different yet." },
-  { id: "acknowledge", name: "Acknowledge", line: "Admit that it's here. You don't have to like it." },
-  { id: "allow", name: "Allow", line: "Let it take up as much of you as it's taking. You don't have to make it smaller." },
-  { id: "accept", name: "Accept", line: "Let it be here without fighting it." },
-  { id: "appreciate", name: "Appreciate", line: "Find what it's been trying to do for you." },
-  { id: "validate", name: "Validate", line: "Your body has the right to feel this, whatever it is." },
-  { id: "exhale", name: "Exhale", line: "Is this feeling in alignment with what you actually want right now?" },
-];
+// The seven steps live in the shared charge engine (word for word from the Cave of Lessons); re-exported so old imports hold.
+import { WAVE_STEPS } from "./charge-engine.js";
+export { WAVE_STEPS };
 
 export const CARE = { sat: 7, satMin: 1, satMax: 10, vit: 100, vitMin: 0, vitMax: 100, unsettled: 3, perCare: 1, ownElement: 2, vitPerCare: 20, vitPerDay: 5, satDays: 3 };
 const DAY = 864e5;
@@ -37,10 +30,11 @@ export function careNow(care, at = Date.now()) {
   return { sat, vit, days, word };
 }
 
-/** The care a spirit has after being given an ember of `emberFeel` (an element, wood to water) at `at`. An ember of the
+/** The care a spirit has after being given an ember (an element, wood to water, or the engine's `{feel, from, to, by}`; the `to` element is what feeds) at `at`. An ember of the
     spirit's own element feeds it twice over. The result is what to store. */
 export function feed(care, emberFeel, spiritElement, at = Date.now()) {
   const n = careNow(care, at);
+  if (emberFeel && typeof emberFeel === "object") emberFeel = emberFeel.to ?? emberFeel.feel;
   const own = !!emberFeel && !!spiritElement && String(emberFeel).toLowerCase() === String(spiritElement).toLowerCase();
   return { sat: clamp(n.sat + (own ? CARE.ownElement : CARE.perCare), CARE.satMin, CARE.satMax), vit: clamp(n.vit + CARE.vitPerCare, CARE.vitMin, CARE.vitMax), at };
 }
