@@ -3,7 +3,8 @@
 // built from rooms.json so their metres match round 4's plans.
 import * as THREE from 'three';
 import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
-import { greatCourt } from './anchor.js';
+import { greatCourt, kitMaterials } from './anchor.js';
+import { cragCrown } from './crag.js';
 import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE } from './layout.js';
 
 export const PAL = {
@@ -100,6 +101,15 @@ export function terrain(S) {
     const north = Math.max(0, (-z - 180) / 120) + Math.max(0, (-x - 330) / 120);
     if (north > 0) c.lerp(t.set(PAL.forest), Math.min(1, north));
     { const far = Math.min(1, Math.max(0, (Math.hypot(x - P.great[0], z - P.great[1]) - 45) / 80)); if (far > 0) c.lerp(t.set('#a9a99a'), far * 0.85); } // round 12: the summit slope goes pale and crag-grey with distance, so the ranges read over it
+    { // round 13: cliffs are bare rock, banded and streaked like the painting's crag; its crown keeps a little moss
+      const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;
+      const dS = Math.hypot(x - P.summit[0], z - P.summit[1]);
+      if (sl > 0.7 || (dS < 60 && y > 52)) {
+        const band = 0.5 + 0.5 * Math.sin(y * 0.9 + Math.sin(Math.atan2(z - P.summit[1], x - P.summit[0]) * 23) * 2.2);
+        c.set(band > 0.6 ? '#b8b2a6' : band > 0.3 ? '#9c978c' : '#7d7a72');
+        if (sl < 1.1 && dS < 60) c.lerp(t.set('#6f8355'), 0.45);
+      }
+    }
     if (y < -60) c.lerp(t.set(PAL.rock), Math.min(1, (-60 - y) / 60));
     for (const p of PADS) if (p[3] > 6 && Math.hypot(x - p[0], z - p[1]) < p[3] - 1) { c.set(PAL.pave); break; }
     for (const [a, b, hw, cc] of segs) {
@@ -215,6 +225,7 @@ export function places(S, rooms) {
     Object.assign(GREAT, greatCourt(G, { collide: (x, z, w, d, y0, h) => pushCollider(G, x, z, w, d, y0, h) }));
   }
   // Summit: the founder's hall (its south doors face the great court) and the Heaven altar, open sky, behind it
+  cragCrown(S, kitMaterials()); // round 13: the crag's walled crown, its tiered halls and the winding wall
   { const G = frame(S, P.summit, 90, P.great, true);
     const H = new THREE.Group(); H.position.set(0, 0, 4); G.add(H); room(H, rooms.founder);
     for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(7 - i * 2, 7 - i * 2, 0.5, 40), mat(i % 2 ? PAL.paper : PAL.stone)); c.position.set(0, 0.25 + i * 0.5, -20); c.receiveShadow = c.castShadow = true; G.add(c); }

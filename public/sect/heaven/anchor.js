@@ -11,7 +11,8 @@ let M = null;
 export const kitMaterials = () => (M ||= materials());
 
 // The camera the painting is seen from: eye height inside the gate, looking up the court to the hall.
-export const ANCHOR_VIEW = { cam: [0, 1.65, 18.4], look: [0, 2.6, -18], avatar: [0, 21] };
+// Round 13: tilted up about eight degrees, as the painting is, so the crag's crown and the gate's lintel both sit in frame.
+export const ANCHOR_VIEW = { cam: [0, 1.65, 18.4], look: [0, 6.8, -18], avatar: [0, 21] };
 
 export function greatCourt(G, { collide = () => {} } = {}) {
   const M = kitMaterials();
@@ -50,8 +51,8 @@ export function greatCourt(G, { collide = () => {} } = {}) {
 
   // the circle a student chalks on the paving (the painting's glowing sigil, here a pale ring)
   const sig = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.4, 48), new THREE.MeshBasicMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.75 }));
-  sig.rotation.x = -Math.PI / 2; sig.position.set(-5.2, 0.06, 7.5); G.add(sig);
-  const star = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.92, 5, 1), sig.material); star.rotation.x = -Math.PI / 2; star.position.set(-5.2, 0.061, 7.5); G.add(star);
+  sig.rotation.x = -Math.PI / 2; sig.position.set(-2.4, 0.06, 8.6); G.add(sig);
+  const star = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.92, 5, 1), sig.material); star.rotation.x = -Math.PI / 2; star.position.set(-2.4, 0.061, 8.6); G.add(star);
 
   // banners at the stair foot, pines at the court's back corners and over the parapets
   for (const sx of [-1, 1]) { const b = banner(M, { h: 3, w: 0.7 }); b.position.set(sx * 5.2, 0, TZ + TD / 2 + 4.2); G.add(b); }
@@ -80,13 +81,13 @@ const ROBE = {
   ink:   { cloth: ['#3b4452', '#566274', '#242a33', '#7a2e2a'], lining: '#8a6a44' },
 };
 export const STUDENTS = [
-  [-5.8, 4.2, 200, { outfit: 'coat', dye: 'violet', skin: 'amber', style: 'sweep', colour: 'black', shape: 'a', build: 'slender', tint: ROBE.slate }],
-  [-3.6, 2.6, 120, { outfit: 'jacket', dye: 'saffron', skin: 'light', style: 'page', colour: 'gray', shape: 'b', build: 'average', tint: ROBE.brown }],
-  [3.4, 1.8, 250, { outfit: 'dress', dye: 'saffron', skin: 'umber', style: 'afro', colour: 'black', shape: 'c', build: 'average', tint: ROBE.mist }],
-  [4.6, 2.9, 70, { outfit: 'coat', dye: 'violet', skin: 'chestnut', style: 'spiked', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.ink }],
-  [5.4, 0.6, 330, { outfit: 'dress', dye: 'violet', skin: 'light', style: 'sweep', colour: 'red', shape: 'c', build: 'slender', tint: ROBE.rose }],
+  [-4.2, 7.4, 200, { outfit: 'coat', dye: 'violet', skin: 'amber', style: 'sweep', colour: 'black', shape: 'a', build: 'slender', tint: ROBE.slate }],
+  [-3.6, 5.2, 120, { outfit: 'jacket', dye: 'saffron', skin: 'light', style: 'page', colour: 'gray', shape: 'b', build: 'average', tint: ROBE.brown }],
+  [2.6, 5.4, 250, { outfit: 'dress', dye: 'saffron', skin: 'umber', style: 'afro', colour: 'black', shape: 'c', build: 'average', tint: ROBE.mist }],
+  [3.8, 6.4, 70, { outfit: 'coat', dye: 'violet', skin: 'chestnut', style: 'spiked', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.ink }],
+  [4.4, 4.2, 330, { outfit: 'dress', dye: 'violet', skin: 'light', style: 'sweep', colour: 'red', shape: 'c', build: 'slender', tint: ROBE.rose }],
   [-1.8, -9.2, 20, { outfit: 'coat', dye: 'saffron', skin: 'amber', style: 'page', colour: 'black', shape: 'b', build: 'average', tint: ROBE.slate }],
   [-13.2, -2, 90, { outfit: 'jacket', dye: 'violet', skin: 'umber', style: 'afro', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.brown }],
   [8.5, -10.5, 300, { outfit: 'jacket', dye: 'saffron', skin: 'chestnut', style: 'sweep', colour: 'gray', shape: 'b', build: 'slender', tint: ROBE.moss }],
-  [-6.4, 8.6, 160, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
+  [-0.9, 8.9, 270, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
 ];
