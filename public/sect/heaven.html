@@ -16,6 +16,7 @@
   .stops button, .views button { min-height: 40px; border-radius: 20px; border: 2px solid var(--paper); background: var(--red); color: var(--paper); font-weight: 700; cursor: pointer; }
   .views { position: fixed; z-index: 5; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; }
   .views button { padding: 0 14px; background: var(--teal); }
+  .views select { min-height: 40px; max-width: 52vw; border-radius: 20px; border: 2px solid var(--paper); background: var(--paper); color: var(--ink); font: inherit; padding: 0 10px; }
   .hint { position: fixed; z-index: 5; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); font-size: .8rem; background: var(--glass); border-radius: 10px; padding: 6px 10px; }
   body.top .hud, body.top .hint { display: none; }
 </style>
@@ -26,7 +27,7 @@
 </head><body>
 <div class="hud" id="hud"><b id="where">The road</b><span id="what">The summit is in view from the first step.</span></div>
 <div class="stops" id="stops"></div>
-<div class="views"><button id="topBtn">Top view</button></div>
+<div class="views"><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
 <div class="hint">WASD or arrows to walk; tap the ground to walk there; drag to look round.</div>
 <script type="module">
 import * as THREE from 'three';
@@ -139,7 +140,21 @@ function enter(key, { up = 3.2, back = 1.6 } = {}) {
   A.rotation.y = Math.atan2(-dx, -dz);
   cam.position.set(dx0 - dx / L * back, r.y + up, dz0 - dz / L * back);
   orbit.target.set(ax + dx / L * 2.5, r.y + 1.2, az + dz / L * 2.5);
-  hud.where.textContent = Rm.title; hud.what.textContent = Rm.sub; input.target = null;
+  const court = r.court && !Rm.title.includes('court') ? `, in the ${r.court.name.replace(/^The /, '')}` : '';
+  hud.where.textContent = Rm.title + court; hud.what.textContent = Rm.sub; input.target = null;
+}
+// Round 8: a list of every room you can walk into, grouped by where it stands.
+{
+  const sel = document.getElementById('roomSel'), groups = new Map();
+  const where = i => i.court ? i.court.name : (i.key === 'founder' ? 'The summit' : COURTS.find(c => c.key === 'shaman').name);
+  for (const i of interiors) { const g = where(i); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(i); }
+  for (const [g, list] of groups) {
+    const og = document.createElement('optgroup'); og.label = g;
+    for (const i of list) { const o = document.createElement('option'); o.value = i.key;
+      o.textContent = i.key.startsWith('elder') ? "Elder's house" : i.key === 'founder' ? "Founder's hall" : i.R.title.split(': ')[1] || i.R.title; og.appendChild(o); }
+    sel.appendChild(og);
+  }
+  sel.onchange = () => { if (sel.value) { if (topView) document.getElementById('topBtn').click(); enter(sel.value); } sel.value = ''; sel.blur(); };
 }
 window.heaven = { jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun };
 requestAnimationFrame(frame);
