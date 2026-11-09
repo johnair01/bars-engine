@@ -5,6 +5,15 @@ import { heightAt, GRID, FAR_ROAD, FAR_EXTENT, WATCH } from './layout.js';
 import { materials, hall } from './kit.js';
 // the road's ribbon ends this far short of the Watch; a stone stair climbs the rest to the plinth top
 const STAIR_FOOT = 20, PLINTH_TOP = 9;
+// round 15: a soft warm halo (a sprite, added light, outside the fog) for the Watch and its lanterns
+let _glowTex = null;
+function glow(size, alpha, y) {
+  if (!_glowTex) { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    r.addColorStop(0, 'rgba(255,200,120,1)'); r.addColorStop(0.2, 'rgba(255,150,50,0.55)'); r.addColorStop(1, 'rgba(255,120,30,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 64, 64); _glowTex = new THREE.CanvasTexture(c); }
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: _glowTex, transparent: true, opacity: alpha, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  s.scale.set(size, size, 1); s.position.y = y; return s;
+}
 
 export function farLand(S, floors) {
   const E = FAR_EXTENT, N = 300, cx = 24, cz = -9;
@@ -37,10 +46,14 @@ export function farLand(S, floors) {
 
   // the Watch: a three-tier pavilion with its lamp lit, facing back down the road to the sect
   const M = materials(), W = new THREE.Group();
-  const P = hall(M, { w: 9, d: 7, ph: 3.4, tiers: 3, lit: true, seed: 14, lite: true }); W.add(P);
+  // round 15: larger and four tiers (was 9 x 7, three tiers), so from the gate at 760 m it reads as a building, not a dot
+  const P = hall(M, { w: 13, d: 10, ph: 4.6, tiers: 4, lit: true, seed: 14, lite: true }); W.add(P);
   W.position.set(WATCH[0], heightAt(WATCH[0], WATCH[1]), WATCH[1]);
   const back = FAR_ROAD[FAR_ROAD.length - 2]; W.rotation.y = Math.atan2(back[0] - WATCH[0], back[1] - WATCH[1]);
-  const lamp = new THREE.PointLight('#ffb860', 40, 60); lamp.position.set(0, 4, 0); W.add(lamp);
+  const lamp = new THREE.PointLight('#ffb860', 60, 80); lamp.position.set(0, 5, 0); W.add(lamp);
+  // round 15: a warm glow round the lit pavilion that the haze does not eat, so the Watch shows from the gate as a light
+  // on the peak at the end of the road
+  W.add(glow(30, 0.45, 9)); W.add(glow(12, 0.85, 6));
   S.add(W);
   // Round 14c (part 7): the road as its own paved ribbon laid on the ground, so it reads in every view; the far mesh's
   // 13 m spacing smeared the painted road over whole hillsides.
@@ -57,7 +70,7 @@ export function farLand(S, floors) {
     rm.receiveShadow = true; rm.name = 'farRoad'; S.add(rm); }
   // a stone platform under the Watch, so the pavilion sits on its peak instead of hanging off the slope
   { const y0 = heightAt(WATCH[0], WATCH[1]);
-    const pl = new THREE.Mesh(new THREE.CylinderGeometry(9, 11, 9, 8), new THREE.MeshStandardMaterial({ color: '#a59a86', roughness: 1 }));
+    const pl = new THREE.Mesh(new THREE.CylinderGeometry(10, 12, 9, 8), new THREE.MeshStandardMaterial({ color: '#a59a86', roughness: 1 }));
     pl.position.set(WATCH[0], y0 - 4.4, WATCH[1]); pl.receiveShadow = pl.castShadow = true; S.add(pl); }
   // Round 14d: a stone stair from the road's end up the last steep pitch to the plinth top, each step a block down to
   // the slope so no gap shows under it. The stair joins the walkable floors.
@@ -82,14 +95,16 @@ export function farLand(S, floors) {
   const pts = [];
   for (let k = 1; k < FAR_ROAD.length; k++) { const a = FAR_ROAD[k - 1], b = FAR_ROAD[k], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L; // round 14d: set beside the road on its normal, not 4 m east (which put some in the road)
-    for (let s = 0; s < (k === FAR_ROAD.length - 1 ? L - STAIR_FOOT : L); s += 40) { const u = s / L, x = a[0] + (b[0] - a[0]) * u + nx * 5, z = a[1] + (b[1] - a[1]) * u + nz * 5; pts.push([x, z, k >= FAR_ROAD.length - 3]); } }
+    for (let s = 0; s < (k === FAR_ROAD.length - 1 ? L - STAIR_FOOT : L); s += 40) { const u = s / L, x = a[0] + (b[0] - a[0]) * u + nx * 5, z = a[1] + (b[1] - a[1]) * u + nz * 5; pts.push([x, z, true]); } }
   const I = new THREE.InstancedMesh(post, new THREE.MeshStandardMaterial({ color: '#d8c9a6', emissive: '#ffb860', emissiveIntensity: 0.25 }), pts.length);
   const m4 = new THREE.Matrix4();
   pts.forEach(([x, z], i) => { m4.makeTranslation(x, heightAt(x, z), z); I.setMatrixAt(i, m4); }); S.add(I);
-  // Round 14d: the posts on the Watch's switchbacks carry lit lantern heads, so the zigzag up its face shows from the
+  // Round 14d: the posts on the Watch's switchbacks carry lit lantern heads (round 15: every post, so the whole road shows as a line of lights), so the zigzag up its face shows from the
   // anchor as a line of lights climbing to the pavilion's lamp.
   { const lit = pts.filter(p => p[2]), head = new THREE.BoxGeometry(1.4, 1.6, 1.4); head.translate(0, 3.9, 0);
     const H = new THREE.InstancedMesh(head, new THREE.MeshStandardMaterial({ color: '#ffd9a0', emissive: '#ffb050', emissiveIntensity: 1.6 }), lit.length);
-    lit.forEach(([x, z], i) => { m4.makeTranslation(x, heightAt(x, z), z); H.setMatrixAt(i, m4); }); S.add(H); }
+    lit.forEach(([x, z], i) => { m4.makeTranslation(x, heightAt(x, z), z); H.setMatrixAt(i, m4); }); S.add(H);
+    // round 15: each lit head gets a glow, so the zigzag of lights up the Watch's face shows through the haze
+    for (const [x, z] of lit) { const g = glow(9, 0.7, 0); g.position.set(x, heightAt(x, z) + 3.9, z); S.add(g); } }
   return { T, W };
 }
