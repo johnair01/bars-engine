@@ -417,7 +417,7 @@ function minuteOk(m: Json | undefined): boolean {
   }
   return true
 }
-const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given'])
+const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given', 'from', 'to', 'by'])
 const GIVEN_KEYS = new Set(['spirit', 'stone', 'room', 'at'])
 const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 
@@ -429,6 +429,9 @@ const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 function homeEmberOk(e: Doc): boolean {
   if (!Object.keys(e).every(k => HOME_EMBER_KEYS.has(k))) return false
   if (!(ELEMENTS as readonly string[]).includes(e.feel as string) || !isNum(e.at)) return false
+  // where the charge started and ended (shared charge engine, FR-008), and the move that carried it: the elements and a short move id
+  for (const k of ['from', 'to'] as const) if (e[k] != null && !(ELEMENTS as readonly string[]).includes(e[k] as string)) return false
+  if (e.by != null && !(typeof e.by === 'string' && /^[a-z0-9_-]{1,40}$/i.test(e.by))) return false
   const g = e.given
   if (g == null) return true
   if (!isObj(g) || !Object.keys(g).every(k => GIVEN_KEYS.has(k))) return false

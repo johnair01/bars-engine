@@ -2751,7 +2751,7 @@ function checkinSheet() {
     return `<form class="stack" id="checkForm"><h2>Check in with yourself</h2>
       <p class="small muted">Before anyone else: what is here? Only you see this.</p>
       <div class="feels">${FEEL_ORDER.map(f => `<button type="button" class="${w.feel === f ? "on" : ""}" aria-pressed="${w.feel === f}" data-act="checkFeel" data-id="${f}"><span class="ember" style="--c:${cssHue(elHex(f))};--s:${w.feel === f ? 30 : 22}px"></span>${cap(FEELS[f])}</button>`).join("")}</div>
-      <label for="cInt">How strong is it? <b id="cIntV">${w.intensity}</b> of 10<input id="cInt" type="range" min="0" max="10" step="1" value="${w.intensity}"></label>
+      <label for="cInt"><span>How strong is it? <b id="cIntV">${w.intensity}</b> of 10</span><input id="cInt" type="range" min="0" max="10" step="1" value="${w.intensity}"></label>
       <div class="small"><b>Does it pull you toward something, or away?</b></div>
       <div class="choice dirs">${DIR_WORDS.map(([k, t]) => `<button type="button" class="${w.direction === k ? "on" : ""}" aria-pressed="${w.direction === k}" data-act="checkDir" data-id="${k}">${t}</button>`).join("")}</div>
       <label for="cLine">What does your body say? One line, if you like<input id="cLine" maxlength="280" placeholder="In your own words" value="${esc(w.line)}"></label>
@@ -2762,7 +2762,7 @@ function checkinSheet() {
   if (w.step <= 6 && w.block) {   // "Something's in the way": how big it is and what it says, then the block walk
     return `<form class="stack wave" style="--c:${c}" id="blockForm">${head}
       <h2>Something's in the way</h2><p class="wline">That is allowed. Say how big it feels and what it says, and the Between will walk you to it. You come back to ${esc(CE.WAVE_STEPS[Math.max(0, w.step)].name)}, where you left off.</p>
-      <label for="bSize">How big does it feel? <b id="bSizeV">${esc(CE.SIZE_WORDS[w.block.size])}</b><input id="bSize" type="range" min="1" max="10" step="1" value="${w.block.size}"></label>
+      <label for="bSize"><span>How big does it feel? <b id="bSizeV">${esc(CE.SIZE_WORDS[w.block.size])}</b></span><input id="bSize" type="range" min="1" max="10" step="1" value="${w.block.size}"></label>
       <label for="bWords">What does it say?<input id="bWords" maxlength="240" placeholder="In its words" value="${esc(w.block.words)}"></label>
       <div class="row"><button type="submit">Walk to it</button><button class="ghost" type="button" data-act="blockCancel">Never mind</button></div></form>`;
   }
@@ -4234,8 +4234,8 @@ let booted = false;
   // ?wake=1 (previews, the homeroom): sat on the first minute's cushion as the minute wakes you, even with the store down
   if (WAKE_SKIP && inNook() && !wake.on) wakeOnCushion();
   if (SIT_SKIP) setTimeout(() => { if (SIT_SKIP === "hearth") sitAtHearth(); else sitOn(seatId(SIT_SKIP)); }, 600);
-  if (garden && !jump) resumePendingCharge();
-  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
+  const resumed = garden && (!jump || jump === "checkin") && resumePendingCharge();   // a deep link to the check-in still returns to its step
+  if (!resumed && jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   // the first minute (Still C): a homeroom not yet oriented wakes into it; a guest's invitation doorway opens at its end
   minuteStart();
   syncShelf();

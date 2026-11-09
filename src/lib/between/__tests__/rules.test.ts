@@ -253,6 +253,8 @@ function testHomePrivateDoc() {
   for (const wave of [8, -1, 2.5, '7']) assert.equal(homeWrite({ checkins: { c2: { feel: 'fire', at: 3, wave } } } as Doc).ok, false, 'wave ' + wave)
   const e = { feel: 'water', at: 4, given: null }
   assert.equal(homeWrite({ embers: { e1: e } }).ok, true)
+  assert.equal(homeWrite({ embers: { e1: { ...e, from: 'fire', to: 'water', by: 'fire_water' } } }).ok, true, 'an ember keeps where its charge started, ended and the move')
+  assert.equal(homeWrite({ embers: { e1: { ...e, to: 'rage' } } } as Doc).ok, false, 'to is an element')
   assert.equal(mayWrite(member(A), h, path, 'update', { embers: { e1: e } }, doc).ok, true)
   assert.equal(homeWrite({ embers: { e1: { ...e, given: { spirit: 'slmn-ab12', room: 'gardenX', at: 5 } } } }).ok, true, 'given to a spirit in a room')
   assert.equal(homeWrite({ embers: { e1: { ...e, given: { spirit: 'slmn-ab12', room: null, at: 5 } } } }).ok, true, 'or in the homeroom')
