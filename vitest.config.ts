@@ -14,6 +14,7 @@ export default defineConfig({
       'src/lib/economy/__tests__/coin-face.test.ts',
       'src/lib/between/__tests__/coin.test.ts',
       'src/lib/between/__tests__/coin-turn.test.ts',
+      'src/lib/between/__tests__/bar.test.ts',
       'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
       'src/lib/mtgoa-course/__tests__/round-two.test.ts',
       'src/lib/mtgoa-course/__tests__/day-eight.test.ts',
