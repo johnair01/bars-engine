@@ -123,7 +123,7 @@ describe('pouchWrite keeps the server\'s embers its own', () => {
         const worked = { ...lit, state: 'held', move: 'fire_metal', feel: 'fire' }
         expect(pouchWrite({ embers: { k: worked } }, cur).ok).toBe(true)
         expect(pouchWrite({ embers: { k: { ...worked, from: { place: 'x', id: 'y' } } } }, cur).ok).toBe(false)
-        expect(pouchWrite({ embers: { k: { ...worked, from: undefined } } }, cur).ok).toBe(false)
+        expect(pouchWrite({ embers: { k: { ...worked, from: undefined } as never } }, cur).ok).toBe(false)
         expect(pouchWrite({ embers: { n: { ...worked, from: { place: 'x', id: 'y' } } } }, cur).ok).toBe(false)
         expect(pouchWrite({ embers: { k: { ...worked, state: 'caught', in: 'b1' } } }, cur).ok).toBe(false)
         const caught = { ...worked, state: 'caught', in: 'b1' }
