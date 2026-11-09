@@ -94,7 +94,7 @@ export const ROUTE = [
 ].map(([p, text], i) => ({ n: i + 1, at: m(p), text }));
 
 // One heightfield from the pads: inverse distance to each pad's rim, flat inside every pad.
-export function heightAt(x, z) {
+function rawHeight(x, z) {
   let num = 0, den = 0;
   for (let i = 0; i < PADS.length; i++) {
     const p = PADS[i], d = Math.hypot(x - p[0], z - p[1]) - p[3];
@@ -103,4 +103,32 @@ export function heightAt(x, z) {
     num += w * p[2]; den += w;
   }
   return num / den;
+}
+
+// The raw blend leaves terraces; a blurred grid smooths the slopes, then every pad is pressed flat again with an
+// 8 m feather. Walking and the ground mesh both read this grid, so the avatar stands on what you see.
+export const GRID = { x0: 24 - 570, z0: -9 - 410, step: 3, nx: 381, nz: 275 };
+let H = null;
+function buildGrid() {
+  const { x0, z0, step, nx, nz } = GRID; H = new Float32Array(nx * nz);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) H[j * nx + i] = rawHeight(x0 + i * step, z0 + j * step);
+  const T = new Float32Array(H.length);
+  for (let pass = 0; pass < 4; pass++) {
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { let s = 0, n = 0;
+      for (let k = -3; k <= 3; k++) { const ii = Math.min(nx - 1, Math.max(0, i + k)); s += H[j * nx + ii]; n++; } T[j * nx + i] = s / n; }
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { let s = 0, n = 0;
+      for (let k = -3; k <= 3; k++) { const jj = Math.min(nz - 1, Math.max(0, j + k)); s += T[jj * nx + i]; n++; } H[j * nx + i] = s / n; }
+  }
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const x = x0 + i * step, z = z0 + j * step;
+    for (const p of PADS) { const d = Math.hypot(x - p[0], z - p[1]) - p[3];
+      if (d < 8) { const t = d <= 0 ? 1 : 1 - d / 8, k = t * t * (3 - 2 * t); H[j * nx + i] += (p[2] - H[j * nx + i]) * k; if (d <= 0) break; } }
+  }
+}
+export function heightAt(x, z) {
+  if (!H) buildGrid();
+  const { x0, z0, step, nx, nz } = GRID;
+  const fx = Math.min(nx - 1.001, Math.max(0, (x - x0) / step)), fz = Math.min(nz - 1.001, Math.max(0, (z - z0) / step));
+  const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = j * nx + i;
+  return (H[a] * (1 - u) + H[a + 1] * u) * (1 - v) + (H[a + nx] * (1 - u) + H[a + nx + 1] * u) * v;
 }

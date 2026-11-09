@@ -72,7 +72,7 @@ export function paifang(G, x, z, w = 7, h = 5, col = PAL.plaster) {
 
 // ---------- terrain ----------
 export function terrain(S) {
-  const W = 1140, D = 820, N = 380, M = 274, cx = 24, cz = -9;
+  const W = 1140, D = 822, N = 380, M = 274, cx = 24, cz = -9 + 1;
   const g = new THREE.PlaneGeometry(W, D, N, M); g.rotateX(-Math.PI / 2); g.translate(cx, 0, cz);
   const pos = g.attributes.position, col = new Float32Array(pos.count * 3), c = new THREE.Color(), t = new THREE.Color();
   const segs = [];
@@ -87,7 +87,7 @@ export function terrain(S) {
     for (const [a, b, hw, cc] of segs) {
       const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
       const k = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2));
-      if (Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz) < hw) { c.copy(cc); break; }
+      if (Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz) < hw) { c.lerp(cc, 0.7); break; }
     }
     col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
   }
@@ -238,11 +238,11 @@ export function forest(S) {
 export function routePosts(S) {
   for (const r of ROUTE) {
     const y = heightAt(...r.at);
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.2, 8), mat(PAL.plaster)); post.position.set(r.at[0], y + 1.6, r.at[1]); post.castShadow = true; S.add(post);
+    const px = r.at[0] + 3, pz = r.at[1] - 1; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.2, 8), mat(PAL.plaster)); post.position.set(px, heightAt(px, pz) + 1.6, pz); post.castShadow = true; S.add(post);
     const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
     x.fillStyle = '#a3322a'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill(); x.strokeStyle = '#fff8ea'; x.lineWidth = 6; x.stroke();
     x.fillStyle = '#fff8ea'; x.font = 'bold 64px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(r.n), 64, 68);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
-    sp.scale.set(2.4, 2.4, 1); sp.position.set(r.at[0], y + 4.4, r.at[1]); sp.renderOrder = 10; sp.userData.routeBadge = true; S.add(sp);
+    sp.scale.set(2.4, 2.4, 1); sp.position.set(px, heightAt(px, pz) + 4.4, pz); sp.renderOrder = 10; sp.userData.routeBadge = true; S.add(sp);
   }
 }

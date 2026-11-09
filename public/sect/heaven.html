@@ -34,7 +34,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { heightAt, ROUTE, P, COURTS } from './heaven/layout.js';
-import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors } from './heaven/world.js';
+import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors, colliders } from './heaven/world.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
 
 const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -44,7 +44,7 @@ R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
 document.body.appendChild(R.domElement);
 
 const S = new THREE.Scene();
-S.background = new THREE.Color('#cfdbe0'); S.fog = new THREE.Fog('#dfe6e6', 160, 900);
+S.background = new THREE.Color('#cfdbe0'); const fog = new THREE.Fog('#dfe6e6', 160, 900); S.fog = fog;
 S.add(new THREE.HemisphereLight('#f4ecd8', '#6b5d48', 1.1));
 const sun = new THREE.DirectionalLight('#ffe2b8', 2.4); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 400 });
@@ -87,7 +87,11 @@ function jump(n, view) {
   const r = ROUTE[n - 1], [x, z] = r.at;
   // stand a few metres short of the post, facing the summit unless the stop says otherwise
   const face = view?.face ?? P.summit; const dx = face[0] - x, dz = face[1] - z, L = Math.hypot(dx, dz) || 1;
-  A.position.set(x - dx / L * 3, 0, z - dz / L * 3); A.position.y = groundAt(A.position.x, A.position.z);
+  // step back from the post until the avatar and the camera behind it both stand clear of every building
+  const clear = (px, pz, r) => !colliders.some(b => { const ddx = px - b.x, ddz = pz - b.z, lx = ddx * b.c - ddz * b.s, lz = ddx * b.s + ddz * b.c; return b.y1 - b.y0 > 1 && Math.abs(lx) < b.hw + r && Math.abs(lz) < b.hd + r; });
+  let off = 3; const back0 = view?.back ?? 11;
+  while (off < 60 && !(clear(x - dx / L * off, z - dz / L * off, 0.8) && clear(x - dx / L * (off + back0), z - dz / L * (off + back0), 2.5) && clear(x - dx / L * (off + back0 / 2), z - dz / L * (off + back0 / 2), 1.5))) off += 2;
+  A.position.set(x - dx / L * off, 0, z - dz / L * off); A.position.y = groundAt(A.position.x, A.position.z);
   A.rotation.y = Math.atan2(-dx, -dz);
   const back = view?.back ?? 11, up = view?.up ?? 4.5;
   cam.position.set(A.position.x - dx / L * back, A.position.y + up, A.position.z - dz / L * back);
@@ -122,11 +126,22 @@ function frame(now) {
   const d = A.position.clone().sub(prev); cam.position.add(d); orbit.target.add(d);
   orbit.update();
   sun.position.set(A.position.x + 80, A.position.y + 140, A.position.z + 60); sun.target.position.copy(A.position);
-  R.render(S, topView ? top : cam);
+  S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
   requestAnimationFrame(frame);
 }
 jump(1, { face: P.gate });
-window.heaven = { jump, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun };
+function enter(key, { up = 3.2, back = 1.6 } = {}) {
+  const r = interiors.find(i => i.key === key), Rm = r.R, rt = Rm.route;
+  const W = ([x, y]) => { const lx = x - Rm.Wd / 2, lz = y - Rm.D / 2; return [r.x + r.c * lx + r.s * lz, r.z - r.s * lx + r.c * lz]; };
+  const [ax, az] = W(rt[rt.length - 1]), [dx0, dz0] = W(rt[0]);
+  A.position.set(ax, r.y + 0.06, az);
+  const dx = ax - dx0, dz = az - dz0, L = Math.hypot(dx, dz);
+  A.rotation.y = Math.atan2(-dx, -dz);
+  cam.position.set(dx0 - dx / L * back, r.y + up, dz0 - dz / L * back);
+  orbit.target.set(ax + dx / L * 2.5, r.y + 1.2, az + dz / L * 2.5);
+  hud.where.textContent = Rm.title; hud.what.textContent = Rm.sub; input.target = null;
+}
+window.heaven = { jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun };
 requestAnimationFrame(frame);
 </script>
 </body></html>
