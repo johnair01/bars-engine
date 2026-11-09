@@ -601,6 +601,17 @@ export function ForestWalk() {
                 If booking can wait, start here. The parts that stall us have names, and I&rsquo;ll introduce them one at a time. Only your
                 address leaves this page; what you carried in stays here.
               </p>
+              <video
+                className="w-full rounded-xl border border-emerald-200/15"
+                controls
+                muted
+                playsInline
+                preload="none"
+                poster="/coaching/meet-your-daemons-poster.jpg"
+                aria-label="Thirty-second animation: a child at dusk meets a tortoise guardian called the Protector"
+              >
+                <source src="/coaching/meet-your-daemons.mp4" type="video/mp4" />
+              </video>
               <EmailCaptureForm
                 askName
                 promise={LIST_TERMS.daemons.promise}
