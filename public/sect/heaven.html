@@ -37,6 +37,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { heightAt, ROUTE, P, COURTS } from './heaven/layout.js';
 import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors, colliders } from './heaven/world.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
+import { atmosphere, placeSun } from './heaven/atmo.js';
 
 const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight);
@@ -50,6 +51,9 @@ S.add(new THREE.HemisphereLight('#f4ecd8', '#6b5d48', 1.1));
 const sun = new THREE.DirectionalLight('#ffe2b8', 2.4); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 400 });
 sun.shadow.bias = -0.0006; S.add(sun, sun.target);
+const hemi = S.children.find(o => o.isHemisphereLight);
+// Round 11: the anchor painting's air (low warm sun, sky dome, ranges in haze, cloud sea).
+atmosphere(S, R, { sun, hemi, fog });
 
 const rooms = await (await fetch('./heaven/rooms.json')).json();
 terrain(S);
@@ -135,7 +139,7 @@ function frame(now) {
   step(A, input, dt, yaw);
   const d = A.position.clone().sub(prev); cam.position.add(d); orbit.target.add(d);
   orbit.update();
-  sun.position.set(A.position.x + 80, A.position.y + 140, A.position.z + 60); sun.target.position.copy(A.position);
+  placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
   requestAnimationFrame(frame);
 }
