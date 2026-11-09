@@ -2031,6 +2031,21 @@ async function keepEmber() {
   await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null } } });
   hd = {}; if (hm) { closeSheet(); hmSync(); } else toast("An ember, in your pouch."); // by the fire, it rises out of the satchel instead
 }
+/* Write a BAR at the hearth (ember-to-vibeulon FR-004 to FR-011): the held ember becomes a private BAR with one coin. When the player
+   has not chosen a coin face yet, /bar answers choose:true and the coin turn opens for that bare coin. */
+async function writeBarAtHearth() {
+  const eid = sheetArg, mark = (($("#barMark") || {}).value || "").trim();
+  if (!eid || !gardenId) return;
+  if (!mark) { toast("Write a few words first."); return; }
+  let j;
+  try { j = await api("/api/between/" + gardenId + "/bar", { emberAt: eid, mark }); }
+  catch (e) { toast(e.code === "not_yet" ? "That ember is not in your hands." : "The BAR did not write. Try again."); return; }
+  const e = embers().find(([k]) => k === eid);
+  if (e) myPouch = { ...(myPouch || {}), embers: { ...((myPouch && myPouch.embers) || {}), [eid]: { ...e[1], state: "written", bar: j.barId } } };
+  closeSheet(); if (hm) hmSync();
+  if (j.choose && j.vibulonId && window.__between.coin) window.__between.coin.open({ vibulonId: j.vibulonId, face: j.face });
+  else toast("Written. Its coin is in your collection.");
+}
 async function makeLantern(eid) {
   const e = embers().find(([k]) => k === eid); if (!e || e[1].state !== "held") return null;
   const lid = "l" + hkey();
@@ -2260,7 +2275,7 @@ function hmHud() {
   }
   const lay = hm.step === "motes" && !(fs && fs.sticks >= 3) ? b("fsLay", "", fs ? "Lay another stick on the fire" : "Lay a stick on the fire") : "";
   const h = `<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
-    ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
+    ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.step === "motes" && !fs && !isDemoEmber(hm.held.eid) && hearthOpen() ? b("hmWrite", "", "Write it down as a BAR") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
     ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
     ${teaBtn()}<button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
   if (hmEl._h === h) return; hmEl._h = h; hmEl.innerHTML = h;
@@ -2599,6 +2614,11 @@ function renderSheet() {
       if (!g && storeDown) { h = `<div class="stack"><h2>Something stirs</h2><p class="muted">When something stirs you, sit with it. What's left is a little glowing ember you keep.</p><p class="small muted">The store did not answer, so no ember can be kept here now.</p></div>` + seatedClose; break; }
       if (!g || !hearthOpen()) { closeSheet(); return; }
       h = stirSheet(g, V) + seatedClose; break;
+    case "bar": {
+      if (!g || !hearthOpen()) { closeSheet(); return; }
+      h = `<div class="stack"><h2>Write it down</h2><p class="muted small">A few words for yourself. The BAR is private, and it keeps one coin.</p>
+        <label for="barMark">What you want to remember<textarea id="barMark" rows="4" maxlength="2000"></textarea></label>
+        <div class="row"><button type="button" data-act="barSave">Write the BAR</button></div></div>` + close; break; }
     case "away": h = awaySheet(g, V) + close; break;
     case "menu": h = menuSheet(g, V); break;
     case "shot": h = shotSheet(); break;
@@ -3571,6 +3591,8 @@ document.addEventListener("click", async ev => {
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
   if (a === "hmHold") { hmHold(id); return; }
   if (a === "hmLantern") { hmLight(); return; }
+  if (a === "hmWrite") { if (hm && hm.held) openSheet("bar", hm.held.eid); return; }
+  if (a === "barSave") { writeBarAtHearth(); return; }
   if (a === "hmHang") { const h = hm && hm.hooks && hm.hooks.find(x => x.id === id); if (h) hmSend(h); return; }
   if (a === "hmStand") { hmStand(); return; }
   if (a === "teaPour") { teaPour(); return; }
