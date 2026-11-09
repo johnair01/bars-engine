@@ -20,7 +20,7 @@ export function makeKneel(W) {
   const X = W.X, F = X.F, k = F.stature / 1.75, { f, l } = F.fr, up = V(0, 1, 0), dn = V(0, -1, 0);
   const holder = W.holder, rootY = F.root.position.y;
   const floorLen = /A1/.test(W.outfit || "");
-  let fit = null, kneeling = false, giveT0 = null, giveWant = false, built = false;
+  let fit = null, kneeling = false, giveT0 = null, giveAge = 0, giveWant = false, built = false;
 
   // run fn with the holder in its own frame (at the world origin, unturned); everything posed in it stays in place after
   function inPlace(fn) {
@@ -101,11 +101,14 @@ export function makeKneel(W) {
     kneeling = false; ember.visible = false; giveT0 = null; giveWant = false;
   }
   function give() { giveWant = true; }
-  function update(t) {
+  function update(t, dt) {
     if (!kneeling) return;
-    if (giveWant) { giveWant = false; giveT0 = t; }
+    if (giveWant) { giveWant = false; giveT0 = t; giveAge = 0; }
     if (giveT0 == null) return;
-    const u = (t - giveT0) / GIVE_S;
+    /* the give runs on frame time, capped per frame: the first frame after the sheet closes can stall for seconds (shaders for
+       the burst and the hearth camera compile), and a wall-clock give would be over before the player sees it begin */
+    giveAge += Math.min(dt == null ? 0.05 : dt, 0.1);
+    const u = giveAge / GIVE_S;
     if (u >= 1) { giveT0 = null; ember.visible = false; inPlace(() => { kneelPose(0); ST.followLap(X, { sleeves: /^$/ }); }); return; }
     // out over the first 45%, held while the ember leaves the hand, back over the last 30%
     const reach = THREE.MathUtils.smoothstep(u, 0, 0.45) * (1 - THREE.MathUtils.smoothstep(u, 0.7, 1));
