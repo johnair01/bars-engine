@@ -508,10 +508,10 @@ export function mount(B, opts = {}) {
   .rb-blines{list-style:none;margin:7px 0 0;padding:6px 0 0;border-top:1px solid #d8c4a2;width:100%;display:grid;gap:4px}
   .rb-blines span{display:block;font:italic 400 13px/1.25 var(--rb-serif);color:var(--ink)}
   .rb-blines small{display:block;font:400 10.5px/1.2 var(--rb-serif);color:var(--faint)}
-  .rb-bcoin{position:absolute;right:-14px;bottom:-12px;transform:rotate(1.2deg);display:flex;gap:2px;background:none;border:0;padding:0;cursor:pointer}
+  .rb-bcoin{position:absolute;right:-14px;bottom:-30px;transform:rotate(1.2deg);display:flex;gap:2px;background:none;border:0;padding:0;cursor:pointer}
   .rb-bcoin:focus-visible{outline:3px solid #5fc2ba;outline-offset:4px;border-radius:8px}
   .rb-bcoin .rb-vib:first-child:not(:last-child){transform:rotate(-8deg) translateY(4px)}
-  .rb-story{flex:none;margin:16px 4px 0;align-self:stretch;padding:8px 12px;border-left:2px solid rgba(110,150,80,.7);background:rgba(255,248,232,.55)}
+  .rb-story{flex:none;margin:30px 4px 0;align-self:stretch;padding:8px 12px;border-left:2px solid rgba(110,150,80,.7);background:rgba(255,248,232,.55)}
   .rb-story p{margin:0 0 4px;font:italic 400 14px/1.35 var(--rb-serif);color:#4a3826} .rb-story p:last-child{margin-bottom:0}
   .rb-restact{display:block;flex:none;margin:12px auto 0;font:italic 400 16px/1.3 var(--rb-serif);color:var(--ink,#3a2a1c);background:none;border:0;border-bottom:1px solid currentColor;border-radius:0;padding:2px 0;cursor:pointer}
   .rb-restact:focus-visible{outline:3px solid #5fc2ba;outline-offset:3px}
