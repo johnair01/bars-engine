@@ -27,5 +27,5 @@ preview: a one-click Vercel preview of the build PR, opened in the Nook
 - [x] T011 [claude] `coin-face.ts`: `coinFace(move, seal, style)` for all fifteen moves, transcend moves twice one element, no ember gives the blank; unit tests (FR-009)
 - [x] T012 [claude] Migration `Vibulon.face Json?`; `mintBarVibulon` writes the face in its transaction; the coin style in the pouch (FR-009, FR-011) (the mint writes the face; the `/bar` route that answers `face` and `choose` waits T008)
 - [x] T013 [claude] `PUT .../coin`: finish a bare coin once, change the style for the next; refuse a set face (FR-010, FR-012, FR-013)
-- [ ] T014 [claude] After his yes on the look: `public/between/coin.js` and the coin turn at the hearth in `garden.js` (FR-010, FR-011, FR-012)
+- [~] T014 [claude] After his yes on the look: `public/between/coin.js` and the coin turn at the hearth in `garden.js` (FR-010, FR-011, FR-012)
 - [ ] T015 [wendell] Walk the Phase 3 Verification Quest from the board look (FR-009 to FR-013)
