@@ -26,22 +26,22 @@ const NAME = t => (t ? String(t)[0].toUpperCase() + String(t).slice(1).toLowerCa
 
 /** The sixteen stock lines, one per good: the move (under 20 words) and its overdone side (starts with the good's name). */
 export const STOCK = {
-  Spark: { move: "Start the small thing you have been waiting to feel ready for, and stop after ten minutes.", overdone: "Spark rushes past the care the thing needs." },
-  Restraint: { move: "Leave one thing alone today that you would normally add to, and see what stays good without you.", overdone: "Restraint held too long stalls everything new." },
-  Nurture: { move: "Do one small thing today that helps someone else's work or rest, and ask for nothing back.", overdone: "Nurture turns into tending their reaction instead of your own." },
-  "Self-nurture": { move: "Take one hour that is only yours, and spend it on what you actually need, not what you owe.", overdone: "Self-nurture becomes absence when someone needs you there." },
-  Breakthrough: { move: "Do the one thing you keep circling, now, before you have a better reason.", overdone: "Breakthrough breaks what only needed another day." },
-  Timing: { move: "Name the moment that would be right, and wait for it on purpose instead of by default.", overdone: "Timing waits so long that nobody is prepared." },
-  Subtle: { move: "Change one small thing in how you show up, and watch what shifts without announcing it.", overdone: "Subtle goes so quiet nobody notices the change." },
-  Direct: { move: "Say the plain sentence out loud to one person, with no setup.", overdone: "Direct turns blunt and leaves no room for their answer." },
-  Venture: { move: "Take one real step into the unknown part, and write down what you find there.", overdone: "Venture runs ahead of the ground under it." },
-  Anchor: { move: "Name the one thing you can count on right now, and stand on it before you move.", overdone: "Anchor becomes staying put because it feels safe." },
-  Clarify: { move: "Write down in one sentence what you actually want from this, then check it against what you did.", overdone: "Clarify keeps sharpening when it is time to act." },
-  Tact: { move: "Choose what to leave unsaid today, and say the rest kindly.", overdone: "Tact smooths over what needed to be said." },
-  Pause: { move: "Stop for ten minutes with nothing in your hands, and notice what you were carrying.", overdone: "Pause becomes avoiding the next thing." },
-  Proceed: { move: "Take the next step you already know, without asking anyone whether it is allowed.", overdone: "Proceed pushes through what was asking you to look." },
-  Widen: { move: "Ask one person outside your usual circle what they see in this.", overdone: "Widen spreads you across more than you can hold." },
-  Deepen: { move: "Stay with one part of this for a full hour, and go further into it than is comfortable.", overdone: "Deepen digs in so far you lose sight of the rest." },
+  Spark: { move: "Make the first rough version today, ugly on purpose: a sketch, a draft line, a dialled number.", overdone: "Spark starts five things and finishes none of them." },
+  Restraint: { move: "Cut the last thing you added to this, and see whether anyone misses it.", overdone: "Restraint keeps trimming until nothing is left to grow." },
+  Nurture: { move: "Ask the person nearest this what would make their week easier, then do exactly that.", overdone: "Nurture tends their feelings while the work they asked for waits." },
+  "Self-nurture": { move: "Put a block on tomorrow's calendar with your name on it, and refuse the first request for it.", overdone: "Self-nurture closes the door on the people counting on you." },
+  Breakthrough: { move: "Send the message you drafted and never sent; if there is none, write it and send it now.", overdone: "Breakthrough forces open what would have opened by itself next week." },
+  Timing: { move: "Pick the date you will act on this, and name the sign that will tell you it is time.", overdone: "Timing keeps moving the date and calls the delay patience." },
+  Subtle: { move: "Shift a habit instead of making an announcement: where you sit, when you arrive, what you bring.", overdone: "Subtle hints so softly that nobody knows anything changed." },
+  Direct: { move: "Say the sentence you have been rehearsing, to the person it is for, in your first minute together.", overdone: "Direct says the true thing and leaves before they can answer." },
+  Venture: { move: "Raise the question about this you fear has a bad answer, and hear the answer through.", overdone: "Venture chases the risk for the rush and forgets what it came for." },
+  Anchor: { move: "List three things about this that will still be true next month, and decide from those.", overdone: "Anchor holds the old plan after the facts have changed." },
+  Clarify: { move: "Finish this sentence on paper: \"I will know this worked when...\" Keep the first ending.", overdone: "Clarify rewrites the goal again instead of starting on it." },
+  Tact: { move: "Before you raise this, name aloud what the other person got right, then make your point.", overdone: "Tact wraps the hard part so well that they never find it." },
+  Pause: { move: "Sit for ten minutes without your phone, and notice the first worry that surfaces.", overdone: "Pause stays seated long after the rest has done its work." },
+  Proceed: { move: "Do the next step on your list before noon, without checking with anyone first.", overdone: "Proceed walks past the warning signs because the plan said go." },
+  Widen: { move: "Tell this to someone who knows nothing about it, and take their first question seriously.", overdone: "Widen gathers so many views that your own goes missing." },
+  Deepen: { move: "Choose the part of this that stung most, and give it a full written page by itself.", overdone: "Deepen circles the same wound after it has stopped teaching." },
 };
 
 /** FNV-1a: a small, stable hash for the deterministic pick. */
