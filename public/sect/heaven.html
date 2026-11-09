@@ -190,7 +190,7 @@ function shot(name) {
   cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { shot, ready, jump, enter, A, cam, orbit, models, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
+window.heaven = { shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 </script>
 </body></html>

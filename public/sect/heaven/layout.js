@@ -117,7 +117,7 @@ const bearing = (deg, d) => { const a = deg * Math.PI / 180, [fx, fz] = _gf, lx 
   return [P.great[0] + (fx * Math.cos(a) + lx * Math.sin(a)) * d, P.great[1] + (fz * Math.cos(a) + lz * Math.sin(a)) * d]; };
 // [x, z, top m, slope, seed]
 export const FAR_PEAKS = [
-  [...bearing(14, 760), 140, 0.8, 1],   // the Watch
+  [...bearing(17, 760), 140, 0.8, 1],   // the Watch (14c: from 14 to 17 degrees, into the open gap left of the hall)
   [...bearing(25, 1050), 230, 0.75, 2], [...bearing(5, 1250), 280, 0.7, 3], [...bearing(36, 1450), 330, 0.65, 4],
   [...bearing(17, 1700), 390, 0.6, 5], [...bearing(46, 1100), 200, 0.75, 6], [...bearing(-3, 1650), 360, 0.6, 7],
   [...bearing(28, 1750), 360, 0.6, 17], [...bearing(9, 1500), 330, 0.65, 18],
@@ -127,22 +127,57 @@ export const FAR_PEAKS = [
 ];
 export const WATCH = FAR_PEAKS[0];
 // The ridge road: from the ring walk at its west side, down to a saddle, up to the Watch. [x, z, crest height]
-const _rs = ringAt(160), _wt = [WATCH[0], WATCH[1]], _mid = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-export const FAR_ROAD = [[..._rs, ringHeight(160)], [..._mid(_rs, _wt, 0.18), 40], [..._mid(_rs, _wt, 0.4), 22],
-  [..._mid(_rs, _wt, 0.6), 34], [..._mid(_rs, _wt, 0.82), 90], [WATCH[0], WATCH[1], WATCH[2]]];
-const spur = (th, s) => 0.5 * Math.sin(th * 5 + s) + 0.3 * Math.sin(th * 9 + s * 2.3) + 0.2 * Math.sin(th * 17 + s * 0.7);
+// Round 14c: the road leaves the ring where it crosses bearing 17 (ring angle 197), runs out along a spine to a shallow
+// saddle, then climbs the Watch's face in switchbacks. It runs away from the anchor and every bend stands higher in the
+// frame than the one before, so from inside the gate it reads as a way up the mountain you could take (in 14b it ran
+// across the view at 22 m and every lantern sat behind the court balustrade).
+const _rs = ringAt(197);
+export const FAR_ROAD = [[..._rs, ringHeight(197)], [...bearing(17.5, 430), 60], [...bearing(17, 510), 57],
+  [...bearing(15.2, 590), 74], [...bearing(19, 640), 92], [...bearing(15.4, 690), 110], [...bearing(18.6, 728), 127],
+  [WATCH[0], WATCH[1], WATCH[2]]];
+PATHS.push([FAR_ROAD.map(p => [p[0], p[1]]), 7, '#b5a58a']); // round 14c: the road coloured in on the sect's own ground too
+// Round 14c: smooth value noise, so the ranges have gullies and spurs that run downhill instead of a star of straight
+// ribs round each peak (the 14b map showed every peak as a starfish).
+const _hash = (i, j) => { let h = (i * 374761393 + j * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function vnoise(x, z) {
+  const i = Math.floor(x), j = Math.floor(z), u = x - i, v = z - j, su = u * u * (3 - 2 * u), sv = v * v * (3 - 2 * v);
+  const a = _hash(i, j), b = _hash(i + 1, j), c = _hash(i, j + 1), d = _hash(i + 1, j + 1);
+  return a + (b - a) * su + (c - a) * sv + (a - b - c + d) * su * sv;
+}
+// ridged noise: sharp crests, rounded valleys, 0..1
+function ridged(x, z) {
+  let s = 0, amp = 0.5, f = 1 / 260, w = 1;
+  for (let o = 0; o < 4; o++) { const n = 1 - Math.abs(2 * vnoise(x * f + o * 17.3, z * f - o * 9.1) - 1), r = n * n * w; s += r * amp; w = Math.min(1, r * 2); amp *= 0.5; f *= 2.1; }
+  return s;
+}
+// Spines: each peak joins its nearest neighbour nearer the sect by a ridge that sags to about two thirds of the lower top,
+// so the ranges read as connected country you could cross, not islands in the cloud.
+const _C = [24, -9];
+export const FAR_SPINES = FAR_PEAKS.map((p, i) => {
+  const dp = Math.hypot(p[0] - _C[0], p[1] - _C[1]); let best = null, bd = 1e9;
+  FAR_PEAKS.forEach((q, k) => { if (k === i || Math.hypot(q[0] - _C[0], q[1] - _C[1]) >= dp) return; const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = q; } });
+  return best && bd < 700 ? [p, best] : null;
+}).filter(Boolean);
 export function farHeight(x, z) {
-  let h = -230;
+  // foothill floor: low hills that climb gently from the sect's skirt out to the ranges
+  const dc = Math.hypot(x - _C[0], z - _C[1]), rn = ridged(x, z);
+  let h = -150 + Math.min(1, Math.max(0, (dc - 520) / 600)) * 110 + 60 * rn;
   for (const [px, pz, top, sl, sd] of FAR_PEAKS) {
-    const d = Math.hypot(x - px, z - pz); if (d > (top + 230) / (sl * 0.6)) continue; // beyond its foot
-    const th = Math.atan2(z - pz, x - px);
-    h = Math.max(h, top - d * sl * (1 + 0.38 * spur(th, sd)) + 6 * Math.sin(x * 0.05 + sd) * Math.sin(z * 0.043 - sd));
+    const d = Math.hypot(x - px, z - pz), R = (top + 150) / sl; if (d > R * 1.6) continue;
+    const t = d / R, m = top - (top + 150) * Math.pow(t, 0.85) * (1.05 - 0.15 * Math.sin(Math.atan2(z - pz, x - px) * 3 + sd));
+    h = Math.max(h, m - 70 * (1 - rn) * Math.min(1, t * 2.2));
+  }
+  for (const [a, b] of FAR_SPINES) {
+    const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
+    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2)), d = Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz);
+    const sag = Math.min(a[2], b[2]) * 0.62, crest = Math.max(a[2] * Math.pow(1 - t, 2), b[2] * t * t, sag);
+    h = Math.max(h, crest - d * 0.7 - 50 * (1 - rn));
   }
   for (let i = 1; i < FAR_ROAD.length; i++) {
     const a = FAR_ROAD[i - 1], b = FAR_ROAD[i], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
     const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2)), d = Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz);
     const crest = a[2] + (b[2] - a[2]) * (t * t * (3 - 2 * t));
-    h = Math.max(h, crest - Math.max(0, d - 5) * 0.8);
+    h = Math.max(h, crest - Math.max(0, d - 6) * (0.55 + 0.4 * rn));
   }
   return h;
 }

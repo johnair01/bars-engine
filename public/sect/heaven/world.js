@@ -101,9 +101,11 @@ export function terrain(S) {
     const north = Math.max(0, (-z - 180) / 120) + Math.max(0, (-x - 330) / 120);
     if (north > 0) c.lerp(t.set(PAL.forest), Math.min(1, north));
     { const dG = Math.hypot(x - P.great[0], z - P.great[1]);
+      // round 14c: beyond 160 m the ground keeps its own colour and the fog does the distance, so the land between the
+      // court and the ranges reads as land (it was one flat haze blue, which hid the road out)
       // round 13b: and the slopes that rise straight out of the court (up to 45 m) go grey-blue with height, so from the
       // anchor view they read as the painting's ranges in haze behind the hall instead of a green hill
-      const far = Math.min(1, Math.max(0, (dG - 32) / 60, dG < 160 ? (y - 28) / 10 : 0)); if (far > 0) c.lerp(t.set('#9cafc2'), far); if (dG < 160 && y > 22) c.lerp(t.set('#b4c3d2'), Math.min(0.85, (y - 22) / 22)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
+      const far = dG < 160 ? Math.min(1, Math.max(0, (dG - 32) / 60, (y - 28) / 10)) * Math.min(1, (160 - dG) / 40) : 0; if (far > 0) c.lerp(t.set('#9cafc2'), far); if (dG < 160 && y > 22) c.lerp(t.set('#b4c3d2'), Math.min(0.85, (y - 22) / 22)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
     let steep = false;
     { // round 13: cliffs are bare rock, banded and streaked like the painting's crag; its crown keeps a little moss
       const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;
