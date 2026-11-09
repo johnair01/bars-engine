@@ -69,14 +69,24 @@ export function greatCourt(G, { collide = () => {} } = {}) {
 }
 
 // Where the students stand and what they do (local court frame): [x, z, facing (deg, 0 = toward the summit), look].
+// Basic training robes in the painting come in slate blue, undyed brown, grey-blue, rose and green; each trainee gets one
+// (round 12: before, two dyes, violet and saffron, so the court read as two colours). cloth = main, light, shade, trim.
+const ROBE = {
+  slate: { cloth: ['#4d6a8c', '#6d8bad', '#2f4560', '#7a2e2a'], lining: '#8a6a44' },
+  brown: { cloth: ['#7d5a3a', '#9a7650', '#523a24', '#7a2e2a'], lining: '#b9a07a' },
+  mist:  { cloth: ['#7f93a8', '#a0b2c4', '#566878', '#7a2e2a'], lining: '#5a6f86' },
+  rose:  { cloth: ['#b4706a', '#cf8e86', '#85504a', '#6a3a2a'], lining: '#7d5a3a' },
+  moss:  { cloth: ['#5f8a55', '#7ea772', '#3d5c38', '#7a2e2a'], lining: '#c9b98a' },
+  ink:   { cloth: ['#3b4452', '#566274', '#242a33', '#7a2e2a'], lining: '#8a6a44' },
+};
 export const STUDENTS = [
-  [-5.8, 4.2, 200, { outfit: 'coat', dye: 'violet', skin: 'amber', style: 'sweep', colour: 'black', shape: 'a', build: 'slender' }],
-  [-3.6, 2.6, 120, { outfit: 'jacket', dye: 'saffron', skin: 'light', style: 'page', colour: 'gray', shape: 'b', build: 'average' }],
-  [3.4, 1.8, 250, { outfit: 'dress', dye: 'saffron', skin: 'umber', style: 'afro', colour: 'black', shape: 'c', build: 'average' }],
-  [4.6, 2.9, 70, { outfit: 'coat', dye: 'violet', skin: 'chestnut', style: 'spiked', colour: 'black', shape: 'a', build: 'broad' }],
-  [5.4, 0.6, 330, { outfit: 'dress', dye: 'violet', skin: 'light', style: 'sweep', colour: 'red', shape: 'c', build: 'slender' }],
-  [-1.8, -9.2, 20, { outfit: 'coat', dye: 'saffron', skin: 'amber', style: 'page', colour: 'black', shape: 'b', build: 'average' }],
-  [-13.2, -2, 90, { outfit: 'jacket', dye: 'violet', skin: 'umber', style: 'afro', colour: 'black', shape: 'a', build: 'broad' }],
-  [8.5, -10.5, 300, { outfit: 'jacket', dye: 'saffron', skin: 'chestnut', style: 'sweep', colour: 'gray', shape: 'b', build: 'slender' }],
-  [-6.4, 8.6, 160, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true }],
+  [-5.8, 4.2, 200, { outfit: 'coat', dye: 'violet', skin: 'amber', style: 'sweep', colour: 'black', shape: 'a', build: 'slender', tint: ROBE.slate }],
+  [-3.6, 2.6, 120, { outfit: 'jacket', dye: 'saffron', skin: 'light', style: 'page', colour: 'gray', shape: 'b', build: 'average', tint: ROBE.brown }],
+  [3.4, 1.8, 250, { outfit: 'dress', dye: 'saffron', skin: 'umber', style: 'afro', colour: 'black', shape: 'c', build: 'average', tint: ROBE.mist }],
+  [4.6, 2.9, 70, { outfit: 'coat', dye: 'violet', skin: 'chestnut', style: 'spiked', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.ink }],
+  [5.4, 0.6, 330, { outfit: 'dress', dye: 'violet', skin: 'light', style: 'sweep', colour: 'red', shape: 'c', build: 'slender', tint: ROBE.rose }],
+  [-1.8, -9.2, 20, { outfit: 'coat', dye: 'saffron', skin: 'amber', style: 'page', colour: 'black', shape: 'b', build: 'average', tint: ROBE.slate }],
+  [-13.2, -2, 90, { outfit: 'jacket', dye: 'violet', skin: 'umber', style: 'afro', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.brown }],
+  [8.5, -10.5, 300, { outfit: 'jacket', dye: 'saffron', skin: 'chestnut', style: 'sweep', colour: 'gray', shape: 'b', build: 'slender', tint: ROBE.moss }],
+  [-6.4, 8.6, 160, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
 ];

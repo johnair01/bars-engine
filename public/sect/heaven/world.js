@@ -99,6 +99,7 @@ export function terrain(S) {
     c.set(PAL.grass);
     const north = Math.max(0, (-z - 180) / 120) + Math.max(0, (-x - 330) / 120);
     if (north > 0) c.lerp(t.set(PAL.forest), Math.min(1, north));
+    { const far = Math.min(1, Math.max(0, (Math.hypot(x - P.great[0], z - P.great[1]) - 45) / 80)); if (far > 0) c.lerp(t.set('#a9a99a'), far * 0.85); } // round 12: the summit slope goes pale and crag-grey with distance, so the ranges read over it
     if (y < -60) c.lerp(t.set(PAL.rock), Math.min(1, (-60 - y) / 60));
     for (const p of PADS) if (p[3] > 6 && Math.hypot(x - p[0], z - p[1]) < p[3] - 1) { c.set(PAL.pave); break; }
     for (const [a, b, hw, cc] of segs) {

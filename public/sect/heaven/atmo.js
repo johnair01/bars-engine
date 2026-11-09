@@ -9,9 +9,9 @@ import { ridge, cloudTex } from './kit.js';
 export const SUN_DIR = new THREE.Vector3(-0.62, 0.2, -0.76).normalize();
 
 export function atmosphere(S, R, { sun, hemi, fog }) {
-  R.toneMappingExposure = 0.95;
+  R.toneMappingExposure = 1.12;
   sun.color.set('#ffc98a'); sun.intensity = 3.1;
-  hemi.color.set('#ffe6c4'); hemi.groundColor.set('#5a4a3c'); hemi.intensity = 0.85;
+  hemi.color.set('#ffe6c4'); hemi.groundColor.set('#5a4a3c'); hemi.intensity = 1.5;
   fog.color.set('#e9cfae'); fog.near = 90; fog.far = 1300;
   S.background = null;
 
