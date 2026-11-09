@@ -24,12 +24,16 @@ export function cragCrown(S, M) {
     if (i % 2 === 0) { const m = box(G, 0.9, 0.7, 0.95, M.stone, (x0 + x1) / 2, 91.95, (z0 + z1) / 2); m.rotation.y = seg.rotation.y; }
   }
 
-  // tiered halls on the crown's lip, facing the great court: a three-tier tower and two lower halls beside it
-  const place = (H, th, r, y = 90) => { const [x, z] = at(th, r); H.position.set(x, y, z); H.rotation.y = Math.PI / 2 - th; G.add(H); return H; };
-  place(hall(M, { w: 11, d: 8, ph: 4.4, tiers: 3, seed: 21 }), toGreat + 0.12, 24);
-  place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22 }), toGreat - 0.5, 27);
-  place(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), toGreat + 0.75, 26);
-  place(hall(M, { w: 9, d: 7, ph: 4, tiers: 2, seed: 24 }), toGreat + Math.PI, 18);
+  // tiered halls on the crown's lip, facing the great court: a three-tier tower and two lower halls beside it.
+  // Round 13c: about twice the size and brought out to the lip, the tower raised on a stepped stone podium, because from
+  // the anchor view the round 13 halls read as specks on the rim where the painting's crown is mostly buildings.
+  const place = (H, th, r, y = 90, k = 1) => { const [x, z] = at(th, r); H.position.set(x, y, z); H.rotation.y = Math.PI / 2 - th; H.scale.setScalar(k); G.add(H); return H; };
+  { const th = toGreat - 0.45, r = rimAt(th) - 15, [x, z] = at(th, r);
+    for (let i = 0; i < 3; i++) { const b = box(G, 30 - i * 5, 2.4, 24 - i * 4, M.stone, x, 90 + 1.2 + i * 2.4, z); b.rotation.y = Math.PI / 2 - th; }
+    place(hall(M, { w: 11, d: 8, ph: 4.4, tiers: 3, seed: 21 }), th, r, 97.2, 2.1); }
+  place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22 }), toGreat + 0.1, rimAt(toGreat + 0.1) - 11, 90, 2);
+  place(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), toGreat + 0.62, rimAt(toGreat + 0.62) - 10, 90, 1.9);
+  place(hall(M, { w: 9, d: 7, ph: 4, tiers: 2, seed: 24 }), toGreat + Math.PI, 18, 90, 1.8);
 
   // the winding wall: a walled road cut into the cliff, climbing from the crag's foot toward the great court round to
   // the crown, a turn and a quarter, held to the contour where the ground stands at the road's height

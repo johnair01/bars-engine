@@ -19,14 +19,15 @@ export function greatCourt(G, { collide = () => {} } = {}) {
   // paving over the whole court, a curb of stone at its edge
   const pave = new THREE.Mesh(new THREE.PlaneGeometry(44, 46), M.paving.clone());
   pave.material.map = M.paving.map.clone(); pave.material.map.needsUpdate = true; pave.material.map.repeat.set(7, 7);
-  pave.material.color.setRGB(1.38, 1.2, 0.98); // round 13b: warm sunlit flagstones, as the painting's
+  pave.material.color.setRGB(1.22, 1.14, 1.04); // round 13b, 13c: sunlit flagstones, warm but still stone-grey as the painting's
   pave.rotation.x = -Math.PI / 2; pave.position.set(0, 0.04, 0); pave.receiveShadow = true; G.add(pave);
   // low parapets down both sides, with a gap at the gate
   for (const sx of [-1, 1]) { box(G, 0.7, 1.1, 34, M.stone, sx * 21.6, 0.55, 2); collide(sx * 21.6, 2, 0.7, 34, 0, 1.1); }
 
   // the terrace: dressed stone, 1.8 m, a central stair of nine steps, balustrade posts either side of it
   const TY = 1.8, TZ = -19, TD = 10;
-  box(G, 36, TY, TD, M.stoneD, 0, TY / 2, TZ); collide(-11, TZ, 14, TD, 0, TY); collide(11, TZ, 14, TD, 0, TY);
+  box(G, 36, TY, TD, M.stone, 0, TY / 2, TZ); // round 13c: the paler dressed stone, the painting's terrace wall reads light
+  collide(-11, TZ, 14, TD, 0, TY); collide(11, TZ, 14, TD, 0, TY);
   box(G, 36.4, 0.16, TD + 0.4, M.plinth, 0, TY + 0.08, TZ);
   for (let i = 0; i < 9; i++) { const h = TY * (i + 1) / 9; box(G, 8, h, 0.42, M.plinth, 0, h / 2, TZ + TD / 2 + 3.6 - i * 0.42); }
   for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) box(G, 0.26, 0.9, 0.26, M.plinth, sx * 4.2, TY + 0.45 - i * 0.45 * (i > 0), TZ + TD / 2 + i * 1.2);
@@ -69,13 +70,18 @@ export function greatCourt(G, { collide = () => {} } = {}) {
   [[-19, -14, 9, 0.2, 3], [19.5, -15, 10, -0.15, 7], [-23.5, 8, 8, 0.25, 13], [23.5, 4, 9, -0.2, 17]].forEach(([x, z, h, lean, s]) => { const p = pine(M, h, lean, s); p.position.set(x, 0, z); G.add(p); });
 
   // the gate the painting is seen through: two lacquered posts, a lintel and a rafter row, at the court's south edge
-  const GZ = 12, GX = 3.15, DW = new THREE.MeshStandardMaterial({ color: 0x3e2416, roughness: 0.8 });
+  const GZ = 12, GX = 3.15, DW = new THREE.MeshStandardMaterial({ color: 0x6e4a30, roughness: 0.8 }); // round 13c: lit brown timber, not black
+  const POST = new THREE.MeshStandardMaterial({ color: 0x7a4a2c, roughness: 0.7 }); // round 13c: dark old timber, as the painting's posts (red lacquer read as a new gate)
   // Round 13b: posts and lintel raised to 6 m so the lintel is a thin strip at the top of the anchor frame and the sky
   // shows under it, as in the painting (at 4.9 m the lintel and rafters filled the top fifth of the frame).
-  for (const sx of [-1, 1]) { box(G, 0.42, 6.2, 0.42, M.lacR, sx * GX, 3.1, GZ); box(G, 0.8, 0.3, 0.8, M.stone, sx * GX, 0.15, GZ); collide(sx * GX, GZ, 0.5, 0.5, 0, 6.2); }
+  for (const sx of [-1, 1]) { box(G, 0.42, 6.2, 0.42, POST, sx * GX, 3.1, GZ); box(G, 0.8, 0.3, 0.8, M.stone, sx * GX, 0.15, GZ); collide(sx * GX, GZ, 0.5, 0.5, 0, 6.2); }
   box(G, GX * 2 + 1.2, 0.4, 0.5, DW, 0, 6.0, GZ);
   for (let x = -GX - 0.4; x <= GX + 0.41; x += 0.5) box(G, 0.18, 0.18, 1.6, DW, x, 6.3, GZ);
 
+  // Round 13c: the threshold under the gate, big dark flagstones in the gatehouse's shade, as the painting's foreground
+  // (the court's sunlit paving ran right to the bottom of the anchor frame, much brighter than the painting there).
+  { const th = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), M.stoneD.clone()); th.material.color.setRGB(0.62, 0.62, 0.66);
+    th.rotation.x = -Math.PI / 2; th.position.set(0, 0.05, GZ + 4.2); th.receiveShadow = true; G.add(th); }
   // timber stacked by the scaffold, a cart of stone by the stair
   for (let i = 0; i < 5; i++) box(G, 3.4, 0.24, 0.24, M.raw, -12.5, 0.12 + Math.floor(i / 2) * 0.24, 0.4 + (i % 2) * 0.28 + (i > 3 ? 0.14 : 0));
   return { stairFoot: [0, TZ + TD / 2 + 3.8], bell: [BX, BZ] };
@@ -101,5 +107,5 @@ export const STUDENTS = [
   [-1.8, -9.2, 20, { outfit: 'coat', dye: 'saffron', skin: 'amber', style: 'page', colour: 'black', shape: 'b', build: 'average', tint: ROBE.slate }],
   [-13.2, -2, 90, { outfit: 'jacket', dye: 'violet', skin: 'umber', style: 'afro', colour: 'black', shape: 'a', build: 'broad', tint: ROBE.brown }],
   [8.5, -10.5, 300, { outfit: 'jacket', dye: 'saffron', skin: 'chestnut', style: 'sweep', colour: 'gray', shape: 'b', build: 'slender', tint: ROBE.moss }],
-  [-1.1, 10.4, 270, { outfit: 'coat', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
+  [-1.1, 10.4, 270, { outfit: 'jacket', dye: 'violet', skin: 'light', style: 'page', colour: 'black', shape: 'a', build: 'average', kneel: true, tint: ROBE.mist }],
 ];
