@@ -54,10 +54,14 @@ import * as FS from "./fire-song.js";
 import * as CH from "./chamber.js";
 import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
+import { mountRoad } from "./road.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
 const PLACE = ["scale-house", "friends-fire", "chamber"].includes(Q.get("place")) ? Q.get("place") : "clearing";
+/* the road out (healing journey slice 2): ?road=1 on the clearing; the cultivation character walks it (?who=f|m, or
+   sessionStorage "hj-who", else f) */
+const ROAD = Q.get("road") === "1" && PLACE === "clearing";
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -411,7 +415,18 @@ async function makeFriends(ff) {
   }
   return out;
 }
+/* the cultivation walker, wrapped in makeFigure's shape. The pack is an empty group on the back; the road hangs its bundle there. */
+async function makeRoadFigure() {
+  let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
+  const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
+  scene.add(W.holder);
+  const bag = new THREE.Group(); bag.position.set(0, 1.18, -0.2); W.holder.add(bag);
+  const plank = new THREE.Group();
+  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, update(dt, moving) { W.update(dt, moving); } };
+}
 async function makeFigure(M) {
+  if (ROAD) return makeRoadFigure();
   const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
   const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
   const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
@@ -642,6 +657,7 @@ async function build() {
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
+  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show(); }
 }
 
 /* ===================================================================================================
@@ -662,6 +678,7 @@ function walkable(x, z) {
   if (FFX) return FF.walkable(x, z);
   if (CHX) return CH.walkable(x, z);
   if (Math.abs(x) < 0.9 && z < -CLR + 1.3 && z > -CLR - 0.6) return true;   // a step onto the path out
+  if (state.road && state.road.onRoad(x, z)) return true;   // the road out, from the arch
   const d = Math.hypot(x, z);
   if (d < STUMP_R + 0.32) return false;
   if (d < CLR - 1.2) return true;
@@ -742,6 +759,7 @@ function nearNow() {
     const bs = state.block && state.block.near(p); if (bs) return bs;
     const st = state.ch && state.ch.near(p); return st ? "kept:" + state.ch.stones.indexOf(st) : null;
   }
+  if (state.road && state.road.nearLetter(p.x, p.z)) return "letter";
   if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
@@ -758,6 +776,7 @@ function showCard() {
   const btn = (act, label) => `<button type="button" data-act="${act}">${label}</button>`;
   const card = (title, text, ...btns) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${btns.join("")}</div>`;
   if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where ${esc(state.ep.villain || "the Weigher")} is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
+  else if (n === "letter") { key = "letter"; html = card("A letter in the grass", "It lies at the edge of the road, a glint on its fold. Nobody has opened it.", btn("letter", "Pick it up")); }
   else if (n === "back") { key = "back"; html = card("The path back", "It runs back through the heavy trees to the clearing.", btn("go:clearing", "Walk back to the clearing")); }
   else if (n === "far") { const there = state.ep.next ? esc(state.ep.next.location) : "the Friends' Fire"; key = "far"; html = card("The far bank", `Past the last trees, a fire is lit, and someone is tuning a guitar. The path runs on to ${there.replace(/^The /, "the ")}.`, btn("go:friends-fire", `Follow the path to ${there.replace(/^The /, "the ")}`), btn("walk:bridge", "Back over the bridge")); }
   else if (n === "ff-back") { key = "ff-back"; html = card("The path back", "It runs back through the trees to the Scale-House and the bridge you mended.", btn("go:scale-house-far", "Walk back to the Scale-House")); }
@@ -817,6 +836,7 @@ $("#card").addEventListener("click", e => {
   else if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
+  else if (b.dataset.act === "letter" && state.road) state.road.card();
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
