@@ -4,34 +4,158 @@
   "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj1.py",
   "size": 8772,
   "ok": true,
-  "seconds": 12.3
+  "seconds": 12.3,
+  "object": "bell",
+  "render": {
+   "ok": true,
+   "png": "deepseek/render_obj1.png",
+   "engine": "CYCLES",
+   "seconds": 2.7,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.4069,
+    "std": 0.2567,
+    "min": 0.2,
+    "max": 0.9686
+   },
+   "added": [
+    "camera (none in the script)",
+    "two lights (none in the script)",
+    "a world (none in the script)"
+   ],
+   "error": null,
+   "mesh_tris": 7930,
+   "build_seconds": 0.2,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
  },
  {
   "oid": "obj2",
   "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj2.py",
   "size": 16076,
   "ok": true,
-  "seconds": 26.8
+  "seconds": 26.8,
+  "object": "trigram_floor",
+  "render": {
+   "ok": true,
+   "png": "deepseek/render_obj2.png",
+   "engine": "CYCLES",
+   "seconds": 2.0,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.2475,
+    "std": 0.1663,
+    "min": 0.0824,
+    "max": 0.8863
+   },
+   "added": [],
+   "error": null,
+   "mesh_tris": 2574,
+   "build_seconds": 0.3,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
  },
  {
   "oid": "obj3",
   "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj3.py",
   "size": 9290,
   "ok": true,
-  "seconds": 13.6
+  "seconds": 13.6,
+  "object": "guandao",
+  "render": {
+   "ok": true,
+   "png": "deepseek/render_obj3.png",
+   "engine": "CYCLES",
+   "seconds": 2.3,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.3525,
+    "std": 0.2407,
+    "min": 0.0,
+    "max": 0.7608
+   },
+   "added": [],
+   "error": null,
+   "mesh_tris": 291,
+   "build_seconds": 0.1,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
  },
  {
   "oid": "obj4",
   "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj4.py",
   "size": 9559,
   "ok": true,
-  "seconds": 14.1
+  "seconds": 14.1,
+  "object": "hearth_jars",
+  "render": {
+   "ok": true,
+   "png": "deepseek/render_obj4.png",
+   "engine": "CYCLES",
+   "seconds": 2.6,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.2664,
+    "std": 0.2618,
+    "min": 0.0353,
+    "max": 0.9373
+   },
+   "added": [],
+   "error": null,
+   "mesh_tris": 3006,
+   "build_seconds": 0.4,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
  },
  {
   "oid": "obj5",
   "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/deepseek/obj5.py",
   "size": 12738,
   "ok": true,
-  "seconds": 17.6
+  "seconds": 17.6,
+  "object": "formation",
+  "render": {
+   "ok": true,
+   "png": "deepseek/render_obj5.png",
+   "engine": "CYCLES",
+   "seconds": 3.2,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.4078,
+    "std": 0.2598,
+    "min": 0.0627,
+    "max": 0.9922
+   },
+   "added": [],
+   "error": null,
+   "mesh_tris": 517,
+   "build_seconds": 0.1,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
  }
 ]
