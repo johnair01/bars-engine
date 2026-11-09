@@ -57,6 +57,16 @@ export const AXIS = [[1690, 1150], [1600, 1060], [1520, 980], [1580, 880], [1480
   [1260, 640], [1040, 735], [980, 650], [860, 545]].map(m);
 const AXIS_H = [-40, -32, -24, -16, -9, -4, 0, 12, 25, 50, 90];
 for (let i = 1; i < AXIS.length - 1; i++) if (i < 6 || i === 9) PADS.push([...AXIS[i], AXIS_H[i], 4]);
+// Round 14: the great court turns about ten degrees to the left of the summit, so from the anchor view the crag stands
+// right of centre as the painting draws it (it stood dead centre behind the hall). GREAT_FACE is where its -z points.
+export const GREAT_YAW = 0.18;
+const _f = [P.summit[0] - P.great[0], P.summit[1] - P.great[1]], _L = Math.hypot(..._f), _u = [_f[0] / _L, _f[1] / _L], _l = [_u[1], -_u[0]];
+export const GREAT_FACE = [P.great[0] + (_u[0] * Math.cos(GREAT_YAW) + _l[0] * Math.sin(GREAT_YAW)) * _L, P.great[1] + (_u[1] * Math.cos(GREAT_YAW) + _l[1] * Math.sin(GREAT_YAW)) * _L];
+// Round 14: a hollow of haze left of the axis between the great court and the crag. In the painting the land falls
+// away left of the hall to layered ranges and bright sky; here a grey-green shoulder filled that half of the anchor
+// frame. Nothing stands in it; the axis ridge and the ring walk keep their pads.
+for (const [fw, lf, h, r] of [[105, 38, -60, 14], [150, 70, -70, 18], [70, 48, -30, 6], [140, 20, -50, 8]])
+  PADS.push([P.great[0] + _u[0] * fw + _l[0] * lf, P.great[1] + _u[1] * fw + _l[1] * lf, h, r]);
 // The skirt: cloud sea falls away south and east, the forest slopes off north and west.
 for (let a = 0; a < 360; a += 12) {
   const r = a * Math.PI / 180, x = Math.cos(r) * 560, z = Math.sin(r) * 430;

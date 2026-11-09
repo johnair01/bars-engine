@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
 import { greatCourt, kitMaterials } from './anchor.js';
 import { cragCrown } from './crag.js';
-import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE } from './layout.js';
+import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE, GREAT_FACE } from './layout.js';
 
 export const PAL = {
   plaster: '#c25a3d', beam: '#2f6f6a', gold: '#b8862b', roof: '#3f4a4c', stone: '#9a9184', paper: '#efe5cf',
@@ -227,7 +227,7 @@ export function places(S, rooms) {
   // Arrival court: gatehouse, arrival hall (12 bunks), notice wall
   { const G = frame(S, P.arrival, 12, P.summit); inside(G, 0, 10, 'arrival-hall', 'The arrival court'); hall(G, -12, -6, 7, 6, 3.4); box(G, 10, -8, 6, 0.4, 2.2, PAL.paper); }
   // Great court (round 11): drawn toward the anchor painting at eye height (anchor.js); round 10's censer and post bell are gone.
-  { const G = frame(S, P.great, 25, P.summit); GREAT.G = G;
+  { const G = frame(S, P.great, 25, GREAT_FACE); GREAT.G = G; // round 14: turned left so the crag stands right
     Object.assign(GREAT, greatCourt(G, { collide: (x, z, w, d, y0, h) => pushCollider(G, x, z, w, d, y0, h) }));
   }
   // Summit: the founder's hall (its south doors face the great court) and the Heaven altar, open sky, behind it
