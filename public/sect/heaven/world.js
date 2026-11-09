@@ -66,12 +66,9 @@ export function box(G, x, z, w, d, h, col, { y0 = 0, collide = true, cast = true
 }
 
 const hipGeo = (() => { const g = new THREE.CylinderGeometry(0, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return g; })();
-export function roof(G, x, z, w, d, y, rise, col = PAL.roof) {
-  const R = new THREE.Group();
-  const eave = new THREE.Mesh(new THREE.BoxGeometry(w + 1.6, 0.3, d + 1.6), mat(PAL.beam));
-  eave.position.set(x, y + 0.15, z); eave.castShadow = true; R.add(eave);
-  const p = new THREE.Mesh(hipGeo, mat(col)); p.scale.set((w + 1.6) / Math.SQRT2, rise, (d + 1.6) / Math.SQRT2);
-  p.position.set(x, y + 0.3, z); p.castShadow = true; R.add(p);
+export function roof(G, x, z, w, d, y, rise) {
+  const R = new THREE.Group(); R.position.set(x, 0, z);
+  kroof(R, M(), { w, d, y, ex: 0.8, rise, lite: true });
   G.add(R); return R;
 }
 
@@ -84,10 +81,8 @@ export function hall(G, x, z, w, d, h, { col = PAL.plaster, door = PAL.wood, roo
 }
 
 export function paifang(G, x, z, w = 7, h = 5, col = PAL.plaster) {
-  for (const sx of [-1, 1]) box(G, x + sx * w / 2, z, 0.6, 0.6, h, col);
-  box(G, x, z, w + 1.6, 0.8, 0.5, PAL.beam, { y0: h, collide: false });
-  box(G, x, z, w + 2.6, 1.4, 0.35, PAL.roof, { y0: h + 0.5, collide: false });
-  box(G, x, z - 0.42, 1.6, 0.06, 0.9, PAL.gold, { y0: h - 1.2, collide: false });
+  for (const sx of [-1, 1]) pushCollider(G, x + sx * w / 2, z, 0.6, 0.6, 0, h);
+  const P = kpaifang(M(), { w, h, plaque: '天門' }); P.position.set(x, 0, z); P.rotation.y = Math.PI; G.add(P);
 }
 
 // ---------- terrain ----------
