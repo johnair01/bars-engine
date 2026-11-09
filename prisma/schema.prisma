@@ -1763,6 +1763,8 @@ model Vibulon {
   originTitle   String
   generation    Int          @default(1)
   stakedOnBarId String?
+  /// The coin's face (ember-to-vibeulon FR-009): { v, ring, tex, seal, color, mat }; null before the face shipped.
+  face          Json?
   createdAt     DateTime     @default(now())
   bountyStake   BountyStake?
   creator       Player?      @relation("VibulonCreator", fields: [creatorId], references: [id])

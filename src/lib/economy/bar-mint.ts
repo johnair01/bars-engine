@@ -8,6 +8,7 @@
  * Every spend and every balance a player reads counts only spendable vibeulons: `stakedOnBarId` is null.
  */
 import type { Prisma, PrismaClient } from '@prisma/client'
+import { coinFace, type CoinStyle } from './coin-face'
 
 /** A Prisma client or an interactive transaction client. */
 export type Tx = Prisma.TransactionClient | PrismaClient
@@ -21,10 +22,21 @@ export function spendableWhere(ownerId: string): Prisma.VibulonWhereInput {
     return { ownerId, stakedOnBarId: null }
 }
 
-/** Mint the one vibeulon a new BAR gives its maker. Call inside the transaction that creates the BAR. */
+/**
+ * Mint the one vibeulon a new BAR gives its maker. Call inside the transaction that creates the BAR.
+ * The coin carries a face (ember-to-vibeulon FR-009): `ember.move` sets its ring and texture, `seal` its bezel, and
+ * `style` (the player's coin style, FR-011) its colour and material; no style leaves the coin bare for the coin turn.
+ */
 export async function mintBarVibulon(
     tx: Tx,
-    input: { barId: string; playerId: string; title: string },
+    input: {
+        barId: string
+        playerId: string
+        title: string
+        ember?: { move: string } | null
+        seal?: string | null
+        style?: CoinStyle | null
+    },
 ): Promise<string> {
     const v = await tx.vibulon.create({
         data: {
@@ -33,6 +45,7 @@ export async function mintBarVibulon(
             originSource: BAR_MINT_SOURCE,
             originId: input.barId,
             originTitle: input.title.slice(0, 200),
+            face: coinFace(input.ember?.move, input.seal, input.style),
         },
         select: { id: true },
     })
