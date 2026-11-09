@@ -111,16 +111,16 @@ export function terrain(S) {
       const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;
       const dS = Math.hypot(x - P.summit[0], z - P.summit[1]);
       if (sl > 0.7 || (dS < 60 && y > 52)) {
-        const band = 0.5 + 0.5 * Math.sin(y * 0.9 + Math.sin(Math.atan2(z - P.summit[1], x - P.summit[0]) * 23) * 2.2);
-        c.set(band > 0.6 ? '#ccd1d5' : band > 0.3 ? '#b0b8bf' : '#8f99a3'); // round 13b, 13c: pale blue-grey rock in the haze, so the warm sun doesn't turn it tan
-        { const m = 0.5 + 0.5 * Math.sin(x * 0.21 + Math.sin(z * 0.17) * 3) * Math.sin(z * 0.19 + y * 0.31); if (m > 0.72) c.lerp(t.set('#5d7a4e'), Math.min(0.8, (m - 0.72) * 4)); } // round 13c: moss and shrubs clinging in the cliff's ledges, as the painting's crag has
+        // round 16: one smooth rock tone with a slow wash. The 0.9-per-metre bands and the moss blotches aliased on the
+        // 3 m grid into the smears Wendell called fuzzy and distorted; the crag's face is now its own mesh (crag.js).
+        { const w = 0.5 + 0.5 * Math.sin(x * 0.031 + z * 0.023); c.set('#b9b8b0').lerp(t.set('#a7a9a6'), w); }
         if (sl < 1.1 && dS < 60) c.lerp(t.set('#6f8355'), 0.45);
         steep = sl > 0.7;
       }
     }
     if (y < -60) c.lerp(t.set(PAL.rock), Math.min(1, (-60 - y) / 60));
     for (const p of PADS) if (p[3] > 6 && Math.hypot(x - p[0], z - p[1]) < p[3] - 1) { c.set(PAL.pave); break; }
-    if (!steep) for (const [a, b, hw, cc] of segs) { // round 13b: no path colour on the cliff (the axis streaked it brown)
+    if (!steep && Math.hypot(x - P.summit[0], z - P.summit[1]) > 130) for (const [a, b, hw, cc] of segs) { // round 16: no path smear on the ridge under the crag // round 13b: no path colour on the cliff (the axis streaked it brown)
       const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
       const k = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2));
       if (Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz) < hw) { c.lerp(cc, 0.7); break; }
