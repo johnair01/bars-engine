@@ -2,6 +2,7 @@
 // Grey boxes in the round 2 and 5 palette; three interiors (founder's hall, Shaman Elder's house, Virelune room) are
 // built from rooms.json so their metres match round 4's plans.
 import * as THREE from 'three';
+import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
 import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE } from './layout.js';
 
 export const PAL = {
@@ -13,6 +14,25 @@ export const mat = (col, o = {}) => {
   const k = col + JSON.stringify(o);
   if (!mats.has(k)) mats.set(k, new THREE.MeshStandardMaterial({ color: col, roughness: 0.9, ...o }));
   return mats.get(k);
+};
+
+// Round 10: the dress. Round 2's kit materials (plaster, cut stone, painted beam, tile roof) replace the flat greys, and
+// each face's texture repeats per metre so a long wall tiles instead of stretching.
+let KM = null;
+const M = () => KM || (KM = materials());
+const DRESS = { [PAL.plaster.toLowerCase()]: ['plaster', 3], [PAL.stone.toLowerCase()]: ['stoneD', 2.5], '#9a8f7a': ['stoneD', 2.5], '#9c2a22': ['lacR', 0] };
+function metreUV(g, w, h, d, t) {
+  const uv = g.attributes.uv, f = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let i = 0; i < uv.count; i++) { const [a, b] = f[Math.floor(i / 4)]; uv.setXY(i, uv.getX(i) * a / t, uv.getY(i) * b / t); }
+  uv.needsUpdate = true;
+}
+// A box for `col`, dressed if the colour has a kit material, flat otherwise.
+const dressed = (w, h, d, col) => {
+  const e = typeof col === 'string' && DRESS[col.toLowerCase()];
+  const g = new THREE.BoxGeometry(w, h, d);
+  if (!e) return new THREE.Mesh(g, typeof col === 'string' ? mat(col) : col);
+  if (e[1]) metreUV(g, w, h, d, e[1]);
+  return new THREE.Mesh(g, M()[e[0]]);
 };
 
 // Everything that blocks the avatar, as oriented boxes; and every room whose roof lifts when you step inside.
@@ -39,19 +59,16 @@ const pushCollider = (G, x, z, w, d, y0, h) => { const F = wf(G), [wx, wz] = toW
   colliders.push({ x: wx, z: wz, c: F.c, s: F.s, hw: w / 2, hd: d / 2, y0: F.y + y0, y1: F.y + y0 + h }); };
 
 export function box(G, x, z, w, d, h, col, { y0 = 0, collide = true, cast = true } = {}) {
-  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof col === 'string' ? mat(col) : col);
+  const b = dressed(w, h, d, col);
   b.position.set(x, y0 + h / 2, z); b.castShadow = cast; b.receiveShadow = true; G.add(b);
   if (collide) pushCollider(G, x, z, w, d, y0, h);
   return b;
 }
 
 const hipGeo = (() => { const g = new THREE.CylinderGeometry(0, 1, 1, 4, 1); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return g; })();
-export function roof(G, x, z, w, d, y, rise, col = PAL.roof) {
-  const R = new THREE.Group();
-  const eave = new THREE.Mesh(new THREE.BoxGeometry(w + 1.6, 0.3, d + 1.6), mat(PAL.beam));
-  eave.position.set(x, y + 0.15, z); eave.castShadow = true; R.add(eave);
-  const p = new THREE.Mesh(hipGeo, mat(col)); p.scale.set((w + 1.6) / Math.SQRT2, rise, (d + 1.6) / Math.SQRT2);
-  p.position.set(x, y + 0.3, z); p.castShadow = true; R.add(p);
+export function roof(G, x, z, w, d, y, rise) {
+  const R = new THREE.Group(); R.position.set(x, 0, z);
+  kroof(R, M(), { w, d, y, ex: 0.8, rise, lite: true });
   G.add(R); return R;
 }
 
@@ -64,10 +81,8 @@ export function hall(G, x, z, w, d, h, { col = PAL.plaster, door = PAL.wood, roo
 }
 
 export function paifang(G, x, z, w = 7, h = 5, col = PAL.plaster) {
-  for (const sx of [-1, 1]) box(G, x + sx * w / 2, z, 0.6, 0.6, h, col);
-  box(G, x, z, w + 1.6, 0.8, 0.5, PAL.beam, { y0: h, collide: false });
-  box(G, x, z, w + 2.6, 1.4, 0.35, PAL.roof, { y0: h + 0.5, collide: false });
-  box(G, x, z - 0.42, 1.6, 0.06, 0.9, PAL.gold, { y0: h - 1.2, collide: false });
+  for (const sx of [-1, 1]) pushCollider(G, x + sx * w / 2, z, 0.6, 0.6, 0, h);
+  const P = kpaifang(M(), { w, h, plaque: '天門' }); P.position.set(x, 0, z); P.rotation.y = Math.PI; G.add(P);
 }
 
 // ---------- terrain ----------
@@ -145,7 +160,7 @@ export function room(E, R, tag = R.key, court = null, where = null) {
   const roofCol = PAL.roof;
   const ox = R.Wd / 2, oz = R.D / 2;
   const add = (x, y, w, d, h, col, o = {}) => {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(col));
+    const b = dressed(w, h, d, col);
     const lx = x + w / 2 - ox, lz = y + d / 2 - oz, y0 = o.y0 || 0;
     b.position.set(lx, y0 + h / 2, lz); b.castShadow = true; b.receiveShadow = true; E.add(b);
     if (o.collide !== false) pushCollider(E, lx, lz, w, d, y0, h);
@@ -178,7 +193,8 @@ export function room(E, R, tag = R.key, court = null, where = null) {
   // Round 9: free CC0 furniture (rooms.json `models`); heaven.html sets the meshes down, this gives them colliders.
   for (const [, cx, cy, , , w, d, h] of R.models || []) if (h > 0.5) pushCollider(E, cx - ox, cy - oz, w, d, 0, h);
   const top = R.Ht + (R.key === 'elder' ? 0.6 : 0);
-  const rf = roof(E, 0, 0, R.Wd, R.D, top, Math.min(R.Wd, R.D) * 0.3, roofCol);
+  const rf = new THREE.Group(); E.add(rf);
+  kroof(rf, M(), { w: R.Wd, d: R.D, y: top, ex: 0.9, rise: Math.min(2.2, Math.min(R.Wd, R.D) * 0.3), lite: true });
   const F = wf(E);
   interiors.push({ x: F.x, z: F.z, c: F.c, s: F.s, hw: R.Wd / 2 + 0.3, hd: R.D / 2 + 0.3, y: F.y, roof: rf, key: tag, R, E, court, where });
   return E;
