@@ -2057,9 +2057,14 @@ async function addItem(kind, text, sealed) {
 /* ---------- the hearth: embers in your own pouch, lanterns offered to the other ---------- */
 const pouchPath = () => "data/users/" + me + "/pouch";
 const hearthOpen = () => { const g = view().g; return !!(g && isMember(g) && !readOnly && g.phase !== "closed"); };
+const POUCH_TURN = PREVIEW_HOST && KQ.get("pouch") === "turn"; // preview: two lit embers from a kept turn (T015)
+const demoLit = POUCH_TURN ? { demoLit1: { move: null, feel: null, glow: null, state: "lit", at: 5, lantern: null, from: { place: "table-turn", id: "demo-turn", with: "demo-friend" } } } : {};
 const demoPouch = EMBER_DEMO ? { demo1: { move: "wood_fire", feel: "wood", glow: 2, state: "held", at: 1 }, demo2: { move: "water_transcend", feel: "water", glow: 5, state: "held", at: 2 },
   demo3: { move: "earth_metal", feel: "earth", glow: null, state: "held", at: 3 }, demo4: { move: "fire_earth", feel: "fire", glow: 4, state: "held", at: 4 } } : {};
 function embers() { const p = overlay(pouchPath(), myPouch || {}) || {}; const e = p.embers && typeof p.embers === "object" ? p.embers : {}; return Object.entries({ ...e, ...demoPouch }).filter(([, x]) => x && typeof x === "object" && MOVES[x.move]); }
+/* A lit ember is one a turn at the low table lit for you: no move yet, only where it came from. You work it at the hearth (FR-005). */
+function litEmbers() { const p = overlay(pouchPath(), myPouch || {}) || {}; const e = p.embers && typeof p.embers === "object" ? p.embers : {}; return Object.entries(e).concat(Object.entries(demoLit)).filter(([, x]) => x && typeof x === "object" && x.state === "lit" && !x.move && x.from); }
+const litLine = (x, g) => { const w = x.from && x.from.with ? nameOf(x.from.with, g) : ""; return w ? "From your turn with " + w + "." : "From your turn at the table."; };
 /* A lantern made from a preview's demo ember (or where no lantern can be saved) lives on this page only, kept across polls. */
 const localItems = new Map();
 function localItem(id, d) { if (d) { localItems.set(id, d); items.set(id, d); } else { localItems.delete(id); items.delete(id); } refresh(); }
@@ -2074,7 +2079,10 @@ function hearthSpot(id) { // in front of the hearth, toward the middle of the ro
 async function keepEmber() {
   const m = MOVES[hd.move]; if (!m) return;
   // Only the move, its feeling and the private glow: no words, and nothing of which charge it came from.
-  await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null } } });
+  // A lit ember worked here becomes that same ember, held, so a turn never gives a second one (FR-006).
+  const lit = hd.lit && litEmbers().find(([k]) => k === hd.lit);
+  const key = lit ? lit[0] : "e" + hkey();
+  await op(pouchPath(), "update", { embers: { [key]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null, ...(lit ? { from: lit[1].from } : {}) } } });
   hd = {}; if (hm) { closeSheet(); hmSync(); } else toast("An ember, in your pouch."); // by the fire, it rises out of the satchel instead
 }
 async function makeLantern(eid) {
@@ -2125,7 +2133,9 @@ async function unmakeLantern(id, compost) {
 function stirSheet(g, V) {
   const charges = [...V.items.entries()].filter(([, i]) => i.kind === "charge" && i.by === me);
   const pick = (act, id, on, inner, extra = "") => `<button type="button" data-act="${act}" data-id="${id}" aria-pressed="${on ? "true" : "false"}" class="${on ? "on" : ""}" ${extra}>${inner}</button>`;
+  const lits = litEmbers();
   return `<div class="stack"><h2>Something stirs</h2>
+    ${lits.length ? `<span class="small"><b>Lit at the table</b></span><div class="choice">${lits.map(([k, x]) => pick("hLit", k, hd.lit === k, `<span class="ember" style="--c:${cssHue(AMBER)};--s:12px"></span><b>${esc(litLine(x, g))}</b>work it here`)).join("")}</div>` : ""}
     <label for="hCharge">What stirred you<select id="hCharge"><option value="">A feeling with no words</option>${charges.map(([k, i]) => `<option value="${k}" ${hd.charge === k ? "selected" : ""}>${esc(String(i.text || "").slice(0, 70))}</option>`).join("")}</select></label>
     <span class="small"><b>What it felt like</b></span>
     <div class="choice">${Object.entries(FEELS).map(([el, f]) => pick("hFeel", el, hd.feel === el, `<span class="ember" style="--c:${cssHue(elHex(el))};--s:12px"></span><b>${f[0].toUpperCase() + f.slice(1)}</b>${el}`)).join("")}</div>
@@ -2306,7 +2316,8 @@ function hmHud() {
     if (hmEl._h !== h) { hmEl._h = h; hmEl.innerHTML = h; } return;
   }
   const lay = hm.step === "motes" && !(fs && fs.sticks >= 3) ? b("fsLay", "", fs ? "Lay another stick on the fire" : "Lay a stick on the fire") : "";
-  const h = `<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
+  const litG = view().g, litHtml = hm.step === "motes" ? litEmbers().map(([, x]) => `<p class="hmlit">${esc(litLine(x, litG))}</p>`).join("") : "";
+  const h = `${litHtml}<div class="hmrow">${lay}${hm.step === "motes" ? ms.map(m => b("hmHold", m.eid, fs ? (m.state === "lip" ? "Take this ember back" : "Sit with this ember") : m.state === "held" ? "Let this ember go back" : (m.e.glow || 3) >= 4 ? "A bright ember" : "An ember")).join("") : ""}
     ${hm.held && hm.step === "motes" ? b("hmBreathe", "", "Breathe on it (hold)") : ""}${hm.held && hm.L && !hm.L.lit ? b("hmLantern", "", "Give it to the lantern") : ""}
     ${hm.step === "hang" ? hm.hooks.map(x => b("hmHang", x.id, "Hang it here")).join("") : ""}
     ${teaBtn()}<button type="button" class="hmlink" data-open="hearth" data-id="stir">Something stirs</button><button type="button" class="hmlink" data-act="hmStand">Stand up</button></div>`;
@@ -3775,6 +3786,7 @@ document.addEventListener("click", async ev => {
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
   if (a === "music") { ambient.toggleMusic(); soundLabel(); return; }
   if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
+  if (a === "hLit") { hd = { ...hd, lit: hd.lit === id ? null : id, feel: null, move: null, glow: null }; renderSheet(); return; }
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
