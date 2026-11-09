@@ -8,7 +8,84 @@ import { heightAt, P, CRAG, cragNoise } from './layout.js';
 
 const rimAt = th => CRAG.rim + cragNoise(th) * 7;
 
+// Round 16: the cliff as its own rock mesh. Wendell scored round 14d a 5 and named the real problem: the mountain
+// behind the hall looked fuzzy and distorted. The cliff was the 3 m ground grid stretched over 50 m of drop, so each
+// triangle spanned about 12 m of height and the rock bands aliased into smears. Here the face is cut as the painting
+// draws it: pale stone in vertical pillars with flat planes, a ledge every few storeys and pines in the ledges. It stands
+// just outside the walkable cliff, so the ground and the avatar keep reading heightAt.
+const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const N_TH = 58; // about 5 m pillars
+const pillar = th => { const u = ((th / (Math.PI * 2)) % 1 + 1) % 1, k = Math.floor(u * N_TH); return k; };
+// outward radius of the rock face at bearing th and height y
+export function cliffR(th, y) {
+  const k = pillar(th), slope = 3.2 + 1.6 * cragNoise(th * 3 + 1);
+  const ledge = Math.floor((90 - y) / 7.5), lean = (hash(k * 3.1) - 0.5) * 0.06;
+  const out = 1.4 + hash(k) * 3.6 + hash(k * 7 + ledge * 13) * 1.1 + ledge * 0.35;
+  return rimAt(th) + Math.max(0, 90 - y) / slope + out + (90 - y) * lean;
+}
+
+export function cragRock(S) {
+  const [sx, sz] = P.summit, NT = N_TH * 4, levels = [];
+  for (let y = 90.4; y > 18; y -= 1.25) levels.push(y);
+  const NY = levels.length, pos = [], col = [], c = new THREE.Color();
+  const tones = ['#d6d3ca', '#cbc8be', '#bfbdb4', '#b3b2ab'].map(h => new THREE.Color(h));
+  const V = (j, i) => { // vertex (bearing i, level j) -> [x, y, z]
+    const th = i / NT * Math.PI * 2, y = levels[j], r = j === 0 ? rimAt(th) - 3 : cliffR(th, y);
+    return [sx + Math.cos(th) * r, y, sz + Math.sin(th) * r];
+  };
+  const grid = [];
+  for (let j = 0; j < NY; j++) { grid.push([]); for (let i = 0; i <= NT; i++) grid[j].push(V(j, i)); }
+  // each bearing's face ends a few metres under the ground it meets
+  const bottom = [];
+  for (let i = 0; i <= NT; i++) { let j = 1; while (j < NY - 1) { const [x, y, z] = grid[j][i]; if (heightAt(x, z) >= y + 0.5) break; j++; } bottom.push(Math.min(NY - 1, j + 2)); }
+  for (let i = 0; i < NT; i++) {
+    const k = pillar((i + 0.5) / NT * Math.PI * 2), jb = Math.max(bottom[i], bottom[i + 1]);
+    for (let j = 0; j < jb; j++) {
+      const a = grid[j][i], b = grid[j][i + 1], d = grid[j + 1][i], e = grid[j + 1][i + 1];
+      const ledge = Math.floor((90 - levels[j]) / 7.5), t = tones[Math.floor(hash(k * 5 + ledge * 3) * 4)];
+      c.copy(t);
+      if (pillar(i / NT * Math.PI * 2) !== pillar((i + 1) / NT * Math.PI * 2)) c.multiplyScalar(0.72); // the joint between pillars
+      if (j === 0) c.set('#a9a79f');
+      const streak = hash(i * 1.7) > 0.86 ? 0.82 : 1; c.multiplyScalar(streak * (1 - Math.max(0, levels[j] - 30 < 8 ? (8 - (levels[j] - 30)) * 0.02 : 0)));
+      pos.push(...a, ...d, ...b, ...b, ...d, ...e);
+      for (let q = 0; q < 6; q++) col.push(c.r, c.g, c.b);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  const rock = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, flatShading: true }));
+  rock.name = 'cragRock'; rock.castShadow = rock.receiveShadow = true; S.add(rock);
+
+  // pines and shrubs rooted in the ledges, as the painting's crag carries them
+  const pineGeo = new THREE.ConeGeometry(1, 2.6, 7), bushGeo = new THREE.IcosahedronGeometry(1, 0);
+  pineGeo.translate(0, 1.3, 0);
+  const pines = new THREE.InstancedMesh(pineGeo, new THREE.MeshStandardMaterial({ color: '#3f5a3a', roughness: 1, flatShading: true }), 160);
+  const bushes = new THREE.InstancedMesh(bushGeo, new THREE.MeshStandardMaterial({ color: '#56704a', roughness: 1, flatShading: true }), 140);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3();
+  let np = 0, nb = 0;
+  for (let n = 0; n < 400 && (np < 90 || nb < 140); n++) {
+    const th = hash(n * 3.3) * Math.PI * 2, ledge = 1 + Math.floor(hash(n * 5.9) * 6), y = 90 - ledge * 7.5 + 0.2;
+    const r = cliffR(th, y + 0.6) - 0.6, x = sx + Math.cos(th) * r, z = sz + Math.sin(th) * r;
+    if (heightAt(x, z) > y - 1) continue;
+    const s = 0.8 + hash(n * 2.2) * 1.2;
+    if (hash(n * 9.1) < 0.45 && np < 90) { sc.set(s * 1.1, s * 1.5, s * 1.1); p.set(x, y, z); m.compose(p, q, sc); pines.setMatrixAt(np++, m); }
+    else if (nb < 140) { sc.set(s * 1.3, s * 0.7, s * 1.3); p.set(x, y + 0.3, z); m.compose(p, q, sc); bushes.setMatrixAt(nb++, m); }
+  }
+  // the ridge under the crag, where the axis climbs to its foot: a stand of pines either side of the way up, so from the
+  // gate the shoulder behind the hall reads as wooded rock instead of a bare pale mound
+  { const [gx, gz] = P.great, tg = Math.atan2(gz - sz, gx - sx);
+    for (let n = 0; n < 900 && np < 90 + 70; n++) {
+      const th = tg + (hash(n * 4.7) - 0.5) * 1.6, d = 58 + hash(n * 8.3) * 70, x = sx + Math.cos(th) * d, z = sz + Math.sin(th) * d, y = heightAt(x, z);
+      const off = Math.abs(Math.sin(th - tg) * d); if (y < 27 || off < 7 || Math.hypot(x - gx, z - gz) < 40) continue;
+      const s = 1.6 + hash(n * 1.9) * 1.4; sc.set(s, s * 1.8, s); p.set(x, y - 0.3, z); m.compose(p, q, sc); pines.setMatrixAt(np++, m);
+    } }
+  pines.count = np; bushes.count = nb; pines.castShadow = bushes.castShadow = true; S.add(pines, bushes);
+  return rock;
+}
+
 export function cragCrown(S, M) {
+  cragRock(S);
   const [sx, sz] = P.summit, G = new THREE.Group(); S.add(G);
   const toGreat = Math.atan2(P.great[1] - sz, P.great[0] - sx);
   const at = (th, r) => [sx + Math.cos(th) * r, sz + Math.sin(th) * r];
@@ -41,15 +118,16 @@ export function cragCrown(S, M) {
   let prev = null;
   for (let i = 0; i <= steps; i++) {
     const t = i / steps, th = start + t * turn, y = yLo + (yHi - yLo) * t;
-    let lo = rimAt(th) - 3, hi = 75;
-    for (let k = 0; k < 18; k++) { const mid = (lo + hi) / 2; const [x, z] = at(th, mid); if (heightAt(x, z) > y) lo = mid; else hi = mid; }
-    const [x, z] = at(th, lo + 1.6);
+    // round 16: held to the new rock face, with a stone retaining wall under it so it reads built into the cliff
+    const slope = 3.2 + 1.6 * cragNoise(th * 3 + 1), dy = Math.max(0, 90 - y);
+    const r = rimAt(th) + dy / slope + 7.8 + Math.floor(dy / 7.5) * 0.35 + dy * 0.03, [x, z] = at(th, r); // smooth: clears every pillar
     if (prev) {
       const [px, pz, py] = prev, L = Math.hypot(x - px, z - pz), ry = -Math.atan2(z - pz, x - px);
-      const road = box(G, L + 0.4, 0.9, 3.2, M.plinth, (x + px) / 2, (y + py) / 2 - 0.2, (z + pz) / 2); road.rotation.y = ry;
-      const [ox, oz] = [Math.cos(th) * 1.7, Math.sin(th) * 1.7];
-      const wall = box(G, L + 0.4, 1.5, 0.6, M.stone, (x + px) / 2 + ox, (y + py) / 2 + 0.75, (z + pz) / 2 + oz); wall.rotation.y = ry;
-      if (i % 3 === 0) { const m = box(G, 0.7, 0.55, 0.65, M.stone, x + ox, y + 1.75, z + oz); m.rotation.y = ry; }
+      const road = box(G, L + 0.4, 0.9, 3.6, M.plinth, (x + px) / 2, (y + py) / 2 - 0.2, (z + pz) / 2); road.rotation.y = ry;
+      const [ox, oz] = [Math.cos(th) * 1.95, Math.sin(th) * 1.95];
+      const wall = box(G, L + 0.4, 1.6, 0.8, M.stone, (x + px) / 2 + ox, (y + py) / 2 + 0.8, (z + pz) / 2 + oz); wall.rotation.y = ry;
+      const base = box(G, L + 0.4, 6, 9, M.stone, (x + px) / 2 - ox * 1.2, (y + py) / 2 - 3.6, (z + pz) / 2 - oz * 1.2); base.rotation.y = ry;
+      if (i % 3 === 0) { const m = box(G, 0.8, 0.6, 0.85, M.stone, x + ox, y + 1.9, z + oz); m.rotation.y = ry; }
     }
     prev = [x, z, y];
   }

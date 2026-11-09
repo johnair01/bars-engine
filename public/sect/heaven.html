@@ -27,14 +27,14 @@
 </head><body>
 <div class="hud" id="hud"><b id="where">The road</b><span id="what">The summit is in view from the first step.</span></div>
 <div class="stops" id="stops"></div>
-<div class="views"><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
+<div class="views"><button id="watchBtn">Walk to the Watch</button><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
 <div class="hint">WASD or arrows to walk; tap the ground to walk there; drag to look round.</div>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { heightAt, ROUTE, P, COURTS } from './heaven/layout.js';
+import { heightAt, ROUTE, P, COURTS, FAR_ROAD, WATCH } from './heaven/layout.js';
 import { terrain, court, places, forest, routePosts, axisMarks, interiors, floors, colliders, GREAT } from './heaven/world.js';
 import { ANCHOR_VIEW } from './heaven/anchor.js';
 import { farLand } from './heaven/far.js';
@@ -122,6 +122,20 @@ function jump(n, view) {
 }
 const stops = document.getElementById('stops');
 for (const r of ROUTE) { const b = document.createElement('button'); b.textContent = r.n; b.title = r.text; b.onclick = () => jump(r.n); stops.appendChild(b); }
+// Round 16: Wendell (cc-heaven-r14d, 5/10): "I don't see how one actually walks the path". This button stands the
+// avatar where the road leaves the ring walk and walks it there, bend by bend, up the stair to the Watch; the camera
+// follows behind. Any key or a tap on the ground takes the walk back.
+let roadLeg = -1;
+function walkToWatch() {
+  if (topView) document.getElementById('topBtn').click();
+  const [x, z] = FAR_ROAD[0], [nx, nz] = FAR_ROAD[1], dx = nx - x, dz = nz - z, L = Math.hypot(dx, dz);
+  A.position.set(x, groundAt(x, z), z); A.rotation.y = Math.atan2(-dx, -dz);
+  cam.position.set(x - dx / L * 10, A.position.y + 5.5, z - dz / L * 10);
+  orbit.target.set(x + dx / L * 8, A.position.y + 2, z + dz / L * 8);
+  roadLeg = 1; input.target = new THREE.Vector3(nx, 0, nz);
+  hud.where.textContent = 'The road to the Watch'; hud.what.textContent = 'Down off the ring walk, over the saddle and up the switchbacks; the lanterns mark the way.';
+}
+document.getElementById('watchBtn').onclick = walkToWatch;
 document.getElementById('topBtn').onclick = () => { topView = !topView; S.getObjectByName('farLand')?.userData.mapView?.(topView); document.body.classList.toggle('top', topView); document.getElementById('topBtn').textContent = topView ? 'Walk' : 'Top view'; };
 
 const input = { keys: new Set(), target: null };
@@ -133,7 +147,7 @@ R.domElement.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6 || topView) return;
   ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, cam);
   const hit = ray.intersectObjects(floors, false)[0];
-  if (hit) input.target = hit.point.clone();
+  if (hit) { input.target = hit.point.clone(); roadLeg = -1; }
 });
 addEventListener('resize', () => { R.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); fitTop(); });
 
@@ -143,8 +157,14 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   prev.copy(A.position);
   const yaw = Math.atan2(cam.position.x - orbit.target.x, cam.position.z - orbit.target.z);
+  if (roadLeg > 0 && !input.target) { if (input.keys.size || roadLeg >= FAR_ROAD.length - 1) roadLeg = -1; else { roadLeg++; const [x, z] = FAR_ROAD[roadLeg]; input.target = new THREE.Vector3(x, 0, z); } }
   step(A, input, dt, yaw);
   const d = A.position.clone().sub(prev); cam.position.add(d); orbit.target.add(d);
+  if (roadLeg > 0 && d.lengthSq() > 1e-6) { // on the road, the camera eases round behind the avatar
+    const fx = -Math.sin(A.rotation.y), fz = -Math.cos(A.rotation.y), k = Math.min(1, dt * 1.5);
+    cam.position.lerp(new THREE.Vector3(A.position.x - fx * 10, A.position.y + 5.5, A.position.z - fz * 10), k);
+    orbit.target.lerp(new THREE.Vector3(A.position.x + fx * 8, A.position.y + 2, A.position.z + fz * 8), k);
+  }
   orbit.update();
   if (dressAll) dressAll(dt);
   placeSun(sun, A.position);
@@ -190,7 +210,7 @@ function shot(name) {
   cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
+window.heaven = { walkToWatch, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 </script>
 </body></html>
