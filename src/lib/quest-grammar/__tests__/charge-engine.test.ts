@@ -5,7 +5,6 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
-// @ts-expect-error plain ES module with no types
 import * as E from '../../../../public/calrunia/charge-engine.js'
 import table from '../move-table.json'
 
@@ -13,15 +12,15 @@ const game = fs.readFileSync(path.resolve(__dirname, '../../../../content/ontolo
 
 // Step order and rungs: the same as game.jsx's WAVE_STEPS.
 const block = game.slice(game.indexOf('const WAVE_STEPS = ['), game.indexOf('const WAVE_STEP_LABEL'))
-const gameSteps = [...block.matchAll(/\{ id: "(\w+)"(.*?)(?=\n\s*\{ id:|\n\s*\];)/gs)].map((m) => ({ id: m[1], rung: /rung: true/.test(m[2]) }))
+const gameSteps = [...block.matchAll(/\{ id: "(\w+)"([\s\S]*?)(?=\n\s*\{ id:|\n\s*\];)/g)].map((m) => ({ id: m[1], rung: /rung: true/.test(m[2]) }))
 assert.deepEqual(E.WAVE_STEPS.map((s: { id: string }) => s.id), gameSteps.map((s) => s.id))
 assert.deepEqual(E.WAVE_STEPS.filter((s: { rung?: boolean }) => s.rung).map((s: { id: string }) => s.id), gameSteps.filter((s) => s.rung).map((s) => s.id))
 
 // Routing table: same as game.jsx and the move table.
 for (const [cycle, family] of [['sheng', 'generative'], ['ke', 'control']] as const) {
   const m = game.match(new RegExp(`${cycle}: \\{ dissatisfied: "(\\w+)", neutral: "(\\w+)", satisfied: "(\\w+)" \\}`))!
-  assert.deepEqual(table.states.map((s) => E.ROUTING[cycle][s]), m.slice(1, 4), cycle)
-  assert.deepEqual(table.states.map((s) => E.ROUTING[cycle][s]), table.states.map((s) => (table.families as any)[family].state[s]), cycle)
+  assert.deepEqual(table.states.map((s) => (E.ROUTING as any)[cycle][s]), m.slice(1, 4), cycle)
+  assert.deepEqual(table.states.map((s) => (E.ROUTING as any)[cycle][s]), table.states.map((s) => (table.families as any)[family].state[s]), cycle)
 }
 // Cycles: the engine's copy equals the table.
 assert.deepEqual(E.CYCLES, table.cycles)
@@ -65,7 +64,7 @@ c = E.exhale(c, 'release', t); assert.equal(c.wave.step, 'scan')
 c = E.scan(c, { location: 'chest', texture: 'warm' }, t); assert.equal(c.wave.step, 'done')
 c = E.move(c, 'sheng', t)
 assert.equal(c.state, 'neutral')
-assert.equal(c.moveChannel, 'sadness')
+assert.equal((c as any).moveChannel, 'sadness')
 assert.deepEqual(E.emberOf(c), { feel: 'water', from: 'metal', to: 'water', by: 'metal_water' })
 assert.equal(E.toRecord(c).reading.body, 'tight behind the sternum')
 
