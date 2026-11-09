@@ -3,7 +3,8 @@
 // built from rooms.json so their metres match round 4's plans.
 import * as THREE from 'three';
 import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
-import { greatCourt } from './anchor.js';
+import { greatCourt, kitMaterials } from './anchor.js';
+import { cragCrown } from './crag.js';
 import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE } from './layout.js';
 
 export const PAL = {
@@ -99,10 +100,25 @@ export function terrain(S) {
     c.set(PAL.grass);
     const north = Math.max(0, (-z - 180) / 120) + Math.max(0, (-x - 330) / 120);
     if (north > 0) c.lerp(t.set(PAL.forest), Math.min(1, north));
-    { const far = Math.min(1, Math.max(0, (Math.hypot(x - P.great[0], z - P.great[1]) - 45) / 80)); if (far > 0) c.lerp(t.set('#a9a99a'), far * 0.85); } // round 12: the summit slope goes pale and crag-grey with distance, so the ranges read over it
+    { const dG = Math.hypot(x - P.great[0], z - P.great[1]);
+      // round 13b: and the slopes that rise straight out of the court (up to 45 m) go grey-blue with height, so from the
+      // anchor view they read as the painting's ranges in haze behind the hall instead of a green hill
+      const far = Math.min(1, Math.max(0, (dG - 32) / 60, dG < 160 ? (y - 28) / 10 : 0)); if (far > 0) c.lerp(t.set('#93a2af'), far); if (dG < 160 && y > 30) c.lerp(t.set('#aebdcc'), Math.min(0.7, (y - 30) / 25)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
+    let steep = false;
+    { // round 13: cliffs are bare rock, banded and streaked like the painting's crag; its crown keeps a little moss
+      const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;
+      const dS = Math.hypot(x - P.summit[0], z - P.summit[1]);
+      if (sl > 0.7 || (dS < 60 && y > 52)) {
+        const band = 0.5 + 0.5 * Math.sin(y * 0.9 + Math.sin(Math.atan2(z - P.summit[1], x - P.summit[0]) * 23) * 2.2);
+        c.set(band > 0.6 ? '#b9bec2' : band > 0.3 ? '#9aa1a8' : '#79828b'); // round 13b, 13c: pale blue-grey rock in the haze, so the warm sun doesn't turn it tan
+        { const m = 0.5 + 0.5 * Math.sin(x * 0.21 + Math.sin(z * 0.17) * 3) * Math.sin(z * 0.19 + y * 0.31); if (m > 0.72) c.lerp(t.set('#5d7a4e'), Math.min(0.8, (m - 0.72) * 4)); } // round 13c: moss and shrubs clinging in the cliff's ledges, as the painting's crag has
+        if (sl < 1.1 && dS < 60) c.lerp(t.set('#6f8355'), 0.45);
+        steep = sl > 0.7;
+      }
+    }
     if (y < -60) c.lerp(t.set(PAL.rock), Math.min(1, (-60 - y) / 60));
     for (const p of PADS) if (p[3] > 6 && Math.hypot(x - p[0], z - p[1]) < p[3] - 1) { c.set(PAL.pave); break; }
-    for (const [a, b, hw, cc] of segs) {
+    if (!steep) for (const [a, b, hw, cc] of segs) { // round 13b: no path colour on the cliff (the axis streaked it brown)
       const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
       const k = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2));
       if (Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz) < hw) { c.lerp(cc, 0.7); break; }
@@ -215,6 +231,7 @@ export function places(S, rooms) {
     Object.assign(GREAT, greatCourt(G, { collide: (x, z, w, d, y0, h) => pushCollider(G, x, z, w, d, y0, h) }));
   }
   // Summit: the founder's hall (its south doors face the great court) and the Heaven altar, open sky, behind it
+  cragCrown(S, kitMaterials()); // round 13: the crag's walled crown, its tiered halls and the winding wall
   { const G = frame(S, P.summit, 90, P.great, true);
     const H = new THREE.Group(); H.position.set(0, 0, 4); G.add(H); room(H, rooms.founder);
     for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(7 - i * 2, 7 - i * 2, 0.5, 40), mat(i % 2 ? PAL.paper : PAL.stone)); c.position.set(0, 0.25 + i * 0.5, -20); c.receiveShadow = c.castShadow = true; G.add(c); }

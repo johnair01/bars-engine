@@ -93,6 +93,10 @@ export const ROUTE = [
   [[905, 805], 'Dojo. Root sparring with your team.'],
 ].map(([p, text], i) => ({ n: i + 1, at: m(p), text }));
 
+// The summit crag (round 13): its crown's radius and a smooth, seeded wobble round it so the cliff has spurs and bays.
+export const CRAG = { rim: 38 };
+export function cragNoise(th) { return 0.5 * Math.sin(th * 3 + 0.7) + 0.3 * Math.sin(th * 7 + 2.1) + 0.2 * Math.sin(th * 13 + 4.4); }
+
 // One heightfield from the pads: inverse distance to each pad's rim, flat inside every pad.
 function rawHeight(x, z) {
   let num = 0, den = 0;
@@ -118,6 +122,20 @@ function buildGrid() {
       for (let k = -3; k <= 3; k++) { const ii = Math.min(nx - 1, Math.max(0, i + k)); s += H[j * nx + ii]; n++; } T[j * nx + i] = s / n; }
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { let s = 0, n = 0;
       for (let k = -3; k <= 3; k++) { const jj = Math.min(nz - 1, Math.max(0, j + k)); s += T[jj * nx + i]; n++; } H[j * nx + i] = s / n; }
+  }
+  // Round 13: the summit is a crag, as the anchor painting draws it (a grey rock tower with the founder's buildings on its
+  // crown), not the round green dome the blend makes. Inside the crown's rim the ground stays at the summit's height;
+  // outside it a cliff falls about four metres for every metre out, down to a foot that never stands above the blend.
+  { const [sx, sz] = P.summit;
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      const x = x0 + i * step, z = z0 + j * step, d = Math.hypot(x - sx, z - sz);
+      if (d > 150) continue;
+      const th = Math.atan2(z - sz, x - sx), rim = CRAG.rim + cragNoise(th) * 7;
+      const foot = 40 + Math.max(0, d - rim) * 0.12, h = H[j * nx + i];
+      const cliff = 90 - Math.max(0, d - rim) * (3.2 + 1.6 * cragNoise(th * 3 + 1));
+      const low = Math.min(h, foot), k = Math.min(1, Math.max(0, (150 - d) / 30));
+      H[j * nx + i] = h + (Math.max(cliff, low) - h) * k;
+    }
   }
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const x = x0 + i * step, z = z0 + j * step;

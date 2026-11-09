@@ -6,7 +6,9 @@ import * as THREE from 'three';
 import { ridge, cloudTex } from './kit.js';
 
 // The sun sits low over the far ranges, behind and to the left of the founder's hall as the great court faces it.
-export const SUN_DIR = new THREE.Vector3(-0.62, 0.2, -0.76).normalize();
+// Round 13b: swung about 18 degrees left of the court's axis and raised to about 15 degrees, so from the anchor view the
+// sun stands in the sky left of the crag over the ranges, where the painting has it (before, it hid behind the crag).
+export const SUN_DIR = new THREE.Vector3(-0.877, 0.268, -0.478).normalize();
 
 export function atmosphere(S, R, { sun, hemi, fog }) {
   R.toneMappingExposure = 1.12;
@@ -33,7 +35,9 @@ export function atmosphere(S, R, { sun, hemi, fog }) {
 
   // the ranges: rings of ridge cards, nearer rings darker and bluer, farther ones paler into the haze
   const ranges = new THREE.Group(); S.add(ranges);
-  const layers = [[1100, 260, '#5d6e7c', 0.95, 0.42], [1500, 330, '#7d8c98', 0.85, 0.34], [1950, 420, '#a7b0b6', 0.75, 0.28], [2350, 520, '#c9c4bd', 0.6, 0.22]];
+  // Round 13b: about twice as tall, so from the great court they rise over the ring's green shoulders into the sky as the
+  // painting's do (at round 13 their tops sat at eye height behind the ring and barely showed).
+  const layers = [[1100, 520, '#5d6e7c', 0.95, 0.42], [1500, 640, '#7d8c98', 0.85, 0.34], [1950, 760, '#a7b0b6', 0.75, 0.28], [2350, 880, '#c9c4bd', 0.6, 0.22]];
   layers.forEach(([r, h, col, a, rough], li) => {
     const n = 14;
     for (let i = 0; i < n; i++) {
