@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
 import { greatCourt, kitMaterials } from './anchor.js';
 import { cragCrown } from './crag.js';
-import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE, GREAT_FACE } from './layout.js';
+import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE, GREAT_FACE, FAR_ROAD } from './layout.js';
 
 export const PAL = {
   plaster: '#c25a3d', beam: '#2f6f6a', gold: '#b8862b', roof: '#3f4a4c', stone: '#9a9184', paper: '#efe5cf',
@@ -281,6 +281,8 @@ export function forest(S) {
     if (!inForest) continue;
     if (PADS.some(p => p[3] > 6 && Math.hypot(x - p[0], z - p[1]) < p[3] + 6)) continue;
     if (Math.abs(x) < 5 && z < -150) continue; // keep the spring path clear
+    if (FAR_ROAD.some((b, i) => { if (!i) return false; const a = FAR_ROAD[i - 1], dx = b[0] - a[0], dz = b[1] - a[1]; // and the road to the Watch
+      const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz) < 7; })) continue;
     pts.push([x, z]);
   }
   const C = new THREE.InstancedMesh(cone, mat('#3f5a33'), pts.length), T = new THREE.InstancedMesh(trunk, mat('#5a4030'), pts.length);

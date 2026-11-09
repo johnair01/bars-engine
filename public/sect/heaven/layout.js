@@ -132,9 +132,15 @@ export const WATCH = FAR_PEAKS[0];
 // frame than the one before, so from inside the gate it reads as a way up the mountain you could take (in 14b it ran
 // across the view at 22 m and every lantern sat behind the court balustrade).
 const _rs = ringAt(197);
-export const FAR_ROAD = [[..._rs, ringHeight(197)], [...bearing(17.5, 430), 60], [...bearing(17, 510), 57],
-  [...bearing(15.2, 590), 74], [...bearing(19, 640), 92], [...bearing(15.4, 690), 110], [...bearing(18.6, 728), 127],
-  [WATCH[0], WATCH[1], WATCH[2]]];
+// Round 14c (part 7): the first route ran straight through the Blight hollow and two skirt pads, which pressed holes
+// 100 m deep into it (the walk stood in a canyon). It now swings south of the Blight, then zigzags up the Watch's face.
+export const FAR_ROAD = [[..._rs, ringHeight(197)], [-299, -81, 60], [-374, -100, 57], [-450, -105, 66],
+  [-505, -150, 82], [-555, -118, 100], [-575, -185, 120], [WATCH[0], WATCH[1], WATCH[2]]];
+{ // the skirt's sunken pads give way where the road crosses the skirt
+  const near = (x, z) => FAR_ROAD.some((b, i) => { if (!i) return false; const a = FAR_ROAD[i - 1], dx = b[0] - a[0], dz = b[1] - a[1];
+    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz) < 30; });
+  for (let i = PADS.length - 1; i >= 0; i--) if (PADS[i][3] === 10 && PADS[i][2] <= -50 && near(PADS[i][0], PADS[i][1])) PADS.splice(i, 1);
+}
 PATHS.push([FAR_ROAD.map(p => [p[0], p[1]]), 7, '#b5a58a']); // round 14c: the road coloured in on the sect's own ground too
 // Round 14c: smooth value noise, so the ranges have gullies and spurs that run downhill instead of a star of straight
 // ribs round each peak (the 14b map showed every peak as a starfish).

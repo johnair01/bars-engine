@@ -122,7 +122,7 @@ function jump(n, view) {
 }
 const stops = document.getElementById('stops');
 for (const r of ROUTE) { const b = document.createElement('button'); b.textContent = r.n; b.title = r.text; b.onclick = () => jump(r.n); stops.appendChild(b); }
-document.getElementById('topBtn').onclick = () => { topView = !topView; document.body.classList.toggle('top', topView); document.getElementById('topBtn').textContent = topView ? 'Walk' : 'Top view'; };
+document.getElementById('topBtn').onclick = () => { topView = !topView; S.getObjectByName('farLand')?.userData.mapView?.(topView); document.body.classList.toggle('top', topView); document.getElementById('topBtn').textContent = topView ? 'Walk' : 'Top view'; };
 
 const input = { keys: new Set(), target: null };
 addEventListener('keydown', e => { if (e.target.tagName !== 'INPUT') input.keys.add(e.key.toLowerCase()); });
