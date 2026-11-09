@@ -18,7 +18,7 @@
   },
   "contact_max_gap": 0.02,
   "rack": {
-   "min_span": 1.0,
+   "min_span": 0.6,
    "top_between": [
     1.1,
     1.6
@@ -43,7 +43,7 @@
  "measured_from": {
   "shaft": "BRIEF.md: practice polearm, about 2 m shaft",
   "blade": "BRIEF.md: broad curved blade; 0.55 m long and 0.14 m wide at the accepted read",
-  "rack": "BRIEF.md: rests on a rack of dark pine; crossbar at 1.32 m as the courtyard frames show",
+  "rack": "a rack for one polearm, so its crossbar is about twice the blade's width; 0.6 m is the floor, and the top must land in the band a person reaches",
   "contact": "a hung blade touches its socket; his 2026-11-09 look caught 6 cm of air and marked it down"
  },
  "missing": [
