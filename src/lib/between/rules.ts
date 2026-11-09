@@ -159,7 +159,7 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'bar'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -181,7 +181,8 @@ export function pouchWrite(pouch: Doc): Verdict {
     if (!m) return no(400, 'Choose one of the fifteen moves.')
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
-    if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
+    if (e.state !== 'held' && e.state !== 'lit' && e.state !== 'written') return no(400, 'An ember is held, lit or written.')
+    if (e.bar != null && typeof e.bar !== 'string') return no(400, 'A written ember names its BAR.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
   }
   return yes
