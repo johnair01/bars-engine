@@ -36,6 +36,13 @@ export const COPY = {
   kept: "Kept in both your books.",
   sees: "{name} sees it when they next sit.",
   sealed: "A card is sealed until it is offered or opened with tea.",
+  // the kept turn as a BAR (slice 3, .specify/specs/friendcraft-deck-3)
+  barKick: "A BAR, kept at the table",
+  emberHeld: "Your ember from this turn, worked wood to fire.",
+  setIn: "Set it into this BAR",
+  takeBack: "Take my coin back",
+  storyNone: "This coin has no story yet.",
+  restFail: "That did not land. Try again in a moment.",
 };
 export const HINTS = {
   light: "Write a small ask a friend could make of you, or an easy hour you could spend together.",
@@ -47,7 +54,7 @@ export const HINTS = {
    stays the fallback, so an empty field returns to it. `hopeOnly` and `hope` are joined to the player's own words and stay
    fixed. Every edit keeps the keep list: no digit, no markup, one short line (keep list 5). */
 export const COPY_FIELDS = ["ask", "anyone", "add", "another", "takeOut", "open", "hint.light", "hint.middle", "hint.deep",
-  "draw", "askRoad", "earn", "back", "openTea", "asked", "offer", "notToday", "lineDrawer", "lineOwner", "kept", "sees", "sealed"];
+  "draw", "askRoad", "earn", "back", "openTea", "asked", "offer", "notToday", "lineDrawer", "lineOwner", "kept", "sees", "sealed", "barKick", "emberHeld", "setIn", "takeBack", "storyNone", "restFail"];
 export const COPY_MAX = 200;
 export const DEFAULT_COPY = { ...COPY, ...Object.fromEntries(DEPTHS.map(d => ["hint." + d, HINTS[d]])) };
 /** An edit as the server keeps it: only known fields, trimmed single lines under COPY_MAX, no digit, no angle bracket. */
