@@ -1,0 +1,53 @@
+{
+ "id": "guan-dao-2026-11-09",
+ "object": "Guan Dao on the weapon rack",
+ "units": "metres",
+ "source": "BRIEF.md object 3 (Wendell's 2026-11-08 pick) plus his steer of 2026-11-09: pull a reference to build from, and give the object a scene to sit in",
+ "picture": "https://bars-engine.vercel.app/board/stills/council/callsheets/stills/2026-11-08-heaven-courtyard-concept-4/make/courtyard-source_edited-media-9fc829e2b30f0fd52eca4377.png",
+ "picture_note": "The accepted round-4 courtyard repaint. It carries the stone, the light and the 2.5 m bell for scale, and it holds no picture of the weapon rack: the record has no reference still of this object at all, which is why both contenders built one nobody could see. That missing still is the first thing this pack asks for.",
+ "object_checks": {
+  "shaft": {
+   "min_height": 1.8,
+   "max_height": 2.6,
+   "min_aspect": 20
+  },
+  "blade": {
+   "min_length": 0.35,
+   "min_width": 0.1,
+   "must_sit_above_shaft": true
+  },
+  "contact_max_gap": 0.02,
+  "rack": {
+   "min_span": 1.0,
+   "top_between": [
+    1.1,
+    1.6
+   ]
+  },
+  "total_height": {
+   "min": 2.0,
+   "max": 3.6
+  }
+ },
+ "scene": {
+  "floor": {
+   "max_thickness": 0.2,
+   "min_span": 2.0
+  },
+  "wall": {
+   "min_height": 1.0,
+   "min_span": 1.5
+  },
+  "scale_reference": "the 2.5 m bronze bell at the courtyard centre"
+ },
+ "measured_from": {
+  "shaft": "BRIEF.md: practice polearm, about 2 m shaft",
+  "blade": "BRIEF.md: broad curved blade; 0.55 m long and 0.14 m wide at the accepted read",
+  "rack": "BRIEF.md: rests on a rack of dark pine; crossbar at 1.32 m as the courtyard frames show",
+  "contact": "a hung blade touches its socket; his 2026-11-09 look caught 6 cm of air and marked it down"
+ },
+ "missing": [
+  "a reference still of the weapon rack and its Guan Dao",
+  "a courtyard wall and floor in the contender's own scene, so the rack has something to sit against"
+ ]
+}
