@@ -51,7 +51,8 @@ export function defaultContacts(dims) {
 }
 
 /* dims: { H: hip-joint height standing, thigh, shin, hw: hip width, A0: ankle height standing, K0: knee height standing,
-   foot0: { L, R } standing foot directions in the body frame, G: contact heights (defaultContacts) }. */
+   foot0: { L, R } standing foot directions in the body frame, G: contact heights (defaultContacts) }.
+   @param {any} dims @param {number} t @returns {any} */
 export function kneelPose(dims, t) {
   const { H, thigh, shin, hw, A0, K0 } = dims, G = dims.G || defaultContacts(dims);
   const foot0 = dims.foot0 || { L: { l: 0, y: -0.1, f: 1 }, R: { l: 0, y: -0.1, f: 1 } };

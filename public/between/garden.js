@@ -12,6 +12,7 @@ import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, a
 import { createCreature } from "./creature.js";
 import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the spark over it (pt1-cushion-first)
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
+import { makeKneeler, DURATION as KNEEL_S, sm as kneelSm } from "./kneel-rig.js";   // the kneel at the hearth (animation-language round 7)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { moodOf } from "./music.js";
@@ -408,7 +409,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const hipsY = bones.hips ? bones.hips.b.position.y : 0;
   const qe = new THREE.Quaternion(), eu = new THREE.Euler(), sv = new THREE.Vector3();
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
-  let sit = 0, waveT = -9, rest = 0, lastSeatAt = null;
+  let sit = 0, waveT = -9, rest = 0, lastSeatAt = null, kneeler, kt = 0;
   return {
     holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: !!wardrobe,
     stance: () => cur,
@@ -421,7 +422,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
     },
     wave(t) { waveT = t; },
     /* After mixer.update: sitting (0..1 eases in), waving for 1.6 s, and for animals a curled-up rest (0..1). */
-    pose(t, dt, wantSit, wantRest, seatAt) {
+    pose(t, dt, wantSit, wantRest, seatAt, wantKneel) {
       if (seatAt != null) lastSeatAt = seatAt; else if (!wantSit && sit > 0.01) seatAt = lastSeatAt; // getting up eases off the same seat
       sit += ((wantSit ? 1 : 0) - sit) * Math.min(1, dt * 5);
       rest += ((wantRest ? 1 : 0) - rest) * Math.min(1, dt * 3);
@@ -431,7 +432,19 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         const want = clipWeights(cur), k = 1 - Math.exp(-3 * dt / FADE[cur]);
         for (const n of ["Walk", "Idle"]) { cw[n] += (want[n] - cw[n]) * k; if (Math.abs(cw[n] - want[n]) < 0.002) cw[n] = want[n]; acts[n].setEffectiveWeight(cw[n]); }
       }
-      if (bones.hipL && sit > 0.01) {
+      /* The kneel (council animation-language round 7, kneel-rig.js): at the hearth the sit becomes a kneel on the heels. kt is seconds
+         into it, easing forward over KNEEL_S and back at 2.5x on standing; a figure that sits on (the tea) drops back to the cross-legged
+         sit at once rather than rising through a stand. Peers still see the sit. */
+      if (wantKneel && managed && bones.hipL && kneeler === undefined) kneeler = makeKneeler(THREE, obj, holder);
+      if (kneeler && wantKneel) kt = Math.min(KNEEL_S, kt + dt);
+      else if (kneeler && kt > 0) kt = wantSit ? 0 : Math.max(0, kt - dt * 2.5);
+      const kneelOn = !!kneeler && kt > 0.001;
+      if (kneelOn) {
+        // the standing start is `ahead` in front of the seat and the cushion's height below it, so the hips end over the cushion
+        const e = kneelSm(0, 1.9, kt), yaw = holder.rotation.y, ah = kneeler.ahead * e;
+        holder.position.x += Math.sin(yaw) * ah; holder.position.z += Math.cos(yaw) * ah; holder.position.y += (seatAt != null ? seatAt : lastSeatAt || 0) * e;
+        kneeler.apply(kt);
+      } else if (bones.hipL && sit > 0.01) {
         const w = sit;
         if (acts.Walk && wantSit && !managed) acts.Walk.weight = 0;
         for (const [n, x, y, z] of SIT) bend(n, x, y, z, w);   // stance.js, so the robe tools pose the same sit
@@ -1482,7 +1495,7 @@ function frameBody() {
     meState.body.holder.position.y = myFloor;
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
-    meState.body.pose(t, dt, meState.sitting, false, mySeatAt);
+    meState.body.pose(t, dt, meState.sitting, false, mySeatAt, meState.sitting && seatedAtHearth() && !(tea && tea.holding()));
     teaFrame(t);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
     meState.wasWalking = walking;
