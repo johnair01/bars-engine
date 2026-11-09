@@ -1,5 +1,5 @@
 /**
- * Embers, lit by a place and caught by a BAR (spec .specify/specs/friendcraft-deck-3, FR-002, FR-017).
+ * Embers, lit by a place and caught by a BAR (spec .specify/specs/deck-3, FR-002, FR-017).
  *
  * A place lights an ember in a player's own pouch (the `pouch` private doc of their homeroom). The player works it at
  * their hearth, choosing its move. A worked ember can be set into a BAR they share: the BAR catches it, and one vibeulon

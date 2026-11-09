@@ -6,66 +6,11 @@ import {
     spendableBalance,
     spendableVibulons,
     stakeBarVibulon,
-    type Tx,
 } from '../bar-mint'
 
-type V = { id: string; ownerId: string | null; creatorId: string | null; originSource: string; originId: string; originTitle: string; stakedOnBarId: string | null; createdAt: Date }
-type Bar = { id: string; visibility: string; archivedAt: Date | null; mergedIntoId: string | null; status: string }
-type Ev = { playerId: string; source: string; amount: number; questId?: string | null }
+import { fakeDb as sharedFakeDb, type Bar } from './fake-db'
 
-/** An in-memory stand-in for the few Prisma calls bar-mint makes. */
-function fakeDb(bars: Bar[] = []) {
-    const vibulons: V[] = []
-    const events: Ev[] = []
-    let n = 0
-    const match = (v: V, w: Record<string, unknown> = {}) =>
-        Object.entries(w).every(([k, want]) => {
-            const got = (v as unknown as Record<string, unknown>)[k]
-            if (want && typeof want === 'object' && !(want instanceof Date)) {
-                const o = want as { in?: unknown[]; not?: unknown }
-                if (o.in) return o.in.includes(got)
-                if ('not' in o) return got !== o.not
-            }
-            return got === want
-        })
-    const sorted = () => [...vibulons].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-    const db = {
-        vibulon: {
-            create: async ({ data }: { data: Partial<V> }) => {
-                const v = { id: `v${++n}`, stakedOnBarId: null, createdAt: new Date(1000 + n), ...data } as V
-                vibulons.push(v)
-                return v
-            },
-            findFirst: async ({ where }: { where: Record<string, unknown> }) => sorted().find((v) => match(v, where)) ?? null,
-            findMany: async ({ where, take }: { where: Record<string, unknown>; take?: number }) =>
-                sorted().filter((v) => match(v, where)).slice(0, take ?? Infinity),
-            count: async ({ where }: { where: Record<string, unknown> }) => vibulons.filter((v) => match(v, where)).length,
-            update: async ({ where, data }: { where: { id: string }; data: Partial<V> }) => {
-                const v = vibulons.find((x) => x.id === where.id)!
-                Object.assign(v, data)
-                return v
-            },
-            updateMany: async ({ where, data }: { where: Record<string, unknown>; data: Partial<V> }) => {
-                const hit = vibulons.filter((v) => match(v, where))
-                hit.forEach((v) => Object.assign(v, data))
-                return { count: hit.length }
-            },
-        },
-        vibulonEvent: { create: async ({ data }: { data: Ev }) => (events.push(data), data) },
-        customBar: {
-            findMany: async ({ where }: { where: { id: { in: string[] }; status: { not: string } } & Record<string, unknown> }) =>
-                bars.filter(
-                    (b) =>
-                        where.id.in.includes(b.id) &&
-                        b.visibility === where.visibility &&
-                        b.archivedAt === null &&
-                        b.mergedIntoId === null &&
-                        b.status !== where.status.not,
-                ),
-        },
-    }
-    return { tx: db as unknown as Tx, vibulons, events, bars }
-}
+const fakeDb = (bars: Bar[] = []) => sharedFakeDb({ bars })
 
 describe('bar mint and stake (ee-bar-mint-stake)', () => {
     it('making a BAR mints one vibeulon to its maker, named for that BAR', async () => {

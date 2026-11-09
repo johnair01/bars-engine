@@ -1,12 +1,12 @@
 /**
- * Coin marks: what a vibeulon remembers (spec .specify/specs/friendcraft-deck-3, FR-007 to FR-011).
+ * Coin marks: what a vibeulon remembers (spec .specify/specs/deck-3, FR-007 to FR-011).
  *
  * Wendell's note on fo3-coin-on-page: "Vibeulons carry energy and provenance of what minted them and how they've been
  * spent". A coin keeps `energy` ({ move, feel } of what made it) and one `VibulonMark` for each act done to it. A mark
  * copies the coin's origin and energy and has no foreign key, so it still reads after the coin row is burned.
  *
  * This is Calrunia's module, not any one place's: every function takes the `place` that calls it as a short string
- * (`friendcraft-turn`, `nook-hearth`, `quest`). Nothing here is named for Friendcraft.
+ * (`table-turn`, `nook-hearth`, `quest`). Nothing here is named for any one game.
  */
 import { randomUUID } from 'node:crypto'
 import { MOVES } from '@/lib/between/rules'
@@ -92,7 +92,7 @@ export async function coinStory(tx: Tx, vibulonId: string, viewerId?: string): P
                 break
             case 'set': {
                 const other = viewerId && m.playerId === viewerId ? m.toId : m.playerId
-                if (m.place === 'friendcraft-turn' && other) lines.push(`Set here at your table with ${name(other)}.`)
+                if (m.place === 'table-turn' && other) lines.push(`Set here at your table with ${name(other)}.`)
                 else lines.push(`Set on this page by ${name(m.playerId)}.`)
                 break
             }
