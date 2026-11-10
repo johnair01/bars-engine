@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wendell-britt/Six-faces-council/blob/main/schema/board-save.schema.json",
   "title": "Board save",
-  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only. A stores document is one placement in the Stores' move (bars-engine /board/studio?stores=1): a run's thing put on the shelf, in the seed basket, up the bell line or in the compost ring, or taken by the tide; board/pull.py records it with the steps.",
+  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only. A resolved document is one settled answer the board's Resolved tab draws, at <kind>--<id>, written by board/resolved_write.py from what board/pull.py records. A stores document is one placement in the Stores' move (bars-engine /board/studio?stores=1): a run's thing put on the shelf, in the seed basket, up the bell line or in the compost ring, or taken by the tide; board/pull.py records it with the steps.",
   "type": "object",
   "additionalProperties": false,
   "required": ["board", "collection", "docId", "data"],
   "properties": {
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
-                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws", "records"]},
+                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws", "records", "constraint", "resolved"]},
     "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\\\u0000-\\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}
@@ -43,6 +43,12 @@
            "then": {"required": ["name", "rounds"], "properties": {"name": {"$ref": "#/$defs/text"}, "rounds": {"type": "array"}}}}
         ]}}
     },
+    "resolved": {
+      "properties": {"board": {"const": "council"}, "docId": {"pattern": "^(positions|questions|terms|causes)--\\S"}, "data": {
+        "required": ["kind", "id", "savedAt"],
+        "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes"]},
+                       "id": {"$ref": "#/$defs/text"},
+                       "savedAt": {"$ref": "#/$defs/iso"}}}}},
     "iso": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"},
     "decided": {
       "anyOf": [
@@ -54,6 +60,7 @@
   "allOf": [
     {"if": {"properties": {"collection": {"const": "rows"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/row"}},
     {"if": {"properties": {"collection": {"const": "records"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/record"}},
+    {"if": {"properties": {"collection": {"const": "resolved"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/resolved"}},
     {"if": {"properties": {"mode": {"const": "update"}}, "required": ["mode"]}, "then": {}, "else": {"allOf": [
       {"if": {"properties": {"collection": {"enum": ["positions", "questions", "terms", "causes", "picks", "blockers"]}}},
        "then": {"properties": {"data": {"required": ["savedAt"], "properties": {"savedAt": {"$ref": "#/$defs/iso"}}}}}},

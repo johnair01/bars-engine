@@ -11,6 +11,7 @@ export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
   'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws', 'records',
   'constraint',  // the council's dated constraint read, one document a day
+  'resolved',  // one settled answer at <kind>--<id>, written by board/resolved_write.py
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
@@ -97,6 +98,14 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (c === 'draws') { // the draw: a project deck's top card turned up, at <deck>--<card id>
       if (s.board !== 'council') errors.push('the draws are the Council Board\'s')
       if (!nonBlank(data.deck) || !nonBlank(data.card) || !(str(data.at) && ISO.test(data.at))) errors.push('a draw names its deck, card and at')
+    }
+    if (c === 'resolved') { // one settled answer, the record the page's Resolved tab draws (six-faces-council board/resolved_write.py)
+      if (s.board !== 'council') errors.push('the resolved entries are the Council Board\'s')
+      if (!['positions', 'questions', 'terms', 'causes'].includes(data.kind as string)) errors.push('a resolved entry names its kind')
+      if (!nonBlank(data.id)) errors.push('a resolved entry names its id')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('a resolved entry needs savedAt, an ISO UTC time')
+      else if (nonBlank(data.kind) && nonBlank(data.id) && s.docId !== `${data.kind}--${data.id}`)
+        errors.push('a resolved entry lives at <kind>--<id>')
     }
     if (c === 'morning' && s.docId === 'menu') {
       if (!str(data.menu) || !(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('the menu needs menu and savedAt')

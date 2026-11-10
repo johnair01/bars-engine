@@ -7,7 +7,7 @@ import { missingObjects } from './content-store'
  * the council's rows (src/lib/board/rows.ts), and the council's records — its callsheets, passes and ledger as
  * whole documents (src/lib/board/records.ts, born recorded). His answers (positions, questions, ...) are his to
  * save, never a session's. */
-export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws', 'records',
+export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws', 'records', 'resolved',
   'constraint'])  // the council's dated constraint read, one document a day (six-faces-council constraint-route-brief.md)
 /** Collections whose session writes the board-pull Action lands on main, so they are born unrecorded: a posted row
  * waits for board-pull to put it in board_data.json and acknowledge it, and the staleness check alarms if it does not. */

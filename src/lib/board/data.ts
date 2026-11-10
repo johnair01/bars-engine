@@ -7,11 +7,14 @@ export const DATA_PATH = 'board/board_data.json'
 
 /**
  * The collections the store serves as live rows. `board/pull.py` writes them into board_data.json as lists, so a
- * document per row becomes one list entry here. Every other key (resolved, battles, morning, intake, draws,
- * weather_log, list_reads) is the council's record and lives only in the pushed copy: the store has no collection
- * for it. Wendell, 2026-11-05: "the Page shouldn't be carrying its own data. It should all be served via the API".
+ * document per row becomes one list entry here, and `resolved` is folded back from one document per settled
+ * answer. Every other key (battles, morning, intake, draws, weather_log, list_reads) is the council's record and
+ * lives only in the pushed copy: the store has no collection for it. Wendell, 2026-11-05: "the Page shouldn't be carrying its own data. It should all be served via the API".
  */
-export const FROM_STORE = ['positions', 'questions', 'terms', 'causes', 'picks'] as const
+export const FROM_STORE = ['positions', 'questions', 'terms', 'causes', 'picks', 'resolved'] as const
+
+/** The record's `resolved`: settled answers under their kind, then their id. */
+export type Resolved = Record<string, Record<string, Record<string, unknown>>>
 
 function safeJson(text: string | null): Record<string, unknown> | null {
   if (!text) return null
@@ -31,7 +34,27 @@ export function merge(record: Record<string, unknown>, docs: Record<string, Reco
   const out: Record<string, unknown> = { ...record }
   for (const c of FROM_STORE) {
     const held = docs[c]
-    if (held && Object.keys(held).length) out[c] = Object.values(held)
+    if (!held || !Object.keys(held).length) continue
+    // One settled answer per document, so a settled answer the record never saw lands beside the ones it did.
+    if (c === 'resolved') out.resolved = foldResolved((record.resolved as Resolved | undefined) ?? {}, held)
+    else out[c] = Object.values(held)
+  }
+  return out
+}
+
+/** The store's one-document-per-entry resolved rows, back in the shape the page reads: `{ kind: { id: entry } }`. */
+export function foldResolved(record: Resolved, docs: Record<string, Record<string, unknown>>): Resolved {
+  const out: Resolved = {}
+  for (const [kind, entries] of Object.entries(record ?? {})) out[kind] = { ...entries }
+  for (const doc of Object.values(docs)) {
+    const kind = typeof doc.kind === 'string' ? doc.kind : ''
+    const id = typeof doc.id === 'string' ? doc.id : ''
+    if (!kind || !id) continue
+    const entry = { ...doc }
+    delete entry.kind
+    delete entry.id
+    delete entry.savedAt
+    out[kind] = { ...(out[kind] ?? {}), [id]: entry }
   }
   return out
 }
