@@ -99,6 +99,7 @@ export default defineConfig({
       'src/app/api/board/changes/__tests__/route.test.ts',
       'src/lib/board/__tests__/changes.test.ts',
       'src/app/api/board/content/__tests__/route.test.ts',
+      'src/app/api/board/content/status/__tests__/route.test.ts',
       'src/app/api/council/preview-shots/__tests__/route.test.ts',
       'src/lib/marks/__tests__/chalk.test.ts',
       'src/lib/work/__tests__/ticket.test.ts',
