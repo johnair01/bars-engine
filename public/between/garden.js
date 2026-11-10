@@ -25,7 +25,8 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
-import { makeQiSky, qiOf } from "./sky-qi.js";
+import { makeQiSky, qiOf, qiFromEmbers, roomLift, isKept } from "./sky-qi.js";
+import { stripsMesh, brushMesh, createBrushWrite, INK } from "./brush-write.js"; // ember-to-vibeulon: the BAR written with a brush
 import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
@@ -818,6 +819,7 @@ function stepBetween(t, dt) {
   betweenLight.color.setHex(phase === "spark" ? 0xd48bc0 : state === "charged" ? 0xd9a0c8 : 0x9ad8cf);
   if (hollow) hollow.update(t, dt, lightScale, camera.position, lastFocus);
   if (qiSky) qiSky.step(dt, QI_PREVIEW != null ? QI_PREVIEW : qiOf(look));
+  if (hollow && hollow.handles.hearth) { const hf = hollow.handles.hearth; hf.qi = roomLift(qiFromEmbers(roomEmbers())); hf.qiSnap = REDUCE_MOTION; }
 }
 
 /* ===================================================================================================
@@ -1728,6 +1730,7 @@ function drawLabels(t) {
     const sh = myShelf();
     if (sh.sealed.length) placeLabel(label("shelfS", sh.sealed.length > 1 ? sh.sealed.length + " scrolls, sealed" : "A scroll from " + (sh.sealed[0].name || "someone"), ""), shelf.at.clone().add(new THREE.Vector3(-0.3, 0.42, 0)));
     else if (sh.blank && !minuteOn()) placeLabel(label("shelfB", "A blank scroll", "dim"), shelf.at.clone().add(new THREE.Vector3(0.3, 0.4, 0)));
+    if (shelf.brush && !(brushWrite && brushWrite.isOpen)) placeLabel(label("shelfW", "Blank strips and a brush", "dim"), shelf.at.clone().add(new THREE.Vector3(0.25, 0.3, 0.1)));
   }
   if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting && seatBy(meState.seatWant) ? seatBy(meState.seatWant).top + 0.85 : groundY(meState.pos.x, meState.pos.z) + 1.95));
   for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting && seatBy(p.seat) ? seatBy(p.seat).top + 0.85 : groundY(p.pos.x, p.pos.z) + 1.95));
@@ -2029,6 +2032,49 @@ async function keepEmber() {
   // Only the move, its feeling and the private glow: no words, and nothing of which charge it came from.
   await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null } } });
   hd = {}; if (hm) { closeSheet(); hmSync(); } else toast("An ember, in your pouch."); // by the fire, it rises out of the satchel instead
+  roomLight.mine = Math.max(roomLight.mine, keptHere()); roomLight.room = Math.max(roomLight.room, roomLight.mine); lightSoon(); syncShelf();
+}
+/* ---------- the room's light and the BAR written with a brush (ember-to-vibeulon FR-004, FR-005, FR-007, FR-008) ----------
+   Qi is the embers kept (his A on ee-qi-role), shown as the room's own light: the hearth and the lamps step up as embers are
+   kept and never fall (sky-qi.js qiFromEmbers). Kept embers go with you, so the count is read from the server across your
+   pouches (GET .../bar); in a shared Between the Hollow's light is both members' counts summed, and neither number is
+   written anywhere. Until the server answers, this page's own pouch stands in. */
+const REDUCE_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const roomLight = { mine: 0, room: 0, at: 0, busy: false };
+const keptHere = () => embers().filter(([, e]) => isKept(e)).length;
+function roomEmbers() { const here = keptHere(); return Math.max(here, roomLight.room, roomLight.mine); }
+async function lightNow() {
+  if (!gardenId || roomLight.busy || EMBER_DEMO) return;
+  roomLight.busy = true;
+  try { const r = await fetch("/api/between/" + gardenId + "/bar", { credentials: "same-origin", cache: "no-store" }); if (r.ok) { const j = await r.json(); roomLight.mine = +j.mine || 0; roomLight.room = +j.room || 0; syncShelf(); } }
+  catch {} finally { roomLight.busy = false; roomLight.at = Date.now(); }
+}
+function lightSoon() { setTimeout(lightNow, 400); }
+/* The blank strips and the brush wait on the Nook's shelf once one ember is kept (FR-004): the BAR-making opens after the first worked charge. */
+const stripsOpen = () => keptHere() > 0 || roomLight.mine > 0;
+let brushWrite = null;
+function openBrush() {
+  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar, onClose: done => { if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
+  const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0))
+    .map(([id, e]) => { const el = MOVES[e.move][1]; return { id, el, name: MOVES[e.move][0], light: cssHue(elHex(el)), demo: isDemoEmber(id) }; });
+  if (!held.length) { toast(stripsOpen() ? "Every ember you hold is written or lit. Sit at the hearth to keep another." : "Sit at the hearth and keep an ember first."); return; }
+  if (shelf.brush) shelf.brush.userData.wet(null);
+  brushWrite.open(held);
+}
+/* Saving the BAR: the route mints its vibeulon and marks the ember written. A preview's demo ember writes on this page only. */
+async function writeBar({ ember, mark, demo }) {
+  const el = MOVES[(embers().find(([k]) => k === ember) || [, {}])[1].move]?.[1];
+  if (demo || !gardenId || storeDown) {
+    if (demoPouch[ember]) demoPouch[ember] = { ...demoPouch[ember], state: "written", bar: "local-" + hkey() };
+    return { ink: el && INK[el] ? INK[el].set : null };
+  }
+  let j;
+  try { j = await api("/api/between/" + gardenId + "/bar", { ember, mark }); }
+  catch (e) { throw new Error(e && e.code === "unavailable" ? "No connection. The strip waits until you are back online." : (e && e.message) || "It did not set. Try again in a moment."); }
+  const p = myPouch && myPouch.embers ? myPouch : { embers: {} };
+  myPouch = { ...p, embers: { ...p.embers, [ember]: { ...(p.embers[ember] || {}), state: "written", bar: j.barId } } };
+  refresh();
+  return j;
 }
 async function makeLantern(eid) {
   const e = embers().find(([k]) => k === eid); if (!e || e[1].state !== "held") return null;
@@ -3193,7 +3239,7 @@ const vines = [];
   }
 }
 /* ---------- the shelf: the blank scroll, scrolls that arrived sealed, keepsakes ---------- */
-const shelf = { group: null, at: new THREE.Vector3(), face: 0, sig: "", taps: [], sealedSeen: null };
+const shelf = { group: null, at: new THREE.Vector3(), face: 0, sig: "", taps: [], sealedSeen: null, brush: null, stripsSeen: null };
 function scrollMesh(kind, hue) {
   const g = new THREE.Group(), s = kind === "keep" ? 0.5 : kind === "council" ? 0.74 : 0.68;
   const paper = new THREE.MeshStandardMaterial({ color: 0xd9ccb0, roughness: 0.9, emissive: 0xefe2c4, emissiveIntensity: 0.22 }), rod = new THREE.MeshStandardMaterial({ color: 0x7a5236, roughness: 0.7 });
@@ -3252,7 +3298,7 @@ const paperDone = new Set(); // scrolls answered on this page, before the list c
 function syncShelf() {
   const want = inNook() && hollow && garden && isHome(garden);
   if (!want) { if (shelf.group) { scene.remove(shelf.group); shelf.group = null; shelf.sig = ""; } return; }
-  const sh = myShelf(), sig = JSON.stringify([sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
+  const sh = myShelf(), strips = stripsOpen(), sig = JSON.stringify([strips, sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
   if (sig === shelf.sig && shelf.group) return;
   // a sealed scroll that was not here a moment ago has just landed: a puff of leaves
   const ids = new Set(sh.sealed.map(x => x.room + "|" + x.id));
@@ -3261,7 +3307,7 @@ function syncShelf() {
   if (shelf.group) scene.remove(shelf.group);
   const sp = SHELLS.nook.spots.find(x => x.id === "shelf");
   const g = new THREE.Group(); g.position.set(sp.at[0], sp.at[1], sp.at[2]); g.rotation.y = sp.face || 0; scene.add(g);
-  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = [];
+  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = []; shelf.brush = null;
   const put = (m, x, y, z, ry, tap) => { m.position.set(x, y, z); m.rotation.y = ry; g.add(m); if (tap) shelf.taps.push({ ...tap, m }); };
   // stills round 2026-11-03-council-scroll-ad1: the book stands on the shelf's left half since fb-look-01 and hid the sealed
   // scrolls at -0.27; every scroll now sits on the right half, sealed ones in front, the council's on top of them
@@ -3270,6 +3316,14 @@ function syncShelf() {
   sh.council.slice(0, 1).forEach((x, i) => put(scrollMesh("council"), sh.sealed.length > 1 ? 0.3 : 0.38, sh.sealed.length > 1 ? 0.072 : 0, 0.1, 0.03, { key: "council", i }));
   sh.keepsakes.slice(0, 4).forEach((x, i) => put(scrollMesh("keep", KEEP_HUE[x.answer] || KEEP_HUE.no), 0.48 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? 0.15 : -0.1), { key: "keep", i }));
   sh.councilKept.slice(0, 2).forEach((x, i) => put(scrollMesh("councilKeep"), 0.2 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? -0.12 : 0.08), { key: "councilKeep", i }));
+  // the blank strips and the hearth's brush, at the front edge of the shelf once one ember is kept (FR-004; stills round
+  // 2026-11-04-ember-first-1 frame 2): tapping either takes a strip to the cloth
+  if (strips) {
+    put(stripsMesh(THREE), 0.24, 0, 0.02, 0.05, { key: "strip" });
+    const b = brushMesh(THREE); b.scale.setScalar(1.4); put(b, 0.26, 0.012, 0.14, 0.15, { key: "strip" }); shelf.brush = b;
+    if (shelf.stripsSeen === false) burst(shelf.at.clone().add(new THREE.Vector3(0, 0.1, 0.15)), 0xe8cf7a);
+  }
+  shelf.stripsSeen = strips;
   if (landed) burst(shelf.at.clone().add(new THREE.Vector3(-0.25, 0.1, 0.1)), 0x8fd08a);
 }
 function shelfTapPos(tp) { const v = new THREE.Vector3(); tp.m.getWorldPosition(v); v.y += 0.03; return v; }
@@ -3527,6 +3581,7 @@ function minuteHint() {
 /* Your shelf, tapped: the blank scroll to write on, a sealed one to open, a keepsake to read again. */
 function shelfTap(kind, i) {
   const sh = myShelf();
+  if (kind === "strip") { openBrush(); return; }
   if (kind === "blank") { if (minuteOn()) { toast("Your first scroll. You can write it once the doorway opens."); return; } openPaper("write", { fromShelf: true }); return; }
   if (kind === "sealed" && sh.sealed[i]) { openPaper("read", sh.sealed[i]); return; }
   if (kind === "keep" && sh.keepsakes[i]) openPaper("keep", sh.keepsakes[i]);
@@ -4047,7 +4102,7 @@ async function poll() {
   clearTimeout(pollTimer);
   if (!gardenId || stopped) return;
   polling = true;
-  try { take(await api("/api/between/" + gardenId + "/poll", { presence: document.hidden ? null : presenceNow(), invite })); }
+  try { take(await api("/api/between/" + gardenId + "/poll", { presence: document.hidden ? null : presenceNow(), invite })); if (Date.now() - roomLight.at > 30000 && isMember(view().g)) lightNow(); }
   catch (e) {
     if (e.code === "unauthenticated") return toLogin();
     if (e.code === "permission_denied" || e.code === "not_found") return stop(e.message || "This garden is not open to you.");
@@ -4160,7 +4215,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { tea: () => tea, brush: () => openBrush(), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },

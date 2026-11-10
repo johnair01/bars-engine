@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { makeQiSky, qiOf, skyAt, QI } from '../../../../public/between/sky-qi.js'
+import { makeQiSky, qiOf, skyAt, QI, qiFromEmbers, roomLift, isKept, ROOM_STEPS } from '../../../../public/between/sky-qi.js'
 
 // The Between keeps its own time (his A on uu-between-clock, 2026-11-02): one sky for both players, lit by its health.
 const DUSK = { sky: { top: [0.17, 0.12, 0.36], mid: [0.52, 0.33, 0.62], low: [0.98, 0.56, 0.4], hor: [1, 0.74, 0.48] }, stars: 0.7, sunY: 3.4, sunDir: [0.18, 0.05, -1], dusk: 0.9 }
@@ -35,5 +35,23 @@ describe('the Between sky', () => {
   it('reads no clock', () => {
     const src = readFileSync(path.join(__dirname, '../../../../public/between/sky-qi.js'), 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')
     expect(src).not.toMatch(/Date|getHours|performance\.now|Intl/)
+  })
+})
+
+// ember-to-vibeulon FR-007: qi is the embers kept, shown as the room's light; glow never enters it and it never falls.
+describe('the room light from embers kept', () => {
+  it('steps up with the first ember and keeps warming, never falling', () => {
+    expect(qiFromEmbers(0)).toBe(0)
+    expect(qiFromEmbers(1)).toBe(1)
+    let last = 0
+    for (let n = 0; n <= 100; n++) { const q = qiFromEmbers(n); expect(q).toBeGreaterThanOrEqual(last); last = q }
+    expect(qiFromEmbers(1000)).toBe(ROOM_STEPS)
+    expect(roomLift(qiFromEmbers(1))).toBeGreaterThan(roomLift(0))
+  })
+  it('counts an ember once whatever its glow, and still counts it when written or lit', () => {
+    const light = [{ state: 'held', glow: 1 }], heavy = [{ state: 'held', glow: 5 }]
+    expect(qiFromEmbers(light.filter(isKept).length)).toBe(qiFromEmbers(heavy.filter(isKept).length))
+    expect(['held', 'lit', 'written'].every(state => isKept({ state }))).toBe(true)
+    expect(isKept({ state: 'gone' })).toBe(false)
   })
 })

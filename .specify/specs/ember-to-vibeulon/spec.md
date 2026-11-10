@@ -37,8 +37,10 @@ burning one.
 | Where qi shows | The room's own light (hearth and lamps), not the sky; the sky stays lit by the Between's health | council position ee2-qi-is-nook-light; the sky is Wendell's yes on uu-between-clock-look-1, 2026-11-02 |
 | Qi in the Hollow | The Hollow's light reads both members' kept embers together, as one number; each one's count and glow stay private | council position ee2-hollow-light-shared |
 | Does writing a BAR use up its ember | No: the ember's state turns `written` and still counts toward qi, so making a BAR never dims the room | council position ee2-one-ember-per-lantern |
-| What makes a BAR in the Between | Writing it with a kept ember: at the hearth the player takes a blank strip from the shelf, lays it on the writing cloth and writes its mark with the ember as the brush; the vibeulon settles on its seal. The BAR is a talisman card laid flat and lit, never folded. The lantern stays an offer | Wendell: B on ee2-lantern-is-bar, then A on ee2-gesture-look-1 (2026-11-04 04:40) |
-| The ink | The ember is the ink, and its colour comes from the move of the charge that left it (the element of that move), so two BARs from different work read differently. Glow still sets nothing | Wendell's note on ee2-gesture-look-1: "the embers affect the color of the ink" |
+| What makes a BAR in the Between | Writing it with a brush: at the hearth the player takes a blank strip from the shelf, lays it on the writing cloth, dips the hearth's brush in a kept ember and writes the mark with the brush; the vibeulon settles on its seal. The BAR is a talisman card laid flat and lit, never folded. The lantern stays an offer | Wendell: B on ee2-lantern-is-bar, A on ee2-gesture-look-1 (2026-11-04 04:40), then B on ee2-first-ember-look-1 with his note "I want them to write it with a brush" (2026-11-04 05:30) |
+| The brush | One brush, the hearth's own, lies on the shelf beside the blank strips and appears with them. The player draws the stroke themselves, by finger or mouse, across the strip. The ember is the brush's ink: dipping the brush in an ember wets its tip in that ember's colour. Brushes to collect stay a later slice | Wendell's note on ee2-first-ember-look-1 |
+| The ink | The ember is the brush's ink, and its colour comes from the move of the charge that left it (the move's starting element, council position ee2-ink-from-element), so two BARs from different work read differently. Each ink is its element's light deepened so it reads on talisman yellow (stills round 2026-11-04-ember-first-1). Glow still sets nothing |
+| The lantern's paper | A lantern carrying a BAR takes its ember's colour in the paper, not near-white cream (the paper was seen washing out in stills round 2026-11-04-ember-first-1) | the build, from that round's seen-and-not-fixed list | Wendell's note on ee2-gesture-look-1: "the embers affect the color of the ink" |
 | BAR mint | Making a BAR mints one vibeulon to its maker, `originSource: 'bar_mint'`, `originId` = the BAR id | Wendell, ee-bar-mint-stake A |
 | Publish | The vibeulon the BAR minted is staked on it (`stakedOnBarId`); the burn in `create-bar.ts` retires | Wendell, ee-bar-mint-stake A |
 | When BAR-making opens | After the player's first worked charge, in the Nook | Wendell, ee-bar-making-opens A |
@@ -49,8 +51,8 @@ burning one.
 
 - **WHO:** the player (maker), the other member of the Hollow.
 - **WHAT:** Ember (BetweenPrivate pouch, `{move, feel, glow, state, at, bar}`), Qi (a Meter, derived, never stored),
-  BAR (a talisman card written with an ember, a CustomBar row; a lantern carries it to the Hollow as an offer), Vibulon (minted by the BAR, staked on it when public).
-- **WHERE:** `/ontology-game/between`: the Nook (hearth, blank strips on its shelf, the writing cloth) and the Hollow (where lanterns carry offers).
+  Brush (the hearth's own, on the shelf; its ink is an ember), BAR (a talisman card written with the brush, a CustomBar row; a lantern carries it to the Hollow as an offer), Vibulon (minted by the BAR, staked on it when public).
+- **WHERE:** `/ontology-game/between`: the Nook (hearth, blank strips and the brush on its shelf, the writing cloth) and the Hollow (where lanterns carry offers).
 - **Primitives:** ontology objects Ember, Qi as Meter, Lantern = BAR, Vibulon; mechanics already built in the Between:
   the hearth sit (`sitAtHearth`, `keepEmber` in `public/between/garden.js`) and the lantern offer (cc-lantern-offer).
 
@@ -68,13 +70,20 @@ Stake sets `stakedOnBarId = barId` on the BAR's own vibeulon and writes `Vibulon
 (no value leaves the wallet). Release clears it and writes `source: 'bar_stake_release'`. Wallet balance counts only
 vibeulons with `stakedOnBarId = null`.
 
-### `POST /api/between/[gardenId]/bar` `{ emberAt, mark }` and `{ barId, offer: true }`
+### `GET /api/between/[gardenId]/bar`
 
-Writes a BAR with the caller's kept ember (`emberAt` names it in the pouch; `mark` is what the player wrote). Refuses
+Returns `{ mine, room }`: `mine` is the caller's kept embers across their pouches, and `room` is the sum over this garden's
+members (the caller's alone in a home). The page lights the room from `room` (FR-007, FR-008). Neither number is written to
+any row.
+
+### `POST /api/between/[gardenId]/bar` `{ ember, mark }` and `{ barId, offer: true | false }`
+
+Writes a BAR with the brush dipped in the caller's kept ember (`ember` names it in the pouch; `mark` is the line the player
+wrote under the stroke, its title). Refuses
 with 409 `not_yet` until the caller's pouch holds one worked ember (FR-004). Creates the BAR (`createCustomBar` path,
 private) with its ink colour from the ember's move, mints its vibeulon, and sets the ember's `state: 'written'` and
 `bar: <barId>`. With `offer: true` (the card carried to the Hollow on a lantern, cc-lantern-offer), the BAR turns public
-and its vibeulon is staked. Response: `{ barId, vibulonId, ink, staked }`. No ember text, feel or glow is written to any
+and its vibeulon is staked; `offer: false` takes it back to private and releases the stake. Response: `{ barId, vibulonId, ink, staked }`. No ember text, feel or glow is written to any
 shared row (cc-pouch-private). (Was `/lantern`; renamed for his A on ee2-gesture-look-1.)
 
 ## User Stories
@@ -112,10 +121,10 @@ by that one and my total does not; taking the BAR back returns it to spendable.
 
 ### Phase 2: Embers, qi and the BAR written at the hearth (the Between)
 
-- **FR-004** The blank strips on the hearth shelf appear in the Nook, and `POST .../bar` succeeds, only once the
-  player's pouch holds at least one kept ember from a worked charge.
-- **FR-005** Writing a BAR with a kept ember calls the Phase 1 path (private BAR plus mint), inks it in the colour of
-  that ember's move, marks the ember `state: 'written'` with `bar: <barId>`, and writes no ember text, feel or glow to
+- **FR-004** The blank strips and the brush on the hearth shelf appear in the Nook, and `POST .../bar` succeeds, only
+  once the player's pouch holds at least one kept ember from a worked charge.
+- **FR-005** Writing a BAR with the brush dipped in a kept ember (the player draws the stroke) calls the Phase 1 path
+  (private BAR plus mint), inks it in the colour of that ember's move, marks the ember `state: 'written'` with `bar: <barId>`, and writes no ember text, feel or glow to
   any shared row.
 - **FR-006** Offering a written BAR in the Hollow (carried on a lantern) publishes it and stakes its vibeulon (FR-002); it counts toward the
   Between once, on the other member's yes (cc-lantern-offer, unchanged).
@@ -154,14 +163,15 @@ again.
 - `evidence_and_unknowns`: rulings ee-qi-role, ee-bar-mint-stake, ee-bar-making-opens (2026-10-29); code read at 4e13376 (keepEmber, qiOf, the two burns, stakedOnBarId unused). Open: the lantern as the BAR gesture [NEEDS CLARIFICATION: is lighting a lantern how a player makes a BAR in the Between | board: ee2-lantern-is-bar] (Sage).
 - `provenance_effects`: every minted vibeulon names its BAR; the ember records its lantern; a stake never destroys value and releases to the maker (Regent).
 - `risks_and_tests`: players read glow as value (compare glow on private vs lit embers in the first playtest); room light read as a score (ask a playtester what the light means); minting on every BAR lets a player farm vibeulons from empty private BARs outside the Between, which his rule that gaming only cheats the cheater answers, and the falsify script counts; the old Show Up victory was proven unreachable (0 of 6 superpowers win, `.specify/specs/ember-economy-decompose/HARVEST.md` H4), so no ember or lantern count becomes a win condition (Challenger).
-- `implementation_translation`: `src/actions/create-bar.ts`, new `src/lib/economy/bar-mint.ts`, wallet balance readers, `public/between/garden.js` (hearth, pouch, lantern hook), `public/between/hollow.js` (room light), new route `src/app/api/between/[gardenId]/lantern/route.ts` (Architect).
+- `implementation_translation`: `src/actions/create-bar.ts`, new `src/lib/economy/bar-mint.ts`, wallet balance readers, `public/between/garden.js` (hearth, pouch, the shelf's strips and brush), new `public/between/brush-write.js` (the brush and the strip), `public/between/hollow.js` (room light, the lantern's paper), new route `src/app/api/between/[gardenId]/bar/route.ts` (Architect).
 - `decision_or_open_authority`: the gates are his (ruled 2026-10-29); ee2-lantern-is-bar is on the board; ee2-qi-is-nook-light, ee2-hollow-light-shared and ee2-one-ember-per-lantern stand unless he flips them (Regent).
 
 ## Later, from his note on ee2-gesture-look-1
 
 Not built in this spec; each opens as its own slice through the pipeline, with stills first.
 
-- Brushes the player collects, each making a different stroke.
+- Brushes the player collects, each making a different stroke (the hearth's one brush is built now, his note on
+  ee2-first-ember-look-1).
 - Seals the player learns to craft, pressed on the BAR where the vibeulon settles.
 - Vibeulons the player designs: the coin's face drawn by its maker.
 
