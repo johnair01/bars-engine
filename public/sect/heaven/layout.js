@@ -247,13 +247,13 @@ function buildGrid() {
       if (d < 8) { const t = d <= 0 ? 1 : 1 - d / 8, k = t * t * (3 - 2 * t); H[j * nx + i] += (p[2] - H[j * nx + i]) * k; if (d <= 0) break; } }
   }
   // round 20: the pilgrim stair's earthwork. Under the zigzag the ground is cut or filled to just below the treads and
-  // landings, and beside them it banks off at about 1:0.8, so the stair sits in the hill instead of on stilts.
+  // landings, and beside them it banks off at about 1:0.3 (round 21: was 1:0.8, which left 7 m walls), so the stair sits in the hill instead of on stilts.
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const x = x0 + i * step, z = z0 + j * step, E = pilgrimEarth(x, z); if (!E.length) continue;
     // under a tread or landing the ground sits 0.45 m below it; beside one it keeps a shelf as wide as a grid cell (so the
     // ground between nodes stays under the treads) and then a cut bank; lower down, fill banks up to it
     let fill = -1e9, cut = 1e9;
-    for (const [d, y] of E) { fill = Math.max(fill, y - 0.45 - Math.max(0, d - 0.6) * 0.8); cut = Math.min(cut, y - 0.45 + Math.max(0, d - 2.4) * 1.2); }
+    for (const [d, y] of E) { fill = Math.max(fill, y - 0.45 - Math.max(0, d - 0.6) * 0.3); cut = Math.min(cut, y - 0.45 + Math.max(0, d - 2.4) * 4); }
     H[j * nx + i] = Math.min(Math.max(H[j * nx + i], fill), cut);
 }
 }
@@ -296,12 +296,12 @@ export const PILGRIM = (() => {
   }
   return { T, R, HW, N, th, flights, landings, foot: corners[0], top: ends[nD + 1], corners, axis: [ux, uz], yTop };
 })();
-// the way's elements near (x, z), as [distance outside the tread or landing, its top]; empty when none is within 12 m
+// the way's elements near (x, z), as [distance outside the tread or landing, its top]; empty when none is within 24 m
 export function pilgrimEarth(x, z) {
   const { T, R, HW, flights, landings } = PILGRIM, out = [];
   for (const f of flights) { const s = (x - f.a[0]) * f.ux + (z - f.a[1]) * f.uz, v = (x - f.a[0]) * f.nx + (z - f.a[1]) * f.nz;
     const sc = Math.max(f.s0, Math.min(f.s1, s)), k = Math.max(0, Math.min(f.m - 2, Math.floor((sc - f.s0) / T))), d = Math.hypot(s - sc, Math.max(0, Math.abs(v) - HW));
-    if (d < 12) out.push([d, f.y + R * (k + 1)]); }
-  for (const l of landings) { const d = Math.max(0, Math.hypot(x - l.x, z - l.z) - l.r); if (d < 12) out.push([d, l.y]); }
+    if (d < 24) out.push([d, f.y + R * (k + 1)]); }
+  for (const l of landings) { const d = Math.max(0, Math.hypot(x - l.x, z - l.z) - l.r); if (d < 24) out.push([d, l.y]); }
   return out;
 }
