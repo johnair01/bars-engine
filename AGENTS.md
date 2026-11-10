@@ -17,6 +17,17 @@
 - `npx vercel env pull` is no longer part of bring-up: it writes production's `DATABASE_URL`, which a dev server now
   refuses (override `BARS_ALLOW_REMOTE_DB=1` only for a deliberate, named exception).
 
+## Publishing a Pull Request
+
+A session may open a pull request without asking again when the branch is one it pushed itself in that session, the
+branch is in this repo, and the pull request goes from that branch to `main`.
+
+Nothing else is covered: a force-push, a merge, a branch deletion, a pull request into any branch other than `main`, a
+repository setting, and a push to a branch the session did not create all wait for Wendell. Consent to publish a branch
+is consent to publish that branch and no other. When a call meets every condition and the harness guard refuses it
+anyway, retry once, then ask (Wendell, 2026-11-09: "it's going to be important for us to create PRs from this
+environment").
+
 ## Verification Checkpoint
 - Donation wizard route (port from `scripts/local/dev.sh status`):
   - `http://localhost:<port>/event/donate/wizard?ref=bruised-banana`

@@ -39,7 +39,7 @@ const outputPath = args.includes('--output') ? args[args.indexOf('--output') + 1
 // Structural rules (hard constraints)
 // ---------------------------------------------------------------------------
 
-const EXPECTED_MOVE_TYPES: MoveType[] = ['wake_up', 'clean_up', 'grow_up', 'show_up']
+const EXPECTED_MOVE_TYPES: MoveType[] = ['wake_up', 'open_up', 'clean_up', 'grow_up', 'show_up']
 const EXPECTED_CARDS_PER_MOVE = 2
 const EXPECTED_TOTAL = EXPECTED_MOVE_TYPES.length * EXPECTED_CARDS_PER_MOVE
 
@@ -209,7 +209,7 @@ function validateDeck(deck: DeckTemplate): ValidationIssue[] {
 // ---------------------------------------------------------------------------
 
 function moveTypeLabel(mt: MoveType): string {
-  return { wake_up: 'WAKE UP', clean_up: 'CLEAN UP', grow_up: 'GROW UP', show_up: 'SHOW UP' }[mt]
+  return { wake_up: 'WAKE UP', open_up: 'OPEN UP', clean_up: 'CLEAN UP', grow_up: 'GROW UP', show_up: 'SHOW UP' }[mt]
 }
 
 function effectSummary(card: CardSeedEntry): string {
@@ -354,7 +354,7 @@ function buildReviewFile(decks: DeckTemplate[], allIssues: Map<string, Validatio
       const cards = deck.cardSeed.filter((c) => c.moveType === mt)
       if (!cards.length) continue
 
-      const mtLabel = { wake_up: 'Wake Up', clean_up: 'Clean Up', grow_up: 'Grow Up', show_up: 'Show Up' }[mt]
+      const mtLabel = { wake_up: 'Wake Up', open_up: 'Open Up', clean_up: 'Clean Up', grow_up: 'Grow Up', show_up: 'Show Up' }[mt]
       lines.push(`### ${mtLabel}`)
       lines.push(``)
 
