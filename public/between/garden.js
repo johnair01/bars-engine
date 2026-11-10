@@ -2047,9 +2047,9 @@ function brushFigureOn() {
   brushSeat = s;
   if (!brushFigLoading) brushFigLoading = import("./brush-figure.js").then(m => m.createBrushFigure(scene)).then(f => { brushFig = f; return f; })
     .catch(e => { noteError(e, "brush figure"); brushFigLoading = null; return null; });
-  brushFigLoading.then(f => { if (!f || !brushWrite || !brushWrite.isOpen) return; f.place(brushSeat); f.show(true); if (meState.body) meState.body.visible = false; if (brushWrite.ember) f.ember(); });
+  brushFigLoading.then(f => { if (!f || !brushWrite || !brushWrite.isOpen) return; f.place(brushSeat); f.show(true); if (meState.body) meState.body.holder.visible = false; if (brushWrite.ember) f.ember(); });
 }
-function brushFigureOff() { if (brushFig) brushFig.show(false); if (meState.body) meState.body.visible = true; }
+function brushFigureOff() { if (brushFig) brushFig.show(false); if (meState.body) meState.body.holder.visible = true; }
 function openBrush() {
   if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar,
     onDip: () => brushFig && brushFig.ember(), onStroke: e => brushFig && brushFig.stroke(e), onSet: () => brushFig && brushFig.finish(),

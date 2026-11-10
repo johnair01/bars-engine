@@ -74,7 +74,7 @@ export async function createBrushFigure(scene) {
     view(s, tall) {
       const fx = Math.sin(s.yaw), fz = Math.cos(s.yaw), lx = fz, lz = -fx, fl = s.floor ?? 0;
       const at = (x, y, z) => new THREE.Vector3(s.x + lx * x + fx * z, fl + y, s.z + lz * x + fz * z); // x left, z ahead
-      return tall ? [at(-1.0, 1.75, 1.7), at(0, 0.05, 0.1)] : [at(-1.5, 1.3, 1.55), at(0.4, 0.45, 0.15)]; // phone: she sits in the top half, over the strip
+      return tall ? [at(-2.0, 1.3, 1.3), at(0.1, -0.25, 0.1)] : [at(-1.5, 1.3, 1.55), at(0.4, 0.45, 0.15)]; // phone: she sits in the top half, over the strip
     },
   };
   return api;
