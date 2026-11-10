@@ -28,3 +28,7 @@
 - `scripts/local/dev.sh` finds or starts Postgres without Docker (Debian cluster, Homebrew/Postgres.app private cluster, then Docker).
 - If `npm run smoke` output disagrees with `npm run diagnose:db`, prefer `diagnose:db` for factual DB source and connectivity.
 - Keep migration discipline: use Prisma migrations (`migrate dev`/`migrate deploy`), never `db push` for shared/prod flows.
+
+## Writing for Wendell and players
+- Keep “and” for genuinely parallel claims or actions. Name cause, contrast, sequence, or explanation when a second claim depends on the first. Do not append a claim about anyone's feelings or motives without evidence. Apply this to agent replies, specs, reports, product copy, and game text. Preserve quotations and player input.
+- A scanner finding is a candidate for reading, never proof of a defect. A clean scan is not proof that the prose works. Wendell's Send to Editorial Review action triggers a bounded deeper pass.

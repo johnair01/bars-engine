@@ -16,6 +16,8 @@
 
 
 
+import { RELATION_RULE } from '@/lib/editorial/relation-rule'
+
 /** System prompt — sets the NL engine role for dungeon room generation */
 const SYSTEM_PROMPT = `You are a retro RPG dungeon room designer. Your output is a JSON object representing a single dungeon room for a retro RPG game.
 
@@ -30,7 +32,8 @@ Rules:
 - The JSON must match the schema exactly
 - Exits should describe what the player senses, not just "a door"
 - Props should reflect the room's history and purpose
-- Names should be evocative, not generic (e.g. "Chamber of the Weeping Icon", not "Room 1")`
+- Names should be evocative, not generic (e.g. "Chamber of the Weeping Icon", not "Room 1")
+- ${RELATION_RULE}`
 
 /**
  * Build the user prompt for a BarSeed.

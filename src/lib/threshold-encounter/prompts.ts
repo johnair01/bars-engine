@@ -1,4 +1,5 @@
 import type { SceneType } from '@/lib/growth-scene/types'
+import { RELATION_RULE } from '@/lib/editorial/relation-rule'
 
 const GM_FACE_STYLE: Record<string, string> = {
   shaman: 'mysterious and threshold-crossing; the world becomes thin, the unseen makes contact',
@@ -56,7 +57,8 @@ PROSE STYLE:
 - Second person ("You notice...", "Something shifts...")
 - Evocative, not purple — specific sensory detail
 - 60-120 words per passage for canonical; 40-80 for minimal
-- Choice passage: 2-3 choices, each linking to 'response'`
+- Choice passage: 2-3 choices, each linking to 'response'
+- ${RELATION_RULE}`
 }
 
 export function buildUserPrompt(inputs: ThresholdEncounterPromptInputs): string {
