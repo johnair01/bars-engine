@@ -33,6 +33,9 @@ const ALLOWED = [
   /^board\/council-board-decided\.json$/,
   /^board\/stills\/[0-9a-f]{16}\.(jpe?g|png|gif|webp)$/,
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp)$/i,
+  /** A look's reference frames and the recipe that regenerates them (2026-11-09): the pictures a look was drawn
+   * against. Served only to the owner or a council session, never at /board/stills. */
+  /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\/refs\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp|json)$/i,
   /^council\/callsheets\/INDEX\.md$/,
   /^council\/loops\/[A-Za-z0-9._-]+\.json$/,
   /^council\/ledger\/[A-Za-z0-9._-]+\.json$/,

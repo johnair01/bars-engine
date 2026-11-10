@@ -1,0 +1,17 @@
+{
+  "board": "council",
+  "collection": "resolved",
+  "docId": "positions--build",
+  "data": {
+    "kind": "positions",
+    "id": "build",
+    "savedAt": "2026-10-02T12:00:00Z",
+    "decision": "stands",
+    "label": "Stands",
+    "recorded": "2026-10-02",
+    "saved_at": "2026-10-02T12:00:00Z",
+    "record": "ledger/2026-10-02-board-read-1.json (six-faces-council)",
+    "faces": ["sage"],
+    "pass": 1
+  }
+}
