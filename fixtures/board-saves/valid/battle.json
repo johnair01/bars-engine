@@ -1,0 +1,12 @@
+{
+  "board": "council",
+  "collection": "battles",
+  "docId": "fr-scene-staging",
+  "data": {
+    "id": "fr-scene-staging",
+    "name": "Scene Staging",
+    "repo": "sprout",
+    "element": "wood",
+    "order": 0
+  }
+}
