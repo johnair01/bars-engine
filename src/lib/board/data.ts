@@ -53,8 +53,28 @@ export function merge(record: Record<string, unknown>, docs: Docs): Record<strin
     else if (c === 'intake') { const run = held.latest; if (run) out.intake = without(run, 'savedAt') }
     else if (c === 'battles') out.battles = foldBattles(held)
     else if (c === 'draws') out.draws = { ...((record.draws as Held | undefined) ?? {}), ...held }
-    else out[c] = Object.values(held)
+    else out[c] = overlay((record[c] as Entry[] | undefined) ?? [], held)
   }
+  return out
+}
+
+type Entry = Record<string, unknown>
+
+/**
+ * A list collection's store documents laid over the record's entries by id. The store's `questions`, `positions`,
+ * `terms` and `causes` documents carry only what he saved (choice, status, steer, savedAt), never the question's text or
+ * options, so replacing the record's list with them left the page with nothing to draw. Each entry keeps the record's
+ * fields; a document's own fields win; a document the record has no entry for is added.
+ */
+export function overlay(record: Entry[], held: Held): Entry[] {
+  const seen = new Set<string>()
+  const out = record.map((entry) => {
+    const id = typeof entry.id === 'string' ? entry.id : ''
+    const doc = id ? held[id] : undefined
+    if (id) seen.add(id)
+    return doc ? { ...entry, ...doc } : entry
+  })
+  for (const [id, doc] of Object.entries(held)) if (!seen.has(id)) out.push(doc)
   return out
 }
 
