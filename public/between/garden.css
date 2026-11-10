@@ -193,6 +193,9 @@ body.seatedmoment .mcap { top: auto; bottom: calc(22vh + env(safe-area-inset-bot
 
 /* Part 4: the check-in, walked. The room stays in view, glowing in the feeling's colour. */
 .sheet.walk { max-height: 58vh; }
+.sheet.walk label { display: block; }   /* the reading pace wraps each word in a span; in a grid every word became its own row and pushed the body scan off the screen */
+.sheet.walk label > input, .sheet.walk label > span:last-child:not(.cw) { margin-top: 6px; }
+.sheet.walk label > input { display: block; width: 100%; }
 body.quiethud .hud .bottom { display: none; }
 .sheet .feels { display: flex; flex-wrap: wrap; gap: 8px; }
 .sheet .feels button { background: var(--soft); color: var(--ink); border-color: var(--line); font-weight: 400; display: inline-flex; align-items: center; gap: 2px; min-height: 48px; }

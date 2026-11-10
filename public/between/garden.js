@@ -32,7 +32,8 @@ import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
 import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
-import * as CE from "../calrunia/charge-engine.js";   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
+import * as CE from "../calrunia/charge-engine.js";
+import { makeCultBody } from "./cult/player-body.js";   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
 installPaint();
 
@@ -1185,13 +1186,18 @@ function lookOf(uid) {
   const g = view().g;
   return g && g.looks && typeof g.looks[uid] === "string" ? g.looks[uid] : null;
 }
+const CULT_ME = KQ.get("cult") !== "0";
 async function ensureMyBody() {
   const g = view().g;
   const hue = hueOf(me, g), lk = lookOf(me);
   if ((meState.body && myBodyHue === hue && myBodyLook === lk) || myBodyBusy) return;
   myBodyBusy = true;
   try {
-    const b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
+    /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
+       here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
+    let b = null;
+    if (CULT_ME) { try { b = await makeCultBody({ who: KQ.get("cult") === "m" ? "m" : "f", ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
+    if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
   } finally { myBodyBusy = false; }
@@ -1486,6 +1492,8 @@ function frameBody() {
       const want = Math.atan2(move.x, move.z);
       let d = want - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 10);
     }
+    // the check-in: standing still, you turn to face the view that comes round in front of you (ckOn)
+    else if (ckYaw != null && !meState.sitting) { let d = ckYaw - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 3); }
     meState.body.setWalking(walking);
     meState.body.holder.position.copy(meState.pos);
     // sat: the holder stands on the seat's floor and the pose rests the hips on its top (seatAt); the first minute's cushion too
@@ -1494,6 +1502,7 @@ function frameBody() {
     meState.body.holder.position.y = myFloor;
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
+    checkinBody(meState.body);
     meState.body.pose(t, dt, meState.sitting, false, mySeatAt);
     teaFrame(t);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
@@ -1664,6 +1673,21 @@ function frameBody() {
     const p = new THREE.Vector3(w.x + ix * (W.back ?? back) + rx * (W.side ?? side), W.y ?? (tall ? 1.15 : 1.2), w.z + iz * (W.back ?? back) + rz * (W.side ?? side));
     const f = new THREE.Vector3(w.x, w.y + (W.fy ?? (tall ? -0.3 : -0.1)), w.z);
     const k = winK * winK * (3 - 2 * winK); cp.lerp(p, k); focus.lerp(f, k);
+  }
+  /* The check-in seen on you (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be here"): while
+     the W.A.V.E. runs, the view comes round in front of your figure, low and close, with you in the top half of a phone
+     screen over the sheet, so the breath is seen in your arms and the ember in your hands. It eases back when the sheet closes. */
+  const ckOn = sheetName === "checkin" && !!walk && walk.step >= 0 && !!meState.body && !mirrorOn && !meState.sitting;
+  if (ckOn && ckYaw == null) { const c = camera.position.clone().sub(meState.pos); ckYaw = Math.atan2(c.x, c.z); }
+  ckK += ((ckOn ? 1 : 0) - ckK) * Math.min(1, dt * 1.6);
+  if (!ckOn && ckK < 0.002) { ckK = 0; ckYaw = null; }
+  if (ckK > 0 && ckYaw != null) {
+    const tall = innerWidth < innerHeight, gy = groundY(meState.pos.x, meState.pos.z), C = window.__ckCam || {};
+    const fx = Math.sin(ckYaw), fz = Math.cos(ckYaw), back = C.back ?? (tall ? 2.9 : 2.5);
+    const p = new THREE.Vector3(meState.pos.x + fx * back, gy + (C.y ?? (tall ? 1.3 : 1.25)), meState.pos.z + fz * back);
+    const f = new THREE.Vector3(meState.pos.x, gy + (C.fy ?? (tall ? 0.42 : 0.95)), meState.pos.z);
+    clampCamera(p, f);
+    const k = ckK * ckK * (3 - 2 * ckK); cp.lerp(p, k); focus.lerp(f, k);
   }
   const teaOn = !!(tea && tea.holding() && meState.sitting && seatViewAt && !mirrorOn);
   teaK += ((teaOn ? 1 : 0) - teaK) * Math.min(1, dt * 1.1);
@@ -2821,6 +2845,20 @@ let walk = null;
 const DIR_WORDS = [["toward", "Toward it"], ["away", "Away from it"], ["both", "Both"], ["cant_tell", "Can't tell"]];
 function syncStep(w) { const id = w.charge.wave.step; w.step = id === "scan" || id === "done" ? 6 : CE.WAVE_STEPS.findIndex(x => x.id === id); }
 let breathTimer = 0;
+let ckK = 0, ckYaw = null;   // the check-in's view of you (ckOn in the frame loop)
+/* The breath on your figure: the in-breath lifts the forearms to chest height, palms up, and the out-breath lowers them,
+   in time with the ring (CE.breathOf); the ember, once made, rests between your hands until it goes to a spirit. A figure
+   without breathe (Average Dusk, ?cult=0) is left as it was. */
+function checkinBody(b) {
+  if (!b.breathe) return;
+  const on = sheetName === "checkin" && walk && walk.step >= 0;
+  let k = 0;
+  if (on && walk.charge && walk.step <= 5 && !walk.block) {
+    const br = CE.breathOf(walk.charge, now());
+    k = br.phase === "in" ? br.t * br.t * (3 - 2 * br.t) : br.phase === "out" ? 1 - br.t * br.t * (3 - 2 * br.t) : 0;
+  }
+  b.breathe(k); b.hold(!!(on && walk.step === 7));
+}
 /* the ring is CSS; the sheet draws again where the breath turns and where it ends, so the label and the button are true */
 function watchBreath(w) {
   clearTimeout(breathTimer);
