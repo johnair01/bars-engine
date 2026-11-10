@@ -4,6 +4,7 @@
 // mountains fading into haze, and a sea of cloud below the summit.
 import * as THREE from 'three';
 import { ridge, cloudTex } from './kit.js';
+import { P } from './layout.js';
 
 // The sun sits low over the far ranges, behind and to the left of the founder's hall as the great court faces it.
 // Round 13b: swung about 18 degrees left of the court's axis and raised to about 15 degrees, so from the anchor view the
@@ -16,6 +17,12 @@ export function atmosphere(S, R, { sun, hemi, fog }) {
   hemi.color.set('#ffe6c4'); hemi.groundColor.set('#5a4a3c'); hemi.intensity = 1.5;
   fog.color.set('#b7c4d1'); fog.near = 80; fog.far = 1800; // round 14b: blue-grey haze so the real far peaks layer like the painting's ranges
   S.background = null;
+  // Round 17: the crag's face toward the court was backlit (the sun stands behind it from the gate), so its pillars read
+  // soft and grey. A warm fill from the court's side, without shadows, lights the face the way the painting's bounce light
+  // off the cloud sea does; the sun still draws the rim and the long shadows.
+  { const [sx, sz] = P.summit, [gx, gz] = P.great, dx = gx - sx, dz = gz - sz, D = Math.hypot(dx, dz);
+    const fill = new THREE.DirectionalLight('#ffd3a0', 1.25); fill.name = 'cragFill';
+    fill.position.set(sx + dx / D * 300, 190, sz + dz / D * 300); fill.target.position.set(sx, 55, sz); S.add(fill, fill.target); }
 
   // sky dome: a gradient with a glow round the sun
   const sky = new THREE.Mesh(new THREE.SphereGeometry(2600, 32, 16), new THREE.ShaderMaterial({
