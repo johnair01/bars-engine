@@ -8,7 +8,7 @@ vi.mock('@/lib/board/owner', () => owner)
 import { NextRequest } from 'next/server'
 import { readObject, readRefObject, setBackend, setEntries, storeObject, storeRefObject } from '@/lib/board/content-store'
 import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
-import { artPath } from '../../art'
+import { artPath } from '../../../art'
 import { GET } from '../route'
 
 const REF = 'council/callsheets/stills/cc-cultivation-clothing/refs/Ma1zP7EZMps/sheet.jpg'
