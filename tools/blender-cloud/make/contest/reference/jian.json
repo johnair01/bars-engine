@@ -1,0 +1,47 @@
+{
+  "id": "heaven-sect-basic-jian-2026-11-10",
+  "object": "One basic unsheathed jian",
+  "units": "metres",
+  "source": "Metropolitan Museum of Art object 27931, public-domain Chinese sword with scabbard; sword measured at 103.8 cm, blade 83.8 cm; Heaven Sect accepted courtyard supplies material palette, not shape",
+  "picture": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/27931/58804/main-image",
+  "object_checks": {
+    "blade_length": [
+      0.8,
+      0.87
+    ],
+    "blade_width": [
+      0.035,
+      0.065
+    ],
+    "blade_thickness": [
+      0.004,
+      0.02
+    ],
+    "grip_length": [
+      0.13,
+      0.19
+    ],
+    "guard_width": [
+      0.08,
+      0.13
+    ],
+    "whole_length": [
+      1,
+      1.08
+    ],
+    "contact_max_gap": 0.01,
+    "axis_max_offset": 0.015
+  },
+  "measured_from": {
+    "blade_length": "The Met object 27931 lists an 83.8 cm blade.",
+    "whole_length": "The Met object 27931 lists 103.8 cm without scabbard.",
+    "blade_width": "The museum lists overall width 9.5 cm, including guard; the blade band is a modeling test range, not a museum measurement.",
+    "guard_width": "The museum lists overall width 9.5 cm; 8–13 cm allows variation around its guard."
+  },
+  "look_only": [
+    "Double-edged straight silhouette and central ridge",
+    "Guard and pommel read like the reference",
+    "Finish suits the accepted Heaven Sect courtyard",
+    "Blade and hilt look coherent at gameplay scale"
+  ]
+}
