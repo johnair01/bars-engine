@@ -31,6 +31,9 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
+      - name: Council Board API saves
+        run: npx vitest run src/app/api/board/saves/__tests__/route.test.ts src/app/api/board/saves/__tests__/route-post.test.ts
+
       - name: Move table (one cell per move on every surface)
         run: npm run test:move-table
 
