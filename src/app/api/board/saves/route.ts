@@ -3,13 +3,14 @@
  * @entity SYSTEM
  * @description The boards' store (nonprofit, council): read every document, or save one, as the board's single owner;
  *   a council menu seal also writes each item as a Tap the Vein task, and a council seeds save sets that task aside
- * @permissions owner (bars-engine sign-in cookie naming BOARD_OWNER_PLAYER_ID)
+ * @permissions owner (bars-engine sign-in cookie naming BOARD_OWNER_PLAYER_ID); Council question choices also accept COUNCIL_MENU_TOKEN in the Authorization header
  * @example GET /api/board/saves?board=nonprofit
  * @agentDiscoverable false
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { boardOwnerId, isBoardOwner } from '@/lib/board/owner'
+import { tokenMatches } from '@/lib/council/token'
 import { applyWrite, MAX_SAVE_BYTES, RECORD_KINDS, validateSave } from '@/lib/board/save'
 import { lastPull, latestDoc, latestDocs, settledSeq, unrecordedSaves } from '@/lib/board/store'
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
@@ -42,7 +43,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isBoardOwner())) return NextResponse.json({ error: 'Sign in as the board owner' }, { status: 401 })
+  const ownerSession = await isBoardOwner()
+  const authorization = req.headers.get('authorization')
+  const menuSecret = process.env.COUNCIL_MENU_TOKEN
+  const menuToken = !ownerSession && !!menuSecret && !!authorization &&
+    tokenMatches(authorization.startsWith('Bearer ') ? authorization.slice(7) : authorization, menuSecret)
+  if (!ownerSession && !menuToken) return NextResponse.json({ error: 'Sign in as the board owner or use the Council menu token' }, { status: 401 })
   const origin = req.headers.get('origin')
   if (origin && new URL(origin).host !== req.nextUrl.host) return NextResponse.json({ error: 'Cross-site save' }, { status: 403 })
   const raw = await req.text()
@@ -52,6 +58,21 @@ export async function POST(req: NextRequest) {
   const v = validateSave(body)
   if (!v.ok) return NextResponse.json({ error: 'Not a board save', details: v.errors }, { status: 422 })
   const { board, collection, docId } = v.save
+  // The menu token may choose an option on an existing Council question. It cannot edit board state,
+  // replace an answer, or invent a choice. Owner cookie saves keep their existing contract.
+  if (menuToken) {
+    const choice = v.save.data.choice
+    if (board !== 'council' || collection !== 'questions' || v.save.mode === 'update' ||
+        Object.keys(v.save.data).some(k => !['choice', 'savedAt'].includes(k)) || typeof choice !== 'string')
+      return NextResponse.json({ error: 'Menu token may only choose an existing Council question option' }, { status: 403 })
+    const [question, answer] = await Promise.all([
+      latestDoc('council', 'rows', docId), latestDoc('council', 'questions', docId),
+    ])
+    if (!question || question.kind !== 'questions' || !Array.isArray(question.options) ||
+        !question.options.some(option => option && typeof option === 'object' && option.v === choice))
+      return NextResponse.json({ error: 'Question or option not found' }, { status: 422 })
+    if (answer) return NextResponse.json({ error: 'Question already answered' }, { status: 409 })
+  }
   if (collection === 'rows')  // rows are the council's, posted by sessions (/api/board/session-writes); his saves are answers
     return NextResponse.json({ error: 'Rows are posted by sessions, not saved from the page' }, { status: 403 })
   // A page that read a picture as its link and saves the document back gets the picture put back first.
