@@ -3,10 +3,62 @@
 // a walled crown, tiered halls on its lip and a wall that winds down its face. layout.js now shapes the cliff; this
 // module builds what stands on it, in world coordinates, every piece seated on heightAt.
 import * as THREE from 'three';
-import { hall, box } from './kit.js';
-import { heightAt, P, CRAG, cragNoise } from './layout.js';
+import { hall, box, paifang } from './kit.js';
+import { heightAt, P, CRAG, cragNoise, AXIS } from './layout.js';
 
 const rimAt = th => CRAG.rim + cragNoise(th) * 7;
+
+// Round 17: the way up the ridge. From the gate the slope in front of the crag was one pale, empty mound. The painting's
+// crag is reached by a pilgrim stair; here a stone stair climbs from the great court's back edge to a landing with a gate
+// on the ridge's crest (the axis point at +50), and a bridge carries the way over the saddle behind it to the foot of the
+// winding wall, so the eye can follow one road from the hall to the crown.
+const _tg = Math.atan2(P.great[1] - P.summit[1], P.great[0] - P.summit[0]);
+const WALL_TH = _tg - 1.1, WALL_Y = 46; // where the winding wall starts (cragCrown)
+const wallFoot = () => { const th = WALL_TH, dy = 90 - WALL_Y, slope = 3.2 + 1.6 * cragNoise(th * 3 + 1);
+  const r = rimAt(th) + dy / slope + 7.8 + Math.floor(dy / 7.5) * 0.35 + dy * 0.03; return [P.summit[0] + Math.cos(th) * r, P.summit[1] + Math.sin(th) * r]; };
+const LAND = AXIS[9], STAIR0 = [P.great[0] + (LAND[0] - P.great[0]) * 0.5, P.great[1] + (LAND[1] - P.great[1]) * 0.5];
+const WAY = [STAIR0, LAND, wallFoot()];
+function nearWay(x, z) { let best = 1e9;
+  for (let i = 1; i < WAY.length; i++) { const [a, b] = [WAY[i - 1], WAY[i]], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
+    const k = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2)); best = Math.min(best, Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz)); }
+  return best; }
+
+export function cragWay(S, M) {
+  const G = new THREE.Group(); G.name = 'cragWay'; S.add(G);
+  // the stair: treads about 1.1 m deep, each set level on the highest ground under it, with a low wall either side
+  { const [a, b] = [STAIR0, LAND], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), n = Math.ceil(L / 1.1), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
+    for (let k = 0; k < n; k++) {
+      const t0 = k / n, t1 = (k + 1) / n, tm = (t0 + t1) / 2, x = a[0] + dx * tm, z = a[1] + dz * tm;
+      let top = -1e9, low = 1e9; for (const t of [t0, tm, t1]) for (const s of [-2.4, 0, 2.4]) { const h = heightAt(a[0] + dx * t + nx * s, a[1] + dz * t + nz * s); top = Math.max(top, h); low = Math.min(low, h); }
+      top += 0.18; const hgt = top - low + 0.8;
+      const st = box(G, L / n + 0.04, hgt, 4.2, M.plinth, x, top - hgt / 2, z); st.rotation.y = ry;
+      for (const s of [-1, 1]) { const w = box(G, L / n + 0.06, hgt + 0.7, 0.55, M.stone, x + nx * 2.35 * s, top + 0.35 - hgt / 2, z + nz * 2.35 * s); w.rotation.y = ry; }
+    } }
+  // the landing on the crest, and a gate on it facing the court
+  { const [x, z] = LAND, y = heightAt(x, z), face = Math.atan2(P.great[0] - x, P.great[1] - z);
+    const pad = box(G, 10, 3, 10, M.plinth, x, y - 1.35, z); pad.rotation.y = face;
+    const gate = paifang(M, { w: 6.5, h: 5.2, plaque: '登天' }); gate.position.set(x, y + 0.15, z); gate.rotation.y = face; G.add(gate); }
+  // the bridge over the saddle to the wall's foot: a deck with parapets on stone piers
+  { const [a, b] = [LAND, WAY[2]], ya = heightAt(...a) + 0.15, yb = WALL_Y, dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
+    const n = Math.ceil(L / 2), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
+    for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, x = a[0] + dx * t, z = a[1] + dz * t, y = ya + (yb - ya) * t;
+      const d = box(G, L / n + 0.05, 0.8, 4, M.plinth, x, y - 0.4, z); d.rotation.y = ry;
+      for (const s of [-1, 1]) { const w = box(G, L / n + 0.05, 1.1, 0.45, M.stone, x + nx * 2 * s, y + 0.55, z + nz * 2 * s); w.rotation.y = ry; }
+      if (k % 4 === 2) { const g = Math.min(heightAt(x + nx * 1.5, z + nz * 1.5), heightAt(x - nx * 1.5, z - nz * 1.5)), h = y - 0.8 - g + 2;
+        if (h > 1.5) { const pr = box(G, 2.4, h, 3.6, M.stone, x, g - 2 + h / 2, z); pr.rotation.y = ry; } } } }
+  // rock outcrops on the ridge either side of the way, flat-faced like the crag
+  { const geo = new THREE.DodecahedronGeometry(1, 0), mat = new THREE.MeshStandardMaterial({ color: '#b3a68f', roughness: 1, flatShading: true });
+    const R = new THREE.InstancedMesh(geo, mat, 70), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), p = new THREE.Vector3();
+    const [sx, sz] = P.summit; let nr = 0;
+    for (let n = 0; n < 1500 && nr < 70; n++) {
+      const th = _tg + (hash(n * 6.1 + 2) - 0.5) * 1.9, d = 56 + hash(n * 3.7 + 1) * 80, x = sx + Math.cos(th) * d, z = sz + Math.sin(th) * d, y = heightAt(x, z);
+      if (y < 26 || nearWay(x, z) < 5 || Math.hypot(x - P.great[0], z - P.great[1]) < 38) continue;
+      const s = 1.2 + hash(n * 9.7) * 2.8; e.set(hash(n) * 3, hash(n * 2.3) * 6, hash(n * 4.1) * 3); q.setFromEuler(e);
+      sc.set(s * 1.4, s * 0.8, s * 1.1); p.set(x, y + s * 0.15, z); m.compose(p, q, sc); R.setMatrixAt(nr++, m);
+    }
+    R.count = nr; R.castShadow = R.receiveShadow = true; G.add(R); }
+  return G;
+}
 
 // Round 16: the cliff as its own rock mesh. Wendell scored round 14d a 5 and named the real problem: the mountain
 // behind the hall looked fuzzy and distorted. The cliff was the 3 m ground grid stretched over 50 m of drop, so each
@@ -28,7 +80,7 @@ export function cragRock(S) {
   const [sx, sz] = P.summit, NT = N_TH * 4, levels = [];
   for (let y = 90.4; y > 18; y -= 1.25) levels.push(y);
   const NY = levels.length, pos = [], col = [], c = new THREE.Color();
-  const tones = ['#d6d3ca', '#cbc8be', '#bfbdb4', '#b3b2ab'].map(h => new THREE.Color(h));
+  const tones = ['#ddd1bb', '#d1c5ae', '#c3b8a3', '#b5ab98'] // round 17: warm stone, as the painting's sunlit crag.map(h => new THREE.Color(h));
   const V = (j, i) => { // vertex (bearing i, level j) -> [x, y, z]
     const th = i / NT * Math.PI * 2, y = levels[j], r = j === 0 ? rimAt(th) - 3 : cliffR(th, y);
     return [sx + Math.cos(th) * r, y, sz + Math.sin(th) * r];
@@ -44,7 +96,7 @@ export function cragRock(S) {
       const a = grid[j][i], b = grid[j][i + 1], d = grid[j + 1][i], e = grid[j + 1][i + 1];
       const ledge = Math.floor((90 - levels[j]) / 7.5), t = tones[Math.floor(hash(k * 5 + ledge * 3) * 4)];
       c.copy(t);
-      if (pillar(i / NT * Math.PI * 2) !== pillar((i + 1) / NT * Math.PI * 2)) c.multiplyScalar(0.72); // the joint between pillars
+      if (pillar(i / NT * Math.PI * 2) !== pillar((i + 1) / NT * Math.PI * 2)) c.multiplyScalar(0.78); // the joint between pillars
       if (j === 0) c.set('#a9a79f');
       const streak = hash(i * 1.7) > 0.86 ? 0.82 : 1; c.multiplyScalar(streak * (1 - Math.max(0, levels[j] - 30 < 8 ? (8 - (levels[j] - 30)) * 0.02 : 0)));
       pos.push(...a, ...d, ...b, ...b, ...d, ...e);
@@ -54,13 +106,28 @@ export function cragRock(S) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.computeVertexNormals();
+  // round 17: each flat facet takes a little more light the more it turns toward the court, and the facets turned away
+  // fall into a cool shade, so the pillars read as planes from the gate instead of one soft grey wall
+  { const [gx, gz] = P.great, fx = gx - sx, fz = gz - sz, fl = Math.hypot(fx, fz), nr = g.attributes.normal, cl = g.attributes.color, shade = new THREE.Color('#a7a8ad');
+    const ps = g.attributes.position;
+    for (let v = 0; v < nr.count; v++) {
+      // where a pillar steps back the face folds and its normal points into the rock, which rendered as black strips;
+      // turn those normals outward so every facet takes the light
+      const ox = ps.getX(v) - sx, oz = ps.getZ(v) - sz;
+      if (nr.getX(v) * ox + nr.getZ(v) * oz < 0) nr.setXYZ(v, -nr.getX(v), -nr.getY(v), -nr.getZ(v));
+      const f = (nr.getX(v) * fx + nr.getZ(v) * fz) / fl, up = nr.getY(v);
+      c.setRGB(cl.getX(v), cl.getY(v), cl.getZ(v));
+      if (f < 0) c.lerp(shade, Math.min(0.3, -f * 0.4)); else c.multiplyScalar(1 + f * 0.14);
+      if (up > 0.5) c.multiplyScalar(1.08); // ledge tops catch the sky
+      cl.setXYZ(v, c.r, c.g, c.b);
+    } }
   const rock = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, flatShading: true }));
   rock.name = 'cragRock'; rock.castShadow = rock.receiveShadow = true; S.add(rock);
 
   // pines and shrubs rooted in the ledges, as the painting's crag carries them
   const pineGeo = new THREE.ConeGeometry(1, 2.6, 7), bushGeo = new THREE.IcosahedronGeometry(1, 0);
   pineGeo.translate(0, 1.3, 0);
-  const pines = new THREE.InstancedMesh(pineGeo, new THREE.MeshStandardMaterial({ color: '#3f5a3a', roughness: 1, flatShading: true }), 160);
+  const pines = new THREE.InstancedMesh(pineGeo, new THREE.MeshStandardMaterial({ color: '#3f5a3a', roughness: 1, flatShading: true }), 260);
   const bushes = new THREE.InstancedMesh(bushGeo, new THREE.MeshStandardMaterial({ color: '#56704a', roughness: 1, flatShading: true }), 140);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3();
   let np = 0, nb = 0;
@@ -75,9 +142,9 @@ export function cragRock(S) {
   // the ridge under the crag, where the axis climbs to its foot: a stand of pines either side of the way up, so from the
   // gate the shoulder behind the hall reads as wooded rock instead of a bare pale mound
   { const [gx, gz] = P.great, tg = Math.atan2(gz - sz, gx - sx);
-    for (let n = 0; n < 900 && np < 90 + 70; n++) {
+    for (let n = 0; n < 2400 && np < 90 + 150; n++) {
       const th = tg + (hash(n * 4.7) - 0.5) * 1.6, d = 58 + hash(n * 8.3) * 70, x = sx + Math.cos(th) * d, z = sz + Math.sin(th) * d, y = heightAt(x, z);
-      const off = Math.abs(Math.sin(th - tg) * d); if (y < 27 || off < 7 || Math.hypot(x - gx, z - gz) < 40) continue;
+      const off = Math.abs(Math.sin(th - tg) * d); if (y < 27 || off < 7 || Math.hypot(x - gx, z - gz) < 40 || nearWay(x, z) < 6) continue;
       const s = 1.6 + hash(n * 1.9) * 1.4; sc.set(s, s * 1.8, s); p.set(x, y - 0.3, z); m.compose(p, q, sc); pines.setMatrixAt(np++, m);
     } }
   pines.count = np; bushes.count = nb; pines.castShadow = bushes.castShadow = true; S.add(pines, bushes);
@@ -85,7 +152,7 @@ export function cragRock(S) {
 }
 
 export function cragCrown(S, M) {
-  cragRock(S);
+  cragRock(S); cragWay(S, M);
   const [sx, sz] = P.summit, G = new THREE.Group(); S.add(G);
   const toGreat = Math.atan2(P.great[1] - sz, P.great[0] - sx);
   const at = (th, r) => [sx + Math.cos(th) * r, sz + Math.sin(th) * r];
