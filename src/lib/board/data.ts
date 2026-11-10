@@ -36,7 +36,7 @@ export function merge(record: Record<string, unknown>, docs: Record<string, Reco
     const held = docs[c]
     if (!held || !Object.keys(held).length) continue
     // One settled answer per document, so a settled answer the record never saw lands beside the ones it did.
-    if (c === 'resolved') out.resolved = foldResolved((record.resolved as Resolved | undefined) ?? {}, held)
+    if (c === 'resolved') out.resolved = foldResolved((record.resolved as Resolved | undefined) ?? {}, held as Record<string, Record<string, unknown>>)
     else out[c] = Object.values(held)
   }
   return out
