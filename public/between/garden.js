@@ -33,7 +33,10 @@ import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
 import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
-import { makeCultBody } from "./cult/player-body.js";   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
+import { makeCultBody, useKneel } from "./cult/player-body.js";
+import { makeKneel } from "./cult/kneel.js";
+useKneel(makeKneel);
+//   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
 installPaint();
 
