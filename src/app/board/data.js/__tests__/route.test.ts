@@ -73,6 +73,7 @@ describe('GET /board/data.js', () => {
     const data = JSON.parse((await res.text()).replace(/^window.__BOARD_DATA__ = /, '').replace(/;\n$/, ''))
     expect(data.positions).toEqual([{ id: 'pos-1', text: 'one' }, { id: 'store-1', pos: 'a saved position', faces: ['regent'] }])
     expect(data.questions).toEqual([{ id: 'q-1', q: 'a saved question' }])
+    expect(data.updated).toBe('2026-11-05T00:00:00Z')
   })
 
   it('keeps the record\'s question text when the store holds only his answer', async () => {
@@ -81,7 +82,6 @@ describe('GET /board/data.js', () => {
     const res = await GET(req())
     const data = JSON.parse((await res.text()).replace(/^window.__BOARD_DATA__ = /, '').replace(/;\n$/, ''))
     expect(data.questions).toEqual([{ id: 'q-1', q: 'May the Sage rule?', options: [{ v: 'a' }], choice: 'a', savedAt: '2026-11-10T00:30:00Z' }])
-    expect(data.updated).toBe('2026-11-05T00:00:00Z')
   })
 
   it("folds the store's settled answers under their kind and id, beside the record's own", async () => {
