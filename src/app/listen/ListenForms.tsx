@@ -8,7 +8,7 @@ import { AWAKEN_CHAPTER_FILE_HREF } from '@/lib/awaken/content'
 type Result = { ok: true; message: string } | { ok: false; error: string } | null
 
 const INPUT =
-  'min-h-11 w-full rounded-xl border border-zinc-700 bg-[#111110] px-4 text-[#e8e6e0] placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none'
+  'min-h-11 w-full rounded-xl border border-zinc-700 bg-[#111110] px-4 text-[#e8e6e0] placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40'
 
 function EmailForm({
   id,
@@ -50,11 +50,11 @@ function EmailForm({
       className="space-y-3"
     >
       <label className="block">
-        <span className="mb-1 block text-xs text-zinc-400">Name (optional)</span>
+        <span className="mb-1.5 block text-sm text-[#b4b2ab]">Name (optional)</span>
         <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className={INPUT} />
       </label>
       <label className="block">
-        <span className="mb-1 block text-xs text-zinc-400">Email</span>
+        <span className="mb-1.5 block text-sm text-[#b4b2ab]">Email</span>
         <input
           required
           type="email"
@@ -73,11 +73,11 @@ function EmailForm({
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 font-bold text-white transition-colors hover:bg-emerald-500 disabled:opacity-60"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 font-bold text-white transition-colors hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 disabled:opacity-60"
       >
         {pending ? pendingLabel : button}
       </button>
-      <p className="text-xs leading-relaxed text-zinc-500">{fineprint}</p>
+      <p className="text-[13px] leading-relaxed text-[#9a9890]">{fineprint}</p>
     </form>
   )
 }
@@ -112,7 +112,7 @@ export function DojoWaitlist() {
       id="dojo"
       button="Put me on the list"
       pendingLabel="Saving…"
-      fineprint="No cohort has a date yet. This list hears first, and joining holds no seat and costs nothing."
+      fineprint="This list hears first. Joining holds no seat and costs nothing."
       submit={(v) => joinDojoWaitlist(v)}
     />
   )
