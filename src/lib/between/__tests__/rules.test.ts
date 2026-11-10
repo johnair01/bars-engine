@@ -246,6 +246,11 @@ function testHomePrivateDoc() {
   assert.equal(mayWrite(member(A), room(), path, 'set', doc, null).ok, false, 'the look and hopes live in the homeroom')
   assert.equal(homeWrite({ ...doc, score: 3 }).ok, false)
   assert.equal(homeWrite({ goals: { g1: { text: '' } } }).ok, false)
+  assert.equal(homeWrite({ hearth: { sits: 3, at: 5, told: { earth: 1, wood: 2 } } }).ok, true, 'a hearth record')
+  assert.equal(homeWrite({ hearth: { care: 4, careAt: 9 } }).ok, true, 'the cares done')
+  assert.equal(homeWrite({ hearth: { care: 0 } }).ok, true, 'no care yet')
+  for (const hearth of [{ sits: -1 }, { sits: 1.5 }, { score: 2 }, { told: { joy: 1 } }, { told: { earth: 'now' } }, { at: 'x' }, { care: 5 }, { care: -1 }, { care: 1.5 }, { care: '2' }, { careAt: 'x' }, 'lit'])
+    assert.equal(homeWrite({ hearth } as Doc).ok, false, 'hearth ' + JSON.stringify(hearth))
   assert.equal(homeWrite({ checkins: { c1: { feel: 'joy', at: 1 } } }).ok, false, 'one of the five feelings')
   assert.equal(mayWrite(member(A), h, path, 'update', { goals: { g1: null } }, doc).ok, true)
   // part 4: a check-in walks the seven steps of the W.A.V.E. and leaves an ember
