@@ -13,6 +13,7 @@ export default defineConfig({
       'src/lib/economy/__tests__/bar-mint.test.ts',
       'src/lib/npc-from-321/__tests__/casting-sheet.test.ts',
       'src/actions/__tests__/npc-from-321-part-quest.test.ts',
+      'src/actions/__tests__/between-people.test.ts',
       'src/lib/economy/__tests__/coin-marks.test.ts',
       'src/lib/economy/__tests__/marks-everywhere.test.ts',
       'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
