@@ -87,7 +87,7 @@ describe('POST /api/board/saves with Council menu token', () => {
   it('rejects edits to other collections or board state', async () => {
     const attempts = [
       { ...answer, board: 'nonprofit' },
-      { ...answer, collection: 'positions' },
+      { ...answer, collection: 'positions', data: { status: 'stands', savedAt: answer.data.savedAt } },
       { ...answer, collection: 'questions', mode: 'update' },
       { ...answer, data: { ...answer.data, steer: 'extra field' } },
     ]
