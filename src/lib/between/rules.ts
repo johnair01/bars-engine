@@ -166,7 +166,9 @@ const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFin
 
 /** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
 export function pouchWrite(pouch: Doc): Verdict {
-  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
+  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow' && k !== 'keepsakes') return no(400, 'The pouch holds embers and keepsakes only.')
+  const kept = keepsakesWrite(pouch.keepsakes)
+  if (!kept.ok) return kept
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
   if (h != null && !(isObj(h) && Object.keys(h).every(k => k === 'card' || k === 'at') && h.card === HOLLOW_CARD && isNum(h.at)))
@@ -183,6 +185,28 @@ export function pouchWrite(pouch: Doc): Verdict {
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
     if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
+  }
+  return yes
+}
+
+/* ---------- the keepsake: what the cold left when a block cleared, carried home (block-metabolize, the satchel slice) ----------
+ * Carrying the keepsake from the keeping chamber puts it in the pouch at the satchel (position bm6-keepsake-satchel-next; his B
+ * on bm-build-look-3, 2026-11-03: "These will live in the satchel inventory and be used for crafting and spirit husbandry").
+ * It keeps its element and its shape, which the element fixes (public/between/block-room.js KEEPSAKE), and when it came: never
+ * the feeling, the charge's sentences or the player's lines. It is held until crafting and spirit husbandry give it a use. */
+export const KEEPSAKE_OF: Record<string, string> = { water: 'vessel', metal: 'key', fire: 'ember', earth: 'stone' }
+const KEEPSAKE_KEYS = new Set(['element', 'kind', 'state', 'at'])
+export function keepsakesWrite(ks: Json | undefined): Verdict {
+  if (ks == null) return yes
+  if (!isObj(ks)) return no(400, 'A keepsake is a small thing.')
+  for (const k of Object.values(ks)) {
+    if (k === null) continue
+    if (!isObj(k)) return no(400, 'A keepsake is a small thing.')
+    for (const f of Object.keys(k)) if (!KEEPSAKE_KEYS.has(f)) return no(400, 'A keepsake keeps no words.')
+    if (typeof k.element !== 'string' || !KEEPSAKE_OF[k.element]) return no(400, 'A keepsake is water, metal, fire or earth.')
+    if (k.kind !== KEEPSAKE_OF[k.element]) return no(400, 'Its element gives a keepsake its shape.')
+    if (k.state !== 'held') return no(400, 'A keepsake is held.')
+    if (!isNum(k.at)) return no(400, 'A keepsake keeps when it was carried.')
   }
   return yes
 }
