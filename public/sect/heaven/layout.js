@@ -246,6 +246,16 @@ function buildGrid() {
     for (const p of PADS) { const d = Math.hypot(x - p[0], z - p[1]) - p[3];
       if (d < 8) { const t = d <= 0 ? 1 : 1 - d / 8, k = t * t * (3 - 2 * t); H[j * nx + i] += (p[2] - H[j * nx + i]) * k; if (d <= 0) break; } }
   }
+  // round 20: the pilgrim stair's earthwork. Under the zigzag the ground is cut or filled to just below the treads and
+  // landings, and beside them it banks off at about 1:0.8, so the stair sits in the hill instead of on stilts.
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const x = x0 + i * step, z = z0 + j * step, E = pilgrimEarth(x, z); if (!E.length) continue;
+    // under a tread or landing the ground sits 0.45 m below it; beside one it keeps a shelf as wide as a grid cell (so the
+    // ground between nodes stays under the treads) and then a cut bank; lower down, fill banks up to it
+    let fill = -1e9, cut = 1e9;
+    for (const [d, y] of E) { fill = Math.max(fill, y - 0.45 - Math.max(0, d - 0.6) * 0.8); cut = Math.min(cut, y - 0.45 + Math.max(0, d - 2.4) * 1.2); }
+    H[j * nx + i] = Math.min(Math.max(H[j * nx + i], fill), cut);
+}
 }
 export function heightAt(x, z) {
   if (!H) buildGrid();
@@ -254,4 +264,44 @@ export function heightAt(x, z) {
   const fx = Math.min(nx - 1.001, Math.max(0, (x - x0) / step)), fz = Math.min(nz - 1.001, Math.max(0, (z - z0) / step));
   const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = j * nx + i;
   return (H[a] * (1 - u) + H[a + 1] * u) * (1 - v) + (H[a + nx] * (1 - u) + H[a + nx + 1] * u) * v;
+}
+
+// Round 20: Wendell answered cc-heaven-r19 C, "Make the stair gentle and zigzag". Round 19's one straight flight had
+// 0.235 m risers. The gentle stair has 0.17 m risers on 0.28 m treads, sized to the cultivation figure's 0.62 m stride by
+// the stair-maker's rule (two risers and a tread make one stride: 2 x 0.17 + 0.28 = 0.62), one step per tread. A
+// gentle stair needs about 42 m of treads to climb the 25 m from the great court to the gate on the crest, and the ridge
+// gives 29 m, so the way zigzags: four flights of 32 steps cross the slope at 69 degrees from the axis, turning on round
+// landings, and a last straight flight of 20 steps climbs on the axis to the gate. Plan only (no heights read here):
+// layout.js carves the ground to it and crag.js builds it.
+export const PILGRIM = (() => {
+  const LAND = AXIS[9], a = [P.great[0] + (LAND[0] - P.great[0]) * 0.5, P.great[1] + (LAND[1] - P.great[1]) * 0.5];
+  const dx = LAND[0] - a[0], dz = LAND[1] - a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, nx = -uz, nz = ux;
+  const W = ([u, v]) => [a[0] + ux * u + nx * v, a[1] + uz * u + nz * v];
+  const T = 0.28, HW = 1.5, y0 = 25, yTop = AXIS_H[9] + 0.15, N = Math.round((yTop - y0) / 0.17), R = (yTop - y0) / N;
+  const nD = 4, mLast = 20, ms = Array(nD).fill((N - mLast) / nD), u0 = -3, uTop = L - 5;
+  let th = 1.1, rL = 2, rF = 2;
+  const segs = () => ms.map((m, i) => (m - 1) * T + (i ? rL : 0) + (i < nD - 1 ? rL : rF));
+  for (let it = 0; it < 80; it++) { rL = HW / Math.sin(Math.PI / 2 - th); rF = HW / Math.sin((Math.PI - th) / 2);
+    const c = (uTop - (mLast - 1) * T - rF - u0) / segs().reduce((p, q) => p + q, 0); th = 0.5 * th + 0.5 * Math.acos(Math.min(1, c)); }
+  const S = segs(); let lat = 0; S.forEach((s, i) => { lat += (i % 2 ? -1 : 1) * s * Math.sin(th); });
+  const C = [[u0, -lat]]; S.forEach((s, i) => { const [cu, cv] = C[i]; C.push([cu + s * Math.cos(th), cv + (i % 2 ? -1 : 1) * s * Math.sin(th)]); });
+  const corners = C.map(W), flights = [], landings = []; let y = y0;
+  const ends = [...corners, W([uTop, 0])];
+  for (let i = 0; i <= nD; i++) {
+    const p = ends[i], q = ends[i + 1], ddx = q[0] - p[0], ddz = q[1] - p[1], Ls = Math.hypot(ddx, ddz), m = i < nD ? ms[i] : mLast;
+    const s0 = i === 0 ? 0 : i < nD ? rL : rF;
+    flights.push({ a: p, ux: ddx / Ls, uz: ddz / Ls, nx: -ddz / Ls, nz: ddx / Ls, s0, s1: s0 + (m - 1) * T, m, y: y, ry: -Math.atan2(ddz, ddx) });
+    y += R * m;
+    if (i < nD) landings.push({ x: q[0], z: q[1], y, r: i < nD - 1 ? rL : rF });
+  }
+  return { T, R, HW, N, th, flights, landings, foot: corners[0], top: ends[nD + 1], corners, axis: [ux, uz], yTop };
+})();
+// the way's elements near (x, z), as [distance outside the tread or landing, its top]; empty when none is within 12 m
+export function pilgrimEarth(x, z) {
+  const { T, R, HW, flights, landings } = PILGRIM, out = [];
+  for (const f of flights) { const s = (x - f.a[0]) * f.ux + (z - f.a[1]) * f.uz, v = (x - f.a[0]) * f.nx + (z - f.a[1]) * f.nz;
+    const sc = Math.max(f.s0, Math.min(f.s1, s)), k = Math.max(0, Math.min(f.m - 2, Math.floor((sc - f.s0) / T))), d = Math.hypot(s - sc, Math.max(0, Math.abs(v) - HW));
+    if (d < 12) out.push([d, f.y + R * (k + 1)]); }
+  for (const l of landings) { const d = Math.max(0, Math.hypot(x - l.x, z - l.z) - l.r); if (d < 12) out.push([d, l.y]); }
+  return out;
 }
