@@ -21,11 +21,13 @@ function fake(pouch: Record<string, unknown> | null) {
         vibulon: {
             create: async ({ data }: { data: Row }) => { const c = { id: `v${coins.length + 1}`, ...data }; coins.push(c); return { id: c.id } },
             findUnique: async ({ where }: { where: { id: string } }) => coins.find((c) => c.id === where.id) ?? null,
+            findMany: async ({ where }: { where: { id: { in: string[] } } }) => coins.filter((c) => where.id.in.includes(c.id)),
             findFirst: async ({ where }: { where: Row }) =>
                 coins.find((c) => (where.stakedOnBarId ? c.stakedOnBarId === where.stakedOnBarId : c.originId === where.originId && !c.stakedOnBarId)) ?? null,
             update: async ({ where, data }: { where: { id: string }; data: Row }) => { Object.assign(coins.find((c) => c.id === where.id)!, data) },
         },
         vibulonEvent: { create: async () => ({}) },
+        vibulonMark: { createMany: async () => ({ count: 1 }) },
     }
     return { tx: tx as unknown as Tx, bars, coins, pouch: () => store }
 }
