@@ -2,11 +2,11 @@
  * @route GET /board/data.js
  * @entity SYSTEM
  * @description The Council Board's data as the script its page loads before it renders: `window.__BOARD_DATA__ = …`,
- *   read from bars-engine's own store for the live collections (positions, questions, terms, causes, picks) with the
- *   council's record underneath for everything the store has no collection for (resolved, battles, morning, intake,
- *   draws, weather_log), so the page no longer carries its own data and a saved answer shows without a push
- *   (Wendell, 2026-11-05: "the Page shouldn't be carrying its own data. It should all be served via the API"; his
- *   2026-11-09 ruling stops the copy being written at all once the record has a home in the store).
+ *   read from bars-engine's own store for every collection the page draws (positions, questions, terms, causes,
+ *   picks, resolved, draws, battles, morning, intake, and the weather readings the morning collection holds), so the
+ *   page no longer carries its own data and a saved answer shows without a push (Wendell, 2026-11-05: "the Page
+ *   shouldn't be carrying its own data. It should all be served via the API"; his 2026-11-09 ruling stops the copy
+ *   being written at all once the record has a home in the store).
  * @permissions owner (BOARD_OWNER_PLAYER_ID); others are sent to /login
  * @agentDiscoverable false
  */
