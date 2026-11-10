@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Breathe at the Edge',
+      bodyText:
+        'At the edge of the thing you fear, your breath goes shallow first. Take four slow breaths there. Let the edge stay an edge. Write down the first thing you notice once your shoulders drop.',
+      faceKey: null,
+      archetypeKey: 'danger-walker',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let Someone Walk You Through',
+      bodyText:
+        'You guide others across risk and rarely get guided. Ask one person to show you a crossing they know. Take their route without correcting it. Write down what you learned from receiving it.',
+      faceKey: null,
+      archetypeKey: 'danger-walker',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'The Risk You Are Avoiding',
       bodyText:
         'The Danger Walker\'s shadow is sometimes avoiding the specific risk that matters most. Which risk are you dancing around? What are you navigating that you should be walking directly toward?',
