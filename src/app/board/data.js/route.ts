@@ -3,10 +3,10 @@
  * @entity SYSTEM
  * @description The Council Board's data as the script its page loads before it renders: `window.__BOARD_DATA__ = …`,
  *   read from bars-engine's own store for every collection the page draws (positions, questions, terms, causes,
- *   picks, resolved, draws, battles, morning, intake, and the weather readings the morning collection holds), so the
- *   page no longer carries its own data and a saved answer shows without a push (Wendell, 2026-11-05: "the Page
- *   shouldn't be carrying its own data. It should all be served via the API"; his 2026-11-09 ruling stops the copy
- *   being written at all once the record has a home in the store).
+ *   picks, resolved, draws, battles, morning, intake, and the weather readings the morning collection holds). Nothing
+ *   is read from a pushed copy: if the store answers nothing, this assigns nothing and the page draws no board
+ *   (Wendell, 2026-11-05: "the Page shouldn't be carrying its own data. It should all be served via the API"; his
+ *   2026-11-09 ruling: "If the store is down the store is down. I don't want a fallback").
  * @permissions owner (BOARD_OWNER_PLAYER_ID); others are sent to /login
  * @agentDiscoverable false
  */
@@ -18,9 +18,7 @@ import { streamed } from '../serve'
 
 export const dynamic = 'force-dynamic'
 
-export { DATA_PATH } from '@/lib/board/data'
-
-/** The page's own rule: a push that lands in the store shows on the next load of the page and of this script together. */
+/** The page's own rule: a save that lands in the store shows on the next load of the page and of this script together. */
 const HEADERS = {
   'Content-Type': 'text/javascript; charset=utf-8',
   'Cache-Control': 'no-store',
@@ -28,10 +26,10 @@ const HEADERS = {
   'Referrer-Policy': 'same-origin',
 }
 
-/** A script that assigns nothing, so the page falls back to the copy it carries instead of drawing an empty board. */
+/** A script that assigns nothing, so the page draws no board at all and the fault is named. */
 const NOTHING = 'window.__BOARD_DATA__ = null;\n'
 
-/** The pushed JSON as the script body. The page reads it before its data tag, so a board that grows past the page's
+/** The board's data as the script body. The page reads it before its data tag, so a board that grows past the page's
  * own size arrives here whole; U+2028 and U+2029 are legal JSON and were once illegal inside a JS object literal. */
 export function script(json: string): string {
   const body = json.trim().replace(/;\s*$/, '').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
