@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { SHELLS } from "../calrunia/room-kit.js";
+import { LIGHT } from "./look-data.js";
 
 /* ---------- layout (metres; the floor is y = 0, the dais top is DAIS_Y) ---------- */
 /* The room kit (public/calrunia/room-kit.js): buildHollow builds one of two shells. `hollow` is the Dusk hollow as it was;
@@ -495,7 +496,7 @@ export function buildHollow(scene, opts = {}) {
       const tassel = add(new THREE.CylinderGeometry(0.02, 0.035, 0.2, 5), new THREE.MeshStandardMaterial({ color: 0xa0402a }), 0, -0.47, 0, g);
       const top = onShell(Math.atan2(p.z, -p.x), 0.3, 0.92); const cordLen = Math.max(0.3, top.y - p.y - 0.33);
       add(new THREE.CylinderGeometry(0.01, 0.01, cordLen, 4), M.rope, 0, 0.33 + cordLen / 2, 0, g);
-      const light = new THREE.PointLight(0xffb066, 7, 9, 1.6); light.position.set(0, -0.05, 0); g.add(light);
+      const light = new THREE.PointLight(LIGHT.lantern.colour, LIGHT.lantern.intensity, LIGHT.lantern.distance, LIGHT.lantern.decay); light.position.set(0, -0.05, 0); g.add(light);
       anim.lanterns.push({ g, light, ph: r() * 10, base: p.clone() });
     }
   }
@@ -549,7 +550,7 @@ export function buildHollow(scene, opts = {}) {
       const base = p.clone().addScaledVector(side, s * (STREAM_HALF + 0.35));
       for (let k = 0; k < 3; k++) { const c = add(cg, cm, base.x + (r() - 0.5) * 0.3, 0.2, base.z + (r() - 0.5) * 0.3); c.rotation.set((r() - 0.5) * 0.7, r() * 3, (r() - 0.5) * 0.7); c.scale.setScalar(0.6 + r() * 0.7); anim.crystals.push(c); }
     }
-    const cl = new THREE.PointLight(0x5fe0d0, 6, 6, 1.6); cl.position.copy(STREAM.getPointAt(0.55)).setY(0.8); root.add(cl); anim.crystalLight = cl;
+    const cl = new THREE.PointLight(LIGHT.crystals.colour, LIGHT.crystals.intensity, LIGHT.crystals.distance, LIGHT.crystals.decay); cl.position.copy(STREAM.getPointAt(0.55)).setY(0.8); root.add(cl); anim.crystalLight = cl;
     anim.crystalMat = cm;
   }
 
@@ -689,8 +690,8 @@ export function buildHollow(scene, opts = {}) {
   const dusk = new THREE.DirectionalLight(0x8a7ad8, 0.9); dusk.position.set(0.5, 3, -10); root.add(dusk);
   const rim = new THREE.DirectionalLight(0xff9a6a, 0.35); rim.position.set(2, 1.5, -12); root.add(rim);
   // the strengths the flicker moves around; a room style changes them (public/calrunia/room-styles.js applyStyle)
-  const base = { hemi: 0.55, fire: 16, lantern: 7 };
-  const fire = new THREE.PointLight(0xff8a3a, 16, 10, 1.5); fire.position.set(HEARTH.x * 0.82, 0.8, HEARTH.z * 0.82); root.add(fire);
+  const base = { hemi: 0.55, fire: LIGHT.hearth.intensity, lantern: LIGHT.lantern.intensity };
+  const fire = new THREE.PointLight(LIGHT.hearth.colour, LIGHT.hearth.intensity, LIGHT.hearth.distance, LIGHT.hearth.decay); fire.position.set(HEARTH.x * 0.82, 0.8, HEARTH.z * 0.82); root.add(fire);
   /* The hearth can be out (Still C, the first minute: you wake to a cold hearth). `hearth.want` is 1 lit, 0 out; `hearth.k`
      eases toward it, so the fire catches rather than snapping on. `hearth.ember` (0..1) is the one ember's glow in the cold
      hearth, tapped to light it; it rides on the fire's own light, so no new light is added. */
@@ -777,7 +778,7 @@ export function buildHollow(scene, opts = {}) {
       const rho = Math.hypot(x, z) / (R * 0.95), len = Math.max(0.3, H * 0.95 * Math.sqrt(Math.max(0, 1 - rho * rho)) - y); // up to the ceiling
       const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, len, 4), M.rope); cord.position.set(x, y + len / 2, z); root.add(cord);
       const hook = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 14, Math.PI * 1.5), M.darkWood); hook.position.set(x, y - 0.03, z); hook.rotation.z = Math.PI / 2; root.add(hook);
-      light = new THREE.PointLight(0xffb066, 0, 8, 1.6); light.position.set(x, y - 0.45, z); root.add(light);
+      light = new THREE.PointLight(LIGHT.hung.colour, LIGHT.hung.intensity, LIGHT.hung.distance, LIGHT.hung.decay); light.position.set(x, y - 0.45, z); root.add(light);
     }
     const h = { id: sp.id, takes: sp.takes, slot, ring, ringMats: [rm, gm], light, item: null, glow: 0, pos: new THREE.Vector3(x, y, z), flat };
     spots[sp.id] = h; spotList.push(h);
