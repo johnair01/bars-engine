@@ -2574,6 +2574,7 @@ function fireTouch() {
   const at = hm.frag && hm.frag.mode === "browse" ? list.indexOf(hm.frag.c) + 1 : 0;
   if (at >= list.length) fragEnd(); else fragStart(list[at], "browse");
   return true;
+}
 /* A sit with an ember that had already risen wakes it into a spirit (growth FR-011): in the homeroom a spirit of the home, in a Between
    the hollow's, drawn beside the hearth. Then the sit asks "Give it a name?" with one line and "Leave it be". It wakes once. */
 let wakeSpirit = null;
