@@ -31,7 +31,9 @@ import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
-import { WAVE_STEPS, careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
+import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
+import * as CE from "../calrunia/charge-engine.js";   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
+const WAVE_STEPS = CE.WAVE_STEPS;
 installPaint();
 
 /* ===================================================================================================
@@ -2613,7 +2615,7 @@ function openSheet(name, arg) {
   if (name === "hearth" && arg !== "stir") { hmBegin(); return; }
   if (name === "hearth" && sheetName !== "hearth") hd = {};
   if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
-  if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1 };
+  if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1, intensity: 5, direction: "cant_tell" };
   if (name === "invitations" || name === "rooms" || name === "destinations") refreshList();
   if (name === "spirit" || name === "checkin") fetchHome();
   if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
@@ -2694,7 +2696,7 @@ function renderSheet() {
     case "hope": if (!g || !isHome(g)) { closeSheet(); return; } h = hopeSheet(); break;
     case "look": if (!g || !isHome(g)) { closeSheet(); return; } h = lookSheet(); break;
     case "goals": h = goalsSheet() + close; break;
-    case "checkin": if (!walk) walk = { feel: null, line: "", step: -1 }; h = checkinSheet(); break;
+    case "checkin": if (!walk) walk = { feel: null, line: "", step: -1, intensity: 5, direction: "cant_tell" }; h = checkinSheet(); break;
     case "invitations": h = invitationsSheet() + close; break;
     case "style": if (!g || !isMember(g) || g.phase === "closed") { closeSheet(); return; } h = styleSheet(g) + close; break;
     case "invite": if (!g || isHome(g) || !isMember(g)) { closeSheet(); return; } h = inviteSheet(g) + close; break;
@@ -2815,6 +2817,17 @@ const cap = w => w ? w[0].toUpperCase() + w.slice(1) : "";
    the last step saves the check-in and leaves an ember, which can feed one of your spirits now or wait for later.
    `walk.step` is -1 while choosing, 0 to 6 on the steps, 7 once the ember is made. */
 let walk = null;
+/* The engine's step names the card: 0-5 the cards, 6 the exhale fork and then the body scan, 7 the ember. */
+const DIR_WORDS = [["toward", "Toward it"], ["away", "Away from it"], ["both", "Both"], ["cant_tell", "Can't tell"]];
+function syncStep(w) { const id = w.charge.wave.step; w.step = id === "scan" || id === "done" ? 6 : CE.WAVE_STEPS.findIndex(x => x.id === id); }
+let breathTimer = 0;
+/* the ring is CSS; the sheet draws again where the breath turns and where it ends, so the label and the button are true */
+function watchBreath(w) {
+  clearTimeout(breathTimer);
+  if (!w.charge || w.step < 0 || w.step > 5 || w.block) return;
+  const e = now() - w.charge.wave.stepAt, B = CE.BREATH; if (e >= B.inMs + B.outMs) return;
+  breathTimer = setTimeout(() => { if (walk === w && sheetName === "checkin") renderSheet(); }, (e < B.inMs ? B.inMs : B.inMs + B.outMs) - e + 40);
+}
 function checkinSheet() {
   const w = walk;
   if (w.step < 0) {
@@ -2822,26 +2835,54 @@ function checkinSheet() {
     return `<form class="stack" id="checkForm"><h2>Check in with yourself</h2>
       <p class="small muted">Before anyone else: what is here? Only you see this.</p>
       <div class="feels">${FEEL_ORDER.map(f => `<button type="button" class="${w.feel === f ? "on" : ""}" aria-pressed="${w.feel === f}" data-act="checkFeel" data-id="${f}"><span class="ember" style="--c:${cssHue(elHex(f))};--s:${w.feel === f ? 30 : 22}px"></span>${cap(FEELS[f])}</button>`).join("")}</div>
-      <label for="cLine">One line, if you like<input id="cLine" maxlength="280" placeholder="What it is about" value="${esc(w.line)}"></label>
+      <label for="cInt"><span>How strong is it? <b id="cIntV">${w.intensity}</b> of 10</span><input id="cInt" type="range" min="0" max="10" step="1" value="${w.intensity}"></label>
+      <div class="small"><b>Does it pull you toward something, or away?</b></div>
+      <div class="choice dirs">${DIR_WORDS.map(([k, t]) => `<button type="button" class="${w.direction === k ? "on" : ""}" aria-pressed="${w.direction === k}" data-act="checkDir" data-id="${k}">${t}</button>`).join("")}</div>
+      <label for="cLine">What does your body say? One line, if you like<input id="cLine" maxlength="280" placeholder="In your own words" value="${esc(w.line)}"></label>
       <div class="row"><button type="submit" ${w.feel ? "" : "disabled"}>Walk through it</button><button class="quiet" type="button" data-close>Not now</button></div>
       ${past.length ? `<details><summary>Your last check-ins</summary><ul class="log">${past.map(c => `<li>${esc(c.feel ? FEELS[c.feel] : "")}${c.line ? `: <i>${esc(c.line)}</i>` : ""} <span class="muted small">· ${fmt(c.at)}</span></li>`).join("")}</ul></details>` : ""}</form>`;
   }
   const c = cssHue(elHex(w.feel)), head = `<span class="eyebrow">${esc(cap(FEELS[w.feel]))}${w.line ? " · " + esc(w.line) : ""}</span>`;
-  if (w.step <= 6) {
-    const st = WAVE_STEPS[w.step];
+  if (w.step <= 6 && w.block) {   // "Something's in the way": how big it is and what it says, then the block walk
+    return `<form class="stack wave" style="--c:${c}" id="blockForm">${head}
+      <h2>Something's in the way</h2><p class="wline">That is allowed. Say how big it feels and what it says, and the Between will walk you to it. You come back to ${esc(CE.WAVE_STEPS[Math.max(0, w.step)].name)}, where you left off.</p>
+      <label for="bSize"><span>How big does it feel? <b id="bSizeV">${esc(CE.SIZE_WORDS[w.block.size])}</b></span><input id="bSize" type="range" min="1" max="10" step="1" value="${w.block.size}"></label>
+      <label for="bWords">What does it say?<input id="bWords" maxlength="240" placeholder="In its words" value="${esc(w.block.words)}"></label>
+      <div class="row"><button type="submit">Walk to it</button><button class="ghost" type="button" data-act="blockCancel">Never mind</button></div></form>`;
+  }
+  if (w.step <= 5) {
+    const st = WAVE_STEPS[w.step], el = Math.min(now() - w.charge.wave.stepAt, CE.BREATH.inMs + CE.BREATH.outMs), br = CE.breathOf(w.charge, now());
+    watchBreath(w);
     return `<div class="stack wave" style="--c:${c}">${head}
       <h2>${esc(st.name)}</h2><p class="wline">${esc(st.line)}</p>
+      <div class="breath ${br.phase}" style="--in:${CE.BREATH.inMs}ms;--out:${CE.BREATH.outMs}ms;--el:${el}ms" role="img" aria-label="${br.phase === "in" ? "Breathe in" : br.phase === "out" ? "Breathe out" : "Breath finished"}"><i></i><span>${br.phase === "in" ? "Breathe in" : br.phase === "out" ? "Breathe out" : "Whenever you are ready"}</span></div>
       <div class="wdots" role="img" aria-label="Step ${w.step + 1} of seven">${WAVE_STEPS.map((x, i) => `<i class="${i < w.step ? "on" : i === w.step ? "now" : ""}"></i>`).join("")}</div>
-      <div class="row"><button class="ghost" type="button" data-act="waveBack">Back</button><button type="button" data-act="waveNext">${w.step === 6 ? "Breathe out" : "Next"}</button><button class="quiet" type="button" data-close>Stop</button></div></div>`;
+      <div class="row">${br.phase === "done" ? `<button type="button" data-act="waveNext">${esc(st.button)}</button>` : `<button class="ghost" type="button" data-act="waveSkip">Skip the breath</button>`}<button class="ghost" type="button" data-act="blockOpen">Something's in the way</button></div>
+      <div class="row">${w.step === 0 ? `<button class="quiet" type="button" data-act="waveBack">Back</button>` : ""}<button class="quiet" type="button" data-close>Stop</button></div></div>`;
+  }
+  if (w.step === 6 && w.charge.wave.step === "exhale") {
+    return `<div class="stack wave" style="--c:${c}">${head}
+      <h2>${esc(WAVE_STEPS[6].name)}</h2><p class="wline">${esc(WAVE_STEPS[6].line)}</p>
+      <div class="wdots" role="img" aria-label="Step 7 of seven">${WAVE_STEPS.map((x, i) => `<i class="${i < 6 ? "on" : "now"}"></i>`).join("")}</div>
+      <div class="row"><button type="button" data-act="exhaleStay">Yes, I want to stay with it</button><button type="button" data-act="exhaleRelease">No, I'm ready to let it go</button></div>
+      <div class="row"><button class="ghost" type="button" data-act="blockOpen">Something's in the way</button><button class="quiet" type="button" data-close>Stop</button></div></div>`;
+  }
+  if (w.step === 6) {   // the body scan after the exhale
+    const stay = w.charge.wave.alignment === "stay";
+    return `<form class="stack wave" style="--c:${c}" id="scanForm">${head}
+      <h2>${stay ? "Where is it now?" : "What is left behind?"}</h2><p class="wline">${stay ? "Stay with it a moment and notice it in your body." : "Breathe it out and notice what is left in your body."} Say it in your own words; the answers are only for you.</p>
+      <label for="sLoc">Where do you feel it?<input id="sLoc" maxlength="120" placeholder="Chest, throat, hands, nowhere" autocomplete="off"></label>
+      <label for="sTex">What is it like?<input id="sTex" maxlength="120" placeholder="Tight, warm, heavy, light" autocomplete="off"></label>
+      <div class="row"><button type="submit">Breathe out</button><button class="quiet" type="button" data-close>Stop</button></div></form>`;
   }
   const sp = feedable(), g = view().g, room = g && !isHome(g) && isMember(g) && g.phase !== "closed";
   const given = w.given;
   return `<div class="stack wave" style="--c:${c}">${head}
     <div class="emberbig"><span class="ember" style="--c:${c};--s:58px"></span></div>
-    <h2>${given ? esc(given) + " took your ember" : "An ember of " + esc(FEELS[w.feel])}</h2>
+    <h2>${given ? esc(given) + " took your ember" : "An ember of " + esc(FEELS[w.ember || w.feel])}</h2>
     ${given ? `<p class="small muted">Your check-in is kept in your homeroom.</p><div class="row"><button type="button" data-close>Back to the room</button></div>`
     : `<p class="small muted">What you walked through left this ember. Give it to one of your spirits, and it feeds them. An ember of a spirit's own element feeds it twice over.</p>
-    ${sp.length ? `<div class="choice">${sp.map(x => spiritBtn(x, w.feel)).join("")}</div>` : `<p class="small">None of your spirits is with you. ${isHome(g) ? "Call one up from the caves under Spirits, or keep the ember for later." : "Bring one in from your homeroom, or keep the ember for later."}</p>`}
+    ${sp.length ? `<div class="choice">${sp.map(x => spiritBtn(x, w.ember || w.feel)).join("")}</div>` : `<p class="small">None of your spirits is with you. ${isHome(g) ? "Call one up from the caves under Spirits, or keep the ember for later." : "Bring one in from your homeroom, or keep the ember for later."}</p>`}
     <div class="row"><button class="ghost" type="button" data-act="emberKeep">Keep it for later</button>${room ? `<button class="ghost" type="button" data-act="emberStone">Leave it on a stone for them</button>` : ""}</div>`}</div>`;
 }
 /* ---------- spirits of the homeroom (part 4): they live there, walk there, and come with you into a room ---------- */
@@ -3685,8 +3726,14 @@ document.addEventListener("click", async ev => {
   if (a === "lookRandom") { lookDraft = randomLook(); renderSheet(); ensureMyBody().catch(() => {}); return; }
   if (a === "lookPart") { mirrorPart = id; renderSheet(); return; }
   if (a === "checkFeel") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; walk.feel = walk.feel === id ? null : id; } renderSheet(); return; }
-  if (a === "waveBack") { if (walk) { walk.step = Math.max(-1, walk.step - 1); renderSheet(); } return; }
-  if (a === "waveNext" && walk && walk.step < 6) { walk.step++; renderSheet(); return; }
+  if (a === "checkDir") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; const r = $("#cInt"); if (r) walk.intensity = +r.value; walk.direction = id; } renderSheet(); return; }
+  if (a === "waveBack") { if (walk && walk.step === 0) { walk.step = -1; walk.charge = null; renderSheet(); } return; }
+  if (a === "waveNext" || a === "waveSkip") { if (walk && walk.charge && walk.step >= 0 && walk.step <= 5) {
+    try { walk.charge = CE.nextStep(walk.charge, now(), { skipBreath: a === "waveSkip" }); syncStep(walk); } catch (e) { toast("Take the breath first, or skip it."); }
+    renderSheet(); } return; }
+  if (a === "blockOpen") { if (walk && walk.charge) { walk.block = { size: 4, words: "" }; renderSheet(); } return; }
+  if (a === "blockCancel") { if (walk) { walk.block = null; renderSheet(); } return; }
+  if (a === "exhaleStay" || a === "exhaleRelease") { if (walk && walk.charge && walk.charge.wave.step === "exhale") { walk.charge = CE.exhale(walk.charge, a === "exhaleStay" ? "stay" : "release", now()); syncStep(walk); renderSheet(); } return; }
   if (a === "emberKeep") { closeSheet(); toast("Kept. It waits under Spirits, in your homeroom, until you give it."); return; }
   if (a === "goHome") { goRoom(null); return; }
   if (a === "goRoom") { goRoom(id); return; }
@@ -3794,7 +3841,6 @@ document.addEventListener("click", async ev => {
       catch { window.prompt("Copy the invitation link:", link); }
     }
     else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Saved. Each of your rooms shows you this way now."); }
-    else if (a === "waveNext") await finishWave();
     else if (a === "emberGive") await giveEmber(id);
     else if (a === "emberStone") await emberStone();
     else if (a === "caveCall") await callFromCave(id);
@@ -3892,7 +3938,13 @@ document.addEventListener("submit", async ev => {
       $("#gText").value = ""; renderSheet(); toast("Kept in your homeroom. Only you see it.");
     } else if (f.id === "checkForm") {
       if (!walk || !walk.feel) { toast("Choose what is here first."); return; }
-      walk.line = $("#cLine").value.trim().slice(0, 280); walk.step = 0; renderSheet();
+      walk.line = $("#cLine").value.trim().slice(0, 280); walk.intensity = +$("#cInt").value;
+      walk.charge = CE.startCharge({ channel: walk.feel, intensity: walk.intensity, direction: walk.direction, body: walk.line }, now()); syncStep(walk); renderSheet();
+    } else if (f.id === "blockForm") {
+      await openBlockWalk($("#bSize").value, $("#bWords").value.trim().slice(0, 240));
+    } else if (f.id === "scanForm") {
+      walk.charge = CE.scan(walk.charge, { location: $("#sLoc").value.trim().slice(0, 120), texture: $("#sTex").value.trim().slice(0, 120) }, now());
+      await finishWave();
     } else if (f.id === "inviteForm") {
       const g = view().g; if (members(g).length < 2) return;
       const w = $("#sWhen").value, when = w ? new Date(w).getTime() : null;
@@ -3982,14 +4034,49 @@ async function keepLook() {
 }
 function goRoom(id) { if (id) { walkThrough(id); return; } markSeen(); location.href = ROOM_URL(null); }
 /* ---------- the check-in's ember, and the spirits it feeds (part 4) ---------- */
+document.addEventListener("input", e => {   // the check-in's two sliders say their value as they move
+  const t = e.target; if (!t || !t.id) return;
+  if (t.id === "cInt") { const o = $("#cIntV"); if (o) o.textContent = t.value; if (walk) walk.intensity = +t.value; }
+  else if (t.id === "bSize") { const o = $("#bSizeV"); if (o) o.textContent = CE.SIZE_WORDS[+t.value]; }
+});
 async function finishWave() {
-  const w = walk; if (!w || !w.feel || w.step !== 6) return;
-  const at = now(), eid = "e" + hkey();
-  await homeOp({ checkins: { ["c" + hkey()]: { feel: w.feel, line: w.line || null, at, wave: WAVE_STEPS.length } }, lastCheckin: at, embers: { [eid]: { feel: w.feel, at, given: null } } });
+  const w = walk; if (!w || !w.feel || !w.charge || w.charge.wave.step !== "done") return;
+  const at = now(), eid = "e" + hkey(), em = CE.emberOf(w.charge);
+  await homeOp({ checkins: { ["c" + hkey()]: { feel: w.feel, line: w.line || null, at, wave: WAVE_STEPS.length, charge: CE.toRecord(w.charge) } }, lastCheckin: at, embers: { [eid]: { feel: em.feel, from: em.from, to: em.to, by: em.by, at, given: null } } });
   if (walk !== w) return;
-  w.step = 7; w.eid = eid;
+  w.step = 7; w.eid = eid; w.ember = em.to;
   burst(meState.pos.clone().setY(groundY(meState.pos.x, meState.pos.z)), elHex(w.feel));
   renderSheet();
+}
+/* "Something's in the way": the block is a room (block-room.js, in the land). The charge waits in this browser while you walk
+   there, and the sheet is back on the same step with a fresh breath when you come home (returnFromBlock). */
+const PENDING = "oag.charge.pending.v1", FEELING_OF = { fear: "scared", anger: "frustrated", sadness: "disappointed", neutral: "numb", joy: "scared" };
+async function openBlockWalk(size, words) {
+  const w = walk; if (!w || !w.charge) return;
+  w.charge = CE.openBlock(w.charge, { size, words }, now()); w.block = null;
+  try {
+    const sample = await fetch("/between/ctw/sample-player.json").then(r => r.json());
+    sample.q4 = { weather: [{ feeling: FEELING_OF[w.charge.reading.channel] || "scared", strength: "a storm" }] };
+    sample.q6 = { ...(sample.q6 || {}), loudest: words || (sample.q6 || {}).loudest };
+    sessionStorage.setItem("ctw-charge", JSON.stringify(sample)); sessionStorage.removeItem("ctw-block-outcome");
+    sessionStorage.setItem("ctw-back", location.pathname + location.search);
+    localStorage.setItem(PENDING, JSON.stringify({ charge: w.charge, feel: w.feel, line: w.line, intensity: w.intensity, direction: w.direction }));
+  } catch (e) { w.charge = CE.returnFromBlock(w.charge, "left", now()); toast("The block walk would not open. You are back where you were."); renderSheet(); return; }
+  closeSheet();
+  const fade = document.createElement("div"); fade.style.cssText = "position:fixed;inset:0;z-index:90;background:#1a1210;opacity:0;transition:opacity .6s";
+  document.body.appendChild(fade); requestAnimationFrame(() => { fade.style.opacity = "1"; });
+  setTimeout(() => { location.href = "/between/land.html"; }, 650);
+}
+/** On boot: a charge that went to the block walk returns to its step. */
+function resumePendingCharge() {
+  let p = null; try { p = JSON.parse(localStorage.getItem(PENDING) || "null"); } catch (e) { /* none */ }
+  if (!p || !p.charge || !p.charge.blockStack || !p.charge.blockStack.length) { try { localStorage.removeItem(PENDING); } catch (e) { /* plain */ } return false; }
+  let outcome = "left"; try { outcome = sessionStorage.getItem("ctw-block-outcome") || "left"; sessionStorage.removeItem("ctw-block-outcome"); sessionStorage.removeItem("ctw-charge"); localStorage.removeItem(PENDING); } catch (e) { /* plain */ }
+  openSheet("checkin");
+  walk = { feel: p.feel, line: p.line || "", intensity: p.intensity, direction: p.direction, step: 0, charge: CE.returnFromBlock(p.charge, outcome, now()) };
+  syncStep(walk); renderSheet();
+  toast(outcome === "cleared" ? "You are back. What you cleared is behind you." : "You are back where you left off.");
+  return true;
 }
 /** Give an ember (the walk's, or the oldest waiting) to a spirit: `ref` is "home:<id>" or "room:<id>". */
 async function giveEmber(ref) {
@@ -4000,7 +4087,7 @@ async function giveEmber(ref) {
   const V = view(), at = now();
   const d = where === "home" ? homeSpirits().get(sid) : V.spirits.get(sid);
   if (!d) return;
-  const care = feed(d.care, e.feel, d.element, at);
+  const care = feed(d.care, e.to || e.feel, d.element, at);
   if (where === "home") await homeDocOp("spirits/" + sid, "update", { care });
   else {
     await op("spirits/" + sid, "update", { care });
@@ -4250,7 +4337,8 @@ let booted = false;
   // ?wake=1 (previews, the homeroom): sat on the first minute's cushion as the minute wakes you, even with the store down
   if (WAKE_SKIP && inNook() && !wake.on) wakeOnCushion();
   if (SIT_SKIP) setTimeout(() => { if (SIT_SKIP === "hearth") sitAtHearth(); else sitOn(seatId(SIT_SKIP)); }, 600);
-  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
+  const resumed = garden && (!jump || jump === "checkin") && resumePendingCharge();   // a deep link to the check-in still returns to its step
+  if (!resumed && jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   // the first minute (Still C): a homeroom not yet oriented wakes into it; a guest's invitation doorway opens at its end
   minuteStart();
   syncShelf();
