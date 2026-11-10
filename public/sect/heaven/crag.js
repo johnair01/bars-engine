@@ -28,6 +28,15 @@ function nearWay(x, z) { let best = 1e9;
 // (wayColliders): the stair rises in even flights over the ridge's profile, the landing and the bridge deck can be stood
 // on, and the walls and the gate's posts stop the avatar. CREST_STAIR ends the walk the "Climb to the crest" button takes.
 export const wayColliders = [];
+export const TREAD = 0.25; // round 19: the pilgrim stair's tread depth
+// round 19: where a foot should land on the stair: the middle of the tread under (x, z), or null off the stair
+export function stairTread(x, z) {
+  const st = way.stair; if (!st) return null;
+  const u = ((x - st.a[0]) * st.ux + (z - st.a[1]) * st.uz) / st.L, v = (x - st.a[0]) * st.nx + (z - st.a[1]) * st.nz;
+  if (u < 0 || u >= 1 || Math.abs(v) > 2.15) return null;
+  const k = Math.floor(u * st.n), uc = (k + 0.5) / st.n * st.L;
+  return [st.a[0] + st.ux * uc + st.nx * v, st.a[1] + st.uz * uc + st.nz * v, st.tops[k]];
+}
 const way = { stair: null, land: null, bridge: null };
 const wallBox = (x, z, len, thick, ry, y0, y1) => wayColliders.push({ x, z, c: Math.cos(ry), s: Math.sin(ry), hw: len / 2, hd: thick / 2, y0, y1 });
 // ground of the way at (x, z), or -Infinity off it
@@ -50,25 +59,25 @@ export const CREST_STAIR = (() => {
 
 export function cragWay(S, M) {
   const G = new THREE.Group(); G.name = 'cragWay'; S.add(G);
-  // the stair: treads 0.6 m deep in even flights. The flights follow the upper hull of the ground under the stair, so no
-  // tread is buried and each flight keeps one riser height; a low wall stands either side.
-  // It ends at the landing's front edge (round 17 ran it to the landing's centre, so its walls stood through the gate).
+  // Round 19: Wendell answered cc-heaven-r18 A: "adjust the steps so that that figure can walk the distances and walk the
+  // steps". Round 18's treads were 0.6 m deep with risers anywhere from 0 to 0.9 m, set by the ridge's hull, so no stride
+  // could keep to them. The way climbs 24.5 m in 26 m, too steep for a 0.17 m stair with landings (that needs 52 m), so it
+  // is one even pilgrim flight, as the steep stairs of China's sacred mountains are: every tread 0.25 m deep, every riser
+  // the same 0.235 m, one step of the figure per tread. The flight clears the ridge everywhere (13 cm at its foot).
   { const a = STAIR0, D0 = Math.hypot(LAND[0] - a[0], LAND[1] - a[1]), b = [LAND[0] - (LAND[0] - a[0]) / D0 * 5, LAND[1] - (LAND[1] - a[1]) / D0 * 5];
-    const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), n = Math.ceil(L / 0.6), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
-    const prof = []; for (let i = 0; i <= 120; i++) { const t = i / 120; let h = -1e9; for (const s of [-2.4, -1.2, 0, 1.2, 2.4]) h = Math.max(h, heightAt(a[0] + dx * t + nx * s, a[1] + dz * t + nz * s)); prof.push([t, h]); }
-    prof[120][1] = Math.max(prof[120][1], heightAt(...LAND)); // the stair ends level with the landing
-    const hull = []; for (const p of prof) { while (hull.length > 1) { const [o, q] = [hull[hull.length - 2], hull[hull.length - 1]]; if ((q[0] - o[0]) * (p[1] - o[1]) - (q[1] - o[1]) * (p[0] - o[0]) >= 0) hull.pop(); else break; } hull.push(p); }
-    const hullAt = t => { for (let i = 1; i < hull.length; i++) if (t <= hull[i][0]) { const [p, q] = [hull[i - 1], hull[i]]; return p[1] + (q[1] - p[1]) * (t - p[0]) / (q[0] - p[0]); } return hull[hull.length - 1][1]; };
-    const tops = [];
+    const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), n = Math.round(L / TREAD), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
+    let y0 = -1e9; for (const s of [-2.4, -1.2, 0, 1.2, 2.4]) y0 = Math.max(y0, heightAt(a[0] + nx * s, a[1] + nz * s));
+    const rise = (heightAt(...LAND) + 0.15 - y0) / n, tops = [];
     for (let k = 0; k < n; k++) {
       const t0 = k / n, t1 = (k + 1) / n, tm = (t0 + t1) / 2, x = a[0] + dx * tm, z = a[1] + dz * tm;
       let low = 1e9; for (const t of [t0, tm, t1]) for (const s of [-2.4, 0, 2.4]) low = Math.min(low, heightAt(a[0] + dx * t + nx * s, a[1] + dz * t + nz * s));
-      const top = hullAt(t1) + 0.15; tops.push(top); const hgt = top - low + 0.8;
-      const st = box(G, L / n + 0.04, hgt, 4.2, M.plinth, x, top - hgt / 2, z); st.rotation.y = ry;
-      for (const s of [-1, 1]) { const wx = x + nx * 2.35 * s, wz = z + nz * 2.35 * s, w = box(G, L / n + 0.06, hgt + 0.7, 0.55, M.stone, wx, top + 0.35 - hgt / 2, wz); w.rotation.y = ry;
-        wallBox(wx, wz, L / n + 0.06, 0.55, ry, top - hgt, top + 0.7); }
+      const top = y0 + rise * (k + 1); tops.push(top); const hgt = top - low + 0.8;
+      const st = box(G, L / n + 0.01, hgt, 4.2, M.plinth, x, top - hgt / 2, z); st.rotation.y = ry;
+      if (k % 3 === 0) { const m = Math.min(3, n - k), xm = a[0] + dx * (k + m / 2) / n, zm = a[1] + dz * (k + m / 2) / n, wt = y0 + rise * (k + m) + 0.7, len = L * m / n + 0.02; // the side walls, stepped every three treads
+        for (const s of [-1, 1]) { const wx = xm + nx * 2.35 * s, wz = zm + nz * 2.35 * s, wh = wt - low + 0.8, w = box(G, len, wh, 0.55, M.stone, wx, wt - wh / 2, wz); w.rotation.y = ry;
+          wallBox(wx, wz, len, 0.55, ry, low - 0.8, wt); } }
     }
-    way.stair = { a, L, ux: dx / L, uz: dz / L, nx, nz, tops }; }
+    way.stair = { a, L, ux: dx / L, uz: dz / L, nx, nz, tops, n, rise }; }
   // the landing on the crest, and a gate on it facing the court
   { const [x, z] = LAND, y = heightAt(x, z), face = Math.atan2(P.great[0] - x, P.great[1] - z);
     const pad = box(G, 10, 3, 10, M.plinth, x, y - 1.35, z); pad.rotation.y = face;
