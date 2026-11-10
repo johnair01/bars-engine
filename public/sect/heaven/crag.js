@@ -71,7 +71,8 @@ export function cragWay(S, M) {
         const sc = f.s0 + (k + 0.5) * TREAD, x = f.a[0] + f.ux * sc, z = f.a[1] + f.uz * sc, top = f.y + R * (k + 1);
         const low = lowUnder(x, z, f.ux, f.uz, f.nx, f.nz, TREAD, TW), hgt = top - low + 0.6;
         const st = box(G, TREAD + 0.01, hgt, TW * 2, M.plinth, x, top - hgt / 2, z); st.rotation.y = f.ry;
-        if (k % 3 === 0) { const n = Math.min(3, f.m - 1 - k), sm = f.s0 + (k + n / 2) * TREAD, xm = f.a[0] + f.ux * sm, zm = f.a[1] + f.uz * sm, wt = f.y + R * (k + n) + 0.75, len = n * TREAD + 0.02;
+        if (k % 2 === 0) { const n = Math.min(2, f.m - 1 - k), sm = f.s0 + (k + n / 2) * TREAD, xm = f.a[0] + f.ux * sm, zm = f.a[1] + f.uz * sm, wt = f.y + R * (k + n) + 0.4, // round 22: a 0.4 m kerb in pairs (was 0.75 m in threes), so side views see the feet
+             len = n * TREAD + 0.02;
           for (const sg of [-1, 1]) { const wx = xm + f.nx * wy * sg, wz = zm + f.nz * wy * sg, wl = lowUnder(wx, wz, f.ux, f.uz, f.nx, f.nz, len, 0.15), wh = wt - wl + 0.6;
             const w = box(G, len, wh, WT, M.stone, wx, wt - wh / 2, wz); w.rotation.y = f.ry; wallBox(wx, wz, len, WT, f.ry, wl - 0.6, wt); } }
       }
@@ -84,7 +85,7 @@ export function cragWay(S, M) {
       const NS = 20; for (let s = 0; s < NS; s++) { const th = (s + 0.5) / NS * Math.PI * 2;
         if (open.some(o => Math.abs(Math.atan2(Math.sin(th - o), Math.cos(th - o))) < half)) continue;
         const wr = r - WT / 2, wx = l.x + Math.cos(th) * wr, wz = l.z + Math.sin(th) * wr, len = 2 * Math.PI * wr / NS + 0.04, ry = -th + Math.PI / 2;
-        const w = box(G, len, 0.75 + 0.6, WT, M.stone, wx, l.y + 0.75 - 0.675, wz); w.rotation.y = ry; wallBox(wx, wz, len, WT, ry, l.y - 0.6, l.y + 0.75); }
+        const w = box(G, len, 0.4 + 0.6, WT, M.stone, wx, l.y + 0.4 - 0.5, wz); w.rotation.y = ry; wallBox(wx, wz, len, WT, ry, l.y - 0.6, l.y + 0.4); }
     }); }
   // the landing on the crest, and a gate on it facing the court
   { const [x, z] = LAND, y = heightAt(x, z), face = Math.atan2(P.great[0] - x, P.great[1] - z);
@@ -96,6 +97,16 @@ export function cragWay(S, M) {
   { const [a, b] = [LAND, WAY[2]], ya = heightAt(...a) + 0.15, yb = WALL_Y, dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
     const n = Math.ceil(L / 2), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
     way.bridge = { a, L, ux: dx / L, uz: dz / L, nx, nz, ya, yb };
+    // round 22: the crest beyond the gate. A paved terrace 10 m wide and 6 m deep runs on from the gate toward the bridge, held
+    // by a stone block down to the ground, with a 0.45 m kerb on its two sides and a stone lantern at each of its far corners.
+    { const ux = dx / L, uz = dz / L, TL = 6, TWD = 10, cx = a[0] + ux * (TL / 2 + 0.5), cz = a[1] + uz * (TL / 2 + 0.5), top = ya - 0.06;
+      let lo = 1e9; for (const t of [0, 0.5, 1]) for (const s of [-1, 0, 1]) lo = Math.min(lo, heightAt(cx + ux * (t - 0.5) * TL + nx * s * TWD / 2, cz + uz * (t - 0.5) * TL + nz * s * TWD / 2));
+      const th = Math.max(0.5, top - lo + 0.6), ter = box(G, TL, th, TWD, M.plinth, cx, top - th / 2, cz); ter.rotation.y = ry;
+      for (const sg of [-1, 1]) { const wx = cx + nx * (TWD / 2 - 0.15) * sg, wz = cz + nz * (TWD / 2 - 0.15) * sg;
+        const k = box(G, TL, 0.45 + 0.1, 0.3, M.stone, wx, top + 0.225, wz); k.rotation.y = ry; wallBox(wx, wz, TL, 0.3, ry, top - 0.2, top + 0.45);
+        const lx = cx + ux * (TL / 2 - 0.6) + nx * (TWD / 2 - 0.15) * sg, lz = cz + uz * (TL / 2 - 0.6) + nz * (TWD / 2 - 0.15) * sg;
+        const base = box(G, 0.5, 0.5, 0.5, M.stone, lx, top + 0.25, lz), post = box(G, 0.22, 0.9, 0.22, M.stone, lx, top + 0.95, lz), cap = box(G, 0.55, 0.14, 0.55, M.stone, lx, top + 1.5, lz), box_ = box(G, 0.34, 0.34, 0.34, M.stone, lx, top + 1.74, lz);
+        wallBox(lx, lz, 0.5, 0.5, 0, top - 0.2, top + 1.9); [base, post, cap, box_].forEach(m => { m.rotation.y = ry; }); } }
     for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, x = a[0] + dx * t, z = a[1] + dz * t, y = ya + (yb - ya) * t;
       const d = box(G, L / n + 0.05, 0.8, 4, M.plinth, x, y - 0.4, z); d.rotation.y = ry;
       for (const s of [-1, 1]) { const wx = x + nx * 2 * s, wz = z + nz * 2 * s, w = box(G, L / n + 0.05, 1.1, 0.45, M.stone, wx, y + 0.55, wz); w.rotation.y = ry;
