@@ -252,7 +252,7 @@ function buildGrid() {
     const x = x0 + i * step, z = z0 + j * step, E = pilgrimEarth(x, z); if (!E.length) continue;
     // under a tread or landing the ground sits 0.45 m below it; beside one it keeps a shelf as wide as a grid cell (so the
     // ground between nodes stays under the treads) and then a cut bank; lower down, fill banks up to it
-    const [fill, cut] = earthBand(E);
+    const [fill, cut] = earthBand(E, x, z);
     H[j * nx + i] = Math.min(Math.max(H[j * nx + i], fill), cut);
 }
 }
@@ -267,12 +267,15 @@ export function heightAt(x, z) {
   // bank can hug the treads (shelf 0.6 m) without the interpolated ground rising through them
   if (x < _PB[0] || x > _PB[1] || z < _PB[2] || z > _PB[3]) return g;
   const E = pilgrimEarth(x, z); if (!E.length) return g;
-  const [fill, cut] = earthBand(E); return Math.min(Math.max(g, fill), cut);
+  const [fill, cut] = earthBand(E, x, z); return Math.min(Math.max(g, fill), cut);
 }
 // round 22: the earthwork's band at a point: the ground may not stand below fill (a 1:0.3 bank up to the way) nor above
 // cut (a bank of 1:4 beyond a 0.6 m shelf; round 21 left a 2.4 m shelf, which gave piers of 3 to 7 m under the flights)
-function earthBand(E) { let fill = -1e9, cut = 1e9;
+// Round 24: inside the great court (its pad and feather) the upper flights' fill banks may not raise the ground above the
+// court, nor cut it below, which had left a 0.5 m bank right beside the stair's foot (walkability rule 1, found by walkcheck.js)
+function earthBand(E, x, z) { let fill = -1e9, cut = 1e9;
   for (const [d, y] of E) { fill = Math.max(fill, y - 0.45 - Math.max(0, d - 0.6) * 0.3); cut = Math.min(cut, y - 0.45 + Math.max(0, d - 0.6) * 4); }
+  if (Math.hypot(x - P.great[0], z - P.great[1]) < 38) { fill = Math.min(fill, 25); cut = Math.max(cut, 25); }
   return [fill, cut]; }
 
 // Round 20: Wendell answered cc-heaven-r19 C, "Make the stair gentle and zigzag". Round 19's one straight flight had
