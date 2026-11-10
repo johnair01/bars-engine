@@ -45,7 +45,7 @@ export function foldRows(rows: Held): Record<string, Doc[]> {
 
 /**
  * The answers he saved, laid over the cards by id. An answer document carries only what he set (a choice, a status, a
- * steer, a savedAt), so the card keeps its text and options; an answer for a card the store has no row for is added.
+ * steer, a savedAt), so the card keeps its text and options; an answer for a card the store has no row for is left out, since it holds no text and the page cannot draw it.
  */
 export function overlay(cards: Doc[], answers: Held): Doc[] {
   const seen = new Set<string>()
@@ -55,7 +55,6 @@ export function overlay(cards: Doc[], answers: Held): Doc[] {
     if (id) seen.add(id)
     return answer ? { ...card, ...answer } : card
   })
-  for (const [id, answer] of Object.entries(answers)) if (!seen.has(id)) out.push({ id, ...answer })
   return out
 }
 
@@ -67,6 +66,26 @@ export function foldResolved(docs: Held): Resolved {
     const id = typeof doc.id === 'string' ? doc.id : ''
     if (!kind || !id) continue
     out[kind] = { ...(out[kind] ?? {}), [id]: without(doc, 'kind', 'id', 'savedAt') }
+  }
+  return out
+}
+
+/**
+ * The settled record, from the store's `records` documents: each is one file of the council's record, and the ones of
+ * kind `resolved` carry a decided row as JSON text under `body`, named `<kind>/<id>`. They fold into the same
+ * `{ kind: { id: entry } }` shape, so a row that is settled stays out of Open.
+ */
+export function foldRecords(held: Held): Resolved {
+  const out: Resolved = {}
+  for (const doc of Object.values(held)) {
+    if (doc.kind !== 'resolved' || typeof doc.name !== 'string' || typeof doc.body !== 'string') continue
+    const at = doc.name.indexOf('/')
+    if (at < 1) continue
+    let entry: unknown
+    try { entry = JSON.parse(doc.body) } catch { continue }
+    if (!entry || typeof entry !== 'object') continue
+    const kind = doc.name.slice(0, at), id = doc.name.slice(at + 1)
+    out[kind] = { ...(out[kind] ?? {}), [id]: entry as Record<string, unknown> }
   }
   return out
 }
@@ -98,8 +117,10 @@ export function merge(docs: Docs): Doc {
   const out: Doc = {}
   for (const [kind, cards] of Object.entries(foldRows(docs.rows ?? {})))
     out[kind] = overlay(cards, docs[kind] ?? {})
-  const held = docs.resolved
-  if (held && Object.keys(held).length) out.resolved = foldResolved(held)
+  const resolved = foldRecords(docs.records ?? {})
+  for (const [kind, entries] of Object.entries(foldResolved(docs.resolved ?? {}))) resolved[kind] = { ...(resolved[kind] ?? {}), ...entries }
+  // Always present, so the page can look up any kind before anything is settled.
+  out.resolved = { positions: {}, questions: {}, terms: {}, causes: {}, ...resolved }
   const morning = docs.morning
   if (morning && Object.keys(morning).length) Object.assign(out, foldMorning(morning))
   const intake = docs.intake?.latest
