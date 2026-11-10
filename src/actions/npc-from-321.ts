@@ -1,7 +1,11 @@
 'use server'
 
 import { db } from '@/lib/db'
+import type { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { mintVibulon } from '@/actions/economy'
+import { promoteRaisedPartOnMet } from '@/actions/daemons'
+import { PART_STEPS, bothStepsDone, coinTitle, readPart, withPart, type PartStep } from '@/lib/npc-from-321/part-quest'
 import { getCurrentPlayer } from '@/lib/auth'
 import { normalizeCastingSheet, type CastingSheet } from '@/lib/npc-from-321/casting-sheet'
 
@@ -79,4 +83,101 @@ export async function raisePartFrom321(
   })
   revalidatePath('/admin/npcs')
   return { daemonId: daemon.id }
+}
+
+// ── T006: the part's three-step quest and its check-in ──────────────────────────────────────────────────────────
+
+async function ownedRaisedPart(daemonId: string) {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authorized' as const }
+  const daemon = await db.daemon.findUnique({
+    where: { id: daemonId },
+    select: { id: true, playerId: true, name: true, source: true, shadow321SessionId: true, innerWorkDigest: true },
+  })
+  if (!daemon || daemon.source !== '321_raised') return { error: 'Part not found' as const }
+  if (daemon.playerId !== player.id) return { error: 'Not authorized' as const }
+  return { player, daemon }
+}
+
+/** Take the part's quest: a root quest with three children (life, land, checkin). Taking it twice returns the same quest. */
+export async function takePartQuest(daemonId: string): Promise<{ questId?: string; error?: string }> {
+  const got = await ownedRaisedPart(daemonId)
+  if ('error' in got) return { error: got.error }
+  const { player, daemon } = got
+  const part = readPart(daemon.innerWorkDigest)
+  if (part.questId) return { questId: part.questId }
+
+  const root = await db.customBar.create({
+    data: { creatorId: player.id, title: `Help ${daemon.name}`, description: `A part of you asked for help. Three steps: one in your life, one in the land, one check-in.`, type: 'quest', visibility: 'private' },
+  })
+  for (const [i, step] of ['life', 'land', 'checkin'].entries()) {
+    await db.customBar.create({
+      data: { creatorId: player.id, title: `${daemon.name}: ${step}`, description: `Step ${i + 1} of 3 (${step}).`, type: 'quest', visibility: 'private', parentId: root.id, rootId: root.id },
+    })
+  }
+  if (daemon.shadow321SessionId) {
+    await db.shadow321Session.update({ where: { id: daemon.shadow321SessionId }, data: { linkedQuestId: root.id } })
+  }
+  await db.daemon.update({
+    where: { id: daemon.id },
+    data: { innerWorkDigest: withPart(daemon.innerWorkDigest, { ...part, questId: root.id }) as Prisma.InputJsonValue },
+  })
+  revalidatePath('/daemons')
+  return { questId: root.id }
+}
+
+/** Mark the life step or the land step done. The check-in is not a step you mark; it opens when both are done. */
+export async function markStep(questId: string, step: PartStep): Promise<{ ok?: true; error?: string }> {
+  if (!(PART_STEPS as readonly string[]).includes(step)) return { error: 'Unknown step' }
+  const session = await db.shadow321Session.findFirst({
+    where: { linkedQuestId: questId },
+    select: { daemons: { where: { source: '321_raised' }, select: { id: true }, take: 1 } },
+  })
+  const daemonId = session?.daemons[0]?.id
+  if (!daemonId) return { error: 'Quest not found' }
+  const got = await ownedRaisedPart(daemonId)
+  if ('error' in got) return { error: got.error }
+  const part = readPart(got.daemon.innerWorkDigest)
+  if (part.questId !== questId) return { error: 'Quest not found' }
+  await db.daemon.update({
+    where: { id: daemonId },
+    data: { innerWorkDigest: withPart(got.daemon.innerWorkDigest, { ...part, steps: { ...part.steps, [step]: true } }) as Prisma.InputJsonValue },
+  })
+  return { ok: true }
+}
+
+/**
+ * The check-in. "not_yet" changes nothing. "met" needs both steps, mints one coin with the player as creator, and
+ * promotes the part to a person; a second "met" on the same need mints nothing.
+ */
+export async function checkInPart(
+  daemonId: string,
+  answer: 'met' | 'not_yet',
+  whatWasDone?: string,
+): Promise<{ vibulonId?: string; playerId?: string; error?: string }> {
+  const got = await ownedRaisedPart(daemonId)
+  if ('error' in got) return { error: got.error }
+  const { player, daemon } = got
+  const part = readPart(daemon.innerWorkDigest)
+  if (!part.questId || !bothStepsDone(part)) return { error: 'The life step and the land step come first' }
+  if (answer === 'not_yet') return {}
+  if (part.met) return { error: 'This need is already met' }
+
+  const done = (whatWasDone ?? '').trim()
+  if (!done) return { error: 'Say in one line what was done' }
+
+  const digest = (daemon.innerWorkDigest ?? {}) as { finalShadowName?: string }
+  const [vibulonId] = await mintVibulon(
+    player.id,
+    1,
+    { source: 'npc-from-321', id: part.questId, title: coinTitle(digest.finalShadowName ?? daemon.name, done) },
+    { creatorId: player.id },
+  )
+  await db.daemon.update({
+    where: { id: daemon.id },
+    data: { innerWorkDigest: withPart(daemon.innerWorkDigest, { ...part, met: { vibulonId, whatWasDone: done, at: new Date().toISOString() } }) as Prisma.InputJsonValue },
+  })
+  const { npcId } = await promoteRaisedPartOnMet(daemon.id)
+  revalidatePath('/daemons')
+  return { vibulonId, playerId: npcId }
 }

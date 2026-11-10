@@ -45,9 +45,9 @@ export async function mintVibulon(
     playerId: string,
     amount: number,
     origin: { source: string, id: string, title: string },
-    options?: { skipRevalidate?: boolean }
-) {
-    if (amount <= 0) return
+    options?: { skipRevalidate?: boolean, creatorId?: string }
+): Promise<string[]> {
+    if (amount <= 0) return []
 
     const data = []
     for (let i = 0; i < amount; i++) {
@@ -55,14 +55,16 @@ export async function mintVibulon(
             ownerId: playerId,
             originSource: origin.source,
             originId: origin.id,
-            originTitle: origin.title
+            originTitle: origin.title,
+            ...(options?.creatorId ? { creatorId: options.creatorId } : {})
         })
     }
 
-    await db.vibulon.createMany({ data })
+    const created = await db.vibulon.createManyAndReturn({ data, select: { id: true } })
     if (!options?.skipRevalidate) {
         revalidatePath('/')
     }
+    return created.map((v) => v.id)
 }
 
 /**
