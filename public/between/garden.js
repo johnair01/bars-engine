@@ -4193,4 +4193,8 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
+// the seed bed by the stream (Six-faces-council bars-garden slice 1, his A on bg-first-minute-look-1): in the hollow, plant a
+// BAR from your seed bag with one line of what you want from it, water it with one mana. Previews: ?room=standin&seedbed=demo
+// brings a sample bag and bed (never saved); ?mana=demo holds one mana of each element on this page only
+import("./seedbed-room.js").then(m => { window.__between.seedbed = m.mount(window.__between, { preview: PREVIEW_HOST, demo: PREVIEW_HOST ? KQ.get("seedbed") : null, mana: PREVIEW_HOST ? KQ.get("mana") : null }); }).catch(e => noteError(e, "seedbed"));
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null }); }).catch(e => noteError(e, "coins"));
