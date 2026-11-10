@@ -3,7 +3,7 @@ import type { Tx } from '@/lib/economy/bar-mint'
 import { coinFace } from '@/lib/economy/coin-face'
 import { finishCoin, readCoinStyle } from '../coin'
 
-type Coin = { id: string; ownerId: string; creatorId: string; face: unknown }
+type Coin = { id: string; ownerId: string; creatorId: string; face: unknown; originSource?: string; originId?: string; originTitle?: string }
 
 function fake(coins: Coin[] = []) {
     const pouches = new Map<string, Record<string, unknown>>()
@@ -15,6 +15,7 @@ function fake(coins: Coin[] = []) {
                 coins.find((c) => c.id === where.id)!.face = data.face
             },
         },
+        vibulonMark: { createMany: async () => ({ count: 1 }) },
         betweenPrivate: {
             findUnique: async ({ where }: { where: { gardenId_playerId_key: { gardenId: string; playerId: string; key: string } } }) => {
                 const d = pouches.get(k(where.gardenId_playerId_key))

@@ -5,6 +5,7 @@
 import type { Prisma } from '@prisma/client'
 import { asCoinStyle, faceIsSet, isCoinColor, isCoinMat, type CoinFace, type CoinStyle } from '@/lib/economy/coin-face'
 import type { Tx } from '@/lib/economy/bar-mint'
+import { markCoins } from '@/lib/economy/coin-marks'
 
 const asObj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {})
 
@@ -43,7 +44,7 @@ export async function finishCoin(
     }
     if (typeof input.vibulonId !== 'string')
         return { ok: false, status: 400, code: 'invalid_argument', error: 'vibulonId is the coin to finish.' }
-    const coin = await tx.vibulon.findUnique({ where: { id: input.vibulonId }, select: { id: true, ownerId: true, creatorId: true, face: true } })
+    const coin = await tx.vibulon.findUnique({ where: { id: input.vibulonId }, select: { id: true, ownerId: true, creatorId: true, face: true, originSource: true, originId: true, originTitle: true, energy: true } })
     if (!coin) return { ok: false, status: 404, code: 'not_found', error: 'There is no such coin.' }
     if (coin.ownerId !== input.playerId && coin.creatorId !== input.playerId)
         return { ok: false, status: 403, code: 'permission_denied', error: 'Only the player who minted a coin finishes it.' }
@@ -59,6 +60,7 @@ export async function finishCoin(
         mat: style.mat,
     }
     await tx.vibulon.update({ where: { id: coin.id }, data: { face: face as unknown as Prisma.InputJsonValue } })
+    await markCoins(tx, [coin], 'finished', { playerId: input.playerId, place: 'coin-turn' })
     await keepCoinStyle(tx, input.gardenId, input.playerId, style)
     return { ok: true, style, face }
 }
