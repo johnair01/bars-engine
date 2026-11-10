@@ -247,13 +247,12 @@ function buildGrid() {
       if (d < 8) { const t = d <= 0 ? 1 : 1 - d / 8, k = t * t * (3 - 2 * t); H[j * nx + i] += (p[2] - H[j * nx + i]) * k; if (d <= 0) break; } }
   }
   // round 20: the pilgrim stair's earthwork. Under the zigzag the ground is cut or filled to just below the treads and
-  // landings, and beside them it banks off at about 1:0.8, so the stair sits in the hill instead of on stilts.
+  // landings, and beside them it banks off at about 1:0.3 (round 21: was 1:0.8, which left 7 m walls), so the stair sits in the hill instead of on stilts.
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const x = x0 + i * step, z = z0 + j * step, E = pilgrimEarth(x, z); if (!E.length) continue;
     // under a tread or landing the ground sits 0.45 m below it; beside one it keeps a shelf as wide as a grid cell (so the
     // ground between nodes stays under the treads) and then a cut bank; lower down, fill banks up to it
-    let fill = -1e9, cut = 1e9;
-    for (const [d, y] of E) { fill = Math.max(fill, y - 0.45 - Math.max(0, d - 0.6) * 0.8); cut = Math.min(cut, y - 0.45 + Math.max(0, d - 2.4) * 1.2); }
+    const [fill, cut] = earthBand(E, x, z);
     H[j * nx + i] = Math.min(Math.max(H[j * nx + i], fill), cut);
 }
 }
@@ -263,8 +262,21 @@ export function heightAt(x, z) {
   if (x < x0 || z < z0 || x > x0 + (nx - 1) * step || z > z0 + (nz - 1) * step) return farHeight(x, z); // round 14b: the far region
   const fx = Math.min(nx - 1.001, Math.max(0, (x - x0) / step)), fz = Math.min(nz - 1.001, Math.max(0, (z - z0) / step));
   const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = j * nx + i;
-  return (H[a] * (1 - u) + H[a + 1] * u) * (1 - v) + (H[a + nx] * (1 - u) + H[a + nx + 1] * u) * v;
+  const g = (H[a] * (1 - u) + H[a + 1] * u) * (1 - v) + (H[a + nx] * (1 - u) + H[a + nx + 1] * u) * v;
+  // round 22: near the stair the earthwork's band is applied at the exact point, not only at the 3 m nodes, so the
+  // bank can hug the treads (shelf 0.6 m) without the interpolated ground rising through them
+  if (x < _PB[0] || x > _PB[1] || z < _PB[2] || z > _PB[3]) return g;
+  const E = pilgrimEarth(x, z); if (!E.length) return g;
+  const [fill, cut] = earthBand(E, x, z); return Math.min(Math.max(g, fill), cut);
 }
+// round 22: the earthwork's band at a point: the ground may not stand below fill (a 1:0.3 bank up to the way) nor above
+// cut (a bank of 1:4 beyond a 0.6 m shelf; round 21 left a 2.4 m shelf, which gave piers of 3 to 7 m under the flights)
+// Round 24: inside the great court (its pad and feather) the upper flights' fill banks may not raise the ground above the
+// court, nor cut it below, which had left a 0.5 m bank right beside the stair's foot (walkability rule 1, found by walkcheck.js)
+function earthBand(E, x, z) { let fill = -1e9, cut = 1e9;
+  for (const [d, y] of E) { fill = Math.max(fill, y - 0.45 - Math.max(0, d - 0.6) * 0.3); cut = Math.min(cut, y - 0.45 + Math.max(0, d - 0.6) * 4); }
+  if (Math.hypot(x - P.great[0], z - P.great[1]) < 38) { fill = Math.min(fill, 25); cut = Math.max(cut, 25); }
+  return [fill, cut]; }
 
 // Round 20: Wendell answered cc-heaven-r19 C, "Make the stair gentle and zigzag". Round 19's one straight flight had
 // 0.235 m risers. The gentle stair has 0.17 m risers on 0.28 m treads, sized to the cultivation figure's 0.62 m stride by
@@ -296,12 +308,16 @@ export const PILGRIM = (() => {
   }
   return { T, R, HW, N, th, flights, landings, foot: corners[0], top: ends[nD + 1], corners, axis: [ux, uz], yTop };
 })();
-// the way's elements near (x, z), as [distance outside the tread or landing, its top]; empty when none is within 12 m
+// the way's elements near (x, z), as [distance outside the tread or landing, its top]; empty when none is within 24 m
 export function pilgrimEarth(x, z) {
   const { T, R, HW, flights, landings } = PILGRIM, out = [];
   for (const f of flights) { const s = (x - f.a[0]) * f.ux + (z - f.a[1]) * f.uz, v = (x - f.a[0]) * f.nx + (z - f.a[1]) * f.nz;
     const sc = Math.max(f.s0, Math.min(f.s1, s)), k = Math.max(0, Math.min(f.m - 2, Math.floor((sc - f.s0) / T))), d = Math.hypot(s - sc, Math.max(0, Math.abs(v) - HW));
-    if (d < 12) out.push([d, f.y + R * (k + 1)]); }
-  for (const l of landings) { const d = Math.max(0, Math.hypot(x - l.x, z - l.z) - l.r); if (d < 12) out.push([d, l.y]); }
+    if (d < 24) out.push([d, f.y + R * (k + 1)]); }
+  for (const l of landings) { const d = Math.max(0, Math.hypot(x - l.x, z - l.z) - l.r); if (d < 24) out.push([d, l.y]); }
   return out;
 }
+const _PB = (() => { const { flights, landings } = PILGRIM; let a = 1e9, b = -1e9, c = 1e9, d = -1e9;
+  for (const f of flights) for (const p of [f.a, [f.a[0] + f.ux * f.s1, f.a[1] + f.uz * f.s1]]) { a = Math.min(a, p[0]); b = Math.max(b, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
+  for (const l of landings) { a = Math.min(a, l.x - l.r); b = Math.max(b, l.x + l.r); c = Math.min(c, l.z - l.r); d = Math.max(d, l.z + l.r); }
+  return [a - 25, b + 25, c - 25, d + 25]; })();

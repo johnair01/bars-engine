@@ -1,7 +1,7 @@
 // Round 14b: the far region as ground you can walk on (layout.js farHeight). One coarse mesh round the sect's fine one,
 // the ridge road drawn into it, and the Watch: a pavilion with a lit lamp on the nearest far peak, where the road ends.
 import * as THREE from 'three';
-import { heightAt, GRID, FAR_ROAD, FAR_EXTENT, WATCH } from './layout.js';
+import { heightAt, GRID, FAR_ROAD, FAR_EXTENT, WATCH, pilgrimEarth } from './layout.js';
 import { materials, hall } from './kit.js';
 // the road's ribbon ends this far short of the Watch; a stone stair climbs the rest to the plinth top
 const STAIR_FOOT = 20, PLINTH_TOP = 9;
@@ -27,7 +27,9 @@ export function farSurface(x, z) {
   if (u + v <= 1) return a + (d - a) * u + (b - a) * v;
   const c = fv(ix + 1, iz + 1); return c + (b - c) * (1 - u) + (d - c) * (1 - v);
 }
-export const roadGround = (x, z) => Math.max(heightAt(x, z), farSurface(x, z));
+// round 24: near the pilgrim stair the far mesh is sunk under the earthwork, but on that steep ground its 12.7 m
+// triangles still rose 6 m above the court at the stair's foot and held the figure in the air (walkcheck.js found it)
+export const roadGround = (x, z) => pilgrimEarth(x, z).length ? heightAt(x, z) : Math.max(heightAt(x, z), farSurface(x, z));
 
 export function farLand(S, floors) {
   const E = FAR_EXTENT, N = 300, cx = 24, cz = -9;
