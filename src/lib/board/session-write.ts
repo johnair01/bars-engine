@@ -8,7 +8,12 @@ import { missingObjects } from './content-store'
  * whole documents (src/lib/board/records.ts, born recorded). His answers (positions, questions, ...) are his to
  * save, never a session's. */
 export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws', 'records', 'resolved',
-  'constraint', 'morning', 'intake', 'battles'])  // the council's dated constraint read, one document a day (six-faces-council constraint-route-brief.md)
+  'constraint', 'morning', 'intake', 'battles', 'questions', 'positions'])  // the council's dated constraint read, one document a day (six-faces-council constraint-route-brief.md)
+/** A session may write the wording of a question or position (the board's store-only read, Wendell 2026-11-10: "Yes only
+ * open questions and positions"), never his answer: these fields are his alone. */
+export const ANSWER_FIELDS = ['choice', 'choices', 'steer', 'status', 'savedAt', 'previous', 'unfolded', 'move', 'commitment']
+const TEXT_COLLECTIONS = new Set(['questions', 'positions'])
+
 /** Collections whose session writes the board-pull Action lands on main, so they are born unrecorded: a posted row
  * waits for board-pull to put it in board_data.json and acknowledge it, and the staleness check alarms if it does not. */
 export const UNRECORDED_COLLECTIONS = new Set(['rows'])
@@ -94,6 +99,11 @@ export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: Se
   for (const { collection, docId, mode = collection === 'rows' || collection === 'records' ? 'set' : 'update', data } of docs) {
     const key = `${collection}/${docId}`
     if (!SESSION_COLLECTIONS.has(collection)) { out.refused.push(`${key}: sessions write ${[...SESSION_COLLECTIONS].join(', ')}`); continue }
+    if (TEXT_COLLECTIONS.has(collection)) {
+      const his = ANSWER_FIELDS.filter((f) => f in (data as object))
+      if (mode !== 'update') { out.refused.push(`${key}: a session writes a question's or position's wording with mode update`); continue }
+      if (his.length) { out.refused.push(`${key}: ${his.join(', ')} are his answer, never a session's`); continue }
+    }
     const v = validateSave({ board: 'council', collection, docId, mode, data })
     if (!v.ok) { out.refused.push(`${key}: ${v.errors.join('; ')}`); continue }
     // The seal (six-faces-council canon/mechanics/lading-seal.yaml): a row docks only with every picture it names
