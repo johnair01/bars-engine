@@ -14,7 +14,7 @@ const BYTES = 'the walk reference, as a push left it'
 const BASE = 'https://bars-engine.vercel.app/board/refs/'
 
 function get(p: string, token?: string) {
-  const headers = token ? { authorization: `Bearer ${token}` } : {}
+  const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {}
   return GET(new NextRequest(BASE + p, { headers }), { params: Promise.resolve({ path: p.split('/') }) })
 }
 
