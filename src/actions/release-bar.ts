@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins } from '@/lib/economy/coin-marks'
 
 const RELEASE_COST = 1 // Cost to release back to the salad bowl
 
@@ -48,13 +49,15 @@ export async function releaseBarToSaladBowl(barId: string) {
         const tokenIds = wallet.map(t => t.id)
 
         // Transaction: Burn tokens, update bar
-        await db.$transaction([
+        await db.$transaction(async (tx) => {
+            // Mark first: the mark copies the coin row, which the delete removes
+            await markCoins(tx, wallet, 'spent', { playerId, place: 'quest-release', barId, note: 'releasing a quest' })
             // Burn tokens (expenditure)
-            db.vibulon.deleteMany({
+            await tx.vibulon.deleteMany({
                 where: { id: { in: tokenIds } }
-            }),
+            })
             // Log expense
-            db.vibulonEvent.create({
+            await tx.vibulonEvent.create({
                 data: {
                     playerId,
                     source: 'quest_release',
@@ -62,16 +65,16 @@ export async function releaseBarToSaladBowl(barId: string) {
                     notes: `Released quest: ${bar.title}`,
                     archetypeMove: 'CLEANSE' // Or another appropriate move
                 }
-            }),
+            })
             // Update Bar
-            db.customBar.update({
+            await tx.customBar.update({
                 where: { id: barId },
                 data: {
                     claimedById: null,
                     visibility: 'public',
                 }
             })
-        ])
+        })
 
         revalidatePath('/')
         return { success: true }

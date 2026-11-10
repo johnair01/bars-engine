@@ -7,6 +7,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
 import { getVibeulonLedgerMode } from '@/lib/mvp-flags'
 import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins, withCoinIds } from '@/lib/economy/coin-marks'
 
 /**
  * Ensures the player's integer balance is migrated to Vibulon tokens.
@@ -28,13 +29,15 @@ export async function ensureWallet(playerId: string) {
             })
         }
 
-        await db.$transaction([
-            db.vibulon.createMany({ data }),
-            db.starterPack.update({
+        const rows = withCoinIds(data)
+        await db.$transaction(async (tx) => {
+            await tx.vibulon.createMany({ data: rows })
+            await markCoins(tx, rows, 'minted', { playerId, place: 'wallet-migration' })
+            await tx.starterPack.update({
                 where: { playerId },
                 data: { initialVibeulons: 0 }
             })
-        ])
+        })
     }
 }
 
@@ -60,7 +63,12 @@ export async function mintVibulon(
         })
     }
 
-    const created = await db.vibulon.createManyAndReturn({ data, select: { id: true } })
+    const rows = withCoinIds(data)
+    await db.$transaction(async (tx) => {
+        await tx.vibulon.createMany({ data: rows })
+        await markCoins(tx, rows, 'minted', { playerId, place: origin.source })
+    })
+    const created = rows.map((r) => ({ id: r.id }))
     if (!options?.skipRevalidate) {
         revalidatePath('/')
     }
@@ -162,6 +170,7 @@ export async function transferVibulons(formData: FormData) {
             const senderLabel = sender.name || sender.contactValue || sender.id
 
             // 2. Transfer Tokens + Increment Generation
+            await markCoins(tx, wallet, 'given', { playerId: senderId, place: 'p2p-transfer', toId: recipient.id })
             for (const token of wallet) {
                 await tx.vibulon.update({
                     where: { id: token.id },

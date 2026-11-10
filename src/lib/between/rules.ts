@@ -134,7 +134,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
-      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!)) : yes
+      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!), cur) : yes
   }
 }
 
@@ -159,13 +159,20 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'from', 'in'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
-/** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
-export function pouchWrite(pouch: Doc): Verdict {
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words.
+ * `cur` is the pouch as it stands. An ember the server wrote (a lit one with no move yet, or a caught one) stands only
+ * while it is identical to `cur`'s; a hand cannot light, catch or re-source an ember (spec friendcraft-deck-3, FR-017).
+ * A worked ember keeps the `from` it was lit with.
+ */
+export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
   for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
@@ -173,10 +180,15 @@ export function pouchWrite(pouch: Doc): Verdict {
     return no(400, 'The hollow keeps one card of your own.')
   const embers = pouch.embers ?? {}
   if (!isObj(embers)) return no(400, 'The pouch holds embers only.')
-  for (const e of Object.values(embers)) {
+  const was = cur && isObj(cur.embers) ? (cur.embers as Doc) : {}
+  for (const [key, e] of Object.entries(embers)) {
     if (e === null) continue
     if (!isObj(e)) return no(400, 'An ember is a small thing.')
     for (const k of Object.keys(e)) if (!EMBER_KEYS.has(k)) return no(400, 'An ember keeps no words.')
+    const before = was[key]
+    if (before !== undefined && sameJson(before, e)) continue
+    if (e.state === 'caught' || 'in' in e) return no(400, 'Only a BAR catches an ember.')
+    if (isObj(before) ? !sameJson(before.from, e.from) : e.from !== undefined) return no(400, 'Where an ember came from does not change.')
     const m = typeof e.move === 'string' ? MOVES[e.move] : undefined
     if (!m) return no(400, 'Choose one of the fifteen moves.')
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
