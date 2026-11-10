@@ -154,6 +154,18 @@ Failures that already exist on main are not yours to fix in an unrelated change.
 Vercel runs Node 24; the cloud sandbox has Node 22. A difference between them is rare; if a build passes locally and
 fails on Vercel, that is the first thing to check.
 
+### The look check
+
+`scripts/local/look-check.mjs` renders the Between's hollow headless (chromium with software WebGL, three.js from the CDN) at
+a fixed camera and size, then compares two things with `scripts/local/look/baseline.json`: the look dataset
+(`public/between/look-data.js`: ramp, palette and light budget, naming the entry that moved) and the frame's luminance at the
+10th, 40th, 70th and 95th percentiles (the ramp is the only part held against the frame; the palette and light budget are
+held as data). `check.sh` runs it as the `look` step only when the branch touches `public/between/`, `public/calrunia/` or
+`scripts/local/look`, which keeps other lanes' push loops unchanged (`LOOK_CHECK=1` forces it, `LOOK_CHECK=0` skips it).
+It skips, saying why, when Playwright, chromium or the CDN is unavailable. When a round moves the look on purpose, refresh
+`look-data.js` from the council's `look.json`, run `node scripts/local/look-check.mjs --update`, and cite the new look hash
+(`LOOK_HASH`) in the pull request. Spec: six-faces-council `.specify/specs/between-look-data`.
+
 ## 7. Shipping: one production deploy a day
 
 Production behaviour is unchanged: **every push to `main` builds production.** So the number of merges to `main` is
