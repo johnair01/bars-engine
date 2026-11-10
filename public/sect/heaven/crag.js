@@ -112,7 +112,10 @@ export function cragWay(S, M) {
       for (const s of [-1, 1]) { const wx = x + nx * 2 * s, wz = z + nz * 2 * s, w = box(G, L / n + 0.05, 1.1, 0.45, M.stone, wx, y + 0.55, wz); w.rotation.y = ry;
         if (t * L > 5.5) wallBox(wx, wz, L / n + 0.05, 0.45, ry, y - 0.8, y + 1.1); }
       if (k % 4 === 2) { const g = Math.min(heightAt(x + nx * 1.5, z + nz * 1.5), heightAt(x - nx * 1.5, z - nz * 1.5)), h = y - 0.8 - g + 2;
-        if (h > 1.5) { const pr = box(G, 2.4, h, 3.6, M.stone, x, g - 2 + h / 2, z); pr.rotation.y = ry; } } } }
+        if (h > 1.5) { if (h <= 4) { const pr = box(G, 2.4, h, 3.6, M.stone, x, g - 2 + h / 2, z); pr.rotation.y = ry; }
+          else { // round 23: over a real hollow (the ground is 10 m under the deck here) the pier is a slim trestle, two 0.8 m posts with a cross-beam, not one 12 m slab
+            for (const sg of [-1, 1]) { const px = x + nx * 1.2 * sg, pz = z + nz * 1.2 * sg, gp = heightAt(px, pz), hp = y - 0.8 - gp + 1, post = box(G, 0.8, hp, 0.8, M.stone, px, gp - 1 + hp / 2, pz); post.rotation.y = ry; }
+            const bm = box(G, 1.2, 0.6, 3.6, M.stone, x, y - 1.1, z); bm.rotation.y = ry; } } } } }
   // rock outcrops on the ridge either side of the way, flat-faced like the crag
   { const geo = new THREE.DodecahedronGeometry(1, 0), mat = new THREE.MeshStandardMaterial({ color: '#b3a68f', roughness: 1, flatShading: true });
     const R = new THREE.InstancedMesh(geo, mat, 70), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), p = new THREE.Vector3();
