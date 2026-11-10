@@ -12,9 +12,10 @@
    more slowly. At the clearing the charge's keepsake is offered (kept or let go) and the compost record is kept.
 
    Slice 2 (his steer on bm-chamber-look-3, 2026-11-02 20:12Z, "Mix of a and b"): the record is kept in the spirit store
-   (./kept.js, `oag.spirits.v1`), not the tab, and the keeping chamber under the nook's shelf (land/chamber.js) stands every
+   (./kept.js, `oag.spirits.v1`), not the tab, and the keeping chamber past the nook's doorway (land/chamber.js) stands every
    piece on its own stone. A storm still fills the land; a season, the densest weather, fills the keeping chamber itself,
-   over what is kept there (densityOf().where), and its signs show at the chamber's arch rather than the doorway.
+   over what is kept there (densityOf().where). Its signs show at the doorway like a storm's, and the doorway leads into the
+   chamber (the arch under the shelf is gone: his C on bm-satchel-look-2, 2026-11-04).
 
    Slice 2b (his B on bm-build-look-2, 2026-11-03 10:50Z: "break down what those actions actually are versus metaphors ...
    A bit busy and it's not as clear that the actions are a result of doing the work"): each stand is the 3-2-1's real steps,
@@ -31,6 +32,7 @@
    at /ontology-game/cave/spirit-forms.js by scripts/build-ontology-game.mjs). */
 import * as THREE from "three";
 import { keep as keepRecord } from "./kept.js";
+import { toPouch } from "./pouch-keepsake.js";
 
 export const DIALS = { s: 0.72, w: 0.74, c: 0.75 };           // his, from the round 1 pick page (2026-11-01 21:29Z)
 const DENSE = ["a storm", "a season"];                         // episode-sheet.js STRENGTH: the two dense steps of three
@@ -116,7 +118,7 @@ export function mountSigns(B) {
   let G = null, key = "", fade = 0, snow = null, setF = null;
   const shelfBook = () => { const a = B.anchors && B.anchors(); return a && a.shelf ? V(a.shelf[0], 1.32, a.shelf[2]) : null; };
   function build(d) {
-    const a = B.anchors(), arch = d.where === "chamber" && B.chamberArch && B.chamberArch.at(), P = arch ? V(arch[0], 0, arch[1]) : V(a.portal[0], 0, a.portal[2]), Hh = a.hearth ? V(a.hearth[0], 0, a.hearth[2]) : null, book = shelfBook();
+    const a = B.anchors(), P = V(a.portal[0], 0, a.portal[2]), Hh = a.hearth ? V(a.hearth[0], 0, a.hearth[2]) : null, book = shelfBook();
     G = new THREE.Group(); G.name = "block-signs"; B.scene.add(G);
     const { rnd, glow, dots } = kit(G, 23), toRoom = V(-P.x, 0, -P.z).normalize();
     // the doorway glows cold, with the room behind it
@@ -327,7 +329,7 @@ export async function mountRoom(o) {
   cur.set(1); light(STATES[idx]);
   for (let i = 0; i < idx; i++) STANDS[i].done = "taken";
   const record = { id: "k" + Date.now().toString(36), element: d.element, feeling: d.feeling, strength: d.strength, stands: [], keepsake: null, where: o.where || "the land", at: null };
-  let keep = null, keptState = null;    // the keepsake: shown at the clearing, kept or let go
+  let keep = null, keptState = null, pouchState = null;   // pouchState: "pouch", "waiting" or null (pouch-keepsake.js toPouch)    // the keepsake: shown at the clearing, kept or let go
   // melt(f): the stand's lines so far carry the room f of the way (0 to 1) toward its next state; at 1 the state is the room's
   function melt(f) {
     if (pend && pWant >= 1) arrive();      // the last stand's melt is still running: it lands now, and this stand starts its own
@@ -368,7 +370,7 @@ export async function mountRoom(o) {
     o.say && o.say(`Where the cold was thickest, it left ${d.keepsake}.`, 6);
   }
   // the record is kept once the keepsake is carried or let go (kept.js); a preview (o.dry) keeps nothing
-  function write() { record.at = new Date().toISOString(); if (!record.keepsake || o.dry) return; keepRecord({ ...record, keepsake: d.keepsake, let: record.keepsake === "let go" }); }
+  function write() { record.at = new Date().toISOString(); if (!record.keepsake || o.dry) return; keepRecord({ ...record, keepsake: d.keepsake, let: record.keepsake === "let go", pouch: record.keepsake !== "let go" }); }
 
   /* the stands' cards: the 3-2-1's real steps, one line at a time, in the player's own words */
   const next = () => STANDS.findIndex(x => !x.done);
@@ -382,7 +384,7 @@ export async function mountRoom(o) {
     const btn = (act, label, alt) => `<button type="button" data-melt="${act}"${alt ? ' class="alt"' : ""}>${label}</button>`;
     const box = (title, text, ...b) => `<div><b>${title}</b><div class="t">${text}</div></div>${b.length ? `<div class="row">${b.join("")}</div>` : ""}`;
     if (n === "melt:keep") { const g = gift();
-      return { key: "melt:keep", html: box(d.keepsake.replace(/^./, ch => ch.toUpperCase()), `What the cold left when it cleared${g ? `, and the gift it gave: “${esc(g)}”` : ""}. It is yours to carry, or to let go.`, btn("keep", "Carry it"), btn("letgo", "Let it go", 1)) }; }
+      return { key: "melt:keep", html: box(d.keepsake.replace(/^./, ch => ch.toUpperCase()), `What the cold left when it cleared${g ? `, and the gift it gave: “${esc(g)}”` : ""}. Carry it home in your satchel's pouch, or let it go.`, btn("keep", "Carry it"), btn("letgo", "Let it go", 1)) }; }
     const i = +n.slice(5), st = STANDS[i], nx = next();
     if (st.done) return { key: n + ":done", html: box(st.name, `You wrote ${st.lines.length === 1 ? "one line" : st.lines.length + " lines"} here. The ice went where your words went.`) };
     if (i !== nx) return { key: n + ":wait", html: box(st.name, `This stand waits. Start at ${esc(STANDS[nx].name)}, the one that glows.`) };
@@ -397,8 +399,10 @@ export async function mountRoom(o) {
   function act(a, text) {
     // one keepsake a visit: once it is carried or let go, the card is gone and a second press does nothing (his B on bm-build-look-3)
     if (a === "keep" || a === "letgo") { if (!keep || keptState) return; keptState = a; record.keepsake = a === "keep" ? d.keepsake : "let go"; write();
-      o.say && o.say(a === "keep" ? (o.keepSay || `You carry ${d.keepsake} back with you.`) : "It goes up with the rest of the light.", 5); o.sound && o.sound(a);
-      o.onKeep && o.onKeep({ ...record, keepsake: d.keepsake, let: a === "letgo" }); return; }
+      o.say && o.say(a === "keep" ? (o.keepSay || `You put ${d.keepsake} in your satchel's pouch.`) : "It goes up with the rest of the light.", 5); o.sound && o.sound(a);
+      // the satchel slice (bm6-keepsake-satchel-next): a carried keepsake goes into the pouch on the server store (pouch-keepsake.js)
+      if (a === "keep" && !o.dry) toPouch(record.id, d.element).then(r => { pouchState = r; if (r === "waiting" && o.say) o.say("The store did not answer, so it waits on this device and goes into your pouch when your nook next opens.", 7); });
+      o.onKeep && o.onKeep({ ...record, keepsake: d.keepsake, let: a === "letgo", pouch: a === "keep" }); return; }
     const [verb, si] = a.split(":"), i = +si, st = STANDS[i]; if (!st || st.done || i !== next()) return;
     if (verb === "say") { const t = String(text || "").trim().slice(0, 240); if (!t) return;
       const step = st.steps[Math.min(st.lines.length, st.steps.length - 1)]; st.lines.push({ voice: step.voice, text: t });
@@ -440,6 +444,6 @@ export async function mountRoom(o) {
     rain: () => [0, 0.6, 0.2, 0][idx],                 // the land's own rain: snow takes its place at the ice stand
     fogAdd: () => 0.015 * s * kVis + 0.01 * s * kVis,  // the mist a dense charge adds to the land's own fog
     lightK: () => 1 - (0.45 + 0.1 * (1 - s)) * kVis,    // for a light the land sets itself each frame
-    view: () => ({ state: STATE_NAME[idx], k: STATES[idx], melt: +pf.toFixed(2), stands: STANDS.map(st => ({ id: st.id, done: st.done, lines: st.lines.length, of: st.steps.length, at: [+st.at.x.toFixed(2), +st.at.z.toFixed(2)] })), keepsake: keep ? (keptState || "offered") : null, record: { ...record } }),
+    view: () => ({ state: STATE_NAME[idx], k: STATES[idx], melt: +pf.toFixed(2), stands: STANDS.map(st => ({ id: st.id, done: st.done, lines: st.lines.length, of: st.steps.length, at: [+st.at.x.toFixed(2), +st.at.z.toFixed(2)] })), keepsake: keep ? (keptState || "offered") : null, pouch: pouchState, record: { ...record } }),
   };
 }
