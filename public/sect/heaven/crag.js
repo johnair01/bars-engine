@@ -80,7 +80,8 @@ export function cragRock(S) {
   const [sx, sz] = P.summit, NT = N_TH * 4, levels = [];
   for (let y = 90.4; y > 18; y -= 1.25) levels.push(y);
   const NY = levels.length, pos = [], col = [], c = new THREE.Color();
-  const tones = ['#ddd1bb', '#d1c5ae', '#c3b8a3', '#b5ab98'] // round 17: warm stone, as the painting's sunlit crag.map(h => new THREE.Color(h));
+  // round 17: warm stone, as the painting's sunlit crag
+  const tones = ['#ddd1bb', '#d1c5ae', '#c3b8a3', '#b5ab98'].map(h => new THREE.Color(h));
   const V = (j, i) => { // vertex (bearing i, level j) -> [x, y, z]
     const th = i / NT * Math.PI * 2, y = levels[j], r = j === 0 ? rimAt(th) - 3 : cliffR(th, y);
     return [sx + Math.cos(th) * r, y, sz + Math.sin(th) * r];
@@ -99,7 +100,13 @@ export function cragRock(S) {
       if (pillar(i / NT * Math.PI * 2) !== pillar((i + 1) / NT * Math.PI * 2)) c.multiplyScalar(0.78); // the joint between pillars
       if (j === 0) c.set('#a9a79f');
       const streak = hash(i * 1.7) > 0.86 ? 0.82 : 1; c.multiplyScalar(streak * (1 - Math.max(0, levels[j] - 30 < 8 ? (8 - (levels[j] - 30)) * 0.02 : 0)));
-      pos.push(...a, ...d, ...b, ...b, ...d, ...e);
+      // wind each triangle so its front faces out from the summit; the grid's own order faced in on much of the crag,
+      // so the face was culled and the black strips were the joints seen from inside (round 17)
+      for (const [p, q, r] of [[a, d, b], [b, d, e]]) {
+        const ux = q[0] - p[0], uy = q[1] - p[1], uz = q[2] - p[2], vx = r[0] - p[0], vy = r[1] - p[1], vz = r[2] - p[2];
+        const nx = uy * vz - uz * vy, nz = ux * vy - uy * vx, ox = p[0] + q[0] + r[0] - 3 * sx, oz = p[2] + q[2] + r[2] - 3 * sz;
+        if (nx * ox + nz * oz < 0) pos.push(...p, ...r, ...q); else pos.push(...p, ...q, ...r);
+      }
       for (let q = 0; q < 6; q++) col.push(c.r, c.g, c.b);
     }
   }
