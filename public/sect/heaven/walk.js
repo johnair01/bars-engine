@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { heightAt } from './layout.js';
 import { colliders, interiors } from './world.js';
 import { roadGround } from './far.js';
+import { wayGround, wayColliders } from './crag.js';
 
 export const SPEED = 4, RADIUS = 0.35;
 
@@ -26,12 +27,12 @@ export function inside(p) {
 
 export function groundAt(x, z) {
   const r = inside({ x, z });
-  return r ? r.y + 0.06 : roadGround(x, z); // round 16: stand on the far mesh where it is drawn above the heightfield
+  return r ? r.y + 0.06 : Math.max(roadGround(x, z), wayGround(x, z)); // round 16: the far mesh; round 18: the crag's stair, landing and bridge
 }
 
 // Push the avatar's circle out of every box whose height spans its body.
 export function collide(p) {
-  for (const b of colliders) {
+  for (const list of [colliders, wayColliders]) for (const b of list) {
     if (Math.abs(p.x - b.x) > b.hw + b.hd + 1 || Math.abs(p.z - b.z) > b.hw + b.hd + 1) continue;
     if (b.y1 < p.y + 0.3 || b.y0 > p.y + 1.7) continue;
     const dx = p.x - b.x, dz = p.z - b.z;
