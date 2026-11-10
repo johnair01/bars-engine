@@ -22,7 +22,8 @@
 </style>
 <script type="importmap">{"imports":{
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
 }}</script>
 </head><body>
 <div class="hud" id="hud"><b id="where">The road</b><span id="what">The summit is in view from the first step.</span></div>
@@ -41,7 +42,8 @@ import { farLand } from './heaven/far.js';
 import { people } from './heaven/people.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
 import { atmosphere, placeSun } from './heaven/atmo.js';
-import { CREST_STAIR } from './heaven/crag.js';
+import { CREST_STAIR, stairTread, TREAD } from './heaven/crag.js';
+import { cultWalker, GAIT } from './cult/cultwalk.js';
 
 const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight);
@@ -92,9 +94,12 @@ const models = Promise.all(['Stone_Fire_Pit.glb', 'Ceramic_Pot.glb', 'Antique_Ce
 }).catch(e => console.warn('models', e));
 
 const A = avatar(S);
-// Round 11: robed students in the great court and a robed avatar (people.js); the frame loop dresses them.
-let dressAll = null;
-const ready = people(S, gl, { court: GREAT.G, avatar: A }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
+// Round 11: robed students in the great court (people.js); the frame loop dresses them. Round 19: the avatar is the
+// cultivation figure walking with planted feet (cult/cultwalk.js), one step per tread on the pilgrim stair.
+let dressAll = null, walker = null;
+const ready = people(S, gl, { court: GREAT.G }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
+const walking = cultWalker(S, A, { groundAt, tread: stairTread, stepOn: (x, z) => stairTread(x, z) ? TREAD : GAIT.step })
+  .then(w => { walker = w; return w; }).catch(e => { console.warn('cultivation figure', e); A.children.forEach(c => { c.visible = true; }); });
 const cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 3000);
 const orbit = new OrbitControls(cam, R.domElement);
 orbit.enableDamping = true; orbit.maxPolarAngle = Math.PI * 0.49; orbit.minDistance = 2; orbit.maxDistance = 120; orbit.enablePan = false;
@@ -185,6 +190,7 @@ function frame(now) {
   }
   orbit.update();
   if (dressAll) dressAll(dt);
+  if (walker) walker.update(dt);
   placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
   requestAnimationFrame(frame);
@@ -228,7 +234,7 @@ function shot(name) {
   cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
+window.heaven = { walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 </script>
 </body></html>

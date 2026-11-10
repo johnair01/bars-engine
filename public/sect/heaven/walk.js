@@ -1,12 +1,14 @@
-// The avatar: a capsule at 4 m/s, WASD relative to the camera, tap-to-walk, slides along walls, stands on the ground
+// The avatar: a capsule (round 19: the cultivation figure walks over it, cult/cultwalk.js) at a walk, WASD relative to the camera, tap-to-walk, slides along walls, stands on the ground
 // or a room floor; roofs lift when it steps inside a room.
 import * as THREE from 'three';
 import { heightAt } from './layout.js';
 import { colliders, interiors } from './world.js';
 import { roadGround } from './far.js';
-import { wayGround, wayColliders } from './crag.js';
+import { wayGround, wayColliders, stairTread } from './crag.js';
 
-export const SPEED = 4, RADIUS = 0.35;
+// Round 19: a walking pace for the cultivation figure's stride (was 4 m/s, a run), and on the pilgrim stair one step per
+// 0.25 m tread at about two steps a second
+export const SPEED = 1.3, STAIR_SPEED = 0.5, RADIUS = 0.35;
 
 export function avatar(S) {
   const g = new THREE.Group();
@@ -66,8 +68,8 @@ export function step(A, input, dt, camYaw) {
   const L = Math.hypot(mx, mz);
   if (L > 0) {
     mx /= L; mz /= L;
-    const sub = Math.ceil(SPEED * dt / 0.2);
-    for (let i = 0; i < sub; i++) { p.x += mx * SPEED * dt / sub; p.z += mz * SPEED * dt / sub; p.y = groundAt(p.x, p.z); collide(p); }
+    const v = stairTread(p.x, p.z) ? STAIR_SPEED : SPEED, sub = Math.ceil(v * dt / 0.2);
+    for (let i = 0; i < sub; i++) { p.x += mx * v * dt / sub; p.z += mz * v * dt / sub; p.y = groundAt(p.x, p.z); collide(p); }
     A.rotation.y = Math.atan2(-mx, -mz);
   }
   p.y = groundAt(p.x, p.z);
