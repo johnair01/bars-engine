@@ -96,4 +96,36 @@ describe('GET /board/data.js', () => {
     expect(res.status).toBe(200)
     expect(await res.text()).toContain('from the store')
   })
+
+  it("folds the store's draws, weather readings and gather into the shapes the page reads", async () => {
+    setBackend(memoryBackend({ [DATA_PATH]: JSON.stringify({ draws: { old: { deck: 'd', card: 'c', at: '2026-11-01T00:00:00Z' } } }) }).backend)
+    vi.mocked(latestDocs).mockResolvedValue({
+      draws: { 'bar-intake--bi-anyone-look-1': { deck: 'bar-intake', card: 'bi-anyone-look-1', at: '2026-11-02T20:23:29Z' } },
+      morning: {
+        gather: { date: '2026-11-02', gathered_at: '2026-11-03T10:36:23Z', savedAt: '2026-11-03T10:36:23Z' },
+        'weather--2026-11-02T07:00:00Z': { feeling: 'tender', pick: 'wv-tender', savedAt: '2026-11-02T07:00:00Z' },
+      },
+    })
+    const res = await GET(req())
+    expect(res.status).toBe(200)
+    const data = JSON.parse((await res.text()).replace(/^window.__BOARD_DATA__ = /, '').replace(/;\n$/, ''))
+    expect(Object.keys(data.draws).sort()).toEqual(['bar-intake--bi-anyone-look-1', 'old'])
+    expect(data.morning).toEqual({ date: '2026-11-02', gathered_at: '2026-11-03T10:36:23Z' })
+    expect(data.weather_log).toEqual({
+      'weather--2026-11-02T07:00:00Z': { feeling: 'tender', pick: 'wv-tender', savedAt: '2026-11-02T07:00:00Z' },
+    })
+  })
+
+  it("folds the intake's one run and the battles list, in the order the store kept", async () => {
+    setBackend(memoryBackend({}).backend)
+    vi.mocked(latestDocs).mockResolvedValue({
+      intake: { latest: { date: '2026-10-21', items: [{ id: 'menu-task:1' }], savedAt: '2026-10-22T02:01:09Z' } },
+      battles: { second: { id: 'second', name: 'Second', order: 1 }, first: { id: 'first', name: 'First', order: 0 } },
+    })
+    const res = await GET(req())
+    expect(res.status).toBe(200)
+    const data = JSON.parse((await res.text()).replace(/^window.__BOARD_DATA__ = /, '').replace(/;\n$/, ''))
+    expect(data.intake).toEqual({ date: '2026-10-21', items: [{ id: 'menu-task:1' }] })
+    expect(data.battles).toEqual([{ id: 'first', name: 'First' }, { id: 'second', name: 'Second' }])
+  })
 })
