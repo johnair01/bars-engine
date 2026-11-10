@@ -137,6 +137,21 @@ export async function missingObjects(shas: string[]): Promise<string[]> {
   return out
 }
 
+/** A reference object, kept out of the `sha/` namespace that the public stills route serves by hash. A reference is
+ * readable through /board/refs only, which asks for the board owner or a session (2026-11-09: the first reference
+ * pushed answered 200 at /board/stills/sha/<sha>, to a caller who could not open /board/refs at all). */
+export async function storeRefObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {
+  const b = backend()
+  if (!b) throw new Error('no content store configured')
+  await b.write('refs/' + sha, bytes, type)
+}
+
+export async function readRefObject(sha: string): Promise<{ body: ReadableStream<Uint8Array>; type?: string } | null> {
+  const b = backend()
+  if (!b || !/^[0-9a-f]{64}$/.test(sha)) return null
+  return b.read('refs/' + sha).catch(() => null)
+}
+
 export async function storeObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {
   const b = backend()
   if (!b) throw new Error('no content store configured')
