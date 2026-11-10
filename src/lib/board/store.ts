@@ -32,8 +32,9 @@ export function readableHeads<T extends { collection: string; recorded: boolean 
 
 /** The latest document per (collection, docId): what the claude.ai store used to hold. With leaveOutRecordedRows, the
  * `rows` documents main already records are left out (the page's read, GET /api/board/saves); board-pull and the
- * other routes read everything. */
-export async function latestDocs(board: string, opts: { leaveOutRecordedRows?: boolean } = {}): Promise<Docs> {
+ * other routes read everything. With `collections`, only those collections are read, so a caller that draws a few of them
+ * (the board's data.js) does not carry the rows and steps it never uses. */
+export async function latestDocs(board: string, opts: { leaveOutRecordedRows?: boolean; collections?: readonly string[] } = {}): Promise<Docs> {
   const all = await db.$queryRaw<{ id: string; bytes: number; collection: string; recorded: boolean }[]>`
     SELECT id, bytes, collection, recorded FROM (
       SELECT DISTINCT ON (collection, doc_id) id, collection, octet_length(data::text)::int AS bytes,
@@ -41,7 +42,8 @@ export async function latestDocs(board: string, opts: { leaveOutRecordedRows?: b
       FROM board_saves WHERE board = ${board}
       ORDER BY collection, doc_id, received_at DESC, id DESC
     ) h`
-  const heads = readableHeads<(typeof all)[number]>(all, !!opts.leaveOutRecordedRows)
+  const only = opts.collections ? new Set<string>(opts.collections) : null
+  const heads = readableHeads<(typeof all)[number]>(all, !!opts.leaveOutRecordedRows).filter((h) => !only || only.has(h.collection))
   const out: Docs = {}
   for (const ids of batchIds(heads)) {
     const rows = await db.boardSave.findMany({ where: { id: { in: ids } }, select: { collection: true, docId: true, data: true } })

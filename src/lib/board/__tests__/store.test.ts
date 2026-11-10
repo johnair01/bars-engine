@@ -40,4 +40,15 @@ describe('latestDocs', () => {
     expect(db.boardSave.findMany).toHaveBeenCalledTimes(4)
     expect(docs).toEqual({ picks: { 'd-s1': { id: 's1' }, 'd-s2': { id: 's2' }, 'd-s3': { id: 's3' } }, steps: { 'd-s4': { id: 's4' } } })
   })
+  it('reads only the collections asked for, so data.js skips the rows and steps it never draws', async () => {
+    db.boardSave.findMany.mockClear()
+    db.$queryRaw.mockResolvedValueOnce([
+      { id: 'r1', bytes: 10, collection: 'rows', recorded: false }, { id: 'q1', bytes: 10, collection: 'questions', recorded: false },
+      { id: 's1', bytes: 10, collection: 'steps', recorded: false }])
+    db.boardSave.findMany.mockImplementation(async ({ where }: { where: { id: { in: string[] } } }) =>
+      where.id.in.map(id => ({ collection: 'questions', docId: 'd-' + id, data: { id } })))
+    await latestDocs('council', { collections: ['questions', 'positions'] })
+    expect(db.boardSave.findMany).toHaveBeenCalledTimes(1)
+    expect(db.boardSave.findMany.mock.calls[0][0].where.id.in).toEqual(['q1'])
+  })
 })

@@ -124,7 +124,7 @@ export function foldBattles(held: Held): Record<string, unknown>[] {
 export async function boardData(board = 'council'): Promise<Record<string, unknown> | null> {
   const [copy, docs] = await Promise.all([
     readText(DATA_PATH).catch(() => null),
-    latestDocs(board).catch(() => ({}) as Docs),
+    latestDocs(board, { collections: FROM_STORE }).catch(() => ({}) as Docs),
   ])
   const record = safeJson(copy)
   if (!record && !Object.keys(docs).length) return null
