@@ -1660,6 +1660,9 @@ function frameBody() {
   }
   if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
   camera.lookAt(focus); lastFocus.copy(focus);
+  if (brushFig && brushSeat && brushWrite && brushWrite.isOpen) { // the writing: framed on the kneeling writer, beside the strip
+    brushFig.tick(dt); const [bp, bf] = brushFig.view(brushSeat, innerWidth < innerHeight); camera.position.copy(bp); camera.lookAt(bf);
+  }
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
   figureLightTick(t, dt, me3);
   renderer.render(scene, camera);
@@ -2035,14 +2038,28 @@ async function lightNow() {
 function lightSoon() { setTimeout(lightNow, 400); }
 /* The blank strips and the brush wait on the Nook's shelf once one ember is kept (FR-004): the BAR-making opens after the first worked charge. */
 const stripsOpen = () => keptHere() > 0 || roomLight.mine > 0;
-let brushWrite = null;
+let brushWrite = null, brushFig = null, brushFigLoading = null, brushSeat = null;
+/* FR-005 (his A on ee2-brush-cult-look-5, "This is how she writes"): while you write, the cultivation figure kneels on the
+   hearth's seat with the brush upright in her hand, in place of your dressed figure (which has no finger bones). She is
+   built the first time the strip opens, and follows the strip: the dip when an ember is chosen, the stroke as you draw. */
+function brushFigureOn() {
+  const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return;
+  brushSeat = s;
+  if (!brushFigLoading) brushFigLoading = import("./brush-figure.js").then(m => m.createBrushFigure(scene)).then(f => { brushFig = f; return f; })
+    .catch(e => { noteError(e, "brush figure"); brushFigLoading = null; return null; });
+  brushFigLoading.then(f => { if (!f || !brushWrite || !brushWrite.isOpen) return; f.place(brushSeat); f.show(true); if (meState.body) meState.body.visible = false; if (brushWrite.ember) f.ember(); });
+}
+function brushFigureOff() { if (brushFig) brushFig.show(false); if (meState.body) meState.body.visible = true; }
 function openBrush() {
-  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar, onClose: done => { if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
+  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar,
+    onDip: () => brushFig && brushFig.ember(), onStroke: e => brushFig && brushFig.stroke(e), onSet: () => brushFig && brushFig.finish(),
+    onClose: done => { brushFigureOff(); if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
   const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0))
     .map(([id, e]) => { const el = MOVES[e.move][1]; return { id, el, name: MOVES[e.move][0], light: cssHue(elHex(el)), demo: isDemoEmber(id) }; });
   if (!held.length) { toast(stripsOpen() ? "Every ember you hold is written or lit. Sit at the hearth to keep another." : "Sit at the hearth and keep an ember first."); return; }
   if (shelf.brush) shelf.brush.userData.wet(null);
   brushWrite.open(held);
+  brushFigureOn();
 }
 /* Saving the BAR: the route mints its vibeulon and marks the ember written. A preview's demo ember writes on this page only. */
 async function writeBar({ ember, mark, demo }) {
