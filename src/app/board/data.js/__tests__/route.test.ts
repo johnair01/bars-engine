@@ -76,6 +76,19 @@ describe('GET /board/data.js', () => {
     expect(data.updated).toBe('2026-11-05T00:00:00Z')
   })
 
+  it("folds the store's settled answers under their kind and id, beside the record's own", async () => {
+    setBackend(memoryBackend({ [DATA_PATH]: JSON.stringify({ resolved: { positions: { old: { decision: 'retire' } } } }) }).backend)
+    vi.mocked(latestDocs).mockResolvedValue({
+      resolved: { 'positions--build': { kind: 'positions', id: 'build', savedAt: '2026-10-02T12:00:00Z',
+        decision: 'stands', label: 'Stands', saved_at: '2026-10-02T12:00:00Z' } },
+    })
+    const res = await GET(req())
+    expect(res.status).toBe(200)
+    const data = JSON.parse((await res.text()).replace(/^window.__BOARD_DATA__ = /, '').replace(/;\n$/, ''))
+    expect(data.resolved.positions.build).toEqual({ decision: 'stands', label: 'Stands', saved_at: '2026-10-02T12:00:00Z' })
+    expect(data.resolved.positions.old).toEqual({ decision: 'retire' })
+  })
+
   it('serves the store alone when nothing was ever pushed', async () => {
     setBackend(memoryBackend({}).backend)
     vi.mocked(latestDocs).mockResolvedValue({ positions: { p: { id: 'p', pos: 'from the store' } } })
