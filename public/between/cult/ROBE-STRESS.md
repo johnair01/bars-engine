@@ -4,4 +4,8 @@
 
 The poses are synthetic. The current cultivator has a procedural walk but no run, jump, or climb clips. This gallery can identify likely bad configurations; it cannot certify temporal behavior, inertia, contact with a ledge, or performance. It does not alter the live game outfit. The GitHub Actions **Robe motion stress** workflow builds the captures in the cloud and uploads its images and report.
 
+## First cloud baseline, 2026-11-11
+
+[Run 43084038218](https://github.com/johnair01/bars-engine/actions/runs/43084038218) completed in the cloud. `tools/blender-cloud/tests/robe-stress-baseline.json` preserves its 22 pose measurements; the run artifact has the two image strips. The existing ray test reported trousers/boots outside the robe in the synthetic stress poses: worst sampled counts were 79 feminine / 91 masculine in sprint poses, 33 / 92 in jump poses, and 23 / 66 in high-step poses. These are counts of sampled vertices, **not** a severity score or proof of what a player would see. The images show the skirt hinging into a broad, stiff wedge in the long-stride side view. The “crouch” and “climb” poses are leg-reach stress configurations, not physically grounded crouch or ledge-contact animation, so their images cannot be treated as passed movement tests.
+
 Before approving a new robe, replace the synthetic poses with actual game-compatible motion clips and add time-series measurements for body/garment intersection, slit opening and closing, hem-to-foot and hem-to-ground clearance, sudden motion, and runtime cost. Compare the current robe and candidate under identical clips, cameras, and bodies. The Library's `output/council/robe-transfer-2026-11-11/MOTION-GATES.md` records the scenario and acceptance protocol.

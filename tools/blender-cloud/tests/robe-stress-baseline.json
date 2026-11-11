@@ -1,0 +1,366 @@
+{
+  "result": {
+    "status": "complete",
+    "frames": [
+      {
+        "body": "f",
+        "scenario": "stand",
+        "phase": "rest",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 0,
+        "bare": 0,
+        "where": {}
+      },
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "phase": "long stride",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 74,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 52,
+          "trousersL>sash-tail": 2,
+          "trousersR>robe": 17,
+          "bootsL>robe": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "phase": "passing step",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 79,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 21,
+          "trousersR>robe": 26,
+          "bootsL>robe": 3,
+          "bootsR>robe": 29
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "phase": "hard stop",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 4,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 4
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "crouch",
+        "synthetic": true,
+        "bodyPoke": 2,
+        "layerPoke": 21,
+        "bare": 0,
+        "where": {
+          "hips": 2,
+          "trousersL>robe": 7,
+          "trousersR>robe": 11,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "takeoff",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 0,
+        "bare": 0,
+        "where": {}
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "apex tuck",
+        "synthetic": true,
+        "bodyPoke": 2,
+        "layerPoke": 39,
+        "bare": 0,
+        "where": {
+          "hips": 2,
+          "trousersL>robe": 14,
+          "trousersL>sash-tail": 2,
+          "trousersR>robe": 19,
+          "robe>sash-tail": 1,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "landing compression",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 21,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 10,
+          "trousersR>robe": 8,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "phase": "high left step",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 30,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 22,
+          "trousersL>sash-tail": 3,
+          "robe>sash-tail": 5
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "phase": "pull over ledge",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 29,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 17,
+          "trousersL>sash-tail": 3,
+          "trousersR>robe": 2,
+          "robe>sash-tail": 5,
+          "robe>sash-pendant": 2
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "phase": "high right step",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 26,
+        "bare": 0,
+        "where": {
+          "hips": 1,
+          "trousersR>robe": 23,
+          "trousersR>sash-pendant": 1,
+          "robe>sash-pendant": 2
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "stand",
+        "phase": "rest",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 4,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>bootsL": 2,
+          "trousersR>bootsR": 2
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "phase": "long stride",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 96,
+        "bare": 3,
+        "where": {
+          "bare:shoulderL": 1,
+          "bare:shoulderR": 2,
+          "trousersL>robe": 63,
+          "trousersL>sash-tail": 1,
+          "trousersL>bootsL": 1,
+          "trousersR>robe": 15,
+          "trousersR>bootsR": 2,
+          "bootsL>robe": 13,
+          "robe>sash-belt": 1
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "phase": "passing step",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 87,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 28,
+          "trousersL>bootsL": 2,
+          "trousersR>robe": 18,
+          "trousersR>bootsR": 2,
+          "bootsR>robe": 36,
+          "robe>sash-pendant": 1
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "phase": "hard stop",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 15,
+        "bare": 3,
+        "where": {
+          "bare:shoulderL": 2,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 11,
+          "trousersL>bootsL": 2,
+          "trousersR>bootsR": 2
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "crouch",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 77,
+        "bare": 3,
+        "where": {
+          "bare:shoulderL": 2,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 22,
+          "trousersR>robe": 27,
+          "bootsL>robe": 12,
+          "bootsR>robe": 12,
+          "robe>sash-pendant": 4
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "takeoff",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 0,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "apex tuck",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 89,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 29,
+          "trousersL>sash-tail": 1,
+          "trousersL>bootsL": 2,
+          "trousersR>robe": 32,
+          "trousersR>bootsR": 2,
+          "bootsL>robe": 9,
+          "bootsR>robe": 9,
+          "robe>sash-belt": 2,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "landing compression",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 97,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 30,
+          "trousersR>robe": 31,
+          "bootsL>robe": 15,
+          "bootsR>robe": 16,
+          "robe>sash-pendant": 5
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "phase": "high left step",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 51,
+        "bare": 1,
+        "where": {
+          "bare:shoulderR": 1,
+          "trousersL>robe": 37,
+          "trousersL>sash-tail": 6,
+          "trousersL>bootsL": 2,
+          "robe>sash-belt": 1,
+          "robe>sash-tail": 5
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "phase": "pull over ledge",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 83,
+        "bare": 1,
+        "where": {
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 27,
+          "trousersL>sash-tail": 6,
+          "trousersL>bootsL": 2,
+          "trousersR>robe": 20,
+          "bootsR>robe": 19,
+          "robe>sash-belt": 2,
+          "robe>sash-tail": 3,
+          "robe>sash-pendant": 4
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "phase": "high right step",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 55,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersR>robe": 45,
+          "trousersR>sash-pendant": 2,
+          "trousersR>bootsR": 2,
+          "robe>sash-belt": 2,
+          "robe>sash": 1,
+          "robe>sash-pendant": 3
+        }
+      }
+    ]
+  },
+  "errors": []
+}
