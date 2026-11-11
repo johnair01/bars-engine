@@ -266,7 +266,6 @@ export function cragRock(S) {
 export function cragCrown(S, M) {
   cragRock(S); cragWay(S, M);
   const [sx, sz] = P.summit, G = new THREE.Group(); S.add(G);
-  const toGreat = Math.atan2(P.great[1] - sz, P.great[0] - sx);
   const at = (th, r) => [sx + Math.cos(th) * r, sz + Math.sin(th) * r];
 
   // the crown wall: a parapet with merlons a little inside the cliff's lip, the whole way round
@@ -287,15 +286,25 @@ export function cragCrown(S, M) {
   // Round 13c: about twice the size and brought out to the lip, the tower raised on a stepped stone podium, because from
   // the anchor view the round 13 halls read as specks on the rim where the painting's crown is mostly buildings.
   const place = (H, th, r, y = 90, k = 1) => { const [x, z] = at(th, r); H.position.set(x, y, z); H.rotation.y = Math.PI / 2 - th; H.scale.setScalar(k); G.add(H); return H; };
-  { const th = toGreat - 0.55, r = rimAt(th) - 15, [x, z] = at(th, r); // round 25: was -0.45; its podium filled the crown gate's forecourt
-    for (let i = 0; i < 3; i++) { const b = box(G, 30 - i * 5, 2.4, 24 - i * 4, M.stone, x, 90 + 1.2 + i * 2.4, z); b.rotation.y = Math.PI / 2 - th; }
-    place(hall(M, { w: 11, d: 8, ph: 4.4, tiers: 3, seed: 21 }), th, r, 97.2, 2.1); }
+  // Round 26: Wendell's note on cc-heaven-r25: "Buildings are overlapping in a strange way". Measured as rectangles in
+  // plan with their eaves, the tower's podium ran 12 m into the gate hall, and the gate hall, the tower and both lower
+  // halls all cut into the founder's hall (world.js), which stands 30 m by 20 m at the crown's centre. The crown is about
+  // 80 m across and cannot hold six buildings this size, so it is now one compound on the crown gate's axis, the way a
+  // temple is laid out: the gate hall, then the founder's hall turned onto the same axis and set back 7.5 m, then the
+  // Heaven altar. The tower stands on a stone base beside the founder's hall, facing the axis, at two thirds of its old
+  // size, and the one-tier hall stands beside the gate hall. The two-tier hall at the back is gone. Every pair keeps at
+  // least 2.5 m between eaves and every footprint stands inside the crown wall (council/callsheets/calrunian-sect.md).
+  const ax = (r, v) => [sx + Math.cos(CROWN.th) * r + CROWN.nx * v, sz + Math.sin(CROWN.th) * r + CROWN.nz * v];
+  const onAxis = (H, r, v, face, y = 90, k = 1) => { const [x, z] = ax(r, v); H.position.set(x, y, z); H.rotation.y = Math.PI / 2 - face; H.scale.setScalar(k); G.add(H); return H; };
+  const sideL = Math.atan2(-CROWN.nz, -CROWN.nx), sideR = Math.atan2(CROWN.nz, CROWN.nx); // a side building's front faces the axis
+  { const TS = 1.4, [x, z] = ax(1.5, -27); // the tower: three stepped stone tiers, the three-tier hall on top
+    for (let i = 0; i < 3; i++) { const b = box(G, 19.9 - i * 1.5, 2.4, 15.6 - i * 1.5, M.stone, x, 90 + 1.2 + i * 2.4, z); b.rotation.y = Math.PI / 2 - sideR; }
+    onAxis(hall(M, { w: 11, d: 8, ph: 4.4, tiers: 3, seed: 21 }), 1.5, -27, sideR, 97.2, TS); }
   // round 25: this hall stands on the crown gate's axis (CROWN), its plinth front behind the forecourt, its stair on the way
   { const H = place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22 }), CROWN.th, CROWN.rHall, 90, 2);
     const c = Math.cos(H.rotation.y), s = Math.sin(H.rotation.y); // the hall's body stops the figure; the way ends at its door
     wayColliders.push({ x: H.position.x, z: H.position.z, c, s, hw: 8.6, hd: 6.4, y0: 90, y1: 98 }); }
-  place(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), toGreat + 0.95, rimAt(toGreat + 0.95) - 10, 90, 1.9); // round 25: was +0.62, inside the gate hall
-  place(hall(M, { w: 9, d: 7, ph: 4, tiers: 2, seed: 24 }), toGreat + Math.PI, 18, 90, 1.8);
+  onAxis(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), 20, 18.7, sideL, 90, 1.7); // round 26: was on the lip, eaves on the gate hall's
 
   // the winding wall: a walled road cut into the cliff, climbing from the crag's foot toward the great court round to
   // the crown, a turn and a quarter, held to the contour where the ground stands at the road's height
