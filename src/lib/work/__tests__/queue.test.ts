@@ -17,6 +17,11 @@ function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: 
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => { const t = { id: 't' + tickets.length, state: 'ready', ...data }; tickets.push(t); return t }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const t = tickets.find(x => x.id === where.id)!; Object.assign(t, data); return t }),
+      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date } }; data: Record<string, unknown> }) => {
+        const hit = tickets.filter(t => t.state === where.state
+          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt)
+        hit.forEach(t => Object.assign(t, data))
+        return { count: hit.length } }),
     },
   } as never
 }
@@ -41,6 +46,20 @@ describe('the queue', () => {
     expect(r.moved).toBe(1)
     expect(tickets.map(t => t.lane)).toEqual(['freebuff', 'claude', 'claude'])
   })
+  it('returns lapsed leases before it moves the deck, so a dead lane strands nothing', async () => {
+    const now = new Date('2026-10-31T15:00:00Z')
+    const tickets = [
+      { id: 'a', lane: 'claude', state: 'claimed', claimedBy: 'a worker that died',
+        leaseUntil: new Date('2026-10-31T09:00:00Z'), lanes: ['claude', 'freebuff'] },
+      { id: 'b', lane: 'claude', state: 'claimed', claimedBy: 'a worker still running',
+        leaseUntil: new Date('2026-10-31T16:00:00Z'), lanes: ['claude', 'freebuff'] },
+    ]
+    const r = await setLaneDry(fakeDb(tickets), 'claude', true, 'limit', now)
+    expect(r.moved).toBe(1)
+    expect(tickets[0]).toMatchObject({ state: 'ready', lane: 'freebuff', claimedBy: null })
+    expect(tickets[1]).toMatchObject({ state: 'claimed', lane: 'claude' })
+  })
+
   it('lets only the holding lane move a claimed ticket', async () => {
     const tickets = [{ id: 'a', lane: 'claude', state: 'claimed' }]
     expect(await moveTicket(fakeDb(tickets), 'a', 'freebuff', 'done', 'x')).toMatchObject({ ok: false, status: 403 })

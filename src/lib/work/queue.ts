@@ -88,11 +88,16 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
 /**
  * Mark a lane dry (its lamp out) or lit. Going dry passes its ready tickets to the next lit lane in each ticket's own
  * order; a ticket with no lit lane after it stays where it is and waits for the lamp.
+ *
+ * Going dry returns lapsed leases first. A lane whose usage ran out holds the tickets its last worker abandoned, and
+ * the only other sweep runs inside claimTicket — which a dry lane never gets, so those tickets were unreachable for
+ * good: not in its deck, not in the next lane's, and no claim would ever return them (found 2026-11-12: 35 stranded).
  */
 export async function setLaneDry(db: Db, lane: string, dry: boolean, note: string | null, now = new Date()) {
   const dryUntil = dry ? new Date(now.getTime() + DRY_MS) : null
   await db.workLane.upsert({ where: { lane }, create: { lane, dry, dryUntil, note }, update: { dry, dryUntil, note } })
   if (!dry) return { lane, dry, moved: 0 }
+  await returnLapsed(db, now)
   const out = await dryLanes(db, now)
   const ready = await db.workTicket.findMany({ where: { lane, state: 'ready' }, select: { id: true, lanes: true } })
   let moved = 0
