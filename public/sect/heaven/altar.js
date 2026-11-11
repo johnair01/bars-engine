@@ -58,7 +58,7 @@ export function buildAltar(G, M, CROWN, at, y0, cols) {
     for (const g of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) for (const sg of [-1, 1]) posts.push([R, g + sg * gap, yb]); }
   // a local polar angle t is measured from the crown axis (+r) toward +v
   const P = (R, t) => { const a = Math.cos(t) * R, v = Math.sin(t) * R; return at(A.r + a, v); };
-  const yawOf = t => ry - t; // a panel's long side runs along the tangent
+  const yawOf = t => { const [ax, az] = P(5, t - 0.01), [bx, bz] = P(5, t + 0.01); return Math.atan2(bx - ax, bz - az); }; // a box's local z runs along the tangent
   { const geo = new THREE.BoxGeometry(0.22, 0.95, 0.22), head = new THREE.SphereGeometry(0.13, 10, 8);
     const I = new THREE.InstancedMesh(geo, marble, posts.length), H = new THREE.InstancedMesh(head, marble, posts.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), s = new THREE.Vector3(1, 1, 1);
     posts.forEach(([R, t, yb], i) => { const [x, z] = P(R, t); q.setFromEuler(e.set(0, yawOf(t), 0)); m4.compose(new THREE.Vector3(x, yb + 0.475, z), q, s); I.setMatrixAt(i, m4); m4.compose(new THREE.Vector3(x, yb + 1.04, z), q, s); H.setMatrixAt(i, m4); });
@@ -77,6 +77,9 @@ export function buildAltar(G, M, CROWN, at, y0, cols) {
       for (const sg of [-1, 1]) { const t = Rk + A.RUN / 2 - 0.1, [x, z] = at(A.r + er * t - ev * sg * (A.HW + 0.15), ev * t + er * sg * (A.HW + 0.15)), h = A.TH + 0.3;
         const ch = box(G, 0.3, h, A.RUN + 0.3, marble, x, yb + h / 2, z); ch.rotation.y = yaw;
         cols.push({ x, z, c: Math.cos(yaw), s: Math.sin(yaw), hw: 0.15, hd: (A.RUN + 0.3) / 2, y0: yb - 0.3, y1: yb + h }); } } }
+  // the founder's painted screen stands 1.65 m before the north doors and had no collider, so the walk went through it;
+  // now it is solid and the way passes behind it, round its east end, as a temple's rear door is reached
+  { const [x, z] = at(-11.85, 0), yaw = Math.atan2(CROWN.nx, CROWN.nz); cols.push({ x, z, c: Math.cos(yaw), s: Math.sin(yaw), hw: 0.15, hd: 2.85, y0: y0, y1: y0 + 3.2 }); }
   // the round apron and the walk from the founder's north doors
   { const ap = add(new THREE.CylinderGeometry(A.APRON, A.APRON, 0.3, 72), M.paving, cx, y0 - 0.13, cz); ap.material = M.paving; }
   { const r0 = A.DOOR + 0.6, r1 = A.r + A.APRON - 0.5, [x, z] = at((r0 + r1) / 2, 0), w = box(G, 2 * A.WALK, 0.3, r0 - r1, M.paving, x, y0 - 0.12, z); w.rotation.y = ry; }
