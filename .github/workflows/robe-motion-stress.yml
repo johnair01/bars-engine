@@ -1,0 +1,43 @@
+name: Robe motion stress
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/robe-motion-stress.yml
+      - public/between/cult/robe-stress.html
+      - public/between/cult/robe-stress.js
+      - tools/blender-cloud/tests/robe_stress_capture.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser in cloud workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/robe-probe" playwright@1.65.0
+          "$RUNNER_TEMP/robe-probe/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Capture current robe stress poses
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/blender-cloud/tests/robe_stress_capture.mjs "$RUNNER_TEMP/robe-probe/run.mjs"
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory public > "$RUNNER_TEMP/robe-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          ROBE_STRESS_OUT="$RUNNER_TEMP/robe-results" node "$RUNNER_TEMP/robe-probe/run.mjs"
+      - name: Upload diagnostic images and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robe-stress-${{ github.sha }}
+          path: ${{ runner.temp }}/robe-results/
+          if-no-files-found: warn
+          retention-days: 14
