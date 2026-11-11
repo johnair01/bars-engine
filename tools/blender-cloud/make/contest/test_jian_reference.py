@@ -46,6 +46,17 @@ class JianReferenceTest(unittest.TestCase):
         checks = mod.measure([*GOOD, part("Rack", -1, 1, -.1, .1, 0, 1)], PACK)
         self.assertFalse(next(c for c in checks if c["check"] == "no polearm scene")["ok"])
 
+    def test_open_blade_fails(self):
+        parts = [mod.part("Blade", GOOD[0]["lo"], GOOD[0]["hi"], nonmanifold_edges=4), *GOOD[1:]]
+        checks = mod.measure(parts, PACK)
+        self.assertFalse(next(c for c in checks if c["check"] == "closed meshes")["ok"])
+
+    def test_museum_length_is_tight(self):
+        parts = [part("Blade", -.025, .025, -.005, .005, .20, 1.050), *GOOD[1:]]
+        checks = mod.measure(parts, PACK)
+        self.assertFalse(next(c for c in checks if c["check"] == "whole length")["ok"])
+
 
 if __name__ == "__main__":
     unittest.main()
+
