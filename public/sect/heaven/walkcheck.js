@@ -20,4 +20,6 @@ export function walkCheck(route, ground = groundAt, maxJump = 0.22) {
 // round 25: the walk goes on past the road's top, along the crown deck, through the crown gate, over the forecourt and up
 // the hall's stair to its door (round 24 stopped at the road's last node, which is why it missed the gap to the crown)
 export function wayCheck() { const C = CROWN;
-  return walkCheck([...CREST_STAIR.slice(0, -1), ...ROAD.slice(ROAD_START).map(([x, z]) => [x, z]), C.at(C.rWall), C.at(C.rStair), C.at(C.rPlinth - 0.8)]); }
+  return walkCheck([...CREST_STAIR.slice(0, -1), ...ROAD.slice(ROAD_START).map(([x, z]) => [x, z]), C.at(C.rWall), C.at(C.rStair), C.at(C.rPlinth - 0.8),
+  // round 27: on through the gate hall, down its back stair, across the court and in at the founder's south door to the hall's middle
+  C.at(C.rBack + 0.3), C.at(C.rFoot - 0.3), C.at(5.5), C.at(-3.5)]); }
