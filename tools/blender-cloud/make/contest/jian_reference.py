@@ -12,8 +12,8 @@ sys.path.insert(0, HERE)
 import qa  # noqa: E402
 
 
-def part(name, lo, hi):
-    return {"name": name, "lo": lo, "hi": hi}
+def part(name, lo, hi, nonmanifold_edges=0):
+    return {"name": name, "lo": lo, "hi": hi, "nonmanifold_edges": nonmanifold_edges}
 
 
 def span(p, axis):
@@ -30,6 +30,8 @@ def measure(parts, spec):
     required = ("blade", "grip", "guard", "pommel")
     for name in required:
         add(f"part {name}", name in by_name, f"{name} mesh {'found' if name in by_name else 'missing'}")
+    open_parts = {p["name"]: p["nonmanifold_edges"] for p in parts if p["nonmanifold_edges"]}
+    add("closed meshes", not open_parts, f"nonmanifold edges: {open_parts}")
     if not all(name in by_name for name in required):
         return checks
 
@@ -72,6 +74,7 @@ def measure(parts, spec):
 
 def build_parts(script):
     import bpy
+    import bmesh
     from mathutils import Vector
     real = sys.modules["bpy"]
     bpy.ops.object.select_all(action="SELECT")
@@ -90,9 +93,14 @@ def build_parts(script):
         if obj.type != "MESH":
             continue
         points = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+        mesh = bmesh.new()
+        mesh.from_mesh(obj.data)
+        nonmanifold_edges = sum(not edge.is_manifold for edge in mesh.edges)
+        mesh.free()
         found.append(part(obj.name,
                           [min(v[i] for v in points) for i in range(3)],
-                          [max(v[i] for v in points) for i in range(3)]))
+                          [max(v[i] for v in points) for i in range(3)],
+                          nonmanifold_edges))
     return found
 
 
@@ -113,3 +121,4 @@ def main(argv):
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
+
