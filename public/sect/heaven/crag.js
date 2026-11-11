@@ -301,9 +301,19 @@ export function cragCrown(S, M) {
     for (let i = 0; i < 3; i++) { const b = box(G, 19.9 - i * 1.5, 2.4, 15.6 - i * 1.5, M.stone, x, 90 + 1.2 + i * 2.4, z); b.rotation.y = Math.PI / 2 - sideR; }
     onAxis(hall(M, { w: 11, d: 8, ph: 4.4, tiers: 3, seed: 21 }), 1.5, -27, sideR, 97.2, TS); }
   // round 25: this hall stands on the crown gate's axis (CROWN), its plinth front behind the forecourt, its stair on the way
-  { const H = place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22 }), CROWN.th, CROWN.rHall, 90, 2);
-    const c = Math.cos(H.rotation.y), s = Math.sin(H.rotation.y); // the hall's body stops the figure; the way ends at its door
-    wayColliders.push({ x: H.position.x, z: H.position.z, c, s, hw: 8.6, hd: 6.4, y0: 90, y1: 98 }); }
+  // Round 27: Wendell answered cc-heaven-r26 A. The walk-in check found the way ended at this hall's closed front, the
+  // hall's body a solid box, so nobody could reach the founder's hall behind it; and the porch dropped 1.4 m on three
+  // sides with no kerb (rule 7). A temple's gate hall is walked through: its middle bay now opens front and back, the
+  // figure crosses its floor, goes down eight risers at the back into a paved court and in at the founder's south door.
+  // The plinth carries a stone rail on every edge that is not a stair.
+  { const H = place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22, through: true }), CROWN.th, CROWN.rHall, 90, 2);
+    const c = Math.cos(H.rotation.y), s = Math.sin(H.rotation.y), K = 2, y0 = 90 + 1.4, y1 = y0 + 7.4;
+    const wall = (lx, lz, hw, hd) => wayColliders.push({ x: H.position.x + K * (lx * c + lz * s), z: H.position.z + K * (-lx * s + lz * c), c, s, hw: K * hw, hd: K * hd, y0, y1 });
+    const xd = 1.267 + 0.17; // the open bay's edge, local (the hall's three bays are 2.53 m wide; scale 2)
+    for (const sg of [-1, 1]) { wall(sg * (xd + 3.9) / 2, -2.8, (3.9 - xd) / 2, 0.12); wall(sg * (xd + 3.9) / 2, 2.78, (3.9 - xd) / 2, 0.12); // back wall and front lattice
+      wall(sg * 3.8, 0, 0.12, 2.9); // side walls
+      for (const z of [-2.8, 2.8]) wall(sg * 1.267, z, 0.2, 0.2); } // the open bay's columns
+    crownRail(G, M); }
   onAxis(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), 20, 18.7, sideL, 90, 1.7); // round 26: was on the lip, eaves on the gate hall's
 
   // the winding wall: a walled road cut into the cliff, climbing from the crag's foot toward the great court round to
@@ -340,17 +350,20 @@ export function cragCrown(S, M) {
 export const CROWN = (() => { const [ex, ez, ey, th] = ROAD[ROAD.length - 1], [sx, sz] = P.summit, rE = Math.hypot(ex - sx, ez - sz);
   const rWall = Math.max(30, rimAt(th) - 2.5), FC = 6, RISE = 1.4, NR = 8, RUN = (NR - 1) * TREAD;
   const rStair = rWall - 0.45 - FC, rPlinth = rStair - RUN, rHall = rPlinth - 7; // the hall's plinth is 7 m deep in front of its centre (scale 2)
-  return { th, ux: -Math.cos(th), uz: -Math.sin(th), nx: Math.sin(th), nz: -Math.cos(th), rE, rWall, rStair, rPlinth, rHall, yE: ey + 0.25, y0: 90, NR, R: RISE / NR, RUN,
+  const rBack = rHall - 7, rFoot = rBack - RUN; // round 27: the plinth's back edge and the foot of the back stair
+  return { th, ux: -Math.cos(th), uz: -Math.sin(th), nx: Math.sin(th), nz: -Math.cos(th), rE, rWall, rStair, rPlinth, rHall, rBack, rFoot, yE: ey + 0.25, y0: 90, NR, R: RISE / NR, RUN,
     at: r => [sx + Math.cos(th) * r, sz + Math.sin(th) * r] }; })();
 const CW = 1.8; // half the deck's walkable width
 // the crown way's ground at (x, z): the deck, the forecourt, the stair and the porch, or -Infinity off it
 export function crownGround(x, z) {
   const C = CROWN, [sx, sz] = P.summit, dx = x - sx, dz = z - sz, r = dx * -C.ux + dz * -C.uz, v = dx * C.nx + dz * C.nz;
-  if (r > C.rE + 0.3 || r < C.rPlinth - 1.2) return -Infinity;
+  if (r > C.rE + 0.3 || r < C.rFoot - 2.4) return -Infinity;
   if (r >= C.rWall && Math.abs(v) < CW) return C.yE + (C.y0 - C.yE) * Math.min(1, (C.rE - r) / (C.rE - C.rWall)); // the deck
   if (r >= C.rStair && r < C.rWall && Math.abs(v) < 5) return C.y0 + 0.02; // the forecourt's paving
   if (r < C.rStair && r >= C.rPlinth && Math.abs(v) < 1.5) { const k = Math.floor((C.rStair - r) / TREAD); return C.y0 + C.R * (k + 1); } // the stair
-  if (r < C.rPlinth && Math.abs(v) < 8.5) return C.y0 + C.NR * C.R; // the porch on the hall's plinth
+  if (r < C.rPlinth && r >= C.rBack && Math.abs(v) < 9) return C.y0 + C.NR * C.R; // round 27: the whole plinth, the hall's floor
+  if (r < C.rBack && r >= C.rFoot && Math.abs(v) < 1.5) { const k = Math.floor((r - C.rFoot) / TREAD); return C.y0 + C.R * (k + 1); } // the back stair
+  if (r < C.rFoot && Math.abs(v) < 3) return C.y0 + 0.02; // the paved court to the founder's door
   return -Infinity;
 }
 function crownGate(G, M) {
@@ -381,4 +394,22 @@ function crownGate(G, M) {
   for (let k = 0; k < C.NR - 1; k++) { const r = C.rStair - (k + 0.5) * TREAD, top = C.y0 + C.R * (k + 1), [x, z] = C.at(r), st = box(G, 3, top - C.y0 + 0.2, TREAD + 0.01, M.plinth, x, (top + C.y0 - 0.2) / 2, z); st.rotation.y = ry; }
   for (const sg of [-1, 1]) { const r = C.rStair - C.RUN / 2, [wx, wz] = at(r, sg * 1.65), h = C.NR * C.R + 0.4, w = box(G, 0.3, h, C.RUN + 0.1, M.stone, wx, C.y0 + h / 2 - 0.05, wz); w.rotation.y = ry;
     wayColliders.push({ x: wx, z: wz, c: Math.cos(ry), s: Math.sin(ry), hw: 0.15, hd: C.RUN / 2, y0: C.y0, y1: C.y0 + h }); }
+}
+// Round 27: the gate hall's plinth stands 1.4 m above the crown. A stone rail 0.55 m high runs along every edge that is
+// not a stair (rule 7), the back stair has cheek walls like the front one, and a paved court runs from its foot to the
+// founder's south door.
+function crownRail(G, M) {
+  const C = CROWN, ry = Math.PI / 2 - C.th, at = (r, v) => { const [x, z] = C.at(r); return [x + C.nx * v, z + C.nz * v]; }, yT = C.y0 + C.NR * C.R;
+  const rail = (r0, v0, r1, v1) => { const [ax, az] = at(r0, v0), [bx, bz] = at(r1, v1), L = Math.hypot(bx - ax, bz - az), mx = (ax + bx) / 2, mz = (az + bz) / 2, rr = -Math.atan2(bz - az, bx - ax);
+    const b = box(G, L, 0.55, 0.28, M.stone, mx, yT + 0.275, mz); b.rotation.y = rr; const cp = box(G, L + 0.1, 0.08, 0.36, M.plinth, mx, yT + 0.59, mz); cp.rotation.y = rr;
+    for (let k = 0; k <= Math.round(L / 2.2); k++) { const t = k / Math.max(1, Math.round(L / 2.2)), p = box(G, 0.38, 0.75, 0.38, M.stone, ax + (bx - ax) * t, yT + 0.375, az + (bz - az) * t); p.rotation.y = rr; }
+    wayColliders.push({ x: mx, z: mz, c: Math.cos(rr), s: Math.sin(rr), hw: L / 2, hd: 0.14, y0: yT - 2, y1: yT + 0.6 }); };
+  const E = 8.85; // the rail's line, inside the plinth's 9 m half width
+  for (const sg of [-1, 1]) { rail(C.rPlinth - 0.15, sg * 1.8, C.rPlinth - 0.15, sg * E); rail(C.rBack + 0.15, sg * 1.8, C.rBack + 0.15, sg * E); rail(C.rPlinth - 0.15, sg * E, C.rBack + 0.15, sg * E); }
+  // the back stair: seven treads down from the plinth, cheek walls each side
+  for (let k = 0; k < C.NR - 1; k++) { const r = C.rFoot + (k + 0.5) * TREAD, top = C.y0 + C.R * (k + 1), [x, z] = C.at(r), st = box(G, 3, top - C.y0 + 0.2, TREAD + 0.01, M.plinth, x, (top + C.y0 - 0.2) / 2, z); st.rotation.y = ry; }
+  for (const sg of [-1, 1]) { const r = C.rFoot + C.RUN / 2, [wx, wz] = at(r, sg * 1.65), h = C.NR * C.R + 0.4, w = box(G, 0.3, h, C.RUN + 0.1, M.stone, wx, C.y0 + h / 2 - 0.05, wz); w.rotation.y = ry;
+    wayColliders.push({ x: wx, z: wz, c: Math.cos(ry), s: Math.sin(ry), hw: 0.15, hd: C.RUN / 2, y0: C.y0, y1: C.y0 + h }); }
+  // the court: paving from the stair's foot to the founder's door, 6 m wide
+  { const r0 = C.rFoot, r1 = 6.4, [x, z] = C.at((r0 + r1) / 2), fl = box(G, 6, 0.3, r0 - r1, M.paving, x, C.y0 - 0.13, z); fl.rotation.y = ry; }
 }
