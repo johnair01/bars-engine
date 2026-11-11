@@ -41,6 +41,19 @@ describe('the queue', () => {
     expect(r.moved).toBe(1)
     expect(tickets.map(t => t.lane)).toEqual(['freebuff', 'claude', 'claude'])
   })
+  it('sets the renewal gate by hand, defaults to five hours, and never further out than a week', async () => {
+    const now = new Date('2026-10-31T15:00:00Z')
+    const db = fakeDb([])
+    const in5 = new Date('2026-10-31T20:00:00Z')
+    expect((await setLaneDry(db, 'claude', true, 'out', now)).dryUntil).toEqual(in5)
+    expect((await setLaneDry(db, 'claude', true, 'out', now, new Date('2026-11-01T09:00:00Z'))).dryUntil)
+      .toEqual(new Date('2026-11-01T09:00:00Z'))
+    expect((await setLaneDry(db, 'claude', true, 'out', now, new Date('2027-01-01T00:00:00Z'))).dryUntil)
+      .toEqual(new Date('2026-11-07T15:00:00Z'))
+    // A time in the past is not a gate: it would relight the lamp the moment it was set.
+    expect((await setLaneDry(db, 'claude', true, 'out', now, new Date('2026-10-01T00:00:00Z'))).dryUntil).toEqual(in5)
+  })
+
   it('lets only the holding lane move a claimed ticket', async () => {
     const tickets = [{ id: 'a', lane: 'claude', state: 'claimed' }]
     expect(await moveTicket(fakeDb(tickets), 'a', 'freebuff', 'done', 'x')).toMatchObject({ ok: false, status: 403 })
