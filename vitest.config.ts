@@ -86,6 +86,7 @@ export default defineConfig({
       'src/lib/board/__tests__/records.test.ts',
       'src/app/api/board/records/[docId]/__tests__/route.test.ts',
       'src/lib/__tests__/passport-contract.test.ts',
+      'src/app/api/board/gallery/__tests__/route.test.ts',
       'src/app/api/board/saves/__tests__/route.test.ts',
       'src/app/api/board/saves/__tests__/seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
