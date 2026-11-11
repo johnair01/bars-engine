@@ -71,6 +71,7 @@ export function wayGround(x, z) {
   const br = way.bridge;
   if (br) { const u = ((x - br.a[0]) * br.ux + (z - br.a[1]) * br.uz) / br.L, v = (x - br.a[0]) * br.nx + (z - br.a[1]) * br.nz;
     if (u >= 0 && u <= 1 && Math.abs(v) < 1.8) return br.yAt(u); }
+  { const c = crownGround(x, z); if (c > -Infinity) return c; } // round 25: the crown deck, forecourt, stair and porch
   // round 24: the winding road is walkable from the bridge to the crown (rule 4: nothing drawn as a road is decor only)
   if (Math.hypot(x - P.summit[0], z - P.summit[1]) < 110) {
     for (let i = ROAD_J + 1; i < ROAD.length; i++) { const [px, pz, py] = ROAD[i - 1], [qx, qz, qy] = ROAD[i], dx = qx - px, dz = qz - pz, L2 = dx * dx + dz * dz;
@@ -274,8 +275,11 @@ export function cragCrown(S, M) {
     const a0 = i / n * Math.PI * 2, a1 = (i + 1) / n * Math.PI * 2;
     const r0 = Math.max(30, rimAt(a0) - 2.5), r1 = Math.max(30, rimAt(a1) - 2.5);
     const [x0, z0] = at(a0, r0), [x1, z1] = at(a1, r1), L = Math.hypot(x1 - x0, z1 - z0);
+    const am = (a0 + a1) / 2, gap = Math.atan2(Math.sin(am - CROWN.th), Math.cos(am - CROWN.th));
+    if (Math.abs(gap) < Math.atan2(3.4, CROWN.rWall)) continue; // round 25: the crown gate's opening
     const seg = box(G, L + 0.3, 1.6, 0.9, M.stone, (x0 + x1) / 2, 90.8, (z0 + z1) / 2);
     seg.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+    wallBox((x0 + x1) / 2, (z0 + z1) / 2, L + 0.3, 0.9, seg.rotation.y, 89.4, 91.6); // round 25: rule 7, the lip drops 20 m
     if (i % 2 === 0) { const m = box(G, 0.9, 0.7, 0.95, M.stone, (x0 + x1) / 2, 91.95, (z0 + z1) / 2); m.rotation.y = seg.rotation.y; }
   }
 
@@ -283,11 +287,14 @@ export function cragCrown(S, M) {
   // Round 13c: about twice the size and brought out to the lip, the tower raised on a stepped stone podium, because from
   // the anchor view the round 13 halls read as specks on the rim where the painting's crown is mostly buildings.
   const place = (H, th, r, y = 90, k = 1) => { const [x, z] = at(th, r); H.position.set(x, y, z); H.rotation.y = Math.PI / 2 - th; H.scale.setScalar(k); G.add(H); return H; };
-  { const th = toGreat - 0.45, r = rimAt(th) - 15, [x, z] = at(th, r);
+  { const th = toGreat - 0.55, r = rimAt(th) - 15, [x, z] = at(th, r); // round 25: was -0.45; its podium filled the crown gate's forecourt
     for (let i = 0; i < 3; i++) { const b = box(G, 30 - i * 5, 2.4, 24 - i * 4, M.stone, x, 90 + 1.2 + i * 2.4, z); b.rotation.y = Math.PI / 2 - th; }
     place(hall(M, { w: 11, d: 8, ph: 4.4, tiers: 3, seed: 21 }), th, r, 97.2, 2.1); }
-  place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22 }), toGreat + 0.1, rimAt(toGreat + 0.1) - 11, 90, 2);
-  place(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), toGreat + 0.62, rimAt(toGreat + 0.62) - 10, 90, 1.9);
+  // round 25: this hall stands on the crown gate's axis (CROWN), its plinth front behind the forecourt, its stair on the way
+  { const H = place(hall(M, { w: 8, d: 6, ph: 3.6, tiers: 2, seed: 22 }), CROWN.th, CROWN.rHall, 90, 2);
+    const c = Math.cos(H.rotation.y), s = Math.sin(H.rotation.y); // the hall's body stops the figure; the way ends at its door
+    wayColliders.push({ x: H.position.x, z: H.position.z, c, s, hw: 8.6, hd: 6.4, y0: 90, y1: 98 }); }
+  place(hall(M, { w: 7, d: 5, ph: 3.4, tiers: 1, seed: 23 }), toGreat + 0.95, rimAt(toGreat + 0.95) - 10, 90, 1.9); // round 25: was +0.62, inside the gate hall
   place(hall(M, { w: 9, d: 7, ph: 4, tiers: 2, seed: 24 }), toGreat + Math.PI, 18, 90, 1.8);
 
   // the winding wall: a walled road cut into the cliff, climbing from the crag's foot toward the great court round to
@@ -305,12 +312,64 @@ export function cragCrown(S, M) {
       const ym = (y + py) / 2;
       if (i > ROAD_START + 1) { const wall = box(G, L + 0.4, 1.6, 0.8, M.stone, (x + px) / 2 + ox, ym + 0.8, (z + pz) / 2 + oz); wall.rotation.y = ry;
         wallBox((x + px) / 2 + ox, (z + pz) / 2 + oz, L + 0.4, 0.8, ry, ym, ym + 1.6); }
-      { const kx = (x + px) / 2 - ox, kz = (z + pz) / 2 - oz, k = box(G, L + 0.4, 0.45, 0.3, M.stone, kx, ym + 0.25 + 0.2, kz); k.rotation.y = ry;
-        wallBox(kx, kz, L + 0.4, 0.3, ry, ym, ym + 0.7); }
+      if (i < ROAD.length - 1) { const kx = (x + px) / 2 - ox, kz = (z + pz) / 2 - oz, k = box(G, L + 0.4, 0.45, 0.3, M.stone, kx, ym + 0.25 + 0.2, kz); k.rotation.y = ry;
+        wallBox(kx, kz, L + 0.4, 0.3, ry, ym, ym + 0.7); } // round 25: the last segment's inner side opens onto the crown deck
       const base = box(G, L + 0.4, 6, 9, M.stone, (x + px) / 2 - ox * 1.2, (y + py) / 2 - 3.6, (z + pz) / 2 - oz * 1.2); base.rotation.y = ry;
       if (i % 3 === 0) { const m = box(G, 0.8, 0.6, 0.85, M.stone, x + ox, y + 1.9, z + oz); m.rotation.y = ry; }
     }
     prev = [x, z, y];
   }
+  crownGate(G, M);
   return G;
+}
+
+// Round 25: the road's top against the crown. Wendell answered cc-heaven-r24 A. The check found the winding road's last
+// node 8 m outside the crown's rim and 0.75 m below it, over a 20 m drop, with the crown's parapet closed all the way
+// round: the road stopped in the air facing a wall (walkability rules 2 and 6). Now a stone deck turns off the road's
+// top, climbs 0.75 m over 10 m (1 in 14, rule 3) through a gate in the crown wall onto a paved forecourt, and a stair of
+// eight 0.175 m risers on 0.28 m treads climbs the two-tier hall's plinth to its door, where the way ends (rule 6).
+export const CROWN = (() => { const [ex, ez, ey, th] = ROAD[ROAD.length - 1], [sx, sz] = P.summit, rE = Math.hypot(ex - sx, ez - sz);
+  const rWall = Math.max(30, rimAt(th) - 2.5), FC = 6, RISE = 1.4, NR = 8, RUN = (NR - 1) * TREAD;
+  const rStair = rWall - 0.45 - FC, rPlinth = rStair - RUN, rHall = rPlinth - 7; // the hall's plinth is 7 m deep in front of its centre (scale 2)
+  return { th, ux: -Math.cos(th), uz: -Math.sin(th), nx: Math.sin(th), nz: -Math.cos(th), rE, rWall, rStair, rPlinth, rHall, yE: ey + 0.25, y0: 90, NR, R: RISE / NR, RUN,
+    at: r => [sx + Math.cos(th) * r, sz + Math.sin(th) * r] }; })();
+const CW = 1.8; // half the deck's walkable width
+// the crown way's ground at (x, z): the deck, the forecourt, the stair and the porch, or -Infinity off it
+export function crownGround(x, z) {
+  const C = CROWN, [sx, sz] = P.summit, dx = x - sx, dz = z - sz, r = dx * -C.ux + dz * -C.uz, v = dx * C.nx + dz * C.nz;
+  if (r > C.rE + 0.3 || r < C.rPlinth - 1.2) return -Infinity;
+  if (r >= C.rWall && Math.abs(v) < CW) return C.yE + (C.y0 - C.yE) * Math.min(1, (C.rE - r) / (C.rE - C.rWall)); // the deck
+  if (r >= C.rStair && r < C.rWall && Math.abs(v) < 5) return C.y0 + 0.02; // the forecourt's paving
+  if (r < C.rStair && r >= C.rPlinth && Math.abs(v) < 1.5) { const k = Math.floor((C.rStair - r) / TREAD); return C.y0 + C.R * (k + 1); } // the stair
+  if (r < C.rPlinth && Math.abs(v) < 8.5) return C.y0 + C.NR * C.R; // the porch on the hall's plinth
+  return -Infinity;
+}
+function crownGate(G, M) {
+  const C = CROWN, ry = Math.PI / 2 - C.th, at = (r, v) => { const [x, z] = C.at(r); return [x + C.nx * v, z + C.nz * v]; };
+  // the deck: one slab per metre, a 1.1 m parapet each side, and a 3 m stone corbel under its outer half into the rock
+  const n = Math.ceil(C.rE - C.rWall);
+  for (let k = 0; k < n; k++) { const r = C.rE - (k + 0.5) * (C.rE - C.rWall) / n, y = crownGround(...C.at(r)), L = (C.rE - C.rWall) / n + 0.05, [x, z] = C.at(r);
+    const d = box(G, 4, 0.8, L, M.plinth, x, y - 0.4, z); d.rotation.y = ry;
+    const cb = box(G, 3.4, 3, L, M.stone, x, y - 0.8 - 1.5, z); cb.rotation.y = ry;
+    for (const sg of [-1, 1]) { if (k === 0 && sg === 1) continue; // the side the road comes from stays open at the turn
+      const [wx, wz] = at(r, 2 * sg), w = box(G, 0.45, 1.1, L, M.stone, wx, y + 0.55, wz); w.rotation.y = ry;
+      wayColliders.push({ x: wx, z: wz, c: Math.cos(ry), s: Math.sin(ry), hw: 0.225, hd: L / 2, y0: y - 0.8, y1: y + 1.1 }); } }
+  // the road's end beyond the turn: a wall across it, so the road stops at the deck and not at the air
+  { const [ex, ez, , ] = ROAD[ROAD.length - 1], [px, pz] = ROAD[ROAD.length - 2], tl = Math.hypot(ex - px, ez - pz), tx = (ex - px) / tl, tz = (ez - pz) / tl;
+    const wx = ex + tx * 2.3, wz = ez + tz * 2.3, wr = -Math.atan2(tz, tx) + Math.PI / 2, w = box(G, 4.2, 1.1, 0.5, M.stone, wx, C.yE + 0.55, wz); w.rotation.y = wr;
+    wayColliders.push({ x: wx, z: wz, c: Math.cos(wr), s: Math.sin(wr), hw: 2.1, hd: 0.25, y0: C.yE - 0.5, y1: C.yE + 1.1 }); }
+  // the crown gate: a paifang in the wall's opening, square to the deck, with stub walls closing the opening to its posts
+  { const [x, z] = C.at(C.rWall), g = paifang(M, { w: 6.5, h: 5.2, plaque: '天冠' }); g.position.set(x, C.y0, z); g.rotation.y = ry; G.add(g);
+    for (const px of [-6.5 / 2, -6.5 / 6.5, 6.5 / 6.5, 6.5 / 2]) { const [qx, qz] = at(C.rWall, px); wayColliders.push({ x: qx, z: qz, c: 1, s: 0, hw: 0.25, hd: 0.25, y0: C.y0 - 0.5, y1: C.y0 + 5 }); }
+    for (const sg of [-1, 1]) { const [wx, wz] = at(C.rWall, sg * 3.3 + sg * 0.5), w = box(G, 1.2, 1.6, 0.9, M.stone, wx, 90.8, wz); w.rotation.y = ry;
+      wayColliders.push({ x: wx, z: wz, c: Math.cos(ry), s: Math.sin(ry), hw: 0.6, hd: 0.45, y0: 89.4, y1: 91.6 }); } }
+  // the forecourt: paving 10 m wide from the gate to the stair, a stone lantern at each corner by the hall
+  { const r = (C.rWall + C.rStair) / 2, [x, z] = C.at(r), fl = box(G, 10, 0.3, C.rWall - C.rStair, M.paving, x, C.y0 - 0.13, z); fl.rotation.y = ry;
+    for (const sg of [-1, 1]) { const [lx, lz] = at(C.rStair + 0.8, sg * 4.2), base = box(G, 0.5, 0.5, 0.5, M.stone, lx, C.y0 + 0.25, lz), post = box(G, 0.22, 0.9, 0.22, M.stone, lx, C.y0 + 0.95, lz),
+        cap = box(G, 0.55, 0.14, 0.55, M.stone, lx, C.y0 + 1.5, lz), bx = box(G, 0.34, 0.34, 0.34, M.stone, lx, C.y0 + 1.74, lz);
+      wayColliders.push({ x: lx, z: lz, c: 1, s: 0, hw: 0.25, hd: 0.25, y0: C.y0 - 0.2, y1: C.y0 + 1.9 }); [base, post, cap, bx].forEach(m => { m.rotation.y = ry; }); } }
+  // the stair up the hall's plinth: seven treads, the eighth riser lands on the porch; a 0.4 m cheek wall each side (rule 7)
+  for (let k = 0; k < C.NR - 1; k++) { const r = C.rStair - (k + 0.5) * TREAD, top = C.y0 + C.R * (k + 1), [x, z] = C.at(r), st = box(G, 3, top - C.y0 + 0.2, TREAD + 0.01, M.plinth, x, (top + C.y0 - 0.2) / 2, z); st.rotation.y = ry; }
+  for (const sg of [-1, 1]) { const r = C.rStair - C.RUN / 2, [wx, wz] = at(r, sg * 1.65), h = C.NR * C.R + 0.4, w = box(G, 0.3, h, C.RUN + 0.1, M.stone, wx, C.y0 + h / 2 - 0.05, wz); w.rotation.y = ry;
+    wayColliders.push({ x: wx, z: wz, c: Math.cos(ry), s: Math.sin(ry), hw: 0.15, hd: C.RUN / 2, y0: C.y0, y1: C.y0 + h }); }
 }
