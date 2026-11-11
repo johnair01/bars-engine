@@ -15,8 +15,7 @@ function fakeDb() {
   }
 }
 
-const row = { kind: 'positions', pass: 'worklist-api-slice-a', lane: 'claude', faces: ['architect'], auto: true,
-              pos: 'A probe position.', why: 'test' }
+const row = { kind: 'terms', pass: 'worklist-api-slice-a', lane: 'claude', term: 'probe', plain: 'A probe term.' }
 
 describe('sessionWrite rows (worklist-api)', () => {
   it('writes a valid row, born unrecorded, as a whole document', async () => {
@@ -28,8 +27,16 @@ describe('sessionWrite rows (worklist-api)', () => {
   it('accepts a pre-pass row with no pass (the backfill relocates history)', async () => {
     const db = fakeDb()
     const r = await sessionWrite(db as never, [{ collection: 'rows', docId: 'ancient', mode: 'set',
-                                                 data: { kind: 'positions', faces: ['sage'], pos: 'Older than passes.' } }])
+                                                 data: { kind: 'positions', backfill: true, faces: ['sage'], pos: 'Older than passes.' } }])
     expect(r).toEqual({ written: ['rows/ancient'], same: 0, refused: [] })
+  })
+
+  it('refuses a new position row: positions go to the council log (2026-11-11)', async () => {
+    const db = fakeDb()
+    const r = await sessionWrite(db as never, [{ collection: 'rows', docId: 'wl-pos', mode: 'set',
+      data: { kind: 'positions', pass: 'p', faces: ['sage'], pos: 'Let it stand.' } }])
+    expect(r.written).toEqual([])
+    expect(r.refused[0]).toMatch(/positions no longer go on the board/)
   })
 
   it('refuses a malformed row and writes nothing', async () => {
