@@ -9,14 +9,14 @@ const POSES = [
   ['stand','rest',0,0,0,0,0],
   ['sprint','long stride',0.68,-0.48,-0.22,0.64,0],
   ['sprint','passing step',-0.12,0.18,0.75,-0.38,0],
-  ['sprint','hard stop',0.45,-0.26,0.42,-0.18,-0.12],
-  ['jump','crouch',0.55,0.55,0.92,0.92,-0.22],
+  ['sprint','hard stop',0.45,-0.26,0.42,-0.18,0],
+  ['jump','crouch',0.55,0.55,0.92,0.92,0],
   ['jump','takeoff',0.12,0.12,0.22,0.22,0.16],
   ['jump','apex tuck',0.72,0.72,1.08,1.08,0.5],
-  ['jump','landing compression',0.58,0.5,1.02,0.94,-0.2],
-  ['climb','high left step',1.15,-0.12,1.35,0.12,0.08],
+  ['jump','landing compression',0.58,0.5,1.02,0.94,0],
+  ['climb','high left step',1.15,-0.12,1.35,0.12,0],
   ['climb','pull over ledge',0.93,0.35,1.02,0.75,0.34],
-  ['climb','high right step',-0.12,1.15,0.12,1.35,0.08],
+  ['climb','high right step',-0.12,1.15,0.12,1.35,0],
 ];
 const TRACKS = {
   sprint: [POSES[0],POSES[1],POSES[2],POSES[1],POSES[3],POSES[0]],
@@ -27,6 +27,8 @@ const TRACKS = {
 function stressPose(F, row) {
   FG.resetPose(F);
   const [, , left, right, leftShin, rightShin, rise] = row;
+  const footLevel=()=>Math.min(...['ankleL','ankleR','ballL','ballR'].map(n=>F.bones[n].getWorldPosition(V()).y));
+  const restFoot=footLevel();
   const { f, l } = F.fr, down = V(0,-1,0);
   for (const [s,sg,thigh,shin] of [['L',1,left,leftShin],['R',-1,right,rightShin]]) {
     FG.aim(F,'hip'+s,'knee'+s,down.clone().addScaledVector(l,sg*0.045).addScaledVector(f,thigh));
@@ -34,7 +36,10 @@ function stressPose(F, row) {
     FG.aim(F,'shoulder'+s,'elbow'+s,down.clone().addScaledVector(l,sg*0.29).addScaledVector(f,-thigh*0.2));
     FG.aim(F,'elbow'+s,'wrist'+s,down.clone().addScaledVector(l,sg*0.16).addScaledVector(f,0.24-thigh*0.2));
   }
-  F.root.position.y += rise;
+  // Ground the lowest foot in stand/sprint/compression, then add explicit
+  // flight height for takeoff/apex. The previous draft drove feet below floor.
+  F.root.updateMatrixWorld(true);
+  F.root.position.y += restFoot-footLevel()+rise;
   F.root.updateMatrixWorld(true);
   F.mesh.skeleton.update();
   F.poseName = row[0];
