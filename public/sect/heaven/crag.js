@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { hall, box, paifang, pine } from './kit.js';
 import { heightAt, P, CRAG, cragNoise, AXIS, PILGRIM } from './layout.js';
+import { altarGround, buildAltar } from './altar.js';
 
 const rimAt = th => CRAG.rim + cragNoise(th) * 7;
 
@@ -339,6 +340,7 @@ export function cragCrown(S, M) {
     prev = [x, z, y];
   }
   crownGate(G, M);
+  { const C = CROWN; buildAltar(G, M, C, (r, v) => { const [x, z] = C.at(r); return [x + C.nx * v, z + C.nz * v]; }, C.y0, wayColliders); } // round 29
   return G;
 }
 
@@ -357,6 +359,7 @@ const CW = 1.8; // half the deck's walkable width
 // the crown way's ground at (x, z): the deck, the forecourt, the stair and the porch, or -Infinity off it
 export function crownGround(x, z) {
   const C = CROWN, [sx, sz] = P.summit, dx = x - sx, dz = z - sz, r = dx * -C.ux + dz * -C.uz, v = dx * C.nx + dz * C.nz;
+  if (r < -3.5 && r > -40 && Math.abs(v) < 16) return altarGround(r, v, C.y0); // round 29: behind the founder's hall, the Heaven altar (altar.js)
   if (r > C.rE + 0.3 || r < C.rFoot - 2.4) return -Infinity;
   if (r >= C.rWall && Math.abs(v) < CW) return C.yE + (C.y0 - C.yE) * Math.min(1, (C.rE - r) / (C.rE - C.rWall)); // the deck
   if (r >= C.rStair && r < C.rWall && Math.abs(v) < 5) return C.y0 + 0.02; // the forecourt's paving

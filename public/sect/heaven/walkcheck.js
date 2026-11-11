@@ -4,6 +4,7 @@
 // Run it in the page before any look of the way is posted: `(await import('/sect/heaven/walkcheck.js')).wayCheck()`.
 import { groundAt } from './walk.js';
 import { CREST_STAIR, ROAD, ROAD_START, CROWN } from './crag.js';
+import { ALTAR } from './altar.js';
 
 export function walkCheck(route, ground = groundAt, maxJump = 0.22) {
   const breaks = []; let prev = null, len = 0;
@@ -22,4 +23,6 @@ export function walkCheck(route, ground = groundAt, maxJump = 0.22) {
 export function wayCheck() { const C = CROWN;
   return walkCheck([...CREST_STAIR.slice(0, -1), ...ROAD.slice(ROAD_START).map(([x, z]) => [x, z]), C.at(C.rWall), C.at(C.rStair), C.at(C.rPlinth - 0.8),
   // round 27: on through the gate hall, down its back stair, across the court and in at the founder's south door to the hall's middle
-  C.at(C.rBack + 0.3), C.at(C.rFoot - 0.3), C.at(5.5), C.at(-3.5)]); }
+  C.at(C.rBack + 0.3), C.at(C.rFoot - 0.3), C.at(5.5), C.at(-3.5),
+  // round 29: out of the north doors, along the walk and up the altar's south stairs to the heart stone
+  C.at(-12), C.at(ALTAR.r + ALTAR.R[0] + ALTAR.RUN + 1), C.at(ALTAR.r)]); }
