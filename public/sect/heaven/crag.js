@@ -3,7 +3,7 @@
 // a walled crown, tiered halls on its lip and a wall that winds down its face. layout.js now shapes the cliff; this
 // module builds what stands on it, in world coordinates, every piece seated on heightAt.
 import * as THREE from 'three';
-import { hall, box, paifang } from './kit.js';
+import { hall, box, paifang, pine } from './kit.js';
 import { heightAt, P, CRAG, cragNoise, AXIS, PILGRIM } from './layout.js';
 
 const rimAt = th => CRAG.rim + cragNoise(th) * 7;
@@ -363,7 +363,8 @@ export function crownGround(x, z) {
   if (r < C.rStair && r >= C.rPlinth && Math.abs(v) < 1.5) { const k = Math.floor((C.rStair - r) / TREAD); return C.y0 + C.R * (k + 1); } // the stair
   if (r < C.rPlinth && r >= C.rBack && Math.abs(v) < 9) return C.y0 + C.NR * C.R; // round 27: the whole plinth, the hall's floor
   if (r < C.rBack && r >= C.rFoot && Math.abs(v) < 1.5) { const k = Math.floor((r - C.rFoot) / TREAD); return C.y0 + C.R * (k + 1); } // the back stair
-  if (r < C.rFoot && Math.abs(v) < 3) return C.y0 + 0.02; // the paved court to the founder's door
+  if (r < C.rFoot && Math.abs(v) < 15) return C.y0 + 0.02; // round 28: the court, as wide as the founder's hall
+  if (r >= C.rFoot && r < C.rStair && Math.abs(v) >= 9.2 && Math.abs(v) < 13.6) return C.y0 + 0.02; // its paved walks beside the gate hall
   return -Infinity;
 }
 function crownGate(G, M) {
@@ -410,6 +411,21 @@ function crownRail(G, M) {
   for (let k = 0; k < C.NR - 1; k++) { const r = C.rFoot + (k + 0.5) * TREAD, top = C.y0 + C.R * (k + 1), [x, z] = C.at(r), st = box(G, 3, top - C.y0 + 0.2, TREAD + 0.01, M.plinth, x, (top + C.y0 - 0.2) / 2, z); st.rotation.y = ry; }
   for (const sg of [-1, 1]) { const r = C.rFoot + C.RUN / 2, [wx, wz] = at(r, sg * 1.65), h = C.NR * C.R + 0.4, w = box(G, 0.3, h, C.RUN + 0.1, M.stone, wx, C.y0 + h / 2 - 0.05, wz); w.rotation.y = ry;
     wayColliders.push({ x: wx, z: wz, c: Math.cos(ry), s: Math.sin(ry), hw: 0.15, hd: C.RUN / 2, y0: C.y0, y1: C.y0 + h }); }
-  // the court: paving from the stair's foot to the founder's door, 6 m wide
-  { const r0 = C.rFoot, r1 = 6.4, [x, z] = C.at((r0 + r1) / 2), fl = box(G, 6, 0.3, r0 - r1, M.paving, x, C.y0 - 0.13, z); fl.rotation.y = ry; }
+  // Round 28 (his A on cc-heaven-r27: widen the court): the court runs the founder's hall's full 30 m width, and a paved
+  // walk 4.4 m wide runs down each side of the gate hall to the forecourt's line, so the gate hall stands inside a court
+  // instead of filling an alley. A bronze censer stands each side of the door line, stone lanterns at the court's ends,
+  // and a pine at each corner by the gate hall. The crown is level here (90 m), so every walk meets the ground flush.
+  { const r0 = C.rFoot, r1 = 6.4, [x, z] = C.at((r0 + r1) / 2), fl = box(G, 30, 0.3, r0 - r1, M.paving, x, C.y0 - 0.13, z); fl.rotation.y = ry; }
+  for (const sg of [-1, 1]) { const [x, z] = at((C.rFoot + C.rStair) / 2, sg * 11.4), fl = box(G, 4.4, 0.3, C.rStair - C.rFoot, M.paving, x, C.y0 - 0.13, z); fl.rotation.y = ry; }
+  const bronze = new THREE.MeshStandardMaterial({ color: 0x6b5634, roughness: 0.45, metalness: 0.7 });
+  const cyl = (r0, r1, h, m, x, y, z, s = 20) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, h, s), m); c.position.set(x, y, z); c.castShadow = c.receiveShadow = true; G.add(c); return c; };
+  for (const sg of [-1, 1]) { const [x, z] = at(7.9, sg * 7);
+    cyl(0.62, 0.5, 0.62, bronze, x, C.y0 + 0.78, z, 24); cyl(0.66, 0.66, 0.06, bronze, x, C.y0 + 1.1, z, 24); cyl(0.3, 0.12, 0.35, bronze, x, C.y0 + 1.3, z, 16);
+    for (let i = 0; i < 3; i++) { const a = i * 2.094; cyl(0.06, 0.07, 0.55, bronze, x + Math.cos(a) * 0.42, C.y0 + 0.27, z + Math.sin(a) * 0.42, 6); }
+    for (const e of [-1, 1]) { const [hx, hz] = at(7.9, sg * 7 + e * 0.66), hd = box(G, 0.06, 0.3, 0.24, bronze, hx, C.y0 + 1.25, hz); hd.rotation.y = ry; }
+    wayColliders.push({ x, z, c: 1, s: 0, hw: 0.62, hd: 0.62, y0: C.y0 - 0.2, y1: C.y0 + 1.5 });
+    const [lx, lz] = at(7.9, sg * 13.2), parts = [box(G, 0.6, 0.5, 0.6, M.stone, lx, C.y0 + 0.25, lz), box(G, 0.26, 1.0, 0.26, M.stone, lx, C.y0 + 1.0, lz), box(G, 0.7, 0.16, 0.7, M.stone, lx, C.y0 + 1.58, lz), box(G, 0.42, 0.42, 0.42, M.stone, lx, C.y0 + 1.87, lz), box(G, 0.62, 0.12, 0.62, M.stone, lx, C.y0 + 2.14, lz)];
+    parts.forEach(m => { m.rotation.y = ry; }); wayColliders.push({ x: lx, z: lz, c: 1, s: 0, hw: 0.3, hd: 0.3, y0: C.y0 - 0.2, y1: C.y0 + 2.2 });
+    const [px, pz] = at(10.2, sg * 12.6), p = pine(M, 5.2, 0.12 * sg, 40 + sg); p.position.set(px, C.y0, pz); G.add(p);
+    wayColliders.push({ x: px, z: pz, c: 1, s: 0, hw: 0.3, hd: 0.3, y0: C.y0 - 0.2, y1: C.y0 + 3 }); }
 }

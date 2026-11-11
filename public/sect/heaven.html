@@ -90,6 +90,12 @@ const models = Promise.all(['Stone_Fire_Pit.glb', 'Ceramic_Pot.glb', 'Antique_Ce
       o.position.set(cx - r.R.Wd / 2, 0.06, cy - r.R.D / 2); r.E.add(o);
     }
   }).catch(e => console.warn('room models', e));
+  // Round 28: the Smithsonian's CC0 mountain censer (boshanlu) on its stand by the founder's great doors, 0.75 m tall.
+  load('si-boshanlu.glb').then(b => { const f = interiors.find(r => r.key === 'founder'), at = f && f.E.userData.censerAt; if (!at) return;
+    let bb = new THREE.Box3().setFromObject(b), sz = bb.getSize(new THREE.Vector3());
+    if (sz.z > sz.y && sz.z >= sz.x) b.rotation.x = -Math.PI / 2; else if (sz.x > sz.y) b.rotation.z = Math.PI / 2; // the scan's long axis stands up
+    b.updateMatrixWorld(true); bb = new THREE.Box3().setFromObject(b); sz = bb.getSize(new THREE.Vector3()); const k = 0.75 / sz.y; b.scale.setScalar(k);
+    const c = bb.getCenter(new THREE.Vector3()); b.position.set(at[0] - c.x * k, at[1] - bb.min.y * k, at[2] - c.z * k); f.E.add(b); window.heaven && (window.heaven.censer = b); }).catch(e => console.warn('censer', e));
   for (const [x, z] of axisMarks()) { const l = lan.clone(); l.scale.setScalar(1.3); l.position.set(x, heightAt(x, z) - 0.05, z); S.add(l); }
 }).catch(e => console.warn('models', e));
 
