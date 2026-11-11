@@ -1,0 +1,45 @@
+name: Jian asset build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/jian-asset-build.yml
+      - tools/blender-cloud/make/jian/**
+      - public/calrunia/weapons/jian/**
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and ffmpeg
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg libgl1 libegl1 libxrender1 libxi6 libxxf86vm1
+          curl -fL --retry 3 -o /tmp/blender.tar.xz https://download.blender.org/release/Blender5.2/blender-5.2.2-linux-x64.tar.xz
+          echo '84098912789dc450e95697c4184fb8a90acbe5111c2ba4aede3fecb57806a168  /tmp/blender.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/blender.tar.xz -C /tmp
+          echo /tmp/blender-5.2.2-linux-x64 >> "$GITHUB_PATH"
+      - name: Rebuild and verify five swords
+        run: |
+          python3 tools/blender-cloud/make/jian/build_release.py
+          python3 tools/blender-cloud/make/jian/build_release.py --check
+      - name: Upload sword models and inventory views
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calrunian-jian-${{ github.sha }}
+          path: |
+            public/calrunia/weapons/jian/*.glb
+            public/calrunia/weapons/jian/*.png
+            public/calrunia/weapons/jian/manifest.json
+            tools/blender-cloud/make/jian/review/checks.json
+          if-no-files-found: error
+          retention-days: 14

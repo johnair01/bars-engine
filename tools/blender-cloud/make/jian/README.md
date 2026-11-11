@@ -12,6 +12,8 @@ Five reusable jian variants: Argyra, Pyrakanth, Lamenth, Virelune, Meridia. Wend
 
 Requires Python 3, Blender 5.2 with `bpy`, and `ffmpeg`. No model API key is needed to rebuild approved assets.
 
+For a cloud rebuild, run the **Jian asset build** GitHub Actions workflow from the Actions tab, or update a pull request that changes this directory. The Ubuntu runner installs the pinned official Blender 5.2.2 release, verifies its SHA-256, rebuilds and checks the five swords, then uploads the GLBs, icons, manifest, and geometry checks as a downloadable run artifact. This uses cloud disk and CPU; you do not need to install Blender or Node dependencies locally. It does not commit regenerated files or deploy them. Review a new version through a pull request before using it in gameplay.
+
 ```sh
 python3 tools/blender-cloud/make/jian/build_release.py
 python3 tools/blender-cloud/make/jian/build_release.py --check
