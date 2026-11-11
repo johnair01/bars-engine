@@ -1,0 +1,297 @@
+{
+  "Argyra": {
+    "Blade": {
+      "nonmanifold_edges": 0,
+      "triangles": 62
+    },
+    "Grip": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar00": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar01": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "Guard": {
+      "nonmanifold_edges": 0,
+      "triangles": 12
+    },
+    "GuardArm00": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm01": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm02": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm03": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "Pommel": {
+      "nonmanifold_edges": 0,
+      "triangles": 144
+    },
+    "dimensions_m": {
+      "blade": 0.8379999818280339,
+      "overall": 1.0374999791383743
+    },
+    "total_triangles": 494
+  },
+  "Pyrakanth": {
+    "Blade": {
+      "nonmanifold_edges": 0,
+      "triangles": 62
+    },
+    "FlameGrip00": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "FlameGrip01": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "FlameGrip02": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "FlameGuard00": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "FlameGuard01": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "FlameGuard02": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "FlameGuard03": {
+      "nonmanifold_edges": 0,
+      "triangles": 28
+    },
+    "Grip": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar00": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar01": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "Guard": {
+      "nonmanifold_edges": 0,
+      "triangles": 12
+    },
+    "GuardArm00": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm01": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm02": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm03": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "Pommel": {
+      "nonmanifold_edges": 0,
+      "triangles": 20
+    },
+    "dimensions_m": {
+      "blade": 0.8379999818280339,
+      "overall": 1.0379999727010727
+    },
+    "total_triangles": 566
+  },
+  "Lamenth": {
+    "Blade": {
+      "nonmanifold_edges": 0,
+      "triangles": 62
+    },
+    "Grip": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar00": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar01": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "Guard": {
+      "nonmanifold_edges": 0,
+      "triangles": 12
+    },
+    "GuardArm00": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm01": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm02": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm03": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "Pommel": {
+      "nonmanifold_edges": 0,
+      "triangles": 224
+    },
+    "dimensions_m": {
+      "blade": 0.8379999818280339,
+      "overall": 1.0379999727010727
+    },
+    "total_triangles": 574
+  },
+  "Virelune": {
+    "Blade": {
+      "nonmanifold_edges": 0,
+      "triangles": 62
+    },
+    "Grip": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar00": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar01": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "Guard": {
+      "nonmanifold_edges": 0,
+      "triangles": 12
+    },
+    "GuardArm00": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm01": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm02": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm03": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm04": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "LeafTerminal00": {
+      "nonmanifold_edges": 0,
+      "triangles": 48
+    },
+    "LeafTerminal01": {
+      "nonmanifold_edges": 0,
+      "triangles": 48
+    },
+    "Pommel": {
+      "nonmanifold_edges": 0,
+      "triangles": 224
+    },
+    "WoodScale00": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "WoodScale01": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "WoodScale02": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "WoodScale03": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "WoodScale04": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "dimensions_m": {
+      "blade": 0.8379999818280339,
+      "overall": 1.0379999727010727
+    },
+    "total_triangles": 886
+  },
+  "Meridia": {
+    "Blade": {
+      "nonmanifold_edges": 0,
+      "triangles": 62
+    },
+    "Grip": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar00": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "GripCollar01": {
+      "nonmanifold_edges": 0,
+      "triangles": 44
+    },
+    "Guard": {
+      "nonmanifold_edges": 0,
+      "triangles": 12
+    },
+    "GuardArm00": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm01": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm02": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "GuardArm03": {
+      "nonmanifold_edges": 0,
+      "triangles": 36
+    },
+    "Pommel": {
+      "nonmanifold_edges": 0,
+      "triangles": 12
+    },
+    "dimensions_m": {
+      "blade": 0.8379999818280339,
+      "overall": 1.0379999727010727
+    },
+    "total_triangles": 362
+  }
+}
