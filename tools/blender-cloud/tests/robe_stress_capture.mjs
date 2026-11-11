@@ -17,7 +17,7 @@ try {
   writeFileSync(join(out,'report.json'),JSON.stringify({result,errors},null,2)+'\n');
   if(result.status!=='complete'||errors.length) throw new Error(JSON.stringify({result:result.status,errors}));
   const sections=page.locator('section');
-  if(await sections.count()!==2||result.frames.length!==22) throw new Error('missing body or motion frames');
+  if(await sections.count()!==2||result.frames.length!==22||result.motions.length!==6) throw new Error('missing body or motion samples');
   await sections.nth(0).screenshot({path:join(out,'feminine-b2-stress.png')});
   await sections.nth(1).screenshot({path:join(out,'masculine-b2-stress.png')});
   console.log(`Captured ${result.frames.length} synthetic poses across two bodies. Diagnostic report: ${out}`);

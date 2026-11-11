@@ -1,6 +1,6 @@
 # Cultivator robe movement baseline
 
-`robe-stress.html` is a diagnostic gallery for the **current** B2 robe on the feminine and masculine average bodies. It poses the existing rig in deterministic stand, sprint, jump, landing, and high-step/climb **stress poses**, renders front and side views, and records the existing `mix.js` poke counts with the full body geometry restored for measurement. The shipped walker hides covered body triangles, so its visual result alone is not a collision check.
+`robe-stress.html` is a diagnostic gallery for the **current** B2 robe on the feminine and masculine average bodies. It poses the existing rig in deterministic stand, sprint, jump, landing, and high-step/climb **stress poses**, renders front and side views, and records the existing `mix.js` poke counts with the full body geometry restored for measurement. It also interpolates these poses into timed synthetic tracks at 30 samples per second and records the skirt hem's height trace and abrupt frame-to-frame changes. The shipped walker hides covered body triangles, so its visual result alone is not a collision check.
 
 The poses are synthetic. The current cultivator has a procedural walk but no run, jump, or climb clips. This gallery can identify likely bad configurations; it cannot certify temporal behavior, inertia, contact with a ledge, or performance. It does not alter the live game outfit. The GitHub Actions **Robe motion stress** workflow builds the captures in the cloud and uploads its images and report.
 

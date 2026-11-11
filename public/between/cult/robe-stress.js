@@ -18,6 +18,11 @@ const POSES = [
   ['climb','pull over ledge',0.93,0.35,1.02,0.75,0.34],
   ['climb','high right step',-0.12,1.15,0.12,1.35,0.08],
 ];
+const TRACKS = {
+  sprint: [POSES[0],POSES[1],POSES[2],POSES[1],POSES[3],POSES[0]],
+  jump: [POSES[0],POSES[4],POSES[5],POSES[6],POSES[7],POSES[0]],
+  climb: [POSES[0],POSES[8],POSES[9],POSES[10],POSES[0]],
+};
 
 function stressPose(F, row) {
   FG.resetPose(F);
@@ -40,8 +45,27 @@ function addFrame(section, src, label) {
   im.src=src; im.alt=label; c.textContent=label; f.append(im,c); section.append(f);
 }
 
+function motionTrack(X, scenario) {
+  const keys=TRACKS[scenario], F=X.F, robe=X.parts.filter(p=>/^robe/.test(p.name));
+  const hem=robe.map(p=>{const a=p.geo.attributes.position, ys=Array.from({length:a.count},(_,i)=>a.getY(i)).sort((x,y)=>x-y), cut=ys[Math.floor(ys.length*.12)];
+    return {p,ids:Array.from({length:a.count},(_,i)=>i).filter(i=>a.getY(i)<=cut)};});
+  const hz=30, duration=1.5, samples=[];
+  for(let frame=0;frame<=duration*hz;frame++) {
+    const t=frame/hz, u=t/duration*(keys.length-1), k=Math.min(keys.length-2,Math.floor(u)), a=keys[k], b=keys[k+1], w=u-k;
+    const row=[scenario,`frame ${frame}`,...a.slice(2).map((v,i)=>v+(b[i+2]-v)*w)];
+    stressPose(F,row);
+    let n=0,y=0,minY=Infinity;
+    for(const {p,ids} of hem) {const P=M.partWorld(p);for(const i of ids) {const h=P[i*3+1];y+=h;n++;minY=Math.min(minY,h);}}
+    samples.push({t:+t.toFixed(3),hemMeanY:+(y/n).toFixed(4),hemMinY:+minY.toFixed(4),rootY:+F.root.position.y.toFixed(4)});
+  }
+  let maxHemStep=0,maxHemAcceleration=0;
+  for(let i=1;i<samples.length;i++) maxHemStep=Math.max(maxHemStep,Math.abs(samples[i].hemMeanY-samples[i-1].hemMeanY));
+  for(let i=2;i<samples.length;i++) maxHemAcceleration=Math.max(maxHemAcceleration,Math.abs(samples[i].hemMeanY-2*samples[i-1].hemMeanY+samples[i-2].hemMeanY));
+  return {scenario,synthetic:true,sampleHz:hz,durationSeconds:duration,maxHemStepM:+maxHemStep.toFixed(4),maxHemSecondDifferenceM:+maxHemAcceleration.toFixed(4),samples};
+}
+
 async function run() {
-  const reg=await (await fetch('./make/parts.json')).json(), root=document.querySelector('#frames'), report=[];
+  const reg=await (await fetch('./make/parts.json')).json(), root=document.querySelector('#frames'), report=[], motions=[];
   for (const who of ['f','m']) {
     const mix={gender:who,build:'average',skin:who==='f'?4:3,height:who==='f'?1.66:1.75,direction:'B',outfit:'B2'};
     const X=await M.build(mix,reg), F=X.F, original=F.mesh.geometry.index.clone();
@@ -57,9 +81,10 @@ async function run() {
       addFrame(section,M.shoot(X,'side',320,460,{dist:7.5,fov:24}),label+' side');
       report.push({body:who,scenario:row[0],phase:row[1],synthetic:true,bodyPoke:measured.bodyPoke,layerPoke:measured.layerPoke,bare:measured.bare,where:measured.where});
     }
+    for(const scenario of Object.keys(TRACKS)) motions.push({body:who,...motionTrack(X,scenario)});
     F.mesh.geometry.setIndex(original); M.dispose(X);
   }
-  document.querySelector('#report').textContent=JSON.stringify({schema:'calrunia.robe_stress.v0',status:'diagnostic_only',frames:report},null,2);
-  window.__robeStress={status:'complete',frames:report}; document.body.classList.add('ready');
+  document.querySelector('#report').textContent=JSON.stringify({schema:'calrunia.robe_stress.v1',status:'diagnostic_only',frames:report,motions},null,2);
+  window.__robeStress={status:'complete',frames:report,motions}; document.body.classList.add('ready');
 }
 run().catch(error=>{document.querySelector('#loading').textContent='Failed: '+error.message; window.__robeStress={status:'failed',error:String(error)};});
