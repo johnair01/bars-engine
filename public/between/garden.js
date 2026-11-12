@@ -725,6 +725,34 @@ const portalVeil = new THREE.MeshStandardMaterial({ color: 0x1a1420, emissive: 0
   const veil = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.82), portalVeil); veil.position.y = 0.93; portal.add(veil);
   const sill = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 0.3), wood); sill.position.y = 0.025; portal.add(sill);
 }
+/* The farm gate (bars-farm FR-001, 2026-11-11): the round seed bed by the stream is gone and a gate stands on the bank
+   in its place. Walking into it opens the player's own field (/between/farm.html), which is where every BAR is planted
+   now. It is a second threshold, not the Nook's doorway: that one leads to shared rooms, this one to private land. */
+const FARM_GATE_AT = new THREE.Vector3(-2.6, 0, 2.2);
+const farmGate = new THREE.Group(); farmGate.position.copy(FARM_GATE_AT).setY(DAIS_Y); farmGate.rotation.y = Math.PI / 2; scene.add(farmGate);
+const farmVeil = new THREE.MeshStandardMaterial({ color: 0x2a1d10, emissive: 0xffd99a, emissiveIntensity: 0.5, roughness: 0.9, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+{
+  const wood = new THREE.MeshStandardMaterial({ color: 0x6b4a2c, roughness: 0.8 });
+  for (const sx of [-1, 1]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 2.0, 8), wood); post.position.set(sx * 0.55, 1.0, 0); farmGate.add(post); }
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.13, 0.18), wood); lintel.position.y = 2.02; farmGate.add(lintel);
+  const veil = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 1.9), farmVeil); veil.position.y = 0.98; farmGate.add(veil);
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.34), wood); sill.position.y = 0.025; farmGate.add(sill);
+  // a furrow of turned soil at the threshold, so the gate reads as land and not as another door
+  const soil = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.04, 0.5), new THREE.MeshStandardMaterial({ color: 0x7a4a2c, roughness: 1 }));
+  soil.position.set(0, 0.02, 0.42); farmGate.add(soil);
+}
+let farmEntering = 0;
+function farmGateTick(t) {
+  const open = isHome(garden) && !minuteOn();
+  farmGate.visible = open;
+  if (!open) return;
+  farmVeil.emissiveIntensity = 0.45 + Math.sin(t * 1.7) * 0.12 + (farmEntering ? 0.5 : 0);
+  if (!farmEntering && Math.hypot(meState.pos.x - FARM_GATE_AT.x, meState.pos.z - FARM_GATE_AT.z) < 0.8) {
+    farmEntering = performance.now();
+    $("#loadMsg").textContent = "Through the gate, to your own land"; $("#loadStep").textContent = ""; $("#loading").hidden = false;
+    setTimeout(() => { location.href = "/between/farm.html"; }, 420);
+  }
+}
 const portalOpen = () => isHome(garden) && !minuteOn();
 const SHIMMER = new THREE.Color(1.0, 0.82, 0.55);
 function portalTick(t) {
@@ -1569,7 +1597,7 @@ function frameBody() {
     w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
-  stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t); hmTick(t, dt); fsBurn(dt);
+  stepBetween(t, dt); portalTick(t); farmGateTick(t); minuteTick(t, dt); gustTick(t); hmTick(t, dt); fsBurn(dt);
   for (const th of things.values()) { if (th.group.userData.sway) th.group.rotation.z = Math.sin(t * 0.7 + th.pos.x) * 0.03; } // a hung lantern sways a little
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
