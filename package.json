@@ -320,6 +320,7 @@
     "prisma": "^5.22.0",
     "sharp": "^0.35.1",
     "tailwindcss": "^4",
+    "three": "0.160.0",
     "ts-morph": "^27.0.2",
     "tsx": "^4.21.0",
     "typescript": "^5",

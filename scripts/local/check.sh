@@ -16,20 +16,15 @@ case " ${NODE_OPTIONS:-} " in *max-old-space-size*) ;; *) export NODE_OPTIONS="$
 mkdir -p .local-dev/check
 failed=()
 
-step() { # name, command...
-  local name="$1"; shift
-  printf '\n── %s ──\n' "$name"
-  if "$@" >".local-dev/check/$name.log" 2>&1; then echo "ok"; else echo "FAILED (log: .local-dev/check/$name.log)"; tail -25 ".local-dev/check/$name.log"; failed+=("$name"); fi
-}
-
-# A step whose exit 2 means "this machine cannot run me": skipped, with the reason the check printed, never a failure.
-step_maybe_skip() { # name, command...
+step() { # [--skip-2] name, command...  (with --skip-2, exit 2 means this machine cannot run it: skipped, never failed)
+  local skip2=0
+  if [ "$1" = "--skip-2" ]; then skip2=1; shift; fi
   local name="$1"; shift
   printf '\n── %s ──\n' "$name"
   local code=0
   "$@" >".local-dev/check/$name.log" 2>&1 || code=$?
   if [ "$code" -eq 0 ]; then echo "ok"; return; fi
-  if [ "$code" -eq 2 ]; then echo "skipped"; tail -2 ".local-dev/check/$name.log"; return; fi
+  if [ "$skip2" -eq 1 ] && [ "$code" -eq 2 ]; then echo "skipped"; tail -2 ".local-dev/check/$name.log"; return; fi
   echo "FAILED (log: .local-dev/check/$name.log)"; tail -25 ".local-dev/check/$name.log"; failed+=("$name")
 }
 
@@ -38,7 +33,7 @@ step check $DEV run -- npm run check
 # The frame half of the look gate (board row bld-gate-home-2, answered a): one hearth still, then the ramp and the
 # lights read off it compared to the look dataset. It can lack a browser or a copy of three, which are skips (exit 2,
 # reported as skipped here) and not faults; only a real drift stops the push.
-step_maybe_skip look-frame $DEV run -- npm run check:look:frame
+step --skip-2 look-frame $DEV run -- npm run check:look:frame
 step vitest $DEV run -- npm run test:vitest
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build
