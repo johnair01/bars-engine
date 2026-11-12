@@ -13,7 +13,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { isLane, laneCaller } from '@/lib/work/lanes'
+import { isLane, laneCaller, LANES } from '@/lib/work/lanes'
 import { claimTicket } from '@/lib/work/queue'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +21,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 
 export async function POST(req: NextRequest) {
   const lane = req.nextUrl.searchParams.get('lane')
-  if (!isLane(lane)) return NextResponse.json({ error: 'lane must be claude or freebuff' }, { status: 400 })
+  if (!isLane(lane)) return NextResponse.json({ error: `lane must be one of ${LANES.join(', ')}` }, { status: 400 })
   if (!laneCaller(req, lane)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const b = (await req.json().catch(() => ({}))) as { by?: unknown }
   const by = typeof b.by === 'string' && b.by.trim() ? b.by.trim().slice(0, 200) : lane

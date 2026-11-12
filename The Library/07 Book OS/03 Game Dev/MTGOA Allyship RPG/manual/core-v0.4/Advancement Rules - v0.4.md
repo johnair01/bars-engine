@@ -139,14 +139,17 @@ You gain:
 Requirement:
 
 - spend 6 Growth
-- transform a relationship, faction, or team tension through this School
-- protect difference and consent while staying in connection
+- practice this School in at least two forms other than your home form
+- match another student to the form of this School's practice that works for them, shown by a BAR that student writes
+- hold the other forms as valid without ranking your home form as the true one
 
 You gain:
 
-- one relational integration move from this School
-- permission to reduce Faction Heat through this School once per arc
-- authority to mediate between one School and one House during downtime
+- one translation move from this School: run its basic practice in a form other than your home form
+- authority to route a student to the lieutenant whose form fits them during downtime
+- permission, once per arc, to name a second valid reading of this School's practice when a scene stalls on one reading
+
+The Integrator expresses the Diplomat's work of holding several perspectives at once. It is not a conflict-mediation rank (Wendell, 2026-11-07; see the Integrator Reading note in the School Rank Matrix).
 
 ### Keeper
 

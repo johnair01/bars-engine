@@ -10,7 +10,7 @@
      actions  [{ label, sub?, on, quiet? }]: seals you press, in the floor band (or under the headline when the subject
               holds the floor)
      foot     a line at the very bottom, italic        landed  [[who, what]]: what two people did, beside each other
-   quiet()  releases the screen.  marks()  the boxes of the words on the glass, for the stills check.
+   quiet()  releases the screen.  say({ hold: true }, owner, rank)  holds the screen and draws nothing.  marks()  the boxes of the words on the glass, for the stills check.
 
    Build 2 (hollow interface build 2): more than one part of the room speaks through it, so each speaks as an owner and
    the screen goes to the one that matters most; the others wait and come back when it lets go.
@@ -26,8 +26,19 @@
    A seal is wax in its element's colour with a glow ring as loud as --ui-loud: action.el names the element (fire when
    it names none). */
 
+/* Homeroom poster build (Six-faces-council homeroom-poster-1, Wendell's A on hp1-look-1): every layer on the glass asks
+   this owner for the screen. The order, highest first: what the player opened (a sheet, rank 4), what the world says to
+   him (a moment, rank 3), what he stands near (rank 2 and 1, soft). A sheet draws itself, so it says { hold: true }: voice
+   draws nothing and the lower owners wait. Labels and pinned layers carry data-ui-layer and step aside by one body class.
+   Words over the world keep light ink in both themes. A label whose box would leave the frame is not drawn (inFrame). */
+/* Would a label of this width, anchored at (x, y) with its bottom middle there, sit wholly inside the frame? */
+export function inFrame(el, x, y, pad = 8) {
+  const w = el.offsetWidth || (el._w || 0), h = el.offsetHeight || 18; if (el.offsetWidth) el._w = el.offsetWidth;
+  return x - w / 2 >= pad && x + w / 2 <= innerWidth - pad && y - h >= pad && y <= innerHeight - pad;
+}
+
 const css = `
-#voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: var(--ui-ink, #f6ecdc); --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); }
+#voice { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: #f6ecdc; /* over the world, light in both themes (hp1-voice-light-ink) */ --display: var(--ui-display, "Marcellus", Georgia, serif); --body: var(--ui-body, "Atkinson Hyperlegible", system-ui, sans-serif); }
 #voice[hidden] { display: none; }
 #voice .vw { position: absolute; left: max(16px, 7%); right: max(16px, 7%); transition: top .5s var(--ui-ease, ease), bottom .5s var(--ui-ease, ease), opacity .4s ease; }
 #voice .vh { font: 400 calc(24px + 8px * var(--ui-loud, 0)) / 1.16 var(--display); text-wrap: balance; text-shadow: 0 1px 3px #000, 0 0 18px rgba(0,0,0,.7); }
@@ -53,13 +64,15 @@ const css = `
 #voice .vl b { font: 400 15px var(--display); color: #ffd08a; }
 #voice .vl span { padding-left: 12px; border-left: 2px solid #ffd08a; color: #fff3df; }
 #ui-down { position: fixed; z-index: 46; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; min-height: 44px; min-width: 44px; display: flex; align-items: center; gap: 8px;
-  padding: 0 14px 0 10px; border: 0; border-radius: 22px; background: rgba(10,6,4,.5); color: var(--ui-ink, #f6ecdc); font: 700 14px/1 var(--ui-body, system-ui, sans-serif);
+  padding: 0 14px 0 10px; border: 0; border-radius: 22px; background: rgba(10,6,4,.5); color: #f6ecdc; font: 700 14px/1 var(--ui-body, system-ui, sans-serif);
   letter-spacing: .01em; text-shadow: 0 1px 3px rgba(0,0,0,.9); cursor: pointer; }
 #ui-down[hidden] { display: none; }
 #ui-down svg { width: 22px; height: 22px; flex: none; }
 #ui-down:focus-visible { outline: 3px solid var(--ui-accent, #5fc2ba); outline-offset: 2px; }
-body.voiced-soft .hud .near, body.voiced-soft .hud .hint, body.voiced-soft .hud .next, body.voiced-soft #labels, body.voiced-soft .ctw-card, body.voiced-soft .ctw-label { visibility: hidden; }
-body.voiced .hud .bottom, body.voiced .hud .top, body.voiced #labels, body.voiced .ctw-label, body.voiced .hint, body.voiced .near { visibility: hidden; }
+/* One rule for everything else on the glass (homeroom-poster-1, hp1-one-owner): a layer marks itself data-ui-layer and
+   voice hides it while something outranks it. "row" is the standing row, which a soft voice keeps; "near" and "label"
+   step aside for any voice. No list of names to keep up to date. */
+body.voiced [data-ui-layer], body.voiced-soft [data-ui-layer]:not([data-ui-layer="row"]) { visibility: hidden; }
 `;
 /* A pinned panel's words as a moment for the screen owner: its first bold is the headline, its line and any small notes
    the line under it, its buttons the seals (each presses the panel's own button, so every action keeps its handler).
@@ -108,6 +121,10 @@ export function createVoice() {
     const t = top();
     if (!t) { cur = null; curOwner = null; key = ""; root.hidden = true; root.innerHTML = ""; downEl.hidden = true; document.body.classList.remove("voiced", "voiced-soft"); return; }
     const [o, { m }] = t;
+    if (m.hold) { // something that draws itself (a sheet) holds the screen: voice draws nothing, and everything else waits
+      cur = m; curOwner = o; key = ""; root.hidden = true; root.innerHTML = ""; downEl.hidden = true;
+      document.body.classList.add("voiced"); document.body.classList.remove("voiced-soft"); return;
+    }
     const k = o + JSON.stringify([m.head, m.sub, (m.actions || []).map(a => [a.label, a.sub, a.quiet, a.el]), m.foot, m.landed, !!m.soft, m.down && (m.down.label || "Put it down")]);
     cur = m; curOwner = o; root.hidden = false;
     downEl.hidden = !m.down;

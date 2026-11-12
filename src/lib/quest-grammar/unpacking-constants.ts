@@ -24,6 +24,8 @@ export const SATISFACTION_OPTIONS = [
 
 export const DISSATISFACTION_OPTIONS = [
   'anxious', 'frustrated', 'stuck', 'scared', 'overwhelmed', 'numb', 'empty', 'worried', 'disappointed', 'isolated',
+  // Wood/Joy dissatisfied: the want not yet met (engine STATE.wood[0])
+  'craving',
 ]
 
 export const SHADOW_VOICE_OPTIONS = [
@@ -32,7 +34,8 @@ export const SHADOW_VOICE_OPTIONS = [
 
 export const MOVE_OPTIONS = ['Wake Up', 'Clean Up', 'Grow Up', 'Show Up'] as const
 
-export const LIFE_STATE_OPTIONS = ['Flowing', 'Stalled', 'Neutral'] as const
+/** Stuck joins the three words of the card turn (council clean-up-alchemy FR-002b); Neutral stays for old saves. */
+export const LIFE_STATE_OPTIONS = ['Flowing', 'Stalled', 'Stuck', 'Neutral'] as const
 
 export const Q3_SEP = ' | '
 

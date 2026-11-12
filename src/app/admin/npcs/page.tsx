@@ -2,6 +2,7 @@
 
 import { listNpcConstitutions } from '@/actions/npc-constitution'
 import Link from 'next/link'
+import RaisePartPanel from './RaisePartPanel'
 import { useEffect, useState, useTransition } from 'react'
 
 type Npc = Awaited<ReturnType<typeof listNpcConstitutions>>[number]
@@ -61,6 +62,8 @@ export default function NpcsPage() {
           </Link>
         </div>
       </header>
+
+      <RaisePartPanel />
 
       <div className="flex gap-4 flex-wrap items-center">
         <div className="flex gap-2 items-center">

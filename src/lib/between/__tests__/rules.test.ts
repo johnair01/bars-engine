@@ -248,6 +248,11 @@ function testHomePrivateDoc() {
   assert.equal(mayWrite(member(A), room(), path, 'set', doc, null).ok, false, 'the look and hopes live in the homeroom')
   assert.equal(homeWrite({ ...doc, score: 3 }).ok, false)
   assert.equal(homeWrite({ goals: { g1: { text: '' } } }).ok, false)
+  assert.equal(homeWrite({ hearth: { sits: 3, at: 5, told: { earth: 1, wood: 2 } } }).ok, true, 'a hearth record')
+  assert.equal(homeWrite({ hearth: { care: 4, careAt: 9 } }).ok, true, 'the cares done')
+  assert.equal(homeWrite({ hearth: { care: 0 } }).ok, true, 'no care yet')
+  for (const hearth of [{ sits: -1 }, { sits: 1.5 }, { score: 2 }, { told: { joy: 1 } }, { told: { earth: 'now' } }, { at: 'x' }, { care: 5 }, { care: -1 }, { care: 1.5 }, { care: '2' }, { careAt: 'x' }, 'lit'])
+    assert.equal(homeWrite({ hearth } as Doc).ok, false, 'hearth ' + JSON.stringify(hearth))
   assert.equal(homeWrite({ checkins: { c1: { feel: 'joy', at: 1 } } }).ok, false, 'one of the five feelings')
   assert.equal(mayWrite(member(A), h, path, 'update', { goals: { g1: null } }, doc).ok, true)
   // part 4: a check-in walks the seven steps of the W.A.V.E. and leaves an ember
@@ -255,6 +260,8 @@ function testHomePrivateDoc() {
   for (const wave of [8, -1, 2.5, '7']) assert.equal(homeWrite({ checkins: { c2: { feel: 'fire', at: 3, wave } } } as Doc).ok, false, 'wave ' + wave)
   const e = { feel: 'water', at: 4, given: null }
   assert.equal(homeWrite({ embers: { e1: e } }).ok, true)
+  assert.equal(homeWrite({ embers: { e1: { ...e, from: 'fire', to: 'water', by: 'fire_water' } } }).ok, true, 'an ember keeps where its charge started, ended and the move')
+  assert.equal(homeWrite({ embers: { e1: { ...e, to: 'rage' } } } as Doc).ok, false, 'to is an element')
   assert.equal(mayWrite(member(A), h, path, 'update', { embers: { e1: e } }, doc).ok, true)
   assert.equal(homeWrite({ embers: { e1: { ...e, given: { spirit: 'slmn-ab12', room: 'gardenX', at: 5 } } } }).ok, true, 'given to a spirit in a room')
   assert.equal(homeWrite({ embers: { e1: { ...e, given: { spirit: 'slmn-ab12', room: null, at: 5 } } } }).ok, true, 'or in the homeroom')

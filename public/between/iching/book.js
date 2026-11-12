@@ -8,6 +8,7 @@
    it names the room it was for, or the page (`page`), or neither when it was for yourself. Plain module, no three.js and no
    fetch, so every rule here has a test (src/lib/between/__tests__/record-book.test.ts). */
 import { whoChoices } from "./connection.js";
+import { deckLeaves, BLANK_GOAL } from "../friendcraft/deck.js";
 
 export const BLANK = { kind: "blank", key: "blank", name: "" };
 /** The longest name a page takes (rules.ts holds the same). */
@@ -24,13 +25,17 @@ export function newPage(name, at) {
     page. `choices` are the table's who-choices (connection.js whoChoices, or a hollow's own two). A named page that got a
     spark (its `room`) takes that spark's place and keeps its casts; a spark that became a Between keeps its page because a
     page for a room is keyed by the room. In a hollow (`blank: false`) the book holds only the hollow's pages.
-    @param {any[]} choices  @param {any} home  @param {{ blank?: boolean }} [o] */
+    A player enrolled in Friendcraft passes their deck (`o.deck`, an empty one included): their goal pages come first,
+    oldest first, then one blank goal leaf, then the rest as above (Six-faces-council spec .specify/specs/friendcraft-deck
+    FR-005). Goal pages are in the nook's book only.
+    @param {any[]} choices  @param {any} home  @param {{ blank?: boolean, deck?: any }} [o] */
 export function leavesOf(choices, home, o = {}) {
   const pages = (home && home.pages && typeof home.pages === "object") ? home.pages : {};
   const named = Object.entries(pages).filter(([, p]) => p && typeof p.name === "string" && p.name)
     .sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
   const byRoom = new Map(named.filter(([, p]) => p.room).map(([pid, p]) => [p.room, pid]));
   const out = [];
+  if (o.blank !== false && o.deck && typeof o.deck === "object") out.push(...deckLeaves(o.deck), { ...BLANK_GOAL });
   for (const w of choices || []) {
     if (!w || w.kind === "plant") continue;
     if (w.kind === "self") { out.push({ ...w, key: "self", name: "Yourself" }); continue; }
@@ -50,9 +55,9 @@ export function leavesOf(choices, home, o = {}) {
 }
 
 /** The book from your room list (spec FR-011): `here` is the hollow you stand in, or null in the nook.
-    @param {any[]} rooms  @param {any} home  @param {string | null} [here] */
-export function pagesOf(rooms, home, here = null) {
-  return leavesOf(whoChoices(rooms, here), home, { blank: !here });
+    @param {any[]} rooms  @param {any} home  @param {string | null} [here]  @param {any} [deck] a Friendcraft player's deck */
+export function pagesOf(rooms, home, here = null, deck = null) {
+  return leavesOf(whoChoices(rooms, here), home, { blank: !here, deck });
 }
 
 /** Does this kept cast belong on this leaf? A cast for yourself names no room and no page; a cast for a person names
@@ -101,5 +106,6 @@ export const lineOn = (cast, leaf) => String((cast && cast.line) || "").replace(
 /** The name on each tab of the fore-edge: the whole name up to ten tabs, then initials so twenty still fit. */
 export function tabName(leaf, count) {
   if (!leaf || leaf.kind === "blank") return "";
+  if (leaf.kind === "goalblank") return "New";
   return count > 10 ? leaf.name.split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase() : leaf.name;
 }
