@@ -20,8 +20,9 @@
          THREE_BASE=<url>  where the bare "three" specifier resolves (default: the CDN the page itself uses)
          LD_LIBRARY_PATH   if chromium cannot find libnspr4 and friends on this machine, put them there
 
-   It needs Playwright with chromium. Without either it exits 2 and says so, so a session with no browser skips this
-   check and runs the rest (docs/LOCAL_FIRST_TESTING.md). Exit 2 is never a pass claim.
+   Nothing here fails for want of a tool. It exits 2 and says why when there is no Playwright, when chromium does not
+   launch, or when there is no copy of three in node_modules and the CDN does not answer; check.sh reads that as
+   skipped (docs/LOCAL_FIRST_TESTING.md). Exit 2 is never a pass claim.
 */
 import http from 'node:http'
 import fs from 'node:fs'
@@ -32,7 +33,10 @@ const ROOT = path.resolve(import.meta.dirname, '..')
 const PUBLIC = path.join(ROOT, 'public')
 const OUT = path.resolve(process.env.OUT || path.join(ROOT, '.local-dev', 'look'))
 const [W, H] = (process.env.SIZE || '1280x720').split('x').map(Number)
-const THREE_BASE = process.env.THREE_BASE || 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/'
+const CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/'
+const THREE_BASE = process.env.THREE_BASE || `${CDN}build/`
+const LOCAL_THREE = path.join(ROOT, 'node_modules', 'three')
+const LOCAL_BVH = path.join(ROOT, 'node_modules', 'three-mesh-bvh')
 const TOLERANCE = { number: 0.005, stop: 1e-6 }
 
 const skip = why => { console.error(`look frame check skipped: ${why}`); process.exit(2) }
@@ -44,8 +48,13 @@ for (const from of [() => require('playwright'), () => createRequire('/')('playw
   try { ({ chromium } = from()); break } catch {}
 }
 if (!chromium) skip('Playwright is not installed here; `npm i -D playwright && npx playwright install chromium` installs it')
-/* --available answers one question for scripts/local/check.sh: is there a browser here at all? Exit 0 when there is. */
-if (process.argv.includes('--available')) { console.log('a browser is available here'); process.exit(0) }
+/* --available answers one question for scripts/local/check.sh: does a browser actually launch here? Resolving the
+   module proves nothing, so this starts chromium and closes it. Exit 0 when it launched, 2 when it did not. */
+if (process.argv.includes('--available')) {
+  let probe
+  try { probe = await chromium.launch(); await probe.close(); console.log('a browser launches here'); process.exit(0) }
+  catch (e) { skip(`chromium did not launch (${String(e.message).split('\n')[0]}); \`npx playwright install-deps chromium\` installs its libraries`) }
+}
 
 const { LOOK, LOOK_HASH } = await import(path.join(PUBLIC, 'between', 'look-data.js'))
 const BUDGET = ['lantern', 'crystals', 'hearth']
@@ -55,12 +64,21 @@ const BUDGET_LIGHT = {
   hearth: LOOK.budget.shells.hollow.lights.find(l => l.light === 'the hearth fire'),
 }
 
+/* Where three comes from. A copy in node_modules first, served beside the page, so a push with no network still renders;
+   otherwise the CDN the page itself uses, and only after a probe says it answers, because a page whose library never
+   loads fails to build the scene and that is not a look fault. Neither one is a skip, not a failure. */
+let imports
+if (fs.existsSync(path.join(LOCAL_THREE, 'build', 'three.module.js'))) {
+  imports = { three: '/__vendor/three/build/three.module.js', 'three/addons/': '/__vendor/three/examples/jsm/', 'three-mesh-bvh': '/__vendor/three-mesh-bvh/build/index.module.js' }
+} else {
+  const reachable = await fetch(`${THREE_BASE}three.module.js`, { method: 'HEAD' }).then(r => r.ok).catch(() => false)
+  if (!reachable) skip(`no copy of three in node_modules and ${THREE_BASE} does not answer, so nothing can render; \`npm i three@0.160.0\` puts a copy there, or THREE_BASE=<url> names another`)
+  imports = { three: `${THREE_BASE}three.module.js`, 'three/addons/': THREE_BASE.replace(/\/build\/$/, '/examples/jsm/'), 'three-mesh-bvh': `${CDN}build/index.module.js` }
+}
+
 /* One scene, built the way garden.js builds it: the paint installed before anything renders, then the hollow. */
 const HARNESS = `<!doctype html><html><head><meta charset="utf-8">
-<script type="importmap">{ "imports": {
-  "three": "${THREE_BASE}three.module.js",
-  "three/addons/": "${THREE_BASE.replace(/\/build\/$/, '/examples/jsm/')}"
-} }</script></head>
+<script type="importmap">${JSON.stringify({ imports })}</script></head>
 <body style="margin:0;background:#1d1007"><script type="module" src="/__look-frame.js"></script></body></html>`
 
 const SCENE = `
@@ -106,8 +124,11 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1')
   if (url.pathname === '/__look-frame.html') { res.writeHead(200, { 'Content-Type': 'text/html' }); return res.end(HARNESS) }
   if (url.pathname === '/__look-frame.js') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(SCENE) }
-  const file = path.join(PUBLIC, decodeURIComponent(url.pathname))
-  if (!file.startsWith(PUBLIC) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('not found') }
+  /* /__vendor/ serves node_modules, for the local copy of three; everything else is public/ as the page gets it. */
+  const vendored = url.pathname.startsWith('/__vendor/')
+  const under = vendored ? path.join(ROOT, 'node_modules') : PUBLIC
+  const file = vendored ? path.join(under, url.pathname.slice('/__vendor/'.length)) : path.join(under, decodeURIComponent(url.pathname))
+  if (!file.startsWith(under) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('not found') }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' })
   fs.createReadStream(file).pipe(res)
 })

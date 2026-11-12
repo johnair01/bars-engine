@@ -146,8 +146,8 @@ The look frame check (`npm run check:look:frame`, board row `bld-gate-home-2`, a
 compared against the dataset") renders one still of the Between's hearth in headless chromium, then compares the ramp
 the shader carries and every point light in the scene to `public/between/look-data.js`, failing on drift past the
 tolerance in the script's header. The still lands in `.local-dev/look/hearth.png`, so a change to the room can be
-looked at rather than described. It needs Playwright chromium; without one `check.sh` prints `skipped` for that step
-and runs the rest. `npm run check` does not run it, so CI stays free of a browser.
+looked at rather than described. It needs Playwright chromium, and a copy of three in `node_modules` or the CDN the page itself uses; with neither
+`check.sh` reports that step `skipped` and runs the rest, so an offline push is not a failed push. `npm run check` does not run it, so CI stays free of a browser.
 
 The Vercel preview build used to be the build check for merging. **`scripts/local/check.sh --build` passing is
 that check now.** A pull request's "How I checked it" names the command and its result, the pages it opened, and the
