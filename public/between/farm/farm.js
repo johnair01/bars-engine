@@ -49,11 +49,24 @@ function tree(x, z, s = 1) { const G = new THREE.Group(); { const tr = mesh(new 
   for (let i = 0; i < 4; i++) { const b = mesh(new THREE.IcosahedronGeometry(rr(0.8, 1.15) * s, 2), toon([PAL.leafA, PAL.leafB, '#4f8a3a'][i % 3])); b.position.set(rr(-0.6, 0.6) * s, (1.9 + rr(0, 0.9)) * s, rr(-0.6, 0.6) * s); G.add(b); } G.position.set(x, 0, z); scene.add(G); }
 for (let i = 0; i < 9; i++) { const a = Math.PI * (0.1 + 0.8 * i / 8) + Math.PI; tree(Math.cos(a) * 12 + rr(-1, 1), Math.sin(a) * 9 - 1 + rr(-1, 1), rr(0.9, 1.4)); }
 tree(-11, 2, 1.3); tree(11.5, 1, 1.2);
-// the portal back to the hollow, behind the player's start
+// the stream at the west edge, and the portal on its bank (level-designer role, 2026-11-09: "the portal and stream sit
+// at the west edge; the portal is the entrance from the hollow"). The stills put the water there; the field code did not.
+const STREAM_X = -7.6;
+{ const pts = []; for (let z = -14; z <= 14; z += 2) pts.push(V(STREAM_X + Math.sin(z * 0.22) * 0.5, 0, z));
+  const curve = new THREE.CatmullRomCurve3(pts); const N = 90, pos = [], idx = [];
+  for (let i = 0; i <= N; i++) { const t = i / N, p = curve.getPoint(t), tan = curve.getTangent(t); const nx = -tan.z, nz = tan.x;
+    pos.push(p.x + nx * 0.75, 0.02, p.z + nz * 0.75, p.x - nx * 0.75, 0.02, p.z - nz * 0.75);
+    if (i < N) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const water = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: '#62bfd6', roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.9 }));
+  water.receiveShadow = true; water.name = 'stream'; scene.add(water);
+  for (let i = 0; i < 14; i++) { const t = i / 13, p = curve.getPoint(t); const st = mesh(new THREE.IcosahedronGeometry(rr(0.12, 0.26), 0), toon('#9aa3a8')); st.position.set(p.x + rr(-1.1, 1.1), 0.06, p.z + rr(-0.6, 0.6)); scene.add(st); } }
+
+// the portal back to the hollow, on the stream's bank at the west edge
 const portal = new THREE.Group();
 { const curve = new THREE.CatmullRomCurve3([V(-1, 0, 0), V(-1.1, 1.2, 0), V(-.6, 2.2, 0), V(0, 2.5, 0), V(.6, 2.2, 0), V(1.1, 1.2, 0), V(1, 0, 0)]);
   portal.add(mesh(new THREE.TubeGeometry(curve, 40, 0.16, 8), toon(PAL.bark))); const inner = mesh(new THREE.CircleGeometry(1, 24), glow(PAL.portal, { transparent: true, opacity: 0.55, side: THREE.DoubleSide }), false); inner.scale.set(0.95, 1.2, 1); inner.position.y = 1.25; portal.add(inner);
-  portal.position.set(0, 0, 9.9); scene.add(portal); }
+  portal.position.set(STREAM_X + 1.5, 0, 2.2); portal.rotation.y = Math.PI / 2; scene.add(portal); }
 
 // ---------- the slots ----------
 const slotGroup = new THREE.Group(); scene.add(slotGroup);
