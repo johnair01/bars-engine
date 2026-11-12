@@ -24,7 +24,9 @@ export async function loadMocapReference(){
   rig.joints.forEach((row,i)=>{if(row[1]>=0)bones[row[1]].add(bones[i])});
   const group=new THREE.Group();rig.joints.forEach((row,i)=>{if(row[1]<0)group.add(bones[i])});
   const helper=new THREE.SkeletonHelper(group);helper.material.vertexColors=false;helper.material.color.set(0xc75a35);helper.material.depthTest=false;
-  return {group,helper,bones,walk:clip(rig.walk),run:clip(rig.run)};
+  const walk=clip(rig.walk),run=clip(rig.run);
+  const hipY=run.channels.find(ch=>ch.joint===0&&ch.path==='t').keys.map(k=>k.v[1]);
+  return {group,helper,bones,walk,run,runHipMin:Math.min(...hipY),runHipMax:Math.max(...hipY)};
 }
 const qa=new THREE.Quaternion(),qb=new THREE.Quaternion();
 function at(ch,f){const keys=ch.keys;let i=0;while(i<keys.length-2&&keys[i+1].f<f)i++;
@@ -36,6 +38,15 @@ export function poseMocap(ref,name,t){const clip=name==='run'?ref.run:ref.walk;i
   const f=(t*clip.fps)%clip.length;
   for(const ch of clip.channels){const b=ref.bones[ch.joint],v=at(ch,f);if(ch.path==='r')b.quaternion.copy(v);else b.position.copy(v)}
   ref.group.updateMatrixWorld(true);ref.helper.updateMatrixWorld(true);
+}
+export function alignMocapFacing(ref,targetForward){
+  ref.group.rotation.y=0;poseMocap(ref,'run',0);
+  const P=n=>ref.bones.find(b=>b.name===n).getWorldPosition(new THREE.Vector3());
+  const a=P('toe.L').sub(P('foot.L')).add(P('toe.R').sub(P('foot.R'))).setY(0).normalize();
+  const b=targetForward.clone().setY(0).normalize();
+  const yaw=Math.atan2(a.z*b.x-a.x*b.z,a.x*b.x+a.z*b.z);
+  ref.group.rotation.y=yaw;ref.group.updateMatrixWorld(true);
+  return yaw;
 }
 export async function loadJumpReference(){
   const source=await (await fetch('./reference-cmu-16-05-jump.bvh')).text();

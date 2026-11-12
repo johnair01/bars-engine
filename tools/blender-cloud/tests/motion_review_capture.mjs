@@ -20,9 +20,11 @@ try{
   await page.locator('#play').click();
   await page.screenshot({path:join(out,'motion-lab-run.png')});
   await page.locator('#actions [data-motion="pose"]').click();
+  if(+(await page.locator('#clearance').inputValue())!==0.5||+(await page.locator('#shoulderOutL').inputValue())!==0.1)throw Error('shared run calibration defaults did not load');
+  await page.locator('#bodyOnly').check();
+  await page.screenshot({path:join(out,'motion-lab-run-default-calibration.png')});
   await page.locator('#shoulderOutL').evaluate(el=>{el.value='0.4';el.dispatchEvent(new Event('input',{bubbles:true}))});
   if(!await page.locator('#posePanel').isVisible()||+(await page.locator('#shoulderOutL').inputValue())!==0.4)throw Error('pose calibration control did not update');
-  await page.locator('#bodyOnly').check();
   await page.screenshot({path:join(out,'motion-lab-pose-calibration.png')});
   await page.locator('#note').fill('Cloud pose calibration save check.');
   await page.locator('#saveNote').click();
