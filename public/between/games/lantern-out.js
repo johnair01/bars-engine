@@ -4,6 +4,7 @@
    the new path to the lookout stone, the lantern floats on along the thread, and the place lights and stays lit. */
 import { PLACES, KINDS, CALL_WORDS, COPY, callsFor, litPlaces, betweenDay, hash } from "./core.js";
 import { setExtraWalk } from "../hollow.js";
+import { LIGHT } from '../../look-data.js';
 
 const MOUTH = { x: 0.6, z: -2.8, r: 1.9 };               // where the calls are chosen (inside the rope fence)
 const PATH = { ax: 0.6, az: -3.2, bx: 1.5, bz: -10.3, w: 0.95 };
@@ -55,7 +56,7 @@ export function create(X) {
     const pts = []; for (let k = 0; k <= 10; k++) { const u = k / 10; pts.push(new THREE.Vector2(0.17 * Math.sin(0.25 + u * (Math.PI - 0.5)) + 0.03, u * 0.44 - 0.22)); }
     const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 14), new THREE.MeshBasicMaterial({ color: 0xffc275, side: THREE.DoubleSide })); g.add(body);
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: dot, color: 0xffb060, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(1.7); g.add(halo);
-    const light = new THREE.PointLight(0xffb066, 4, 7, 1.6); g.add(light); scene.add(g); return { g, light, halo };
+    const light = new THREE.PointLight(LIGHT.lantern.colour, 4, 7, 1.6); g.add(light); scene.add(g); return { g, light, halo };
   })();
 
   /* ---- the state of tonight ---- */

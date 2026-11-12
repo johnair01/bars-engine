@@ -2,11 +2,14 @@ import { createHash } from 'crypto'
 import type { PrismaClient } from '@prisma/client'
 import { applyWrite, validateSave } from './save'
 import { missingObjects } from './content-store'
+import { backfillCarveOut } from './backfill-looks'
 
 /** What a Claude session writes to the Council Board: the Your steps lists and steps, Outreach's contacts and shows,
- * and the council's rows (src/lib/board/rows.ts). His answers (positions, questions, ...) are his to save, never a
- * session's. */
-export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws'])
+ * the council's rows (src/lib/board/rows.ts), and the council's records — its callsheets, passes and ledger as
+ * whole documents (src/lib/board/records.ts, born recorded). His answers (positions, questions, ...) are his to
+ * save, never a session's. */
+export const SESSION_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'rows', 'draws', 'records', 'resolved',
+  'constraint', 'morning', 'intake', 'battles'])  // the council's dated constraint read, one document a day (six-faces-council constraint-route-brief.md)
 /** Collections whose session writes the board-pull Action lands on main, so they are born unrecorded: a posted row
  * waits for board-pull to put it in board_data.json and acknowledge it, and the staleness check alarms if it does not. */
 export const UNRECORDED_COLLECTIONS = new Set(['rows'])
@@ -89,7 +92,7 @@ export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: Se
     missing: (shas: string[]) => Promise<string[]> = missingObjects,
     loads: (url: string) => Promise<boolean> = pictureLoads): Promise<SessionResult> {
   const out: SessionResult = { written: [], same: 0, refused: [] }
-  for (const { collection, docId, mode = collection === 'rows' ? 'set' : 'update', data } of docs) {
+  for (const { collection, docId, mode = collection === 'rows' || collection === 'records' ? 'set' : 'update', data } of docs) {
     const key = `${collection}/${docId}`
     if (!SESSION_COLLECTIONS.has(collection)) { out.refused.push(`${key}: sessions write ${[...SESSION_COLLECTIONS].join(', ')}`); continue }
     const v = validateSave({ board: 'council', collection, docId, mode, data })
@@ -110,9 +113,10 @@ export async function sessionWrite(db: Pick<PrismaClient, 'boardSave'>, docs: Se
     const next = applyWrite(prev, v.save)
     if (collection === 'rows' || collection === 'steps') {
       // Judged on the document as it will stand (an update merges onto the latest), so a step edit cannot strip the picture.
-      const bad = lookErrors(docId, next)
+      const carved = collection === 'rows' && backfillCarveOut(docId, next)  // the one pre-gate exception (backfill-looks.ts)
+      const bad = carved ? [] : lookErrors(docId, next)
       const pic = cardPicture(next)
-      if (!bad.length && pic && !(collection === 'rows' && HOLD_URL.test(pic)) && !(await loads(pic)))
+      if (!carved && !bad.length && pic && !(collection === 'rows' && HOLD_URL.test(pic)) && !(await loads(pic)))
         bad.push(`LOOK NOT POSTED: its picture ${pic.slice(-70)} does not answer 200 as an image; push it or take it again`)
       if (bad.length && isLook(docId, next)) { out.refused.push(`${key}: ${bad.join('; ')}`); continue }
     }

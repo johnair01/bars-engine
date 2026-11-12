@@ -138,7 +138,7 @@ A look or board card must not carry a Vercel preview link any more: none will be
 ## 6. Before you push
 
 ```bash
-scripts/local/check.sh            # npm run check (Prisma generate, verifiers, eslint, tsc) + npm run test:vitest
+scripts/local/check.sh            # npm run check (Prisma generate, verifiers, the look check, eslint, tsc) + npm run test:vitest
 scripts/local/check.sh --build    # the same, then npm run build on the local database
 ```
 
