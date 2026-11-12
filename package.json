@@ -153,6 +153,7 @@
     "verify:build-reliability": "npm run verify:server-action-types && npm run verify:prisma-schema && npm run verify:transformation-registry-lockstep && npm run verify:face-meta-lockstep",
     "lantern:engine": "node scripts/build-lantern-engine.mjs",
     "check:look": "node scripts/check-look.mjs",
+    "check:look:frame": "node scripts/check-look-frame.mjs",
     "check": "npm run db:generate && npm run verify:build-reliability && npm run check:look && npm run lint && tsc --noEmit",
     "precommit:check": "npm run check && npm run validate-manifest",
     "build:type-check": "tsc --noEmit",

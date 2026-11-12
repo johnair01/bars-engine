@@ -138,9 +138,16 @@ A look or board card must not carry a Vercel preview link any more: none will be
 ## 6. Before you push
 
 ```bash
-scripts/local/check.sh            # npm run check (Prisma generate, verifiers, the look check, eslint, tsc) + npm run test:vitest
+scripts/local/check.sh            # npm run check (Prisma generate, verifiers, the look check, eslint, tsc), the look frame check, then vitest
 scripts/local/check.sh --build    # the same, then npm run build on the local database
 ```
+
+The look frame check (`npm run check:look:frame`, board row `bld-gate-home-2`, answered "a headless browser shot
+compared against the dataset") renders one still of the Between's hearth in headless chromium, then compares the ramp
+the shader carries and every point light in the scene to `public/between/look-data.js`, failing on drift past the
+tolerance in the script's header. The still lands in `.local-dev/look/hearth.png`, so a change to the room can be
+looked at rather than described. It needs Playwright chromium; without one `check.sh` prints `skipped` for that step
+and runs the rest. `npm run check` does not run it, so CI stays free of a browser.
 
 The Vercel preview build used to be the build check for merging. **`scripts/local/check.sh --build` passing is
 that check now.** A pull request's "How I checked it" names the command and its result, the pages it opened, and the
