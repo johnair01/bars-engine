@@ -69,6 +69,11 @@ async function postStill(still) {
     console.log('not posted: no COUNCIL_MENU_TOKEN here, so the board row keeps its last picture')
     return
   }
+  // Read the row before writing anything: an answered look, or a row that is not there, must leave the store untouched.
+  const held = await board('GET', `/api/board/session-writes?collection=steps&ids=${encodeURIComponent(`steps/${ROW}`)}`)
+  const doc = held.docs?.[`steps/${ROW}`]
+  if (!doc) { console.log(`posted nothing: the board holds no step ${ROW}`); return }
+  if (doc.done || doc.note) { console.log(`posted nothing: you already answered ${ROW}, so it keeps its picture`); return }
   const raw = fs.readFileSync(still)
   const sha = createHash('sha256').update(raw).digest('hex')
   const name = `${sha.slice(0, 16)}.png`            // the content store's own name for a picture: its hash
@@ -79,10 +84,6 @@ async function postStill(still) {
     await board('PUT', `/api/board/content?sha=${sha}&type=${encodeURIComponent('image/png')}`, gzipSync(raw, { level: 9 }), { 'Content-Type': 'application/gzip' })
     await board('POST', '/api/board/content', { set: { [path]: { sha, type: 'image/png', size: raw.length } }, remove: [] })
   }
-  const held = await board('GET', `/api/board/session-writes?collection=steps&ids=${encodeURIComponent(`steps/${ROW}`)}`)
-  const doc = held.docs?.[`steps/${ROW}`]
-  if (!doc) { console.log(`posted the still at ${served}, but the board holds no step ${ROW}`); return }
-  if (doc.done || doc.note) { console.log(`posted the still at ${served}; ${ROW} keeps the picture it had, because you answered it`); return }
   const title = doc.lookTitle || 'The Between: the hearth, as the frame check draws it'
   const href = `${BOARD}/board/look?t=${encodeURIComponent(title)}&i=${encodeURIComponent(name)}`
   const out = await board('POST', '/api/board/session-writes', { docs: [{ collection: 'steps', docId: ROW, mode: 'update', data: { still: served, files: [{ id: 'hearth-frame', src: served }], href } }] })
