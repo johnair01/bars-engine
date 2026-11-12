@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 import { aim } from './figure.js';
 import { partWorld } from './mix.js';
+import { LIGHT } from '../../look-data.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const wp = b => b.getWorldPosition(V());
@@ -79,7 +80,7 @@ export function setHearth(X, seatC, o = {}) {
   let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < 7; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.12 + r() * 0.1, 0.5 + r() * 0.35, 8, 1, true), new THREE.MeshBasicMaterial({ color: i % 3 ? 0xff7a22 : 0xffa840, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false })); c.position.set((r() - 0.5) * 0.5, 0.45, (r() - 0.5) * 0.2); H.add(c); }
   // the fire's light, where hollow.js puts it (0.82 of the way from the room's middle to the hearth: in front of the logs)
-  const fire = new THREE.PointLight(0xff8a3a, 16, 10, 1.5); fire.position.copy(H.position).addScaledVector(f, -0.2).setY(0.8); S.add(fire);
+  const fire = new THREE.PointLight(LIGHT.hearth.colour, LIGHT.hearth.intensity, LIGHT.hearth.distance, LIGHT.hearth.decay); fire.position.copy(H.position).addScaledVector(f, -0.2).setY(0.8); S.add(fire);
   // the worn cushion (hollow.js makeRoomItem cushion, flattened to MAT_TOP), plum
   const cg = new THREE.BoxGeometry(1, 1, 1, 6, 2, 6), p = cg.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), kk = 1 - (Math.abs(x * 2) ** 4 + Math.abs(z * 2) ** 4) * 0.35; p.setY(i, y * Math.max(0.25, kk)); const s = 1 - Math.abs(y) * 0.12; p.setX(i, x * s); p.setZ(i, z * s); }
