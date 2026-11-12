@@ -3,3 +3,4 @@
 {"id":"2026-11-12-user-review-3","motion":"jump","note":"Jump is kind of iffy.","source":"user chat review"}
 {"id":"2026-11-12-user-review-4","motion":"climb","note":"Climb needs something visible to climb on for the action to make sense.","source":"user chat review"}
 {"id": "180410e5-abc8-46c5-b240-5456d14e6cda", "created_at": 1794511078, "motion": "climb", "time_seconds": 0.213, "settings": {"speed": 0.85, "stride": 1.25, "arm": 1.35, "lean": 0.85, "lift": 1, "jump": 1, "body": "f", "view": {"yaw": 0.88, "pitch": 0.03, "zoom": 1}}, "note": "Show a ledge and actual hand and foot contact before judging the climb motion.", "source": "motion lab"}
+{"id":"2026-11-12-user-review-5","motion":"run","note":"The source and cultivator rigs are not aligned; the cultivator's arms intersect the torso during the run. Calibrate the rig and allow posing in the viewer before judging motion quality.","source":"user chat review"}

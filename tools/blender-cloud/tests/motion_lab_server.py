@@ -29,7 +29,7 @@ class Handler(SimpleHTTPRequestHandler):
             data = json.loads(self.rfile.read(length))
             motion = data.get('motion')
             note = data.get('note', '').strip()
-            if motion not in {'walk', 'run', 'jump', 'climb'} or not 1 <= len(note) <= 2000:
+            if motion not in {'walk', 'run', 'pose', 'jump', 'climb'} or not 1 <= len(note) <= 2000:
                 raise ValueError('motion or note invalid')
             record = {'id': str(uuid.uuid4()), 'created_at': int(time.time()), 'motion': motion,
                       'time_seconds': round(float(data.get('time_seconds', 0)), 3),

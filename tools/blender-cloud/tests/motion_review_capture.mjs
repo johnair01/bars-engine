@@ -19,6 +19,15 @@ try{
   await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('run ·'));
   await page.locator('#play').click();
   await page.screenshot({path:join(out,'motion-lab-run.png')});
+  await page.locator('#actions [data-motion="pose"]').click();
+  await page.locator('#shoulderOutL').evaluate(el=>{el.value='0.4';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.getByText('Left upper arm: out 0.40').waitFor();
+  await page.locator('#bodyOnly').check();
+  await page.screenshot({path:join(out,'motion-lab-pose-calibration.png')});
+  await page.locator('#note').fill('Cloud pose calibration save check.');
+  await page.locator('#saveNote').click();
+  await page.getByText('Saved to the repo with this frame and settings.').waitFor();
+  await page.locator('#bodyOnly').uncheck();
   await page.locator('#actions [data-motion="jump"]').click();
   await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('jump ·'));
   await page.screenshot({path:join(out,'motion-lab-jump.png')});
