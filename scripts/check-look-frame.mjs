@@ -15,9 +15,12 @@
    A budget light the scene does not build, or any drift past those numbers, is a finding and exit 1.
 
    Run:  node scripts/check-look-frame.mjs
+         --post            put the still on board row between-hearth-frame-look-01 (LOOK_ROW names another), so the
+                           picture on /board/look is never older than the last push; needs COUNCIL_MENU_TOKEN, and a
+                           post that cannot happen is reported without failing the push
          OUT=<dir>         where the still goes (default .local-dev/look)
          SIZE=1280x720     the still's size
-         THREE_BASE=<url>  where the bare "three" specifier resolves (default: the CDN the page itself uses)
+         THREE_BASE=<url>  where the bare "three" specifier resolves (default: the copy in node_modules)
          LD_LIBRARY_PATH   if chromium cannot find libnspr4 and friends on this machine, put them there
 
    Nothing here fails for want of a tool. It exits 2 and says why when there is no Playwright, when chromium does not
@@ -27,6 +30,8 @@
 import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
+import { gzipSync } from 'node:zlib'
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
@@ -38,8 +43,52 @@ const THREE_BASE = process.env.THREE_BASE || `${CDN}build/`
 const LOCAL_THREE = path.join(ROOT, 'node_modules', 'three')
 const LOCAL_BVH = path.join(ROOT, 'node_modules', 'three-mesh-bvh')
 const TOLERANCE = { number: 0.005, stop: 1e-6 }
+/* --post puts the still on the board look row that carries the room's pictures, so the picture is never older than the
+   last push. It needs COUNCIL_MENU_TOKEN and a reachable bars-engine; a post that cannot happen is reported and the
+   check still passes, because a board that is down is not a fault in public/between. */
+const POST = process.argv.includes('--post') || !!process.env.LOOK_POST
+const BOARD = (process.env.BARS_ENGINE_URL || 'https://bars-engine.vercel.app').replace(/\/$/, '')
+const ROW = process.env.LOOK_ROW || 'between-hearth-frame-look-01'
 
 const skip = why => { console.error(`look frame check skipped: ${why}`); process.exit(2) }
+
+/* The board's two stores: the content store (pictures, by hash) and the session store (the row that names one). */
+async function board(method, url, body, headers = {}) {
+  const token = process.env.COUNCIL_MENU_TOKEN
+  const res = await fetch(BOARD + url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'User-Agent': 'bars-engine check-look-frame', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers },
+    body: body === undefined ? undefined : (Buffer.isBuffer(body) ? body : JSON.stringify(body)),
+  })
+  if (!res.ok) throw new Error(`${method} ${url} answered ${res.status}: ${(await res.text()).slice(0, 200)}`)
+  return res.json().catch(() => ({}))
+}
+
+async function postStill(still) {
+  if (!process.env.COUNCIL_MENU_TOKEN) {
+    console.log('not posted: no COUNCIL_MENU_TOKEN here, so the board row keeps its last picture')
+    return
+  }
+  const raw = fs.readFileSync(still)
+  const sha = createHash('sha256').update(raw).digest('hex')
+  const name = `${sha.slice(0, 16)}.png`            // the content store's own name for a picture: its hash
+  const path = `board/stills/${name}`
+  const served = `${BOARD}/board/stills/${name}`
+  const manifest = await board('GET', '/api/board/content')
+  if (manifest.files?.[path]?.sha !== sha) {
+    await board('PUT', `/api/board/content?sha=${sha}&type=${encodeURIComponent('image/png')}`, gzipSync(raw, { level: 9 }), { 'Content-Type': 'application/gzip' })
+    await board('POST', '/api/board/content', { set: { [path]: { sha, type: 'image/png', size: raw.length } }, remove: [] })
+  }
+  const held = await board('GET', `/api/board/session-writes?collection=steps&ids=${encodeURIComponent(`steps/${ROW}`)}`)
+  const doc = held.docs?.[`steps/${ROW}`]
+  if (!doc) { console.log(`posted the still at ${served}, but the board holds no step ${ROW}`); return }
+  if (doc.done || doc.note) { console.log(`posted the still at ${served}; ${ROW} keeps the picture it had, because you answered it`); return }
+  const title = doc.lookTitle || 'The Between: the hearth, as the frame check draws it'
+  const href = `${BOARD}/board/look?t=${encodeURIComponent(title)}&i=${encodeURIComponent(name)}`
+  const out = await board('POST', '/api/board/session-writes', { docs: [{ collection: 'steps', docId: ROW, mode: 'update', data: { still: served, files: [{ id: 'hearth-frame', src: served }], href } }] })
+  console.log(`board row ${ROW} shows ${served}`)
+  if (out.refused?.length) console.error(`board refused: ${out.refused.join('; ')}`)
+}
 
 /* Playwright: this repo's node_modules, a global install, or $HOME/pw (the way a cloud session installs it). */
 const require = createRequire(import.meta.url)
@@ -197,6 +246,10 @@ try {
     process.exit(1)
   }
   console.log(`\nthe frame reads the look dataset; look hash ${LOOK_HASH}. Tolerance: colour exact, numbers within ${TOLERANCE.number}, stops within ${TOLERANCE.stop}.`)
+  if (POST) {
+    try { await postStill(still) }
+    catch (e) { console.error(`posted nothing: ${String(e.message).split('\n')[0]}`) }
+  }
 } finally {
   if (browser) await browser.close()
   server.close()

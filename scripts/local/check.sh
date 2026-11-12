@@ -33,7 +33,7 @@ step check $DEV run -- npm run check
 # The frame half of the look gate (board row bld-gate-home-2, answered a): one hearth still, then the ramp and the
 # lights read off it compared to the look dataset. It can lack a browser or a copy of three, which are skips (exit 2,
 # reported as skipped here) and not faults; only a real drift stops the push.
-step --skip-2 look-frame $DEV run -- npm run check:look:frame
+step --skip-2 look-frame $DEV run -- npm run check:look:frame -- --post
 step vitest $DEV run -- npm run test:vitest
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build

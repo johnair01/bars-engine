@@ -147,7 +147,11 @@ compared against the dataset") renders one still of the Between's hearth in head
 the shader carries and every point light in the scene to `public/between/look-data.js`, failing on drift past the
 tolerance in the script's header. The still lands in `.local-dev/look/hearth.png`, so a change to the room can be
 looked at rather than described. It reads three from `node_modules`, where `npm ci` puts the devDependency that matches the importmap's version, so it
-needs no network; only a machine with no chromium reports that step `skipped`, and the rest still run. `npm run check` does not run it, so CI stays free of a browser.
+needs no network; only a machine with no chromium reports that step `skipped`, and the rest still run.
+
+`check.sh` runs it with `--post`, so the still on board row `between-hearth-frame-look-01` is replaced each time the
+frame renders, and the picture on `/board/look` is never older than the last push. A machine with no
+`COUNCIL_MENU_TOKEN` says so and leaves the row alone; so does a look you have already answered. `npm run check` does not run it, so CI stays free of a browser.
 
 The Vercel preview build used to be the build check for merging. **`scripts/local/check.sh --build` passing is
 that check now.** A pull request's "How I checked it" names the command and its result, the pages it opened, and the
