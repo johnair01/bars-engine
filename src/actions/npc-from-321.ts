@@ -107,8 +107,17 @@ export async function takePartQuest(daemonId: string): Promise<{ questId?: strin
   const part = readPart(daemon.innerWorkDigest)
   if (part.questId) return { questId: part.questId }
 
+  // A part met in a 3-2-1 opened from a setback serves the goal that setback was about (Madi's demo, /between/people).
+  const session = daemon.shadow321SessionId
+    ? await db.shadow321Session.findUnique({ where: { id: daemon.shadow321SessionId }, select: { chargeSourceBarId: true } })
+    : null
+  const charge = session?.chargeSourceBarId
+    ? await db.customBar.findUnique({ where: { id: session.chargeSourceBarId }, select: { creatorId: true, lensGoalId: true } })
+    : null
+  const lensGoalId = charge?.creatorId === player.id ? charge.lensGoalId ?? null : null
+
   const root = await db.customBar.create({
-    data: { creatorId: player.id, title: `Help ${daemon.name}`, description: `A part of you asked for help. Three steps: one in your life, one in the land, one check-in.`, type: 'quest', visibility: 'private' },
+    data: { creatorId: player.id, title: `Help ${daemon.name}`, description: `A part of you asked for help. Three steps: one in your life, one in the land, one check-in.`, type: 'quest', visibility: 'private', lensGoalId },
   })
   for (const [i, step] of ['life', 'land', 'checkin'].entries()) {
     await db.customBar.create({
