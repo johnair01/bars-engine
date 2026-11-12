@@ -22,6 +22,11 @@ try{
   await page.locator('#actions [data-motion="jump"]').click();
   await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('jump ·'));
   await page.screenshot({path:join(out,'motion-lab-jump.png')});
+  await page.locator('#actions [data-motion="climb"]').click();
+  await page.locator('#note').fill('Cloud note save check: visible ledge contact.');
+  await page.locator('#saveNote').click();
+  await page.getByText('Saved to the repo with this frame and settings.').waitFor();
+  await page.screenshot({path:join(out,'motion-lab-climb-and-note.png')});
   const error=await page.locator('#error').textContent();if(error?.trim())throw Error(error);
   console.log('Captured 36 authored motion frames on two bodies');
 }finally{await browser.close()}

@@ -2,6 +2,7 @@
 // Kept separate from the cultivator rig so it serves as a motion reference.
 import * as THREE from 'three';
 import {BVHLoader} from 'three/addons/loaders/BVHLoader.js';
+import * as FG from './make/figure.js';
 export async function loadMocapReference(){
   const buf=await (await fetch('./reference-cmu-walk-run.glb')).arrayBuffer(),dv=new DataView(buf),jl=dv.getUint32(12,true);
   const j=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bin=20+jl+8,rig=j.nodes[0].extras;
@@ -39,3 +40,30 @@ export async function loadJumpReference(){
   return {group,helper,mixer,clip};
 }
 export function poseJumpReference(ref,t){ref.mixer.setTime(Math.min(t,ref.clip.duration));ref.group.updateMatrixWorld(true);ref.helper.updateMatrixWorld(true)}
+
+// Transfer the captured joint *directions*, not the source rig's local bone
+// rotations. The rigs have different rest axes, so copying quaternions would
+// twist the cultivator. Reach and arm controls scale only the forward component.
+export function retargetRunDirections(F,ref,{stride=1,arm=1,lean=1,groundY=0}={}){
+  FG.resetPose(F);ref.group.updateMatrixWorld(true);
+  const byName=Object.fromEntries(ref.bones.map(b=>[b.name,b]));
+  const P=n=>byName[n].getWorldPosition(new THREE.Vector3());
+  const up=new THREE.Vector3(0,1,0),left=P('upper_arm.L').sub(P('upper_arm.R')).setY(0).normalize();
+  const forward=P('toe.L').sub(P('foot.L')).add(P('toe.R').sub(P('foot.R'))).setY(0).normalize();
+  const srcForward=forward.lengthSq()>.1?forward:new THREE.Vector3().crossVectors(left,up).normalize();
+  const srcLeft=left.addScaledVector(srcForward,-left.dot(srcForward)).normalize();
+  const targetDir=(a,b,scale)=>{
+    const d=P(b).sub(P(a)).normalize(),lat=d.dot(srcLeft),fw=d.dot(srcForward)*scale;
+    return up.clone().multiplyScalar(d.y).addScaledVector(F.fr.l,lat).addScaledVector(F.fr.f,fw).normalize();
+  };
+  const torso=targetDir('spine','spine.003',lean);
+  FG.aim(F,'hips','spine01',torso);
+  for(const side of ['L','R']){
+    const x=side==='L'?'L':'R',s=side==='L'?'L':'R';
+    FG.aim(F,'hip'+x,'knee'+x,targetDir('thigh.'+s,'shin.'+s,stride));
+    FG.aim(F,'knee'+x,'ankle'+x,targetDir('shin.'+s,'foot.'+s,stride));
+    FG.aim(F,'shoulder'+x,'elbow'+x,targetDir('upper_arm.'+s,'forearm.'+s,arm));
+    FG.aim(F,'elbow'+x,'wrist'+x,targetDir('forearm.'+s,'hand.'+s,arm));
+  }
+  F.root.position.y=groundY;F.root.updateMatrixWorld(true);F.mesh.skeleton.update();F.poseName='run-mocap';
+}

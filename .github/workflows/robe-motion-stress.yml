@@ -18,6 +18,7 @@ on:
       - public/between/cult/walker.js
       - tools/blender-cloud/tests/robe_stress_capture.mjs
       - tools/blender-cloud/tests/motion_review_capture.mjs
+      - tools/blender-cloud/tests/motion_lab_server.py
 
 permissions:
   contents: read
@@ -40,7 +41,7 @@ jobs:
           set -euo pipefail
           cp tools/blender-cloud/tests/robe_stress_capture.mjs "$RUNNER_TEMP/robe-probe/run.mjs"
           cp tools/blender-cloud/tests/motion_review_capture.mjs "$RUNNER_TEMP/robe-probe/motion.mjs"
-          python3 -m http.server 8767 --bind 127.0.0.1 --directory public > "$RUNNER_TEMP/robe-server.log" 2>&1 &
+          python3 tools/blender-cloud/tests/motion_lab_server.py > "$RUNNER_TEMP/robe-server.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid"' EXIT
           ROBE_STRESS_OUT="$RUNNER_TEMP/robe-results" node "$RUNNER_TEMP/robe-probe/run.mjs"
