@@ -13,9 +13,10 @@ const h = vi.hoisted(() => {
     },
     shadow321Session: {
       findFirst: vi.fn(async ({ where }: any) => state.session?.linkedQuestId === where.linkedQuestId ? { daemons: [{ id: state.daemon.id }] } : null),
+      findUnique: vi.fn(async () => ({ chargeSourceBarId: state.session?.chargeSourceBarId ?? null })),
       update: vi.fn(async ({ data }: any) => Object.assign(state.session, data)),
     },
-    customBar: { create: vi.fn(async ({ data }: any) => { const b = { id: `bar-${state.bars.length + 1}`, ...data }; state.bars.push(b); return b }) },
+    customBar: { findUnique: vi.fn(async () => null), create: vi.fn(async ({ data }: any) => { const b = { id: `bar-${state.bars.length + 1}`, ...data }; state.bars.push(b); return b }) },
     vibulonMark: { createMany: vi.fn(async () => ({ count: 0 })) },
     $transaction: vi.fn(async (fn: any) => fn(db)),
     vibulon: { createMany: vi.fn(async ({ data }: any) => { data.forEach((d: any) => state.coins.push({ ...d })); return { count: data.length } }), createManyAndReturn: vi.fn(async ({ data }: any) => data.map((d: any) => { const c = { id: `coin-${state.coins.length + 1}`, ...d }; state.coins.push(c); return { id: c.id } })) },
