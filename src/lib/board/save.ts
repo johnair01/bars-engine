@@ -1,3 +1,4 @@
+import { recordErrors } from './records'
 import { rowErrors } from './rows'
 
 /**
@@ -8,13 +9,18 @@ import { rowErrors } from './rows'
 export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
-  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws',
+  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws', 'records',
+  'battles',  // one battle's record at battles/<id>, written by board/copy_write.py
+  'intake',   // the intake's one run at intake/latest, written by board/copy_write.py
+  'constraint',  // the council's dated constraint read, one document a day
+  'resolved',  // one settled answer at <kind>--<id>, written by board/resolved_write.py
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
  * aside (src/lib/tap-the-vein/board-set-aside.ts). */
 export const RECORD_KINDS = new Set<string>([
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv', 'stores', 'draws',
+  'battles', 'intake',
 ])
 /** The `board` of a request: absent means the nonprofit board; anything not in BOARDS is null. */
 export function parseBoard(v: unknown): (typeof BOARDS)[number] | null {
@@ -60,6 +66,11 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (s.mode === 'update') errors.push('a row is posted whole: mode set (a revision is a new id)')
     errors.push(...rowErrors(data))
   }
+  if (s.collection === 'records') { // the council's record-only files, stored not mirrored (store-only FR-001)
+    if (s.board !== 'council') errors.push('records are the Council Board\'s')
+    if (s.mode === 'update') errors.push('a record is posted whole: mode set (a revision is a new docId)')
+    errors.push(...recordErrors(data))
+  }
   if (s.mode !== 'update') {
     const c = s.collection as string
     if (['positions', 'questions', 'terms', 'causes', 'picks', 'blockers'].includes(c) && !(str(data.savedAt) && ISO.test(data.savedAt)))
@@ -90,6 +101,30 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (c === 'draws') { // the draw: a project deck's top card turned up, at <deck>--<card id>
       if (s.board !== 'council') errors.push('the draws are the Council Board\'s')
       if (!nonBlank(data.deck) || !nonBlank(data.card) || !(str(data.at) && ISO.test(data.at))) errors.push('a draw names its deck, card and at')
+    }
+    if (c === 'resolved') { // one settled answer, the record the page's Resolved tab draws (six-faces-council board/resolved_write.py)
+      if (s.board !== 'council') errors.push('the resolved entries are the Council Board\'s')
+      if (!['positions', 'questions', 'terms', 'causes'].includes(data.kind as string)) errors.push('a resolved entry names its kind')
+      if (!nonBlank(data.id)) errors.push('a resolved entry names its id')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('a resolved entry needs savedAt, an ISO UTC time')
+      else if (nonBlank(data.kind) && nonBlank(data.id) && s.docId !== `${data.kind}--${data.id}`)
+        errors.push('a resolved entry lives at <kind>--<id>')
+    }
+    if (c === 'battles') { // one battle's record, its rounds and questions (six-faces-council board/copy_write.py)
+      if (s.board !== 'council') errors.push('the battles are the Council Board\'s')
+      if (!nonBlank(data.name)) errors.push('a battle names its name')
+      if (data.id !== s.docId) errors.push('a battle lives at battles/<id> and names that id')
+    }
+    if (c === 'intake') { // the intake's one run, at intake/latest
+      if (s.board !== 'council') errors.push('the intake is the Council Board\'s')
+      if (s.docId !== 'latest') errors.push('the intake lives at intake/latest')
+      if (!(str(data.date) && DATE.test(data.date))) errors.push('the intake names its date')
+      if (!Array.isArray(data.items)) errors.push('the intake carries its items')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
+    }
+    if (c === 'morning' && s.docId === 'gather') { // the gather the page draws
+      if (!(str(data.date) && DATE.test(data.date))) errors.push('the gather names its date')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
     }
     if (c === 'morning' && s.docId === 'menu') {
       if (!str(data.menu) || !(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('the menu needs menu and savedAt')

@@ -82,7 +82,7 @@ export const CONNECTOR_OVERRIDES: Record<string, Technique> = {
     id: 'sp-connector-CLEAN-SHAMAN-OUTER',
     slug: 'connector-clean_up-shaman-outer',
     name: 'Clear the Static',
-    essence: 'Clear the relational static with someone before you ask, so the ask lands clean.',
+    essence: 'Pour two cups before you ask a friend for help. Say what the two of you left unsaid.',
     steps: [
       'Notice the unspoken charge with this person (old debts, awkwardness).',
       'Name it lightly to yourself, then feel where it sits in your body.',
@@ -224,7 +224,7 @@ export const CONNECTOR_OVERRIDES: Record<string, Technique> = {
     forbiddenMoves: ['Turning every moment of care into hosting', 'Pressuring yourself to repay the care', 'Deflecting belonging by managing it'],
     failureModes: ['The Overextended Hub — never a guest', 'Connection that only flows outward'],
     remediation: 'Let one person take care of you this week without reciprocating.',
-    tell: { working: 'You feel held and let it land.', performed: 'You receive, then immediately start organizing.' },
+    tell: { working: 'You take the bowl your friend offers. You thank them before you eat.', performed: 'You receive, then immediately start organizing.' },
     contraindications: ['When the group truly needs you to hold space right now'],
     example: 'A friend checks on you; instead of flipping to their needs, you let yourself be cared for.',
     tier: 'canonical',

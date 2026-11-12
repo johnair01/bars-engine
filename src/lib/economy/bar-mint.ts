@@ -8,6 +8,7 @@
  * Every spend and every balance a player reads counts only spendable vibeulons: `stakedOnBarId` is null.
  */
 import type { Prisma, PrismaClient } from '@prisma/client'
+import { markCoins, type CoinEnergy } from './coin-marks'
 
 /** A Prisma client or an interactive transaction client. */
 export type Tx = Prisma.TransactionClient | PrismaClient
@@ -21,27 +22,36 @@ export function spendableWhere(ownerId: string): Prisma.VibulonWhereInput {
     return { ownerId, stakedOnBarId: null }
 }
 
-/** Mint the one vibeulon a new BAR gives its maker. Call inside the transaction that creates the BAR. */
+export const EMBER_CATCH_SOURCE = 'ember_catch'
+
+/**
+ * Mint the one vibeulon a new BAR gives its maker. Call inside the transaction that creates the BAR.
+ * `source` defaults to `bar_mint`; `ember_catch` is a worked ember set into a BAR (ember.ts). `energy` is the ember's
+ * move and feel (FR-007). The mint writes its `minted` mark.
+ */
 export async function mintBarVibulon(
     tx: Tx,
-    input: { barId: string; playerId: string; title: string },
+    input: { barId: string; playerId: string; title: string; source?: string; energy?: CoinEnergy; place?: string },
 ): Promise<string> {
+    const source = input.source ?? BAR_MINT_SOURCE
     const v = await tx.vibulon.create({
         data: {
             ownerId: input.playerId,
             creatorId: input.playerId,
-            originSource: BAR_MINT_SOURCE,
+            originSource: source,
             originId: input.barId,
             originTitle: input.title.slice(0, 200),
+            ...(input.energy ? { energy: input.energy as Prisma.InputJsonValue } : {}),
         },
-        select: { id: true },
+        select: { id: true, originSource: true, originId: true, originTitle: true, energy: true },
     })
+    await markCoins(tx, [v], 'minted', { playerId: input.playerId, place: input.place ?? 'bar-mint', barId: input.barId })
     await tx.vibulonEvent.create({
         data: {
             playerId: input.playerId,
-            source: BAR_MINT_SOURCE,
+            source,
             amount: 1,
-            notes: `Made a BAR: ${input.title.slice(0, 120)}`,
+            notes: source === BAR_MINT_SOURCE ? `Made a BAR: ${input.title.slice(0, 120)}` : `A BAR caught your ember`,
             questId: input.barId,
         },
     })
@@ -73,6 +83,7 @@ export async function stakeBarVibulon(
         }))
     if (!coin) return null
     await tx.vibulon.update({ where: { id: coin.id }, data: { stakedOnBarId: input.barId } })
+    await markCoins(tx, [coin.id], 'staked', { playerId: input.playerId, place: 'bar-mint', barId: input.barId })
     await tx.vibulonEvent.create({
         data: {
             playerId: input.playerId,
@@ -97,6 +108,7 @@ export async function releaseBarStake(tx: Tx, input: { barId: string } | { barId
     await tx.vibulon.updateMany({ where: { id: { in: staked.map((v) => v.id) } }, data: { stakedOnBarId: null } })
     for (const v of staked) {
         if (!v.ownerId) continue
+        await markCoins(tx, [v.id], 'released', { playerId: v.ownerId, place: 'bar-mint', barId: v.stakedOnBarId })
         await tx.vibulonEvent.create({
             data: {
                 playerId: v.ownerId,
@@ -122,11 +134,18 @@ export async function releaseStaleStakes(tx: Tx, ownerId: string): Promise<numbe
     })
     const ids = [...new Set(staked.map((v) => v.stakedOnBarId as string))]
     if (ids.length === 0) return 0
-    const live = await tx.customBar.findMany({
-        where: { id: { in: ids }, visibility: 'public', archivedAt: null, mergedIntoId: null, status: { not: 'archived' } },
-        select: { id: true },
+    // A stake stands while its BAR is public and live (as merged), or private, live and shared with the coin's owner
+    // through a BarShare either way (fo3-stake-on-shared-page).
+    const bars = await tx.customBar.findMany({
+        where: { id: { in: ids }, archivedAt: null, mergedIntoId: null, status: { not: 'archived' } },
+        select: { id: true, visibility: true },
     })
-    const liveIds = new Set(live.map((b) => b.id))
+    const privateIds = bars.filter((b) => b.visibility !== 'public').map((b) => b.id)
+    const shares = privateIds.length
+        ? await tx.barShare.findMany({ where: { barId: { in: privateIds } }, select: { barId: true, fromUserId: true, toUserId: true } })
+        : []
+    const sharedWithOwner = new Set(shares.filter((s) => s.fromUserId === ownerId || s.toUserId === ownerId).map((s) => s.barId))
+    const liveIds = new Set(bars.filter((b) => b.visibility === 'public' || sharedWithOwner.has(b.id)).map((b) => b.id))
     return releaseBarStake(tx, { barIds: ids.filter((id) => !liveIds.has(id)) })
 }
 

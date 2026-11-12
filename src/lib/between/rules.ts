@@ -21,7 +21,7 @@ export type Target =
   | { table: 'shown'; playerId: string }
   | { table: 'privates'; playerId: string; key: PrivateKey }
 
-const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home'] as const
+const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home', 'deck'] as const
 type PrivateKey = (typeof PRIVATE_KEYS)[number]
 
 export type Op = 'set' | 'update' | 'delete'
@@ -131,8 +131,10 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
     case 'privates':
       if (target.playerId !== me) return no(403, 'That is the other person\'s own.')
       if (target.key === 'home' && !home) return no(400, 'Your look and hopes are kept in your homeroom.')
+      if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
-      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!)) : yes
+      if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
+      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!), cur) : yes
   }
 }
 
@@ -157,13 +159,20 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'bar'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'bar', 'from', 'in'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
-/** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
-export function pouchWrite(pouch: Doc): Verdict {
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words.
+ * `cur` is the pouch as it stands. An ember the server wrote (a lit one with no move yet, or a caught one) stands only
+ * while it is identical to `cur`'s; a hand cannot light, catch or re-source an ember (spec friendcraft-deck-3, FR-017).
+ * A worked ember keeps the `from` it was lit with.
+ */
+export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
   for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
@@ -171,10 +180,15 @@ export function pouchWrite(pouch: Doc): Verdict {
     return no(400, 'The hollow keeps one card of your own.')
   const embers = pouch.embers ?? {}
   if (!isObj(embers)) return no(400, 'The pouch holds embers only.')
-  for (const e of Object.values(embers)) {
+  const was = cur && isObj(cur.embers) ? (cur.embers as Doc) : {}
+  for (const [key, e] of Object.entries(embers)) {
     if (e === null) continue
     if (!isObj(e)) return no(400, 'An ember is a small thing.')
     for (const k of Object.keys(e)) if (!EMBER_KEYS.has(k)) return no(400, 'An ember keeps no words.')
+    const before = was[key]
+    if (before !== undefined && sameJson(before, e)) continue
+    if (e.state === 'caught' || 'in' in e) return no(400, 'Only a BAR catches an ember.')
+    if (isObj(before) ? !sameJson(before.from, e.from) : e.from !== undefined) return no(400, 'Where an ember came from does not change.')
     const m = typeof e.move === 'string' ? MOVES[e.move] : undefined
     if (!m) return no(400, 'Choose one of the fifteen moves.')
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
@@ -339,7 +353,7 @@ function roomWrite(me: string, garden: Doc, room: Json): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt', 'hearth'])
 
 /* ---------- the coin table (Six-faces-council pass bar-intake-2, brief "Coin table, build 2") ----------
  * Keep writes the move a cast gave you to your homeroom's private doc (`casts`): the hexagram, its lane and suit, the
@@ -417,7 +431,7 @@ function minuteOk(m: Json | undefined): boolean {
   }
   return true
 }
-const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given'])
+const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given', 'from', 'to', 'by'])
 const GIVEN_KEYS = new Set(['spirit', 'stone', 'room', 'at'])
 const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 
@@ -429,11 +443,32 @@ const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 function homeEmberOk(e: Doc): boolean {
   if (!Object.keys(e).every(k => HOME_EMBER_KEYS.has(k))) return false
   if (!(ELEMENTS as readonly string[]).includes(e.feel as string) || !isNum(e.at)) return false
+  // where the charge started and ended (shared charge engine, FR-008), and the move that carried it: the elements and a short move id
+  for (const k of ['from', 'to'] as const) if (e[k] != null && !(ELEMENTS as readonly string[]).includes(e[k] as string)) return false
+  if (e.by != null && !(typeof e.by === 'string' && /^[a-z0-9_-]{1,40}$/i.test(e.by))) return false
   const g = e.given
   if (g == null) return true
   if (!isObj(g) || !Object.keys(g).every(k => GIVEN_KEYS.has(k))) return false
   const to = [g.spirit, g.stone].filter(v => v != null)
   return to.length === 1 && isId(to[0]) && (g.room == null || isId(g.room)) && isNum(g.at)
+}
+
+/* The hearth's record (spec focus-sit-world-growth, Contracts 1): finished sits, the last one's time, and when each of the five
+ * fragments was told. The page never shows the count. */
+const HEARTH_CHANNELS = ['earth', 'fire', 'wood', 'metal', 'water']
+function hearthOk(h: unknown): boolean {
+  if (h == null) return true
+  if (!isObj(h)) return false
+  if (Object.keys(h).some(k => !['sits', 'at', 'told', 'care', 'careAt'].includes(k))) return false
+  if (h.sits != null && !(isNum(h.sits) && Number.isInteger(h.sits) && h.sits >= 0 && h.sits <= 1_000_000)) return false
+  if (h.at != null && !isNum(h.at)) return false
+  if (h.care != null && !(isNum(h.care) && Number.isInteger(h.care) && h.care >= 0 && h.care <= 4)) return false
+  if (h.careAt != null && !isNum(h.careAt)) return false
+  if (h.told != null) {
+    if (!isObj(h.told)) return false
+    for (const [c, v] of Object.entries(h.told)) if (!HEARTH_CHANNELS.includes(c) || !isNum(v)) return false
+  }
+  return true
 }
 
 /** May the homeroom's private doc stand? A look, goals (each maybe tied to a room), check-ins from the five feelings, embers. */
@@ -444,6 +479,7 @@ export function homeWrite(doc: Doc): Verdict {
   if (doc.oriented != null && !isNum(doc.oriented)) return no(400, 'Your first minute here has a time.')
   if (!minuteOk(doc.minute)) return no(400, 'Your first minute here keeps times, nothing more.')
   if (doc.bookAt != null && !(doc.bookAt === 'self' || isId(doc.bookAt))) return no(400, 'The book opens at a page.')
+  if (!hearthOk(doc.hearth)) return no(400, 'Your hearth keeps finished sits and when each part of its story was told, nothing more.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
     ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)
@@ -459,6 +495,42 @@ export function homeWrite(doc: Doc): Verdict {
       if (!ID.test(id)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
       if (v !== null && !(isObj(v) && ok(v))) return no(400, field === 'goals' ? 'A hope is a short line, maybe tied to one room.' : field === 'embers' ? 'An ember is a feeling and where it went, nothing more.' : field === 'pages' ? 'A page in your book is a name, nothing more.' : field === 'casts' ? 'A kept cast is its hexagram and its move, nothing more.' : 'A check-in is a feeling and a short line.')
     }
+  }
+  return yes
+}
+
+/* ---------- the deck (Six-faces-council spec .specify/specs/friendcraft-deck, slice 1; his A on fo-ad-look-1) ----------
+ * A friend's own deck is a private doc beside `home`, so the words they mean to share and the words they keep to
+ * themselves never sit in one record (fo-deck-own-doc). A goal is the player's line; under it three cards, light,
+ * middle and deep, each the player's own words. Cost is read from the depth in code (public/between/friendcraft/deck.js
+ * COST), never stored, and nothing here counts, scores or prices a card: a count or cost field is refused. */
+export const DECK_DEPTHS = ['light', 'middle', 'deep'] as const
+export const DECK_WORDS_MAX = 140
+const DECK_GOAL_KEYS = new Set(['text', 'at', 'cards'])
+const DECK_CARD_KEYS = new Set(['words', 'at'])
+const deckWords = (v: unknown) => typeof v === 'string' && v.trim().length > 0 && v.length <= DECK_WORDS_MAX && isNote(v)
+function deckGoalOk(g: Doc): boolean {
+  if (!Object.keys(g).every(k => DECK_GOAL_KEYS.has(k))) return false
+  if (!deckWords(g.text) || !isNum(g.at)) return false
+  const cards = g.cards
+  if (cards == null) return true
+  if (!isObj(cards)) return false
+  for (const [depth, c] of Object.entries(cards)) {
+    if (!(DECK_DEPTHS as readonly string[]).includes(depth)) return false
+    if (c === null) continue
+    if (!isObj(c) || !Object.keys(c).every(k => DECK_CARD_KEYS.has(k)) || !deckWords(c.words) || !isNum(c.at)) return false
+  }
+  return true
+}
+/** May the deck stand? Goals only; each a line of the player's words with up to three cards at the three depths. */
+export function deckWrite(doc: Doc): Verdict {
+  for (const k of Object.keys(doc)) if (k !== 'goals') return no(400, 'Your deck keeps your goals and their cards, nothing more.')
+  const goals = doc.goals
+  if (goals == null) return yes
+  if (!isObj(goals)) return no(400, 'Your deck keeps your goals and their cards, nothing more.')
+  for (const [id, g] of Object.entries(goals)) {
+    if (!ID.test(id) || id === 'goal') return no(400, 'Your deck keeps your goals and their cards, nothing more.')
+    if (g !== null && !(isObj(g) && deckGoalOk(g))) return no(400, 'A goal is a short line of your words, with up to three cards under it.')
   }
   return yes
 }

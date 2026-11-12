@@ -1,0 +1,109 @@
+{
+  "as_of": "2026-11-09",
+  "weights": {
+    "asks": 0.5,
+    "builds": 0.3,
+    "dollars_per_hundred": 0.2
+  },
+  "unit": "weighted points per constraint minute (asks, builds, dollars over 100)",
+  "constraint": {
+    "key": "asks",
+    "label": "paid asks written and never sent",
+    "face": "regent",
+    "port": "Gathering Resources",
+    "wip": 14,
+    "oldest_hours": 672,
+    "oldest_days": 28.0,
+    "age_weighted": 9408,
+    "project": "The money gate",
+    "source": "council/callsheets/money-block.md: 14 coaching pitches written 2026-10-12, step 04 send the first three still open"
+  },
+  "why_this_lane": "The unit is a weighted mix of asks, builds and dollars (his ruling, 2026-11-09). The weights and the dollar divisor are the council's proposal until he looks.",
+  "lanes": [
+    {
+      "key": "asks",
+      "label": "paid asks written and never sent",
+      "face": "regent",
+      "port": "Gathering Resources",
+      "wip": 14,
+      "oldest_hours": 672,
+      "oldest_days": 28.0,
+      "age_weighted": 9408,
+      "project": "The money gate",
+      "source": "council/callsheets/money-block.md: 14 coaching pitches written 2026-10-12, step 04 send the first three still open"
+    },
+    {
+      "key": "pulls",
+      "label": "open pull requests",
+      "face": "architect",
+      "port": "Skillful Organizing",
+      "wip": 36,
+      "oldest_hours": 156,
+      "oldest_days": 6.5,
+      "age_weighted": 5616,
+      "project": "The deck",
+      "source": "council/passes/throughput-1_2026-11-03.md: 36 pull requests open, oldest 2026-11-03 00:10"
+    },
+    {
+      "key": "gates",
+      "label": "answered gates with no thread",
+      "face": "sage",
+      "port": "Direct Action",
+      "wip": 11,
+      "oldest_hours": 216,
+      "oldest_days": 9.0,
+      "age_weighted": 2376,
+      "project": "The tide table",
+      "source": "council/gates/due.json: 11 entries, oldest saved_at 2026-10-31T02:15"
+    },
+    {
+      "key": "looks",
+      "label": "looks waiting on his eye",
+      "face": "diplomat",
+      "port": "Raise Awareness",
+      "wip": 2,
+      "oldest_hours": 36,
+      "oldest_days": 1.5,
+      "age_weighted": 72,
+      "project": "Lantern Harbour",
+      "source": "council/callsheets/money-block.md: mb-gate-look-6 posted 2026-11-08, unanswered"
+    }
+  ],
+  "move": {
+    "text": "Send the three coaching pitches before anything else.",
+    "lane": "asks",
+    "cost_min": 15,
+    "expects": {
+      "asks": 3,
+      "builds": 0,
+      "dollars": 225
+    },
+    "value": 1.95,
+    "leverage": 0.13,
+    "why": "Wendell can turn fourteen written pitches into paid conversations today.",
+    "missing": "Nothing but your send. The letters are written.",
+    "face": "regent",
+    "source": "council/callsheets/coaching-pipeline.md: 14 pitches written 2026-10-12, step 04 open"
+  },
+  "then": [
+    {
+      "text": "Answer the money gate look so round six can build.",
+      "lane": "looks",
+      "cost_min": 10,
+      "leverage": 0.03
+    },
+    {
+      "text": "Merge the steered deck parts and close the three carried pull requests.",
+      "lane": "pulls",
+      "cost_min": 20,
+      "leverage": 0.015
+    },
+    {
+      "text": "Drain the eleven answered gates into threads.",
+      "lane": "gates",
+      "cost_min": 60,
+      "leverage": 0.015
+    }
+  ],
+  "falsifier": "If this read keeps returning game work, it is not a constraint read. It should name the lane holding the oldest age-weighted blockage, and that lane should move week to week."
+}

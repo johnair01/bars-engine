@@ -52,7 +52,10 @@ export function brushMesh(THREE) {
 
 /* ---------- at the cloth: the strip, the brush and its ink ---------- */
 const css = `
-.bw{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 55%,rgba(58,30,16,.96),rgba(12,8,6,.98));padding:16px;box-sizing:border-box}
+/* the room stays in view while you write (FR-005): the kneeling writer is seen on the left, the strip sits to the right
+   (below on a phone) on a dark that fades into the room, never a full-screen backdrop */
+.bw{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:flex-end;background:linear-gradient(90deg,rgba(12,8,6,0) 0%,rgba(12,8,6,0) 38%,rgba(20,12,8,.55) 62%,rgba(20,12,8,.82) 100%);padding:16px 4vw;box-sizing:border-box}
+@media (max-aspect-ratio:1/1){.bw{align-items:flex-end;justify-content:center;background:linear-gradient(180deg,rgba(12,8,6,0) 0%,rgba(12,8,6,0) 42%,rgba(20,12,8,.6) 60%,rgba(20,12,8,.86) 100%);padding:12px 16px}.bw-strip{width:auto;height:min(30vh,250px)}.bw-in{gap:8px}}
 .bw[hidden]{display:none}
 .bw-in{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:360px;width:100%;color:#f3e6cc;font:15px/1.4 Georgia,serif}
 .bw-dip{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:44px}
@@ -76,7 +79,7 @@ const css = `
 `;
 
 /** The writing at the cloth. `write({ ember, mark })` saves it and resolves to `{ ink }`, or throws with a message. */
-export function createBrushWrite({ write, onClose } = {}) {
+export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}) {
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
   const el = document.createElement("div"); el.className = "bw"; el.hidden = true;
   el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Write a BAR with the brush");
@@ -126,7 +129,7 @@ export function createBrushWrite({ write, onClose } = {}) {
     const b = ev.target.closest(".bw-ember"); if (!b || !s || s.done) return;
     s.ember = s.embers.find(e => e.id === b.dataset.id) || null;
     say.textContent = s.ember ? `The brush takes the ${ELEMENT_WORD[s.ember.el].toLowerCase()} ember's light.` : "";
-    draw(); hud();
+    draw(); hud(); if (s.ember && onDip) onDip(s.ember);
   });
   const at = ev => { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) * W / r.width, (ev.clientY - r.top) * H / r.height]; };
   let down = null;
@@ -140,7 +143,8 @@ export function createBrushWrite({ write, onClose } = {}) {
     if (!down || !s) return;
     const [x, y] = at(ev), now = performance.now(), v = Math.hypot(x - down.x, y - down.y) / Math.max(1, now - down.t);
     const pts = s.strokes[s.line], w = Math.max(3, Math.min(15, 15 - v * 9)), pw = pts[pts.length - 1][2];
-    pts.push([x, y, pw + (w - pw) * 0.35]); down = { t: now, x, y }; draw();
+    pts.push([x, y, pw + (w - pw) * 0.35]); if (onStroke) onStroke({ ds: Math.hypot(x - down.x, y - down.y), press: (w - 3) / 12, down: true });
+    down = { t: now, x, y }; draw();
   });
   const up = () => { if (!down || !s) return; down = null; s.line = -1; draw(); hud(); }; // the stroke dries to its set colour
   cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
@@ -152,7 +156,7 @@ export function createBrushWrite({ write, onClose } = {}) {
     s.busy = true; hud(); say.textContent = "";
     try {
       await write({ ember: s.ember.id, mark: markIn.value.trim().slice(0, 80), demo: s.ember.demo });
-      s.done = true; s.busy = false; draw(); hud();
+      s.done = true; s.busy = false; draw(); hud(); if (onSet) onSet();
       const box = cv.getBoundingClientRect(), wrap = cv.parentElement.getBoundingClientRect();
       const coin = document.createElement("div"); coin.className = "bw-coin fall";
       coin.style.left = (box.left - wrap.left + box.width / 2 - 15) + "px"; coin.style.top = (box.top - wrap.top + box.height * (H - 78) / H - 15) + "px";
@@ -165,8 +169,8 @@ export function createBrushWrite({ write, onClose } = {}) {
   function open(embers) {
     s = { embers, ember: embers.length === 1 ? embers[0] : null, strokes: [], line: -1, busy: false, done: false, coin: null };
     markIn.value = ""; say.textContent = s.ember ? `The brush takes the ${ELEMENT_WORD[s.ember.el].toLowerCase()} ember's light.` : embers.length ? "Dip the brush in an ember." : "";
-    el.hidden = false; draw(); hud(); setTimeout(() => (s.ember ? cv : dip.querySelector("button") || backBtn).focus?.(), 0);
+    el.hidden = false; draw(); hud(); if (s.ember && onDip) onDip(s.ember); setTimeout(() => (s.ember ? cv : dip.querySelector("button") || backBtn).focus?.(), 0);
   }
   function close() { if (!s) return; const done = s.done; if (s.coin) s.coin.remove(); s = null; el.hidden = true; onClose && onClose(done); }
-  return { open, close, get isOpen() { return !!s; }, el };
+  return { open, close, get isOpen() { return !!s; }, get ember() { return s ? s.ember : null; }, el };
 }

@@ -15,7 +15,7 @@ export function rowErrors(data: Record<string, unknown>): string[] {
   const errors: string[] = []
   const list = data.kind as string
   if (!ROW_LISTS.includes(list as never)) return [`a row's kind (its board list) is one of ${ROW_LISTS.join(', ')}`]
-  if (!text(data.pass)) errors.push('a row names the pass that posted it')
+  if (data.pass !== undefined && !text(data.pass)) errors.push('a row names the pass that posted it')
   if ('id' in data) errors.push('a row\'s id is its docId, not a field')
   if (data.lane !== undefined && typeof data.lane !== 'string') errors.push('lane is a string')
   if (list === 'positions' && !(faces(data.faces) && text(data.pos))) errors.push('a position needs faces and pos')

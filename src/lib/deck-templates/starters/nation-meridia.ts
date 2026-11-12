@@ -40,6 +40,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Let the Ground Be Held',
+      bodyText:
+        'Earth holds everything and is rarely held. Lie down or lean on something solid, breathe out long, and let it carry your weight for two minutes. Write down what your body gave up.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'meridia',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Be Fed by Someone Else',
+      bodyText:
+        'Accept one meal, one favour or one hour of attention from another person without returning it today. Write down what it felt like to be the ground that is watered.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'meridia',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'What Has Compacted Under Too Much Weight?',
       bodyText:
         'Over time, earth under sustained pressure becomes too dense for growth. What part of you — your energy, your capacity, your sense of possibility — has been compacted by too much load? Name it. Meridia recovers by acknowledging the compression before trying to loosen it.',

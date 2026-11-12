@@ -1,20 +1,74 @@
-// Part (new): the pier the money boat moors at, its plank and its lines (game frame Homeroom, his C on mb-deck-look-2:
-// "the player would engage with the cargo on the boat"). Drawn in money pier round 1 (Six-faces-council
-// council/callsheets/stills/2026-11-03-money-pier-1/make/pier.part.js, his A on mb-pier-look-1) and lifted in here.
-// New because assets_here.py "pier boat" found no 3D pier in the record (the board's moorings pier is 2D). Built from
-// blocks at the boat's own scale: piles, stringers, planks with gaps, two bollards, fenders, two pier lanterns (the
-// deck's lantern, kept), and a plank with cleats laid across the boat's rail. The pier runs along z; its top is PIER_Y.
-// DY and HZ are the old deck's height and hatch line; the tide post, route book and bell still draw from them.
+// Round 6 (money gate, his Steer on mb-gate-look-5: "free models cost more to run"): the code pier steered toward Poly
+// Haven's Modular Wooden Pier. Same footprint, lanterns, plank, lines and bollards. What changes: piles run down into the
+// water and every other pair rises above the deck with rope wrapped on it, the bents get pile caps and X braces, the
+// planks are browner, uneven in length and set with gaps, a grain is painted at load time (no download), and a mooring
+// gallows stands at the sea end, away from the berth. Every static wood piece is baked into one mesh: one draw call.
 const DY = -0.4, HZ = -1.0;
 const PIER = { x: 0, w: 3.0, z0: 11, z1: -12, y: -1.95 }, BERTH = { x: 3.85, y: -2.95, z: -2 };
-PART("pier", "The pier, its lanterns and the plank", "New, from the kit's own shapes and the boat's woods", () => {
-  const { x, w, z0, z1, y } = PIER, len = z0 - z1, wood = [0x7a5a5a, 0x6c4e52, 0x84625e], pile = mat(0x4a3440);
-  for (let z = z0 - 0.6; z > z1; z -= 2.4) [-1, 1].forEach((s) => add(new THREE.CylinderGeometry(0.17, 0.2, 2.6, 7), pile, x + s * (w / 2 - 0.12), y - 1.2, z));
-  [-1, 1].forEach((s) => add(new THREE.BoxGeometry(0.22, 0.3, len), mat(0x553c46), x + s * (w / 2 - 0.12), y - 0.22, z1 + len / 2));
-  let k = 0; for (let z = z0; z > z1; z -= 0.32, k++) add(new THREE.BoxGeometry(w + (k % 3 === 1 ? 0.12 : 0), 0.09, 0.28), mat(wood[k % 3]), x, y - 0.045, z);
-  [-1, 1].forEach((s) => add(new THREE.BoxGeometry(0.14, 0.14, len), mat(0x5e4450), x + s * (w / 2 + 0.02), y + 0.06, z1 + len / 2)); // the curb
+// a seeded random of its own, so the parts drawn after this one keep their own random draws
+const steerRnd = (() => { let s = 23; return (a, b) => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return a + (b - a) * (((t ^ t >>> 14) >>> 0) / 4294967296); }; })();
+// bake: many pieces, each with its own place and colour, into one mesh with vertex colours (one draw call on a phone)
+function bake(pieces, m, o = {}) {
+  const pos = [], nor = [], uv = [], col = [], M = new THREE.Matrix4(), c = new THREE.Color();
+  for (const p of pieces) {
+    const g = p.geo.index ? p.geo.toNonIndexed() : p.geo; p.geo !== g && p.geo.dispose();
+    M.compose(new THREE.Vector3(p.x, p.y, p.z), new THREE.Quaternion().setFromEuler(new THREE.Euler(p.rx || 0, p.ry || 0, p.rz || 0)), new THREE.Vector3(...(p.s || [1, 1, 1])));
+    g.applyMatrix4(M); c.set(p.color);
+    const P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv;
+    for (let i = 0; i < P.count; i++) { pos.push(P.getX(i), P.getY(i), P.getZ(i)); nor.push(N.getX(i), N.getY(i), N.getZ(i)); uv.push(U ? U.getX(i) : 0, U ? U.getY(i) : 0); col.push(c.r, c.g, c.b); }
+    g.dispose();
+  }
+  const G = new THREE.BufferGeometry();
+  G.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); G.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+  G.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); G.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  return add(G, m, 0, 0, 0, o);
+}
+// a painted texture, made on the phone at load time: draw(ctx, w, h) on a w x h canvas
+function paintTex(w, h, draw) { const cv = document.createElement("canvas"); cv.width = w; cv.height = h; draw(cv.getContext("2d"), w, h); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; }
+// weathered grain: pale lines along the board, darker worn ends, multiplied by each piece's colour
+const grainTex = paintTex(256, 64, (g, w, h) => {
+  g.fillStyle = "#e8e2dc"; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 26; i++) { const y = steerRnd(0, h); g.strokeStyle = `rgba(70,48,36,${steerRnd(0.12, 0.35)})`; g.lineWidth = steerRnd(0.6, 2); g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 32) g.lineTo(x, y + steerRnd(-2.5, 2.5)); g.stroke(); }
+  for (let i = 0; i < 5; i++) { g.fillStyle = `rgba(60,40,30,${steerRnd(0.15, 0.3)})`; g.beginPath(); g.ellipse(steerRnd(20, w - 20), steerRnd(8, h - 8), steerRnd(3, 7), steerRnd(2, 4), 0, 0, 7); g.fill(); } // knots
+  const e = g.createLinearGradient(0, 0, w, 0); e.addColorStop(0, "rgba(40,28,22,.35)"); e.addColorStop(0.06, "rgba(0,0,0,0)"); e.addColorStop(0.94, "rgba(0,0,0,0)"); e.addColorStop(1, "rgba(40,28,22,.35)"); g.fillStyle = e; g.fillRect(0, 0, w, h);
+});
+function jitterSteer(geo, a) { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) + steerRnd(-a, a), p.getY(i), p.getZ(i) + steerRnd(-a, a)); geo.computeVertexNormals(); return geo; }
+PART("pier", "The pier, its lanterns and the plank", "Steered toward Poly Haven's Modular Wooden Pier, still drawn in code", () => {
+  const { x, w, z0, z1, y } = PIER, len = z0 - z1, R = steerRnd, P = [];
+  const wood = [0x5e4232, 0x523a2c, 0x66493a, 0x4a3428], dark = 0x3a2a22, rope = 0xb59a6c, sx = (s) => x + s * (w / 2 - 0.12);
+  // bents every 2.4 m: two piles from the seabed, a cap across under the deck; every other bent's piles rise as posts
+  const bents = []; for (let z = z0 - 0.6; z > z1; z -= 2.4) bents.push(z);
+  bents.forEach((z, i) => {
+    const tall = i % 2 === 0;
+    [-1, 1].forEach((s) => {
+      const top = tall ? y + 0.95 : y - 0.1, bot = y - 3.4, hgt = top - bot;
+      P.push({ geo: jitterSteer(new THREE.CylinderGeometry(0.15, 0.19, hgt, 7, 3), 0.025), color: dark, x: sx(s), y: bot + hgt / 2, z, rz: R(-0.03, 0.03) });
+      if (tall) [0.55, 0.68].forEach((dy) => P.push({ geo: new THREE.TorusGeometry(0.175, 0.035, 4, 10), color: rope, x: sx(s), y: y + dy, z, rx: Math.PI / 2 }));
+    });
+    P.push({ geo: new THREE.BoxGeometry(w + 0.3, 0.2, 0.24), color: 0x463226, x, y: y - 0.32, z });
+  });
+  // X braces on the outer faces, every other bay; one long brace under the deck from end to end on each side (stringers)
+  bents.slice(0, -1).forEach((z, i) => { if (i % 2) return; const dz = -2.4, dy = 0.7, L = Math.hypot(dz, dy), a = Math.atan2(dy, dz);
+    [-1, 1].forEach((s) => [a, -a].forEach((r) => P.push({ geo: new THREE.BoxGeometry(0.07, 0.15, L), color: 0x4a3428, x: sx(s) + s * 0.2, y: y - 0.78, z: z + dz / 2, rx: r }))); });
+  [-1, 1].forEach((s) => P.push({ geo: new THREE.BoxGeometry(0.22, 0.28, len), color: 0x4a3428, x: sx(s), y: y - 0.2, z: z1 + len / 2 }));
+  // planks with gaps, each its own length, offset and set, a few short pairs where a board was replaced
+  for (let z = z0; z > z1; z -= 0.31) {
+    const t = 0.085, d = 0.25, col = wood[Math.floor(R(0, 4))], yy = y - 0.045 + R(-0.012, 0.012), ry = R(-0.018, 0.018);
+    if (R(0, 1) < 0.1) { const cut = R(-0.6, 0.6); P.push({ geo: new THREE.BoxGeometry(w / 2 + cut - 0.03, t, d), color: col, x: x - w / 4 + cut / 2 - 0.02, y: yy, z, ry }); P.push({ geo: new THREE.BoxGeometry(w / 2 - cut - 0.03, t, d), color: wood[(Math.floor(R(0, 4)))], x: x + w / 4 + cut / 2 + 0.02, y: yy, z, ry }); }
+    else { const L = w + R(-0.12, 0.22); P.push({ geo: new THREE.BoxGeometry(L, t, d), color: col, x: x + R(-0.07, 0.07), y: yy, z, ry }); }
+  }
   // fenders on the berth side, where the boat rides
-  for (let z = BERTH.z - 3; z <= BERTH.z + 3; z += 2) add(new THREE.CylinderGeometry(0.13, 0.13, 0.9, 6), mat(0x2e2430), x + w / 2 + 0.16, y - 0.65, z);
+  for (let z = BERTH.z - 3; z <= BERTH.z + 3; z += 2) P.push({ geo: new THREE.CylinderGeometry(0.13, 0.13, 0.9, 6), color: 0x2e2430, x: x + w / 2 + 0.16, y: y - 0.65, z });
+  // a davit at the sea end on the far side from the berth and the tide post: one post, an arm out over the water, a
+  // block on a short rope, and a coil of line on the planks at its foot (Poly Haven's pier has two such gallows)
+  const gz = z1 + 1.2, gx = x - w / 2 + 0.1;
+  P.push({ geo: jitterSteer(new THREE.CylinderGeometry(0.11, 0.13, 3.2, 6), 0.015), color: dark, x: gx, y: y + 1.6, z: gz });
+  P.push({ geo: new THREE.BoxGeometry(1.5, 0.16, 0.16), color: dark, x: gx - 0.6, y: y + 3.05, z: gz });
+  P.push({ geo: new THREE.BoxGeometry(0.08, 0.08, 0.95), color: dark, x: gx - 0.3, y: y + 2.75, z: gz, rx: Math.PI / 2, rz: -0.75 }); // the knee
+  P.push({ geo: new THREE.CylinderGeometry(0.016, 0.016, 0.6, 3), color: rope, x: gx - 1.2, y: y + 2.7, z: gz });
+  P.push({ geo: new THREE.BoxGeometry(0.14, 0.2, 0.1), color: 0x2a1e20, x: gx - 1.2, y: y + 2.32, z: gz }); // the block
+  [0, 1, 2].forEach((i) => P.push({ geo: new THREE.TorusGeometry(0.26 - i * 0.05, 0.035, 4, 12), color: rope, x: gx + 0.45, y: y + 0.03 + i * 0.05, z: gz + 0.5, rx: Math.PI / 2 }));
+  bake(P, new THREE.MeshStandardMaterial({ map: grainTex, vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0 }));
   // bollards at the boat's bow and stern lines
   const bollards = [BERTH.z - 3.6, BERTH.z + 3.4].map((z) => { add(new THREE.CylinderGeometry(0.16, 0.2, 0.42, 8), mat(0x3a2e3a, { metalness: 0.4 }), x + w / 2 - 0.35, y + 0.21, z); add(new THREE.CylinderGeometry(0.24, 0.24, 0.07, 8), mat(0x3a2e3a, { metalness: 0.4 }), x + w / 2 - 0.35, y + 0.44, z); return new THREE.Vector3(x + w / 2 - 0.35, y + 0.35, z); });
   // two pier lanterns, the deck's lantern post kept whole
@@ -60,7 +114,7 @@ PART("berth", "The money boat at its berth", "The money boat piece; the hatch, l
     const k = st.sending == null ? 0 : st.sending;
     c.visible = st.waiting || st.sending != null; b.visible = k < 0.98 && !st.berthEmpty;
     spM.color.set(st.turned ? 0xffd27a : 0x9ff6e4); spM.emissive.copy(spM.color);
-    anchored.forEach((a, i) => { a.visible = i < st.boatsOut; a.position.y = -2.75 + Math.sin(st.t * 0.9 + i) * 0.05; });
+    anchored.forEach((a, i) => { a.visible = i < st.boatsOut && i !== st.returningIndex; a.position.y = -2.75 + Math.sin(st.t * 0.9 + i) * 0.05; });
     b.position.lerpVectors(HOME, FAR, k * k); b.rotation.y = k * 0.18; b.position.y += Math.sin(st.t * 1.1) * 0.04; b.rotation.z = Math.sin(st.t * 0.8) * 0.015;
     sp.position.y = -0.35 + u.deckY + 0.95 + Math.sin(st.t * 1.6) * 0.05;
     wake.forEach((w, i) => { w.visible = k > 0.02; w.position.set(b.position.x - i * 0.12, -3.1, b.position.z + 3.5 + i * 1.6); w.rotation.z = 0.05; });
