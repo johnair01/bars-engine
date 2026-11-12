@@ -10,6 +10,12 @@ on:
       - public/between/cult/motion.js
       - public/between/cult/motion-review.html
       - public/between/cult/motion-review.js
+      - public/between/cult/motion-lab.html
+      - public/between/cult/motion-lab.js
+      - public/between/cult/mocap-reference.js
+      - public/between/cult/reference-cmu-walk-run.glb
+      - public/between/cult/reference-cmu-16-05-jump.bvh
+      - public/between/cult/walker.js
       - tools/blender-cloud/tests/robe_stress_capture.mjs
       - tools/blender-cloud/tests/motion_review_capture.mjs
 

@@ -13,5 +13,15 @@ try{
   if(result.status!=='complete'||errors.length||result.frames.length!==36)throw Error(JSON.stringify({status:result.status,frames:result.frames?.length,errors}));
   const sections=page.locator('section');if(await sections.count()!==6)throw Error('Missing motion sections');
   for(let i=0;i<6;i++)await sections.nth(i).screenshot({path:join(out,`${i<3?'feminine':'masculine'}-${['run','jump','climb'][i%3]}-motion.png`)});
+  await page.goto('http://127.0.0.1:8767/between/cult/motion-lab.html',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('walk ·'),{timeout:600000});
+  await page.locator('#actions [data-motion="run"]').click();
+  await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('run ·'));
+  await page.locator('#play').click();
+  await page.screenshot({path:join(out,'motion-lab-run.png')});
+  await page.locator('#actions [data-motion="jump"]').click();
+  await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('jump ·'));
+  await page.screenshot({path:join(out,'motion-lab-jump.png')});
+  const error=await page.locator('#error').textContent();if(error?.trim())throw Error(error);
   console.log('Captured 36 authored motion frames on two bodies');
 }finally{await browser.close()}

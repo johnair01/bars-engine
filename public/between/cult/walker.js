@@ -60,6 +60,8 @@ export async function makeWalker({ who = "f", outfit = "B2" } = {}) {
 
   return {
     holder, X, who, outfit,
+    // Deterministic review of the shipped gait, without requiring player movement.
+    previewWalk(phase, amount = 1) { gait(phase, amount); },
     // dt: seconds; moving: whether the traveller is walking this frame. The stride advances by the ground covered,
     // so the feet do not skate.
     update(dt, moving) {
