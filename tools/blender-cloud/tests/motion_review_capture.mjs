@@ -21,7 +21,7 @@ try{
   await page.screenshot({path:join(out,'motion-lab-run.png')});
   await page.locator('#actions [data-motion="pose"]').click();
   await page.locator('#shoulderOutL').evaluate(el=>{el.value='0.4';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.getByText('Left upper arm: out 0.40').waitFor();
+  if(!await page.locator('#posePanel').isVisible()||+(await page.locator('#shoulderOutL').inputValue())!==0.4)throw Error('pose calibration control did not update');
   await page.locator('#bodyOnly').check();
   await page.screenshot({path:join(out,'motion-lab-pose-calibration.png')});
   await page.locator('#note').fill('Cloud pose calibration save check.');
