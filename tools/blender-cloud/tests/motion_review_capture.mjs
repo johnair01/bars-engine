@@ -60,6 +60,22 @@ try{
   await page.locator('#saveNote').click();
   await page.getByText('Saved to the repo with this frame and settings.').waitFor();
   await page.screenshot({path:join(out,'motion-lab-climb-and-note.png')});
+  // First body-size boundary set: both bases and opposing build/height extremes.
+  for(const [body,build,height] of [['f','slight',1.50],['f','broad',1.95],['m','slight',1.95],['m','broad',1.50]]){
+    await page.locator('#body').selectOption(body);
+    await page.waitForFunction(value=>document.querySelector('#stage')?.dataset.body===value,body,{timeout:600000});
+    await page.locator('#build').selectOption(build);
+    await page.waitForFunction(value=>document.querySelector('#stage')?.dataset.build===value,build,{timeout:600000});
+    await page.locator('#height').evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))},height);
+    await page.waitForFunction(value=>document.querySelector('#stage')?.dataset.height===value,height.toFixed(2),{timeout:600000});
+    const stem=`motion-lab-${body}-${build}-${height.toFixed(2)}`;
+    await page.locator('#actions [data-motion="pose"]').click();
+    await page.locator('#time').evaluate(el=>{el.value='350';el.dispatchEvent(new Event('input',{bubbles:true}))});
+    await page.screenshot({path:join(out,`${stem}-run.png`)});
+    await page.locator('#actions [data-motion="jump"]').click();
+    await page.locator('#time').evaluate(el=>{el.value='518';el.dispatchEvent(new Event('input',{bubbles:true}))});
+    await page.screenshot({path:join(out,`${stem}-jump.png`)});
+  }
   const error=await page.locator('#error').textContent();if(error?.trim())throw Error(error);
-  console.log('Captured 36 authored motion frames on two bodies');
+  console.log('Captured authored motion frames and eight body-size boundary frames');
 }finally{await browser.close()}

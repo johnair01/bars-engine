@@ -24,7 +24,7 @@ for(const [key,name] of poseKeys){const label=document.createElement('label'),in
   label.textContent=name;label.append(read);$('poseSliders').append(label,input);
   poseValues[key]=+input.value;read.textContent=poseValues[key].toFixed(2);
   input.oninput=()=>{poseValues[key]=+input.value;read.textContent=poseValues[key].toFixed(2);localStorage.setItem('cult-motion-pose',JSON.stringify(poseValues));renderPose()};}
-let W=null,ref=null,jumpRef=null,ledge=null,maskedIndex=null,who='f',motion='walk',playing=true,clock=0,previous=0,groundY=0,standingFootY=0;
+let W=null,ref=null,jumpRef=null,ledge=null,maskedIndex=null,who='f',buildKey='average',bodyHeight=1.66,heightEdited=false,buildSerial=0,motion='walk',playing=true,clock=0,previous=0,groundY=0,standingFootY=0;
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 const camera=new THREE.PerspectiveCamera(25,1,.05,40);
@@ -89,8 +89,13 @@ function renderPose(){if(!W)return;
   $('posePanel').hidden=!['run','pose'].includes(motion);
   $('time').value=Math.round((clock/duration())*1000);$('timeValue').textContent=clock.toFixed(2)+'s';
 }
-async function build(){if(W){if(ref)W.X.scene.remove(ref.group,ref.helper);if(jumpRef)W.X.scene.remove(jumpRef.group,jumpRef.helper);W.dispose()}
-  W=await makeWalker({who,outfit:'B2'});W.X.scene.add(W.holder);groundY=W.X.F.root.position.y;
+async function build(){const serial=++buildSerial,previous=W;W=null;
+  if(previous){if(ref)previous.X.scene.remove(ref.group,ref.helper);if(jumpRef)previous.X.scene.remove(jumpRef.group,jumpRef.helper);previous.dispose()}
+  const next=await makeWalker({who,build:buildKey,height:bodyHeight,outfit:'B2'});if(serial!==buildSerial){next.dispose();return}
+  W=next;W.X.scene.add(W.holder);groundY=W.X.F.root.position.y;
+  $('error').textContent='';
+  $('mixReadout').textContent=`${who==='f'?'Feminine':'Masculine'} · ${buildKey} · ${W.X.F.stature.toFixed(2)} m`;
+  canvas.dataset.body=who;canvas.dataset.build=buildKey;canvas.dataset.height=W.X.F.stature.toFixed(2);
   standingFootY=Math.min(W.X.F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,W.X.F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
   maskedIndex=W.X.F.mesh.geometry.index.clone();setBodyVisibility();
   if(!ref)ref=await loadMocapReference();
@@ -110,7 +115,12 @@ requestAnimationFrame(frame);
 for(const button of document.querySelectorAll('[data-motion]'))button.onclick=()=>{motion=button.dataset.motion;clock=0;if(motion==='pose'){playing=false;$('play').textContent='Play'}for(const b of document.querySelectorAll('[data-motion]'))b.setAttribute('aria-pressed',String(b===button));renderPose()};
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play'};
 $('time').oninput=()=>{playing=false;$('play').textContent='Play';clock=(+$('time').value/1000)*duration();renderPose()};
-$('body').onchange=async()=>{who=$('body').value;await build()};
+const rebuild=()=>build().catch(e=>{$('error').textContent='Could not build character: '+e.message});
+$('body').onchange=()=>{who=$('body').value;if(!heightEdited){bodyHeight=who==='f'?1.66:1.75;$('height').value=bodyHeight;$('heightValue').textContent=bodyHeight.toFixed(2)+' m'}rebuild()};
+$('build').onchange=()=>{buildKey=$('build').value;rebuild()};
+let heightTimer=null;
+$('height').oninput=()=>{$('heightValue').textContent=(+$('height').value).toFixed(2)+' m';clearTimeout(heightTimer);heightTimer=setTimeout(()=>{bodyHeight=+$('height').value;heightEdited=true;rebuild()},180)};
+$('height').onchange=()=>{clearTimeout(heightTimer);if(bodyHeight===+$('height').value)return;bodyHeight=+$('height').value;heightEdited=true;rebuild()};
 $('reset').onclick=()=>{for(const [key,, , ,def] of settings){$(key).value=def;$(key).dispatchEvent(new Event('input'))}for(const [key] of poseKeys){$(key).value=poseDefaults[key]??0;$(key).dispatchEvent(new Event('input'))}};
 async function showNotes(){
   try{const text=await (await fetch('./review-notes.jsonl?at='+Date.now())).text(),notes=text.trim().split('\n').filter(Boolean).map(JSON.parse);
@@ -120,7 +130,7 @@ async function showNotes(){
 }
 $('saveNote').onclick=async()=>{
   const note=$('note').value.trim();if(!note){$('noteStatus').textContent='Write a note first.';return}
-  const body={motion,time_seconds:clock,settings:{...values,...poseValues,body:who,view:{yaw:orbitYaw,pitch:orbitPitch,zoom:orbitZoom}},note};
+  const body={motion,time_seconds:clock,settings:{...values,...poseValues,body:who,build:buildKey,height:bodyHeight,view:{yaw:orbitYaw,pitch:orbitPitch,zoom:orbitZoom}},note};
   try{const response=await fetch('/api/motion-notes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!response.ok)throw Error(`server returned ${response.status}`);
     $('note').value='';$('noteStatus').textContent='Saved to the repo with this frame and settings.';await showNotes();

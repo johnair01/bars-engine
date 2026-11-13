@@ -17,6 +17,7 @@ on:
       - public/between/cult/mocap-reference.js
       - public/between/cult/reference-cmu-walk-run.glb
       - public/between/cult/reference-cmu-16-05-jump.bvh
+      - public/between/cult/ubc/**
       - public/between/cult/walker.js
       - tools/blender-cloud/tests/robe_stress_capture.mjs
       - tools/blender-cloud/tests/motion_review_capture.mjs
