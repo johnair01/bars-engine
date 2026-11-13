@@ -22,12 +22,16 @@ import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
+import {
+  assetBrief, canonBlock, evaluateMechanic, faceLens, nextLines, ontologyProfile, pipelineNext, pipelineStatus,
+  readLoop, refusalLines, statusLines, verifyRound,
+} from '@/lib/board/pipeline'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.1.0'
+const SERVER_VERSION = '1.2.0'
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
@@ -49,6 +53,20 @@ const ok = (value: unknown): ToolResult => ({ content: [text(value)], isError: f
 const bad = (message: string): ToolResult => ({ content: [text(message)], isError: true })
 const pictureContent = (bytes: Uint8Array, type: string): ToolContent =>
   ({ type: 'image', data: Buffer.from(bytes).toString('base64'), mimeType: type })
+
+const STRAND = {
+  type: 'string',
+  description: "The strand's name, as council/loops/<strand>.json carries it, e.g. `hand-grip`.",
+}
+
+function strandOf(args: Record<string, unknown>): { strand: string } | { error: string } {
+  const raw = args.strand
+  const strand = typeof raw === 'string' ? raw.trim() : ''
+  if (!strand) return { error: 'this tool needs strand: a strand name, e.g. `hand-grip`' }
+  if (!/^[A-Za-z0-9._-]+$/.test(strand))
+    return { error: `${strand}: a strand name is letters, digits, dot, dash or underscore` }
+  return { strand }
+}
 
 /** The row's own fields, which `rowErrors` (src/lib/board/rows.ts) checks: `kind`, `pass`, `lane` and the list's. */
 const ROW_DATA = {
@@ -188,6 +206,122 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
+    name: 'pipeline.status',
+    title: 'Where a strand stands',
+    description: 'Answer a strand\'s callsheet, the stage it has signed, the open gaps the loop reports and the next gate, '
+      + 'in 40 lines or fewer, each fact naming the file it came from.',
+    inputSchema: {
+      type: 'object',
+      properties: { strand: STRAND },
+      required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'pipeline.next',
+    title: 'The next gate',
+    description: 'Answer the one stage a strand moves to next: its gate and the command that runs it.',
+    inputSchema: {
+      type: 'object',
+      properties: { strand: STRAND },
+      required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'loop.checks',
+    title: 'A strand\'s checks',
+    description: 'Answer council/loops/<strand>.json\'s deft block: each check\'s id, his note quoted, the look it came '
+      + 'from, what it reads, its bound, and whether it holds or only reports.',
+    inputSchema: {
+      type: 'object',
+      properties: { strand: STRAND },
+      required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'asset.brief',
+    title: 'What one round owes',
+    description: 'Answer the brief for a strand\'s round as markdown: the node type, the place\'s floors, the reference '
+      + 'frames with his answers, the order the callsheet\'s NEXT steps give, the proof command and the emits list.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        strand: STRAND,
+        node: { type: 'string', description: 'The node type, e.g. `hall`; the checks that meet it are named.' },
+      },
+      required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'asset.verify',
+    title: 'Judge a round before it posts',
+    description: 'Read the round\'s judge.json receipt and refuse a round whose receipt is missing, belongs to another '
+      + 'strand, predates a check the loop runs now, or holds; a held round comes back with the failing check and his '
+      + 'sentence. A clear round answers the judge line.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        strand: STRAND,
+        round: { type: 'string', description: 'The round folder, e.g. `2026-11-09-cc-gate-look-13`.' },
+      },
+      required: ['strand', 'round'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'canon.lookup',
+    title: 'One canon block',
+    description: 'Answer one canon/mechanics file or one rule in canon/play-canon.md: its rule, the words he is quoted '
+      + 'saying, the ask that remains, and the file:line it came from.',
+    inputSchema: {
+      type: 'object',
+      properties: { name: { type: 'string', description: '`lading-seal`, or a rule\'s title, e.g. `Hard magic`.' } },
+      required: ['name'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'ontology.profile',
+    title: 'What a task kind loads',
+    description: 'Answer a load profile from ontology/manifest.yaml and the eleven design-ontology fields the stage owes.',
+    inputSchema: {
+      type: 'object',
+      properties: { kind: { type: 'string', description: 'e.g. `game_design` or `council_deliberation`.' } },
+      required: ['kind'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'mechanic.eval',
+    title: 'A mechanic\'s arithmetic',
+    description: 'Evaluate one canon/mechanics file at a state and show its arithmetic: each fader\'s value, its bounds, '
+      + 'and whether the words it says appear in the feel line it names. The same two checks the tuning bench runs.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mechanic: { type: 'string', description: 'The file\'s name, e.g. `lading-seal`.' },
+        state: { type: 'object', additionalProperties: true, description: 'Fader key to number, e.g. {"press": 0.5}.' },
+      },
+      required: ['mechanic'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'faces.lens',
+    title: 'The six lenses on a strand',
+    description: 'Answer each face\'s lens, its standing test and the lessons whose own words bear on the strand, quoted '
+      + 'from council/faces.yaml.',
+    inputSchema: {
+      type: 'object',
+      properties: { strand: STRAND },
+      required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -313,6 +447,96 @@ async function postBoardDocs(args: Record<string, unknown>): Promise<ToolResult>
   return ok({ board: 'council', dry, ...result })
 }
 
+async function pipelineStatusTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const s = strandOf(args)
+  if ('error' in s) return bad(s.error)
+  return ok(statusLines(await pipelineStatus(s.strand)).join('\n'))
+}
+
+async function pipelineNextTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const s = strandOf(args)
+  if ('error' in s) return bad(s.error)
+  return ok(nextLines(await pipelineNext(s.strand)).join('\n'))
+}
+
+async function loopChecks(args: Record<string, unknown>): Promise<ToolResult> {
+  const s = strandOf(args)
+  if ('error' in s) return bad(s.error)
+  const { path, loop, error } = await readLoop(s.strand)
+  const deft = loop?.deft
+  if (!deft)
+    return bad(error ?? `${path} holds no deft loop; run python3 council/judge/make_loop.py ${s.strand}`)
+  return ok({
+    strand: s.strand,
+    node_types: deft.node_types ?? [],
+    place: deft.place ?? null,
+    checks: (deft.checks ?? []).map((c) => ({
+      id: c.id,
+      note: c.note ?? '',
+      look: c.look ?? null,
+      reads: c.reads ?? {},
+      bound: c.bound ?? '',
+      holds: c.holds ?? 'no',
+      holds_by_hold: c.holds_by_hold ?? null,
+    })),
+    emits: deft.emits ?? {},
+    run: deft.run ?? null,
+    source: path,
+  })
+}
+
+async function assetBriefTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const s = strandOf(args)
+  if ('error' in s) return bad(s.error)
+  const node = typeof args.node === 'string' ? args.node : undefined
+  const r = await assetBrief(s.strand, node)
+  if (!r.brief) return bad(r.error ?? `${s.strand}: the brief could not be read`)
+  return ok(r.brief.brief)
+}
+
+async function assetVerify(args: Record<string, unknown>): Promise<ToolResult> {
+  const s = strandOf(args)
+  if ('error' in s) return bad(s.error)
+  const round = typeof args.round === 'string' ? args.round.trim() : ''
+  if (!round) return bad('asset.verify needs round: the round folder, e.g. `2026-11-09-cc-gate-look-13`')
+  const v = await verifyRound(s.strand, round)
+  if (!v.ok) return bad(refusalLines(v).join('\n'))
+  return ok({ ok: true, judge: v.judge, refused: [], registry: v.registry, source: v.source })
+}
+
+async function canonLookup(args: Record<string, unknown>): Promise<ToolResult> {
+  const name = typeof args.name === 'string' ? args.name : ''
+  const r = await canonBlock(name)
+  if (!r.block) return bad(r.error ?? `no canon block named ${name}`)
+  return ok(r.block)
+}
+
+async function ontologyProfileTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const kind = typeof args.kind === 'string' ? args.kind : ''
+  const p = await ontologyProfile(kind)
+  if (p.error) return bad(p.error)
+  return ok(p)
+}
+
+async function mechanicEval(args: Record<string, unknown>): Promise<ToolResult> {
+  const mechanic = typeof args.mechanic === 'string' ? args.mechanic : ''
+  const state = args.state && typeof args.state === 'object' && !Array.isArray(args.state)
+    ? (args.state as Record<string, unknown>)
+    : {}
+  const r = await evaluateMechanic(mechanic, state)
+  if (!r.result) return bad(r.error ?? `no mechanic named ${mechanic}`)
+  return ok(r.result)
+}
+
+async function facesLens(args: Record<string, unknown>): Promise<ToolResult> {
+  const s = strandOf(args)
+  if ('error' in s) return bad(s.error)
+  const l = await faceLens(s.strand)
+  if (!l.faces.length)
+    return bad(l.notes[0] ?? `${s.strand}: no face lens could be read from council/faces.yaml`)
+  return ok(l)
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
@@ -320,6 +544,15 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'read_picture') return readPicture(args)
   if (name === 'list_pictures') return listPicturesTool(args)
   if (name === 'post_board_docs') return postBoardDocs(args)
+  if (name === 'pipeline.status') return pipelineStatusTool(args)
+  if (name === 'pipeline.next') return pipelineNextTool(args)
+  if (name === 'loop.checks') return loopChecks(args)
+  if (name === 'asset.brief') return assetBriefTool(args)
+  if (name === 'asset.verify') return assetVerify(args)
+  if (name === 'canon.lookup') return canonLookup(args)
+  if (name === 'ontology.profile') return ontologyProfileTool(args)
+  if (name === 'mechanic.eval') return mechanicEval(args)
+  if (name === 'faces.lens') return facesLens(args)
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -338,7 +571,8 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
- *   read_picture, list_pictures, post_board_docs and whoami
+ *   read_picture, list_pictures, post_board_docs, whoami, and the pipeline door's nine (pipeline.status, pipeline.next,
+ *   loop.checks, asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
@@ -379,7 +613,8 @@ export async function POST(req: NextRequest) {
         instructions: 'The Council Board on bars-engine. Store a picture with put_picture, post a question, position, '
           + 'term, cause or battle with post_rows, and see one back with read_picture. Every row carries its pass and a '
           + 'lane naming the environment that posted it. Run the reach test first (council/faces.yaml in '
-          + 'six-faces-council). A question for Wendell is a row, never a line in a pull request.',
+          + 'six-faces-council). A question for Wendell is a row, never a line in a pull request. A round starts at '
+          + 'pipeline.status and asset.brief, and asset.verify reads the judge receipt before its look posts.',
       })
     }
     case 'notifications/initialized':
