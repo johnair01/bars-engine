@@ -1,5 +1,6 @@
 import 'server-only'
 import { latestDocs, type Docs } from './store'
+import { leanDocs } from './pictures'
 
 /**
  * The board's cards and the answers on them, all from bars-engine's own store. `rows` holds one document per card, its
@@ -138,7 +139,11 @@ export function merge(docs: Docs): Doc {
  * The board data the page draws, from the store alone. Null when the store answers nothing, so the page draws no board
  * at all and the fault is named, rather than a copy that hides it.
  */
-export async function boardData(board = 'council'): Promise<Doc | null> {
+export async function boardData(board = 'council', origin?: string): Promise<Doc | null> {
   const docs = await latestDocs(board).catch(() => ({}) as Docs)
-  return Object.keys(docs).length ? merge(docs) : null
+  if (!Object.keys(docs).length) return null
+  // Pictures go out as links to /api/board/picture, fetched when the page draws them: the question rows held about 7 MB
+  // of base64, which kept /board/data.js from loading. Links name the collection each picture lives in, so the overlay
+  // of an answer over a card keeps working.
+  return merge(origin ? (leanDocs(docs, origin, board) as Docs) : docs)
 }

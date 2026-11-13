@@ -27,6 +27,15 @@ describe('GET /board/data.js', () => {
     expect(await res.text()).toBe('window.__BOARD_DATA__ = null;\n')
   })
 
+  it('serves a large picture as a link to /api/board/picture, not as embedded base64', async () => {
+    const big = 'data:image/png;base64,' + 'A'.repeat(5000)
+    vi.mocked(latestDocs).mockResolvedValue({ rows: { q: { kind: 'questions', still: big, small: 'data:image/png;base64,AAAA' } } })
+    const text = await (await GET(req())).text()
+    expect(text).not.toContain(big)
+    expect(text).toContain('/api/board/picture?board=council&c=rows&id=q&p=still')
+    expect(text).toContain('data:image/png;base64,AAAA')
+  })
+
   it('sets the script headers a page load can cache against', async () => {
     vi.mocked(latestDocs).mockResolvedValue({ rows: { p: { kind: 'positions', pos: 'from the store' } } })
     const res = await GET(req())
