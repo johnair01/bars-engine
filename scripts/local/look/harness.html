@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><title>look check harness</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+/* Builds the hollow once, with the painterly shader, from a fixed camera at a fixed size, and leaves the frame on the
+   canvas for scripts/local/look-check.mjs to read. Nothing here animates: time stays at zero so a frame is repeatable. */
+import * as THREE from "three";
+import { buildHollow } from "/between/hollow.js";
+import { installPaint } from "/between/paint.js";
+import { LOOK_HASH } from "/between/look-data.js";
+const W = 640, H = 400;
+try {
+  installPaint();
+  const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(1); renderer.setSize(W, H);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  document.body.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const hollow = buildHollow(scene, { lowPower: false, shell: "hollow" });
+  const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 200);
+  camera.position.set(0, 1.7, 4.2); camera.lookAt(0, 1.2, -2);
+  if (hollow.update) hollow.update(0, 0, 1, camera.position, new THREE.Vector3(0, 1.2, -2));
+  renderer.render(scene, camera);
+  window.__look = { ready: true, hash: LOOK_HASH, w: W, h: H };
+} catch (e) { window.__look = { ready: false, error: String(e && e.stack || e) }; }
+</script>
