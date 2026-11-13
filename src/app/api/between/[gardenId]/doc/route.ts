@@ -9,6 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { currentPlayer, whoIs, write } from '@/lib/between/store'
+import { noticeAfterWrite } from '@/lib/between/notice'
 import { invitedView, itemFor, parsePath, type Doc, type Op } from '@/lib/between/rules'
 
 export const dynamic = 'force-dynamic'
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ gar
   if (!found) return NextResponse.json({ error: 'There is no garden here', code: 'not_found' }, { status: 404 })
   const res = await write(gardenId, found.who, target, op, data)
   if (!res.ok) return NextResponse.json({ error: res.error, code: res.status === 403 ? 'permission_denied' : 'invalid_argument' }, { status: res.status })
+  if (found.who.member) await noticeAfterWrite(gardenId, player.id, target.table, op, data) // one short email, once a day; never fails the write
   // Someone who only holds the invite link asked to join: they get back the spark as they may see it, never the hopes.
   // A sealed charge the writer has not opened comes back without its words, as the poll sends it.
   const doc = !found.who.member && target.table === 'garden' && res.doc ? invitedView(res.doc)

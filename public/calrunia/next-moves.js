@@ -68,10 +68,10 @@ function partner(rooms, here, now, home) {
   }
   for (const r of withPerson) if (r.styleAsk)
     return { lane: "partner", id: "style:" + r.id, title: "They asked to change the room", line: `${nameIn(r)} would like the room to look different. It changes only if you say yes.`, act: go(r, "style") };
-  const WAIT = { agreement: "an agreement waits for your yes", offer: "an offering waits for your yes", ask: "they asked something about an agreement", cast: "they left a cast face up on the coin table", turn: "they drew a card you wrote and it waits on you at the low table" };
+  const WAIT = { agreement: "an agreement waits for your yes", offer: "an offering waits for your yes", ask: "they asked something about an agreement", cast: "they left a cast face up on the coin table", cup: "they left you a cup, covered, on the low table", jar: "they left a jar on the shelf for you", turn: "they drew a card you wrote and it waits on you at the low table" };
   for (const r of withPerson) {
     const w = r.waiting && r.waiting.find(x => x.what !== "lantern");
-    if (w) return { lane: "partner", id: "wait:" + r.id + ":" + w.id, title: "Waiting on you", line: `With ${nameIn(r)}, ${WAIT[w.what]}.`, act: go(r, w.what === "cast" || w.what === "turn" ? "coins" : "tend") };
+    if (w) return { lane: "partner", id: "wait:" + r.id + ":" + w.id, title: "Waiting on you", line: `With ${nameIn(r)}, ${WAIT[w.what]}.`, act: go(r, w.what === "cast" || w.what === "turn" ? "coins" : "tend") };   // a cup or a jar opens the room itself
   }
   const k = kept(home, "partner", withPerson, here, now); if (k) return k;
   for (const r of withPerson) if (r.revisit && r.revisit.length)

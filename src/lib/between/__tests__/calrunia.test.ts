@@ -93,6 +93,7 @@ function testNextMoves() {
   // the partner lane walks down: waiting, revisit, here now, not sat this week
   const p = (r: object) => suggest({ rooms: [{ ...base, id: 'r', ...r }] }, now).find(x => x.lane === 'partner')
   assert.equal(p({ waiting: [{ id: 'o', what: 'offer' }] })!.id, 'wait:r:o')
+  for (const what of ['cup', 'jar', 'turn'] as const) { const m = p({ waiting: [{ id: 'x', what }] })!; assert.ok(m.line && !/undefined|\d/.test(m.line), what + ': ' + m.line) }
   assert.equal(p({ revisit: ['a'] })!.id, 'revisit:r')
   assert.equal(p({ styleAsk: { style: 'moonlit', at: 1 }, waiting: [{ id: 'o', what: 'offer' }] })!.id, 'style:r', 'their ask to change the room comes before what waits')
   assert.equal(suggest({ rooms: [{ ...base, id: 'r', styleAsk: { style: 'moonlit', at: 1 } }], here: 'r' }, now).find(x => x.lane === 'partner')!.act, 'style')
