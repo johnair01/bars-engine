@@ -20,7 +20,7 @@ function memory(): ContentBackend & { files: Map<string, Uint8Array> } {
     files,
     async read(key) {
       const b = files.get(key)
-      return b ? { body: new Response(b).body!, type: 'image/png' } : null
+      return b ? { body: new Response(new Uint8Array(b)).body!, type: 'image/png' } : null
     },
     async write(key, bytes) { files.set(key, bytes) },
   }

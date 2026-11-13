@@ -13,7 +13,7 @@ function memory(): ContentBackend & { files: Map<string, Uint8Array> } {
     files,
     async read(key) {
       const b = files.get(key)
-      return b ? { body: new Response(b).body!, type: 'application/octet-stream' } : null
+      return b ? { body: new Response(new Uint8Array(b)).body!, type: 'application/octet-stream' } : null
     },
     async write(key, bytes) { files.set(key, bytes) },
   }
