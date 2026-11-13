@@ -208,15 +208,17 @@ export function mount(B, opts = {}) {
     if (c.q6.when) own.q6.when = c.q6.when;
     return own;
   }
-  async function unroll(c, d) {
+  async function unroll(c, d, resuming = false) {
     const err = d && d.querySelector("#ctwErr");
     if (c.missing) { if (err) { err.hidden = false; err.textContent = "Answer question " + c.missing.join("; question ") + "."; } return; }
     let r = await read(c);
     if (!r.errors) { c = withDraft(c, r); r = await read(c); }
     if (r.errors) { if (err) { err.hidden = false; err.textContent = "One answer does not fit the map yet. Check questions 3 and 6: the belief loudest when facing a road you ticked."; } console.warn("charge to world:", r.errors); return; }
+    if (!resuming) try { sessionStorage.removeItem('ctw-return-bar'); sessionStorage.removeItem('ctw-song'); } catch {}
     charge = c; g = r; episode = sheet(c, g);
     raisePanes(); closeDlg();
     walkTo(STAND.clone().addScaledVector(FRONT, 0.85));
+    return true;
   }
   function md(text) { // the sheet's Markdown: headings, lists, bold, italics, code
     const inline = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\*([^*]+)\*/g, "<i>$1</i>");
@@ -237,6 +239,31 @@ export function mount(B, opts = {}) {
       + `<div class="foot">${opts.visit ? "" : `<button type="button" data-ctw="charge">Change the charge</button>`}<button type="button" class="q" data-ctw="close">Close</button></div>`);
     const ch = d.querySelector('[data-ctw="charge"]'); if (ch) ch.onclick = openCharge; d.querySelector('[data-ctw="close"]').onclick = closeDlg;
   }
+  async function openKept() {
+    const d = openDlg(`<h2>What you kept</h2><p class="muted">Finding your BARs…</p><div class="foot"><button type="button" class="q" data-close>Close</button></div>`);
+    d.querySelector('[data-close]').onclick = closeDlg;
+    try {
+      const res = await fetch('/api/calrunia/kept', { cache: 'no-store' });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Could not find your BARs.');
+      if (dlg !== d) return;
+      d.innerHTML = `<h2>What you kept</h2><p class="muted">Choose one to return to its journey.</p>${result.bars.length ? result.bars.map(b => `<div class="row"><button type="button" data-kept="${esc(b.id)}">${esc(b.title)}</button></div>`).join('') : '<p>Nothing is kept here yet.</p>'}<p class="muted" data-kept-status role="status"></p><div class="foot"><button type="button" class="q" data-close>Close</button></div>`;
+      d.querySelector('[data-close]').onclick = closeDlg;
+      d.querySelectorAll('[data-kept]').forEach(button => { button.onclick = async () => {
+        button.disabled = true;
+        try {
+          const r = await fetch('/api/calrunia/kept?id=' + encodeURIComponent(button.dataset.kept), { cache: 'no-store' });
+          const detail = await r.json();
+          if (!r.ok) throw new Error(detail.error || 'Could not open this BAR.');
+          const bar = detail.bar;
+          const opened = await unroll(bar.charge, d, true);
+          if (!opened) throw new Error('This saved journey cannot be opened with the current map.');
+          sessionStorage.setItem('ctw-song', JSON.stringify(bar.notes));
+          sessionStorage.setItem('ctw-return-bar', JSON.stringify({ id: bar.id, content: bar.content }));
+        } catch (err) { d.querySelector('[data-kept-status]').textContent = err.message || 'Could not open this BAR.'; button.disabled = false; }
+      }; });
+    } catch (err) { if (dlg === d) d.querySelector('.muted').textContent = err.message || 'Could not find your BARs.'; }
+  }
   function openPane(p) {
     const l = p.loc;
     const d = openDlg(`<h2>${esc(l.location)}</h2>${p.src ? `<img src="${p.src}" alt="${esc(l.location)}: ${esc(l.aspects.join("; "))}">` : `<p class="muted">Not drawn yet: this place is a brief until a stills round draws it.</p>`}
@@ -250,7 +277,7 @@ export function mount(B, opts = {}) {
   card.addEventListener("click", e => {
     const b = e.target.closest("[data-ctw]"); if (!b) return;
     const k = b.dataset.ctw;
-    if (k === "sample") unroll(JSON.parse(JSON.stringify(sample)), null); else if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
+    if (k === "sample") unroll(JSON.parse(JSON.stringify(sample)), null); else if (k === "charge") { try { sessionStorage.removeItem('ctw-return-bar'); sessionStorage.removeItem('ctw-song'); } catch {} openCharge(); } else if (k === "kept") openKept(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
     else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough();
   });
   function showCard() {
@@ -263,7 +290,7 @@ export function mount(B, opts = {}) {
           : `<div><b>The map stand</b><div class="t">Someone left their charge here. They want ${esc(sample.q1.words)}. They feel ${esc(sample.q4.weather[0].feeling)}, as strong as ${esc(sample.q4.weather[0].strength)}.</div></div><div class="row"><button type="button" data-ctw="sample">Unroll their map</button></div>`)
         : episode
         ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button></div>`
-        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button></div>`;
+        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button><button type="button" class="q" data-ctw="kept">Return to a BAR</button></div>`;
     } else if (near && near.startsWith("pane:")) {
       const p = panes[+near.slice(5)];
       key = near; html = `<div><b>${esc(p.loc.location)}</b><div class="t">${esc(p.loc.aspects[0])}</div></div><div class="row"><button type="button" data-ctw="${near}">Look into it</button></div>`;

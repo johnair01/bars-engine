@@ -819,7 +819,26 @@ function showCard() {
   const inp = c.querySelector("input"); if (!inp) state.melting = false; else if (had || state.melting) inp.focus({ preventScroll: true });
 }
 // a line written at a stand (block-room.js): Enter or "Say it" sends it; the walk keys stay with the field while it has them
-$("#card").addEventListener("submit", e => { const f = e.target.closest("form[data-melt-form]"); if (!f) return; e.preventDefault(); audio();
+$("#card").addEventListener("submit", async e => {
+  const keep = e.target.closest("form[data-keep-form]");
+  if (keep) {
+    e.preventDefault();
+    const field = keep.querySelector('[name="kernel"]'), status = keep.querySelector('[data-keep-status]'), button = keep.querySelector('button[type="submit"]');
+    const content = field.value.trim();
+    if (!content) { status.textContent = "Choose what you want to keep first."; return; }
+    button.disabled = true; status.textContent = "Keeping it…";
+    try {
+      const charge = JSON.parse(sessionStorage.getItem("ctw-charge") || "null");
+      const fs = fireSong();
+      const notes = fs.song.played.length ? fs.song.played.slice(0, 6).map(n => n.degree) : fs.stump;
+      const res = await fetch('/api/calrunia/kept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, charge, notes }) });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'It could not be kept.');
+      state.keptBar = result.id; state.cardKey = '';
+    } catch (err) { status.textContent = err.message || "It could not be kept. Please try again."; button.disabled = false; }
+    return;
+  }
+  const f = e.target.closest("form[data-melt-form]"); if (!f) return; e.preventDefault(); audio();
   const inp = f.querySelector("input"), t = inp.value.trim(); if (!t) return; me.keys.clear(); state.melting = true;
   state.block.act("say:" + f.dataset.meltForm, t); state.cardKey = ""; });
 $("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
@@ -939,7 +958,12 @@ function fireNote(d) {
 function thisWeek(fs) {
   const h = state.ep.home, g = secret(/key to the garage|friends already/i), f = esc(state.ep.friend.name || "your friend");
   const named = fs.song.block ? `<div class="t">You named ${esc(FS.BLOCKS[fs.song.block].toLowerCase())} as what would block you, and it went into ${f}'s hand with the song.</div>` : "";
-  return `<div><b>This week</b><div class="t">${esc(h.capability || "Play one unfinished song for one person.")}</div>${h.key ? `<div class="t">The key you carry home: “${esc(h.key)}”</div>` : ""}${g ? `<div class="t">${esc(g)}</div>` : ""}${named}</div><div class="row"><button type="button" data-act="home">Take it home to your nook</button><button type="button" data-act="stay">Stay by the fire</button></div>`;
+  const kept = state.keptBar ? `<div class="t">Kept privately. You can return to it from your map stand.</div>`
+    : !WALK && hasOwnJourney() ? `<form data-keep-form><label>What would you like to keep?<input name="kernel" maxlength="1000" value="${esc(h.capability || "")}" placeholder="A thought, an action, or a possibility"></label><div class="t">Keeping this also saves your journey answers and notes privately, so you can return.</div><button type="submit">Keep this BAR</button><div class="t" data-keep-status role="status"></div></form>` : "";
+  return `<div><b>This week</b><div class="t">${esc(h.capability || "Play one unfinished song for one person.")}</div>${h.key ? `<div class="t">The key you carry home: “${esc(h.key)}”</div>` : ""}${g ? `<div class="t">${esc(g)}</div>` : ""}${named}${kept}</div><div class="row"><button type="button" data-act="home">Back to your nook</button><button type="button" data-act="stay">Stay by the fire</button></div>`;
+}
+function hasOwnJourney() {
+  try { return !!sessionStorage.getItem("ctw-charge"); } catch { return false; }
 }
 /* Oriel's turn: the timeline's notes plucked on the guitar, one beat after the hand-over, each lighting its seal above
    Oriel; the home note held; a silence; then the friends laugh and the last card comes. */
@@ -1173,6 +1197,7 @@ function frame() {
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     if (WALK && PLACE === "clearing" && !Q.get("at")) caption("The first of four lands their charge made: this clearing, then the Scale-House, the Friends' Fire and the keeping chamber.", 7);
+    if (!WALK && PLACE === "clearing") try { const b = JSON.parse(sessionStorage.getItem('ctw-return-bar') || 'null'); if (b && b.content) caption('You returned with: ' + b.content, 7); } catch { /* no kept BAR */ }
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
     if (WALK && CHX) caption("The arch you came in by ends the walk, whenever you are done here.", 6);
     if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);
