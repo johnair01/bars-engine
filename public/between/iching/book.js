@@ -10,6 +10,17 @@
 import { whoChoices } from "./connection.js";
 import { deckLeaves, BLANK_GOAL } from "../friendcraft/deck.js";
 
+/** The kept turns of the Between(s) you sit in, as ink pages: the card's words, the goal it came from, both lines, the
+    drawer's first, newest first (Six-faces-council spec .specify/specs/friendcraft-deck-2 FR-011). `turns` are roomSummary's
+    `turns` (or a hollow's own kept turn items); `nameOf` gives a friend's name. No date, no count.
+    @param {any[]} turns  @param {(uid: string) => string} [nameOf] */
+export function turnLeaves(turns, nameOf = u => "them") {
+  return (turns || []).filter(t => t && t.id && typeof t.words === "string" && t.words)
+    .sort((a, b) => (b.at || 0) - (a.at || 0))
+    .map(t => ({ kind: "turn", key: "turn-" + t.id, tid: t.id, goal: t.goal || null, depth: t.depth || null, name: t.words, words: t.words,
+      goalText: t.goalText || "", lines: (t.lines || []).map(l => ({ by: l.by, name: nameOf(l.by), words: l.words })) }));
+}
+
 export const BLANK = { kind: "blank", key: "blank", name: "" };
 /** The longest name a page takes (rules.ts holds the same). */
 export const NAME_MAX = 40;
@@ -28,7 +39,7 @@ export function newPage(name, at) {
     A player enrolled in Friendcraft passes their deck (`o.deck`, an empty one included): their goal pages come first,
     oldest first, then one blank goal leaf, then the rest as above (Six-faces-council spec .specify/specs/friendcraft-deck
     FR-005). Goal pages are in the nook's book only.
-    @param {any[]} choices  @param {any} home  @param {{ blank?: boolean, deck?: any }} [o] */
+    @param {any[]} choices  @param {any} home  @param {{ blank?: boolean, deck?: any, turns?: any[], nameOf?: (uid: string) => string }} [o] */
 export function leavesOf(choices, home, o = {}) {
   const pages = (home && home.pages && typeof home.pages === "object") ? home.pages : {};
   const named = Object.entries(pages).filter(([, p]) => p && typeof p.name === "string" && p.name)
@@ -36,6 +47,7 @@ export function leavesOf(choices, home, o = {}) {
   const byRoom = new Map(named.filter(([, p]) => p.room).map(([pid, p]) => [p.room, pid]));
   const out = [];
   if (o.blank !== false && o.deck && typeof o.deck === "object") out.push(...deckLeaves(o.deck), { ...BLANK_GOAL });
+  if (o.turns && o.turns.length) out.push(...turnLeaves(o.turns, o.nameOf));   // kept turns after the goal pages, in the nook and the hollow
   for (const w of choices || []) {
     if (!w || w.kind === "plant") continue;
     if (w.kind === "self") { out.push({ ...w, key: "self", name: "Yourself" }); continue; }
@@ -107,5 +119,6 @@ export const lineOn = (cast, leaf) => String((cast && cast.line) || "").replace(
 export function tabName(leaf, count) {
   if (!leaf || leaf.kind === "blank") return "";
   if (leaf.kind === "goalblank") return "New";
+  if (leaf.kind === "turn") return "Kept";
   return count > 10 ? leaf.name.split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase() : leaf.name;
 }

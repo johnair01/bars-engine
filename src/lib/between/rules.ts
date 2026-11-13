@@ -118,6 +118,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op !== 'set' && !cur) return no(404, 'That is no longer in the garden.')
       if (op === 'update' && data && 'by' in data && data.by !== cur!.by) return no(400, 'Who made it does not change.')
       if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
+      if (data?.kind === 'turn' || cur?.kind === 'turn' || data?.kind === 'spend' || cur?.kind === 'spend') return turnWrite()
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
       if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
       return yes
@@ -410,6 +411,12 @@ function castWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdi
   if (op !== 'set' && data && 'answer' in data) return no(400, 'Only the other person answers.')
   return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
 }
+/* A turn at the table and the tea a card cost are written only by POST /api/between/:gardenId/turn, which reads the other
+ * friend's deck on the server (Six-faces-council spec .specify/specs/friendcraft-deck-2 FR-002). Through the doc route set,
+ * update and delete of kind `turn` or `spend` all end here. */
+export function turnWrite(): Verdict {
+  return no(403, 'A turn is played at the table.')
+}
 const MINUTE_KEYS = new Set(['ember', 'mirror', 'hope', 'vine', 'skip'])
 const MINUTE_SKIPS = new Set(['ember', 'mirror', 'hope'])
 
@@ -547,10 +554,12 @@ const GONE = new Set(['retired', 'composted', 'withdrawn'])
 
 export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
-  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' }[]
+  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' | 'turn' }[]
   revisit: string[]; invitations: { id: string; when: number | null; note: string; at: number | null }[]; lastSatTogether: number | null
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
   keptAgreement: boolean
+  /** the turns both friends answered at this room's table, newest first: the nook's book shows them as ink pages */
+  turns: { id: string; by: string; owner: string; goal: string; depth: string; words: string; goalText: string; lines: { by: string; words: string }[]; at: number }[]
   /** the scrolls they sent that you answered another time or no: kept on your shelf (Still B) */
   keepsakes: { id: string; when: number | null; note: string; answer: 'later' | 'no'; at: number | null }[]
   /** the other person started this room, so their seal wears the first hue (teal); else plum */
@@ -563,13 +572,26 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
   const setup = isObj(g.setup) ? g.setup : {}
   const person = memberIds(g).find(m => m !== me) ?? null
   const who = g.startedBy === me || !g.startedBy ? setup.who ?? null : names[g.startedBy as string] ?? null
-  const waiting: RoomSummary['waiting'] = [], revisit: string[] = []
+  const waiting: RoomSummary['waiting'] = [], revisit: string[] = [], turns: RoomSummary['turns'] = []
   let keptAgreement = false // the room kit's lantern (rk-earned-only): a yes or no, never a count
   for (const { id: iid, data: it } of items) {
     if (it.kind === 'agreement' && it.status === 'kept') keptAgreement = true
     if (GONE.has(it.status as string)) continue
     const yesMe = isObj(it.yes) ? it.yes[me] : undefined
     if (it.kind === 'lantern') { if (it.by !== me && !isNum(yesMe)) waiting.push({ id: iid, what: 'lantern' }); continue }
+    if (it.kind === 'turn') {
+      const kl = isObj(it.lines) ? it.lines : null
+      if (it.status === 'kept' && kl && typeof it.words === 'string' && isNum(it.keptAt))
+        turns.push({ id: iid, by: String(it.by), owner: String(it.owner), goal: String(it.goal), depth: String(it.depth), words: it.words,
+          goalText: typeof it.goalText === 'string' ? it.goalText : '', at: it.keptAt,
+          lines: [it.by, it.owner].map(u => { const l = kl[String(u)]; return { by: String(u), words: isObj(l) ? String(l.words ?? '') : '' } }).filter(l => l.words) })
+      // an asked card or a card opened with tea waits on its owner; a face-up card waits on whoever has no line yet (ids only, never words)
+      const lines = isObj(it.lines) ? it.lines : {}
+      const mine = it.owner === me
+      if ((mine && (it.status === 'asked' || it.status === 'opened')) || (it.status === 'open' && isObj(lines[it.by as string]) && !isObj(lines[me]) && mine))
+        waiting.push({ id: iid, what: 'turn' })
+      continue
+    }
     if (it.kind === 'cast') { if (it.by !== me && !(isObj(it.answer) && isObj(it.answer[me]))) waiting.push({ id: iid, what: 'cast' }); continue }
     if (isObj(it.pending) && it.pending.by !== me) waiting.push({ id: iid, what: 'ask' })
     else if (it.kind === 'agreement' && it.status === 'proposed' && !yesMe) waiting.push({ id: iid, what: 'agreement' })
@@ -594,7 +616,7 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     joinWaiting: g.startedBy === me && !!jr, waiting, revisit, invitations, lastSatTogether,
     hereNow: !!opts.hereNow, lastTendedAt: g.lastTendedAt ?? null,
     styleAsk: sa ? { style: sa.style as string, at: isNum(sa.at) ? sa.at : null } : null,
-    keptAgreement, keepsakes, personStarted: !!person && g.startedBy === person,
+    keptAgreement, turns: turns.sort((a, b) => b.at - a.at), keepsakes, personStarted: !!person && g.startedBy === person,
   }
 }
 
