@@ -1,5 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+
+// The route reaches the board's store, which imports 'server-only'; every sibling suite stubs it the same way.
+vi.mock('server-only', () => ({}))
+
 import { setBackend, type ContentBackend } from '@/lib/board/content-store'
 import { POST } from '../route'
 

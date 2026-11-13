@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-13T01:06:56.027Z",
+  "generatedAt": "2026-11-13T02:35:36.376Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -499,6 +499,58 @@
       ],
       "example": "/api/health",
       "id": "get_system_5a412cc6"
+    },
+    {
+      "sourceFile": "/src/app/api/mcp/route.ts",
+      "lineNumber": 349,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "agent",
+        "WHAT": "SYSTEM",
+        "WHERE": "council board",
+        "ENERGY": "0"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "POST",
+      "pattern": "/api/mcp",
+      "entity": "SYSTEM",
+      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs and whoami",
+      "permissions": [
+        "COUNCIL_MENU_TOKEN",
+        "as Authorization: Bearer <key>",
+        "a bare header or ?token="
+      ],
+      "example": "POST /api/mcp {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}",
+      "id": "post_system_0cba9682"
+    },
+    {
+      "sourceFile": "/src/app/api/mcp/route.ts",
+      "lineNumber": 418,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "agent",
+        "WHAT": "SYSTEM",
+        "WHERE": "council board",
+        "ENERGY": "0"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "GET",
+      "pattern": "/api/mcp",
+      "entity": "SYSTEM",
+      "description": "The MCP transport's GET, answered 405: this server answers a POST with JSON and opens no SSE stream",
+      "permissions": [
+        "COUNCIL_MENU_TOKEN"
+      ],
+      "example": "GET /api/mcp",
+      "id": "get_system_8a66ec10"
     },
     {
       "sourceFile": "/src/app/api/quests/[questId]/apply-move/route.ts",
