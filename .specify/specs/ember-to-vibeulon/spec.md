@@ -131,7 +131,7 @@ by that one and my total does not; taking the BAR back returns it to spendable.
 
 ## Persisted data & Prisma
 
-No schema change: `Vibulon.stakedOnBarId` exists (prisma/schema.prisma:1765) and is unused today. A later migration may
+Phases 1 and 2 need no schema change: `Vibulon.stakedOnBarId` exists (prisma/schema.prisma:1765) and is unused today. A later migration may
 add a relation and index; that is a separate spec. The ember stays in BetweenPrivate (`data/users/<me>/pouch`).
 
 ## Verification Quest
@@ -142,6 +142,11 @@ room's light steps up once and the sky does not change. Blank strips appear on t
 the ember: the ink is that ember's colour, and the wallet shows one new vibeulon from that BAR. Carry it into the Hollow
 on a lantern and offer it: the vibeulon reads staked, the total is unchanged. Take it back: the vibeulon is spendable
 again.
+
+Phase 3: write a second BAR with an ember from a different move. On the first BAR the coin rises bare and the turntable
+opens; pick a colour and a material, set it down: the pouch shows the coin in them, its ring the ember's from element and
+its texture the arrival. On the second BAR the coin rises already finished and the turntable stays shut. Open the
+turntable at the hearth, change the colour, write a third BAR: only the third coin changes.
 
 ## Ontology
 
@@ -157,13 +162,88 @@ again.
 - `implementation_translation`: `src/actions/create-bar.ts`, new `src/lib/economy/bar-mint.ts`, wallet balance readers, `public/between/garden.js` (hearth, pouch, lantern hook), `public/between/hollow.js` (room light), new route `src/app/api/between/[gardenId]/lantern/route.ts` (Architect).
 - `decision_or_open_authority`: the gates are his (ruled 2026-10-29); ee2-lantern-is-bar is on the board; ee2-qi-is-nook-light, ee2-hollow-light-shared and ee2-one-ember-per-lantern stand unless he flips them (Regent).
 
+## The mint's face (Phase 3, added 2026-11-09)
+
+His A on `ee2-vibeulon-face-look-2` (2026-11-09 17:54Z, no note) took round 2's face into the mint: "The seal in the
+coin's own colour stands, and the next step specs the mint and the player's colour and material choice." The faces are
+drawn in `council/callsheets/stills/2026-11-09-vibeulon-faces-2/` (wendell-britt/six-faces-council); the choosing step
+is drawn in `council/callsheets/stills/2026-11-09-vibeulon-choose-1/` and waits his look `ee2-vibeulon-choose-look-1`.
+
+**What the coin carries.** The vibeulon a BAR mints is the coin he printed (a hexagon with a hole, 34.6 mm corner to
+corner). Its top face has four layers, each read from something the player already did:
+
+| Layer | Read from | Position (stands unless he flips it) |
+|---|---|---|
+| The ring round the hole | the ember's from element, `MOVES[move][1]` in `public/between/garden.js`, the same element its ink already shows | `ee3-face-ring-from` |
+| The texture inside the ring | the move's arrival element, `MOVES[move][2]`: fire shows `show`, wood `grow`, water `clean`, earth `wake`, metal `open` (bars-engine `MOVE_ELEMENT` turned around, open_up being the liminal move that metal stands in for). A transcend move shows its one element twice | `ee3-face-texture-to` |
+| The seal in the ring's hexagon bezel | the player's seal, in the coin's own colour (his A on look-2). A player with no seal yet mints with the bezel empty; the seal fills coins minted after it | `ee3-face-seal-empty` |
+| The body's colour and material | the player's choice, made once at the first mint and carried to every later coin. The player can change it at the hearth for the next coin; a minted coin's face never changes, since it is the coin's provenance | `ee3-face-choice-once` |
+
+**The choices.** Six colours (silk violet, his printed blank; silk copper; silk jade; silk rose; silk pearl; night) and
+six materials (silk filament, matte filament, cast brass, walnut, jade resin, porcelain). Any colour goes on any
+material, so a player has 36 bodies. All are open from the start; nothing is bought or earned yet
+(`ee3-face-all-open`). The five colours after violet and the four materials past filament are round 2's proposals,
+which his A kept.
+
+**The choosing step (the coin turn).** A game surface, so it starts from a mechanic: `coin-turn`, proposed in
+`canon/mechanics/coin-turn.yaml` (six-faces-council) because no mechanic in the atlas turns a made thing in the hand to
+finish it (`tuning-bench`, `coin-table` and `lading-seal` were weighed; see that file's header). The beats, each a still:
+
+1. The BAR is written; its vibeulon rises bare from the BAR's seal: its ring, texture and bezel already cut, its body
+   the unfinished grey of a blank.
+2. The coin hangs over the hearth's small brass turntable. Six filament spools sit on its left rail; touching one turns
+   the coin once and it takes that colour.
+3. Six material blocks sit on its right rail; touching one turns the coin once and it takes that surface.
+4. The player sets it down: it drops into the pouch beside their embers. The turntable folds away; it comes back only
+   when the player opens it at the hearth to change the next coin.
+
+A later mint skips beats 2 and 3: the coin rises already in the player's colour and material and drops into the pouch.
+
+**Watch.** The arrival element on a public coin is new public information about what the player worked: it tells
+anyone who sees the coin where the charge arrived. The record supports it (`fo3-coin-on-page`, "Vibeulons carry energy
+and provenance of what minted them"), and nothing about the feel or the glow is shown, which `cc-pouch-private` keeps.
+The first playtest asks a second player what they read from someone else's coin.
+
+### FR, Phase 3: the mint's face
+
+- **FR-009** A vibeulon minted by `mintBarVibulon` with an ember carries a face `{ v: 1, ring, tex, seal, color, mat }`:
+  `ring` the ember's from element, `tex` its arrival element, `seal` the player's seal id or `null`. A vibeulon minted
+  without an ember (a BAR made outside the Between) carries `ring: null, tex: null` and shows the blank's printed
+  chevrons.
+- **FR-010** At the player's first mint the coin's `color` and `mat` are `null` (bare), and the Nook runs the coin turn.
+  Setting the coin down writes both on that coin and keeps them as the player's coin style for the next coins. The
+  write is refused once the coin's `color` is set (the face never changes).
+- **FR-011** Every later mint copies the player's coin style onto the new coin in the mint's own transaction; the Nook
+  skips the turn.
+- **FR-012** The player can open the turntable at the hearth at any time; changing it changes only the coins minted
+  after it.
+- **FR-013** All six colours and six materials are offered from the start; nothing in the turn costs a vibeulon or
+  checks a count.
+
+### API, Phase 3
+
+- `mintBarVibulon(tx, { barId, playerId, title, ember? })` gains `ember` (`{ move }`) and writes the face (FR-009,
+  FR-011).
+- `POST /api/between/[gardenId]/bar` answers `{ barId, vibulonId, ink, staked, face, choose }`; `choose` is true when
+  the player has no coin style yet (FR-010).
+- `PUT /api/between/[gardenId]/coin` `{ vibulonId?, color, mat }`: with `vibulonId`, finishes that bare coin (owner
+  only, 409 `face_set` if its colour is set) and keeps the style; without it, changes the style for the next coins
+  (FR-010, FR-012). Unknown colour or material answers 400.
+
+### Persisted data, Phase 3
+
+One small migration: `Vibulon.face Json?` (null on every vibeulon minted before it; such a coin shows the bare blank).
+The player's coin style lives in their BetweenPrivate pouch (`data/users/<me>/pouch`, field `coinStyle: { color, mat }`)
+beside the embers it is chosen with; it is not a shared row, though every coin it makes shows it.
+
 ## Later, from his note on ee2-gesture-look-1
 
 Not built in this spec; each opens as its own slice through the pipeline, with stills first.
 
 - Brushes the player collects, each making a different stroke.
 - Seals the player learns to craft, pressed on the BAR where the vibeulon settles.
-- Vibeulons the player designs: the coin's face drawn by its maker.
+- Vibeulons the player designs: the coin's face drawn by its maker. (Its first part, colour and material, is Phase 3
+  above; drawing on the face stays here.)
 
 ## Reserved items
 
@@ -179,6 +259,7 @@ Money: vibeulons are the game's token, not money, and no live paywall changes. N
 - [ ] `npm run check` and `npm run build` pass; unit tests for mint, stake and release
 - [ ] the Verification Quest walks on the preview
 - [ ] Wendell's look on the stills of the BAR written at the hearth, its ink and the room light, before the Between code (board)
+- [ ] Wendell's look `ee2-vibeulon-choose-look-1` on the coin turn before the Phase 3 code (board)
 
 ## Dependencies
 
@@ -189,7 +270,8 @@ Money: vibeulons are the game's token, not money, and no live paywall changes. N
 ## References
 
 - council: `council/passes/6FACE_PASS_ember-economy-host_2026-10-28.md`, `council/callsheets/ember-economy.md`
-- board rows: ee-qi-role, ee-bar-mint-stake, ee-bar-making-opens, cc-pouch-private, cc-lantern-offer, uu-between-clock-look-1
+- board rows: ee2-vibeulon-face-look-2, ee2-vibeulon-choose-look-1, ee3-face-ring-from, ee3-face-texture-to, ee3-face-seal-empty, ee3-face-choice-once, ee3-face-all-open, fo3-coin-on-page,
+  ee-qi-role, ee-bar-mint-stake, ee-bar-making-opens, cc-pouch-private, cc-lantern-offer, uu-between-clock-look-1
 
 ## Signed
 
@@ -199,3 +281,4 @@ Money: vibeulons are the game's token, not money, and no live paywall changes. N
 - falsify: challenger (2026-11-04)
 - plan: architect, regent (2026-11-04)
 - analyze: sage, challenger (2026-11-04)
+- Phase 3, the mint's face: art director, game-designer (2026-11-09)

@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Take the Breath You Would Shape',
+      bodyText:
+        'Influence works by shaping what comes next. Breathe, and shape nothing for one minute. Let the room be exactly as it is. Write down what you see when you are not steering it.',
+      faceKey: null,
+      archetypeKey: 'subtle-influence',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Be Influenced on Purpose',
+      bodyText:
+        'Ask one person for their honest view of your work, then change one thing because of it. Say plainly that you changed it. Write down how it felt to be shaped in plain sight.',
+      faceKey: null,
+      archetypeKey: 'subtle-influence',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'When Did Subtle Become Invisible?',
       bodyText:
         'Your influence can sometimes be so gradual that you become invisible — even to yourself. When did you last make your contribution legible? Who does not know what you have done? Name the invisibility gap.',

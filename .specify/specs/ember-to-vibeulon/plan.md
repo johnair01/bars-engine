@@ -40,3 +40,29 @@ through stills and his look before code, under the Impeccable skill.
 | `src/app/api/between/[gardenId]/lantern/route.ts` | new |
 | `public/between/garden.js`, `public/between/hollow.js` | lantern hook after the first ember; room light from qi |
 | `scripts/ember-economy-replay.ts` | new: the falsify replay |
+
+## Phase 3: the mint's face (added 2026-11-09)
+
+primitives: ontology (Vibulon gains a face; the coin style is a private pouch field); mechanics `coin-turn` (proposed in
+six-faces-council `canon/mechanics/coin-turn.yaml`); style round 2 faces (`ee2-vibeulon-face-look-2`, A)
+footing: ee2-vibeulon-face-look-2, fo3-coin-on-page, cc-pouch-private, canon-embers-vibeulons, and five positions that
+stand unless he flips them: ee3-face-ring-from, ee3-face-texture-to, ee3-face-seal-empty, ee3-face-choice-once,
+ee3-face-all-open
+tier: Counselled; the face is his A, the five positions are drawn from the record, the coin turn waits his look
+scout: rung 2, we have it: round 2's renderer (`faces.html`) already draws every layer, colour and material from a
+small face object, so the game's coin reads the same object; the move's two elements are already in `MOVES`
+
+Approach: the face is a pure function `coinFace(move, seal, style)` in `src/lib/economy/coin-face.ts`, tested on its
+own, called inside the mint's transaction. The Nook draws the coin with round 2's face code ported to the Between's
+Three.js scene (one module, `public/between/coin.js`), so a coin looks the same in the pouch, on a BAR and on the board.
+The coin turn is built only after his look on its stills.
+
+| File | Change |
+|---|---|
+| `prisma/schema.prisma` + migration | `Vibulon.face Json?` |
+| `src/lib/economy/coin-face.ts` | new: `coinFace`, the colour and material lists, validation |
+| `src/lib/economy/bar-mint.ts` | `mintBarVibulon` takes the ember and writes the face |
+| `src/app/api/between/[gardenId]/bar/route.ts` | answers `face` and `choose` |
+| `src/app/api/between/[gardenId]/coin/route.ts` | new: finish a bare coin, change the style |
+| `public/between/coin.js` | new: draws a face (ported from round 2's `faces.html`) |
+| `public/between/garden.js` | the coin rises from the BAR's seal; the turntable at the hearth |

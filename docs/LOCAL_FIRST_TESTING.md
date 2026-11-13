@@ -138,21 +138,56 @@ A look or board card must not carry a Vercel preview link any more: none will be
 ## 6. Before you push
 
 ```bash
-scripts/local/check.sh            # npm run check (Prisma generate, verifiers, eslint, tsc) + npm run test:vitest
+scripts/local/check.sh            # npm run check (Prisma generate, verifiers, the look and registry checks, eslint, tsc), the look frame check, then vitest
 scripts/local/check.sh --build    # the same, then npm run build on the local database
 ```
+
+The look frame check (`npm run check:look:frame`, board row `bld-gate-home-2`, answered "a headless browser shot
+compared against the dataset") renders one still of the Between's hearth in headless chromium, then compares the ramp
+the shader carries and every point light in the scene to `public/between/look-data.js`, failing on drift past the
+tolerance in the script's header. The still lands in `.local-dev/look/hearth.png`, so a change to the room can be
+looked at rather than described. It reads three from `node_modules`, where `npm ci` puts the devDependency that matches the importmap's version, so it
+needs no network; only a machine with no chromium reports that step `skipped`, and the rest still run.
+
+`check.sh` runs it with `--post`, so each render replaces the still on the newest unanswered row of the look list
+`between-hearth-frame`, and the picture on `/board/look` is never older than the last push. A machine with no
+`COUNCIL_MENU_TOKEN` says so and leaves the row alone. So does a look you have already answered: once a row carries his
+answer, the next render needs a fresh row in that list rather than overwriting the record of what he saw. `npm run check` does not run it, so CI stays free of a browser.
 
 The Vercel preview build used to be the build check for merging. **`scripts/local/check.sh --build` passing is
 that check now.** A pull request's "How I checked it" names the command and its result, the pages it opened, and the
 pictures it took. Also run the narrow `npm run test:<area>` scripts for what you changed, through
 `scripts/local/dev.sh run --` when they need the database.
 
-Failures that already exist on main are not yours to fix in an unrelated change. As of 2026-11-04:
-`src/lib/__tests__/vitest-include-registration.test.ts` (seven suites not registered in `vitest.config.ts`) and
-`src/lib/between/__tests__/land-place.test.ts`. Name them in the report as pre-existing.
+Failures that already exist on main are not yours to fix in an unrelated change. As of 2026-11-12 `npm run test:vitest`
+passes every suite here, so a failure belongs to the branch until you show it on main. The two that used to fail pass
+today: `vitest-include-registration` guards `vitest.config.ts` and caught `route-post.test.ts` missing from the include
+list (now in it), and `land-place` passes with the same tree.
+
+`npm run check:registry` fails when `public/registry.json` does not match the routes in `src`. It writes nothing: it
+renders the file the build would write and compares. A route added without refreshing the registry now fails the check
+instead of turning up as a changed file after a build; `npm run build:registry` refreshes it.
+
+A tree that has drifted from the lock is named before any step runs. `node_modules` can hold versions
+`package-lock.json` does not pin, and then eslint and tsc report the tree's faults as the branch's. On 2026-11-12 six
+`Cannot access refs during render` errors came from `eslint-plugin-react-hooks` 7.1.1 while the lock pins 7.0.1, and
+`npm ci` removed them with no code change. `scripts/local/lock-drift.mjs` prints each drifted package, and `check.sh`
+says so at the top and again when a step fails, so a phantom lint failure cannot cost a round.
 
 Vercel runs Node 24; the cloud sandbox has Node 22. A difference between them is rare; if a build passes locally and
 fails on Vercel, that is the first thing to check.
+
+### The look check
+
+`scripts/local/look-check.mjs` renders the Between's hollow headless (chromium with software WebGL, three.js from the CDN) at
+a fixed camera and size, then compares two things with `scripts/local/look/baseline.json`: the look dataset
+(`public/between/look-data.js`: ramp, palette and light budget, naming the entry that moved) and the frame's luminance at the
+10th, 40th, 70th and 95th percentiles (the ramp is the only part held against the frame; the palette and light budget are
+held as data). `check.sh` runs it as the `look` step only when the branch touches `public/between/`, `public/calrunia/` or
+`scripts/local/look`, which keeps other lanes' push loops unchanged (`LOOK_CHECK=1` forces it, `LOOK_CHECK=0` skips it).
+It skips, saying why, when Playwright, chromium or the CDN is unavailable. When a round moves the look on purpose, refresh
+`look-data.js` from the council's `look.json`, run `node scripts/local/look-check.mjs --update`, and cite the new look hash
+(`LOOK_HASH`) in the pull request. Spec: six-faces-council `.specify/specs/between-look-data`.
 
 ## 7. Shipping: one production deploy a day
 

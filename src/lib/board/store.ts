@@ -27,7 +27,14 @@ export function batchIds(heads: { id: string; bytes: number }[], maxBytes = BATC
 /** Heads to read: a posted row that board-pull has recorded is on main and the board page skips it, so the page's
  * read can leave it out (council pass board-store-size-1, 2026-10-31). Exported for the test. */
 export function readableHeads<T extends { collection: string; recorded: boolean }>(heads: T[], leaveOutRecordedRows: boolean): T[] {
-  return leaveOutRecordedRows ? heads.filter((h) => !(h.collection === 'rows' && h.recorded)) : heads
+  // `records` are the council's record-only files, kept in the store and served one at a time at
+  // GET /api/board/records/<id>; the page never reads them from this list, and they were 1.5 MB of the 3.98 MB read
+  // on 2026-11-09 (council pass board-store-size-1).
+  // `resolved` (his settled answers, one document each) reaches the page through /board/data.js, never through this
+  // read: the page's store shim has no resolved collection. They were 1.15 MB of the 2.00 MB read on 2026-11-11.
+  return leaveOutRecordedRows
+    ? heads.filter((h) => h.collection !== 'records' && h.collection !== 'resolved' && !(h.collection === 'rows' && h.recorded))
+    : heads
 }
 
 /** The latest document per (collection, docId): what the claude.ai store used to hold. With leaveOutRecordedRows, the

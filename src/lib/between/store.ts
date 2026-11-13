@@ -6,6 +6,9 @@ import { db } from '@/lib/db'
 import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
 import { settle, viewGarden } from './shared-pick'
 import { cleanCopy } from '../../../public/between/friendcraft/deck.js'
+import { bowls } from '../../../public/between/growth.js'
+import { COST } from '../../../public/between/friendcraft/deck.js'
+import { draw, forYou, isMove, move, seen, worded } from './turn'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -58,9 +61,13 @@ export async function snapshot(gardenId: string, who: Who) {
   ])
   const byId = <T extends { data: Prisma.JsonValue }>(rows: T[], key: (r: T) => string) =>
     Object.fromEntries(rows.map(r => [key(r), asDoc(r.data)]))
+  // a card asked of its owner (or opened with tea) reaches her with her own words, from her own deck, for her alone (turn.ts forYou)
+  const waitingOnMe = items.some(r => { const d = asDoc(r.data); return d.kind === 'turn' && d.owner === who.playerId && (d.status === 'asked' || d.status === 'opened') })
+  const myDeck = waitingOnMe ? await deckOf(who.playerId) : null
+  const itemView = (id: string, d: Doc): Doc => { const base = itemFor(who.playerId, d), fy = forYou(d, who.playerId, myDeck); return fy ? { ...base, forYou: fy } : base }
   return {
     member: true, invite: g.inviteToken, garden: viewGarden(data, who.playerId), names, peers,
-    items: Object.fromEntries(items.map(r => [r.id, itemFor(who.playerId, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
+    items: Object.fromEntries(items.map(r => [r.id, itemView(r.id, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
     shown: byId(shown, r => r.playerId), mine: byId(mine, r => r.key),
   }
 }
@@ -260,6 +267,95 @@ export async function saveFriendcraftCopy(edit: unknown): Promise<Record<string,
   const kept = cleanCopy(edit) as Record<string, string>
   const done = await db.instance.updateMany({ where: { slug: 'friendcraft' }, data: { friendcraftCopy: kept } })
   return done.count ? kept : null
+}
+
+/** The deck a player keeps in their homeroom, read on the server so a drawer never reads it through the poll (FR-003). */
+export async function deckOf(playerId: string): Promise<Doc | null> {
+  const rows = await db.betweenMember.findMany({ where: { playerId }, include: { garden: true } })
+  const home = rows.find(r => asDoc(r.garden.data).kind === 'home')
+  if (!home) return null
+  const row = await db.betweenPrivate.findUnique({ where: { gardenId_playerId_key: { gardenId: home.gardenId, playerId, key: 'deck' } } })
+  return row ? asDoc(row.data) : null
+}
+
+export type TurnResult = { ok: true; turn: Doc; id: string } | { ok: false; status: number; error: string }
+
+/**
+ * One move at the low table (POST /api/between/:gardenId/turn; spec .specify/specs/friendcraft-deck-2 FR-001). The two
+ * friends must share a Between and both be enrolled in Friendcraft. The draw, the spend and the BARs are written in one
+ * transaction with the garden row held, so two phones playing at once read each other's move.
+ *  - an asked card also leaves a slip, one private BAR the drawer made and shared with the owner (his steer on
+ *    fo-deck-2-look-3: "The Slip should be a BAR");
+ *  - a kept turn leaves one private BAR the owner made and shared with the drawer (FR-010), and keeps its id.
+ */
+export async function playTurn(gardenId: string, me: string, body: { do?: unknown; turn?: unknown; words?: unknown }): Promise<TurnResult> {
+  const found = await whoIs(gardenId, me, null)
+  if (!found) return { ok: false, status: 404, error: 'There is no garden here.' }
+  const data = asDoc(found.garden.data)
+  if (!found.who.member) return { ok: false, status: 403, error: 'Only the two people in this garden can sit at its table.' }
+  if (data.kind === 'home') return { ok: false, status: 403, error: 'A turn is played at a table two friends share.' }
+  const ids = Object.keys(asDoc(data.members as Prisma.JsonValue))
+  const other = ids.find(i => i !== me)
+  if (ids.length !== 2 || !other) return { ok: false, status: 403, error: 'A turn is played when two friends sit at the table.' }
+  const [mine, theirs] = await Promise.all([enrolledGames(me), enrolledGames(other)])
+  if (!mine.includes('friendcraft') || !theirs.includes('friendcraft')) return { ok: false, status: 403, error: 'Both friends need to be in Friendcraft to play a turn.' }
+  const act = body.do
+  if (act !== 'draw' && !isMove(act)) return { ok: false, status: 400, error: 'That is not a move at the table.' }
+  const names = Object.fromEntries((await db.player.findMany({ where: { id: { in: [me, other] } }, select: { id: true, name: true } })).map(p => [p.id, p.name]))
+  const seed = Math.floor(Math.random() * 4294967296), at = Date.now()
+  const tid = typeof body.turn === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(body.turn) ? body.turn : null
+  const deckFor = async (owner: string) => deckOf(owner)
+
+  return db.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM between_gardens WHERE id = ${gardenId} FOR UPDATE`
+    const rows = await tx.betweenItem.findMany({ where: { gardenId } })
+    const items = Object.fromEntries(rows.map(r => [r.id, asDoc(r.data)]))
+    const turns = Object.values(items).filter(i => i.kind === 'turn')
+    if (act === 'draw') {
+      const owner = other
+      const drawn = draw(await deckFor(owner), me, owner, names[owner] ?? 'Your friend', turns, seed, at)
+      if (!drawn.ok) return drawn
+      const id = 't' + randomBytes(9).toString('base64url')
+      await put(tx, gardenId, { table: 'items', id }, drawn.turn)
+      return { ok: true as const, turn: seen(drawn.turn), id }
+    }
+    if (!tid || !items[tid] || items[tid].kind !== 'turn') return { ok: false as const, status: 404, error: 'That card is no longer on the table.' }
+    const turn = items[tid]
+    const owner = turn.owner as string
+    return applyMove(tx, gardenId, items, tid, turn, act, me, names, body.words, at, act === 'offer' ? await deckFor(owner) : null)
+  })
+}
+
+async function applyMove(tx: Prisma.TransactionClient, gardenId: string, items: Record<string, Doc>, tid: string, turn: Doc, act: string, me: string,
+  names: Record<string, string>, words: unknown, at: number, ownerDeck: Doc | null): Promise<TurnResult> {
+  const owner = turn.owner as string, drawer = turn.by as string
+  const card = ownerDeck ? worded(ownerDeck).find(c => c.goal === turn.goal && c.depth === turn.depth) ?? null : null
+  const v = move(turn, act as never, me, names[owner] ?? 'Your friend', bowls(items), card, words, at)
+  if (!v.ok) return v
+  let next = v.turn
+  const sid = 's-' + tid
+  if (v.spend === 'add') await put(tx, gardenId, { table: 'items', id: sid }, { kind: 'spend', by: drawer, turn: tid, bowls: (COST as Record<string, number>)[turn.depth as string] ?? 0, at })
+  if (v.spend === 'remove') await put(tx, gardenId, { table: 'items', id: sid }, null)
+  if (v.slip && !next.slip) {
+    const slip = await tx.customBar.create({
+      data: { creatorId: drawer, title: `I asked ${names[owner] ?? 'you'} to offer a ${next.depth} card`, description: 'A paper slip from the low table.', visibility: 'private', reward: 0 },
+      select: { id: true },
+    })
+    await tx.barShare.create({ data: { barId: slip.id, fromUserId: drawer, toUserId: owner } })
+    next = { ...next, slip: slip.id }
+  }
+  if (v.kept && !next.bar) {
+    const lines = next.lines as Doc
+    const say = (u: string) => String((lines[u] as Doc).words)
+    const bar = await tx.customBar.create({
+      data: { creatorId: owner, title: String(next.words), description: say(drawer) + '\n' + say(owner), visibility: 'private', reward: 0 },
+      select: { id: true },
+    })
+    await tx.barShare.create({ data: { barId: bar.id, fromUserId: owner, toUserId: drawer } })
+    next = { ...next, bar: bar.id }
+  }
+  await put(tx, gardenId, { table: 'items', id: tid }, next)
+  return { ok: true, turn: seen(next), id: tid }
 }
 
 /* ---------- the healing journey's coach side (Six-faces-council spec .specify/specs/healing-journey, FR-010 to FR-012) ----------

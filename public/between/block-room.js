@@ -397,6 +397,7 @@ export async function mountRoom(o) {
   function act(a, text) {
     // one keepsake a visit: once it is carried or let go, the card is gone and a second press does nothing (his B on bm-build-look-3)
     if (a === "keep" || a === "letgo") { if (!keep || keptState) return; keptState = a; record.keepsake = a === "keep" ? d.keepsake : "let go"; write();
+      try { sessionStorage.setItem("ctw-block-outcome", "cleared"); } catch (e) { /* the sheet reads "left" */ }   // the hollow's check-in returns on this (charge-engine returnFromBlock)
       o.say && o.say(a === "keep" ? (o.keepSay || `You carry ${d.keepsake} back with you.`) : "It goes up with the rest of the light.", 5); o.sound && o.sound(a);
       o.onKeep && o.onKeep({ ...record, keepsake: d.keepsake, let: a === "letgo" }); return; }
     const [verb, si] = a.split(":"), i = +si, st = STANDS[i]; if (!st || st.done || i !== next()) return;

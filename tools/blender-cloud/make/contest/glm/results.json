@@ -1,0 +1,156 @@
+[
+ {
+  "oid": "obj1",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/glm/obj1.py",
+  "size": 12775,
+  "ok": true,
+  "seconds": 147.6,
+  "object": "bell",
+  "render": {
+   "ok": true,
+   "png": "glm/render_obj1.png",
+   "engine": "CYCLES",
+   "seconds": 2.5,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.1746,
+    "std": 0.201,
+    "min": 0.0549,
+    "max": 0.898
+   },
+   "added": [],
+   "error": null,
+   "mesh_tris": 2509,
+   "build_seconds": 0.1,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
+ },
+ {
+  "oid": "obj2",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/glm/obj2.py",
+  "size": 9863,
+  "ok": true,
+  "seconds": 97.9,
+  "object": "trigram_floor",
+  "render": {
+   "ok": true,
+   "png": "glm/render_obj2.png",
+   "engine": "CYCLES",
+   "seconds": 2.7,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.3434,
+    "std": 0.152,
+    "min": 0.0863,
+    "max": 0.9255
+   },
+   "added": [
+    "scene.camera (a camera existed but was not set)",
+    "a world (none in the script)"
+   ],
+   "error": null,
+   "mesh_tris": 976,
+   "build_seconds": 0.1,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
+ },
+ {
+  "oid": "obj3",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/glm/obj3.py",
+  "size": 12042,
+  "ok": true,
+  "seconds": 170.2,
+  "object": "guandao",
+  "render": {
+   "ok": true,
+   "png": "glm/render_obj3.png",
+   "engine": "CYCLES",
+   "seconds": 2.4,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.283,
+    "std": 0.0722,
+    "min": 0.2,
+    "max": 0.4353
+   },
+   "added": [
+    "camera (none in the script)",
+    "two lights (none in the script)",
+    "a world (none in the script)"
+   ],
+   "error": null,
+   "mesh_tris": 3210,
+   "build_seconds": 0.1,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
+ },
+ {
+  "oid": "obj4",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/glm/obj4.py",
+  "size": 14778,
+  "ok": true,
+  "seconds": 334.3,
+  "object": "hearth_jars",
+  "render": {
+   "ok": false,
+   "png": null,
+   "engine": null,
+   "seconds": null,
+   "size": null,
+   "blank": null,
+   "frame": null,
+   "added": null,
+   "error": "qa.py wrote no result ([Errno 2] No such file or directory: '/workspace/homes/21e1754b04536c6c3683d0d4/blender-here/bars-engine/tools/blender-cloud/make/contest/.qa_render_tmp.json'); exit 1: ^^^^^^^^^^^^^^^\n  File \"/workspace/homes/21e1754b04536c6c3683d0d4/blender-here/bars-engine/tools/blender-cloud/make/contest/glm/obj4.py\", line 52, in set_in\n    s.default_value = value\n    ^^^^^^^^^^^^^^^\nValueError: bpy_struct: item.attr = val: sequences of dimension 0 should contain 4 items, not 3",
+   "mesh_tris": null,
+   "build_seconds": null,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": false
+ },
+ {
+  "oid": "obj5",
+  "path": "/home/workspace/bars-engine/tools/blender-cloud/make/contest/glm/obj5.py",
+  "size": 8109,
+  "ok": true,
+  "seconds": 53.2,
+  "object": "formation",
+  "render": {
+   "ok": true,
+   "png": "glm/render_obj5.png",
+   "engine": "CYCLES",
+   "seconds": 2.1,
+   "size": [
+    640,
+    360
+   ],
+   "blank": false,
+   "frame": {
+    "mean": 0.186,
+    "std": 0.2155,
+    "min": 0.0235,
+    "max": 0.9569
+   },
+   "added": [],
+   "error": null,
+   "mesh_tris": 436,
+   "build_seconds": 0.1,
+   "host": "freebuff cloud VM (bpy 5.2.2 wheel, CPU, no GPU)"
+  },
+  "render_ok": true
+ }
+]
