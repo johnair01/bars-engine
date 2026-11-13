@@ -1,0 +1,3 @@
+Throwaway probe: a Freebuff cloud lane writing through the connected GitHub app.
+Created 2026-11-13 to test branch, commit and pull request permission on johnair01/bars-engine.
+Safe to delete.
