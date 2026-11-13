@@ -7,6 +7,18 @@ import * as FG from './make/figure.js';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const ease = x => x*x*(3-2*x);
+const hermite=(a,b,va,vb,u,span)=>{const t=Math.max(0,Math.min(1,u));return (2*t**3-3*t*t+1)*a+(t**3-2*t*t+t)*span*va+(-2*t**3+3*t*t)*b+(t**3-t*t)*span*vb};
+// Takeoff at .28 s; gravity gives an apex near .60 s and lands at .96 s.
+// Horizontal speed stays continuous through flight instead of easing to zero
+// at each pose key. Landing absorbs vertical velocity before recovery.
+function jumpTrajectory(t,z,y){
+  const gravity=9.81,air=.68,takeoffY=.04,landingY=-.09;
+  const vy=(landingY-takeoffY+.5*gravity*air*air)/air,vx=(1.48-.25)/air;
+  if(t>=.18&&t<.28){const u=(t-.18)/.10;return {z:hermite(.08,.25,.5,vx,u,.10),y:hermite(-.11,takeoffY,0,vy,u,.10)}}
+  if(t>=.28&&t<=.96){const dt=t-.28;return {z:.25+vx*dt,y:takeoffY+vy*dt-.5*gravity*dt*dt}}
+  if(t>.96){const u=(t-.96)/.16;return {z:hermite(1.48,1.68,vx,0,u,.16),y:hermite(landingY,0,0,0,u,.16)}}
+  return {z,y};
+}
 const KEYS = {
   run: {duration:0.64, loop:true, keys:[
     {t:0, z:0, y:0, lean:.12, legs:[.60,-.48], knees:[-.55,-.12], arms:[-.58,.55], elbows:[.43,.35], contact:'left foot strike'},
@@ -22,7 +34,7 @@ const KEYS = {
     {t:.58,z:.82,y:.52,lean:.05,legs:[.32,-.12],knees:[-.58,-.45],arms:[.24,.24],elbows:[.72,.72],contact:'apex'},
     {t:.86,z:1.37,y:.12,lean:.17,legs:[.38,.24],knees:[-.74,-.7],arms:[-.28,-.28],elbows:[.7,.7],contact:'descent'},
     {t:.96,z:1.48,y:-.09,lean:.22,legs:[.40,.38],knees:[-.86,-.82],arms:[-.52,-.52],elbows:[.64,.64],contact:'landing'},
-    {t:1.12,z:1.55,y:0,lean:0,legs:[0,0],knees:[0,0],arms:[0,0],elbows:[.2,.2],contact:'recovered'},
+    {t:1.12,z:1.68,y:0,lean:0,legs:[0,0],knees:[0,0],arms:[0,0],elbows:[.2,.2],contact:'recovered'},
   ]},
   climb: {duration:1.8, loop:false, ledgeHeight:.72, keys:[
     {t:0,z:0,y:0,lean:0,legs:[0,0],knees:[0,0],arms:[0,0],elbows:[.2,.2],contact:'approach'},
@@ -44,7 +56,8 @@ export function sampleMotion(name, seconds) {
   const a=keys[i],b=keys[i+1],u=ease((t-a.t)/(b.t-a.t));
   const scalar=k=>a[k]+(b[k]-a[k])*u;
   const pair=k=>a[k].map((v,j)=>v+(b[k][j]-v)*u);
-  return {name,t,seconds,rootForward:scalar('z')+cycle*keys.at(-1).z,rootUp:scalar('y'),lean:scalar('lean'),
+  const path=name==='jump'?jumpTrajectory(t,scalar('z'),scalar('y')):{z:scalar('z'),y:scalar('y')};
+  return {name,t,seconds,rootForward:path.z+cycle*keys.at(-1).z,rootUp:path.y,lean:scalar('lean'),
     legs:pair('legs'),knees:pair('knees'),arms:pair('arms'),elbows:pair('elbows'),contact:u<.5?a.contact:b.contact};
 }
 

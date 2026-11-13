@@ -3,10 +3,11 @@ import {makeWalker} from './walker.js';
 import {sampleMotion,motionSpec,applyMotion} from './motion.js';
 import {loadMocapReference,poseMocap,alignMocapFacing,retargetRunDirections,loadJumpReference,poseJumpReference} from './mocap-reference.js';
 import {poseMotionCloth} from './motion-cloth.js';
+import {sampleRunDynamics} from './run-dynamics.js';
 import * as FG from './make/figure.js';
 
 const $=id=>document.getElementById(id), canvas=$('stage');
-const settings=[['speed','Playback speed',.5,1.6,1,.05],['stride','Stride reach',.55,1.45,1,.05],['arm','Arm swing',.5,1.6,1,.05],['lean','Torso lean',.4,1.7,1,.05],['clearance','Both arms clear torso',0,.65,.5,.025],['lift','Run flight',.2,1.8,1,.05],['jump','Jump height',.4,1.6,1,.05]];
+const settings=[['speed','Playback speed',.5,1.6,1,.05],['stride','Stride reach',.55,1.45,1,.05],['arm','Arm swing',.5,1.6,1,.05],['lean','Torso lean',.4,1.7,1,.05],['clearance','Both arms clear torso',0,.65,.5,.025],['compression','Run compression',.4,1.8,1,.05],['lift','Run flight',.2,1.8,1,.05],['jump','Jump height',.4,1.6,1,.05]];
 const poseDefaults={shoulderOutL:.1};
 const saved=JSON.parse(localStorage.getItem('cult-motion-lab')||'{}'), values={};
 for(const [key,name,min,max,def,step] of settings){
@@ -37,6 +38,7 @@ addEventListener('resize',size);size();
 function duration(){return motion==='walk'?1.2:motion==='pose'?motionSpec('run').duration:motionSpec(motion).duration}
 function renderPose(){if(!W)return;
   const F=W.X.F;
+  canvas.dataset.runBounce='';
   W.holder.position.set(0,0,0);
   if(motion==='walk'){
     W.previewWalk(clock/duration()*Math.PI*2,values.stride);
@@ -44,12 +46,15 @@ function renderPose(){if(!W)return;
   }else if((motion==='run'||motion==='pose')&&ref){
     const source=ref.run;poseMocap(ref,'run',clock/duration()*source.length/source.fps);
     retargetRunDirections(F,ref,{stride:values.stride,arm:values.arm,lean:values.lean,clearance:values.clearance,pose:poseValues,groundY});
-    F.root.position.y+=(ref.bones[0].position.y-ref.runHipMin)*values.lift;
+    const bounce=sampleRunDynamics(clock/duration(),{compression:values.compression,flight:values.lift});
+    canvas.dataset.runBounce=bounce.height.toFixed(4);
+    F.root.position.y+=bounce.height;
     F.root.updateMatrixWorld(true);F.mesh.skeleton.update();
-    const phase=clock/duration(),strike=Math.pow(Math.abs(Math.cos(2*Math.PI*phase)),8);
+    const strikeDistance=Math.min(bounce.phase,1-bounce.phase),strikeT=Math.max(0,1-strikeDistance/.08),strike=strikeT*strikeT*(3-2*strikeT);
     const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
-    F.root.position.y+=(standingFootY-sole)*strike;
-    $('contact').textContent=`CMU run directions and hip motion · source travel ${source.travel.toFixed(2)} m/cycle`;
+    // Keep the contact correction small so it cannot erase the compression arc.
+    F.root.position.y+=(standingFootY-sole)*strike*.25;
+    $('contact').textContent=`CMU limb directions · ${bounce.stage} · vertical ${bounce.height.toFixed(3)} m · source travel ${source.travel.toFixed(2)} m/cycle`;
     const P=n=>F.bones[n].getWorldPosition(new THREE.Vector3()),mid=P('shoulderL').add(P('shoulderR')).multiplyScalar(.5);
     const eL=P('elbowL').sub(mid).dot(F.fr.l),eR=-P('elbowR').sub(mid).dot(F.fr.l);
     $('alignment').textContent=`Elbow lateral position from torso center: left ${eL.toFixed(2)} m · right ${eR.toFixed(2)} m`;
@@ -71,6 +76,7 @@ function renderPose(){if(!W)return;
   W.holder.updateMatrixWorld(true);
   window.__motionLab={motion,rootForward:W.holder.position.dot(F.fr.f),rootUp:F.root.position.y-groundY};
   canvas.dataset.rootForward=window.__motionLab.rootForward.toFixed(3);
+  canvas.dataset.rootUp=window.__motionLab.rootUp.toFixed(4);
   F.root.updateMatrixWorld(true);
   const comparing=!!(ref&&['walk','run','pose','jump'].includes(motion)),target=F.fr.f.clone().multiplyScalar(comparing?.62:0).add(new THREE.Vector3(0,.92,0));
   const orbit=F.fr.l.clone().applyAxisAngle(new THREE.Vector3(0,1,0),orbitYaw).multiplyScalar(Math.cos(orbitPitch));

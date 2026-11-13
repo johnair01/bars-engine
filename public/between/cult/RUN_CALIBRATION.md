@@ -1,6 +1,8 @@
 # Captured run calibration
 
-The motion lab's run uses the CMU source limb directions. The source skeleton is rotated to match the cultivator's forward axis using the averaged foot-to-toe vector. The cultivator root height follows the source hip translation relative to that run's lowest hip frame. The source has 20 frames at 24 fps, 2.46 m of travel per cycle, and about 0.105 m of hip height range.
+The motion lab's run uses the CMU source limb directions. The source skeleton is rotated to match the cultivator's forward axis using the averaged foot-to-toe vector. The source has 20 frames at 24 fps, 2.46 m of travel per cycle, and about 0.105 m of hip height range.
+
+The game rig uses a separate, explicit vertical contact cycle in `run-dynamics.js`. Each half-stride starts at foot strike (0 m), compresses to -0.04 m at phase .18, releases through toe-off at .40, reaches +0.09 m at .70, and returns to strike. Cubic Hermite slopes match across the loop. The contact correction is limited to the nearest 8% of each half-stride and 25% of the measured sole error; a broad ground correction previously flattened compression. `Run compression` and `Run flight` scale the negative and positive portions independently. This curve is a review calibration motivated by visual feedback, not a claimed direct reproduction of the captured root channel. The remaining sole error still requires foot placement or IK before game use.
 
 Shared review controls: stride 1.00, arm swing 1.00, torso lean 1.00, run flight 1.00, bilateral arm clearance 0.50, left upper arm out 0.10. Other arm offsets are zero. Keep the source direction controls at 1.00 when retargeting; tune only the corrective offsets against the exposed body.
 

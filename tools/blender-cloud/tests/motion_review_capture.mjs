@@ -21,6 +21,13 @@ try{
   await page.screenshot({path:join(out,'motion-lab-run.png')});
   await page.locator('#actions [data-motion="pose"]').click();
   if(+(await page.locator('#clearance').inputValue())!==0.5||+(await page.locator('#shoulderOutL').inputValue())!==0.1)throw Error('shared run calibration defaults did not load');
+  const runHeights=[];
+  for(const phase of [0,90,350,500]){
+    await page.locator('#time').evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}))},phase);
+    runHeights.push(+(await page.locator('#stage').getAttribute('data-root-up')));
+    if(phase===90||phase===350)await page.screenshot({path:join(out,`motion-lab-run-${phase===90?'compression':'flight'}.png`)});
+  }
+  if(!(runHeights[1]<runHeights[0]-.02&&runHeights[2]>runHeights[0]+.06&&Math.abs(runHeights[3]-runHeights[0])<.02))throw Error(`run lacks compression/release/loop: ${runHeights}`);
   await page.locator('#bodyOnly').check();
   await page.screenshot({path:join(out,'motion-lab-run-default-calibration.png')});
   await page.locator('#shoulderOutL').evaluate(el=>{el.value='0.4';el.dispatchEvent(new Event('input',{bubbles:true}))});
@@ -40,6 +47,13 @@ try{
     if(phase===500)await page.screenshot({path:join(out,'motion-lab-jump-midair.png')});
   }
   if(Math.abs(jumpTravel[0])>.01||jumpTravel[1]<.6||jumpTravel[2]<1.45)throw Error(`jump root did not travel forward: ${jumpTravel}`);
+  const flight=[];
+  for(const phase of [250,518,786]){
+    await page.locator('#time').evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}))},phase);
+    flight.push([+(await page.locator('#stage').getAttribute('data-root-forward')),+((await page.locator('#stage').getAttribute('data-root-up')))]);
+  }
+  const first=flight[1][0]-flight[0][0],second=flight[2][0]-flight[1][0];
+  if(Math.abs(first-second)>.08||flight[1][1]<flight[0][1]+.25||flight[1][1]<flight[2][1]+.25)throw Error(`jump flight lacks continuous travel and apex: ${JSON.stringify(flight)}`);
   await page.screenshot({path:join(out,'motion-lab-jump.png')});
   await page.locator('#actions [data-motion="climb"]').click();
   await page.locator('#note').fill('Cloud note save check: visible ledge contact.');

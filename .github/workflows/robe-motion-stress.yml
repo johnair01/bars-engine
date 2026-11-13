@@ -13,6 +13,7 @@ on:
       - public/between/cult/motion-lab.html
       - public/between/cult/motion-lab.js
       - public/between/cult/motion-cloth.js
+      - public/between/cult/run-dynamics.js
       - public/between/cult/mocap-reference.js
       - public/between/cult/reference-cmu-walk-run.glb
       - public/between/cult/reference-cmu-16-05-jump.bvh
