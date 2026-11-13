@@ -263,7 +263,7 @@ function parseRouteAnnotation(jsDoc: JSDoc, filePath: string, lineNumber: number
   return route as RouteDefinition;
 }
 
-async function buildRegistry(): Promise<Registry> {
+export async function buildRegistry(): Promise<Registry> {
   const project = new Project({
     tsConfigFilePath: path.join(process.cwd(), 'tsconfig.json'),
   });
@@ -311,37 +311,38 @@ async function buildRegistry(): Promise<Registry> {
   return registry;
 }
 
-// Main execution
-buildRegistry()
-  .then(registry => {
-    const outputPath = path.join(process.cwd(), 'public', 'registry.json');
+/** The file this registry renders to. The timestamp is the one part no source decides, so when everything else matches
+ *  the file it came from, that timestamp stands and the file stays byte-identical; when a route did change, the new time
+ *  is the record of that rebuild. */
+export function render(registry: Registry, previousText: string | null): string {
+  const body = (r: Registry) => JSON.stringify({ ...r, generatedAt: '' }, null, 2);
+  if (previousText) {
+    try {
+      const previous = JSON.parse(previousText) as Registry;
+      if (body(previous) === body(registry)) registry.generatedAt = previous.generatedAt;
+    } catch { /* a file that will not parse is replaced */ }
+  }
+  return JSON.stringify(registry, null, 2);
+}
 
-    // Ensure public directory exists
-    const publicDir = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
+const outputPath = path.join(process.cwd(), 'public', 'registry.json');
 
-    // Everything above the timestamp is derived from the source, so when it has not moved the old timestamp stands and
-    // the file stays byte-identical; when a route did change, the new time is the record of that rebuild.
-    const before = fs.existsSync(outputPath) ? (fs.readFileSync(outputPath, 'utf8') as string) : null;
-    const body = (r: Registry) => JSON.stringify({ ...r, generatedAt: '' }, null, 2);
-    if (before) {
-      try {
-        const previous = JSON.parse(before) as Registry;
-        if (body(previous) === body(registry)) registry.generatedAt = previous.generatedAt;
-      } catch { /* a file that will not parse is replaced */ }
-    }
+// Main execution, only when this file is what was run: scripts/check-registry.ts imports the builder and must not write.
+if ((process.argv[1] ?? '').replace(/\\/g, '/').endsWith('scripts/build-registry.ts')) {
+  buildRegistry()
+    .then(registry => {
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      const before = fs.existsSync(outputPath) ? (fs.readFileSync(outputPath, 'utf8') as string) : null;
+      fs.writeFileSync(outputPath, render(registry, before));
 
-    fs.writeFileSync(outputPath, JSON.stringify(registry, null, 2));
-
-    console.log('\n📖 Registry Built Successfully!\n');
-    console.log(`Routes registered: ${registry.routes.length}`);
-    console.log(`Entities defined: ${Object.keys(registry.entities).length}`);
-    console.log(`Relationships defined: ${Object.keys(registry.relationships).length}`);
-    console.log(`\n✅ Registry saved to: ${outputPath}\n`);
-  })
-  .catch(error => {
-    console.error('❌ Registry build error:', error);
-    process.exit(1);
-  });
+      console.log('\n📖 Registry Built Successfully!\n');
+      console.log(`Routes registered: ${registry.routes.length}`);
+      console.log(`Entities defined: ${Object.keys(registry.entities).length}`);
+      console.log(`Relationships defined: ${Object.keys(registry.relationships).length}`);
+      console.log(`\n✅ Registry saved to: ${outputPath}\n`);
+    })
+    .catch(error => {
+      console.error('❌ Registry build error:', error);
+      process.exit(1);
+    });
+}

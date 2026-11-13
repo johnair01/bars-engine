@@ -60,11 +60,6 @@ step vitest $DEV run -- npm run test:vitest
 if look_touched; then step look node scripts/local/look-check.mjs; else echo; echo "── look ── (skipped: no change under public/between or public/calrunia; LOOK_CHECK=1 forces it)"; fi
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build
-  # The build writes public/registry.json. Its ids and timestamp come from the source now, so an unchanged tree leaves it
-  # alone; a real route change shows here and wants committing with the change that made it.
-  if ! git diff --quiet -- public/registry.json 2>/dev/null; then
-    echo "public/registry.json changed with this build; commit it with your change."
-  fi
 fi
 
 echo
