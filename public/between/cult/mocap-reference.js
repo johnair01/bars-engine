@@ -77,9 +77,12 @@ export function retargetRunDirections(F,ref,{stride=1,arm=1,lean=1,groundY=0,cle
   FG.aim(F,'hips','spine01',torso);
   for(const side of ['L','R']){
     const s=side,[[thigh,knee,hipTarget,kneeTarget],[shin,ankle,shinTarget,ankleTarget],[upperArm,forearm,shoulderTarget,elbowTarget],[lowerArm,hand,forearmTarget,wristTarget]]=RUN_RIG_MAP[s];
-    FG.aim(F,hipTarget,kneeTarget,targetDir(thigh,knee,stride));
-    FG.aim(F,shinTarget,ankleTarget,targetDir(shin,ankle,stride));
     const sg=s==='L'?1:-1;
+    // The source knee tracks almost into the centre line on this wider game rig.
+    // Keep a small anatomical lane on each side without changing stride timing.
+    FG.aim(F,hipTarget,kneeTarget,targetDir(thigh,knee,stride).addScaledVector(F.fr.l,sg*.12).normalize());
+    FG.aim(F,shinTarget,ankleTarget,targetDir(shin,ankle,stride).addScaledVector(F.fr.l,sg*.035).normalize());
+    FG.aim(F,'ankle'+s,'ball'+s,targetDir('foot.'+s,'toe.'+s,1));
     const upper=targetDir(upperArm,forearm,arm)
       .addScaledVector(F.fr.l,sg*(clearance+(pose['shoulderOut'+s]||0)))
       .addScaledVector(F.fr.f,pose['shoulderForward'+s]||0).normalize();

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {makeWalker} from './walker.js';
 import {sampleMotion,motionSpec,applyMotion} from './motion.js';
 import {loadMocapReference,poseMocap,alignMocapFacing,retargetRunDirections,loadJumpReference,poseJumpReference} from './mocap-reference.js';
+import {poseMotionCloth} from './motion-cloth.js';
+import * as FG from './make/figure.js';
 
 const $=id=>document.getElementById(id), canvas=$('stage');
 const settings=[['speed','Playback speed',.5,1.6,1,.05],['stride','Stride reach',.55,1.45,1,.05],['arm','Arm swing',.5,1.6,1,.05],['lean','Torso lean',.4,1.7,1,.05],['clearance','Both arms clear torso',0,.65,.5,.025],['lift','Run flight',.2,1.8,1,.05],['jump','Jump height',.4,1.6,1,.05]];
@@ -21,7 +23,7 @@ for(const [key,name] of poseKeys){const label=document.createElement('label'),in
   label.textContent=name;label.append(read);$('poseSliders').append(label,input);
   poseValues[key]=+input.value;read.textContent=poseValues[key].toFixed(2);
   input.oninput=()=>{poseValues[key]=+input.value;read.textContent=poseValues[key].toFixed(2);localStorage.setItem('cult-motion-pose',JSON.stringify(poseValues));renderPose()};}
-let W=null,ref=null,jumpRef=null,ledge=null,maskedIndex=null,who='f',motion='walk',playing=true,clock=0,previous=0,groundY=0;
+let W=null,ref=null,jumpRef=null,ledge=null,maskedIndex=null,who='f',motion='walk',playing=true,clock=0,previous=0,groundY=0,standingFootY=0;
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 const camera=new THREE.PerspectiveCamera(25,1,.05,40);
@@ -44,6 +46,9 @@ function renderPose(){if(!W)return;
     retargetRunDirections(F,ref,{stride:values.stride,arm:values.arm,lean:values.lean,clearance:values.clearance,pose:poseValues,groundY});
     F.root.position.y+=(ref.bones[0].position.y-ref.runHipMin)*values.lift;
     F.root.updateMatrixWorld(true);F.mesh.skeleton.update();
+    const phase=clock/duration(),strike=Math.pow(Math.abs(Math.cos(2*Math.PI*phase)),8);
+    const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
+    F.root.position.y+=(standingFootY-sole)*strike;
     $('contact').textContent=`CMU run directions and hip motion · source travel ${source.travel.toFixed(2)} m/cycle`;
     const P=n=>F.bones[n].getWorldPosition(new THREE.Vector3()),mid=P('shoulderL').add(P('shoulderR')).multiplyScalar(.5);
     const eL=P('elbowL').sub(mid).dot(F.fr.l),eR=-P('elbowR').sub(mid).dot(F.fr.l);
@@ -54,9 +59,15 @@ function renderPose(){if(!W)return;
     s.arms=s.arms.map(x=>x*values.arm);s.elbows=s.elbows.map(x=>x*values.arm);
     s.lean*=values.lean;s.rootUp*=motion==='jump'?values.jump:values.lift;
     applyMotion(F,s,groundY);$('contact').textContent=`Contact intent: ${s.contact} · travel ${s.rootForward.toFixed(2)} m`;
+    if(motion==='jump'&&(clock<=.2||clock>=.94)){
+      for(const side of ['L','R'])FG.aim(F,'ankle'+side,'ball'+side,F.fr.f);
+      const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
+      F.root.position.y+=standingFootY-sole;
+    }
     if(motion==='climb')W.holder.position.copy(F.fr.f).multiplyScalar(s.rootForward);
   }
   if(ledge)ledge.visible=motion==='climb';
+  poseMotionCloth(W.X,motion,clock/duration());
   F.root.updateMatrixWorld(true);
   const comparing=!!(ref&&['walk','run','pose','jump'].includes(motion)),target=F.fr.f.clone().multiplyScalar(comparing?.62:0).add(new THREE.Vector3(0,.92,0));
   const orbit=F.fr.l.clone().applyAxisAngle(new THREE.Vector3(0,1,0),orbitYaw).multiplyScalar(Math.cos(orbitPitch));
@@ -71,6 +82,7 @@ function renderPose(){if(!W)return;
 }
 async function build(){if(W){if(ref)W.X.scene.remove(ref.group,ref.helper);if(jumpRef)W.X.scene.remove(jumpRef.group,jumpRef.helper);W.dispose()}
   W=await makeWalker({who,outfit:'B2'});W.X.scene.add(W.holder);groundY=W.X.F.root.position.y;
+  standingFootY=Math.min(W.X.F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,W.X.F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
   maskedIndex=W.X.F.mesh.geometry.index.clone();setBodyVisibility();
   if(!ref)ref=await loadMocapReference();
   ref.group.position.copy(W.X.F.fr.f).multiplyScalar(1.25);W.X.scene.add(ref.group,ref.helper);alignMocapFacing(ref,W.X.F.fr.f);
