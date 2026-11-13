@@ -15,8 +15,16 @@ export const FEEL = {
   water: { name: "sadness", light: 0x4f8fd0, cloth: 0x2c5f9e, ink: "#1f4f96" },
 };
 export const PICKUP_KEY = "hj-pickup";
-export const roadX = z => 0.5 * Math.sin((z - 6.24) * 0.6);
-export const Z0 = 9.4, Z1 = -2.5, HALF = 0.5, LIT = [4.2, 5.6];
+/* the winding stretch across the clearing (z 9.4 to -2.5) hands over, by z -7, to the path out of the ring, which
+   runs along x = -0.25 (-z - 6.6) (land.js's clearingPath) to the Gatehouse at about z -15. The sine fades into the
+   line, so the way and its slope stay continuous. */
+const WIND = z => 0.5 * Math.sin((z - 6.24) * 0.6);
+export const roadX = z => {
+  if (z >= -2.5) return WIND(z);
+  const u = Math.min(1, (-2.5 - z) / 4.5), t = u * u * (3 - 2 * u);
+  return WIND(z) * (1 - t) + -0.25 * Math.max(0, -z - 6.6) * t;
+};
+export const Z0 = 9.4, Z1 = -14.6, HALF = 0.5, LIT = [4.2, 5.6], Z_LIGHTS = -2.5;
 const LETTER_Z = 3.4, TAG_MAX = 140;
 
 const TAG_CSS = `.hjt-veil{position:fixed;inset:0;z-index:50;background:rgba(8,10,9,.62);display:flex;align-items:flex-end;justify-content:center}
@@ -84,9 +92,9 @@ export function mountRoad(THREE, L, { hang = null, onPick = null, onLeave = null
   /* ---------- the road ---------- */
   const road = new THREE.Group(); road.name = "hj-road"; scene.add(road);
   {
-    const n = 90, pos = [], uv = [], idx = [];
+    const n = 240, pos = [], uv = [], idx = [];
     for (let i = 0; i <= n; i++) { const z = Z0 + (Z1 - Z0) * i / n, x = roadX(z), dx = (roadX(z + 0.01) - x) / 0.01, nl = Math.hypot(1, dx);
-      for (const s of [-1, 1]) { const px = x + s * HALF / nl, pz = z - s * HALF * dx / nl; pos.push(px, groundAt(px, pz) + 0.025, pz); uv.push(s < 0 ? 0 : 1, i / n * 12); } }
+      for (const s of [-1, 1]) { const px = x + s * HALF / nl, pz = z - s * HALF * dx / nl; pos.push(px, groundAt(px, pz) + 0.025, pz); uv.push(s < 0 ? 0 : 1, i / n * 24); } }
     for (let i = 0; i < n; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
     const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
     const tex = canvasTex(64, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, "rgba(206,174,124,0)"); g.addColorStop(0.18, "rgba(206,174,124,.95)"); g.addColorStop(0.82, "rgba(206,174,124,.95)"); g.addColorStop(1, "rgba(206,174,124,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h);
@@ -103,7 +111,7 @@ export function mountRoad(THREE, L, { hang = null, onPick = null, onLeave = null
       for (const sd of [-1, 1]) { const rr = 0.055 + r() * 0.035, px = x + sd * (HALF + 0.04) / nl, pz = z - sd * (HALF + 0.04) * dx / nl;
         const m = new THREE.Mesh(new THREE.DodecahedronGeometry(rr, 0), lit ? wood : warm); m.scale.set(1.2, 0.62, 1); m.rotation.set(r(), r() * 6, r()); m.position.set(px, groundAt(px, pz) + rr * 0.35, pz); road.add(m); }
     }
-    for (let z = Z0 - 1.2; z > Z1; z -= 2.4) { const lit = z > LIT[0] && z < LIT[1]; const pl = new THREE.PointLight(lit ? FEEL.wood.light : 0xffa860, lit ? 1.6 : 1.2, 2.8, 1.6); pl.position.set(roadX(z), 0.35, z); road.add(pl); }
+    for (let z = Z0 - 1.2; z > Z_LIGHTS; z -= 2.4) { const lit = z > LIT[0] && z < LIT[1]; const pl = new THREE.PointLight(lit ? FEEL.wood.light : 0xffa860, lit ? 1.6 : 1.2, 2.8, 1.6); pl.position.set(roadX(z), 0.35, z); road.add(pl); }
     const pl = new THREE.PointLight(FEEL.wood.light, 1.8, 2.8, 1.6); pl.position.set(roadX(4.9), 0.4, 4.9); road.add(pl);
   }
 
