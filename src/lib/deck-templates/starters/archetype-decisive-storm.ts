@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Let the Charge Gather',
+      bodyText:
+        'A storm builds before it breaks. Breathe slowly and leave the pressure where it is for one full minute. Do not release it. Write down what the waiting showed you that the strike would have hidden.',
+      faceKey: null,
+      archetypeKey: 'decisive-storm',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Hear It Through to the End',
+      bodyText:
+        'Pick one person and let them finish a whole thought without your decision landing in the middle of it. Wait one extra breath after they stop. Write down what came after the pause.',
+      faceKey: null,
+      archetypeKey: 'decisive-storm',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'The Decision You Have Been Deferring',
       bodyText:
         'What decision are you holding but not making? The Decisive Storm\'s shadow is sometimes striking everywhere except the one place that matters. Name what is actually at stake — not what you have been telling yourself, but the real cost of not deciding.',

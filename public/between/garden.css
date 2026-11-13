@@ -193,6 +193,9 @@ body.seatedmoment .mcap { top: auto; bottom: calc(22vh + env(safe-area-inset-bot
 
 /* Part 4: the check-in, walked. The room stays in view, glowing in the feeling's colour. */
 .sheet.walk { max-height: 58vh; }
+.sheet.walk label { display: block; }   /* the reading pace wraps each word in a span; in a grid every word became its own row and pushed the body scan off the screen */
+.sheet.walk label > input, .sheet.walk label > span:last-child:not(.cw) { margin-top: 6px; }
+.sheet.walk label > input { display: block; width: 100%; }
 body.quiethud .hud .bottom { display: none; }
 .sheet .feels { display: flex; flex-wrap: wrap; gap: 8px; }
 .sheet .feels button { background: var(--soft); color: var(--ink); border-color: var(--line); font-weight: 400; display: inline-flex; align-items: center; gap: 2px; min-height: 48px; }
@@ -304,3 +307,16 @@ body.quiethud .hud .bottom { display: none; }
 .paper .nug .went::before { content: "\2192\00a0"; }
 .paper .nug .move { font: .9rem/1.45 var(--body); color: #3a2618; background: rgba(255,255,255,.28); padding: 8px 10px; border-radius: 6px; }
 .paper .compost { font: .86rem/1.45 var(--body); color: #6a4a32; border-top: 1.5px dashed #b89a6e; padding-top: 10px; }
+
+/* the check-in's breath ring (shared charge engine, FR-009): 4s in, 6s out; the delay starts it where the breath already is */
+.breath { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0 6px; }
+.breath i { display: block; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle, var(--c) 0%, transparent 70%); box-shadow: inset 0 0 0 2px var(--c); transform: scale(.55); opacity: .85; }
+.breath.in i { animation: breathIn var(--in) linear forwards; animation-delay: calc(var(--el) * -1); }
+.breath.out i { animation: breathOut var(--out) linear forwards; animation-delay: calc((var(--el) - var(--in)) * -1); }
+.breath.done i { transform: scale(.55); }
+.breath span { font-size: .9rem; color: var(--muted, #b9a995); }
+@keyframes breathIn { from { transform: scale(.55); } to { transform: scale(1); } }
+@keyframes breathOut { from { transform: scale(1); } to { transform: scale(.55); } }
+@media (prefers-reduced-motion: reduce) { .breath i { animation: none !important; transform: scale(.8); } }
+.dirs { display: flex; flex-wrap: wrap; gap: 8px; }
+.dirs button.on { box-shadow: 0 0 0 2px var(--c, #e8c98a); }

@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Open One Door a Hand Wide',
+      bodyText:
+        'Still Points hold the boundary closed. Breathe, and open one door in you a hand wide: one person, one topic, one hour. Stay in the doorway. Write down what came toward you through the gap.',
+      faceKey: null,
+      archetypeKey: 'still-point',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let Them Move You',
+      bodyText:
+        'Choose one person and let their request change something small in your day. Say yes to the small part and mean it. Write down what moving felt like when you chose it.',
+      faceKey: null,
+      archetypeKey: 'still-point',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'The Boundary You Have Not Named',
       bodyText:
         'What boundary exists in you that you have not made explicit to the people around you? Not a rule — a real limit of what you can hold, offer, or sustain. Name it. Write the exact words you would use to say it.',

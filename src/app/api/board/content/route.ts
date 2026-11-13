@@ -7,7 +7,8 @@
  * @agentDiscoverable false
  *
  * @route PUT /api/board/content
- * @description One file's bytes, gzipped, stored under its content hash: PUT ?sha=<sha256>&type=<content type>. The
+ * @description One file's bytes, gzipped, stored under its content hash: PUT ?sha=<sha256>&type=<content type>, and
+ *   ?as=refs for a look's reference, which is kept out of the namespace /board/stills serves. The
  *   hash is checked against the bytes. Gzip keeps board_data.json under Vercel's 4.5 MB request cap.
  * @permissions COUNCIL_MENU_TOKEN
  *
@@ -20,7 +21,7 @@ import { createHash } from 'crypto'
 import { gunzipSync } from 'zlib'
 import { NextRequest, NextResponse } from 'next/server'
 import { givenToken, tokenMatches } from '@/lib/council/token'
-import { allowedPath, backend, tokenNames, manifest, setEntries, storeObject, TYPES, type Entry } from '@/lib/board/content-store'
+import { allowedPath, backend, tokenNames, manifest, setEntries, storeObject, storeRefObject, TYPES, type Entry } from '@/lib/board/content-store'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -46,6 +47,8 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const no = refused(req); if (no) return no
   const sha = req.nextUrl.searchParams.get('sha') ?? '', type = req.nextUrl.searchParams.get('type') ?? ''
+  // A reference goes to its own namespace, where the public stills route cannot reach it by hash (2026-11-09).
+  const as = req.nextUrl.searchParams.get('as') ?? ''
   if (!/^[0-9a-f]{64}$/.test(sha) || !TYPES.has(type))
     return NextResponse.json({ error: `Expected ?sha=<sha256 hex>&type=<one of ${[...TYPES].join(', ')}>` }, { status: 400 })
   let bytes: Buffer
@@ -53,7 +56,8 @@ export async function PUT(req: NextRequest) {
   catch { return NextResponse.json({ error: 'The body must be the file gzipped, under 40 MB unpacked' }, { status: 400 }) }
   if (createHash('sha256').update(bytes).digest('hex') !== sha)
     return NextResponse.json({ error: 'The bytes do not match ?sha' }, { status: 400 })
-  try { await storeObject(sha, bytes, type) } catch (e) { return storeError(e) }
+  if (as && as !== 'refs') return NextResponse.json({ error: 'Expected ?as=refs or no ?as at all' }, { status: 400 })
+  try { await (as === 'refs' ? storeRefObject : storeObject)(sha, bytes, type) } catch (e) { return storeError(e) }
   return NextResponse.json({ stored: sha, size: bytes.length }, { headers: NO_STORE })
 }
 

@@ -1763,12 +1763,36 @@ model Vibulon {
   originTitle   String
   generation    Int          @default(1)
   stakedOnBarId String?
+  /// What made this coin: { move?: string, feel?: string }, or null (src/lib/economy/coin-marks.ts).
+  energy        Json?
+  /// The coin's face (ember-to-vibeulon FR-009): { v, ring, tex, seal, color, mat }; null before the face shipped.
+  face          Json?
   createdAt     DateTime     @default(now())
   bountyStake   BountyStake?
   creator       Player?      @relation("VibulonCreator", fields: [creatorId], references: [id])
   owner         Player?      @relation(fields: [ownerId], references: [id])
 
   @@map("vibulons")
+}
+
+/// One mark for each act done to a vibeulon. No relation: a mark outlives a burned coin (src/lib/economy/coin-marks.ts).
+model VibulonMark {
+  id           String   @id @default(cuid())
+  vibulonId    String
+  act          String
+  playerId     String
+  place        String
+  barId        String?
+  toId         String?
+  note         String?
+  originSource String
+  originId     String
+  originTitle  String
+  energy       Json?
+  createdAt    DateTime @default(now())
+
+  @@index([vibulonId])
+  @@map("vibulon_marks")
 }
 
 model Nation {

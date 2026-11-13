@@ -33,10 +33,15 @@ const ALLOWED = [
   /^board\/council-board-decided\.json$/,
   /^board\/stills\/[0-9a-f]{16}\.(jpe?g|png|gif|webp)$/,
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp)$/i,
+  /** A look's reference frames and the recipe that regenerates them (2026-11-09): the pictures a look was drawn
+   * against. Served only to the owner or a council session, never at /board/stills. */
+  /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\/refs\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp|json)$/i,
   /^council\/callsheets\/INDEX\.md$/,
   /^council\/loops\/[A-Za-z0-9._-]+\.json$/,
   /^council\/ledger\/[A-Za-z0-9._-]+\.json$/,
   /^council\/needs-work-done\.json$/,
+  /** The asset gallery's finished crates and planned holes, built by six-faces-council council/tools/gallery_index.py. */
+  /^council\/gallery\/(crates|holes)\.json$/,
 ]
 export function allowedPath(p: string): boolean {
   return !p.includes('..') && !p.includes('//') && ALLOWED.some(r => r.test(p))
@@ -132,6 +137,21 @@ export async function missingObjects(shas: string[]): Promise<string[]> {
     else out.push(sha)
   }
   return out
+}
+
+/** A reference object, kept out of the `sha/` namespace that the public stills route serves by hash. A reference is
+ * readable through /board/refs only, which asks for the board owner or a session (2026-11-09: the first reference
+ * pushed answered 200 at /board/stills/sha/<sha>, to a caller who could not open /board/refs at all). */
+export async function storeRefObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {
+  const b = backend()
+  if (!b) throw new Error('no content store configured')
+  await b.write('refs/' + sha, bytes, type)
+}
+
+export async function readRefObject(sha: string): Promise<{ body: ReadableStream<Uint8Array>; type?: string } | null> {
+  const b = backend()
+  if (!b || !/^[0-9a-f]{64}$/.test(sha)) return null
+  return b.read('refs/' + sha).catch(() => null)
 }
 
 export async function storeObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {

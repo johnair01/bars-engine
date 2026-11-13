@@ -64,3 +64,14 @@ describe('pictures by hash (the seal)', () => {
     setBackend(undefined)
   })
 })
+
+it('never serves a look two references: /board/stills is not a way round the refs gate', async () => {
+  // Live on 2026-11-09: the first pushed reference answered 200 here while /board/refs answered 401 to the same caller,
+  // because a refs folder sits under the callsheet stills path that this route serves.
+  const ref = ['council', 'callsheets', 'stills', 'cc-cultivation-clothing', 'refs', 'Ma1zP7EZMps', 'sheet.jpg']
+  expect(artPath(ref)).toBeNull()
+  expect((await serveArt(ref)).status).toBe(404)
+  // A still beside it is still served: the guard is the refs folder, not the callsheet.
+  expect(artPath(['council', 'callsheets', 'stills', 'a-look', 'frames', 'a-frame.jpg']))
+    .toBe('council/callsheets/stills/a-look/frames/a-frame.jpg')
+})

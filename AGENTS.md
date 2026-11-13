@@ -17,6 +17,17 @@
 - `npx vercel env pull` is no longer part of bring-up: it writes production's `DATABASE_URL`, which a dev server now
   refuses (override `BARS_ALLOW_REMOTE_DB=1` only for a deliberate, named exception).
 
+## Publishing a Pull Request
+
+A session may open a pull request without asking again when the branch is one it pushed itself in that session, the
+branch is in this repo, and the pull request goes from that branch to `main`.
+
+Nothing else is covered: a force-push, a merge, a branch deletion, a pull request into any branch other than `main`, a
+repository setting, and a push to a branch the session did not create all wait for Wendell. Consent to publish a branch
+is consent to publish that branch and no other. When a call meets every condition and the harness guard refuses it
+anyway, retry once, then ask (Wendell, 2026-11-09: "it's going to be important for us to create PRs from this
+environment").
+
 ## Verification Checkpoint
 - Donation wizard route (port from `scripts/local/dev.sh status`):
   - `http://localhost:<port>/event/donate/wizard?ref=bruised-banana`
@@ -28,3 +39,7 @@
 - `scripts/local/dev.sh` finds or starts Postgres without Docker (Debian cluster, Homebrew/Postgres.app private cluster, then Docker).
 - If `npm run smoke` output disagrees with `npm run diagnose:db`, prefer `diagnose:db` for factual DB source and connectivity.
 - Keep migration discipline: use Prisma migrations (`migrate dev`/`migrate deploy`), never `db push` for shared/prod flows.
+- The Council Board's MCP server is `POST /api/mcp` (`src/app/api/mcp/route.ts`): `post_rows`, `read_rows`, `put_picture`,
+  `read_picture`, `list_pictures`, `post_board_docs` and `whoami` for agents with no shell, gated by `COUNCIL_MENU_TOKEN`.
+  It writes through `sessionWrite`, and `src/lib/board/picture-store.ts` stores each picture once under its sha256, so the
+  row rule and the picture gate stay the board's own (the council's `docs/mcp-board.md`).

@@ -50,6 +50,37 @@ describe('sessionWrite records (store-only)', () => {
     expect(db.rows).toHaveLength(0)
   })
 
+  it('accepts the rows and resolved kinds the backfill posts (store-only FR-004)', async () => {
+    const db = fakeDb()
+    const rowsDoc = { kind: 'rows', path: 'council/callsheets/rows/store-only-1.json', body: '[{"id": "a"}]' }
+    const resolvedDoc = { kind: 'resolved', path: 'board/board_data.json',
+                          name: 'positions/build', body: '{"decision": "stands"}', updated: '2026-10-02' }
+    const r = await sessionWrite(db as never, [
+      { collection: 'records', docId: 'rows-store-only-1', data: rowsDoc },
+      { collection: 'records', docId: 'resolved-positions-build', data: resolvedDoc },
+    ])
+    expect(r.refused).toEqual([])
+    expect(r.written).toEqual(['records/rows-store-only-1', 'records/resolved-positions-build'])
+    expect(db.rows.map(x => x.data)).toEqual([rowsDoc, resolvedDoc])
+  })
+
+  it('accepts a research study record (the council research kind)', async () => {
+    const db = fakeDb()
+    const doc = { kind: 'research', path: 'council/research/2026-11-10-calrunia-gm-guide/answers.md',
+                  body: '# The five answers\n' }
+    const r = await sessionWrite(db as never, [
+      { collection: 'records', docId: 'research-2026-11-10-calrunia-gm-guide-answers', data: doc },
+    ])
+    expect(r).toEqual({ written: ['records/research-2026-11-10-calrunia-gm-guide-answers'], same: 0, refused: [] })
+    expect(db.rows[0].data).toEqual(doc)
+  })
+
+  it('accepts a record whose path names board/, refuses one naming neither prefix', async () => {
+    expect(recordErrors({ kind: 'resolved', path: 'board/board_data.json', body: 'x' })).toEqual([])
+    expect(recordErrors({ kind: 'callsheet', path: 'docs/x.md', body: 'x' }))
+      .toEqual(['a record names the main path it came from (council/... or board/...)'])
+  })
+
   it('refuses a body over the 1 MB cap', async () => {
     const errors = recordErrors({ kind: 'callsheet', path: record.path, body: 'x'.repeat(MAX_RECORD_BYTES + 1) })
     expect(errors.some(e => e.includes('1 MB'))).toBe(true)

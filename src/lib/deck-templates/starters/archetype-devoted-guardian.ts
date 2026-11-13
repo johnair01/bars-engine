@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Receive One Breath of Care',
+      bodyText:
+        'Guardians give breath away all day. Sit down, breathe out long, and let the chair hold your weight. Say to yourself: nobody needs me for the next two minutes. Write down what your body did.',
+      faceKey: null,
+      archetypeKey: 'devoted-guardian',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let One Person Look After You',
+      bodyText:
+        'Choose one person and let them do one small thing for you today without paying it back. Say thank you and stop there. Write down how long it took you to stop wanting to repay.',
+      faceKey: null,
+      archetypeKey: 'devoted-guardian',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'What Are You Holding That Is Not Yours to Hold?',
       bodyText:
         'The Devoted Guardian often holds too much for too long. What burden, responsibility, or emotional weight are you carrying that belongs to someone else — or to the community as a whole? Name it.',

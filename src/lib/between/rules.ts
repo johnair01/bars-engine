@@ -119,6 +119,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op !== 'set' && !cur) return no(404, 'That is no longer in the garden.')
       if (op === 'update' && data && 'by' in data && data.by !== cur!.by) return no(400, 'Who made it does not change.')
       if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
+      if (data?.kind === 'turn' || cur?.kind === 'turn' || data?.kind === 'spend' || cur?.kind === 'spend') return turnWrite()
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
       if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
       return yes
@@ -135,7 +136,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
-      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!)) : yes
+      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!), cur) : yes
   }
 }
 
@@ -160,13 +161,20 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'from', 'in', 'did'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
-/** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
-export function pouchWrite(pouch: Doc): Verdict {
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words.
+ * `cur` is the pouch as it stands. An ember the server wrote (a lit one with no move yet, or a caught one) stands only
+ * while it is identical to `cur`'s; a hand cannot light, catch or re-source an ember (spec friendcraft-deck-3, FR-017).
+ * A worked ember keeps the `from` it was lit with.
+ */
+export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
   for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
@@ -174,16 +182,22 @@ export function pouchWrite(pouch: Doc): Verdict {
     return no(400, 'The hollow keeps one card of your own.')
   const embers = pouch.embers ?? {}
   if (!isObj(embers)) return no(400, 'The pouch holds embers only.')
-  for (const e of Object.values(embers)) {
+  const was = cur && isObj(cur.embers) ? (cur.embers as Doc) : {}
+  for (const [key, e] of Object.entries(embers)) {
     if (e === null) continue
     if (!isObj(e)) return no(400, 'An ember is a small thing.')
     for (const k of Object.keys(e)) if (!EMBER_KEYS.has(k)) return no(400, 'An ember keeps no words.')
+    const before = was[key]
+    if (before !== undefined && sameJson(before, e)) continue
+    if (e.state === 'caught' || 'in' in e) return no(400, 'Only a BAR catches an ember.')
+    if (isObj(before) ? !sameJson(before.from, e.from) : e.from !== undefined) return no(400, 'Where an ember came from does not change.')
     const m = typeof e.move === 'string' ? MOVES[e.move] : undefined
     if (!m) return no(400, 'Choose one of the fifteen moves.')
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
     if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
+    if (e.did != null && !(typeof e.did === 'string' && e.did.length <= 140)) return no(400, 'What you did is one short line.')
   }
   return yes
 }
@@ -340,7 +354,7 @@ function roomWrite(me: string, garden: Doc, room: Json): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute', 'casts', 'pages', 'bookAt', 'hearth'])
 
 /* ---------- the coin table (Six-faces-council pass bar-intake-2, brief "Coin table, build 2") ----------
  * Keep writes the move a cast gave you to your homeroom's private doc (`casts`): the hexagram, its lane and suit, the
@@ -406,6 +420,12 @@ function castWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdi
   if (op !== 'set' && data && 'answer' in data) return no(400, 'Only the other person answers.')
   return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
 }
+/* A turn at the table and the tea a card cost are written only by POST /api/between/:gardenId/turn, which reads the other
+ * friend's deck on the server (Six-faces-council spec .specify/specs/friendcraft-deck-2 FR-002). Through the doc route set,
+ * update and delete of kind `turn` or `spend` all end here. */
+export function turnWrite(): Verdict {
+  return no(403, 'A turn is played at the table.')
+}
 const MINUTE_KEYS = new Set(['ember', 'mirror', 'hope', 'vine', 'skip'])
 const MINUTE_SKIPS = new Set(['ember', 'mirror', 'hope'])
 
@@ -425,7 +445,7 @@ function minuteOk(m: Json | undefined): boolean {
   }
   return true
 }
-const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given'])
+const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given', 'from', 'to', 'by'])
 const GIVEN_KEYS = new Set(['spirit', 'stone', 'room', 'at'])
 const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 
@@ -437,11 +457,41 @@ const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 function homeEmberOk(e: Doc): boolean {
   if (!Object.keys(e).every(k => HOME_EMBER_KEYS.has(k))) return false
   if (!(ELEMENTS as readonly string[]).includes(e.feel as string) || !isNum(e.at)) return false
+  // where the charge started and ended (shared charge engine, FR-008), and the move that carried it: the elements and a short move id
+  for (const k of ['from', 'to'] as const) if (e[k] != null && !(ELEMENTS as readonly string[]).includes(e[k] as string)) return false
+  if (e.by != null && !(typeof e.by === 'string' && /^[a-z0-9_-]{1,40}$/i.test(e.by))) return false
   const g = e.given
   if (g == null) return true
   if (!isObj(g) || !Object.keys(g).every(k => GIVEN_KEYS.has(k))) return false
   const to = [g.spirit, g.stone].filter(v => v != null)
   return to.length === 1 && isId(to[0]) && (g.room == null || isId(g.room)) && isNum(g.at)
+}
+
+/* The hearth's record (spec focus-sit-world-growth, Contracts 1): finished sits, the last one's time, and when each of the five
+ * fragments was told. The page never shows the count. */
+const HEARTH_CHANNELS = ['earth', 'fire', 'wood', 'metal', 'water']
+function hearthOk(h: unknown): boolean {
+  if (h == null) return true
+  if (!isObj(h)) return false
+  if (Object.keys(h).some(k => !['sits', 'at', 'told', 'care', 'careAt', 'stage', 'stageAt', 'spirit'].includes(k))) return false
+  if (h.sits != null && !(isNum(h.sits) && Number.isInteger(h.sits) && h.sits >= 0 && h.sits <= 1_000_000)) return false
+  if (h.at != null && !isNum(h.at)) return false
+  if (h.care != null && !(isNum(h.care) && Number.isInteger(h.care) && h.care >= 0 && h.care <= 4)) return false
+  if (h.careAt != null && !isNum(h.careAt)) return false
+  if (h.stage != null && !(isNum(h.stage) && Number.isInteger(h.stage) && h.stage >= 0 && h.stage <= 4)) return false
+  if (h.stageAt != null && !isNum(h.stageAt)) return false
+  if (h.spirit != null) {
+    const sp = h.spirit
+    if (!isObj(sp) || Object.keys(sp).some(k => !['sat', 'vit', 'at'].includes(k))) return false
+    if (!(isNum(sp.sat) && Number.isInteger(sp.sat) && sp.sat >= 1 && sp.sat <= 10)) return false
+    if (!(isNum(sp.vit) && sp.vit >= 0 && sp.vit <= 100)) return false
+    if (sp.at != null && !isNum(sp.at)) return false
+  }
+  if (h.told != null) {
+    if (!isObj(h.told)) return false
+    for (const [c, v] of Object.entries(h.told)) if (!HEARTH_CHANNELS.includes(c) || !isNum(v)) return false
+  }
+  return true
 }
 
 /** May the homeroom's private doc stand? A look, goals (each maybe tied to a room), check-ins from the five feelings, embers. */
@@ -452,6 +502,7 @@ export function homeWrite(doc: Doc): Verdict {
   if (doc.oriented != null && !isNum(doc.oriented)) return no(400, 'Your first minute here has a time.')
   if (!minuteOk(doc.minute)) return no(400, 'Your first minute here keeps times, nothing more.')
   if (doc.bookAt != null && !(doc.bookAt === 'self' || isId(doc.bookAt))) return no(400, 'The book opens at a page.')
+  if (!hearthOk(doc.hearth)) return no(400, 'Your hearth keeps finished sits and when each part of its story was told, nothing more.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
     ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)
@@ -521,10 +572,12 @@ const GONE = new Set(['retired', 'composted', 'withdrawn'])
 
 export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
-  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' }[]
+  stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' | 'cast' | 'turn' }[]
   revisit: string[]; invitations: { id: string; when: number | null; note: string; at: number | null }[]; lastSatTogether: number | null
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
   keptAgreement: boolean
+  /** the turns both friends answered at this room's table, newest first: the nook's book shows them as ink pages */
+  turns: { id: string; by: string; owner: string; goal: string; depth: string; words: string; goalText: string; lines: { by: string; words: string }[]; at: number }[]
   /** the scrolls they sent that you answered another time or no: kept on your shelf (Still B) */
   keepsakes: { id: string; when: number | null; note: string; answer: 'later' | 'no'; at: number | null }[]
   /** the other person started this room, so their seal wears the first hue (teal); else plum */
@@ -537,13 +590,26 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
   const setup = isObj(g.setup) ? g.setup : {}
   const person = memberIds(g).find(m => m !== me) ?? null
   const who = g.startedBy === me || !g.startedBy ? setup.who ?? null : names[g.startedBy as string] ?? null
-  const waiting: RoomSummary['waiting'] = [], revisit: string[] = []
+  const waiting: RoomSummary['waiting'] = [], revisit: string[] = [], turns: RoomSummary['turns'] = []
   let keptAgreement = false // the room kit's lantern (rk-earned-only): a yes or no, never a count
   for (const { id: iid, data: it } of items) {
     if (it.kind === 'agreement' && it.status === 'kept') keptAgreement = true
     if (GONE.has(it.status as string)) continue
     const yesMe = isObj(it.yes) ? it.yes[me] : undefined
     if (it.kind === 'lantern') { if (it.by !== me && !isNum(yesMe)) waiting.push({ id: iid, what: 'lantern' }); continue }
+    if (it.kind === 'turn') {
+      const kl = isObj(it.lines) ? it.lines : null
+      if (it.status === 'kept' && kl && typeof it.words === 'string' && isNum(it.keptAt))
+        turns.push({ id: iid, by: String(it.by), owner: String(it.owner), goal: String(it.goal), depth: String(it.depth), words: it.words,
+          goalText: typeof it.goalText === 'string' ? it.goalText : '', at: it.keptAt,
+          lines: [it.by, it.owner].map(u => { const l = kl[String(u)]; return { by: String(u), words: isObj(l) ? String(l.words ?? '') : '' } }).filter(l => l.words) })
+      // an asked card or a card opened with tea waits on its owner; a face-up card waits on whoever has no line yet (ids only, never words)
+      const lines = isObj(it.lines) ? it.lines : {}
+      const mine = it.owner === me
+      if ((mine && (it.status === 'asked' || it.status === 'opened')) || (it.status === 'open' && isObj(lines[it.by as string]) && !isObj(lines[me]) && mine))
+        waiting.push({ id: iid, what: 'turn' })
+      continue
+    }
     if (it.kind === 'cast') { if (it.by !== me && !(isObj(it.answer) && isObj(it.answer[me]))) waiting.push({ id: iid, what: 'cast' }); continue }
     if (isObj(it.pending) && it.pending.by !== me) waiting.push({ id: iid, what: 'ask' })
     else if (it.kind === 'agreement' && it.status === 'proposed' && !yesMe) waiting.push({ id: iid, what: 'agreement' })
@@ -568,7 +634,7 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     joinWaiting: g.startedBy === me && !!jr, waiting, revisit, invitations, lastSatTogether,
     hereNow: !!opts.hereNow, lastTendedAt: g.lastTendedAt ?? null,
     styleAsk: sa ? { style: sa.style as string, at: isNum(sa.at) ? sa.at : null } : null,
-    keptAgreement, keepsakes, personStarted: !!person && g.startedBy === person,
+    keptAgreement, turns: turns.sort((a, b) => b.at - a.at), keepsakes, personStarted: !!person && g.startedBy === person,
   }
 }
 
