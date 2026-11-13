@@ -1765,6 +1765,8 @@ model Vibulon {
   stakedOnBarId String?
   /// What made this coin: { move?: string, feel?: string }, or null (src/lib/economy/coin-marks.ts).
   energy        Json?
+  /// The coin's face (ember-to-vibeulon FR-009): { v, ring, tex, seal, color, mat }; null before the face shipped.
+  face          Json?
   createdAt     DateTime     @default(now())
   bountyStake   BountyStake?
   creator       Player?      @relation("VibulonCreator", fields: [creatorId], references: [id])

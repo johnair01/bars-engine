@@ -40,6 +40,8 @@ const ALLOWED = [
   /^council\/loops\/[A-Za-z0-9._-]+\.json$/,
   /^council\/ledger\/[A-Za-z0-9._-]+\.json$/,
   /^council\/needs-work-done\.json$/,
+  /** The asset gallery's finished crates and planned holes, built by six-faces-council council/tools/gallery_index.py. */
+  /^council\/gallery\/(crates|holes)\.json$/,
 ]
 export function allowedPath(p: string): boolean {
   return !p.includes('..') && !p.includes('//') && ALLOWED.some(r => r.test(p))

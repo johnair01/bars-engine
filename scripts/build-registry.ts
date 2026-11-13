@@ -13,6 +13,7 @@
 import { Project, JSDoc } from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
+import { createHash } from 'crypto';
 
 interface Registry {
   version: string;
@@ -253,13 +254,16 @@ function parseRouteAnnotation(jsDoc: JSDoc, filePath: string, lineNumber: number
     return null;
   }
 
-  // Generate route ID
-  route.id = `${route.method?.toLowerCase()}_${route.entity.toLowerCase()}_${Date.now()}`;
+  // Generate route ID. Derived from the route itself, not the clock, so a rebuild of an unchanged route keeps its id
+  // and public/registry.json does not churn a diff on every build (2026-11-13: a green check.sh --build left 398 lines
+  // of new timestamps in the working tree).
+  const stable = createHash('sha256').update(`${route.method} ${route.pattern} ${route.sourceFile}`).digest('hex').slice(0, 8);
+  route.id = `${route.method?.toLowerCase()}_${route.entity.toLowerCase()}_${stable}`;
 
   return route as RouteDefinition;
 }
 
-async function buildRegistry(): Promise<Registry> {
+export async function buildRegistry(): Promise<Registry> {
   const project = new Project({
     tsConfigFilePath: path.join(process.cwd(), 'tsconfig.json'),
   });
@@ -307,26 +311,38 @@ async function buildRegistry(): Promise<Registry> {
   return registry;
 }
 
-// Main execution
-buildRegistry()
-  .then(registry => {
-    const outputPath = path.join(process.cwd(), 'public', 'registry.json');
+/** The file this registry renders to. The timestamp is the one part no source decides, so when everything else matches
+ *  the file it came from, that timestamp stands and the file stays byte-identical; when a route did change, the new time
+ *  is the record of that rebuild. */
+export function render(registry: Registry, previousText: string | null): string {
+  const body = (r: Registry) => JSON.stringify({ ...r, generatedAt: '' }, null, 2);
+  if (previousText) {
+    try {
+      const previous = JSON.parse(previousText) as Registry;
+      if (body(previous) === body(registry)) registry.generatedAt = previous.generatedAt;
+    } catch { /* a file that will not parse is replaced */ }
+  }
+  return JSON.stringify(registry, null, 2);
+}
 
-    // Ensure public directory exists
-    const publicDir = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
+const outputPath = path.join(process.cwd(), 'public', 'registry.json');
 
-    fs.writeFileSync(outputPath, JSON.stringify(registry, null, 2));
+// Main execution, only when this file is what was run: scripts/check-registry.ts imports the builder and must not write.
+if ((process.argv[1] ?? '').replace(/\\/g, '/').endsWith('scripts/build-registry.ts')) {
+  buildRegistry()
+    .then(registry => {
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      const before = fs.existsSync(outputPath) ? (fs.readFileSync(outputPath, 'utf8') as string) : null;
+      fs.writeFileSync(outputPath, render(registry, before));
 
-    console.log('\n📖 Registry Built Successfully!\n');
-    console.log(`Routes registered: ${registry.routes.length}`);
-    console.log(`Entities defined: ${Object.keys(registry.entities).length}`);
-    console.log(`Relationships defined: ${Object.keys(registry.relationships).length}`);
-    console.log(`\n✅ Registry saved to: ${outputPath}\n`);
-  })
-  .catch(error => {
-    console.error('❌ Registry build error:', error);
-    process.exit(1);
-  });
+      console.log('\n📖 Registry Built Successfully!\n');
+      console.log(`Routes registered: ${registry.routes.length}`);
+      console.log(`Entities defined: ${Object.keys(registry.entities).length}`);
+      console.log(`Relationships defined: ${Object.keys(registry.relationships).length}`);
+      console.log(`\n✅ Registry saved to: ${outputPath}\n`);
+    })
+    .catch(error => {
+      console.error('❌ Registry build error:', error);
+      process.exit(1);
+    });
+}

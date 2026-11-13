@@ -16,6 +16,7 @@ export const FORM_OF = { wood: "fox", fire: "fox", earth: "tortoise", metal: "to
 /** Feeds that fill a bowl of tea (FR-004). Games feed the light and the growth but pour no tea. */
 export const BOWL_KINDS = ["answer", "turn", "cup"];
 export const FEED_DAYS = 7;
+export const BOWLS_MAX = 3;
 export const KEPT_LIFT = 0.3;
 
 const isObj = v => !!v && typeof v === "object" && !Array.isArray(v);
@@ -33,7 +34,10 @@ export function isFeed(item) {
     const last = answers.reduce((m, e) => e[1].at > m[1].at ? e : m);
     return { kind: "answer", by: uniq([item.by, last[0]]), at: last[1].at };
   }
-  if (item.kind === "turn" && isObj(item.answer)) { // slice 2: a turn answered by both
+  if (item.kind === "turn" && item.status === "kept" && isNum(item.keptAt)) { // friendcraft slice 2: a turn both friends answered is kept at its keptAt
+    return { kind: "turn", by: uniq([item.by, item.owner]), at: item.keptAt };
+  }
+  if (item.kind === "turn" && isObj(item.answer)) { // a turn answered by both, before it is marked kept
     const answers = Object.entries(item.answer).filter(([, a]) => isObj(a) && isNum(a.at));
     if (answers.length < 2) return null;
     return { kind: "turn", by: uniq(answers.map(e => e[0])), at: Math.max(...answers.map(e => e[1].at)) };
@@ -141,4 +145,17 @@ export function standIn({ feeds = 0, kept = 0, lapsed = 0, now = 0, me = "you", 
   for (let d = 0; d < kept && left > 1; d++) { put(top - d * DAY_MS - 3600e3, me); put(top - d * DAY_MS - 1800e3, them); left -= 2; }
   for (let k = 0; left > 0; k++, left--) put(startedAt + (k + 1) * 3600e3 * 5, k % 2 ? me : them);
   return { items, garden: { startedAt, betweenSince: startedAt }, members: [me, them], now };
+}
+
+/** Tea on the table from a bare item list or map, 0 to BOWLS_MAX (friendcraft slice 2's reading, kept for turn-table.js and the
+    server's turn route): each bowl-kind feed fills one bowl, each spend empties the bowls it names (a spend with no count empties one). */
+export function bowls(items) {
+  let fed = 0, spent = 0;
+  for (const it of listOf(items)) {
+    const d = isObj(it) && isObj(it.data) && it.kind == null ? it.data : it;
+    const f = isFeed(d);
+    if (f) { if (BOWL_KINDS.includes(f.kind)) fed++; }
+    else if (isObj(d) && d.kind === "spend") spent += isNum(d.bowls) ? d.bowls : 1;
+  }
+  return Math.max(0, Math.min(BOWLS_MAX, fed) - spent);
 }

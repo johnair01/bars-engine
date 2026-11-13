@@ -78,8 +78,8 @@ describe('sitting on a seat', () => {
   })
   it('walks to the hearth cushion before the hearth sheet opens', () => {
     expect(garden).toContain('if (name === "hearth" && !seatedAtHearth()) { sitAtHearth(); return; }')
-    expect(garden).toContain('data-act="sitHearth">Sit at the hearth</button>')
-    expect(garden).not.toContain('data-open="hearth">Sit at the hearth')
+    expect(garden).toContain('data-act="sitHearth">Go to the hearth</button>')
+    expect(garden).not.toContain('data-open="hearth">Go to the hearth')
   })
   it('wakes the first minute sat on a seat from the same list', () => {
     expect(garden).toMatch(/seatsNow\(hollow\.handles\.spots\)\.concat\(wake\.on \? \[\{ id: "wake"/)
