@@ -113,6 +113,46 @@ export function foldBattles(held: Held): Doc[] {
     .map(({ doc }) => without(doc, 'order', 'savedAt'))
 }
 
+/** When the record settled an entry, as the page reads it (`recordedAt` in board/template.html). */
+function recordedAt(entry: Doc): number {
+  const history = Array.isArray(entry.history) ? (entry.history as Doc[]) : []
+  const last = history[history.length - 1]
+  const at = entry.saved_at ?? last?.saved_at
+  if (typeof at === 'string') return Date.parse(at) + 999
+  return Date.parse(`${String(entry.recorded)}T23:59:59Z`)
+}
+
+/**
+ * A card the record settled is not a decision to make, so the page does not draw it (Wendell, 2026-11-13: "If its
+ * resolved I don't need to see it on the page, so long as it's still in the store"). Its card and its resolved entry
+ * both stay in the store; they just do not go out in the page's script. A deferred entry stays (it comes back), a card
+ * he answered after the record settled stays, and the ids a battle names keep their resolved entry, since the battle
+ * draws its outcome from it.
+ */
+export function trimSettled(out: Doc): void {
+  const resolved = out.resolved as Resolved
+  const inBattle = new Set<string>()
+  for (const b of (out.battles as Doc[] | undefined) ?? [])
+    for (const r of (b.rounds as Doc[] | undefined) ?? [])
+      for (const id of [...((r.questions as string[]) ?? []), ...((r.positions as string[]) ?? [])]) inBattle.add(id)
+  for (const kind of LISTS) {
+    const entries = resolved[kind]
+    const cards = out[kind] as Doc[] | undefined
+    if (!entries || !cards) continue
+    const settled = new Set<string>()
+    for (const [id, entry] of Object.entries(entries)) {
+      if (entry.decision === 'deferred') continue
+      const card = cards.find((c) => c.id === id)
+      if (card && typeof card.savedAt === 'string' && Date.parse(card.savedAt) > recordedAt(entry)) continue
+      settled.add(id)
+    }
+    out[kind] = cards.filter((c) => !settled.has(String(c.id)))
+    for (const id of settled) if (!inBattle.has(id)) delete entries[id]
+  }
+  // The page reads the resolved map by the four plural kinds only; the singular ones hold battle turns it never looks up.
+  for (const k of ['position', 'question', 'term', 'cause']) delete resolved[k]
+}
+
 /** The board's data in the shape the page reads, from the store alone. */
 export function merge(docs: Docs): Doc {
   const out: Doc = {}
@@ -132,6 +172,7 @@ export function merge(docs: Docs): Doc {
   if (picks && Object.keys(picks).length) out.picks = Object.entries(picks).map(([id, d]) => ({ id, ...d }))
   const battles = docs.battles
   if (battles && Object.keys(battles).length) out.battles = foldBattles(battles)
+  trimSettled(out)
   return out
 }
 

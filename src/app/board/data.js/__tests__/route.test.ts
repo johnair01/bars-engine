@@ -36,6 +36,18 @@ describe('GET /board/data.js', () => {
     expect(text).toContain('data:image/png;base64,AAAA')
   })
 
+  it('leaves a settled card and its resolved entry out of the page, but keeps a deferred one', async () => {
+    vi.mocked(latestDocs).mockResolvedValue({
+      rows: { done: { kind: 'questions', q: 'settled' }, later: { kind: 'questions', q: 'deferred' }, open: { kind: 'questions', q: 'still open' } },
+      resolved: { a: { kind: 'questions', id: 'done', decision: 'yes', recorded: '2026-11-01' },
+                  b: { kind: 'questions', id: 'later', decision: 'deferred', recorded: '2026-11-01' } },
+    })
+    const text = await (await GET(req())).text()
+    expect(text).not.toContain('settled')
+    expect(text).toContain('deferred')
+    expect(text).toContain('still open')
+  })
+
   it('sets the script headers a page load can cache against', async () => {
     vi.mocked(latestDocs).mockResolvedValue({ rows: { p: { kind: 'positions', pos: 'from the store' } } })
     const res = await GET(req())
@@ -98,7 +110,9 @@ describe('GET /board/data.js', () => {
       intake: { latest: { date: '2026-10-21', items: [], savedAt: '2026-10-22T02:01:09Z' } },
     })
     const data = await read(await GET(req()))
-    expect(data.resolved.positions.build).toEqual({ decision: 'stands' })
+    // A settled card leaves the page with its resolved entry; the store keeps both.
+    expect(data.resolved.positions.build).toBeUndefined()
+    expect(data.positions).toEqual([])
     expect(data.draws).toEqual({ 'bar-intake--bi-look-1': { deck: 'bar-intake', card: 'bi-look-1', at: '2026-11-02T20:23:29Z' } })
     expect(data.morning).toEqual({ date: '2026-11-02', gathered_at: '2026-11-03T10:36:23Z' })
     expect(data.weather_log['weather--2026-11-02T07:00:00Z'].feeling).toBe('tender')
