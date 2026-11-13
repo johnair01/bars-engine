@@ -12,7 +12,9 @@ const sx = c => (c - (COLS - 1) / 2) * STEP, sz = r => (r - (ROWS - 1) / 2) * ST
 const slotXZ = i => [sx(i % COLS), sz(Math.floor(i / COLS))];
 const $ = id => document.getElementById(id);
 
-const PAL = { grass: '#86b84f', grassDeep: '#6fa13f', mown: '#a9cf66', soil: '#7a4a2c', soilTop: '#8d5a35', soilWet: '#5a3722', weed: '#7d9a3a', weedDark: '#4f7a2e', weedDry: '#b5a24a',
+// his steer on bgf-farm-build-look-1 (2026-11-13): untilled earth is brown dirt, not grass, and tilling puts it in order
+const PAL = { grass: '#86b84f', grassDeep: '#6fa13f', mown: '#a9cf66', soil: '#5e3a22', soilTop: '#774a2b', soilWet: '#4a2c19', weed: '#7d9a3a', weedDark: '#4f7a2e', weedDry: '#b5a24a',
+  dirt: '#a07a52', dirtDeep: '#8a6542', clod: '#8d6844', clodHi: '#a8825a', pebble: '#a39a8e',
   bark: '#7a5a3c', leafA: '#5f9e45', leafB: '#7cbb52', pod: '#f2c544', podHi: '#ffe9a0', seed: '#fff6d8', wood: '#b07c4c', woodDark: '#7c5232', hill: '#9cc76a', portal: '#ffd99a', skin: '#c98f63', wrap: '#e9dcc0', cloth: '#7a6a45', ring: '#fff2c0' };
 const ramp = (() => { const t = new THREE.DataTexture(new Uint8Array([70, 140, 200, 255]), 4, 1, THREE.RedFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
 const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: new THREE.Color(c), gradientMap: ramp, ...o });
@@ -40,18 +42,26 @@ dayLight();
 // ---------- ground ----------
 { const g = new THREE.PlaneGeometry(120, 120, 120, 120); g.rotateX(-Math.PI / 2); const P = g.attributes.position, C = new Float32Array(P.count * 3), c = new THREE.Color();
   for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), r = Math.hypot(x, z * 1.1); let y = r > 16 ? Math.pow((r - 16) / 10, 1.6) * 2.2 : 0; P.setY(i, y);
-    c.set(PAL.grass).lerp(new THREE.Color(PAL.grassDeep), 0.6 * (0.5 + 0.5 * Math.sin(x * 0.7 + Math.sin(z * 0.9)))); if (Math.abs(x) < COLS * STEP / 2 && Math.abs(z) < ROWS * STEP / 2) c.lerp(new THREE.Color(PAL.mown), 0.3);
+    c.set(PAL.grass).lerp(new THREE.Color(PAL.grassDeep), 0.6 * (0.5 + 0.5 * Math.sin(x * 0.7 + Math.sin(z * 0.9))));
     if (r > 18) c.lerp(new THREE.Color(PAL.hill), Math.min(1, (r - 18) / 8)); C.set([c.r, c.g, c.b], i * 3); }
   g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.computeVertexNormals(); const m = mesh(g, toon('#ffffff', { vertexColors: true }), false); m.name = 'ground'; scene.add(m); }
 const groundPlane = new THREE.Plane(V(0, 1, 0), 0);
-// trees and a fence line at the far edge
+// the field inside the fence is bare brown earth, a little uneven in colour; grass grows only outside it
+const FX = COLS * STEP / 2 + 0.45, FZ = ROWS * STEP / 2 + 0.45;   // the fence line
+const inField = p => Math.abs(p.x) < FX && Math.abs(p.z) < FZ;
+{ const g = new THREE.PlaneGeometry(FX * 2, FZ * 2, 56, 44); g.rotateX(-Math.PI / 2); const P = g.attributes.position, C = new Float32Array(P.count * 3), c = new THREE.Color();
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), n = 0.5 + 0.25 * Math.sin(x * 1.7 + Math.sin(z * 2.3) * 1.5) + 0.25 * Math.sin(z * 1.3 - x * 0.6);
+    c.set(PAL.dirt).lerp(new THREE.Color(PAL.dirtDeep), n * 0.8); C.set([c.r, c.g, c.b], i * 3); }
+  g.setAttribute('color', new THREE.BufferAttribute(C, 3)); const m = mesh(g, toon('#ffffff', { vertexColors: true }), false); m.position.y = 0.012; m.name = 'earth'; scene.add(m); }
+// trees around the edge
 function tree(x, z, s = 1) { const G = new THREE.Group(); { const tr = mesh(new THREE.CylinderGeometry(0.16 * s, 0.26 * s, 1.6 * s, 7), toon(PAL.bark)); tr.position.set(0, 0.8 * s, 0); G.add(tr); }
   for (let i = 0; i < 4; i++) { const b = mesh(new THREE.IcosahedronGeometry(rr(0.8, 1.15) * s, 2), toon([PAL.leafA, PAL.leafB, '#4f8a3a'][i % 3])); b.position.set(rr(-0.6, 0.6) * s, (1.9 + rr(0, 0.9)) * s, rr(-0.6, 0.6) * s); G.add(b); } G.position.set(x, 0, z); scene.add(G); }
 for (let i = 0; i < 9; i++) { const a = Math.PI * (0.1 + 0.8 * i / 8) + Math.PI; tree(Math.cos(a) * 12 + rr(-1, 1), Math.sin(a) * 9 - 1 + rr(-1, 1), rr(0.9, 1.4)); }
-tree(-11, 2, 1.3); tree(11.5, 1, 1.2);
+tree(-12.4, 2, 1.3); tree(11.5, 1, 1.2);
 // the stream at the west edge, and the portal on its bank (level-designer role, 2026-11-09: "the portal and stream sit
 // at the west edge; the portal is the entrance from the hollow"). The stills put the water there; the field code did not.
-const STREAM_X = -7.6;
+// It runs west of the fence, so the portal stands outside the fenced field.
+const STREAM_X = -9.4;
 { const pts = []; for (let z = -14; z <= 14; z += 2) pts.push(V(STREAM_X + Math.sin(z * 0.22) * 0.5, 0, z));
   const curve = new THREE.CatmullRomCurve3(pts); const N = 90, pos = [], idx = [];
   for (let i = 0; i <= N; i++) { const t = i / N, p = curve.getPoint(t), tan = curve.getTangent(t); const nx = -tan.z, nz = tan.x;
@@ -67,6 +77,25 @@ const portal = new THREE.Group();
 { const curve = new THREE.CatmullRomCurve3([V(-1, 0, 0), V(-1.1, 1.2, 0), V(-.6, 2.2, 0), V(0, 2.5, 0), V(.6, 2.2, 0), V(1.1, 1.2, 0), V(1, 0, 0)]);
   portal.add(mesh(new THREE.TubeGeometry(curve, 40, 0.16, 8), toon(PAL.bark))); const inner = mesh(new THREE.CircleGeometry(1, 24), glow(PAL.portal, { transparent: true, opacity: 0.55, side: THREE.DoubleSide }), false); inner.scale.set(0.95, 1.2, 1); inner.position.y = 1.25; portal.add(inner);
   portal.position.set(STREAM_X + 1.5, 0, 2.2); portal.rotation.y = Math.PI / 2; scene.add(portal); }
+
+// ---------- the fence round the field, and its gate (his steer on bgf-farm-build-look-1: "having a gate around the field makes sense") ----------
+// Post and two rails, as the round 3 stills drew it; the gate is on the south side, where the player walks in.
+const GATE_W = 1.7, gateOut = V(0, 0, FZ + 0.9), gateIn = V(0, 0, FZ - 0.7);
+const gateLeaves = [];
+{ const F = new THREE.Group(); F.name = 'fence'; scene.add(F);
+  const post = (x, z, h = 0.95, w = 0.12) => { const p = mesh(new THREE.BoxGeometry(w, h, w), toon(PAL.wood)); p.position.set(x, h / 2, z); F.add(p);
+    const cap = mesh(new THREE.ConeGeometry(w * 0.75, 0.12, 4), toon(PAL.woodDark)); cap.rotation.y = Math.PI / 4; cap.position.set(x, h + 0.06, z); F.add(cap); };
+  const rail = (a, b, y) => { const d = b.clone().sub(a), r = mesh(new THREE.BoxGeometry(d.length(), 0.08, 0.05), toon(PAL.wood)); r.position.copy(a).add(b).multiplyScalar(0.5); r.position.y = y; r.rotation.y = -Math.atan2(d.z, d.x); F.add(r); };
+  const run = (a, b) => { const n = Math.max(1, Math.round(a.distanceTo(b) / 1.5)); for (let k = 0; k <= n; k++) { const p = a.clone().lerp(b, k / n); post(p.x, p.z); } rail(a, b, 0.42); rail(a, b, 0.78); };
+  const g0 = V(-GATE_W / 2, 0, FZ), g1 = V(GATE_W / 2, 0, FZ);
+  run(V(-FX, 0, -FZ), V(FX, 0, -FZ)); run(V(FX, 0, -FZ), V(FX, 0, FZ)); run(V(-FX, 0, FZ), V(-FX, 0, -FZ));
+  run(V(FX, 0, FZ), g1); run(g0, V(-FX, 0, FZ));
+  post(g0.x, g0.z, 1.2, 0.16); post(g1.x, g1.z, 1.2, 0.16);
+  // two leaves, each hinged on its gatepost: a frame of rails and stiles with a diagonal brace
+  for (const s of [-1, 1]) { const hinge = new THREE.Group(); hinge.position.set(s * GATE_W / 2, 0, FZ); F.add(hinge); const w = GATE_W / 2 - 0.08, leaf = new THREE.Group(); hinge.add(leaf);
+    const bar = (x0, y0, x1, y1, t = 0.06) => { const L = Math.hypot(x1 - x0, y1 - y0), b = mesh(new THREE.BoxGeometry(L, t, 0.045), toon(PAL.wood)); b.position.set(-s * (x0 + x1) / 2, (y0 + y1) / 2, 0); b.rotation.z = -s * Math.atan2(y1 - y0, x1 - x0); leaf.add(b); };
+    bar(0.04, 0.3, w, 0.3); bar(0.04, 0.85, w, 0.85); bar(0.07, 0.24, 0.07, 0.91, 0.07); bar(w - 0.03, 0.24, w - 0.03, 0.91, 0.07); bar(0.07, 0.3, w - 0.03, 0.85, 0.05);
+    gateLeaves.push({ hinge, s, open: 0 }); } }
 
 // ---------- the slots ----------
 const slotGroup = new THREE.Group(); scene.add(slotGroup);
@@ -84,9 +113,19 @@ function plantMesh(p) { const d = p.tendedDays; const G = new THREE.Group();
   return G; }
 let FARM = null, SEL = null, selRing = null, first = false;
 const slotObjs = {};
-const weedSlots = (() => { const s = new Set(); while (s.size < 32) s.add(Math.floor(rnd() * SLOTS)); return s; })();   // wild tufts on untilled grass, so every slot reads as land to be tilled
+const weedSlots = (() => { const s = new Set(); while (s.size < 32) s.add(Math.floor(rnd() * SLOTS)); return s; })();   // wild tufts on untilled earth, so every slot reads as land to be tilled
+// untilled earth: loose clods and the odd pebble, scattered without order; each slot keeps its own scatter between redraws
+const CLODS = 6, clodGeo = new THREE.IcosahedronGeometry(1, 0), clodMat = toon('#ffffff');
+const clods = new THREE.InstancedMesh(clodGeo, clodMat, SLOTS * CLODS); clods.castShadow = true; clods.receiveShadow = true; slotGroup.add(clods);
+const slotRnd = i => { let s = (i + 1) * 2654435761 % 2147483647 || 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; };
+function drawClods() { const M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color(); let n = 0;
+  for (let i = 0; i < SLOTS; i++) { if (FARM.slots[i]) continue; const r = slotRnd(i), [x, z] = slotXZ(i);
+    for (let k = 0; k < CLODS; k++) { const peb = r() < 0.04, s = peb ? 0.025 + r() * 0.015 : 0.03 + r() * 0.035;
+      q.setFromEuler(e.set(r() * 6, r() * 6, r() * 6)); M.compose(V(x + (r() - 0.5) * 0.8, 0.012, z + (r() - 0.5) * 0.8), q, V(s * (1 + r() * 0.6), s * 0.4, s));
+      clods.setMatrixAt(n, M); clods.setColorAt(n, c.set(peb ? PAL.pebble : r() < 0.5 ? PAL.clod : PAL.clodHi)); n++; } }
+  clods.count = n; clods.instanceMatrix.needsUpdate = true; if (clods.instanceColor) clods.instanceColor.needsUpdate = true; }
 function drawSlots() {
-  for (const k in slotObjs) slotGroup.remove(slotObjs[k]); for (const k in slotObjs) delete slotObjs[k];
+  for (const k in slotObjs) slotGroup.remove(slotObjs[k]); for (const k in slotObjs) delete slotObjs[k]; drawClods();
   for (let i = 0; i < SLOTS; i++) { const G = new THREE.Group(), [x, z] = slotXZ(i), s = FARM.slots[i]; G.position.set(x, 0, z);
     if (!s) { if (weedSlots.has(i)) G.add(tuft(rr(-0.2, 0.2), rr(-0.2, 0.2), rr(0.8, 1.2))); }
     else { const sl = mesh(slabGeo, toon(PAL.soil)); sl.position.y = 0.05; G.add(sl);
@@ -107,8 +146,71 @@ const avatar = new THREE.Group(); const arm = new THREE.Group(); let hoe;
   const blade = mesh(new THREE.BoxGeometry(0.2, 0.05, 0.1), toon('#8a8f98')); blade.position.set(0, -0.62, 0.62); hoe.add(blade); arm.add(hoe);
   const a = mesh(new THREE.CapsuleGeometry(0.05, 0.3, 3, 8), toon(PAL.skin)); a.position.set(0, -0.1, 0.05); arm.add(a); avatar.add(arm); }
 scene.add(avatar); avatar.position.set(0, 0, 6.6); avatar.rotation.y = Math.PI;
-let goal = null, faceTo = null, swing = 0, bob = 0;
-function walkTo(i) { const [x, z] = slotXZ(i); const d = V(avatar.position.x - x, 0, avatar.position.z - z); if (d.length() < 0.01) d.set(0, 0, 1); d.setLength(0.85); goal = V(x + d.x, 0, z + d.z); faceTo = V(x, 0, z); }
+let goal = null, faceTo = null, swing = 0, swingKind = 'till', bob = 0, route = [];
+// a walk that crosses the fence goes through the gate
+function routeTo(to) { const from = avatar.position, a = inField(from), b = inField(to); route = a === b ? [to] : a ? [gateIn.clone(), gateOut.clone(), to] : [gateOut.clone(), gateIn.clone(), to]; goal = route.shift(); }
+function walkTo(i) { const [x, z] = slotXZ(i); const d = V(avatar.position.x - x, 0, avatar.position.z - z); if (d.length() < 0.01) d.set(0, 0, 1); d.setLength(0.85); faceTo = V(x, 0, z); routeTo(V(x + d.x, 0, z + d.z)); }
+
+// ---------- the cultivator figure and the hoe (his steer on bgf-farm-build-look-1: "No cultivator pose, no hoe object created") ----------
+// The figure is the cultivation kit's A2 training wrap, the work clothes of the round 3 stills, built by cult/walker.js as the
+// hollow builds the player. The hoe is its own object, placed every frame from the hands: carried while walking, held in
+// the stills' hoeing stance at rest, raised and struck on a till. If the kit cannot load, the drawn figure above stays.
+const hoeTool = new THREE.Group(); hoeTool.visible = false; scene.add(hoeTool);
+{ const L = 1.32, sh = mesh(new THREE.CylinderGeometry(0.02, 0.024, L, 7), toon(PAL.wood)); sh.position.y = L / 2; hoeTool.add(sh);
+  const col = mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.07, 7), toon('#5d6168')); col.position.y = L - 0.02; hoeTool.add(col);
+  const neck = mesh(new THREE.BoxGeometry(0.03, 0.03, 0.1), toon('#5d6168')); neck.position.set(0, L, 0.05); hoeTool.add(neck);
+  const blade = mesh(new THREE.BoxGeometry(0.22, 0.17, 0.022), toon('#9aa3a8')); blade.position.set(0, L - 0.07, 0.1); blade.rotation.x = 0.25; hoeTool.add(blade); }
+const HOE_GRIP = 0.34;   // the hands hold the shaft this far up from its butt
+function placeHoe(grip, dir) {   // the shaft runs along dir through the grip; the blade turns toward the ground
+  const y = dir.clone().normalize(); let bd = V(0, -1, 0).addScaledVector(y, y.y); if (bd.lengthSq() < 1e-4) bd = faceDir().negate(); bd.normalize();
+  const x = V().crossVectors(y, bd).normalize(); hoeTool.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, bd)); hoeTool.position.copy(grip).addScaledVector(y, -HOE_GRIP); }
+const faceDir = () => V(Math.sin(avatar.rotation.y), 0, Math.cos(avatar.rotation.y));
+let CU = null;   // { W, F, FG, ank0 }
+async function loadCultivator() {
+  try {
+    const [{ makeWalker }, FG] = await Promise.all([import('../cult/walker.js'), import('../cult/make/figure.js')]);
+    const W = await makeWalker({ who: 'f', outfit: 'A2' }), F = W.X.F;
+    const turn = -Math.atan2(F.fr.f.x, F.fr.f.z);   // face +z in the holder, as cult/player-body.js does, so avatar.rotation.y turns her
+    if (Math.abs(turn) > 1e-3) { F.root.rotation.y = turn; F.fr.f.applyAxisAngle(V(0, 1, 0), turn); F.fr.l.applyAxisAngle(V(0, 1, 0), turn); F.root.updateMatrixWorld(true); }
+    // the farm's one toon ramp on her clothes too (the round 3 keep list)
+    W.holder.traverse(o => { if (!o.isMesh) return; o.castShadow = true; const swap = m => { if (!m || m.isMeshToonMaterial || m.isMeshBasicMaterial) return m;
+      const n = toon('#ffffff', { color: m.color ? m.color.clone() : new THREE.Color('#fff'), map: m.map || null, side: m.side, transparent: m.transparent, opacity: m.opacity, vertexColors: m.vertexColors, alphaTest: m.alphaTest });
+      if (m.onBeforeCompile && String(m.onBeforeCompile).indexOf('color_fragment') >= 0) n.onBeforeCompile = m.onBeforeCompile; n.userData = m.userData; return n; };
+      o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); });
+    for (const c of [...avatar.children]) c.visible = false; avatar.add(W.holder); avatar.updateMatrixWorld(true);
+    const lp = b => W.holder.worldToLocal(b.getWorldPosition(V()));
+    CU = { W, F, FG, ank0: Math.min(lp(F.bones.ankleL).y, lp(F.bones.ankleR).y), lp }; hoeTool.visible = true;
+  } catch (e) { console.warn('the cultivator figure did not load; the drawn figure stays', e); }
+}
+// the stance as the round 3 stills drew it (make/farm.js hoeSwing): STRIKE has the blade in the soil, RAISE has it overhead.
+// Each entry: bone, child, [forward, left, up] in her own frame. TEND bends to plant or water, the hoe leaned at her side.
+const LEGS = [['hipL', 'kneeL', [0.25, 0.08, -1]], ['kneeL', 'ankleL', [-0.05, 0.03, -1]], ['hipR', 'kneeR', [-0.2, -0.08, -1]], ['kneeR', 'ankleR', [-0.1, -0.03, -1]]];
+const STRIKE = [['spine01', 'spine', [0.25, 0, 1]], ['spine', 'spine03', [0.3, 0, 1]], ['neck', 'head', [0.6, 0, 1]], ...LEGS,
+  ['shoulderL', 'elbowL', [0.75, 0.12, -1]], ['elbowL', 'wristL', [1, -0.2, -0.5]], ['shoulderR', 'elbowR', [0.55, -0.15, -1]], ['elbowR', 'wristR', [1, 0.25, -0.3]]];
+const RAISE = [['spine01', 'spine', [0.02, 0, 1]], ['spine', 'spine03', [-0.05, 0, 1]], ['neck', 'head', [0.3, 0, 1]], ...LEGS,
+  ['shoulderL', 'elbowL', [0.55, 0.16, 0.5]], ['elbowL', 'wristL', [0.3, -0.3, 1]], ['shoulderR', 'elbowR', [0.5, -0.16, 0.45]], ['elbowR', 'wristR', [0.3, 0.3, 1]]];
+const TEND = [['spine01', 'spine', [0.55, 0, 1]], ['spine', 'spine03', [0.7, 0, 1]], ['neck', 'head', [0.9, 0, 1]],
+  ['hipL', 'kneeL', [0.6, 0.1, -1]], ['kneeL', 'ankleL', [-0.35, 0.04, -1]], ['hipR', 'kneeR', [0.15, -0.1, -1]], ['kneeR', 'ankleR', [-0.3, -0.04, -1]],
+  ['shoulderL', 'elbowL', [0.55, 0.14, -1]], ['elbowL', 'wristL', [0.9, -0.05, -1]], ['shoulderR', 'elbowR', [0.55, -0.14, -1]], ['elbowR', 'wristR', [0.9, 0.05, -1]]];
+function cultPose(A, B, t) {
+  const { F, FG, W } = CU, q = W.holder.getWorldQuaternion(new THREE.Quaternion()), { f, l } = F.fr;
+  FG.resetPose(F);
+  for (let k = 0; k < A.length; k++) { const a = A[k][2], b = B[k][2], m = i => a[i] + (b[i] - a[i]) * t;
+    FG.aim(F, A[k][0], A[k][1], V().copy(f).multiplyScalar(m(0)).addScaledVector(l, m(1)).add(V(0, m(2), 0)).applyQuaternion(q)); }
+  const lo = Math.min(CU.lp(F.bones.ankleL).y, CU.lp(F.bones.ankleR).y); F.root.position.y = CU.ank0 - lo; F.root.updateMatrixWorld(true);
+}
+const wpos = b => b.getWorldPosition(V());
+function cultivator(dt, moving) {
+  const { W, F } = CU, fd = faceDir();
+  if (moving) { W.update(dt, true); placeHoe(wpos(F.bones.wristR), V(0, 1, 0).addScaledVector(fd, -0.3)); return; }   // carried upright in the right hand
+  if (swing > 0 && swingKind === 'tend') { cultPose(STRIKE, TEND, Math.sin(swing * Math.PI)); const s = avatar.position.clone().addScaledVector(V(fd.z, 0, -fd.x), 0.38); placeHoe(s.setY(0.02 + HOE_GRIP), V(0, 1, 0).addScaledVector(fd, -0.12)); return; }
+  // at rest she stands in the hoeing stance; a till lifts the hoe overhead and brings it down into the slot she faces
+  const t = swing > 0 ? Math.sin(swing * Math.PI) : 0; cultPose(STRIKE, RAISE, t);
+  const grip = wpos(F.bones.wristL).lerp(wpos(F.bones.wristR), 0.5), tgt = avatar.position.clone().addScaledVector(fd, 0.86).setY(0.06);
+  // the shaft turns in her own vertical plane, from pointing at the slot to overhead and a little behind her
+  const sd = tgt.sub(grip), a0 = Math.atan2(sd.y, sd.dot(fd)), a = a0 + (2.05 - a0) * t;
+  placeHoe(grip, fd.clone().multiplyScalar(Math.cos(a)).add(V(0, Math.sin(a), 0)));
+}
 
 selRing = new THREE.Mesh(new THREE.RingGeometry(0.36, 0.42, 28), glow(PAL.ring, { transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false })); selRing.rotation.x = -Math.PI / 2; selRing.visible = false; scene.add(selRing);
 
@@ -118,7 +220,8 @@ const camPos = V(0, 7, 13), camLook = V(0, 0.5, 2);
 function frame(dt) {
   let wantP, wantL;
   if (deep != null) { const [x, z] = slotXZ(deep); const far = innerWidth < 700; wantP = V(x - (far ? 0.9 : 0.35), far ? 1.5 : 1.0, z + (far ? 5.2 : 2.6)); wantL = V(x - (far ? 0.3 : -0.25), 0.55, z); }
-  else { const p = avatar.position; wantP = V(p.x * 0.6, 6.2, p.z + 7.5); wantL = V(p.x * 0.6, 0.4, p.z - 2); }
+  else if (Q.get('view') === 'field') { wantP = V(4.5, 12.5, 15.5); wantL = V(0, 0, 0.6); }   // for shots: the whole fenced field, as the round 3 frame 1 shows it
+  else { const p = avatar.position, cx = p.x * (innerWidth < 700 ? 1 : 0.6); wantP = V(cx, 6.2, p.z + 7.5); wantL = V(cx, 0.4, p.z - 2); }   // a phone keeps her in the middle
   const k = 1 - Math.pow(0.002, dt); camPos.lerp(wantP, k); camLook.lerp(wantL, k); camera.position.copy(camPos); camera.lookAt(camLook);
   const w = innerWidth, h = innerHeight; camera.aspect = w / h;
   if (deep != null && w > 700) camera.setViewOffset(w, h, w * 0.05, 0, w, h); else if (deep != null) camera.setViewOffset(w, h, 0, h * 0.26, w, h); else camera.clearViewOffset();   // the plant sits left of centre, clear of the card on the right
@@ -159,12 +262,12 @@ async function api(body) {
   const r = await fetch('/api/between/farm', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ today: localDay(), ...body }) }); const j = await r.json().catch(() => ({}));
   if (!r.ok) { say(j.error || 'That did not work'); if (j.farm) { FARM = j.farm; drawSlots(); } return null; } FARM = j.farm; drawSlots(); return j; }
 async function act(name, extra = {}) {
-  if (name === 'till' || name === 'plant' || name === 'water') { swing = 1; }
+  if (name === 'till' || name === 'plant' || name === 'water' || name === 'reclear') { swing = 1; swingKind = name === 'till' ? 'till' : 'tend'; }
   const j = await api({ act: name, i: SEL, ...extra }); if (!j) return; if (name === 'pick') say('Picked. A harvest BAR and one vibeulon.'); else if (j.mint) say('One vibeulon minted.'); renderCard(); }
 function renderCard() {
   if (SEL == null) { card.hidden = true; return; } const s = FARM.slots[SEL], p = s && s.plant; card.hidden = false; card.className = 'card' + (deep != null ? ' deepen' : '');
   const inp = (id, ph) => `<div class="row"><input id="${id}" maxlength="280" placeholder="${ph}" aria-label="${ph}"></div>`; let h = '';
-  if (!s) h = `<h2>Grass</h2><p>Swing the hoe to make this slot soil.</p><div class="row"><button id="b-till" ${FARM.mana < 5 ? 'disabled' : ''}>Till it · 5 mana</button><button class="alt" id="b-x">Close</button></div>`;
+  if (!s) h = `<h2>Untilled earth</h2><p>Swing the hoe to break this slot into rows.</p><div class="row"><button id="b-till" ${FARM.mana < 5 ? 'disabled' : ''}>Till it · 5 mana</button><button class="alt" id="b-x">Close</button></div>`;
   else if (s.state === 'tilled') h = `<h2>Soil</h2><p>Plant a BAR as a seed, with one line (one word is enough).</p>${inp('f-bar', 'The BAR to plant')}${inp('f-line', 'What you want from it')}<div class="row"><button id="b-plant">Kneel and plant</button><button class="alt" id="b-x">Close</button></div>`;
   else if (s.state === 'weeded') h = `<h2>${esc(p.line)}</h2><p>Weeds have crept over it. Your ${p.tendedDays} tended days wait underneath.</p>${inp('f-line', 'What kept you away?')}<div class="row"><button id="b-reclear" ${FARM.mana < 1 ? 'disabled' : ''}>Clear the weeds · 1 mana</button><button class="alt" id="b-x">Close</button></div>`;
   else if (p.ripe) h = `<h2>${esc(p.line)}</h2><p>Full. Ready to pick.</p><div class="row"><button id="b-pick">Pick it</button><button class="alt" id="b-deep">Look closer</button><button class="alt" id="b-x">Close</button></div>`;
@@ -182,16 +285,19 @@ function renderCard() {
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 renderer.domElement.addEventListener('pointerdown', e => {
   if (deep != null) return; ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); const p = V(); if (!ray.ray.intersectPlane(groundPlane, p)) return;
-  const c = Math.round(p.x / STEP + (COLS - 1) / 2), r = Math.round(p.z / STEP + (ROWS - 1) / 2); if (c < 0 || c >= COLS || r < 0 || r >= ROWS) { goal = V(Math.max(-6, Math.min(6, p.x)), 0, Math.max(-5, Math.min(8, p.z))); return; }
+  const c = Math.round(p.x / STEP + (COLS - 1) / 2), r = Math.round(p.z / STEP + (ROWS - 1) / 2); if (c < 0 || c >= COLS || r < 0 || r >= ROWS) { faceTo = null; routeTo(V(Math.max(STREAM_X + 1.4, Math.min(10, p.x)), 0, Math.max(-7, Math.min(9, p.z)))); return; }
   SEL = r * COLS + c; selRing.visible = true; const [x, z] = slotXZ(SEL); selRing.position.set(x, 0.13, z); walkTo(SEL); renderCard(); });
 $('homeBtn').onclick = () => { location.href = '/between/'; };
 
 // ---------- loop ----------
 const clock = new THREE.Clock();
 function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.position;
-  if (goal) { const d = goal.clone().sub(p); d.y = 0; const L = d.length(); if (L < 0.05) { goal = null; if (faceTo) avatar.rotation.y = Math.atan2(faceTo.x - p.x, faceTo.z - p.z); } else { const st = Math.min(L, 2.6 * dt); p.addScaledVector(d.normalize(), st); avatar.rotation.y = Math.atan2(d.x, d.z); bob += dt * 10; } }
-  avatar.children[0].position.y = 0.85 + (goal ? Math.sin(bob) * 0.03 : 0);
-  if (swing > 0) { swing = Math.max(0, swing - dt * 2); arm.rotation.x = -Math.sin((1 - swing) * Math.PI) * 1.4; } else arm.rotation.x = 0;
+  if (goal) { const d = goal.clone().sub(p); d.y = 0; const L = d.length(); if (L < 0.05) { goal = route.length ? route.shift() : null; if (!goal && faceTo) avatar.rotation.y = Math.atan2(faceTo.x - p.x, faceTo.z - p.z); } else { const st = Math.min(L, 2.6 * dt); p.addScaledVector(d.normalize(), st); avatar.rotation.y = Math.atan2(d.x, d.z); bob += dt * 10; } }
+  if (swing > 0) swing = Math.max(0, swing - dt * (swingKind === 'till' ? 1.4 : 0.9));
+  if (CU) cultivator(dt, !!goal);
+  else { avatar.children[0].position.y = 0.85 + (goal ? Math.sin(bob) * 0.03 : 0); arm.rotation.x = swing > 0 ? -Math.sin((1 - swing) * Math.PI) * 1.4 : 0; }
+  // the gate swings open as she comes near it, and closes behind her
+  const near = Math.hypot(p.x, p.z - FZ) < 1.9; for (const g of gateLeaves) { g.open += ((near ? 1 : 0) - g.open) * Math.min(1, dt * 4); g.hinge.rotation.y = g.s * g.open * 1.45; }
   if (selRing.visible) selRing.scale.setScalar(1 + Math.sin(performance.now() / 300) * 0.06);
   frame(dt); renderer.render(scene, camera); requestAnimationFrame(tick); }
 
@@ -199,9 +305,10 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
 (async () => {
   const r = await fetch('/api/between/farm?today=' + localDay()); if (!r.ok) { $('loading').textContent = r.status === 401 ? 'Sign in to bars-engine to open your farm' : 'The farm could not open'; return; }
   const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); fieldSpirits();
-  await api({ act: 'enter' });
-  if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land. Every slot is grass until you till it.', 7000); avatar.position.set(0, 0, 6.6); setTimeout(() => { goal = V(0, 0, 5.2); }, 3500); }
-  else { avatar.position.set(0, 0, 8.4); goal = V(0, 0, 6.2); }
+  await Promise.all([api({ act: 'enter' }), loadCultivator()]);
+  const IN = V(0, 0, FZ - 1.3);   // inside the gate, in front of the first row
+  if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land, fenced and waiting. Every slot is bare earth until you till it.', 7000); avatar.position.set(0, 0, FZ + 2.2); setTimeout(() => { faceTo = V(0, 0, 0); routeTo(IN); }, 3500); }
+  else { avatar.position.set(0, 0, FZ + 3.2); faceTo = V(0, 0, 0); routeTo(IN); }
   $('loading').classList.add('gone'); tick();
   if (Q.get('deepen') != null) openDeepen(+Q.get('deepen'));
 })();

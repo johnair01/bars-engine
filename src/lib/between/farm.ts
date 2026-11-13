@@ -60,9 +60,9 @@ export function settle(farm: Farm, today: string): Farm {
   return out ?? farm
 }
 
-/** The hoe: tills any slot (grass, weeds or soil). First till costs 5 mana; a tilled slot stays tilled. */
+/** The hoe: tills any slot (bare earth, weeds or soil). First till costs 5 mana; a tilled slot stays tilled. */
 export function till(farm: Farm, i: number, now: string): Result {
-  if (!inGrid(i)) return fail(farm, 'That slot is off the grass')
+  if (!inGrid(i)) return fail(farm, 'That slot is off the field')
   const k = String(i)
   if (farm.slots[k]) return fail(farm, 'Already soil')
   if (farm.mana < TILL_COST) return fail(farm, 'Not enough mana to till')
