@@ -138,7 +138,7 @@ A look or board card must not carry a Vercel preview link any more: none will be
 ## 6. Before you push
 
 ```bash
-scripts/local/check.sh            # npm run check (Prisma generate, verifiers, the look check, eslint, tsc), the look frame check, then vitest
+scripts/local/check.sh            # npm run check (Prisma generate, verifiers, the look and registry checks, eslint, tsc), the look frame check, then vitest
 scripts/local/check.sh --build    # the same, then npm run build on the local database
 ```
 
@@ -163,6 +163,10 @@ Failures that already exist on main are not yours to fix in an unrelated change.
 passes every suite here, so a failure belongs to the branch until you show it on main. The two that used to fail pass
 today: `vitest-include-registration` guards `vitest.config.ts` and caught `route-post.test.ts` missing from the include
 list (now in it), and `land-place` passes with the same tree.
+
+`npm run check:registry` fails when `public/registry.json` does not match the routes in `src`. It writes nothing: it
+renders the file the build would write and compares. A route added without refreshing the registry now fails the check
+instead of turning up as a changed file after a build; `npm run build:registry` refreshes it.
 
 A tree that has drifted from the lock is named before any step runs. `node_modules` can hold versions
 `package-lock.json` does not pin, and then eslint and tsc report the tree's faults as the branch's. On 2026-11-12 six

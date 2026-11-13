@@ -48,11 +48,6 @@ step --skip-2 look-frame $DEV run -- npm run check:look:frame -- --post
 step vitest $DEV run -- npm run test:vitest
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build
-  # The build writes public/registry.json. Its ids and timestamp come from the source now, so an unchanged tree leaves it
-  # alone; a real route change shows here and wants committing with the change that made it.
-  if ! git diff --quiet -- public/registry.json 2>/dev/null; then
-    echo "public/registry.json changed with this build; commit it with your change."
-  fi
 fi
 
 echo
