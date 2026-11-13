@@ -158,9 +158,16 @@ that check now.** A pull request's "How I checked it" names the command and its 
 pictures it took. Also run the narrow `npm run test:<area>` scripts for what you changed, through
 `scripts/local/dev.sh run --` when they need the database.
 
-Failures that already exist on main are not yours to fix in an unrelated change. As of 2026-11-04:
-`src/lib/__tests__/vitest-include-registration.test.ts` (seven suites not registered in `vitest.config.ts`) and
-`src/lib/between/__tests__/land-place.test.ts`. Name them in the report as pre-existing.
+Failures that already exist on main are not yours to fix in an unrelated change. As of 2026-11-12 `npm run test:vitest`
+passes every suite here, so a failure belongs to the branch until you show it on main. The two that used to fail pass
+today: `vitest-include-registration` guards `vitest.config.ts` and caught `route-post.test.ts` missing from the include
+list (now in it), and `land-place` passes with the same tree.
+
+A tree that has drifted from the lock is named before any step runs. `node_modules` can hold versions
+`package-lock.json` does not pin, and then eslint and tsc report the tree's faults as the branch's. On 2026-11-12 six
+`Cannot access refs during render` errors came from `eslint-plugin-react-hooks` 7.1.1 while the lock pins 7.0.1, and
+`npm ci` removed them with no code change. `scripts/local/lock-drift.mjs` prints each drifted package, and `check.sh`
+says so at the top and again when a step fails, so a phantom lint failure cannot cost a round.
 
 Vercel runs Node 24; the cloud sandbox has Node 22. A difference between them is rare; if a build passes locally and
 fails on Vercel, that is the first thing to check.

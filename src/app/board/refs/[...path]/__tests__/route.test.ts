@@ -15,7 +15,7 @@ const REF = 'council/callsheets/stills/cc-cultivation-clothing/refs/Ma1zP7EZMps/
 const BYTES = 'the walk reference, as a push left it'
 const SHA = createHash('sha256').update(BYTES).digest('hex')
 const BASE = 'https://bars-engine.vercel.app/board/refs/'
-const REL = 'cc-cultivation-clothing/refs/Ma1zP7EZMps/sheet.jpg'
+const REL = 'council/callsheets/stills/cc-cultivation-clothing/refs/Ma1zP7EZMps/sheet.jpg'
 
 function get(p: string, token?: string) {
   const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {}
@@ -53,7 +53,7 @@ describe('GET /board/refs', () => {
 
   it('refuses anything that is not a look refs folder, and any path that climbs out of one', async () => {
     expect((await get('board/council-board.html', 't0ken')).status).toBe(404)
-    expect((await get('cc-cultivation-clothing/refs/../../board/council-board.html', 't0ken')).status).toBe(404)
+    expect((await get('council/callsheets/stills/cc-cultivation-clothing/refs/../../../board/council-board.html', 't0ken')).status).toBe(404)
   })
 
   it('reads its bytes from the refs namespace, never from the one the public stills route serves by hash', async () => {
@@ -70,6 +70,6 @@ describe('GET /board/refs', () => {
   })
 
   it('says so when the reference was never pushed', async () => {
-    expect((await get('cc-cultivation-clothing/refs/no-such-source/sheet.jpg', 't0ken')).status).toBe(404)
+    expect((await get('council/callsheets/stills/cc-cultivation-clothing/refs/no-such-source/sheet.jpg', 't0ken')).status).toBe(404)
   })
 })

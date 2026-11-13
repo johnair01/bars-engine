@@ -63,7 +63,8 @@ describe('GET /board/data.js', () => {
     const data = await read(await GET(req()))
     expect(data.questions.map((q: { id: string }) => q.id)).toEqual(['q-1', 'q-2'])
     expect(data.positions).toEqual([{ id: 'p-1', pos: 'a saved position', faces: ['regent'] }])
-    expect(Object.keys(data).sort()).toEqual(['positions', 'questions'])
+    expect(Object.keys(data).sort()).toEqual(['positions', 'questions', 'resolved'])
+    expect(data.resolved).toEqual({ positions: {}, questions: {}, terms: {}, causes: {} })
   })
 
   it('lays his saved answer over the card it belongs to, keeping its text', async () => {
