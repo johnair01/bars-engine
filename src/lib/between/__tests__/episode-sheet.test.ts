@@ -2,12 +2,31 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 // Charge to world in the Between (Six-faces-council pass charge-to-world-1): the page's port of episode_sheet.py.
-import { canonical, locations, read, sheet, todo } from '../../../../public/calrunia/episode-sheet.js'
+import { SATISFACTION, canonical, locations, read, sheet, todo } from '../../../../public/calrunia/episode-sheet.js'
+import moveTable from '../../../../public/calrunia/move-table.json'
 
 const root = join(__dirname, '../../../..')
 const sample = () => JSON.parse(readFileSync(join(root, 'public/between/ctw/sample-player.json'), 'utf8'))
 
 describe('episode sheet (port of council/tools/episode_sheet.py)', () => {
+  it('routes canonical satisfaction words to their move-table elements', () => {
+    const labels: Record<string, keyof typeof SATISFACTION> = {
+      fear: 'excited', sadness: 'poignant', joy: 'blissful', anger: 'triumphant', neutrality: 'peaceful',
+    }
+    for (const channel of moveTable.channels) {
+      expect(SATISFACTION[labels[channel.id]]).toBe(channel.element)
+    }
+  })
+
+  it('makes a blissful creation wood and its environment forest', async () => {
+    const charge = sample()
+    charge.q2.feelings = ['blissful']
+    const result = await read(charge)
+    expect(result.errors).toBeUndefined()
+    expect(result.element).toBe('wood')
+    expect(result.environment).toBe('forest')
+  })
+
   it('writes the sample player the same sheet, line for line, as the Python tool did', async () => {
     const charge = sample()
     const g = await read(charge)

@@ -21,7 +21,7 @@ export const QUADRANTS = {
 };
 export const SATISFACTION = {
   delighted: "wood", energized: "wood", free: "wood", triumphant: "fire", proud: "fire", peaceful: "earth", fulfilled: "earth",
-  excited: "metal", relieved: "metal", poignant: "water", blissful: "water",
+  excited: "metal", relieved: "metal", poignant: "water", blissful: "wood",
 };
 const ENVIRONMENT = { wood: "forest", fire: "mountain", earth: "plains", metal: "cave", water: "lake" };
 const RESOURCE = { wood: "fruit", fire: "embers", earth: "clay", metal: "ore", water: "well water" };
