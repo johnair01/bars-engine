@@ -21,7 +21,7 @@ export type Target =
   | { table: 'shown'; playerId: string }
   | { table: 'privates'; playerId: string; key: PrivateKey }
 
-const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home', 'deck'] as const
+const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home', 'deck', 'journey'] as const
 type PrivateKey = (typeof PRIVATE_KEYS)[number]
 
 export type Op = 'set' | 'update' | 'delete'
@@ -133,8 +133,10 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (target.playerId !== me) return no(403, 'That is the other person\'s own.')
       if (target.key === 'home' && !home) return no(400, 'Your look and hopes are kept in your homeroom.')
       if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
+      if (target.key === 'journey' && !home) return no(400, 'Your journey is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
+      if (target.key === 'journey' && op !== 'delete') return journeyWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!), cur) : yes
   }
 }
@@ -547,6 +549,53 @@ export function deckWrite(doc: Doc): Verdict {
     if (!ID.test(id) || id === 'goal') return no(400, 'Your deck keeps your goals and their cards, nothing more.')
     if (g !== null && !(isObj(g) && deckGoalOk(g))) return no(400, 'A goal is a short line of your words, with up to three cards under it.')
   }
+  return yes
+}
+
+/* ---------- the journey (Six-faces-council spec .specify/specs/healing-journey, slice 1; his A on hj-homeroom-look-1) ----------
+ * One private document beside `home` and `deck`: the program, the pack, the pages, the moves, the places. The pure rules
+ * live in public/between/journey.js. Pages are refused until the player agreed to the storage rule (FR-002); a move
+ * record keeps a move, a day and a time and no text (FR-007); nothing here counts or scores the person. */
+export const JOURNEY_KEYS = ['program', 'pack', 'pages', 'moves', 'places', 'learned'] as const
+const JOURNEY_FEELINGS = new Set(['wood', 'fire', 'earth', 'metal', 'water'])
+const JOURNEY_STATES = new Set(['carried', 'held', 'worked', 'left'])
+const JOURNEY_PLACES = new Set(['dark', 'lit', 'ajar', 'befriended'])
+const JOURNEY_FURNISHINGS = new Set(['lamp', 'plant', 'tool'])
+const dayOk = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+const noKeysBeyond = (o: Doc, allowed: string[]) => Object.keys(o).every(k => allowed.includes(k))
+const listOf = (v: Json | undefined): Json[] | null => (v == null ? [] : Array.isArray(v) ? v : null)
+/** May the journey stand? Pages are refused while the program has no agreed-on date; a move record holds no text. */
+export function journeyWrite(doc: Doc): Verdict {
+  const bad = (m: string) => no(400, m)
+  for (const k of Object.keys(doc)) if (!(JOURNEY_KEYS as readonly string[]).includes(k)) return bad('Your journey keeps the program, pack, pages, moves and places, nothing more.')
+  const program = doc.program
+  if (program != null) {
+    if (!isObj(program) || !noKeysBeyond(program, ['id', 'coachId', 'startsOn', 'endsOn', 'agreedOn', 'closedAt'])) return bad('A program is its people and its dates.')
+    if (!dayOk(program.startsOn) || !dayOk(program.endsOn)) return bad('A program has a start date and an end date.')
+    if (program.agreedOn != null && !dayOk(program.agreedOn)) return bad('The day you agreed to the storage rule is a date.')
+  }
+  const pages = listOf(doc.pages), pack = listOf(doc.pack), moves = listOf(doc.moves), places = listOf(doc.places), learned = listOf(doc.learned)
+  if (!pages || !pack || !moves || !places || !learned) return bad('Your journey keeps lists.')
+  const agreed = isObj(program) && dayOk(program.agreedOn)
+  if (pages.length > 0 && !agreed) return no(403, 'No page is kept until you have agreed to how pages are stored.')
+  for (const o of pack) {
+    if (!isObj(o) || !noKeysBeyond(o, ['id', 'feeling', 'setOff', 'body', 'pickedOn', 'state', 'furnishing']) || typeof o.id !== 'string' || !ID.test(o.id)) return bad('A carried object is its tag.')
+    if (typeof o.feeling !== 'string' || !JOURNEY_FEELINGS.has(o.feeling) || typeof o.state !== 'string' || !JOURNEY_STATES.has(o.state)) return bad('A carried object has a feeling and a state.')
+    if (o.pickedOn != null && !dayOk(o.pickedOn)) return bad('An object was picked up on a day.')
+    for (const f of ['setOff', 'body']) if (o[f] != null && !(typeof o[f] === 'string' && (o[f] as string).length <= 140 && isNote(o[f]))) return bad('A tag line is short.')
+    if (o.furnishing != null && !(typeof o.furnishing === 'string' && JOURNEY_FURNISHINGS.has(o.furnishing))) return bad('A furnishing is a lamp, a plant or a tool.')
+  }
+  const MOVES_OK = new Set(['floorboards', 'window', 'chair', 'workbench', 'doorway', 'hearth', 'diary'])
+  for (const m of moves) {
+    if (!isObj(m) || !noKeysBeyond(m, ['move', 'life', 'on', 'at'])) return bad('A move is which one, which day and when, nothing more.')
+    if (typeof m.move !== 'string' || !MOVES_OK.has(m.move) || !dayOk(m.on) || typeof m.at !== 'string') return bad('A move is which one, which day and when, nothing more.')
+    if (m.life != null && typeof m.life !== 'boolean') return bad('A move is which one, which day and when, nothing more.')
+  }
+  for (const pl of places) {
+    if (!isObj(pl) || !noKeysBeyond(pl, ['id', 'state']) || typeof pl.id !== 'string' || !ID.test(pl.id) || typeof pl.state !== 'string' || !JOURNEY_PLACES.has(pl.state)) return bad('A place is lit, dark, ajar or befriended.')
+  }
+  for (const l of learned) if (typeof l !== 'string' || !ID.test(l)) return bad('A learned move is a name.')
+  for (const pg of pages) if (!isObj(pg) || typeof pg.id !== 'string' || !ID.test(pg.id) || typeof pg.objectId !== 'string' || !isObj(pg.pass as Json)) return bad('A page is a 3-2-1 pass on one object.')
   return yes
 }
 
