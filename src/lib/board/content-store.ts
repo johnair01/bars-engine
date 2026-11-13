@@ -33,6 +33,20 @@ const ALLOWED = [
   /^board\/council-board-decided\.json$/,
   /^board\/stills\/[0-9a-f]{16}\.(jpe?g|png|gif|webp)$/,
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp)$/i,
+  /** What a round's build prints and the judge reads (pipeline-mcp, 2026-11-13): the numbers a check needs, and the
+   * receipt `run_loop.py` writes beside its `judge:` line. */
+  /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\/(numbers|measures|judge)\.json$/i,
+  /** The standards the pipeline door reads: the lenses, the stage contract, the ontology profile and the mechanics
+   * atlas. One copy, pushed like the board's other files, so the server never keeps a second. */
+  /^council\/faces\.yaml$/,
+  /^council\/pipeline\.yaml$/,
+  /^ontology\/manifest\.yaml$/,
+  /^ontology\/v0\.1\/QUICKSTART\.md$/,
+  /^canon\/mechanics\/[A-Za-z0-9._-]+\.yaml$/,
+  /** A strand's callsheet (its signed stages and its NEXT steps) and the floors a place owes (pipeline-mcp, 2026-11-13):
+   * the pipeline door's brief and status read them. Top-level callsheets only; a round's files are allowed above. */
+  /^council\/callsheets\/[A-Za-z0-9._-]+\.md$/i,
+  /^council\/look\/floors\.json$/,
   /** A look's reference frames and the recipe that regenerates them (2026-11-09): the pictures a look was drawn
    * against. Served only to the owner or a council session, never at /board/stills. */
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\/refs\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp|json)$/i,
@@ -46,6 +60,7 @@ export function allowedPath(p: string): boolean {
 }
 
 export const TYPES = new Set(['text/html; charset=utf-8', 'application/json', 'text/markdown; charset=utf-8',
+  'text/yaml; charset=utf-8',
   'image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 
 /** Blob tokens the project already uses for other stores; the board's store is any other one. */

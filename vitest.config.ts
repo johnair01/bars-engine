@@ -101,6 +101,7 @@ export default defineConfig({
       'src/lib/board/__tests__/store.test.ts',
       'src/lib/board/__tests__/pictures.test.ts',
       'src/lib/board/__tests__/picture-store.test.ts',
+      'src/lib/board/__tests__/pipeline.test.ts',
       'src/app/api/mcp/__tests__/route.test.ts',
       'src/app/api/board/picture/__tests__/route.test.ts',
       'src/app/api/board/changes/__tests__/route.test.ts',
