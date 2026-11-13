@@ -723,7 +723,21 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     if (it.kind === 'jar') { if (it.by !== me && it.status === 'left') waiting.push({ id: iid, what: 'jar' }); continue }
     if (it.kind === 'dance' || it.kind === 'call' || it.kind === 'spend') continue
     if (it.kind === 'cup') { if (it.by !== me && it.status === 'poured') waiting.push({ id: iid, what: 'cup' }); continue }
-    if (it.kind === 'turn') { if (isObj(it.answer) && isObj(it.answer[me]) === false && Object.keys(it.answer).some(k => k !== me)) waiting.push({ id: iid, what: 'turn' }); continue }
+    if (it.kind === 'turn') {
+      const kl = isObj(it.lines) ? it.lines : null
+      if (it.status === 'kept' && kl && typeof it.words === 'string' && isNum(it.keptAt))
+        turns.push({ id: iid, by: String(it.by), owner: String(it.owner), goal: String(it.goal), depth: String(it.depth), words: it.words,
+          goalText: typeof it.goalText === 'string' ? it.goalText : '', at: it.keptAt,
+          lines: [it.by, it.owner].map(u => { const l = kl[String(u)]; return { by: String(u), words: isObj(l) ? String(l.words ?? '') : '' } }).filter(l => l.words) })
+      // an asked card or a card opened with tea waits on its owner; a face-up card waits on whoever has no line yet (ids only, never words)
+      const lines = isObj(it.lines) ? it.lines : {}
+      const mine = it.owner === me
+      if ((mine && (it.status === 'asked' || it.status === 'opened')) || (it.status === 'open' && isObj(lines[it.by as string]) && !isObj(lines[me]) && mine))
+        waiting.push({ id: iid, what: 'turn' })
+      // a turn answered by one friend waits on the other (growth feed shape)
+      else if (isObj(it.answer) && isObj(it.answer[me]) === false && Object.keys(it.answer).some(k => k !== me)) waiting.push({ id: iid, what: 'turn' })
+      continue
+    }
     if (it.kind === 'cast') { if (it.by !== me && !(isObj(it.answer) && isObj(it.answer[me]))) waiting.push({ id: iid, what: 'cast' }); continue }
     if (isObj(it.pending) && it.pending.by !== me) waiting.push({ id: iid, what: 'ask' })
     else if (it.kind === 'agreement' && it.status === 'proposed' && !yesMe) waiting.push({ id: iid, what: 'agreement' })

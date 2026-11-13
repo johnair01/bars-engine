@@ -598,7 +598,7 @@ const WAKE_SKIP = PREVIEW_HOST && KQ.get("wake") === "1";        // previews: wa
 const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOST ? KQ.get("cushion") : null;
 // previews: ?embers=demo puts four held embers in your pouch on this page only (never saved), so the seated hearth moment shows
 // with an empty pouch or the store down; a lantern made from one stands on this page only. E.g. ?nook=1&sit=hearth&embers=demo
-const EMBER_RISEN = PREVIEW_HOST && KQ.get("ember") === "risen";   // previews: ?ember=risen puts a risen ember in the satchel (a sit with it wakes it)
+const EMBER_RISEN = PREVIEW_HOST && KQ.get("ember") === "risen";   // previews: ?ember=risen puts a risen ember in the satchel (a finished sit wakes it)
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 // previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
 // E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
