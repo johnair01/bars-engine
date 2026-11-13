@@ -17,7 +17,7 @@ import { createAmbient } from "./ambient.js";
 import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
 import { NEAR as TEA_NEAR } from "./tea-pose.js";
-import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS, FRAGMENT_ORDER, fragmentFor, hearthRecord, careOf as hearthCareOf, careOffered } from "./focus.js";
+import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS, FRAGMENT_ORDER, fragmentFor, hearthRecord, stageOf as hearthCareOf, careOffered, CARES, spiritWord, spiritGlow, spiritFed } from "./focus.js";
 import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from "./fragments.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -33,7 +33,10 @@ import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
 import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
-import { makeCultBody } from "./cult/player-body.js";   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
+import { makeCultBody, useKneel } from "./cult/player-body.js";
+import { makeKneel } from "./cult/kneel.js";
+useKneel(makeKneel);
+//   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
 installPaint();
 
@@ -1367,7 +1370,7 @@ function tapAt(cx, cy) {
   if (best) {
     standUp();
     selected = best.key;
-    // the hearth: walk up to it; its card's "Sit at the hearth" takes you to its cushion (no sheet over the room)
+    // the hearth: walk up to it; its card's "Go to the hearth" takes you to its cushion (no sheet over the room)
     if (best.key === "between" && isHome(view().g)) openSheet(mstate().mirrorGlows ? "hope" : "look");
     if (best.key === "window") { if (isHome(view().g)) openSheet("style"); else toast("The light through the window changes from Style."); }
     if (best.key === "portal") { openSheet("destinations"); return; }
@@ -1931,7 +1934,7 @@ function nearHtml(key, V, g) {
   if (key === "window" && g && isHome(g)) return `<div class="what"><b>The window</b><span class="t">${esc(styleOf(g.style).name)}: ${esc(styleOf(g.style).line)}</span></div><div class="row"><button type="button" data-open="style">Change the light</button></div>`;
   if (!g && !storeDown) return "";
   if (key === "hearth" && sitBlocked()) return `<div class="what"><b>The hearth</b></div>`;
-  if (key === "hearth") return `<div class="what"><b>The hearth</b><span class="t">When something stirs you, sit with it. What's left is a little glowing ember you keep.</span></div><div class="row"><button type="button" data-act="sitHearth">Sit at the hearth</button></div>`;
+  if (key === "hearth") return `<div class="what"><b>The hearth</b><span class="t">When something stirs you, give it to the fire. What's left is a little glowing ember you keep.</span></div><div class="row"><button type="button" data-act="sitHearth">Go to the hearth</button></div>`;
   if (key && key.startsWith("seat:") && typeof seatId(key.slice(5)) !== "number") return freeSeatCard(seatId(key.slice(5)));
   if (!g) return "";
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
@@ -2136,7 +2139,7 @@ function stirSheet(g, V) {
    light, let go early and it stays amber. In a shared room a paper lantern unfolds at your knee to take it, and the room's hooks
    answer. Held to the crafting pass: private, no counts, no failure, no reward, colour only if you let it. */
 const AMBER = 0xff9436, HM_TRAIL = 14, HM_FIRST = "between.hearth.seen";
-const HM_LINES = { first: "When something stirs you, sit with it. What's left is a little glowing ember you keep.", colour: "It shows its colour only if you let it.", them: "For them, when they next come in.",
+const HM_LINES = { first: "When something stirs you, give it to the fire. What's left is a little glowing ember you keep.", colour: "It shows its colour only if you let it.", them: "For them, when they next come in.",
   home: "Embers you keep here go with you. In a room you share, one can become a lantern for your home together." };
 let hm = null, hmGone = null, hmK = 0, hmUp = 0; // the moment while you sit by the fire; the one just ended, its embers sinking home
 const hmEl = document.createElement("div"); hmEl.id = "hm"; hmEl.className = "hm"; hmEl.hidden = true; hmEl.setAttribute("role", "group"); hmEl.setAttribute("aria-label", "By the fire"); document.body.appendChild(hmEl);
@@ -2431,7 +2434,7 @@ function fsLay() {
   fs.flies.push({ m: stick, from, to: fsFireAt(F, fs.sticks - 1), t0: performance.now() / 1000, yaw: F.S.yaw + (fs.sticks - 2) * 0.9 });
   fs.quiet = performance.now();
   if (hm.held) fsChoose(hm.held); // an ember already in your hands is the one you sit with
-  if (!ls.get(FS_FIRST) || EMBER_DEMO) { ls.set(FS_FIRST, 1); setTimeout(() => hmSay("focus", "Sit with it. The fire does the work while you are away."), 900); }
+  if (!ls.get(FS_FIRST) || EMBER_DEMO) { ls.set(FS_FIRST, 1); setTimeout(() => hmSay("focus", "Go do it. The fire keeps your ember warm until you're back."), 900); }
   hmHud();
 }
 /* While choosing, touching an ember sends it to rest on the hearth's lip (touched again, it comes back to the others). */
@@ -2484,10 +2487,11 @@ async function fsDone() {
    in a channel shows that channel's picture in the fire with its line; a touch on the fire with nothing laid shows the told
    ones again, root first. No count, ring or blank slot is ever drawn. Previews: ?hearth=<sits>&told=earth,wood seed the record. */
 const fsOwn = () => { const g = view().g; return !g || isHome(g); };
-const CARE_SEED = PREVIEW_HOST && /^[0-4]$/.test(KQ.get("care") || "") ? +KQ.get("care") : null; // ?care=0..4 draws the hearth at that stage (this page only)
-const HEARTH_SEED = PREVIEW_HOST && (KQ.get("hearth") || KQ.get("told") || CARE_SEED != null) ? { sits: Math.max(0, parseInt(KQ.get("hearth"), 10) || 0), told: Object.fromEntries((KQ.get("told") || "").split(",").filter(c => FRAGMENT_ORDER.includes(c)).map(c => [c, 1])), ...(CARE_SEED != null ? { care: CARE_SEED } : {}) } : null;
+const CARE_SEED = PREVIEW_HOST && /^[0-4]$/.test(KQ.get("stage") || KQ.get("care") || "") ? +(KQ.get("stage") || KQ.get("care")) : null; // ?stage=0..4 (alias ?care=) draws the hearth at that stage (this page only)
+const SPIRIT_SEED = PREVIEW_HOST && /^\d{1,3}$/.test(KQ.get("spirit") || "") ? { sat: 7, vit: 100, at: Date.now() - (+KQ.get("spirit")) * 864e5 } : null; // ?spirit=<days> draws the hearth spirit that many days unfed (FR-031)
+const HEARTH_SEED = PREVIEW_HOST && (KQ.get("hearth") || KQ.get("told") || CARE_SEED != null || SPIRIT_SEED) ? { sits: Math.max(0, parseInt(KQ.get("hearth"), 10) || 0), told: Object.fromEntries((KQ.get("told") || "").split(",").filter(c => FRAGMENT_ORDER.includes(c)).map(c => [c, 1])), ...(CARE_SEED != null ? { stage: CARE_SEED } : {}), ...(SPIRIT_SEED ? { spirit: SPIRIT_SEED } : {}) } : null;
 let hearthLocal = {}; // the record kept on this page only (a demo ember, the store down, a failed write)
-const hearthNow = () => { const mine = myHome.hearth || {}, h = { ...(HEARTH_SEED || {}), ...mine, ...hearthLocal, told: { ...(HEARTH_SEED ? HEARTH_SEED.told : {}), ...(mine.told || {}), ...(hearthLocal.told || {}) } }; if (CARE_SEED != null) h.care = Math.max(CARE_SEED, hearthLocal.care || 0); return h; };
+const hearthNow = () => { const mine = myHome.hearth || {}, h = { ...(HEARTH_SEED || {}), ...mine, ...hearthLocal, told: { ...(HEARTH_SEED ? HEARTH_SEED.told : {}), ...(mine.told || {}), ...(hearthLocal.told || {}) } }; if (CARE_SEED != null) h.stage = Math.max(CARE_SEED, hearthLocal.stage || 0); return h; };
 /* The first chapter (spec focus-sit-world-growth): how many cares the hearth has had (0..4), one a visit. A fire lit before the
    chapter reads as 4. The stage never falls and a sit never moves it. */
 const hearthCareNow = () => hearthCareOf({ ...myHome, hearth: hearthNow() });
@@ -2496,6 +2500,7 @@ const toldNow = () => FRAGMENT_ORDER.filter(c => hearthNow().told[c]);
 /* Writes the finished sit; returns the channel it told, or null when that one was told before. */
 async function fsKeep(feel, demo) {
   const cur = hearthNow(), c = fragmentFor(feel, cur.told), patch = hearthRecord(cur, c, Date.now());
+  if (feel) patch.spirit = spiritFed({ ...myHome, hearth: cur }, feel, patch.at); // the sit feeds the hearth spirit with the ember's feel, in the same write (FR-024)
   const local = () => { hearthLocal = merge({ ...hearthLocal, told: { ...(hearthLocal.told || {}) } }, patch); };
   if (demo || EMBER_DEMO || storeDown || !homeId) local();
   else { try { await homeOp({ hearth: patch }); } catch { local(); } }
@@ -2575,8 +2580,8 @@ function fsTick(t, dt, h, F) {
   // the spirit: a warm presence at the fire with two small eyes, there while you sit
   const sp = fsSpirit.userData; sp.k += ((sitting && live ? 1 : 0) - sp.k) * Math.min(1, dt * 0.8);
   fsSpirit.visible = sp.k > 0.01; fsSpirit.position.copy(HEARTH_AT).addScaledVector(F.f, -0.2).setY(0.72 + Math.sin(t * 0.9) * 0.02);
-  sp.glow.material.opacity = 0.22 * sp.k * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
-  fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink; // its eyes on you
+  sp.glow.material.opacity = 0.22 * sp.k * (hollow && hollow.handles.stage ? hollow.handles.stage.dim : 1) * (fs && fs.step === "banked" ? 0.5 : 1); const blink = (t % 5.3) < 0.12 ? 0.1 : 1;
+  fsSpirit.rotation.y = F.S.yaw + Math.PI; for (const e of sp.eyes) e.material.opacity = 0.9 * sp.k * blink * (hollow && hollow.handles.stage ? hollow.handles.stage.dim : 1); // its eyes on you
   fragTick(t, F, h);
   if (!fs) return;
   // sticks in flight: an arc from the stack onto the fire, a puff of sparks as each lands
@@ -2693,6 +2698,7 @@ function renderSheet() {
       <label for="spForm">Its form<select id="spForm">${Object.entries(FORMS).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
       <label for="spNote">What it brings to the garden<textarea id="spNote" maxlength="600"></textarea></label>
       <div class="row"><button type="submit">${isHome(g) ? "Welcome it home" : "Bring it in"}</button>${close}</div></form>`; break;
+    case "hearthgive": if (!g || !isHome(g)) { closeSheet(); return; } h = hearthGiveSheet(); break;
     case "spirits": if (!g || !isHome(g)) { closeSheet(); return; } h = spiritsSheet() + close; break;
     case "daemon": { const mine = new Set([...V.daemons.values()].filter(d => d.owner === me).map(d => d.which));
       h = `<div class="stack"><h2>Bring a daemon</h2>
@@ -2703,7 +2709,7 @@ function renderSheet() {
     case "hearth":
       if (!seatedAtHearth()) { closeSheet(); return; }
       // the store down (a preview with no store): the moment's words alone, since no ember can be kept
-      if (!g && storeDown) { h = `<div class="stack"><h2>Something stirs</h2><p class="muted">When something stirs you, sit with it. What's left is a little glowing ember you keep.</p><p class="small muted">The store did not answer, so no ember can be kept here now.</p></div>` + seatedClose; break; }
+      if (!g && storeDown) { h = `<div class="stack"><h2>Something stirs</h2><p class="muted">When something stirs you, give it to the fire. What's left is a little glowing ember you keep.</p><p class="small muted">The store did not answer, so no ember can be kept here now.</p></div>` + seatedClose; break; }
       if (!g || !hearthOpen()) { closeSheet(); return; }
       h = stirSheet(g, V) + seatedClose; break;
     case "away": h = awaySheet(g, V) + close; break;
@@ -2914,14 +2920,14 @@ function checkinSheet() {
       <div class="row"><button type="submit">Breathe out</button><button class="quiet" type="button" data-close>Stop</button></div></form>`;
   }
   const sp = feedable(), g = view().g, room = g && !isHome(g) && isMember(g) && g.phase !== "closed";
-  const given = w.given;
+  const given = w.given, hearthOffer = isHome(g) && !given && careOffered(hearthCareNow(), caredThisVisit) != null;
   return `<div class="stack wave" style="--c:${c}">${head}
     <div class="emberbig"><span class="ember" style="--c:${c};--s:58px"></span></div>
     <h2>${given ? esc(given) + " took your ember" : "An ember of " + esc(FEELS[w.ember || w.feel])}</h2>
     ${given ? `<p class="small muted">Your check-in is kept in your homeroom.</p><div class="row"><button type="button" data-close>Back to the room</button></div>`
     : `<p class="small muted">What you walked through left this ember. Give it to one of your spirits, and it feeds them. An ember of a spirit's own element feeds it twice over.</p>
     ${sp.length ? `<div class="choice">${sp.map(x => spiritBtn(x, w.ember || w.feel)).join("")}</div>` : `<p class="small">None of your spirits is with you. ${isHome(g) ? "Call one up from the caves under Spirits, or keep the ember for later." : "Bring one in from your homeroom, or keep the ember for later."}</p>`}
-    <div class="row"><button class="ghost" type="button" data-act="emberKeep">Keep it for later</button>${room ? `<button class="ghost" type="button" data-act="emberStone">Leave it on a stone for them</button>` : ""}</div>`}</div>`;
+    <div class="row">${hearthOffer ? `<button type="button" data-act="hearthGiveWalk">Give it to the hearth</button>` : ""}<button class="ghost" type="button" data-act="emberKeep">Keep it for later</button>${room ? `<button class="ghost" type="button" data-act="emberStone">Leave it on a stone for them</button>` : ""}</div>`}</div>`;
 }
 /* ---------- spirits of the homeroom (part 4): they live there, walk there, and come with you into a room ---------- */
 const caveStore = () => { try { return window.__oagSpiritStore || null; } catch { return null; } };
@@ -2948,7 +2954,8 @@ async function homeDocOp(path, kind, data) {
   const j = await api("/api/between/" + homeId + "/doc", { path, op: kind, data: data ?? null });
   if (homeSnap && path.startsWith("spirits/")) { const id = path.slice(8); homeSnap.spirits = { ...(homeSnap.spirits || {}) }; if (j.doc) homeSnap.spirits[id] = j.doc; else delete homeSnap.spirits[id]; }
 }
-const embersWaiting = () => Object.entries(myHome.embers || {}).filter(([, e]) => e && !e.given && FEELS[e.feel]).sort((a, b) => a[1].at - b[1].at);
+let demoHomeEmbers = PREVIEW_HOST && (CARE_SEED != null || EMBER_DEMO) ? { hdemo1: { feel: "wood", at: 1 }, hdemo2: { feel: "fire", at: 2 } } : {}; // previews only: embers to try the hearth with
+const embersWaiting = () => Object.entries({ ...demoHomeEmbers, ...(myHome.embers || {}) }).filter(([, e]) => e && !e.given && FEELS[e.feel]).sort((a, b) => a[1].at - b[1].at);
 const emberDots = n => embersWaiting().slice(0, n).map(([, e]) => `<span class="ember" style="--c:${cssHue(elHex(e.feel))};--s:9px"></span>`).join("");
 /** The spirits an ember can go to from here: the homeroom's (those not away visiting), and yours in this room. */
 function feedable() {
@@ -3295,6 +3302,7 @@ function minuteTick(t, dt) {
     const c = home && !storeDown ? hearthCareNow() : 4;
     if (stg.care !== c || !stageSynced) { stg.setCare(c, REDUCED || !stageSynced); stageSynced = true; }
     stg.offer = home && !storeDown && careOffered(c, caredThisVisit) != null && !hm;
+    stg.dim = home && !storeDown ? spiritGlow({ ...myHome, hearth: hearthNow() }, Date.now()) : 1; // the hearth spirit's glow and eyes follow its care word (FR-025)
   } else if (hf) hf.want = 1;
   if (hf) hf.ember = 0;
   // the vines: up while the minute keeps them; a vine whose step is done falls, slowly
@@ -3674,13 +3682,21 @@ function directView(key, tall) {
 /* One care at your own hearth (the chapter's four cares, one a visit): you walk up, the stage plays it, and the doc keeps one
    more care. Care 0 on a homeroom whose ember beat is not done is that beat too, in one write (FR-019). A seeded preview
    (?care=) keeps it on this page only. */
-function doCare(c) {
-  caredThisVisit = true; standUp();
-  const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));
+function doCare(c, eid) {
+  const e = eid && embersWaiting().find(([id]) => id === eid), at = now();
+  if (!e) { toast("No ember waits. Checking in leaves one."); return; }
+  caredThisVisit = true;
+  /* hearth give (his A on hw5-hearth-give-look-2): a figure that kneels at the hearth stays knelt and holds the ember
+     out to the fire (cult/kneel.js); any other figure gets up and walks to the hearth as before */
+  const knelt = meState.sitting && meState.body && meState.body.give && (meState.body.kneeling || (meState.body.stance && meState.body.stance() === "sit"));
+  if (knelt) meState.body.give(); else standUp();
+  const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (!knelt && d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));
   const spot = hollow && hollow.handles.stage ? hollow.handles.stage.careSpot(c) : null;
-  burst((spot || HEARTH_AT).clone().setY(0.5), 0xffb060);
+  burst((spot || HEARTH_AT).clone().setY(0.5), elHex(e[1].feel));
   directCam = { key: "hearth", t0: performance.now() };
-  const patch = { hearth: { care: c + 1, careAt: now() } };
+  // the ember you give is what the care is made of: one write moves the stage and feeds the hearth spirit (FR-023, FR-024)
+  const patch = { hearth: { stage: c + 1, stageAt: at, spirit: spiritFed({ ...myHome, hearth: hearthNow() }, e[1].feel, at) }, embers: { [eid]: { given: { spirit: "hearth", room: null, at } } } };
+  if (demoHomeEmbers[eid]) demoHomeEmbers = { ...demoHomeEmbers, [eid]: { ...demoHomeEmbers[eid], given: patch.embers[eid].given } };
   if (CARE_SEED != null) { hearthLocal = merge(hearthLocal, patch.hearth); refreshHud(); return; }
   if (c === 0 && !mstate().done.ember) { minuteAct("ember", "done", patch); if (rehearse) hearthLocal = merge(hearthLocal, patch.hearth); return; }
   if (rehearse) { hearthLocal = merge(hearthLocal, patch.hearth); refreshHud(); return; }
@@ -3688,11 +3704,20 @@ function doCare(c) {
   homeOp(patch).catch(() => toast("That did not save. Check your connection and try again."));
   refreshHud();
 }
+/** The hearth's own sheet: the embers waiting, each one a care. */
+function hearthGiveSheet() {
+  const waiting = embersWaiting(), c = hearthCareNow(), what = { sweep: "sweep the hearth", wood: "bring wood", log: "lay the log", turn: "turn the log" }[CARES[c]] || "tend it";
+  return `<div class="stack"><h2>Give it to the hearth</h2>
+    <p class="small muted">An ember feeds the hearth spirit, and the fire takes it for the next care: ${esc(what)}.</p>
+    ${waiting.length ? `<div class="choice">${waiting.map(([id, e]) => `<button type="button" data-act="hearthGive" data-id="${esc(id)}"><b><span class="ember" style="--c:${cssHue(elHex(e.feel))};--s:12px"></span>An ember of ${esc(FEELS[e.feel])}</b>${esc(e.feel)}${e.feel === "fire" ? " · its own element" : ""}</button>`).join("")}</div>`
+      : `<div class="row"><span class="small muted">No ember waits. Checking in leaves one.</span><button class="ghost" type="button" data-open="checkin">Check in</button></div>`}
+    <div class="row"><button class="quiet" type="button" data-close>Not now</button></div></div>`;
+}
 /* What a tap on the nook does while the minute (or a step left for later) waits: true when it was the minute's. */
 function minuteTap(key) {
   if (!garden || !isHome(garden) || storeDown) return false;
   const st = mstate(), beat = minuteBeat();
-  if (key === "hearth") { const c = hearthCareNow(); if (careOffered(c, caredThisVisit) != null) { doCare(c); return true; } return false; }
+  if (key === "hearth") { const c = hearthCareNow(); if (careOffered(c, caredThisVisit) != null) { openSheet("hearthgive"); return true; } return false; }
   if (key === "portal" && minuteOn()) {
     if (st.step === "vine" && beat === "vine") { standUp(); burst(PORTAL_AT.clone().setY(1.0), 0x8fd08a); minuteAct("vine"); }
     else toast("The vines fall as you learn the room.");
@@ -3880,6 +3905,8 @@ document.addEventListener("click", async ev => {
     }
     else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Saved. Each of your rooms shows you this way now."); }
     else if (a === "emberGive") await giveEmber(id);
+    else if (a === "hearthGiveWalk") { const c = hearthCareNow(); if (walk && walk.eid && careOffered(c, caredThisVisit) != null) { const eid = walk.eid; closeSheet(); doCare(c, eid); } }
+    else if (a === "hearthGive") { const c = hearthCareNow(); closeSheet(); if (careOffered(c, caredThisVisit) != null) doCare(c, id); }
     else if (a === "emberStone") await emberStone();
     else if (a === "caveCall") await callFromCave(id);
     else if (a === "bringHome") await bringHomeSpirit(id);
