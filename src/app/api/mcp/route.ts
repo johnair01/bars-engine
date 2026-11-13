@@ -20,6 +20,7 @@ import { givenToken, tokenMatches } from '@/lib/council/token'
 import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
+import { linkPr, listSpecs, readSpec, validKey, writeSpec } from '@/lib/bar-to-work/specs'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
 
@@ -188,6 +189,41 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
+    name: 'list_specs',
+    title: 'List BAR specs',
+    description: 'List the specs for BARs a player sent to their farm (BAR-to-work). Merged specs only unless drafts is true. No markdown; pull one with get_spec.',
+    inputSchema: { type: 'object', properties: { drafts: { type: 'boolean', description: 'Also list draft specs.' } } },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
+  {
+    name: 'get_spec',
+    title: 'Read one BAR spec',
+    description: 'Read one spec whole, to build from. Merged specs only unless drafts is true.',
+    inputSchema: { type: 'object', properties: { key: { type: 'string' }, drafts: { type: 'boolean' } }, required: ['key'] },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
+  {
+    name: 'post_spec',
+    title: 'Write a BAR spec',
+    description: 'Write the spec for a BAR: key (or barId), title, markdown, status draft or merged, specUrl. A merged spec moves the BAR\'s seed on the farm forward.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string' }, barId: { type: 'string' }, title: { type: 'string' }, markdown: { type: 'string' },
+        status: { type: 'string', description: 'draft or merged.' }, specUrl: { type: 'string' },
+      },
+      required: ['title', 'markdown'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'link_pr',
+    title: 'Link a pull request to a spec',
+    description: 'Record the pull request a lane opened for a merged spec; the BAR\'s seed on the farm shows the link.',
+    inputSchema: { type: 'object', properties: { key: { type: 'string' }, prUrl: { type: 'string', description: 'https link to the pull request.' } }, required: ['key', 'prUrl'] },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -313,6 +349,20 @@ async function postBoardDocs(args: Record<string, unknown>): Promise<ToolResult>
   return ok({ board: 'council', dry, ...result })
 }
 
+const specResult = (r: Awaited<ReturnType<typeof writeSpec>>) => (r.ok ? ok({ spec: r.spec, seed: r.seed }) : bad(r.error))
+
+async function specTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
+  const includeDraft = args.drafts === true
+  if (name === 'list_specs') return ok({ specs: await listSpecs({ includeDraft }) })
+  if (name === 'post_spec') return specResult(await writeSpec(args))
+  if (!validKey(args.key)) return bad(`${name} needs key: letters, digits, . _ -`)
+  if (name === 'get_spec') {
+    const spec = await readSpec(args.key, { includeDraft })
+    return spec ? ok({ spec }) : bad('No merged spec with that key.')
+  }
+  return specResult(await linkPr(args.key, args.prUrl))
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
@@ -320,6 +370,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'read_picture') return readPicture(args)
   if (name === 'list_pictures') return listPicturesTool(args)
   if (name === 'post_board_docs') return postBoardDocs(args)
+  if (name === 'list_specs' || name === 'get_spec' || name === 'post_spec' || name === 'link_pr') return specTool(name, args)
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -338,7 +389,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
- *   read_picture, list_pictures, post_board_docs and whoami
+ *   read_picture, list_pictures, post_board_docs, list_specs, get_spec, post_spec, link_pr and whoami
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0

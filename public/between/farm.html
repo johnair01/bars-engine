@@ -25,6 +25,14 @@
   .card.deepen { background: #f3e6c8; color: #2a1a12; border: 4px solid #b8261a; left: auto; right: 24px; transform: none; top: 90px; bottom: auto; width: min(44vw, 420px); }
   .card.deepen .alt { color: #2a1a12; border-color: #b8261a; }
   @media (max-width: 700px) { .card.deepen { right: 4vw; left: 4vw; width: auto; top: auto; bottom: 12px; } }
+  .seeds { position: fixed; z-index: 22; right: 12px; top: calc(64px + env(safe-area-inset-top, 0px)); width: min(86vw, 300px); max-height: 46vh; overflow: auto; box-sizing: border-box;
+    background: rgba(42,51,47,.86); color: #f3ece2; border-radius: 14px; padding: 10px 12px; }
+  .seeds h2 { margin: 0 0 6px; font: 400 1.05rem Marcellus, serif; }
+  .seeds ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .seeds li { border-top: 1px solid rgba(255,255,255,.16); padding-top: 8px; font-size: .9rem; }
+  .seeds li b { display: block; font-weight: 700; } .seeds li span { opacity: .8; }
+  .seeds a { color: #ffc46a; } .seeds a:focus-visible { outline: 2px solid #ffc46a; outline-offset: 2px; }
+  @media (max-width: 700px) { .seeds { top: auto; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); right: 4vw; left: 4vw; width: auto; max-height: 28vh; } }
   .cap { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); top: calc(76px + env(safe-area-inset-top, 0px)); width: min(90vw, 560px); text-align: center; font: 1.05rem/1.45 Marcellus, serif; color: #2a332f; text-shadow: 0 1px 6px rgba(255,255,255,.8); opacity: 0; transition: opacity .8s; pointer-events: none; }
   .cap.on { opacity: 1; }
   #loading { position: fixed; inset: 0; z-index: 60; background: #cfe8f3; display: grid; place-items: center; font: 1.2rem Marcellus, serif; color: #2a332f; transition: opacity .8s; } #loading.gone { opacity: 0; pointer-events: none; }
@@ -36,5 +44,6 @@
 <div class="top"><div class="pill"><b>Your farm</b><span id="stats"></span></div><button type="button" id="homeBtn" class="alt" style="background:rgba(42,51,47,.78)">Home</button></div>
 <div class="cap" id="cap" aria-live="polite"></div>
 <div class="card" id="card" hidden></div>
+<aside class="seeds" id="seeds" hidden aria-label="Seeds sent from your BARs"></aside>
 <script type="module" src="/between/farm/farm.js"></script>
 </body></html>
