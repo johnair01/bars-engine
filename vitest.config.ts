@@ -139,6 +139,7 @@ export default defineConfig({
     'src/lib/between/__tests__/pick.test.ts',
       'src/lib/between/__tests__/iching-cast.test.ts',
       'src/lib/between/__tests__/farm.test.ts',
+      'src/lib/bar-to-work/__tests__/sort.test.ts',
       'src/lib/between/__tests__/coin-connection.test.ts',
       'src/lib/__tests__/iching-struct.test.ts',
       'src/lib/between/__tests__/record-book.test.ts',
