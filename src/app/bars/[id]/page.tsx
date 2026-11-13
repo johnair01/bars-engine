@@ -17,6 +17,7 @@ import { OfferToCampaign } from '@/components/bars/OfferToCampaign'
 import { listAttachableCampaigns } from '@/actions/campaign-attach'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
+import { SendToFarmButton } from '@/components/bars/SendToFarmButton'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
 import { QuestLineagePanel } from '@/components/quests/QuestLineagePanel'
@@ -358,6 +359,14 @@ export default async function BarDetailPage({
                             Share as talisman
                         </h2>
                         <SendBarForm barId={bar.id} recipients={recipients} />
+                    </section>
+                )}
+
+                {/* Send to the farm (owner only): BAR-to-work */}
+                {isOwner && (
+                    <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">
+                        <h2 className="text-lg font-bold text-white mb-4">Send to the farm</h2>
+                        <SendToFarmButton barId={bar.id} />
                     </section>
                 )}
 

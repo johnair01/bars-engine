@@ -173,6 +173,14 @@ renderer.domElement.addEventListener('pointerdown', e => {
   SEL = r * COLS + c; selRing.visible = true; const [x, z] = slotXZ(SEL); selRing.position.set(x, 0.13, z); walkTo(SEL); renderCard(); });
 $('homeBtn').onclick = () => { location.href = '/between/'; };
 
+// ---------- seeds: BARs sent from /bars/<id> (BAR-to-work), with their sorted type and where the work has got to ----------
+const STATUS = { sorted: 'Waiting for its spec', spec_draft: 'Spec is being drafted', spec_merged: 'Spec ready for a lane', pr_open: 'Work is open for review', done: 'Done' };
+function drawSeeds(list) {
+  const el = $('seeds'); if (!list || !list.length) { el.hidden = true; return; } el.hidden = false;
+  const link = (u, t) => /^https:\/\//.test(u || '') ? ` · <a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
+  el.innerHTML = `<h2>Seeds</h2><ul>${list.map(x => `<li><b>${esc(x.title)}</b><span>${esc(x.workTypeLabel || x.workType)} · ${esc(STATUS[x.status] || x.status)}</span>${link(x.specUrl, 'spec')}${link(x.prUrl, 'work')}</li>`).join('')}</ul>`;
+}
+
 // ---------- loop ----------
 const clock = new THREE.Clock();
 function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.position;
@@ -185,7 +193,7 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
 // ---------- first entry: the whole field from above; later, a short walk-in ----------
 (async () => {
   const r = await fetch('/api/between/farm?today=' + localDay()); if (!r.ok) { $('loading').textContent = r.status === 401 ? 'Sign in to bars-engine to open your farm' : 'The farm could not open'; return; }
-  const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); fieldSpirits();
+  const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); drawSeeds(j.seeds); fieldSpirits();
   await api({ act: 'enter' });
   if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land. Every slot is grass until you till it.', 7000); avatar.position.set(0, 0, 6.6); setTimeout(() => { goal = V(0, 0, 5.2); }, 3500); }
   else { avatar.position.set(0, 0, 8.4); goal = V(0, 0, 6.2); }

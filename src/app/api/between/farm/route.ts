@@ -1,7 +1,7 @@
 /**
  * @route GET /api/between/farm
  * @entity PLAYER
- * @description The signed-in player's private farm: the slot grid, mana, harvests. Weeds are settled against the player's local date.
+ * @description The signed-in player's private farm: the slot grid, mana, harvests, and the seeds (BARs sent from /bars/{id}). Weeds are settled against the player's local date.
  * @permissions signed-in player (bars_player_id cookie)
  * @relationships PLAYER (BetweenPrivate key "farm" on the homeroom)
  * @example GET /api/between/farm?today=2026-11-09
@@ -18,6 +18,8 @@ import { db } from '@/lib/db'
 import { currentPlayer, ensureHome } from '@/lib/between/store'
 import { mintVibulon } from '@/actions/economy'
 import * as F from '@/lib/between/farm'
+import { readSeeds } from '@/lib/bar-to-work/seeds'
+import { WORK_TYPE_LABEL } from '@/lib/bar-to-work/sort'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +49,8 @@ export async function GET(req: NextRequest) {
   if (!s) return NextResponse.json({ error: 'No homeroom yet' }, { status: 409 })
   const today = localDay(req.nextUrl.searchParams.get('today'))
   const farm = F.settle(s.farm, today)
-  return NextResponse.json({ farm, today, first: !s.farm.firstEntryAt, cols: F.COLS, rows: F.ROWS })
+  const seeds = (await readSeeds(s.gardenId, player.id)).map(x => ({ ...x, workTypeLabel: WORK_TYPE_LABEL[x.workType] }))
+  return NextResponse.json({ farm, seeds, today, first: !s.farm.firstEntryAt, cols: F.COLS, rows: F.ROWS })
 }
 
 export async function POST(req: NextRequest) {
