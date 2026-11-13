@@ -13,6 +13,18 @@ import { fakeDb as sharedFakeDb, type Bar } from './fake-db'
 const fakeDb = (bars: Bar[] = []) => sharedFakeDb({ bars })
 
 describe('bar mint and stake (ee-bar-mint-stake)', () => {
+    it('writes the coin\'s face in the mint: ring and texture from the ember, style copied (FR-009, FR-011)', async () => {
+        const { tx, vibulons } = fakeDb()
+        await mintBarVibulon(tx, { barId: 'b1', playerId: 'p1', title: 'T', ember: { move: 'water_fire' }, seal: 's1', style: { color: 'jade', mat: 'brass' } })
+        expect((vibulons[0] as unknown as { face: unknown }).face).toEqual({ v: 1, ring: 'water', tex: 'fire', seal: 's1', color: 'jade', mat: 'brass' })
+    })
+
+    it('mints a bare blank coin with no ember and no style (FR-009, FR-010)', async () => {
+        const { tx, vibulons } = fakeDb()
+        await mintBarVibulon(tx, { barId: 'b1', playerId: 'p1', title: 'T' })
+        expect((vibulons[0] as unknown as { face: unknown }).face).toEqual({ v: 1, ring: null, tex: null, seal: null, color: null, mat: null })
+    })
+
     it('making a BAR mints one vibeulon to its maker, named for that BAR', async () => {
         const { tx, vibulons, events } = fakeDb()
         await mintBarVibulon(tx, { barId: 'b1', playerId: 'p1', title: 'A kind word' })

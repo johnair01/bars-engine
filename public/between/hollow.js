@@ -831,6 +831,7 @@ function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
   // glows: the coal under the swept ash, the care's own faint glow, the fire's two eyes
   const coal = sprite(0.55, 0xff6a20), coalCore = sprite(0.18, 0xffd090); coal.position.set(0.02, 0.2, 0.1); coalCore.position.copy(coal.position);
   const careGlow = sprite(0.5, 0xffd49a);
+  const fireGlow = sprite(0.5, 0xffb060); fireGlow.position.set(0, 0.95, 0.1); // the hearth spirit's own glow in the fire (FR-025)
   const eyes = [-1, 1].map(sg => { const e = sprite(0.075, 0xfff0c8); e.position.set(0.06 * sg, 0.95, 0.12); return e; });
   // the three spirits: a cool dim glow asleep, a warm one with two small eyes awake, in a frame turned to the world so their eyes face the camera
   const SPIRIT = new THREE.Group(); SPIRIT.userData.keep = true; hearth.parent.add(SPIRIT);
@@ -845,7 +846,7 @@ function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
   const ease = (cur, want, dt, rate) => { const d = want - cur; return Math.abs(d) < 0.002 ? want : cur + d * Math.min(1, dt * rate); };
   const sm = k => k * k * (3 - 2 * k);
   const API = {
-    care: 0, offer: false,
+    care: 0, offer: false, dim: 1, // dim 0..1: how bright the hearth spirit's glow and eyes are drawn (focus.js spiritGlow); the fire's size stays the stage's
     /* The hearth at `care` cares done. jump = at once (loading, reduced motion); otherwise each part eases there (a care's act). */
     setCare(n, jump = false) {
       const c = Math.max(0, Math.min(4, Math.floor(+n || 0))); st.care = c; API.care = c;
@@ -872,7 +873,8 @@ function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
       // the care waiting is the drawn object, glowing faintly; nothing else says so
       const spot = c < 4 ? CARE_AT[c] : null, show = API.offer && !!spot;
       careGlow.visible = show; if (show) { careGlow.position.set(spot[0], spot[1] + 0.12, spot[2]); careGlow.material.opacity = 0.3 + 0.12 * Math.sin(t * 2.2); }
-      for (const e of eyes) e.material.opacity = 0.9 * st.turn * ((t % 5.3) < 0.12 ? 0.1 : 1); // the hearth spirit's eyes in the fire, the chapter's end
+      fireGlow.material.opacity = 0.32 * st.turn * API.dim * (0.9 + Math.sin(t * 1.7) * 0.1);
+      for (const e of eyes) e.material.opacity = 0.9 * st.turn * API.dim * ((t % 5.3) < 0.12 ? 0.1 : 1); // the hearth spirit's eyes in the fire, the chapter's end
       if (anim.flies) anim.flies.mat.visible = c >= 4 && st.turn > 0.5; // the room's fireflies come out with the last care
       const toCam = cam ? V(cam.x - HP.x, 0, cam.z - HP.z).normalize() : V(0, 0, 1), side = V(-toCam.z, 0, toCam.x);
       spirits.forEach((sp, i) => {
