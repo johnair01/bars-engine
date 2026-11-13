@@ -55,6 +55,8 @@ import * as CH from "./chamber.js";
 import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 import { mountRoad } from "./road.js";
+import { mountStory } from "./story.js";
+import { MOVE, vertical } from "./move.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
@@ -657,7 +659,8 @@ async function build() {
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
-  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show(); }
+  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show();
+    state.story = mountStory(THREE, { scene, groundH, load: u => loader.loadAsync(u) }, state.road); state.story.show(true); }
 }
 
 /* ===================================================================================================
@@ -672,8 +675,10 @@ const me = SHX ? { pos: V(SH.ARRIVE.x, 0, SH.ARRIVE.z), yaw: Math.atan2(-SH.ARRI
    behind you (his note on ctw-walk-look-1: you could not see yourself without turning the camera) */
 const ARRIVE_AT = SHX ? V(1.3, 0, 7.2) : FFX ? V(FF.WALK_TO.x, 0, FF.WALK_TO.z) : CHX ? V(CH.WALK_TO.x, 0, CH.WALK_TO.z) : V(0, 0, 4.9);
 const intro = { on: !Q.get("at"), t: 0, settling: false };
-const speed = () => (state.me && !state.me.bagOn ? 1.5 : FFX ? 1.3 : 1.15);   // the bag is lighter by the fire   // the bag is heavy; set down, you walk lighter
+const speed = () => (ROAD && me.keys.has("shift") ? MOVE.run : state.me && !state.me.bagOn ? 1.5 : FFX ? 1.3 : 1.15);   // the bag is lighter by the fire   // the bag is heavy; set down, you walk lighter
 function walkable(x, z) {
+  if (state.story && state.story.blocked(x, z)) return false;
+  if (state.story && state.story.walkable(x, z)) return true;   // the Gatehouse door and room, on the road
   if (SHX) return SH.walkable(x, z, state.laid);
   if (FFX) return FF.walkable(x, z);
   if (CHX) return CH.walkable(x, z);
@@ -690,7 +695,8 @@ el.addEventListener("pointerdown", e => { intro.on = false; drag = { x: e.client
 el.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 8) drag.moved = true;
   if (drag.moved) { camYaw = drag.yaw - dx * 0.006; camPitch = Math.max(0.08, Math.min(0.9, drag.pitch + dy * 0.004)); } });
 el.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.moved || !groundMesh) return; tap(e.clientX, e.clientY); });
-addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button, input, textarea")) return; me.keys.add(e.key.toLowerCase()); });
+const jin = { jump: false }, jumper = { position: null, userData: {} };   // the road's jump (move.js, ported from #731)
+addEventListener("keydown", e => { if (e.target.closest && e.target.closest("button, input, textarea")) return; if (ROAD && e.key === " ") { jin.jump = true; e.preventDefault(); } me.keys.add(e.key.toLowerCase()); });
 addEventListener("keyup", e => me.keys.delete(e.key.toLowerCase()));
 function tap(cx, cy) {
   ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
@@ -760,6 +766,7 @@ function nearNow() {
     const st = state.ch && state.ch.near(p); return st ? "kept:" + state.ch.stones.indexOf(st) : null;
   }
   if (state.road && state.road.nearLetter(p.x, p.z)) return "letter";
+  if (state.story) { const st = state.story.near(p); if (st) return st; }
   if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
@@ -776,6 +783,7 @@ function showCard() {
   const btn = (act, label) => `<button type="button" data-act="${act}">${label}</button>`;
   const card = (title, text, ...btns) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${btns.join("")}</div>`;
   if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where ${esc(state.ep.villain || "the Weigher")} is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
+  else if (n && n.startsWith("st:")) { const c = state.story.card(n); if (c) { key = c.key; html = c.html; } }
   else if (n === "letter") { key = "letter"; html = card("A letter in the grass", "It lies at the edge of the road, a glint on its fold. Nobody has opened it.", btn("letter", "Pick it up")); }
   else if (n === "back") { key = "back"; html = card("The path back", "It runs back through the heavy trees to the clearing.", btn("go:clearing", "Walk back to the clearing")); }
   else if (n === "far") { const there = state.ep.next ? esc(state.ep.next.location) : "the Friends' Fire"; key = "far"; html = card("The far bank", `Past the last trees, a fire is lit, and someone is tuning a guitar. The path runs on to ${there.replace(/^The /, "the ")}.`, btn("go:friends-fire", `Follow the path to ${there.replace(/^The /, "the ")}`), btn("walk:bridge", "Back over the bridge")); }
@@ -830,6 +838,11 @@ $("#card").addEventListener("submit", e => { const f = e.target.closest("form[da
 $("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
 $("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
 $("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
+const holdOf = e => { const b = e.target.closest && e.target.closest("button[data-hold]"); return b && state.story ? b.dataset.hold : null; };
+$("#card").addEventListener("pointerdown", e => { const h = holdOf(e); if (h) { audio(); state.story.hold(h, true); } });
+for (const ev of ["pointerup", "pointercancel", "pointerleave"]) $("#card").addEventListener(ev, e => { if (state.story && (ev !== "pointerleave" || holdOf(e))) state.story.hold("cut", false); });
+$("#card").addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && holdOf(e)) { e.preventDefault(); if (!e.repeat) state.story.hold("cut", true); } });
+$("#card").addEventListener("keyup", e => { if ((e.key === " " || e.key === "Enter") && holdOf(e)) state.story.hold("cut", false); });
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
@@ -837,6 +850,7 @@ $("#card").addEventListener("click", e => {
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
   else if (b.dataset.act === "letter" && state.road) state.road.card();
+  else if (b.dataset.act && b.dataset.act.startsWith("st:") && state.story) { state.story.act(b.dataset.act.slice(3)); state.cardKey = ""; }
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
@@ -1057,7 +1071,8 @@ function frame() {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, clock.getDelta()); T += dt;
   const moving = move(dt);
-  me.pos.y = groundH(me.pos.x, me.pos.z);
+  if (ROAD) { jumper.position = me.pos; vertical(jumper, jin, dt, groundH(me.pos.x, me.pos.z)); } else me.pos.y = groundH(me.pos.x, me.pos.z);
+  if (state.story) state.story.frame(dt, T, me.pos);
   if (SHX) me.pos.y = SH.standH(me.pos.x, me.pos.z, state.laid, me.pos.y);   // the laid plank holds you over the gully
   if (FFX && state.sitWhenThere && !me.target && Math.hypot(me.pos.x - FF.STAND.x, me.pos.z - FF.STAND.z) < 0.3) {   // at your crate: sit
     state.sitWhenThere = false; state.sat = true; state.cardKey = ""; if (state.me) state.me.setBag(false); state.bagDown.visible = true;
@@ -1090,7 +1105,7 @@ function frame() {
     for (let i = 0; i < 12 && Math.hypot(base.x + off.x * t, base.z + off.z * t) > lim; i++) t *= 0.86;
     want.copy(base).addScaledVector(off, Math.max(0.3, t)); want.y = Math.min(want.y, CH.TOP - 0.4); }
   else if (SHX) { const fh = Math.hypot(want.x, want.z), lim = SH.HUT_R + 0.7; if (fh < lim) { want.x *= lim / Math.max(fh, 0.01); want.z *= lim / Math.max(fh, 0.01); } }
-  else { const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? ARCH.z - 0.3 : CLR - 0.6;   // never out past the arch, into the roots
+  else if (!ROAD) { const flat = Math.hypot(want.x, want.z), lim = want.z > CLR - 1.5 ? ARCH.z - 0.3 : CLR - 0.6;   // never out past the arch, into the roots
     if (flat > lim) { want.x *= lim / flat; want.z *= lim / flat; } }
   want.y = Math.max(want.y, groundH(want.x, want.z) + 0.6);
   camera.position.lerp(want, 1 - Math.exp(-dt * ease));
