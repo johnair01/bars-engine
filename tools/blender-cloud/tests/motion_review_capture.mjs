@@ -32,6 +32,14 @@ try{
   await page.locator('#bodyOnly').uncheck();
   await page.locator('#actions [data-motion="jump"]').click();
   await page.waitForFunction(()=>document.querySelector('#clock')?.textContent?.startsWith('jump ·'));
+  await page.locator('#play').click();
+  const jumpTravel=[];
+  for(const phase of [0,500,1000]){
+    await page.locator('#time').evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}))},phase);
+    jumpTravel.push(+(await page.locator('#stage').getAttribute('data-root-forward')));
+    if(phase===500)await page.screenshot({path:join(out,'motion-lab-jump-midair.png')});
+  }
+  if(Math.abs(jumpTravel[0])>.01||jumpTravel[1]<.6||jumpTravel[2]<1.45)throw Error(`jump root did not travel forward: ${jumpTravel}`);
   await page.screenshot({path:join(out,'motion-lab-jump.png')});
   await page.locator('#actions [data-motion="climb"]').click();
   await page.locator('#note').fill('Cloud note save check: visible ledge contact.');

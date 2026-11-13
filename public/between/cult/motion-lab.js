@@ -64,10 +64,13 @@ function renderPose(){if(!W)return;
       const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
       F.root.position.y+=standingFootY-sole;
     }
-    if(motion==='climb')W.holder.position.copy(F.fr.f).multiplyScalar(s.rootForward);
+    if(motion==='jump'||motion==='climb')W.holder.position.copy(F.fr.f).multiplyScalar(s.rootForward);
   }
   if(ledge)ledge.visible=motion==='climb';
   poseMotionCloth(W.X,motion,clock/duration());
+  W.holder.updateMatrixWorld(true);
+  window.__motionLab={motion,rootForward:W.holder.position.dot(F.fr.f),rootUp:F.root.position.y-groundY};
+  canvas.dataset.rootForward=window.__motionLab.rootForward.toFixed(3);
   F.root.updateMatrixWorld(true);
   const comparing=!!(ref&&['walk','run','pose','jump'].includes(motion)),target=F.fr.f.clone().multiplyScalar(comparing?.62:0).add(new THREE.Vector3(0,.92,0));
   const orbit=F.fr.l.clone().applyAxisAngle(new THREE.Vector3(0,1,0),orbitYaw).multiplyScalar(Math.cos(orbitPitch));
