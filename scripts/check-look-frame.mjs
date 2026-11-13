@@ -15,9 +15,10 @@
    A budget light the scene does not build, or any drift past those numbers, is a finding and exit 1.
 
    Run:  node scripts/check-look-frame.mjs
-         --post            put the still on board row between-hearth-frame-look-01 (LOOK_ROW names another), so the
-                           picture on /board/look is never older than the last push; needs COUNCIL_MENU_TOKEN, and a
-                           post that cannot happen is reported without failing the push
+         --post            put the still on the newest unanswered row of the look list between-hearth-frame (LOOK_LIST
+                           names another list, LOOK_ROW one row), so the picture on /board/look is never older than
+                           the last push; needs COUNCIL_MENU_TOKEN, and a post that cannot happen is reported without
+                           failing the push
          OUT=<dir>         where the still goes (default .local-dev/look)
          SIZE=1280x720     the still's size
          THREE_BASE=<url>  where the bare "three" specifier resolves (default: the copy in node_modules)
@@ -33,6 +34,7 @@ import path from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
+import { pickRow, rowsOfList } from './look-row.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const PUBLIC = path.join(ROOT, 'public')
@@ -48,7 +50,8 @@ const TOLERANCE = { number: 0.005, stop: 1e-6 }
    check still passes, because a board that is down is not a fault in public/between. */
 const POST = process.argv.includes('--post') || !!process.env.LOOK_POST
 const BOARD = (process.env.BARS_ENGINE_URL || 'https://bars-engine.vercel.app').replace(/\/$/, '')
-const ROW = process.env.LOOK_ROW || 'between-hearth-frame-look-01'
+const LIST = process.env.LOOK_LIST || 'between-hearth-frame'   // the look list this still belongs to
+const ROW = process.env.LOOK_ROW || ''                         // one named row, when a caller wants that one
 
 const skip = why => { console.error(`look frame check skipped: ${why}`); process.exit(2) }
 
@@ -64,16 +67,31 @@ async function board(method, url, body, headers = {}) {
   return res.json().catch(() => ({}))
 }
 
+/* The row this still belongs on: the named one, else the newest row of the list that has no answer yet (pickRow in
+   look-row.mjs, which its own suite checks). Reading before any write keeps a look he answered, and a list with nothing
+   open, exactly as the board left them. */
+async function targetRow() {
+  if (ROW) {
+    const held = await board('GET', `/api/board/session-writes?collection=steps&ids=${encodeURIComponent(`steps/${ROW}`)}`)
+    const doc = held.docs?.[`steps/${ROW}`]
+    return doc ? [ROW, doc] : [null, `the board holds no step ${ROW}`]
+  }
+  const ids = rowsOfList(Object.keys((await board('GET', '/api/board/session-writes?collection=steps')).hashes?.steps ?? {}), LIST)
+  if (!ids.length) return [null, `the board holds no step in the list ${LIST}`]
+  const keys = ids.map(i => encodeURIComponent(`steps/${i}`)).join(',')
+  const docs = (await board('GET', `/api/board/session-writes?collection=steps&ids=${keys}`)).docs ?? {}
+  const got = pickRow({ ids, docs, list: LIST })
+  return [got.row, got.row ? got.doc : got.why]
+}
+
 async function postStill(still) {
   if (!process.env.COUNCIL_MENU_TOKEN) {
     console.log('not posted: no COUNCIL_MENU_TOKEN here, so the board row keeps its last picture')
     return
   }
-  // Read the row before writing anything: an answered look, or a row that is not there, must leave the store untouched.
-  const held = await board('GET', `/api/board/session-writes?collection=steps&ids=${encodeURIComponent(`steps/${ROW}`)}`)
-  const doc = held.docs?.[`steps/${ROW}`]
-  if (!doc) { console.log(`posted nothing: the board holds no step ${ROW}`); return }
-  if (doc.done || doc.note) { console.log(`posted nothing: you already answered ${ROW}, so it keeps its picture`); return }
+  const [row, doc] = await targetRow()
+  if (!row) { console.log(`posted nothing: ${doc}`); return }
+  if (doc.done || doc.note) { console.log(`posted nothing: you already answered ${row}, so it keeps its picture`); return }
   const raw = fs.readFileSync(still)
   const sha = createHash('sha256').update(raw).digest('hex')
   const name = `${sha.slice(0, 16)}.png`            // the content store's own name for a picture: its hash
@@ -86,8 +104,8 @@ async function postStill(still) {
   }
   const title = doc.lookTitle || 'The Between: the hearth, as the frame check draws it'
   const href = `${BOARD}/board/look?t=${encodeURIComponent(title)}&i=${encodeURIComponent(name)}`
-  const out = await board('POST', '/api/board/session-writes', { docs: [{ collection: 'steps', docId: ROW, mode: 'update', data: { still: served, files: [{ id: 'hearth-frame', src: served }], href } }] })
-  console.log(`board row ${ROW} shows ${served}`)
+  const out = await board('POST', '/api/board/session-writes', { docs: [{ collection: 'steps', docId: row, mode: 'update', data: { still: served, files: [{ id: 'hearth-frame', src: served }], href } }] })
+  console.log(`board row ${row} shows ${served}`)
   if (out.refused?.length) console.error(`board refused: ${out.refused.join('; ')}`)
 }
 

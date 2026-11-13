@@ -13,6 +13,7 @@
 import { Project, JSDoc } from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
+import { createHash } from 'crypto';
 
 interface Registry {
   version: string;
@@ -253,8 +254,11 @@ function parseRouteAnnotation(jsDoc: JSDoc, filePath: string, lineNumber: number
     return null;
   }
 
-  // Generate route ID
-  route.id = `${route.method?.toLowerCase()}_${route.entity.toLowerCase()}_${Date.now()}`;
+  // Generate route ID. Derived from the route itself, not the clock, so a rebuild of an unchanged route keeps its id
+  // and public/registry.json does not churn a diff on every build (2026-11-13: a green check.sh --build left 398 lines
+  // of new timestamps in the working tree).
+  const stable = createHash('sha256').update(`${route.method} ${route.pattern} ${route.sourceFile}`).digest('hex').slice(0, 8);
+  route.id = `${route.method?.toLowerCase()}_${route.entity.toLowerCase()}_${stable}`;
 
   return route as RouteDefinition;
 }
@@ -316,6 +320,17 @@ buildRegistry()
     const publicDir = path.join(process.cwd(), 'public');
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir, { recursive: true });
+    }
+
+    // Everything above the timestamp is derived from the source, so when it has not moved the old timestamp stands and
+    // the file stays byte-identical; when a route did change, the new time is the record of that rebuild.
+    const before = fs.existsSync(outputPath) ? (fs.readFileSync(outputPath, 'utf8') as string) : null;
+    const body = (r: Registry) => JSON.stringify({ ...r, generatedAt: '' }, null, 2);
+    if (before) {
+      try {
+        const previous = JSON.parse(before) as Registry;
+        if (body(previous) === body(registry)) registry.generatedAt = previous.generatedAt;
+      } catch { /* a file that will not parse is replaced */ }
     }
 
     fs.writeFileSync(outputPath, JSON.stringify(registry, null, 2));
