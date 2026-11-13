@@ -168,7 +168,7 @@ const seed = (extra: Record<string, string> = {}) => ({
   ...extra,
 })
 
-beforeEach(() => { setBackend(memoryBackend(seed())) })
+beforeEach(() => { setBackend(memoryBackend(seed()).backend) })
 
 describe('the loop', () => {
   it('reads a strand\'s deft checks with his note quoted', async () => {
