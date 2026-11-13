@@ -34,6 +34,7 @@ import path from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
+import { pickRow, rowsOfList } from './look-row.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const PUBLIC = path.join(ROOT, 'public')
@@ -66,24 +67,21 @@ async function board(method, url, body, headers = {}) {
   return res.json().catch(() => ({}))
 }
 
-/* The row this still belongs on: the named one, else the newest row of the list that has no answer yet. Reading before
-   any write keeps a look he answered, and a list with nothing open, exactly as the board left them. */
+/* The row this still belongs on: the named one, else the newest row of the list that has no answer yet (pickRow in
+   look-row.mjs, which its own suite checks). Reading before any write keeps a look he answered, and a list with nothing
+   open, exactly as the board left them. */
 async function targetRow() {
   if (ROW) {
     const held = await board('GET', `/api/board/session-writes?collection=steps&ids=${encodeURIComponent(`steps/${ROW}`)}`)
     const doc = held.docs?.[`steps/${ROW}`]
     return doc ? [ROW, doc] : [null, `the board holds no step ${ROW}`]
   }
-  const ids = Object.keys((await board('GET', '/api/board/session-writes?collection=steps')).hashes?.steps ?? {})
-    .filter(i => i === LIST || i.startsWith(`${LIST}-`)).sort()
+  const ids = rowsOfList(Object.keys((await board('GET', '/api/board/session-writes?collection=steps')).hashes?.steps ?? {}), LIST)
   if (!ids.length) return [null, `the board holds no step in the list ${LIST}`]
   const keys = ids.map(i => encodeURIComponent(`steps/${i}`)).join(',')
   const docs = (await board('GET', `/api/board/session-writes?collection=steps&ids=${keys}`)).docs ?? {}
-  for (const id of [...ids].reverse()) {
-    const d = docs[`steps/${id}`]
-    if (d && !d.done && !d.note) return [id, d]
-  }
-  return [null, `every row in ${LIST} is answered, so it needs a fresh one before a still can land`]
+  const got = pickRow({ ids, docs, list: LIST })
+  return [got.row, got.row ? got.doc : got.why]
 }
 
 async function postStill(still) {

@@ -166,6 +166,7 @@ export default defineConfig({
       'src/lib/work/__tests__/seals.test.ts',
       'src/lib/work/__tests__/wake.test.ts',
       'src/lib/coaching/__tests__/walk-data.test.ts',
+      'scripts/__tests__/look-row.test.mjs',
     ],
   },
   resolve: {
