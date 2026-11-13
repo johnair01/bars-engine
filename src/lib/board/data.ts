@@ -113,6 +113,10 @@ export function foldBattles(held: Held): Doc[] {
     .map(({ doc }) => without(doc, 'order', 'savedAt'))
 }
 
+function hostOf(url: unknown): string {
+  try { return new URL(String(url)).host.toLowerCase() } catch { return '' }
+}
+
 /** When the record settled an entry, as the page reads it (`recordedAt` in board/template.html). */
 function recordedAt(entry: Doc): number {
   const history = Array.isArray(entry.history) ? (entry.history as Doc[]) : []
@@ -135,6 +139,19 @@ export function trimSettled(out: Doc): void {
   for (const b of (out.battles as Doc[] | undefined) ?? [])
     for (const r of (b.rounds as Doc[] | undefined) ?? [])
       for (const id of [...((r.questions as string[]) ?? []), ...((r.positions as string[]) ?? [])]) inBattle.add(id)
+  // A mark with no look named finds its look by time (a question saved within two minutes after it) or by the host of
+  // the question's link (pmLookOf in board/template.html). Trimming that question would leave the mark on no look, and
+  // the page would list it as a cause to name, so the questions a mark can still find stay.
+  const marks = ((out.causes as Doc[] | undefined) ?? []).filter(
+    (c) => (c.pass === 'preview-marks' || /^mark-/.test(String(c.id ?? ''))) && !(c.look || (c.mark as Doc | undefined)?.look),
+  )
+  const markHosts = new Set(marks.map((c) => hostOf((c.mark as Doc | undefined)?.page)).filter(Boolean))
+  const markTimes = marks.map((c) => Date.parse(String((c.mark as Doc | undefined)?.at ?? c.at ?? ''))).filter((t) => !Number.isNaN(t))
+  const markCanFind = (card: Doc | undefined, entry: Doc): boolean => {
+    if (card && markHosts.has(hostOf(card.href))) return true
+    const saved = typeof entry.saved_at === 'string' ? Date.parse(entry.saved_at) : NaN
+    return markTimes.some((t) => (saved - t) / 1000 >= 0 && (saved - t) / 1000 <= 120)
+  }
   for (const kind of LISTS) {
     const entries = resolved[kind]
     const cards = out[kind] as Doc[] | undefined
@@ -142,6 +159,7 @@ export function trimSettled(out: Doc): void {
     const settled = new Set<string>()
     for (const [id, entry] of Object.entries(entries)) {
       if (entry.decision === 'deferred') continue
+      if (kind === 'questions' && markCanFind(cards.find((c) => c.id === id), entry)) continue
       const card = cards.find((c) => c.id === id)
       if (card && typeof card.savedAt === 'string' && Date.parse(card.savedAt) > recordedAt(entry)) continue
       settled.add(id)

@@ -48,6 +48,28 @@ describe('GET /board/data.js', () => {
     expect(text).toContain('still open')
   })
 
+  it('keeps a settled look that a mark can still find, so the mark does not turn into a cause to name', async () => {
+    vi.mocked(latestDocs).mockResolvedValue({
+      rows: {
+        look: { kind: 'questions', q: 'the look', href: 'https://x-preview.example.dev/a' },
+        timed: { kind: 'questions', q: 'timed look' },
+        gone: { kind: 'questions', q: 'unrelated' },
+        m1: { kind: 'causes', pass: 'preview-marks', mark: { page: 'https://x-preview.example.dev/a', at: '2026-11-01T10:00:00Z' } },
+        'mark-2': { kind: 'causes', mark: { page: 'https://other.dev/', at: '2026-11-02T10:00:00Z' } },
+      },
+      resolved: {
+        a: { kind: 'questions', id: 'look', decision: 'A', recorded: '2026-11-03' },
+        b: { kind: 'questions', id: 'timed', decision: 'A', saved_at: '2026-11-02T10:01:00Z' },
+        c: { kind: 'questions', id: 'gone', decision: 'A', saved_at: '2026-11-02T12:00:00Z' },
+      },
+    })
+    const data = await read(await GET(req()))
+    const ids = (data.questions as { id: string }[]).map((q) => q.id)
+    expect(ids).toContain('look')
+    expect((data.resolved as { questions: Record<string, unknown> }).questions.timed).toBeDefined()
+    expect(ids).not.toContain('gone')
+  })
+
   it('sets the script headers a page load can cache against', async () => {
     vi.mocked(latestDocs).mockResolvedValue({ rows: { p: { kind: 'positions', pos: 'from the store' } } })
     const res = await GET(req())
