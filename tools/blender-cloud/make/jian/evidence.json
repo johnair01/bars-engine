@@ -1,0 +1,159 @@
+{
+  "schema": "calrunia.reference_interpretation.v0",
+  "status": "provisional_model_interpretation_used_for_approved_base_jian",
+  "reference": {
+    "title": "Sword with Scabbard",
+    "maker_culture": "Chinese",
+    "date": "18th–19th century",
+    "museum": "The Metropolitan Museum of Art",
+    "object_number": "36.25.1486a,b",
+    "object_url": "https://www.metmuseum.org/art/collection/search/27931",
+    "image_file": "reference/met-27931.jpg",
+    "image_sha256": "0526b7bb38688e5373aa307c091b42d7ce69a014d51f2f829040eb44366b0dd4",
+    "rights": "Public Domain, per Met object page",
+    "measurement_source": "Met object record",
+    "sword_without_scabbard_m": 1.038,
+    "blade_m": 0.838,
+    "source_materials": [
+      "steel",
+      "silver",
+      "wood"
+    ]
+  },
+  "interpretation_producer": "DeepSeek vision pass, 2026-11-10",
+  "interpretation": {
+    "camera": {
+      "view_angle": "near-orthographic frontal, slight downward tilt; blade and scabbard lie parallel in image plane",
+      "uncertainty": "low for in-plane proportions; high for depth/thickness and cross-section"
+    },
+    "observed_landmarks": [
+      {
+        "name": "pommel",
+        "x": 0.4,
+        "y": 0.04,
+        "visible_evidence": "dark lobed/domed metal cap at grip top"
+      },
+      {
+        "name": "grip",
+        "x": 0.4,
+        "y": 0.12,
+        "visible_evidence": "brown cylindrical grip between pommel and guard, with small circular fitting"
+      },
+      {
+        "name": "guard",
+        "x": 0.4,
+        "y": 0.19,
+        "visible_evidence": "wide dark metal crossguard with openwork/scrolled ends"
+      },
+      {
+        "name": "blade_shoulder",
+        "x": 0.4,
+        "y": 0.21,
+        "visible_evidence": "blade emerges below guard, edges taper from shoulder"
+      },
+      {
+        "name": "blade_mid",
+        "x": 0.4,
+        "y": 0.55,
+        "visible_evidence": "bright steel, straight double-edged profile, faint central ridge line"
+      },
+      {
+        "name": "blade_tip",
+        "x": 0.4,
+        "y": 0.97,
+        "visible_evidence": "rounded/pointed terminal, narrow taper"
+      }
+    ],
+    "proposed_parts": [
+      {
+        "role": "pommel",
+        "visible_region": "top cap above grip",
+        "how_it_connects": "caps grip tang; likely peened or pinned",
+        "confidence": 0.9,
+        "observed_or_inferred": "observed"
+      },
+      {
+        "role": "grip",
+        "visible_region": "brown cylinder between pommel and guard",
+        "how_it_connects": "encases tang between pommel and guard",
+        "confidence": 0.9,
+        "observed_or_inferred": "observed"
+      },
+      {
+        "role": "guard",
+        "visible_region": "dark crossguard at blade shoulder",
+        "how_it_connects": "slides over tang, seats against blade shoulders",
+        "confidence": 0.9,
+        "observed_or_inferred": "observed"
+      },
+      {
+        "role": "blade",
+        "visible_region": "long bright steel from guard to tip",
+        "how_it_connects": "integral with tang passing through grip; shoulders abut guard",
+        "confidence": 0.95,
+        "observed_or_inferred": "observed"
+      },
+      {
+        "role": "tang",
+        "visible_region": "hidden inside grip",
+        "how_it_connects": "continuous with blade, threaded/peened at pommel",
+        "confidence": 0.7,
+        "observed_or_inferred": "inferred"
+      },
+      {
+        "role": "central_ridge_or_fullers",
+        "visible_region": "blade face",
+        "how_it_connects": "runs longitudinally along blade",
+        "confidence": 0.5,
+        "observed_or_inferred": "inferred"
+      }
+    ],
+    "dimensions": [
+      {
+        "name": "overall_unsheathed_sword",
+        "meters": 1.038,
+        "source": "museum_measurement",
+        "confidence": 0.95
+      },
+      {
+        "name": "blade_length",
+        "meters": 0.838,
+        "source": "museum_measurement",
+        "confidence": 0.95
+      },
+      {
+        "name": "grip_length",
+        "meters": null,
+        "source": "image_estimate",
+        "confidence": 0.6
+      },
+      {
+        "name": "guard_width",
+        "meters": null,
+        "source": "image_estimate",
+        "confidence": 0.5
+      },
+      {
+        "name": "blade_width",
+        "meters": null,
+        "source": "image_estimate",
+        "confidence": 0.5
+      },
+      {
+        "name": "blade_thickness",
+        "meters": null,
+        "source": "unknown",
+        "confidence": 0.1
+      }
+    ],
+    "ambiguous_features": [
+      "blade cross-section (diamond vs lenticular vs ridged) not determinable from frontal view",
+      "tang construction and pommel attachment hidden",
+      "guard thickness and depth unknown",
+      "grip diameter and taper unknown",
+      "edge geometry near tip ambiguous",
+      "surface wear/patina may obscure ridge lines"
+    ]
+  },
+  "boundary": "Part coordinates are observations/proposals from the image stage, not manually supplied universal sword coordinates. The builder uses the accepted geometry contract separately."
+}
