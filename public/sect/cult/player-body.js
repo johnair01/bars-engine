@@ -13,7 +13,7 @@
 // Sitting and the give belong to the nook's kneel (kneel.js, from the hearth-give round). It plugs in with useKneel(fn),
 // fn(walker) -> { sit(seatAt), stand(), give(), update(t, dt), kneeling }; without it a sit request leaves her standing.
 import * as THREE from "three";
-import * as FG from "./make/figure.js";
+import * as FG from "./figure.js";
 import { makeWalker } from "./walker.js";
 
 let KNEEL = null;

@@ -6,8 +6,8 @@
 // has not run), so the walk is drawn the way the preview draws its 'step' pose: by aiming the limbs (figure.js aim),
 // here with the stride's phase running, and the feet kept on the ground.
 import * as THREE from "three";
-import * as M from "./make/mix.js";
-import * as FG from "./make/figure.js";
+import * as M from "./mix.js";
+import * as FG from "./figure.js";
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const wp = b => b.getWorldPosition(V());
@@ -19,7 +19,7 @@ export const BODIES = {
 };
 let REG = null;
 export async function makeWalker({ who = "f", outfit = "B2" } = {}) {
-  if (!REG) REG = await fetch(new URL("./make/parts.json", import.meta.url)).then(r => r.json());
+  if (!REG) REG = await fetch(new URL("./parts.json", import.meta.url)).then(r => r.json());
   const X = await M.build({ ...BODIES[who], direction: outfit[0], outfit }, REG);
   const F = X.F;
   // the body under the clothes is not drawn while it walks, so a thigh cannot show through the skirt (mix.js

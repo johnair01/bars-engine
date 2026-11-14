@@ -12,7 +12,10 @@ export const PASSPORT_VERSION = 1
 /** The places in calrunia/world.yaml. A place appears on a player's map once they have entered it (cw-emergent-map). */
 export const PLACES = ['vessel', 'sprout', 'cave', 'root', 'between', 'element-lands'] as const
 export type Place = (typeof PLACES)[number]
-export const PASSPORT_KEYS = ['v', 'player', 'spirits', 'hand', 'qi', 'vibeulons', 'embers', 'places_reached', 'updated_at'] as const
+export const PASSPORT_KEYS = ['v', 'player', 'spirits', 'hand', 'qi', 'vibeulons', 'embers', 'places_reached', 'updated_at', 'appearance'] as const
+/** Fields an older stored passport may lack; absent means the default appearance (cd-figure-look-1). */
+export const OPTIONAL_KEYS = ['appearance'] as const
+export const FIGURE_MODELS = ['arcade', 'cultivation'] as const
 export const CARE_STATES = ['well', 'corrupted', 'dead'] as const
 export const HAND_KINDS = ['card', 'bar'] as const
 const MAX_LINEAGE = 60
@@ -31,6 +34,13 @@ export type Spirit = {
 }
 export type HandItem = { id: string; kind: (typeof HAND_KINDS)[number]; title: string; from: Place }
 export type Ember = { id: string; source: string; element: string | null; look: number; state: string; at: string; label: string }
+/**
+ * How the player is drawn (cd-figure-look-1: the Arcade figure stays outside; once they enter Calrunia every place draws
+ * the cultivation model, the Heaven sect build in public/sect/cult/). `outside` is what the Arcade renders, `inside` what every
+ * Calrunian place renders. `ring` is the colour ring under the figure as a 0xRRGGBB number, or null.
+ */
+export type Appearance = { outside: (typeof FIGURE_MODELS)[number]; inside: (typeof FIGURE_MODELS)[number]; who: 'f' | 'm'; outfit: string; ring: number | null }
+export const DEFAULT_APPEARANCE: Appearance = { outside: 'arcade', inside: 'cultivation', who: 'f', outfit: 'B2', ring: null }
 export type Passport = {
   v: 1
   player: { id: string | null; name: string | null; guest_id: string | null }
@@ -41,6 +51,7 @@ export type Passport = {
   embers: Ember[]
   places_reached: Place[]
   updated_at: string
+  appearance?: Appearance
 }
 
 /**
@@ -49,12 +60,13 @@ export type Passport = {
  * These owners are a position, standing unless Wendell flips it: the cave wakes spirits, Sprout's Chapter 1 deals the hand,
  * and the ship holds the qi meter, the vibeulons condensed from it and the embers its parts are made from (inner-vessel1).
  */
-export const FIELD_OWNERS: Record<'spirits' | 'hand' | 'qi' | 'vibeulons' | 'embers', Place> = {
+export const FIELD_OWNERS: Record<'spirits' | 'hand' | 'qi' | 'vibeulons' | 'embers' | 'appearance', Place> = {
   spirits: 'cave',
   hand: 'sprout',
   qi: 'vessel',
   vibeulons: 'vessel',
   embers: 'vessel',
+  appearance: 'sprout',
 }
 
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x)
@@ -102,6 +114,11 @@ export function validatePassport(p: unknown): { ok: true; passport: Passport } |
   if (!Array.isArray(p.places_reached) || !p.places_reached.every(x => (PLACES as readonly unknown[]).includes(x)) || new Set(p.places_reached).size !== p.places_reached.length)
     e.push('places_reached must list places from calrunia/world.yaml, once each')
   if (!isWhen(p.updated_at)) e.push('updated_at must be a time')
+  if (p.appearance !== undefined) {
+    const a = p.appearance
+    if (!isObj(a) || !(FIGURE_MODELS as readonly unknown[]).includes(a.outside) || !(FIGURE_MODELS as readonly unknown[]).includes(a.inside) || (a.who !== 'f' && a.who !== 'm') || !isStr(a.outfit) || !a.outfit || !(a.ring === null || (typeof a.ring === 'number' && Number.isInteger(a.ring) && a.ring >= 0 && a.ring <= 0xffffff)))
+      e.push('appearance must be { outside, inside: arcade|cultivation, who: f|m, outfit, ring: 0..0xffffff or null }')
+  }
   return e.length ? { ok: false, errors: e } : { ok: true, passport: p as unknown as Passport }
 }
 
@@ -172,6 +189,7 @@ export function claimGuest(server: Passport | null, guest: Passport, player: { i
     qi: Math.max(base.qi, guest.qi),
     vibeulons: Math.max(base.vibeulons, guest.vibeulons),
     embers: unionBy(base.embers, guest.embers, a => a),
+    ...(base.appearance || guest.appearance ? { appearance: base.appearance ?? guest.appearance } : {}),
     places_reached: PLACES.filter(x => base.places_reached.includes(x) || guest.places_reached.includes(x)),
     updated_at: at,
   }

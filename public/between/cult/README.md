@@ -1,16 +1,8 @@
-# Cultivation characters, as the game loads them
+# DEPRECATED: public/between/cult
 
-A copy of the cultivation characters' review preview (Six-faces-council, the shells preview at
-`/mnt/project-files/3d-build/cultivation-shells-4-preview/`, accessories round 4, 2026-11-05), so a place in the game
-can build her or him in the page exactly as the preview does. First used by the coaching walk
-(`public/coaching/walk.html`, round 2, Wendell's steer on cw-walk-look-1).
+Wendell, 2026-11-14 (cd-figure-look-1): "Arcade can stay but when they enter Calrunia they need to use the cultivation
+model builds not the 'cultivation figure'; this one needs to be deprecated."
 
-- `make/`, `r0g8/`, `ubc/`: the preview's files. Two changes: `r0g8/ubc.js` loads the bodies from `ubc/` beside it
-  (not beside the page), and `make/mix.js` makes its stills renderer on first use, so a game page opens no second
-  WebGL context.
-- `walker.js`: `makeWalker({ who: 'f' | 'm', outfit })` builds the figure and walks it. The stride aims the limbs as
-  the preview's `step` pose does, with the phase advanced by the ground covered. It is a stand-in until the
-  cultivation pipeline's clips stage (stage 4) gives these bones a walk clip.
-- The page's import map needs `three-mesh-bvh` (0.8.3) beside `three`.
-
-When a cultivation round changes the figures, copy its `make/` over this one and keep the two changes above.
+This folder held a frozen copy of the shells preview (coaching walk round 2, 2026-11-05). It is gone. Every Calrunia
+place now loads the Heaven sect's build in `public/sect/cult/`: `walker.js`, `player-body.js`, `kneel.js` and `seat.js`
+moved there, beside the garments and `mix.js` they build from. Do not add files here.

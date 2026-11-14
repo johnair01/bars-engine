@@ -277,6 +277,50 @@
     "updated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "appearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outside",
+        "inside",
+        "who",
+        "outfit",
+        "ring"
+      ],
+      "description": "Owner: sprout. Optional: a passport without it draws the default (Arcade outside, cultivation model inside). The Arcade draws outside, every Calrunian place draws inside (cd-figure-look-1).",
+      "properties": {
+        "outside": {
+          "enum": [
+            "arcade",
+            "cultivation"
+          ]
+        },
+        "inside": {
+          "enum": [
+            "arcade",
+            "cultivation"
+          ]
+        },
+        "who": {
+          "enum": [
+            "f",
+            "m"
+          ]
+        },
+        "outfit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ring": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 16777215
+        }
+      }
     }
   },
   "$defs": {

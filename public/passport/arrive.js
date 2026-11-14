@@ -5,12 +5,13 @@
 //   spirits     -> oag.spirits.v1   (the cave's store, cave/spirit-store.js)
 //   qi, vibeulons, embers -> oag.vessel.v1 (the ship holds them, FIELD_OWNERS in passport.ts; cave/vessel.js)
 //   hand        -> calrunia.hand.v1 (Sprout's hand; no other place keeps one yet)
+//   appearance  -> calrunia.appearance.v1 (how the player is drawn; absent means the default, the one already stored wins)
 //   guest_id    -> calrunia.guest.v1, only when this browser has none
 // Arriving twice is safe: spirits, embers and cards join by id, and qi and vibeulons take the larger number, so nothing is minted.
 // Runs in the page (window.__calruniaArrive) and under vitest (passport-contract.test.ts).
 (function (root) {
   "use strict";
-  var KEYS = { spirits: "oag.spirits.v1", vessel: "oag.vessel.v1", hand: "calrunia.hand.v1", guest: "calrunia.guest.v1" };
+  var KEYS = { spirits: "oag.spirits.v1", vessel: "oag.vessel.v1", hand: "calrunia.hand.v1", appearance: "calrunia.appearance.v1", guest: "calrunia.guest.v1" };
   var MAX_LOADOUT = 3, MAX_LINEAGE = 60;
 
   function toB64url(text) {
@@ -75,15 +76,18 @@
     var hand = stores.hand && stores.hand.v === 1 && Array.isArray(stores.hand.hand) ? copy(stores.hand) : { v: 1, hand: [] };
     p.hand.forEach(function (h) { if (!byId(hand.hand, h.id)) hand.hand.push({ id: h.id, kind: h.kind, title: h.title, from: h.from }); });
 
-    return { spirits: sp, vessel: v, hand: hand, guest: stores.guest || p.player.guest_id || null };
+    // an appearance this browser already keeps wins; a passport without one leaves it unset (the default)
+    var look = stores.appearance && stores.appearance.v === 1 && stores.appearance.appearance ? stores.appearance : (p.appearance ? { v: 1, appearance: copy(p.appearance) } : null);
+
+    return { spirits: sp, vessel: v, hand: hand, appearance: look, guest: stores.guest || p.player.guest_id || null };
   }
 
   function storage() { try { return root.localStorage || null; } catch (e) { return null; } }
   function readJson(s, key) { try { return JSON.parse(s.getItem(key) || "null"); } catch (e) { return null; } }
   function readStores() {
-    var s = storage(); if (!s) return { spirits: null, vessel: null, hand: null, guest: null };
+    var s = storage(); if (!s) return { spirits: null, vessel: null, hand: null, appearance: null, guest: null };
     var g = null; try { g = s.getItem(KEYS.guest); } catch (e) { /* blocked */ }
-    return { spirits: readJson(s, KEYS.spirits), vessel: readJson(s, KEYS.vessel), hand: readJson(s, KEYS.hand), guest: g };
+    return { spirits: readJson(s, KEYS.spirits), vessel: readJson(s, KEYS.vessel), hand: readJson(s, KEYS.hand), appearance: readJson(s, KEYS.appearance), guest: g };
   }
   // Lay a checked passport into this browser. Returns false when storage is blocked (the page still shows what arrived).
   function apply(p) {
@@ -94,6 +98,7 @@
       s.setItem(KEYS.spirits, JSON.stringify(next.spirits));
       s.setItem(KEYS.vessel, JSON.stringify(next.vessel));
       s.setItem(KEYS.hand, JSON.stringify(next.hand));
+      if (next.appearance) s.setItem(KEYS.appearance, JSON.stringify(next.appearance));
       if (next.guest && !s.getItem(KEYS.guest)) s.setItem(KEYS.guest, next.guest);
       return true;
     } catch (e) { return false; }

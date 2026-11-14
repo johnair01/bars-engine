@@ -8,9 +8,9 @@
 //   walker: makeWalker's result. All the fitting is done with the walker's holder lifted out of the world for a moment
 //   (its own frame is then the world frame), so the laid cloth, kept as meshes inside the holder, moves with it after.
 import * as THREE from "three";
-import * as FG from "./make/figure.js";
-import * as M from "./make/mix.js";
-import * as ST from "./make/seat.js";
+import * as FG from "./figure.js";
+import * as M from "./mix.js";
+import * as ST from "./seat.js";
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const wp = b => b.getWorldPosition(V());
