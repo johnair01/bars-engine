@@ -141,7 +141,7 @@ export function court(S, c, rooms) {
 
 // ---------- a room from rooms.json ----------
 // Room plan coords: x across (0..Wd), y from the north wall (0) to the south door wall (D). Local +z is south.
-export function room(E, R, tag = R.key, court = null) {
+export function room(E, R, tag = R.key, court = null, where = null) {
   const roofCol = PAL.roof;
   const ox = R.Wd / 2, oz = R.D / 2;
   const add = (x, y, w, d, h, col, o = {}) => {
@@ -175,19 +175,22 @@ export function room(E, R, tag = R.key, court = null) {
     if (col === '#2f6f6a' && side === 'W') add(-0.12, a, 0.1, b - a, z1 - z0, col, { y0: z0, collide: false });
   }
   (R.tablets || []).forEach(([yy, zz, mended]) => add(0.3, yy - 0.22, 0.06, 0.44, 0.55, mended ? PAL.gold : '#3b2a1c', { y0: zz + 0.5, collide: false }));
+  // Round 9: free CC0 furniture (rooms.json `models`); heaven.html sets the meshes down, this gives them colliders.
+  for (const [, cx, cy, , , w, d, h] of R.models || []) if (h > 0.5) pushCollider(E, cx - ox, cy - oz, w, d, 0, h);
   const top = R.Ht + (R.key === 'elder' ? 0.6 : 0);
   const rf = roof(E, 0, 0, R.Wd, R.D, top, Math.min(R.Wd, R.D) * 0.3, roofCol);
   const F = wf(E);
-  interiors.push({ x: F.x, z: F.z, c: F.c, s: F.s, hw: R.Wd / 2 + 0.3, hd: R.D / 2 + 0.3, y: F.y, roof: rf, key: tag, R, E, court });
+  interiors.push({ x: F.x, z: F.z, c: F.c, s: F.s, hw: R.Wd / 2 + 0.3, hd: R.D / 2 + 0.3, y: F.y, roof: rf, key: tag, R, E, court, where });
   return E;
 }
 
 // ---------- the other places ----------
 export function places(S, rooms) {
+  const inside = (G, x, z, key, where) => { const H = new THREE.Group(); H.position.set(x, 0, z); H.rotation.y = Math.PI; G.add(H); room(H, rooms[key], key, null, where); };
   // Thunder gate: the paifang across the axis
   { const G = frame(S, P.gate, 0, AXIS[7]); paifang(G, 0, 0, 9, 6.5); box(G, -9, 6, 5, 4, 3, PAL.plaster); }
   // Arrival court: gatehouse, arrival hall (12 bunks), notice wall
-  { const G = frame(S, P.arrival, 12, P.summit); hall(G, 0, 10, 16, 8, 4); hall(G, -12, -6, 7, 6, 3.4); box(G, 10, -8, 6, 0.4, 2.2, PAL.paper); }
+  { const G = frame(S, P.arrival, 12, P.summit); inside(G, 0, 10, 'arrival-hall', 'The arrival court'); hall(G, -12, -6, 7, 6, 3.4); box(G, 10, -8, 6, 0.4, 2.2, PAL.paper); }
   // Great court: censer, chore board, the lathe bell in its frame
   { const G = frame(S, P.great, 25, P.summit);
     box(G, 0, 0, 1.4, 1.4, 1.2, '#7d6a3a'); box(G, 12, -2, 4, 0.3, 2.4, PAL.wood);
@@ -201,14 +204,14 @@ export function places(S, rooms) {
     const H = new THREE.Group(); H.position.set(0, 0, 4); G.add(H); room(H, rooms.founder);
     for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(7 - i * 2, 7 - i * 2, 0.5, 40), mat(i % 2 ? PAL.paper : PAL.stone)); c.position.set(0, 0.25 + i * 0.5, -20); c.receiveShadow = c.castShadow = true; G.add(c); }
   }
-  // Dojo, refectory
-  { const G = frame(S, P.dojo, 30, P.summit); hall(G, 0, 2, 18, 14, 5);
+  // Round 9: the dojo, the refectory, the arrival hall and the team houses are rooms you can walk into. Each stands
+  // where its grey hall stood, turned so its south door faces the summit side (the ring, the terrace, the lane).
+  { const G = frame(S, P.dojo, 30, P.summit); inside(G, 0, 2, 'dojo', 'The dojo and the refectory');
     const ring = new THREE.Mesh(new THREE.RingGeometry(4.2, 4.8, 40), mat(PAL.plaster)); ring.rotation.x = -Math.PI / 2; ring.position.set(0, 0.05, -10); G.add(ring); }
-  { const G = frame(S, P.refectory, 44, P.summit); hall(G, 0, 0, 24, 10, 4.4); }
-  // Exiles' rows: eight team houses, yours with the lit door
+  { const G = frame(S, P.refectory, 44, P.summit); inside(G, 0, 0, 'refectory', 'The dojo and the refectory'); }
+  // Exiles' rows: eight team houses, yours (house 3) with the lit door
   { const G = frame(S, P.rows, 50, P.summit);
-    for (let i = 0; i < 8; i++) { const x = -13.5 + (i % 4) * 9, z = i < 4 ? -6 : 8;
-      hall(G, x, z, 6, 5, 3, { door: i === 2 ? '#ffd27a' : PAL.wood, roofRise: 1.4 }); }
+    for (let i = 0; i < 8; i++) inside(G, -13.5 + (i % 4) * 9, i < 4 ? -6 : 8, 'team-' + (i + 1), "The exiles' rows");
     const lamp = new THREE.PointLight('#ffb860', 6, 14); lamp.position.set(-13.5 + 2 * 9, 2, -9.5); G.add(lamp); }
   // The spring: pool, bathhouse, infirmary, the vessel cells
   { const G = frame(S, P.spring, 50, P.summit);

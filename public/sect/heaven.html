@@ -70,6 +70,15 @@ const models = Promise.all(['Stone_Fire_Pit.glb', 'Ceramic_Pot.glb', 'Antique_Ce
     const fire = new THREE.PointLight('#ff9a4a', 8, 9); fire.position.set(4.6 - ox, 0.6, 4.6 - oz); G.add(fire);
     (E.embers || []).forEach(([x, y, z], i) => { const j = (i % 2 ? vase : pot).clone(); const k = i % 2 ? 0.75 : 0.5; j.scale.setScalar(k); j.position.set(x - ox, z, y + 0.12 - oz); G.add(j); });
   }
+  // Round 9: the free CC0 furniture each room plan lists under `models` (colliders are set in world.js).
+  const extra = [...new Set(interiors.flatMap(r => (r.R.models || []).map(m => m[0])))];
+  Promise.all(extra.map(f => ({ 'Ceramic_Pot.glb': pot, 'Antique_Ceramic_Vase_01.glb': vase, 'Stone_Fire_Pit.glb': pit })[f] || load(f))).then(ms => {
+    const by = Object.fromEntries(extra.map((f, i) => [f, ms[i]]));
+    for (const r of interiors) for (const [f, cx, cy, turn, k] of r.R.models || []) {
+      const o = by[f].clone(); o.scale.setScalar(k); o.rotation.y = turn * Math.PI / 180;
+      o.position.set(cx - r.R.Wd / 2, 0.06, cy - r.R.D / 2); r.E.add(o);
+    }
+  }).catch(e => console.warn('room models', e));
   for (const [x, z] of axisMarks()) { const l = lan.clone(); l.scale.setScalar(1.3); l.position.set(x, heightAt(x, z) - 0.05, z); S.add(l); }
 }).catch(e => console.warn('models', e));
 
@@ -146,7 +155,7 @@ function enter(key, { up = 3.2, back = 1.6 } = {}) {
 // Round 8: a list of every room you can walk into, grouped by where it stands.
 {
   const sel = document.getElementById('roomSel'), groups = new Map();
-  const where = i => i.court ? i.court.name : (i.key === 'founder' ? 'The summit' : COURTS.find(c => c.key === 'shaman').name);
+  const where = i => i.where || (i.court ? i.court.name : (i.key === 'founder' ? 'The summit' : COURTS.find(c => c.key === 'shaman').name));
   for (const i of interiors) { const g = where(i); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(i); }
   for (const [g, list] of groups) {
     const og = document.createElement('optgroup'); og.label = g;
