@@ -89,12 +89,13 @@ export function roof(P, M, { w, d, y, ex = 0.9, rise = 1.35, rows = 1, lift = 0.
 
 // a hall at one of five stages ('open' is a pavilion with no walls, the dojo): 'plinth' (a cleared base), 'frame' (columns and beams, scaffold poles), 'half' (walls
 // part-built, the roof part-tiled, scaffold), 'full'. lit: the lattice doors glow from inside. tiers 2 adds an upper eave.
-export function hall(M, { w = 8, d = 5, ph = 3.2, stage = 'full', lit = false, tiers = 1, seed = 1, openFront = false, lite = false }) {
+export function hall(M, { w = 8, d = 5, ph = 3.2, stage = 'full', lit = false, tiers = 1, seed = 1, openFront = false, lite = false, through = false }) {
+  // round 27: through = a gate hall you walk through: three bays, the middle one open front and back
   const P = new THREE.Group(), rnd = RND(seed), base = 0.7, FL = base;
   box(P, w + 1.0, base, d + 1.0, M.plinth, 0, base / 2, 0);
   box(P, w + 1.0, 0.02, d + 1.0, M.paving, 0, base + 0.01, 0);
   if (stage === 'plinth') { for (let i = 0; i < 3; i++) box(P, 0.35, 0.3, 4 + rnd() * 2, M.raw, -w / 2 + 1 + i * 0.4, base + 0.15 + (i % 2) * 0.3, 0); return P; }
-  const fin = stage === 'full' || stage === 'open', colM = fin ? M.lacR : M.raw, bays = Math.max(3, Math.round(w / 2.2)), xs = [], zs = [-d / 2 + 0.2, d / 2 - 0.2];
+  const fin = stage === 'full' || stage === 'open', colM = fin ? M.lacR : M.raw, bays = through ? 3 : Math.max(3, Math.round(w / 2.2)), xs = [], zs = [-d / 2 + 0.2, d / 2 - 0.2];
   for (let i = 0; i <= bays; i++) xs.push(-w / 2 + 0.2 + i * (w - 0.4) / bays);
   for (const x of xs) for (const z of zs) { cyl(P, 0.16, 0.17, ph, colM, x, FL + ph / 2, z); cyl(P, 0.21, 0.24, 0.16, M.drum, x, FL + 0.08, z); }
   for (const z of zs) box(P, w + 0.2, 0.3, 0.28, fin ? M.painted : M.raw, 0, FL + ph - 0.15, z);
@@ -105,9 +106,10 @@ export function hall(M, { w = 8, d = 5, ph = 3.2, stage = 'full', lit = false, t
     box(P, w + 1.4, 0.06, 0.6, M.raw, 0, FL + 2.8, d / 2 + 0.7); }
   if (stage === 'frame') return P;
   // walls: plaster at the back and sides, lattice doors across the front (half: the back wall and one side only)
-  if (stage !== 'open') box(P, w - 0.4, ph - 0.3, 0.2, M.plaster, 0, FL + (ph - 0.3) / 2, -d / 2 + 0.2);
+  if (stage !== 'open' && !through) box(P, w - 0.4, ph - 0.3, 0.2, M.plaster, 0, FL + (ph - 0.3) / 2, -d / 2 + 0.2);
+  if (stage !== 'open' && through) for (const sg of [-1, 1]) { const a = xs[2] + 0.17, b = w / 2 - 0.2; box(P, b - a, ph - 0.3, 0.2, M.plaster, sg * (a + b) / 2, FL + (ph - 0.3) / 2, -d / 2 + 0.2); }
   for (const sx of stage === 'half' ? [-1] : stage === 'open' ? [] : [-1, 1]) box(P, 0.2, ph - 0.3, d - 0.4, M.plaster, sx * (w / 2 - 0.2), FL + (ph - 0.3) / 2, 0);
-  if (stage === 'full') for (let i = 0; i < bays; i++) { if (openFront && i > 0 && i < bays - 1) continue; const x0 = xs[i], x1 = xs[i + 1], dm = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 - 0.34, ph - 0.5), lit ? M.doorLit : M.door); dm.position.set((x0 + x1) / 2, FL + (ph - 0.5) / 2 + 0.05, d / 2 - 0.22); P.add(dm); }
+  if (stage === 'full') for (let i = 0; i < bays; i++) { if (openFront && i > 0 && i < bays - 1) continue; if (through && i === 1) continue; const x0 = xs[i], x1 = xs[i + 1], dm = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 - 0.34, ph - 0.5), lit ? M.doorLit : M.door); dm.position.set((x0 + x1) / 2, FL + (ph - 0.5) / 2 + 0.05, d / 2 - 0.22); P.add(dm); }
   if (fin) for (let bx = -w / 2; bx <= w / 2 + 0.01; bx += w / (bays * 2)) for (let t = 0; t < 3; t++) box(P, 0.14 + 0.08 * t, 0.07, 0.14, t % 2 ? M.brkG : M.brk, bx, FL + ph + 0.04 + 0.075 * t, d / 2 - 0.2 + 0.1 * t);
   const RY = FL + ph + 0.22;
   if (tiers === 2 && stage === 'full') { roof(P, M, { w: w, d: d, y: RY, ex: 1.0, rise: 0.5, ridgeIn: 1.0 });
