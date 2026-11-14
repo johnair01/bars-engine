@@ -17,6 +17,7 @@ import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
 import { addBarToHandForPlayer } from '@/lib/hand-service'
 import { mintQuestFromText } from '@/lib/quests/mint'
 import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
+import { redactCalruniaReturnMetadata } from '@/lib/calrunia/bar-privacy'
 
 // Element channel ('nation' column) — valid capture-time field-tint values.
 // Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
@@ -777,7 +778,7 @@ export async function getBarDetail(barId: string) {
     }
 
     return {
-        bar,
+        bar: { ...bar, agentMetadata: redactCalruniaReturnMetadata(bar.agentMetadata, isOwner) },
         isOwner,
         isRecipient,
         recipientShare,

@@ -7,6 +7,7 @@ const { currentPlayer, create, findMany } = vi.hoisted(() => ({ currentPlayer: v
 vi.mock('@/lib/between/store', () => ({ currentPlayer }))
 vi.mock('@/lib/db', () => ({ db: { customBar: { create, findMany } } }))
 import { GET, POST } from './route'
+import { redactCalruniaReturnMetadata } from '@/lib/calrunia/bar-privacy'
 
 const sample = () => JSON.parse(readFileSync(join(process.cwd(), 'public/between/ctw/sample-player.json'), 'utf8'))
 const request = (body: unknown) => new NextRequest('http://localhost/api/calrunia/kept', { method: 'POST', body: JSON.stringify(body) })
@@ -58,6 +59,13 @@ describe('private Calrunia BAR capture and return', () => {
     const body = await (await GET(get())).json()
     expect(body.bars[0]).not.toHaveProperty('charge')
     expect(body.bars[0]).not.toHaveProperty('notes')
+  })
+
+  it('keeps saved Calrunia return context out of a shared BAR detail', () => {
+    const metadata = JSON.stringify({ source: 'calrunia_return_v1', charge: sample(), notes: [1] })
+    expect(redactCalruniaReturnMetadata(metadata, false)).toBeNull()
+    expect(redactCalruniaReturnMetadata(metadata, true)).toBe(metadata)
+    expect(redactCalruniaReturnMetadata('{"source":"another"}', false)).toBe('{"source":"another"}')
   })
 
   it('keeps and reloads the same BAR across requests while excluding another owner', async () => {
