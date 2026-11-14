@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { materials, roof as kroof, hall as khall, paifang as kpaifang } from './kit.js';
 import { greatCourt, kitMaterials } from './anchor.js';
 import { cragCrown } from './crag.js';
-import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE } from './layout.js';
+import { heightAt, PADS, PATHS, COURTS, NATIONS, P, AXIS, ROUTE, GREAT_FACE, FAR_ROAD } from './layout.js';
 
 export const PAL = {
   plaster: '#c25a3d', beam: '#2f6f6a', gold: '#b8862b', roof: '#3f4a4c', stone: '#9a9184', paper: '#efe5cf',
@@ -101,16 +101,18 @@ export function terrain(S) {
     const north = Math.max(0, (-z - 180) / 120) + Math.max(0, (-x - 330) / 120);
     if (north > 0) c.lerp(t.set(PAL.forest), Math.min(1, north));
     { const dG = Math.hypot(x - P.great[0], z - P.great[1]);
+      // round 14c: beyond 160 m the ground keeps its own colour and the fog does the distance, so the land between the
+      // court and the ranges reads as land (it was one flat haze blue, which hid the road out)
       // round 13b: and the slopes that rise straight out of the court (up to 45 m) go grey-blue with height, so from the
       // anchor view they read as the painting's ranges in haze behind the hall instead of a green hill
-      const far = Math.min(1, Math.max(0, (dG - 32) / 60, dG < 160 ? (y - 28) / 10 : 0)); if (far > 0) c.lerp(t.set('#93a2af'), far); if (dG < 160 && y > 30) c.lerp(t.set('#aebdcc'), Math.min(0.7, (y - 30) / 25)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
+      const far = dG < 160 ? Math.min(1, Math.max(0, (dG - 32) / 60, (y - 28) / 10)) * Math.min(1, (160 - dG) / 40) : 0; if (far > 0) c.lerp(t.set('#9cafc2'), far); if (dG < 160 && y > 22) c.lerp(t.set('#b4c3d2'), Math.min(0.85, (y - 22) / 22)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
     let steep = false;
     { // round 13: cliffs are bare rock, banded and streaked like the painting's crag; its crown keeps a little moss
       const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;
       const dS = Math.hypot(x - P.summit[0], z - P.summit[1]);
       if (sl > 0.7 || (dS < 60 && y > 52)) {
         const band = 0.5 + 0.5 * Math.sin(y * 0.9 + Math.sin(Math.atan2(z - P.summit[1], x - P.summit[0]) * 23) * 2.2);
-        c.set(band > 0.6 ? '#b9bec2' : band > 0.3 ? '#9aa1a8' : '#79828b'); // round 13b, 13c: pale blue-grey rock in the haze, so the warm sun doesn't turn it tan
+        c.set(band > 0.6 ? '#ccd1d5' : band > 0.3 ? '#b0b8bf' : '#8f99a3'); // round 13b, 13c: pale blue-grey rock in the haze, so the warm sun doesn't turn it tan
         { const m = 0.5 + 0.5 * Math.sin(x * 0.21 + Math.sin(z * 0.17) * 3) * Math.sin(z * 0.19 + y * 0.31); if (m > 0.72) c.lerp(t.set('#5d7a4e'), Math.min(0.8, (m - 0.72) * 4)); } // round 13c: moss and shrubs clinging in the cliff's ledges, as the painting's crag has
         if (sl < 1.1 && dS < 60) c.lerp(t.set('#6f8355'), 0.45);
         steep = sl > 0.7;
@@ -227,7 +229,7 @@ export function places(S, rooms) {
   // Arrival court: gatehouse, arrival hall (12 bunks), notice wall
   { const G = frame(S, P.arrival, 12, P.summit); inside(G, 0, 10, 'arrival-hall', 'The arrival court'); hall(G, -12, -6, 7, 6, 3.4); box(G, 10, -8, 6, 0.4, 2.2, PAL.paper); }
   // Great court (round 11): drawn toward the anchor painting at eye height (anchor.js); round 10's censer and post bell are gone.
-  { const G = frame(S, P.great, 25, P.summit); GREAT.G = G;
+  { const G = frame(S, P.great, 25, GREAT_FACE); GREAT.G = G; // round 14: turned left so the crag stands right
     Object.assign(GREAT, greatCourt(G, { collide: (x, z, w, d, y0, h) => pushCollider(G, x, z, w, d, y0, h) }));
   }
   // Summit: the founder's hall (its south doors face the great court) and the Heaven altar, open sky, behind it
@@ -279,6 +281,8 @@ export function forest(S) {
     if (!inForest) continue;
     if (PADS.some(p => p[3] > 6 && Math.hypot(x - p[0], z - p[1]) < p[3] + 6)) continue;
     if (Math.abs(x) < 5 && z < -150) continue; // keep the spring path clear
+    if (FAR_ROAD.some((b, i) => { if (!i) return false; const a = FAR_ROAD[i - 1], dx = b[0] - a[0], dz = b[1] - a[1]; // and the road to the Watch
+      const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz) < 7; })) continue;
     pts.push([x, z]);
   }
   const C = new THREE.InstancedMesh(cone, mat('#3f5a33'), pts.length), T = new THREE.InstancedMesh(trunk, mat('#5a4030'), pts.length);
