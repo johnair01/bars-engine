@@ -1,0 +1,345 @@
+{
+ "feature": "ctw-friends-fire",
+ "round": 2,
+ "stump": [
+  1,
+  3,
+  0,
+  4
+ ],
+ "note": "Times are seconds from the sit. 'at' is the clock the frame is drawn at. frame = the keyframe's id; tag = real (drawn from engine state after the step), projected or sample.",
+ "sittings": {
+  "A": {
+   "about": "the four stump notes played back, then hand over",
+   "steps": [
+    {
+     "m": "m01",
+     "frame": true,
+     "phase": "walk-in",
+     "tag": "sample",
+     "at": 0,
+     "expect": "no song yet"
+    },
+    {
+     "m": "m02",
+     "frame": true,
+     "phase": "sit",
+     "tag": "sample",
+     "at": 0,
+     "expect": "no song yet"
+    },
+    {
+     "m": "m03",
+     "frame": true,
+     "phase": "ask",
+     "tag": "sample",
+     "at": 0,
+     "expect": "no song yet"
+    },
+    {
+     "m": "m04",
+     "frame": true,
+     "phase": "seals",
+     "tag": "real",
+     "at": 0,
+     "expect": "stump notes 2,4,1,5 lit; nothing played"
+    },
+    {
+     "move": "play",
+     "degree": 1,
+     "t": 0.0
+    },
+    {
+     "move": "play",
+     "degree": 3,
+     "t": 1.2
+    },
+    {
+     "m": "m05",
+     "frame": true,
+     "move": "play",
+     "degree": 0,
+     "t": 2.5,
+     "tag": "real",
+     "expect": "three notes played; the fire leans to the third"
+    },
+    {
+     "move": "play",
+     "degree": 4,
+     "t": 3.6
+    },
+    {
+     "m": "m06t",
+     "frame": true,
+     "move": "tag",
+     "channel": "water",
+     "t": 4.7,
+     "tag": "real",
+     "phase": "tag",
+     "expect": "four notes played; Water despair named; the move still in your hand"
+    },
+    {
+     "m": "m06",
+     "frame": true,
+     "move": "handOver",
+     "t": 5.2,
+     "tag": "real",
+     "expect": "handed over; Oriel has not played"
+    },
+    {
+     "m": "m07",
+     "frame": true,
+     "at": 8.6,
+     "tag": "projected",
+     "expect": "Oriel mid-ending, friends still"
+    },
+    {
+     "m": "m08",
+     "frame": true,
+     "at": "silence",
+     "tag": "projected",
+     "expect": "the silence before the laugh"
+    },
+    {
+     "m": "m09",
+     "frame": true,
+     "at": "laugh",
+     "tag": "projected",
+     "expect": "the friends laugh"
+    },
+    {
+     "m": "m10",
+     "frame": true,
+     "at": "laugh",
+     "phase": "card",
+     "tag": "sample",
+     "expect": "the last card"
+    }
+   ]
+  },
+  "B": {
+   "about": "one note, then hand over",
+   "steps": [
+    {
+     "move": "play",
+     "degree": 4,
+     "t": 0.0
+    },
+    {
+     "move": "tag",
+     "channel": "metal",
+     "t": 1.2
+    },
+    {
+     "m": "m06",
+     "frame": true,
+     "move": "handOver",
+     "t": 1.4,
+     "tag": "real",
+     "expect": "handed over after one note"
+    },
+    {
+     "m": "m07",
+     "frame": true,
+     "at": 4.2,
+     "tag": "projected"
+    },
+    {
+     "m": "m08",
+     "frame": true,
+     "at": "silence",
+     "tag": "projected"
+    }
+   ]
+  },
+  "C": {
+   "about": "just listen tonight",
+   "steps": [
+    {
+     "m": "m06",
+     "frame": true,
+     "move": "pass",
+     "t": 0.0,
+     "tag": "real",
+     "expect": "a pass; nothing played"
+    },
+    {
+     "m": "m07",
+     "frame": true,
+     "at": 6.4,
+     "tag": "projected"
+    },
+    {
+     "m": "m08",
+     "frame": true,
+     "at": "silence",
+     "tag": "projected"
+    }
+   ]
+  },
+  "D": {
+   "about": "the same four notes, played quickly (a different pace)",
+   "steps": [
+    {
+     "move": "play",
+     "degree": 1,
+     "t": 0.0
+    },
+    {
+     "move": "play",
+     "degree": 3,
+     "t": 0.5
+    },
+    {
+     "move": "play",
+     "degree": 0,
+     "t": 1.0
+    },
+    {
+     "move": "play",
+     "degree": 4,
+     "t": 1.5
+    },
+    {
+     "move": "tag",
+     "channel": "water",
+     "t": 1.8
+    },
+    {
+     "move": "handOver",
+     "t": 2.0
+    }
+   ]
+  },
+  "E": {
+   "about": "the refused moves, one per line",
+   "steps": [
+    {
+     "move": "play",
+     "degree": 2,
+     "t": 0.0
+    },
+    {
+     "move": "tag",
+     "channel": "fire",
+     "t": 0.8
+    },
+    {
+     "move": "handOver",
+     "t": 1.0
+    },
+    {
+     "move": "play",
+     "degree": 3,
+     "t": 2.0,
+     "refused": true
+    },
+    {
+     "move": "handOver",
+     "t": 2.5,
+     "refused": true
+    },
+    {
+     "move": "pass",
+     "t": 3.0,
+     "refused": true
+    },
+    {
+     "move": "tag",
+     "channel": "wood",
+     "t": 3.2,
+     "refused": true
+    }
+   ]
+  },
+  "F": {
+   "about": "a pass, then every other move is refused",
+   "steps": [
+    {
+     "move": "pass",
+     "t": 0.0
+    },
+    {
+     "move": "handOver",
+     "t": 1.0,
+     "refused": true
+    },
+    {
+     "move": "play",
+     "degree": 1,
+     "t": 1.5,
+     "refused": true
+    },
+    {
+     "move": "pass",
+     "t": 2.0,
+     "refused": true
+    }
+   ]
+  },
+  "G": {
+   "about": "hand over with nothing played: the stump's last note starts Oriel",
+   "steps": [
+    {
+     "move": "tag",
+     "channel": "earth",
+     "t": 3.8
+    },
+    {
+     "move": "handOver",
+     "t": 4.0
+    }
+   ]
+  },
+  "H": {
+   "about": "never hand over: the fire waits, no timer",
+   "steps": [
+    {
+     "move": "play",
+     "degree": 2,
+     "t": 0.0
+    },
+    {
+     "move": "play",
+     "degree": 1,
+     "t": 1.0
+    }
+   ]
+  },
+  "J": {
+   "about": "a hand-over with no tag is refused; tagging twice keeps the last; a bad channel is refused",
+   "steps": [
+    {
+     "move": "play",
+     "degree": 2,
+     "t": 0.0
+    },
+    {
+     "move": "handOver",
+     "t": 1.0,
+     "refused": true
+    },
+    {
+     "move": "tag",
+     "channel": "cheese",
+     "t": 1.2,
+     "refused": true
+    },
+    {
+     "move": "tag",
+     "channel": "fire",
+     "t": 1.4
+    },
+    {
+     "move": "tag",
+     "channel": "earth",
+     "t": 1.6
+    },
+    {
+     "move": "handOver",
+     "t": 2.0
+    }
+   ]
+  }
+ }
+}

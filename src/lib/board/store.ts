@@ -27,7 +27,14 @@ export function batchIds(heads: { id: string; bytes: number }[], maxBytes = BATC
 /** Heads to read: a posted row that board-pull has recorded is on main and the board page skips it, so the page's
  * read can leave it out (council pass board-store-size-1, 2026-10-31). Exported for the test. */
 export function readableHeads<T extends { collection: string; recorded: boolean }>(heads: T[], leaveOutRecordedRows: boolean): T[] {
-  return leaveOutRecordedRows ? heads.filter((h) => !(h.collection === 'rows' && h.recorded)) : heads
+  // `records` are the council's record-only files, kept in the store and served one at a time at
+  // GET /api/board/records/<id>; the page never reads them from this list, and they were 1.5 MB of the 3.98 MB read
+  // on 2026-11-09 (council pass board-store-size-1).
+  // `resolved` (his settled answers, one document each) reaches the page through /board/data.js, never through this
+  // read: the page's store shim has no resolved collection. They were 1.15 MB of the 2.00 MB read on 2026-11-11.
+  return leaveOutRecordedRows
+    ? heads.filter((h) => h.collection !== 'records' && h.collection !== 'resolved' && !(h.collection === 'rows' && h.recorded))
+    : heads
 }
 
 /** The latest document per (collection, docId): what the claude.ai store used to hold. With leaveOutRecordedRows, the
@@ -74,4 +81,47 @@ export async function unrecordedSaves(board: string) {
     db.boardSave.count({ where: { board, recordedAt: null, record: { not: null } } }),
   ])
   return { oldestReceivedAt: oldest?.receivedAt ?? null, count, held }
+}
+
+/** Saves still within this many ms of arriving are sent again on the next ask: a save whose transaction began earlier
+ * can commit after a later number is read, and a cursor that skipped past it would lose it. The page applies a save
+ * only when its number is newer than what it holds for that document, so sending one twice changes nothing. */
+export const SETTLE_MS = 10_000
+export const CHANGES_LIMIT = 200
+
+export type Change = { seq: number; collection: string; docId: string; data: Record<string, unknown> }
+
+/**
+ * The change log (live board step 2): every save on a board after number `after`, oldest first, at most `limit`, and
+ * the number to ask from next. `next` moves past a save only once it has settled (SETTLE_MS), so recent saves come again
+ * until then; `more` says the limit cut the answer and the caller should ask again at once.
+ */
+export async function changesAfter(board: string, after: number, opts: { limit?: number; now?: number } = {}) {
+  const limit = opts.limit ?? CHANGES_LIMIT, now = opts.now ?? Date.now()
+  const rows = await db.boardSave.findMany({
+    where: { board, seq: { gt: BigInt(after) } }, orderBy: { seq: 'asc' }, take: limit,
+    select: { seq: true, collection: true, docId: true, data: true, receivedAt: true },
+  })
+  return foldChanges(rows, after, limit, now)
+}
+
+/** The pure half of changesAfter, exported for the test. */
+export function foldChanges(rows: { seq: bigint | number; collection: string; docId: string; data: unknown; receivedAt: Date }[],
+                            after: number, limit: number, now: number) {
+  let next = after, settled = true
+  const changes: Change[] = rows.map((r) => {
+    const seq = Number(r.seq)
+    if (settled && now - r.receivedAt.getTime() >= SETTLE_MS) next = seq
+    else settled = false
+    return { seq, collection: r.collection, docId: r.docId, data: r.data as Record<string, unknown> }
+  })
+  return { changes, next, more: rows.length >= limit && settled }
+}
+
+/** Where a full read starts the log (0 when empty): the newest number that has settled (SETTLE_MS), taken before the
+ * documents are read, so the changes after it cover every save the read could have missed. */
+export async function settledSeq(board: string, now = Date.now()): Promise<number> {
+  const r = await db.boardSave.findFirst({ where: { board, receivedAt: { lt: new Date(now - SETTLE_MS) } },
+    orderBy: { seq: 'desc' }, select: { seq: true } })
+  return r ? Number(r.seq) : 0
 }

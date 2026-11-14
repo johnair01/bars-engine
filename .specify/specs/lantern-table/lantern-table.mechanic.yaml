@@ -1,0 +1,47 @@
+# The lantern table. Proposed by the Lantern Hall strand (reel v6, 2026-11-01; callsheet council/callsheets/lantern-hall.md)
+# and written by art direction ad2 (2026-11-02) after his note on lh-table-look-1: "The intake is pretty bad. It's
+# violating the rules of making thing as cards and dashboards. It's not immersive and needs another art direction pass".
+# The intake is the table's first beat, played with the hands on table B; the three directions it was drawn in are in
+# council/callsheets/stills/2026-11-02-lantern-intake-ad2/.
+name: lantern-table
+player_verb: walk the lantern-lit hall to an empty hex table, sit, and set your block out on the tabletop with your hands, then dissolve it a move at a time
+world_response: each intake step leaves an object on or over the table (a tag on the lantern, the well lit, the flame or the scale set, the truths turned, six keep stones glazed), the camera rises from the seat until the table is the board, and every strike changes a stone you can see
+emotion_bent: fear
+how_it_bends: the reservations that stop you become six stones you can hold, name and weigh, so a fear you could not look at becomes a piece on a board you can play
+beats:
+  - beat: goal
+    hands: hang a tag on the lantern's cord (A, C) or stamp a brass plate at the far edge (B)
+    bends: overwhelm into one named aim
+  - beat: desired feeling (gold)
+    hands: drop a gem in the well (A), turn the well's ring to it (B), pour gold sand into the well (C)
+    bends: sadness into longing with a direction
+  - beat: current feeling (lead, intensity)
+    hands: turn the lantern's flame down (A), pull the lead lever (B), pour lead shot into the scale pan (C)
+    bends: numbness into a weight you can measure
+  - beat: truth (one per channel, toggled)
+    hands: flip a rim stone (A), flip a toggle (B), set a cup upright or turn it over (C)
+    bends: shame into what is simply so
+  - beat: reservations (six beliefs as six keeps)
+    hands: set six stones into the six cells (A, C), press each cell and a stone rises (B)
+    bends: fear into pieces on a board
+  - beat: tags (channels at Minor, Medium, Major; untagged in fog; a turned-off reservation a fogged keep)
+    hands: brush glaze down from a stone's crown (A), click a three-notch collar (B), pour a sand ring round it (C)
+    bends: anger into knowing where the heat is
+reference: the reel v6 intake order (artifacts/lantern-hall/v6/); go stones and a tea table; a scale in an apothecary
+replaces: an intake form, a feelings questionnaire, a row of chips under the thumb, a card per step
+standard: a player can go from sitting down to a dealt table of six keeps with only their hands on objects, in under three minutes, typing nothing unless they choose to
+tried_in: port 1 (bars-engine #513) as cards and chips under the thumb: wrong, his note on lh-table-look-1; ad2 stills, look lh-intake-look-1
+status: proposed
+feel_status: proposed by art direction ad2 on 2026-11-02; every number is a proposal until Wendell looks
+feel:
+  response: each object settles in 0.4 s with a sound; the camera rises from seat to top-down in about 1.2 s with no cut
+  forgiveness: any object can be picked up again and changed until the first move; nothing is lost on leaving the table
+  budget: sit to dealt table in under 180 s
+  reduced_motion: objects appear in place, the camera cuts to top-down
+failure: an intake that falls back to a list of choices stops being a table and becomes a form, and he named that failure on lh-table-look-1
+engine_status: engine in bars-engine src/lib/lantern/engine.ts (#505); the intake shape is the reel's intake/game doc
+engine:
+  frame: one three.js scene; the intake objects are meshes on table B, picked by tap or by the hand's reach
+  replay: the intake saves as the reel's intake/game shape, so a table can be dealt again from it
+  count: 1 goal, 1 to 2 wants, 1 now, 5 truths, 6 keeps, up to 5 tags a keep
+  at_cap: a seventh stone has no cell and is not offered

@@ -40,6 +40,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Float Without Diving',
+      bodyText:
+        'Water holds you up when you stop pushing. Breathe, and let your attention rest on the surface for one minute without going deeper. Write down what the surface showed you.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'lamenth',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let Another Current In',
+      bodyText:
+        'Choose one person and let their current run through a conversation without steering it back to yours. Write down where the two currents met, and what moved.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'lamenth',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'What Have You Pooled in Stagnation?',
       bodyText:
         'Water that does not move becomes stagnant. What situation, commitment, or emotional state has been still for too long — pooling, going flat, losing oxygen? Name it. Lamenth knows the difference between patient depth and stuck water.',

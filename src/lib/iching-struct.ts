@@ -18,26 +18,10 @@ interface HexagramStruct {
     lower: Trigram
 }
 
-// Full 64 mapping (simplified for MVP - I will fill 1-64 based on standard King Wen or just programmatic logic if I had the algo, but explicit map is safer)
-// Since I don't have the full 64 map in memory, I'll generate a placeholder pattern or fill common ones.
-// User said "randomly generated set of 64". The MAPPING itself is fixed (Hex 1 is Heaven/Heaven).
-// I will populate a few key ones and default others for MVP, OR define an array if I can recall King Wen.
-// King Wen sequence is arbitrary.
-// I'll implement a helper that returns random trigrams for unmapped IDs if specific accuracy isn't critical, 
-// BUT the user seems esoteric. 
-// I'll define the first 8 and use a modulo for the rest to ensure coverage, 
-// OR better: I'll assume the helper function `getHexagramStructure(id)` does a DB lookup if we stored it?
-// The schema `Bar` has `name` and `tone`. It does NOT have trigram structure fields.
-// I should have added `structure` to `Bar` model.
-// But plan said `src/lib/iching-struct.ts`.
-// I will create a function that deterministically maps ID to upper/lower based on mathematical binary sequence (Fuxi) or just a static map.
-// Let's use a static map for the first 8 and a deterministic hash for the rest to ensure distribution.
-
-// Actually, I can just assign them Randomly for the "Game" version since the sequence is shuffled anyway.
-// But "Hexagram 1" IS "The Creative" (Heaven/Heaven).
-// If the Bar with ID 1 is "The Creative", it MUST match.
-// I'll try to be accurate for at least the first few.
-
+// The King Wen table for all 64 hexagrams: upper and lower trigram. Generated from
+// public/between/iching/hexagrams.json (the coin table's table, checked line by line against the trigrams);
+// src/lib/__tests__/iching-struct.test.ts keeps the two in step. Until 2026-11-07 only ten entries were filled and
+// a binary fallback guessed the rest, which was wrong for 54 of 64 (council position ic2-hexagram-table).
 export const HEXAGRAM_STRUCTURE: Record<number, HexagramStruct> = {
     1: { upper: 'Heaven', lower: 'Heaven' },
     2: { upper: 'Earth', lower: 'Earth' },
@@ -47,28 +31,72 @@ export const HEXAGRAM_STRUCTURE: Record<number, HexagramStruct> = {
     6: { upper: 'Heaven', lower: 'Water' },
     7: { upper: 'Earth', lower: 'Water' },
     8: { upper: 'Water', lower: 'Earth' },
-    15: { upper: 'Earth', lower: 'Mountain' }, // Modesty/Humility
-    20: { upper: 'Wind', lower: 'Earth' },     // Contemplation/View
-    // A simple filler for 9-64 to ensure playability without typing 64 entries manually in this turn.
-    // I'll use a function to derive them if missing.
+    9: { upper: 'Wind', lower: 'Heaven' },
+    10: { upper: 'Heaven', lower: 'Lake' },
+    11: { upper: 'Earth', lower: 'Heaven' },
+    12: { upper: 'Heaven', lower: 'Earth' },
+    13: { upper: 'Heaven', lower: 'Fire' },
+    14: { upper: 'Fire', lower: 'Heaven' },
+    15: { upper: 'Earth', lower: 'Mountain' },
+    16: { upper: 'Thunder', lower: 'Earth' },
+    17: { upper: 'Lake', lower: 'Thunder' },
+    18: { upper: 'Mountain', lower: 'Wind' },
+    19: { upper: 'Earth', lower: 'Lake' },
+    20: { upper: 'Wind', lower: 'Earth' },
+    21: { upper: 'Fire', lower: 'Thunder' },
+    22: { upper: 'Mountain', lower: 'Fire' },
+    23: { upper: 'Mountain', lower: 'Earth' },
+    24: { upper: 'Earth', lower: 'Thunder' },
+    25: { upper: 'Heaven', lower: 'Thunder' },
+    26: { upper: 'Mountain', lower: 'Heaven' },
+    27: { upper: 'Mountain', lower: 'Thunder' },
+    28: { upper: 'Lake', lower: 'Wind' },
+    29: { upper: 'Water', lower: 'Water' },
+    30: { upper: 'Fire', lower: 'Fire' },
+    31: { upper: 'Lake', lower: 'Mountain' },
+    32: { upper: 'Thunder', lower: 'Wind' },
+    33: { upper: 'Heaven', lower: 'Mountain' },
+    34: { upper: 'Thunder', lower: 'Heaven' },
+    35: { upper: 'Fire', lower: 'Earth' },
+    36: { upper: 'Earth', lower: 'Fire' },
+    37: { upper: 'Wind', lower: 'Fire' },
+    38: { upper: 'Fire', lower: 'Lake' },
+    39: { upper: 'Water', lower: 'Mountain' },
+    40: { upper: 'Thunder', lower: 'Water' },
+    41: { upper: 'Mountain', lower: 'Lake' },
+    42: { upper: 'Wind', lower: 'Thunder' },
+    43: { upper: 'Lake', lower: 'Heaven' },
+    44: { upper: 'Heaven', lower: 'Wind' },
+    45: { upper: 'Lake', lower: 'Earth' },
+    46: { upper: 'Earth', lower: 'Wind' },
+    47: { upper: 'Lake', lower: 'Water' },
+    48: { upper: 'Water', lower: 'Wind' },
+    49: { upper: 'Lake', lower: 'Fire' },
+    50: { upper: 'Fire', lower: 'Wind' },
+    51: { upper: 'Thunder', lower: 'Thunder' },
+    52: { upper: 'Mountain', lower: 'Mountain' },
+    53: { upper: 'Wind', lower: 'Mountain' },
+    54: { upper: 'Thunder', lower: 'Lake' },
+    55: { upper: 'Thunder', lower: 'Fire' },
+    56: { upper: 'Fire', lower: 'Mountain' },
+    57: { upper: 'Wind', lower: 'Wind' },
+    58: { upper: 'Lake', lower: 'Lake' },
+    59: { upper: 'Wind', lower: 'Water' },
+    60: { upper: 'Water', lower: 'Lake' },
+    61: { upper: 'Wind', lower: 'Lake' },
+    62: { upper: 'Thunder', lower: 'Mountain' },
+    63: { upper: 'Water', lower: 'Fire' },
+    64: { upper: 'Fire', lower: 'Water' },
 }
 
 export function getHexagramStructure(id: number): HexagramStruct {
-    if (HEXAGRAM_STRUCTURE[id]) return HEXAGRAM_STRUCTURE[id]
-
-    // Fallback: Deterministic pseudo-mapping based on binary standard (Fuxi)
-    // 0-7 map to 8 trigrams.
-    // Upper = (id % 8). Lower = (Math.floor(id / 8) % 8).
-    // This covers all 64 combinations uniquely (0-63).
-    // Adjust for 1-based indexing.
-    const idx = id - 1
-    const lowerIdx = idx % 8
-    const upperIdx = Math.floor(idx / 8) % 8
-
-    return {
-        lower: TRIGRAMS[lowerIdx],
-        upper: TRIGRAMS[upperIdx]
-    }
+    const s = HEXAGRAM_STRUCTURE[id]
+    if (s) return s
+    // Out of range (0, 65, a stray id): wrap into 1 to 64 so callers keep getting a real hexagram, as the old
+    // fallback always returned something.
+    const k = Number.isFinite(id) ? Math.trunc(id) : 1
+    const n = (((k - 1) % 64) + 64) % 64 + 1
+    return HEXAGRAM_STRUCTURE[n]
 }
 
 const SPOT_CHECKS: Partial<Record<number, {

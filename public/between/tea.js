@@ -53,6 +53,9 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
   const cup = new THREE.Group();
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(CUP.r, CUP.r * 0.78, CUP.h, 14), clay); cup.add(bowl);
   const ear = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.006, 6, 10), clay); ear.position.set(CUP.r * 0.9, 0.004, 0); ear.rotation.y = Math.PI / 2; cup.add(ear);
+  /* The tea's own colour (growth FR-005): each shelf pot brews its own. The surface shows once the cup is full. */
+  const surface = new THREE.Mesh(new THREE.CircleGeometry(CUP.r * 0.88, 14), new THREE.MeshBasicMaterial({ color: AMBER }));
+  surface.rotation.x = -Math.PI / 2; surface.position.y = CUP.h * 0.42; surface.visible = false; cup.add(surface);
   cup.traverse(o => { o.userData.noPaint = true; });
   g.add(cup);
 
@@ -127,7 +130,7 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     gv.set(grip.x, 0, grip.z).normalize().applyQuaternion(qt).multiplyScalar(GRIP * k);
     cup.position.copy(J.hand.worldToLocal(a.add(gv)));
   }
-  function detach() { attached = null; player = null; held = false; t0 = null; full = false; glowK = 0; stream.visible = false; putDown(); for (const m of [...steam, halo, ...motes]) m.visible = false; }
+  function detach() { attached = null; player = null; held = false; t0 = null; full = false; glowK = 0; stream.visible = false; surface.visible = false; putDown(); for (const m of [...steam, halo, ...motes]) m.visible = false; }
 
   /* Upright in the figure's frame, tipped `tilt` about its left-right line, and sized in metres at the figure's scale,
      whatever the forearm's turn and the build's bone scales. */
@@ -219,7 +222,7 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
   /* Steam while the cup is full, the halo round the head and motes drifting up from the heart while the savour lasts. */
   function glow(t, sv, dt) {
     glowK += (sv - glowK) * Math.min(1, dt * 5);          // eased again, so a frame drop never pops it
-    cup.getWorldPosition(cp); const k = attached.scale || 1;
+    cup.getWorldPosition(cp); const k = attached.scale || 1; surface.visible = full;
     steam.forEach((m, i) => {
       const ph = ((t / STEAM.life) + i / STEAM.n) % 1;
       m.visible = full && !!soft;
@@ -248,6 +251,8 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     pour(t, skip = 0) { if (t0 != null || held) return false; t0 = t; skipTo = skip; mode = "pour"; stream.visible = false; return true; },
     sip(t) { if (t0 != null || !held) return false; if (player) player.leaveHold(t - holdT0); t0 = t; mode = "sip"; return true; },
     stop() { detach(); },
+    /* tint: the colour of the pot being poured (growth.js TEAS), 0xrrggbb; null goes back to the kettle's amber. */
+    tint(hex) { const c = hex == null ? AMBER : hex; stream.material.color.setHex(c); surface.material.color.setHex(c); },
     running: () => t0 != null,
     state: () => last,   // the beat drawn last frame, for the probes
     freeze(sec) { frozen = sec; },   // probes only: hold the beat at sec seconds in (null lets it run)

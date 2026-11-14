@@ -63,7 +63,7 @@ export default function VoiceStyleGuidePage() {
         <div className="space-y-2">
           <div>
             <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Preferred cadence</p>
-            <p className="text-zinc-300 text-sm italic">You felt it. Good. Now say it.</p>
+            <p className="text-zinc-300 text-sm italic">Ask me what I had for breakfast. Then ask who poured the tea.</p>
           </div>
           <div>
             <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Avoid</p>

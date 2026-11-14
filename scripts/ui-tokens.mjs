@@ -32,11 +32,11 @@ export function readElements(src = readFileSync(SRC, 'utf8')) {
 }
 
 /* The semantic block. Dusk is his pick (Daylight 36 sits on the dusk side; it turns at 40): the warm dark of the
-   poster stills. Light and dark are the Council Board's own block, so the board keeps its colours when it moves over. */
+   poster stills, and the dark of every surface. Light is the Council Board's own light block. The board's grey dark
+   block is gone: a phone set to dark now opens in dusk everywhere. */
 export const SCHEMES = {
   dusk:  { bg: '#140e0b', panel: '#2b1e16', ink: '#f6ecdc', muted: '#c9b49a', line: '#4a3828', accent: '#5fc2ba', 'accent-ink': '#0f1a19', warn: '#e8a06e', ok: '#7cc488' },
   light: { bg: '#f6f5f1', panel: '#ffffff', ink: '#1d1f1e', muted: '#5d625f', line: '#d9d8d1', accent: '#1f6f6a', 'accent-ink': '#ffffff', warn: '#9a4b1e', ok: '#2f7a3b' },
-  dark:  { bg: '#17191a', panel: '#1f2224', ink: '#ece9e1', muted: '#a4a8a3', line: '#33373a', accent: '#5fc2ba', 'accent-ink': '#0f1a19', warn: '#e8a06e', ok: '#7cc488' },
 }
 // his dials, 0..1 (Paper 0 to Machine 1, Quiet 0 to Loud 1, Dusk 0 to Daylight 1)
 export const DIALS = { paper: 0.17, loud: 0.92, daylight: 0.36 }
@@ -74,14 +74,11 @@ ${scheme('dusk', 'color-scheme: dark;')}
 :root[data-theme="light"] {
 ${scheme('light', 'color-scheme: light;')}
 }
-:root[data-theme="dark"] {
-${scheme('dark', 'color-scheme: dark;')}
-}
-@media (prefers-color-scheme: light) { :root[data-theme="auto"] {
+/* The theme follows the phone (Wendell on uu-theme-follow, 2026-11-02: "Turn to light when the phone is on light").
+   A phone set to dark gets dusk, his dialled look; a phone set to light gets light. data-theme="dusk" or "dark" holds a
+   page in dusk and data-theme="light" holds it in light; no data-theme, or "auto", follows the phone. */
+@media (prefers-color-scheme: light) { :root:not([data-theme="dusk"]):not([data-theme="dark"]) {
 ${scheme('light', 'color-scheme: light;')}
-} }
-@media (prefers-color-scheme: dark) { :root[data-theme="auto"] {
-${scheme('dark', 'color-scheme: dark;')}
 } }
 `
 }

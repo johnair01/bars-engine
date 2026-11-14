@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { LaunchOffers } from './LaunchOffers'
-import { LAUNCH_GOAL_CENTS, formatPrice } from '@/lib/launch/offers'
 import { BarnRaisingBar } from '@/components/event/BarnRaisingBar'
 import { getBarnSnapshot } from '@/actions/barn'
 import type { BarnState } from '@/lib/event/barn-raising'
@@ -75,8 +74,7 @@ export default async function LaunchPage() {
                 {launchContent.hero.title}
               </h1>
               <p className="max-w-2xl text-base leading-relaxed text-[#a09e98]">
-                {launchContent.hero.body} Every purchase fuels the{' '}
-                {formatPrice(LAUNCH_GOAL_CENTS)} launch wall.
+                {launchContent.hero.body}
               </p>
             </div>
 
@@ -129,7 +127,7 @@ export default async function LaunchPage() {
             </Link>
             .
           </p>
-          <p>Payments are handled securely by Gumroad. Physical goods ship after the print run.</p>
+          <p>Payments are handled securely by Gumroad. The deck and handbook in print ship after the print run.</p>
         </footer>
       </div>
     </main>

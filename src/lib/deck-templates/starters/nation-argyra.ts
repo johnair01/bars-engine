@@ -40,6 +40,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Let the Metal Cool',
+      bodyText:
+        'Metal takes its shape in the pause after the heat. Breathe, and let one thing you are refining stay unfinished for a minute. Write down what you see in it once you stop polishing.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'argyra',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Receive a Rougher Draft',
+      bodyText:
+        'Ask one person to show you something they have not refined, and say nothing about the edges. Take in what it is trying to be. Write down the idea you found under the roughness.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'argyra',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'What Needs to Be Released to Become Pure?',
       bodyText:
         'Refining removes what does not belong. What commitment, relationship, role, or habit are you carrying that dilutes rather than strengthens you? Name it. Discernment is not cruelty — it is the discipline of Metal.',

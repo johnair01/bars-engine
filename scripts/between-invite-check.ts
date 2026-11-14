@@ -306,6 +306,29 @@ async function main() {
   let A = await signIn('pl-planter', { viewport: { width: 1024, height: 700 } }, browser)
   // a phone's size, touch and agent; drawn at one pixel per point, since the software WebGL here draws three times slower at 3x
   let Bp = await signIn('pl-partner', { ...(devices['iPhone 13'] ?? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), deviceScaleFactor: 1 }, phone)
+  /* Stills (BETWEEN_STILLS=<folder>): instead of the steps, the planter opens each preview address and a still is taken
+     at a desktop and a phone size, so a look can show what the page draws (Six-faces-council friendship-between build
+     round 1). BETWEEN_STILLS_URLS overrides the list: name=query;name=query. */
+  const stillsDir = process.env.BETWEEN_STILLS
+  if (stillsDir) {
+    mkdirSync(stillsDir, { recursive: true })
+    const list = (process.env.BETWEEN_STILLS_URLS || 'nook-hearth=nook=1&sit=hearth;nook-table=nook=1&coins=self;hollow-table=room=standin&coins=self')
+      .split(';').filter(Boolean).map(kv => { const i = kv.indexOf('='); return [kv.slice(0, i), kv.slice(i + 1)] as const })
+    try {
+      for (const [p, size] of [[A, 'desk'], [Bp, 'phone']] as const) {
+        for (const [name, q] of list) {
+          // a fresh tab for each still: a page drawing in software WebGL can be slower to unload than a navigation waits
+          const t = await p.context().newPage()
+          await t.goto(`${base}/ontology-game/between?${q}`, { waitUntil: 'commit' }); await ready(t)
+          await t.waitForTimeout(Number(process.env.BETWEEN_STILLS_WAIT) || 9_000)
+          await t.screenshot({ path: join(stillsDir, `${name}-${size}.png`), timeout: 90_000, animations: 'disabled', caret: 'hide' })
+          console.log(`still ${name}-${size}.png`)
+          await t.close({ runBeforeUnload: false } as never)
+        }
+      }
+    } finally { await browser.close(); await phone.close(); srv.close() }
+    return
+  }
   let roomId = '', link = ''
   try {
     // the planter plants a spark toward the partner and goes into it
