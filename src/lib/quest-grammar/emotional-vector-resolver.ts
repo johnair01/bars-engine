@@ -12,49 +12,9 @@
 import type { EmotionalVector, EmotionalChannel } from './types'
 import type { AlchemyAltitude } from '../alchemy/types'
 import { parseVectorString } from './types'
+import { KEYWORD_CHANNEL as CHANNEL_KEYWORDS, DISSATISFIED_KEYWORDS, SATISFIED_KEYWORDS } from './lexicon'
 
-// ---------------------------------------------------------------------------
-// Keyword → Channel mappings
-// ---------------------------------------------------------------------------
-
-const CHANNEL_KEYWORDS: Record<string, EmotionalChannel> = {
-  // Fear
-  fear: 'Fear', afraid: 'Fear', anxiety: 'Fear', anxious: 'Fear',
-  scared: 'Fear', frightened: 'Fear', terrified: 'Fear',
-  dread: 'Fear', worried: 'Fear', worry: 'Fear', nervous: 'Fear',
-  // Anger
-  anger: 'Anger', angry: 'Anger', frustration: 'Anger', frustrated: 'Anger',
-  rage: 'Anger', fury: 'Anger', irritation: 'Anger', annoyed: 'Anger',
-  resentment: 'Anger', bitterness: 'Anger', hostile: 'Anger',
-  // Sadness
-  sadness: 'Sadness', sad: 'Sadness', grief: 'Sadness', mourn: 'Sadness',
-  sorrow: 'Sadness', loss: 'Sadness', lonely: 'Sadness', loneliness: 'Sadness',
-  heartbreak: 'Sadness', hurting: 'Sadness', hurt: 'Sadness',
-  // Joy
-  joy: 'Joy', happy: 'Joy', happiness: 'Joy', delight: 'Joy',
-  bliss: 'Joy', pleasure: 'Joy', excitement: 'Joy', excited: 'Joy',
-  wonder: 'Joy', awe: 'Joy', love: 'Joy',
-  gratitude: 'Joy', thankfulness: 'Joy',
-  // Neutrality
-  neutrality: 'Neutrality', numb: 'Neutrality', numbness: 'Neutrality',
-  empty: 'Neutrality', void: 'Neutrality', stillness: 'Neutrality',
-  peace: 'Neutrality', calm: 'Neutrality', presence: 'Neutrality',
-}
-
-/** Keywords that indicate altitude "dissatisfied" */
-const DISSATISFIED_KEYWORDS = [
-  'confused', 'overwhelmed', 'lost', 'stuck', 'blocked',
-  'anxious', 'worried', 'afraid', 'angry', 'sad',
-  'frustrated', 'stranded', 'alone', 'broken',
-]
-
-/** Keywords that indicate altitude "satisfied" */
-const SATISFIED_KEYWORDS = [
-  'clarity', 'resolution', 'breakthrough', 'understanding',
-  'peace', 'connection', 'flow', 'ease',
-  'joy', 'excitement', 'bliss', 'gratitude',
-  'courage', 'bravery', 'acceptance',
-]
+// Keyword → Channel mappings, and the satisfied and dissatisfied keywords: ./lexicon.ts (shared with the lantern table)
 
 // ---------------------------------------------------------------------------
 // BarType → Default vector patterns

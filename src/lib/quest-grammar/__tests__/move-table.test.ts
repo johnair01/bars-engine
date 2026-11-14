@@ -65,3 +65,7 @@ if (fs.existsSync(council)) {
 }
 
 console.log('move-table tests passed')
+
+// The hollow's copy under public/calrunia (read by charge-engine.js) is the same table.
+const publicCopy = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../../public/calrunia/move-table.json'), 'utf8'))
+assert.deepEqual(publicCopy, table, 'public/calrunia/move-table.json differs from the src copy')

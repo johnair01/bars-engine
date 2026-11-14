@@ -23,7 +23,7 @@ tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.m
 
 - Start: `scripts/local/dev.sh dev` (local Postgres, a database for this workspace, `next dev` on a free port; prints
   the URL). Sign in as `admin@admin.local` / `password`, or player id `test-admin`. Stop: `scripts/local/dev.sh stop`.
-- Before pushing: `scripts/local/check.sh --build`. It replaces the Vercel preview as the build check for self-merge;
+- Before pushing: `scripts/local/check.sh --build`. It replaces the Vercel preview as the build check;
   name the command and its result in the pull request.
 - Show Wendell: a cloud session's `localhost` is the container, which he cannot open. Take pictures with
   `AS=test-admin OUT=/mnt/project-files/looks/<name> scripts/local/dev.sh shot /page ...`, read them yourself, then
@@ -33,6 +33,15 @@ tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.m
   `vercel env pull` to get a database, and do not create hosted preview deployments as routine testing.
 - A change that only Vercel can show (middleware, crons, Blob, Vercel-only env) says "needs hosted check" in its pull
   request; the options are in the guide, section 7.
+
+## Ship once a day: do not merge your own pull request
+
+Wendell, 2026-11-04 (council board `lf-daily-ship`, answer A). Every merge to `main` is a production build, so threads
+no longer self-merge in bars-engine. When `scripts/local/check.sh --build` is green and no look gates the pull request
+(`board/answered.py --pr N` in the council repo), mark it ready for review and add the `ship-next` label, then stop. One
+shipping session a day merges every `ship-next` pull request in one batch (`docs/LOCAL_FIRST_TESTING.md` section 7).
+Only an urgent fix (production down, payment or sign-in broken) merges straight to `main` by hand, and its description
+says why. Council pull requests are unchanged.
 
 ## Hand off before the context passes 150,000 tokens
 
@@ -81,26 +90,10 @@ The Portland community around this project has a strong allergy to AI. Design ch
 
 TypeScript, Next.js 14+, Prisma (PostgreSQL), Tailwind CSS, AI SDK. Source in `src/`, tests in `tests/`.
 
-## Spec Workflow
+## Spec work
 
-- **Specs**: `.specify/specs/<feature>/` — each feature has spec.md, plan.md, tasks.md
-- **Backlog prompts**: `.specify/backlog/prompts/` — paste into Claude Code for spec-driven work
-- **Objective stack**: [.specify/backlog/BACKLOG.md](.specify/backlog/BACKLOG.md)
-
-### Creating or expanding spec kits (read first)
-
-Before authoring new feature specs, **read** [.agents/skills/spec-kit-translator/SKILL.md](.agents/skills/spec-kit-translator/SKILL.md) and scaffold from [.specify/spec-template.md](.specify/spec-template.md). The three-file folder alone is not enough: include Purpose/Practice where applicable, design decisions, conceptual model (WHO/WHAT/WHERE when relevant), data/API contracts before UI-heavy work, and a **Verification Quest** for user-facing changes (see skill § Verification Quests). After editing `BACKLOG.md`, run `npm run backlog:seed` per the skill. Rule reference: [.cursor/rules/spec-kit-plans.mdc](.cursor/rules/spec-kit-plans.mdc).
-
-## Agent Context Refresh
-
-Run when switching branches or after pulling new specs:
-
-```bash
-./.specify/scripts/bash/update-agent-context.sh claude
-```
-
-- On a feature branch: uses that spec's plan.md
-- On main: uses specs/main/plan.md
+Spec kits (`.specify/specs/`), the backlog, the agent-context refresh and Ouroboros (`ooo`) are in the skill
+`.claude/skills/spec-workflow/SKILL.md`; load it when the work touches a spec.
 
 ## Fail-Fix Workflow
 
@@ -127,6 +120,4 @@ See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 <!-- ooo:START -->
 <!-- ooo:VERSION:0.14.0 -->
 
-## Ouroboros
-
-Specification-first `ooo` commands and agents: [docs/OUROBOROS.md](docs/OUROBOROS.md) (moved out of this file 2026-10-30 so every session that attaches this repo opens smaller).
+Ouroboros (`ooo`): `.claude/skills/spec-workflow/SKILL.md`.

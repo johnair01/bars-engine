@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
+vi.mock('@/lib/db', () => ({ db: {} }))
 
-import { resetWakeThrottle, wakePickup, WAKE_THROTTLE_MS } from '../wake'
+import { openWakeWindow, resetWakeThrottle, wakePickup, wakePickupBatched, wakeStatus, WAKE_THROTTLE_MS } from '../wake'
 
 describe('answers start the work: the pickup wake', () => {
   afterEach(() => {
@@ -34,5 +35,58 @@ describe('answers start the work: the pickup wake', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('no', { status: 403 })))
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     expect(await wakePickup('x')).toBe('failed')
+  })
+
+  it('reports whether it is set and which routine, never the token', async () => {
+    expect(wakeStatus()).toMatchObject({ urlSet: false, tokenSet: false, routine: null })
+    process.env.PICKUP_ROUTINE_FIRE_URL = 'https://api.anthropic.com/v1/claude_code/routines/trig_abc123/fire'
+    process.env.PICKUP_ROUTINE_TOKEN = 'secret'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('no', { status: 401 })))
+    await wakePickup('x', 5_000_000)
+    const s = wakeStatus()
+    expect(s).toMatchObject({ urlSet: true, tokenSet: true, routine: 'trig_abc123' })
+    expect(s.lastOnThisInstance).toMatchObject({ result: 'failed', status: 401 })
+    expect(JSON.stringify(s)).not.toContain('secret')
+  })
+
+  // A tiny in-memory stand-in for the WorkLane and WorkTicket calls the window uses.
+  const fakeDb = (ready: number) => {
+    let row: { dryUntil: Date | null } | null = null
+    return {
+      workLane: {
+        updateMany: async ({ where, data }: any) => {
+          const now: Date = where.OR[1].dryUntil.lte
+          if (row && (!row.dryUntil || row.dryUntil <= now)) { row.dryUntil = data.dryUntil; return { count: 1 } }
+          return { count: 0 }
+        },
+        create: async ({ data }: any) => { if (row) throw new Error('unique'); row = { dryUntil: data.dryUntil } },
+      },
+      workTicket: { count: async () => ready },
+    } as any
+  }
+
+  it('opens one window; a save inside it joins it', async () => {
+    const db = fakeDb(1), t = new Date(1_000_000)
+    expect(await openWakeWindow(db, t, 60_000)).toBe(true)
+    expect(await openWakeWindow(db, new Date(t.getTime() + 1_000), 60_000)).toBe(false)
+  })
+
+  it('fires once for a burst of answers', async () => {
+    process.env.PICKUP_ROUTINE_FIRE_URL = 'https://api.anthropic.com/v1/claude_code/routines/trig_x/fire'
+    process.env.PICKUP_ROUTINE_TOKEN = 'tok'
+    const f = vi.fn().mockResolvedValue(new Response('{}', { status: 200 })); vi.stubGlobal('fetch', f)
+    const db = fakeDb(3), sleep = async () => undefined
+    const out = await Promise.all(['a', 'b', 'c'].map(r => wakePickupBatched(`answer to ${r}`, { db, sleep, windowMs: 60_000 })))
+    expect(out.filter(r => r === 'sent')).toHaveLength(1)
+    expect(out.filter(r => r === 'batched')).toHaveLength(2)
+    expect(f).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(f.mock.calls[0][1].body).text).toContain('3 answers waiting')
+  })
+
+  it('fires nothing when the deck was claimed during the window', async () => {
+    process.env.PICKUP_ROUTINE_FIRE_URL = 'https://x.test/fire'; process.env.PICKUP_ROUTINE_TOKEN = 'tok'
+    const f = vi.fn(); vi.stubGlobal('fetch', f)
+    expect(await wakePickupBatched('x', { db: fakeDb(0), sleep: async () => undefined })).toBe('nothing-ready')
+    expect(f).not.toHaveBeenCalled()
   })
 })

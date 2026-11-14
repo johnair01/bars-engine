@@ -19,13 +19,19 @@ export const dynamic = 'force-dynamic'
  * app now lives beside the caves. This route only checks the sign-in and hands out the page (src/lib/between/page.ts);
  * the scene is public/between/garden.js (the hollow and the creature in hollow.js and creature.js, round 2) and the store
  * is /api/between.
+ *
+ * Six-faces-council friendship-between build round 1 (2026-11-04): the nook's firebox glows with its fire (hollow.js M.soot)
+ * and the coin table's light sits low over the table (coin-table.js), so faces at the table are not lit hot.
  */
 
 export async function GET(req: NextRequest) {
   const player = await currentPlayer()
   if (!player) {
     const back = req.nextUrl.pathname + req.nextUrl.search
-    return NextResponse.redirect(new URL('/login?returnTo=' + encodeURIComponent(back), req.url))
+    // A friend who opens a spark's invitation link has no account yet: the first screen is "Create your account", with
+    // "Sign in" one tap away (Six-faces-council spec .specify/specs/friendcraft-deck FR-001). No invite keeps the sign-in.
+    const to = req.nextUrl.searchParams.get('invite') ? '/signup' : '/login'
+    return NextResponse.redirect(new URL(to + '?returnTo=' + encodeURIComponent(back), req.url))
   }
   return new NextResponse(withChalk(BETWEEN_PAGE), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin' },

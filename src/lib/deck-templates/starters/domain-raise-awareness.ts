@@ -38,6 +38,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Listen Before You Tell',
+      bodyText:
+        'You know something others do not. Breathe, and spend one minute listening to what the people nearest to it already say about it. Write down the word they use that you do not.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: 'RAISE_AWARENESS',
+      faceMoveType: null,
+    },
+    {
+      title: 'Hold a Place for Their Story',
+      bodyText:
+        'Invite one person closest to the issue to tell it in their own words, with no editing from you. Write down what they said that your version of the story left out.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: 'RAISE_AWARENESS',
+      faceMoveType: null,
+    },
+    {
       title: 'The Story That Is Not Being Told',
       bodyText:
         'What story is missing from the current conversation? Whose experience, whose data, whose perspective is absent? Name it. The missing story is often the most important one.',

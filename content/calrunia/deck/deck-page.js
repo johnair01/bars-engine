@@ -7,11 +7,14 @@
 // ?demo=1 plays the sample chart without writing to this device.
 const TH = window.__tradeHand;
 const params = new URLSearchParams(location.search);
-const DEMO = params.get("demo") === "1", BUILD = params.get("build") === "1";
+const DEMO = ["1", "return"].includes(params.get("demo")), BUILD = params.get("build") === "1";
 const now = () => new Date().toISOString();
 let S = (!DEMO && TH.store.get()) || TH.blank(now(), window.__tradeDeckChart);
 const save = () => { if (!DEMO) TH.store.put(S); };
-TH.deal(S, now()); TH.settleFog(S, now()); save();
+TH.deal(S, now()); TH.settleFog(S, now());
+// A disposable sample opens at the returning boat for the board's look. It never writes the player's store.
+if (params.get("demo") === "return") TH.release(S, "sent", now());
+save();
 const page = window.__tradeDeck = { ready: false, frames: 0, parts: PARTS.map((p) => p.id), build: BUILD, bubble: null, model: null };
 
 // ---- page --------------------------------------------------------------------------------------------------------------
@@ -49,15 +52,25 @@ const berthEmpty = () => !!S.crate && S.crate.state === "sent" && live.sending =
 const plankOut = () => !(live.sending > 0) && !berthEmpty();
 function where(x, z) {
   if (Math.abs(x - PIER.x) < PIER.w / 2 - 0.2 && z < PIER.z0 - 0.3 && z > PIER.z1 + 0.3) return "pier";
+  if (returnMoored()) {
+    if (x <= -PIER.w / 2 + 0.3 && x >= RET.x + 1.1 && Math.abs(z - RET_Z) < 0.32) return "return-plank";
+    const taper = Math.min(1, ((RET.z + 3.9) - z) / 1.8);
+    if (z > RET.z - 3.0 && taper > 0 && Math.abs(x - RET.x) < 1.45 * taper) return "return-boat";
+  }
   if (!plankOut()) return null;
   if (x >= PIER_EDGE - 0.3 && x <= BOAT_IN + 0.3 && Math.abs(z - PLZ) < 0.32) return "plank";
   const taper = Math.min(1, (z - (BERTH.z - 3.9)) / 1.8);
   if (z < BERTH.z + 3.0 && taper > 0 && Math.abs(x - BERTH.x) < 1.45 * taper) return "boat";
   return null;
 }
+// The west berth is independent of today's boat. It is walkable only after the returning boat moors.
+const RET_Y = RET.y - 0.35 + boatProto.userData.deckY, RET_Z = RET.z - 1.6;
+const RET_PIER = new THREE.Vector3(-PIER.w / 2 + 0.4, PIER.y, RET_Z);
+const RET_END = new THREE.Vector3(RET.x + 1.1, RET_Y, RET_Z);
+const returnMoored = () => !!live.ret && live.ret.come === 0 && !live.ret.leaving;
 const onDeck = (x, z) => !!where(x, z);
-const heightAt = (x, z) => { const w = where(x, z); if (w === "boat") return BOAT_Y; if (w === "plank") return PIER.y + (BOAT_Y - PIER.y) * Math.min(1, Math.max(0, (x - PIER_EDGE) / (BOAT_IN - PIER_EDGE))); return PIER.y; };
-const side = (x, z) => { const w = where(x, z); return w === "plank" ? (x - PIER_EDGE < BOAT_IN - x ? "pier" : "boat") : w; };
+const heightAt = (x, z) => { const w = where(x, z); if (w === "return-boat") return RET_Y; if (w === "return-plank") return PIER.y + (RET_Y - PIER.y) * Math.min(1, Math.max(0, (-x - PIER.w / 2) / (-(RET.x + 1.5) - PIER.w / 2))); if (w === "boat") return BOAT_Y; if (w === "plank") return PIER.y + (BOAT_Y - PIER.y) * Math.min(1, Math.max(0, (x - PIER_EDGE) / (BOAT_IN - PIER_EDGE))); return PIER.y; };
+const side = (x, z) => { const w = where(x, z); if (w === "return-plank") return x > -2 ? "pier" : "return-boat"; return w === "plank" ? (x - PIER_EDGE < BOAT_IN - x ? "pier" : "boat") : w; };
 
 // ---- the captain -------------------------------------------------------------------------------------------------------
 const player = { group: new THREE.Group(), pos: new THREE.Vector3(0, PIER.y, 7.0), path: [], then: null, mixer: null, acts: {}, walking: false };
@@ -65,7 +78,14 @@ const aboard = () => side(player.pos.x, player.pos.z) === "boat";
 // Walk to p, crossing the plank when p is on the other side of it.
 function goTo(p, then = null) {
   const a = side(player.pos.x, player.pos.z), b = side(p.x, p.z);
-  player.path = a && b && a !== b ? (a === "pier" ? [PIER_END, BOAT_END] : [BOAT_END, PIER_END]).map((v) => v.clone()).concat([p]) : [p];
+  const via = [];
+  if (a && b && a !== b) {
+    if (a === "return-boat") via.push(RET_END, RET_PIER);
+    if (a === "boat") via.push(BOAT_END, PIER_END);
+    if (b === "return-boat") via.push(RET_PIER, RET_END);
+    if (b === "boat") via.push(PIER_END, BOAT_END);
+  }
+  player.path = via.map((v) => v.clone()).concat([p]);
   player.then = then;
 }
 player.group.position.copy(player.pos); player.group.rotation.y = Math.PI; scene.add(player.group);
@@ -92,12 +112,12 @@ const near = (v) => {
 };
 
 // ---- live state the parts draw -----------------------------------------------------------------------------------------
-const live = { sending: null, crew: false, ringing: 0, rowing: -1 };
+const live = { sending: null, crew: false, ringing: 0, rowing: -1, ret: params.get("demo") === "return" && S.boats[0] ? { id: S.boats[0].id, come: 1, open: 0, kind: null } : null };
 const LEVEL = { stranger: 0, known: 0.33, trusted: 0.66, route: 1 };
 function st(t) {
   const waiting = !!S.crate && S.crate.state === "waiting";
   return { t, waiting, turned: TH.tideTurned(S) && !!S.crate, spiritSide: waiting && S.crate.spiritSide, sending: live.sending, berthEmpty: berthEmpty(), crew: live.crew || (S.crate && S.crate.state === "crew"),
-    ringing: live.ringing > t, rowing: live.rowing, fog: S.fog, tide: TH.tideLine(S, now()).level, routes: S.routes.length,
+    ret: live.ret, returningIndex: live.ret ? S.boats.filter((b) => !b.back).findIndex((b) => b.id === live.ret.id) : -1, ringing: live.ringing > t, rowing: live.rowing, fog: S.fog, tide: TH.tideLine(S, now()).level, routes: S.routes.length,
     boatsOut: Math.min(5, S.boats.filter((b) => !b.back).length - (live.sending != null ? 1 : 0)),
     ports: [0, 1, 2, 3, 4, 5].map((i) => (S.ports[i] ? LEVEL[S.ports[i].standing] : -1)) };
 }
@@ -113,7 +133,7 @@ function say(at, name, text, ...rows) {
 function hush() { bubble.hidden = true; anchor = null; page.bubble = null; }
 const btn = (text, fn, quiet) => { const b = el("button", quiet ? "quiet" : "", text); b.type = "button"; b.addEventListener("click", (e) => { e.stopPropagation(); fn(); }); return b; };
 const row = (...kids) => { const r = el("div", "dk-row"); r.append(...kids); return r; };
-const field = (ph, big) => { const f = el(big ? "textarea" : "input", "dk-field"); f.placeholder = ph; if (big) f.rows = 2; f.addEventListener("pointerdown", (e) => e.stopPropagation()); return f; };
+const field = (ph, big) => { const f = el(big ? "textarea" : "input", "dk-field"); f.placeholder = ph; if (ph) f.setAttribute("aria-label", ph); if (big) f.rows = 2; f.addEventListener("pointerdown", (e) => e.stopPropagation()); return f; };
 const portName = (id) => (S.ports.find((p) => p.id === id) || { name: "a port" }).name;
 const done = () => { save(); drawPlate(); };
 const crateAt = () => hitOf("crate").clone().add(new THREE.Vector3(0, 1.6, 0));
@@ -170,12 +190,21 @@ const ACTS = {
     }, true)));
   },
   boat(h) {
-    const out = S.boats.filter((b) => !b.back); const b = out[h.i]; if (!b) return;
+    const b = S.boats.filter((boat) => !boat.back)[h.i]; if (!b) return;
     const at = h.pos.clone().add(new THREE.Vector3(0, 2.4, 0));
-    const amt = field("Amount"); amt.inputMode = "decimal"; const no = field("What the no taught you");
-    say(at, "A boat at anchor", "It carried " + b.action + " to " + portName(b.port) + ". What did it bring back?", amt,
-      row(btn("Coin", () => { if (!(+amt.value > 0)) return amt.focus(); TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); done(); keep(b, at); })), no,
-      row(btn("A no", () => { TH.logReturn(S, b.id, { kind: "lesson", line: no.value.trim() }, now()); done(); say(at, "The spirit", "I'll hold that one. Nothing of yours is any less."); }, true), btn("Still out", hush, true)));
+    if (live.ret) return say(at, "A boat at anchor", "One boat is already at the return berth. Open its crate first.");
+    say(at, "A boat at anchor", "It carried " + b.action + " to " + portName(b.port) + ". Has it come home?",
+      row(btn("She's back", () => { live.ret = { id: b.id, come: 1, open: 0, kind: null }; yaw = 0; hush(); }), btn("Still out", hush, true)));
+  },
+  returnCrate() {
+    if (!returnMoored()) return;
+    const b = S.boats.find((boat) => boat.id === live.ret.id && !boat.back); if (!b) return;
+    live.ret.open = 1;
+    const at = window.__ret.crate.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 1.6, 0));
+    const amt = field("Amount"); amt.type = "number"; amt.min = "0.01"; amt.step = "0.01"; amt.inputMode = "decimal"; amt.addEventListener("input", () => amt.setCustomValidity("")); const note = field("What the no taught you (optional)");
+    say(at, "The returning crate", "What came back from " + portName(b.port) + "?", amt,
+      row(btn("Coin", () => { if (!(+amt.value > 0) || !Number.isFinite(+amt.value)) { amt.setCustomValidity("Enter an amount greater than zero."); amt.reportValidity(); return; } TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); live.ret.kind = "coin"; live.ret.open = 1; done(); keep(b, at); })), note,
+      row(btn("A no", () => { TH.logReturn(S, b.id, { kind: "lesson", line: note.value.trim() }, now()); live.ret.kind = "lesson"; live.ret.open = 1; done(); say(at, "The spirit", "I'll hold that one. Nothing of yours is any less.", row(btn("Leave the boat", departReturn))); }, true), btn("Still out", departReturn, true)));
   },
   tide() { const t = TH.tideLine(S, now()); say(hitOf("tide").clone().add(new THREE.Vector3(0, 2.6, 0)), "The tide post", "This month: " + money(t.coin) + (t.goal ? " of " + money(t.goal) + "." : ".")); },
   book() {
@@ -187,7 +216,12 @@ const ACTS = {
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
 function keep(b, at) {
   const words = field("The words that worked (optional)");
-  say(at, "Coin came back", "Keep this as a route in the route book?", words, row(btn("Keep the route", () => { TH.keepRoute(S, b.id, words.value.trim(), now()); done(); say(at, null, "Kept. The route book has a new page."); }), btn("Not now", hush, true)));
+  say(at, "Coin came back", "Keep this as a route in the route book?", words, row(btn("Keep the route", () => { TH.keepRoute(S, b.id, words.value.trim(), now()); done(); say(at, null, "Kept. The route book has a new page.", row(btn("Leave the boat", departReturn))); }), btn("Not now", departReturn, true)));
+}
+function departReturn() {
+  hush();
+  if (!live.ret) return;
+  goTo(RET_PIER.clone(), () => { if (live.ret) live.ret.leaving = true; });
 }
 function send() {
   const c = S.crate; if (!c || c.state !== "waiting") return;
@@ -205,7 +239,15 @@ function sit(step) {
 
 // ---- input: tap to walk or to go to a thing, drag to turn ---------------------------------------------------------------
 let yaw = 0, drag = null;
-const hits = () => PARTS.flatMap((p) => (p.hit || []).map((h) => ({ ...h, part: p })));
+const hits = () => {
+  const returningIndex = live.ret ? S.boats.filter((b) => !b.back).findIndex((b) => b.id === live.ret.id) : -1;
+  const all = PARTS.flatMap((p) => (p.hit || []).filter((h) => h.kind !== "boat" || (h.i < S.boats.filter((b) => !b.back).length && h.i !== returningIndex)).map((h) => ({ ...h, part: p })));
+  if (returnMoored()) {
+    scene.updateMatrixWorld(true);
+    all.push({ pos: window.__ret.crate.getWorldPosition(new THREE.Vector3()), kind: "returnCrate", part: part("returnBerth") });
+  }
+  return all;
+};
 const toScreen = (v) => { const p = v.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, z: p.z }; };
 canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, yaw, moved: false }; });
 addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 6) drag.moved = true; if (drag.moved) yaw = drag.yaw - dx * 0.006; });
@@ -213,11 +255,11 @@ addEventListener("pointerup", (e) => {
   const d = drag; drag = null; if (!d || d.moved || BUILD) return;
   let best = null, bd = 64;
   hits().forEach((h) => { if (h.part.update && !h.part.group.visible) return; const s = toScreen(h.pos); if (s.z > 1) return; const dd = Math.hypot(s.x - e.clientX, s.y - e.clientY); if (dd < bd) { bd = dd; best = h; } });
-  if (best) { if (best.kind === "plank") return ACTS.plank(); const act = () => ACTS[best.kind](best); const to = near(best.pos); if (to) goTo(to, act); else act(); return; }
+  if (best) { if (best.kind === "returnCrate") { goTo(new THREE.Vector3(RET.x + 0.5, RET_Y, RET.z - 0.7), () => ACTS.returnCrate()); return; } if (best.kind === "plank") return ACTS.plank(); const act = () => ACTS[best.kind](best); const to = near(best.pos); if (to) goTo(to, act); else act(); return; }
   hush();
   const ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
   // the boat's deck sits lower than the pier: try it first, then the pier and the plank
-  for (const y of [BOAT_Y, PIER.y]) { const p = new THREE.Vector3(); if (ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), p) && where(p.x, p.z) && (y === PIER.y || where(p.x, p.z) === "boat")) { goTo(p); return; } }
+  for (const y of [BOAT_Y, RET_Y, PIER.y]) { const p = new THREE.Vector3(); if (ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), p) && where(p.x, p.z) && (y === PIER.y || where(p.x, p.z) === "boat" || where(p.x, p.z) === "return-boat")) { goTo(p); return; } }
 });
 addEventListener("resize", () => { renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
 
@@ -242,10 +284,13 @@ composer.addPass(new RenderPass(scene, camera));
 composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth * PR, innerHeight * PR), 0.32, 0.4, 0.92));
 composer.addPass(new OutputPass());
 const clock = new THREE.Clock();
+let returnHint = "";
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   // the boat casts off once the captain is back on the pier, and sails with the crate for seven seconds
   if (live.sending != null && !(live.sending === 0 && (aboard() || player.path.length))) { live.sending = Math.min(1, live.sending + dt / 7); if (live.sending >= 1) { live.sending = null; say(new THREE.Vector3(BERTH.x, -0.4, BERTH.z), null, "The boat is out in the fog. The tide has turned, and the studio boats are free."); } }
+  if (live.ret && live.ret.come > 0 && !live.ret.leaving) live.ret.come = Math.max(0, live.ret.come - dt / 7);
+  if (live.ret && live.ret.leaving) { live.ret.come = Math.min(1, live.ret.come + dt / 7); if (live.ret.come >= 1) live.ret = null; }
   const goal = player.path[0];
   if (goal) {
     const d = new THREE.Vector3(goal.x - player.pos.x, 0, goal.z - player.pos.z), L = d.length();
@@ -255,10 +300,12 @@ function frame() {
   player.pos.y = heightAt(player.pos.x, player.pos.z);
   player.group.position.copy(player.pos);
   if (player.mixer) player.mixer.update(dt);
+  const hint = live.ret && !live.ret.leaving ? (live.ret.come > 0 ? "A boat is coming home." : "Your boat is home. Tap its crate to board and open it.") : "";
+  if (hint !== returnHint) { returnHint = hint; if (hint) plate.textContent = hint; else drawPlate(); }
   const s = st(t); PARTS.forEach((p) => p.update && p.update(s));
   // a phone stands the camera further back, so the boat's stern stays in frame (money pier round 1, "not checked")
   const far = innerWidth / innerHeight < 0.8 ? 1.5 : 1;
-  const focus = BUILD ? new THREE.Vector3(2.0, -2.2, -3.5) : new THREE.Vector3(player.pos.x * 0.5 + 1.2, player.pos.y + 0.2, player.pos.z - 8);
+  const focus = BUILD ? new THREE.Vector3(2.0, -2.2, -3.5) : new THREE.Vector3(player.pos.x * 0.5 + (live.ret ? -0.8 : 1.2), player.pos.y + 0.2, player.pos.z - 8);
   const eye = BUILD ? new THREE.Vector3(-5.0, 4.5, 12.0 * far) : focus.clone().add(new THREE.Vector3(Math.sin(yaw) * 15 * far, 5.6, Math.cos(yaw) * 15 * far));
   camera.position.lerp(eye, BUILD || page.frames === 0 ? 1 : 0.08);
   camera.lookAt(focus);
