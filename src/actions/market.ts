@@ -97,6 +97,10 @@ export async function getMarketQuests(): Promise<MarketQuest[]> {
     kotterStage: q.kotterStage,
     visibility: q.visibility,
     isBounty: q.questSource === 'bounty' || (q.stakedPool ?? 0) > 0,
+    questBeliefKey: q.questBeliefKey,
+    prediction: q.prediction,
+    predictionDue: q.predictionDue?.toISOString() ?? null,
+    predictionOutcome: q.predictionOutcome,
     creator: q.creator
       ? {
           id: q.creator.id,
