@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-14T00:36:19.597Z",
+  "generatedAt": "2026-11-14T01:38:35.215Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 392,
+      "lineNumber": 451,
       "params": [],
       "query": [],
       "relationships": [],
@@ -518,7 +518,7 @@
       "method": "POST",
       "pattern": "/api/mcp",
       "entity": "SYSTEM",
-      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, list_tickets, steer_ticket and whoami",
+      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket and whoami",
       "permissions": [
         "COUNCIL_MENU_TOKEN",
         "as Authorization: Bearer <key>",
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 461,
+      "lineNumber": 520,
       "params": [],
       "query": [],
       "relationships": [],

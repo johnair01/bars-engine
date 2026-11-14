@@ -21,6 +21,7 @@ import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
 import { steerTicket } from '@/lib/work/queue'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
+import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
 
@@ -28,7 +29,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.2.0'
+const SERVER_VERSION = '1.4.0'
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
@@ -200,6 +201,46 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: 'read_answers',
+    title: 'Read his answers',
+    description: 'Read what Wendell answered for each board row, live from the store: state (answered, open or unknown id), '
+      + 'his choice, the option label, his steer note, and when he saved it. Use it before saying anything waits on him.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ids: { type: 'array', minItems: 1, maxItems: MAX_IDS, items: { type: 'string' }, description: 'The question row ids.' },
+      },
+      required: ['ids'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'check_visible',
+    title: 'Check a row will show',
+    description: 'For each row id, say whether the Council Board page will draw it and where (Open, Your eyes, a battle), '
+      + 'or why not (answered, settled, wrong kind, superseded). It runs the same data merge and status rule as the page. '
+      + 'Run it after post_rows: nobody may say a row is on the board without this answer.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ids: { type: 'array', minItems: 1, maxItems: MAX_IDS, items: { type: 'string' }, description: 'The row ids just posted.' },
+      },
+      required: ['ids'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'list_open',
+    title: 'List what is open',
+    description: 'List what waits: unanswered question rows (newest first), battles with an open turn, and the ready work '
+      + 'tickets per lane with their brief and owner lane. Rows posted before the store kept them may be missing.',
+    inputSchema: {
+      type: 'object',
+      properties: { limit: { type: 'integer', minimum: 1, maximum: 200, description: 'Most questions and battle turns to list; 50 unless given.' } },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'steer_ticket',
     title: 'Steer a ticket to another lane',
     description: 'The same move as the harbour page\'s lantern drag (POST /api/work/:id/steer), written to the store at '
@@ -363,6 +404,24 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'post_board_docs') return postBoardDocs(args)
   if (name === 'list_tickets') return listTickets(args)
   if (name === 'steer_ticket') return steerTool(args)
+  if (name === 'read_answers') {
+    const ids = Array.isArray(args.ids)
+      ? args.ids.filter((v): v is string => typeof v === 'string' && v.trim() !== '').slice(0, MAX_IDS)
+      : []
+    if (ids.length === 0) return bad('read_answers needs ids: the question rows to look up')
+    return ok({ board: 'council', answers: await readAnswers(ids) })
+  }
+  if (name === 'check_visible') {
+    const ids = Array.isArray(args.ids)
+      ? args.ids.filter((v): v is string => typeof v === 'string' && v.trim() !== '').slice(0, MAX_IDS)
+      : []
+    if (ids.length === 0) return bad('check_visible needs ids: the row ids just posted')
+    return ok({ board: 'council', rows: await checkVisible(ids) })
+  }
+  if (name === 'list_open') {
+    const n = Number(args.limit)
+    return ok(await listOpen(Number.isInteger(n) && n >= 1 ? Math.min(n, 200) : 50))
+  }
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -381,7 +440,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
- *   read_picture, list_pictures, post_board_docs, list_tickets, steer_ticket and whoami
+ *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket and whoami
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
