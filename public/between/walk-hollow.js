@@ -15,6 +15,9 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.wh-end{transition:none}}
 `;
 
+/** Where the walk goes after the Hollow: the Heaven sect, told it was reached from the Hollow (cd-merge-look-1 C, 2026-11-14). */
+export const SECT_HREF = "/sect/heaven.html?from=hollow";
+
 export const STEP_WORDS = {
   table: "The Hollow is where two friends meet. Mara sits across the low table: walk to it, sit, and draw a card from her deck.",
   mouth: "The card is kept in both your books. Now walk out to the hollow's mouth, past the rope fence, where the valley's calls wait.",
@@ -47,11 +50,12 @@ export function mount(B) {
   function endCard() {
     if (card) return;
     card = document.createElement("div"); card.className = "wh-end"; card.setAttribute("role", "dialog"); card.setAttribute("aria-label", "The end of the walk");
-    card.innerHTML = `<b>The end of the walk</b><p>You woke in a nook, a stranger's charge made four lands, and a friend met you in the Hollow. That is the game: what you feel becomes a place, and you walk its places with friends.</p><div class="wh-row"><button type="button" class="go" data-wh="again">Walk it again</button><button type="button" data-wh="stay">Stay a while</button></div>`;
+    card.innerHTML = `<b>The end of the walk</b><p>You woke in a nook, a stranger's charge made four lands, and a friend met you in the Hollow. That is the game: what you feel becomes a place, and you walk its places with friends.</p><p>Up the road, the Heaven sect keeps a gate for anyone who carried a lantern out.</p><div class="wh-row"><button type="button" class="go" data-wh="sect">Walk on to the Heaven sect</button><button type="button" data-wh="again">Walk it again</button><button type="button" data-wh="stay">Stay a while</button></div>`;
     for (const ev of ["pointerdown", "pointerup", "keydown", "wheel"]) card.addEventListener(ev, e => e.stopPropagation());
     card.addEventListener("click", e => {
       const b = e.target.closest("[data-wh]"); if (!b) return;
-      if (b.dataset.wh === "again") location.href = "/between/walk";
+      if (b.dataset.wh === "sect") location.href = SECT_HREF;   // the join leg (chapter1-demo plan step 3): the hollow's last card opens the Heaven gate
+      else if (b.dataset.wh === "again") location.href = "/between/walk";
       else { card.remove(); card = null; endAt = Infinity; const hint = document.querySelector("#hint"); if (hint) hint.style.visibility = ""; }
     });
     const hint = document.querySelector("#hint"); if (hint) hint.style.visibility = "hidden";   // the end card is the one line now

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { walkStep, STEP_WORDS } from '../../../../public/between/walk-hollow.js'
+import { walkStep, STEP_WORDS, SECT_HREF } from '../../../../public/between/walk-hollow.js'
 
 /* The walk's Hollow (Six-faces-council hollow-demo, his A on hdw-route): the guide names one step at a time. */
 describe('the walk through the Hollow', () => {
@@ -17,5 +17,8 @@ describe('the walk through the Hollow', () => {
   })
   it('gives every step one short line with no number in it', () => {
     for (const w of Object.values(STEP_WORDS) as string[]) { expect(w.length).toBeLessThan(160); expect(w).not.toMatch(/\d/) }
+  })
+  it('walks on to the Heaven sect from the end card (the join leg)', () => {
+    expect(SECT_HREF).toBe('/sect/heaven.html?from=hollow')
   })
 })

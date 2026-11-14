@@ -51,6 +51,12 @@ import { cultWalker, GAIT } from './cult/cultwalk.js';
 import { cameraRig, MOVE } from './heaven/move.js';
 import { wayColliders } from './heaven/crag.js';
 
+// The join leg from the Hollow (chapter1-demo plan step 3, cd-merge-look-1 C): a player who carried the lantern out arrives on the road.
+if (new URLSearchParams(location.search).get('from') === 'hollow') {
+  document.getElementById('where').textContent = 'The road up from the Hollow';
+  document.getElementById('what').textContent = 'You carried a lantern out of the Hollow. The Heaven gate is at the top of this road.';
+}
+
 const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight);
 R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
