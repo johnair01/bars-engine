@@ -638,7 +638,7 @@ export type RoomSummary = {
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
   keptAgreement: boolean
   /** the turns both friends answered at this room's table, newest first: the nook's book shows them as ink pages */
-  turns: { id: string; by: string; owner: string; goal: string; depth: string; words: string; goalText: string; lines: { by: string; words: string }[]; at: number }[]
+  turns: { id: string; by: string; owner: string; goal: string; depth: string; words: string; goalText: string; lines: { by: string; words: string }[]; at: number; bar: string | null; coins: { id: string; by: string; feel: string | null; mine: boolean }[] }[]
   /** the scrolls they sent that you answered another time or no: kept on your shelf (Still B) */
   keepsakes: { id: string; when: number | null; note: string; answer: 'later' | 'no'; at: number | null }[]
   /** the other person started this room, so their seal wears the first hue (teal); else plum */
@@ -663,6 +663,7 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
       if (it.status === 'kept' && kl && typeof it.words === 'string' && isNum(it.keptAt))
         turns.push({ id: iid, by: String(it.by), owner: String(it.owner), goal: String(it.goal), depth: String(it.depth), words: it.words,
           goalText: typeof it.goalText === 'string' ? it.goalText : '', at: it.keptAt,
+          bar: typeof it.bar === 'string' ? it.bar : null, coins: Array.isArray(it.coins) ? (it.coins as RoomSummary['turns'][number]['coins']) : [],
           lines: [it.by, it.owner].map(u => { const l = kl[String(u)]; return { by: String(u), words: isObj(l) ? String(l.words ?? '') : '' } }).filter(l => l.words) })
       // an asked card or a card opened with tea waits on its owner; a face-up card waits on whoever has no line yet (ids only, never words)
       const lines = isObj(it.lines) ? it.lines : {}

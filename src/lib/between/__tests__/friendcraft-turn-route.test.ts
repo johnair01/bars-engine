@@ -7,6 +7,7 @@ const state = {
   garden: { id: 'room', inviteToken: 'x', startedById: 'O', data: { kind: 'room', members: { D: {}, O: {} } } } as any,
   items: new Map<string, any>(),
   bars: [] as any[], shares: [] as any[],
+  pouches: new Map<string, any>(),
 }
 const deck = { goals: {
   g1: { text: 'A friend who asks', at: 1, cards: { deep: { words: 'Sit with me when I cry', at: 1 } } },
@@ -22,6 +23,11 @@ vi.mock('@/lib/db', () => {
       deleteMany: async ({ where }: any) => { state.items.delete(where.id); return {} },
     },
     customBar: { create: async ({ data }: any) => { const b = { id: 'bar' + state.bars.length, ...data }; state.bars.push(b); return { id: b.id } } },
+    betweenMember: { findMany: async ({ where }: any) => [{ gardenId: 'home' + where.playerId, garden: { data: { kind: 'home' } } }] },
+    betweenPrivate: {
+      findUnique: async ({ where }: any) => { const d = state.pouches.get(where.gardenId_playerId_key.playerId); return d ? { data: d } : null },
+      upsert: async ({ where, create }: any) => { state.pouches.set(where.gardenId_playerId_key.playerId, create.data); return {} },
+    },
     barShare: { create: async ({ data }: any) => { state.shares.push(data); return {} } },
   }
   return { db: {
@@ -46,7 +52,7 @@ const as = (who: string | null) => { state.cookie = who }
 
 describe('POST /api/between/:gardenId/turn', () => {
   beforeEach(() => {
-    as('D'); state.items.clear(); state.bars.length = 0; state.shares.length = 0; state.enrolled = new Set(['D', 'O'])
+    as('D'); state.pouches.clear(); state.items.clear(); state.bars.length = 0; state.shares.length = 0; state.enrolled = new Set(['D', 'O'])
     state.garden.data = { kind: 'room', members: { D: {}, O: {} } }
   })
 
@@ -87,6 +93,12 @@ describe('POST /api/between/:gardenId/turn', () => {
     expect(state.shares[1]).toMatchObject({ fromUserId: 'O', toUserId: 'D' })
     expect((await call({ do: 'line', turn: id, words: 'again' })).status).toBe(409)
     expect(state.bars).toHaveLength(2)
+    // FR-003: each friend has one lit ember from this turn, and the kept turn answered again lights none more.
+    for (const who of ['D', 'O']) {
+      const embers = Object.values(state.pouches.get(who).embers) as any[]
+      expect(embers).toHaveLength(1)
+      expect(embers[0]).toMatchObject({ state: 'lit', move: null, from: { place: 'table-turn', id } })
+    }
   })
 
   it('tea: refused without bowls, spends with them, and not today gives them back', async () => {

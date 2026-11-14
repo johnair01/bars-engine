@@ -197,7 +197,7 @@ export function mount(B, h) {
 
   /** The kept turns, shaped for the book's ink pages. */
   function kept() {
-    return turns().filter(t => t.status === "kept" && t.words).map(t => ({ id: t.id, by: t.by, owner: t.owner, goal: t.goal, depth: t.depth, words: t.words, goalText: t.goalText || "", at: t.keptAt || t.at,
+    return turns().filter(t => t.status === "kept" && t.words).map(t => ({ id: t.id, by: t.by, owner: t.owner, goal: t.goal, depth: t.depth, words: t.words, goalText: t.goalText || "", at: t.keptAt || t.at, bar: t.bar || null, coins: t.coins || [],
       lines: [t.by, t.owner].filter(u => t.lines && t.lines[u]).map(u => ({ by: u, words: t.lines[u].words })) }));
   }
   return { focus, momentFor, drawAction, sync, seed, kept, tea, turns };

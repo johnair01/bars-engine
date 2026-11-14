@@ -18,7 +18,7 @@ export function turnLeaves(turns, nameOf = u => "them") {
   return (turns || []).filter(t => t && t.id && typeof t.words === "string" && t.words)
     .sort((a, b) => (b.at || 0) - (a.at || 0))
     .map(t => ({ kind: "turn", key: "turn-" + t.id, tid: t.id, goal: t.goal || null, depth: t.depth || null, name: t.words, words: t.words,
-      goalText: t.goalText || "", lines: (t.lines || []).map(l => ({ by: l.by, name: nameOf(l.by), words: l.words })) }));
+      goalText: t.goalText || "", bar: t.bar || null, coins: t.coins || [], lines: (t.lines || []).map(l => ({ by: l.by, name: nameOf(l.by), words: l.words })) }));
 }
 
 export const BLANK = { kind: "blank", key: "blank", name: "" };
