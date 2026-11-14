@@ -6,9 +6,9 @@ import { colliders, interiors } from './world.js';
 import { roadGround } from './far.js';
 import { wayGround, wayColliders, stairTread } from './crag.js';
 
-// Round 19: a walking pace for the cultivation figure's stride (was 4 m/s, a run), and on the pilgrim stair one step per
-// 0.25 m tread at about two steps a second
-export const SPEED = 1.3, STAIR_SPEED = 0.5, RADIUS = 0.35;
+// Round 19: a walking pace for the cultivation figure's stride (was 4 m/s, a run). Round 20: on the gentle stair one step
+// per 0.28 m tread at about two steps a second
+export const SPEED = 1.3, STAIR_SPEED = 0.55, RADIUS = 0.35;
 
 export function avatar(S) {
   const g = new THREE.Group();

@@ -4,7 +4,7 @@
 // module builds what stands on it, in world coordinates, every piece seated on heightAt.
 import * as THREE from 'three';
 import { hall, box, paifang } from './kit.js';
-import { heightAt, P, CRAG, cragNoise, AXIS } from './layout.js';
+import { heightAt, P, CRAG, cragNoise, AXIS, PILGRIM } from './layout.js';
 
 const rimAt = th => CRAG.rim + cragNoise(th) * 7;
 
@@ -16,8 +16,8 @@ const _tg = Math.atan2(P.great[1] - P.summit[1], P.great[0] - P.summit[0]);
 const WALL_TH = _tg - 1.1, WALL_Y = 46; // where the winding wall starts (cragCrown)
 const wallFoot = () => { const th = WALL_TH, dy = 90 - WALL_Y, slope = 3.2 + 1.6 * cragNoise(th * 3 + 1);
   const r = rimAt(th) + dy / slope + 7.8 + Math.floor(dy / 7.5) * 0.35 + dy * 0.03; return [P.summit[0] + Math.cos(th) * r, P.summit[1] + Math.sin(th) * r]; };
-const LAND = AXIS[9], STAIR0 = [P.great[0] + (LAND[0] - P.great[0]) * 0.5, P.great[1] + (LAND[1] - P.great[1]) * 0.5];
-const WAY = [STAIR0, LAND, wallFoot()];
+const LAND = AXIS[9];
+const WAY = [PILGRIM.foot, ...PILGRIM.landings.map(l => [l.x, l.z]), PILGRIM.top, LAND, wallFoot()]; // round 20: the zigzag's turns
 function nearWay(x, z) { let best = 1e9;
   for (let i = 1; i < WAY.length; i++) { const [a, b] = [WAY[i - 1], WAY[i]], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
     const k = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2)); best = Math.min(best, Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz)); }
@@ -28,22 +28,22 @@ function nearWay(x, z) { let best = 1e9;
 // (wayColliders): the stair rises in even flights over the ridge's profile, the landing and the bridge deck can be stood
 // on, and the walls and the gate's posts stop the avatar. CREST_STAIR ends the walk the "Climb to the crest" button takes.
 export const wayColliders = [];
-export const TREAD = 0.25; // round 19: the pilgrim stair's tread depth
-// round 19: where a foot should land on the stair: the middle of the tread under (x, z), or null off the stair
+export const TREAD = PILGRIM.T; // round 20: the gentle stair's tread depth (0.28 m), one step of the figure per tread
+const TW = 1.2; // half the width of a tread; the walls stand outside it, to PILGRIM.HW
+// where a foot should land on the stair: the middle of the tread under (x, z) as [x, z, top], or null off the stair
 export function stairTread(x, z) {
-  const st = way.stair; if (!st) return null;
-  const u = ((x - st.a[0]) * st.ux + (z - st.a[1]) * st.uz) / st.L, v = (x - st.a[0]) * st.nx + (z - st.a[1]) * st.nz;
-  if (u < 0 || u >= 1 || Math.abs(v) > 2.15) return null;
-  const k = Math.floor(u * st.n), uc = (k + 0.5) / st.n * st.L;
-  return [st.a[0] + st.ux * uc + st.nx * v, st.a[1] + st.uz * uc + st.nz * v, st.tops[k]];
+  for (const f of PILGRIM.flights) { const s = (x - f.a[0]) * f.ux + (z - f.a[1]) * f.uz, v = (x - f.a[0]) * f.nx + (z - f.a[1]) * f.nz;
+    if (s < f.s0 || s >= f.s1 || Math.abs(v) > TW) continue;
+    const k = Math.floor((s - f.s0) / TREAD), sc = f.s0 + (k + 0.5) * TREAD;
+    return [f.a[0] + f.ux * sc + f.nx * v, f.a[1] + f.uz * sc + f.nz * v, f.y + PILGRIM.R * (k + 1)]; }
+  return null;
 }
 const way = { stair: null, land: null, bridge: null };
 const wallBox = (x, z, len, thick, ry, y0, y1) => wayColliders.push({ x, z, c: Math.cos(ry), s: Math.sin(ry), hw: len / 2, hd: thick / 2, y0, y1 });
 // ground of the way at (x, z), or -Infinity off it
 export function wayGround(x, z) {
-  const st = way.stair;
-  if (st) { const u = ((x - st.a[0]) * st.ux + (z - st.a[1]) * st.uz) / st.L, v = (x - st.a[0]) * st.nx + (z - st.a[1]) * st.nz;
-    if (u >= 0 && u < 1 && Math.abs(v) < 2.15) return st.tops[Math.min(st.tops.length - 1, Math.floor(u * st.tops.length))]; }
+  for (const l of PILGRIM.landings) if (Math.hypot(x - l.x, z - l.z) < l.r + 0.25) return l.y;
+  const t = stairTread(x, z); if (t) return t[2];
   const ld = way.land;
   if (ld) { const dx = x - ld.x, dz = z - ld.z, lx = dx * ld.c - dz * ld.s, lz = dx * ld.s + dz * ld.c; if (Math.abs(lx) < 5 && Math.abs(lz) < 5) return ld.y; }
   const br = way.bridge;
@@ -52,32 +52,40 @@ export function wayGround(x, z) {
   return -Infinity;
 }
 // the stair's foot, the landing and a step through the gate: the last legs of the "Climb to the crest" walk
-export const CREST_STAIR = (() => {
-  const [x0, z0] = STAIR0, [lx, lz] = LAND, dx = lx - x0, dz = lz - z0, D = Math.hypot(dx, dz);
-  return [[x0 - dx / D * 2, z0 - dz / D * 2], STAIR0, LAND, [lx + dx / D * 3, lz + dz / D * 3]];
+export const CREST_STAIR = (() => { // round 20: the foot, each landing of the zigzag, the top step, through the gate
+  const [ax, az] = PILGRIM.axis, [fx, fz] = PILGRIM.foot, [lx, lz] = LAND;
+  return [[fx - ax * 2, fz - az * 2], PILGRIM.foot, ...PILGRIM.landings.map(l => [l.x, l.z]), PILGRIM.top, LAND, [lx + ax * 3, lz + az * 3]];
 })();
 
 export function cragWay(S, M) {
   const G = new THREE.Group(); G.name = 'cragWay'; S.add(G);
-  // Round 19: Wendell answered cc-heaven-r18 A: "adjust the steps so that that figure can walk the distances and walk the
-  // steps". Round 18's treads were 0.6 m deep with risers anywhere from 0 to 0.9 m, set by the ridge's hull, so no stride
-  // could keep to them. The way climbs 24.5 m in 26 m, too steep for a 0.17 m stair with landings (that needs 52 m), so it
-  // is one even pilgrim flight, as the steep stairs of China's sacred mountains are: every tread 0.25 m deep, every riser
-  // the same 0.235 m, one step of the figure per tread. The flight clears the ridge everywhere (13 cm at its foot).
-  { const a = STAIR0, D0 = Math.hypot(LAND[0] - a[0], LAND[1] - a[1]), b = [LAND[0] - (LAND[0] - a[0]) / D0 * 5, LAND[1] - (LAND[1] - a[1]) / D0 * 5];
-    const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), n = Math.round(L / TREAD), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
-    let y0 = -1e9; for (const s of [-2.4, -1.2, 0, 1.2, 2.4]) y0 = Math.max(y0, heightAt(a[0] + nx * s, a[1] + nz * s));
-    const rise = (heightAt(...LAND) + 0.15 - y0) / n, tops = [];
-    for (let k = 0; k < n; k++) {
-      const t0 = k / n, t1 = (k + 1) / n, tm = (t0 + t1) / 2, x = a[0] + dx * tm, z = a[1] + dz * tm;
-      let low = 1e9; for (const t of [t0, tm, t1]) for (const s of [-2.4, 0, 2.4]) low = Math.min(low, heightAt(a[0] + dx * t + nx * s, a[1] + dz * t + nz * s));
-      const top = y0 + rise * (k + 1); tops.push(top); const hgt = top - low + 0.8;
-      const st = box(G, L / n + 0.01, hgt, 4.2, M.plinth, x, top - hgt / 2, z); st.rotation.y = ry;
-      if (k % 3 === 0) { const m = Math.min(3, n - k), xm = a[0] + dx * (k + m / 2) / n, zm = a[1] + dz * (k + m / 2) / n, wt = y0 + rise * (k + m) + 0.7, len = L * m / n + 0.02; // the side walls, stepped every three treads
-        for (const s of [-1, 1]) { const wx = xm + nx * 2.35 * s, wz = zm + nz * 2.35 * s, wh = wt - low + 0.8, w = box(G, len, wh, 0.55, M.stone, wx, wt - wh / 2, wz); w.rotation.y = ry;
-          wallBox(wx, wz, len, 0.55, ry, low - 0.8, wt); } }
+  // Round 20: Wendell answered cc-heaven-r19 C, "Make the stair gentle and zigzag". The plan is layout.js's PILGRIM:
+  // 148 risers of 0.17 m on 0.28 m treads, four flights crossing the slope and turning on round landings, and a last
+  // straight flight up the axis to the gate. Each tread is a stone block down to the ground under it; low walls run
+  // along both sides of each flight, stepped every three treads, and round the outside of each landing.
+  { const { R, HW, flights, landings } = PILGRIM, WT = 0.3, wy = HW - WT / 2;
+    const lowUnder = (x, z, ux, uz, nx, nz, len, half) => { let low = 1e9;
+      for (const t of [-0.5, 0, 0.5]) for (const s of [-half, 0, half]) low = Math.min(low, heightAt(x + ux * t * len + nx * s, z + uz * t * len + nz * s)); return low; };
+    for (const f of flights) {
+      for (let k = 0; k < f.m - 1; k++) {
+        const sc = f.s0 + (k + 0.5) * TREAD, x = f.a[0] + f.ux * sc, z = f.a[1] + f.uz * sc, top = f.y + R * (k + 1);
+        const low = lowUnder(x, z, f.ux, f.uz, f.nx, f.nz, TREAD, TW), hgt = top - low + 0.6;
+        const st = box(G, TREAD + 0.01, hgt, TW * 2, M.plinth, x, top - hgt / 2, z); st.rotation.y = f.ry;
+        if (k % 3 === 0) { const n = Math.min(3, f.m - 1 - k), sm = f.s0 + (k + n / 2) * TREAD, xm = f.a[0] + f.ux * sm, zm = f.a[1] + f.uz * sm, wt = f.y + R * (k + n) + 0.75, len = n * TREAD + 0.02;
+          for (const sg of [-1, 1]) { const wx = xm + f.nx * wy * sg, wz = zm + f.nz * wy * sg, wl = lowUnder(wx, wz, f.ux, f.uz, f.nx, f.nz, len, 0.15), wh = wt - wl + 0.6;
+            const w = box(G, len, wh, WT, M.stone, wx, wt - wh / 2, wz); w.rotation.y = f.ry; wallBox(wx, wz, len, WT, f.ry, wl - 0.6, wt); } }
+      }
     }
-    way.stair = { a, L, ux: dx / L, uz: dz / L, nx, nz, tops, n, rise }; }
+    // the landings: a round stone platform, and a wall round its outside, open where a flight meets it
+    landings.forEach((l, i) => {
+      const r = l.r + 0.25, low = (() => { let lo = 1e9; for (let a = 0; a < 12; a++) for (const q of [0, 0.6, 1]) lo = Math.min(lo, heightAt(l.x + Math.cos(a * Math.PI / 6) * r * q, l.z + Math.sin(a * Math.PI / 6) * r * q)); return lo; })();
+      const h = l.y - low + 0.6, pad = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 24), M.plinth); pad.position.set(l.x, l.y - h / 2, l.z); pad.castShadow = pad.receiveShadow = true; G.add(pad);
+      const open = [flights[i], flights[i + 1]].map((f, j) => Math.atan2(j ? f.uz : -f.uz, j ? f.ux : -f.ux)), half = Math.atan2(HW + 0.3, r);
+      const NS = 20; for (let s = 0; s < NS; s++) { const th = (s + 0.5) / NS * Math.PI * 2;
+        if (open.some(o => Math.abs(Math.atan2(Math.sin(th - o), Math.cos(th - o))) < half)) continue;
+        const wr = r - WT / 2, wx = l.x + Math.cos(th) * wr, wz = l.z + Math.sin(th) * wr, len = 2 * Math.PI * wr / NS + 0.04, ry = -th + Math.PI / 2;
+        const w = box(G, len, 0.75 + 0.6, WT, M.stone, wx, l.y + 0.75 - 0.675, wz); w.rotation.y = ry; wallBox(wx, wz, len, WT, ry, l.y - 0.6, l.y + 0.75); }
+    }); }
   // the landing on the crest, and a gate on it facing the court
   { const [x, z] = LAND, y = heightAt(x, z), face = Math.atan2(P.great[0] - x, P.great[1] - z);
     const pad = box(G, 10, 3, 10, M.plinth, x, y - 1.35, z); pad.rotation.y = face;

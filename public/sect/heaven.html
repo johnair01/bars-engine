@@ -156,7 +156,7 @@ function walkToCrest() {
   cam.position.set(x - dx / L * 10, A.position.y + 5.5, z - dz / L * 10);
   orbit.target.set(x + dx / L * 8, A.position.y + 2, z + dz / L * 8);
   roadLeg = 1; input.target = new THREE.Vector3(nx, 0, nz);
-  hud.where.textContent = 'The stair to the crest'; hud.what.textContent = "Round the founder's hall and up the pilgrim stair to the gate on the ridge.";
+  hud.where.textContent = 'The stair to the crest'; hud.what.textContent = "Round the founder's hall and up the zigzag stair to the gate on the ridge.";
 }
 document.getElementById('crestBtn').onclick = walkToCrest;
 document.getElementById('topBtn').onclick = () => { topView = !topView; S.getObjectByName('farLand')?.userData.mapView?.(topView); document.body.classList.toggle('top', topView); document.getElementById('topBtn').textContent = topView ? 'Walk' : 'Top view'; };
