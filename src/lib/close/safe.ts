@@ -1,4 +1,4 @@
-import type { CloseRecord, Item, Pick, Safety } from './types'
+import type { CloseRecord, Item, Safety } from './types'
 
 /** Why a piece of work is not safe for Zo to run tonight (FR-005); empty when it is. */
 export function unsafeReasons(s: Safety): string[] {

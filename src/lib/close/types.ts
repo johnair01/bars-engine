@@ -56,6 +56,8 @@ export interface Ticket {
   minutes: number
   lane: 'zo' | 'claude'
   released: boolean
+  /** The safety facts FR-005 asks of it, copied from the pick; the lever re-checks them. Absent means not safe. */
+  safety?: Safety
 }
 
 export interface CloseRecord {
