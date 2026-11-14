@@ -1,0 +1,2554 @@
+{
+ "intake": {
+  "goal": "Send an immersive demo to the homies for the Patreon launch",
+  "goalCtx": "",
+  "want": [
+   "fire",
+   "wood",
+   "metal"
+  ],
+  "now": {
+   "fire": 2,
+   "metal": 2,
+   "earth": 2
+  },
+  "truth": {
+   "fire": true,
+   "metal": true,
+   "earth": true
+  },
+  "truthCtx": {},
+  "res": [
+   true,
+   true,
+   true,
+   true,
+   true,
+   true
+  ],
+  "cmd": 0,
+  "tags": [
+   {},
+   {},
+   {},
+   {},
+   {},
+   {}
+  ],
+  "step": 1,
+  "live": false,
+  "dealt": false
+ },
+ "states": [
+  {
+   "w": 1,
+   "oil": 4,
+   "lit": false,
+   "milestones": [],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 0,
+   "bars": [],
+   "dealt": {},
+   "surfaced": null,
+   "fx": "6 keeps dealt. The block takes 12 refinements to overcome. Lamp oil 4. 6 keeps are untagged, so they use a placeholder loop at strength 2."
+  },
+  {
+   "w": 1,
+   "oil": 3,
+   "lit": false,
+   "milestones": [],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 0,
+   "bars": [],
+   "dealt": {
+    "You": 2
+   },
+   "surfaced": null,
+   "fx": "Logged. Strikes for 2: Anxiety becomes Wonder. Not capable is held."
+  },
+  {
+   "w": 1,
+   "oil": 2,
+   "lit": false,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 1,
+   "bars": [],
+   "dealt": {
+    "You": 4
+   },
+   "surfaced": null,
+   "fx": "Kind matches. Strikes for 2: Despair becomes Poignance. Don't belong is held. Milestone: Dread transmutes into the sublime. Mints a vibeulon."
+  },
+  {
+   "w": 1,
+   "oil": 1,
+   "lit": false,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 2,
+   "bars": [],
+   "dealt": {
+    "You": 6
+   },
+   "surfaced": null,
+   "fx": "Kind matches. Strikes for 2: Craving becomes Bliss. Not significant is held. Milestone: Shyness transmutes into Awe. Mints a vibeulon."
+  },
+  {
+   "w": 1,
+   "oil": 0,
+   "lit": false,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 2
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 3,
+   "bars": [],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "Kind matches. Strikes for 2: Apathy becomes Peace. Not worthy is held. Milestone: Resignation transmutes into Acceptance. Mints a vibeulon."
+  },
+  {
+   "w": 1,
+   "oil": 0,
+   "lit": false,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 3,
+   "bars": [],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "Shadow grows on Not good enough and Not ready."
+  },
+  {
+   "w": 2,
+   "oil": 3,
+   "lit": false,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "water",
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 3,
+   "bars": [],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "Ghost placed. It strikes for 2 when the action is logged."
+  },
+  {
+   "w": 2,
+   "oil": 2,
+   "lit": false,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "water",
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 4,
+   "bars": [],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "No witness in the story, so it deals no damage. It still mints a vibeulon."
+  },
+  {
+   "w": 2,
+   "oil": 2,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "water",
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 4,
+   "bars": [],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "Your table is open to kibitzers."
+  },
+  {
+   "w": 2,
+   "oil": 1,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "water",
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 4,
+   "bars": [],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "Ghost placed. It strikes for 2 when the action is logged."
+  },
+  {
+   "w": 2,
+   "oil": 0,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "water",
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 5,
+   "bars": [
+    {
+     "dir": "out"
+    }
+   ],
+   "dealt": {
+    "You": 8
+   },
+   "surfaced": null,
+   "fx": "Strikes their keep for 2. You and the owner both mint in Water. Your BAR goes to their game master."
+  },
+  {
+   "w": 2,
+   "oil": 0,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 1
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 5,
+   "bars": [
+    {
+     "dir": "out"
+    }
+   ],
+   "dealt": {
+    "You": 10
+   },
+   "surfaced": null,
+   "fx": "Logged. Strikes for 2: Despair becomes Sadness."
+  },
+  {
+   "w": 2,
+   "oil": 0,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 1
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 5,
+   "bars": [
+    {
+     "dir": "out"
+    }
+   ],
+   "dealt": {
+    "You": 10
+   },
+   "surfaced": null,
+   "fx": "No shadow grows."
+  },
+  {
+   "w": 3,
+   "oil": 4,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      },
+      {
+       "ch": "wood",
+       "g": 1
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 5,
+   "bars": [
+    {
+     "dir": "out"
+    },
+    {
+     "dir": "in"
+    }
+   ],
+   "dealt": {
+    "You": 10,
+    "Kibitzers": 2
+   },
+   "surfaced": {
+    "i": 5,
+    "ch": "wood"
+   },
+   "fx": "Kind matches. A Wood loop surfaces in Not ready at Joy. Strikes for 2: Sadness becomes Poignance."
+  },
+  {
+   "w": 3,
+   "oil": 4,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 3
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": false,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      },
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 6,
+   "bars": [
+    {
+     "dir": "out"
+    },
+    {
+     "dir": "in"
+    }
+   ],
+   "dealt": {
+    "You": 10,
+    "Kibitzers": 2
+   },
+   "surfaced": null,
+   "fx": "Refined from inside: Joy becomes Bliss. Mints a colorless vibeulon. Not ready is held."
+  },
+  {
+   "w": 3,
+   "oil": 4,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 1
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      },
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 6,
+   "bars": [
+    {
+     "dir": "out"
+    },
+    {
+     "dir": "in"
+    },
+    {
+     "dir": "in"
+    }
+   ],
+   "dealt": {
+    "You": 10,
+    "Kibitzers": 4
+   },
+   "surfaced": null,
+   "fx": "Kind matches. Strikes for 2: Frustration becomes Anger."
+  },
+  {
+   "w": 3,
+   "oil": 4,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 1
+      }
+     ],
+     "held": false,
+     "holder": null,
+     "ch": null,
+     "touched": true,
+     "ghost": "fire",
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      },
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 6,
+   "bars": [
+    {
+     "dir": "out"
+    },
+    {
+     "dir": "in"
+    },
+    {
+     "dir": "in"
+    }
+   ],
+   "dealt": {
+    "You": 10,
+    "Kibitzers": 4
+   },
+   "surfaced": null,
+   "fx": "2 BARs read."
+  },
+  {
+   "w": 3,
+   "oil": 4,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    },
+    {
+     "id": "0-5firewater",
+     "name": "Glory",
+     "from": "Disappointment",
+     "w": 3,
+     "i": 0,
+     "j": 5
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "fire",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      },
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 6,
+   "bars": [
+    {
+     "dir": "out"
+    },
+    {
+     "dir": "in"
+    },
+    {
+     "dir": "in"
+    }
+   ],
+   "dealt": {
+    "You": 12,
+    "Kibitzers": 4
+   },
+   "surfaced": null,
+   "fx": "Logged. Strikes for 2: Anger becomes Triumph. Not good enough is held. Milestone: Disappointment transmutes into Glory."
+  },
+  {
+   "w": 3,
+   "oil": 4,
+   "lit": true,
+   "milestones": [
+    {
+     "id": "2-3watermetal",
+     "name": "the sublime",
+     "from": "Dread",
+     "w": 1,
+     "i": 2,
+     "j": 3
+    },
+    {
+     "id": "3-4woodmetal",
+     "name": "Awe",
+     "from": "Shyness",
+     "w": 1,
+     "i": 4,
+     "j": 3
+    },
+    {
+     "id": "1-2earthwater",
+     "name": "Acceptance",
+     "from": "Resignation",
+     "w": 1,
+     "i": 1,
+     "j": 2
+    },
+    {
+     "id": "0-5firewater",
+     "name": "Glory",
+     "from": "Disappointment",
+     "w": 3,
+     "i": 0,
+     "j": 5
+    }
+   ],
+   "keeps": [
+    {
+     "loops": [
+      {
+       "ch": "fire",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "fire",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "earth",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "earth",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "water",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "metal",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "metal",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": false,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    },
+    {
+     "loops": [
+      {
+       "ch": "water",
+       "g": 0
+      },
+      {
+       "ch": "wood",
+       "g": 0
+      }
+     ],
+     "held": true,
+     "holder": "You",
+     "ch": "wood",
+     "touched": true,
+     "ghost": null,
+     "fog": false,
+     "ph": true
+    }
+   ],
+   "minted": 6,
+   "bars": [
+    {
+     "dir": "out"
+    },
+    {
+     "dir": "in"
+    },
+    {
+     "dir": "in"
+    }
+   ],
+   "dealt": {
+    "You": 12,
+    "Kibitzers": 4
+   },
+   "surfaced": null,
+   "fx": "All active keeps are held. The goal is met. Contributors are paid in vibeulons by refinement dealt (You 12, Kibitzers 4) and keep the stories they collected.",
+   "opened": true
+  }
+ ]
+}

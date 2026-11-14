@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
+import { chalkOn } from "@/lib/marks/chalk";
 import { Chrome } from "@/components/Chrome";
 import { AdminIdentitySwitcher } from "@/components/AdminIdentitySwitcher";
 import { DevIdentitySwitcher } from "@/components/DevIdentitySwitcher";
@@ -70,6 +72,8 @@ export default async function RootLayout({
         <Toaster />
         {/* Vercel Web Analytics: cookieless page counts by path, referrer and utm tag (lead-gen pass 1). */}
         <Analytics />
+        {/* The chalk ring: on a preview, a held finger marks what he saw and sends it to the Council Board (public/marks/chalk.js). */}
+        {chalkOn() && <Script src="/marks/chalk.js" strategy="afterInteractive" />}
       </body>
     </html>
   );

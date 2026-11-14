@@ -38,6 +38,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Stand Still Before the Move',
+      bodyText:
+        'Breathe and stand without acting for one minute. Feel the energy that wants to move you. Do not spend it yet. Write down what the energy is for, in one sentence.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: 'DIRECT_ACTION',
+      faceMoveType: null,
+    },
+    {
+      title: 'Ask Who Is Already Acting',
+      bodyText:
+        'Before you start anything, ask one person who is already acting on this what they need, and listen to the whole answer. Write down the opening they showed you that you did not know was there.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: 'DIRECT_ACTION',
+      faceMoveType: null,
+    },
+    {
       title: 'What Is Stopping You?',
       bodyText:
         'You know what to do. What is actually in the way of doing it right now? Name the obstacle without softening it. Is it external, internal, or both?',

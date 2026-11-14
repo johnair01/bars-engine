@@ -15,22 +15,28 @@
      5. rim: a thin warm paint-light on edges facing away from the camera, as the pictures have on every figure.
    ?paint=0 on the page URL turns it off, for the side-by-side with round 2. ?paint=0.5 is half strength. */
 import * as THREE from "three";
+import { LOOK } from "./look-data.js";
 
-/* Concept ramp, read from the four views' luminance percentiles (10, 40, 70, 95): the mean colour inside each band.
-   Views 1 to 4 agree within a few counts, so one ramp serves all four. sRGB hex. */
-export const RAMP = ["#1d1007", "#351e15", "#4d2e23", "#774f4f", "#e09a72"];
-export const RAMP_STOPS = [0.0, 0.2, 0.42, 0.66, 1.0];   // where each colour sits along the banded light (0 dark, 1 lit)
+/* The ramp and the palette come from the look dataset (look-data.js, copied from the council's look.json). The ramp
+   was read from the four views' luminance percentiles (10, 40, 70, 95): the mean colour inside each band, sRGB hex. */
+export const RAMP = LOOK.ramp.colours;
+export const RAMP_STOPS = LOOK.ramp.stops;   // where each colour sits along the banded light (0 dark, 1 lit)
 
 const q = new URLSearchParams(typeof location !== "undefined" ? location.search : "").get("paint");
 const strength = q === null ? 1 : Math.max(0, Math.min(1, Number(q)));
 export const paint = {
   uStrength: { value: Number.isFinite(strength) ? strength : 1 },
-  uBands: { value: 5 },
+  uBands: { value: LOOK.palette.bands },
   uRamp: { value: RAMP.map(h => new THREE.Color(h)) },   // THREE.Color converts sRGB hex to linear
   uStops: { value: RAMP_STOPS },
   uBrush: { value: 1 },
-  uSoft: { value: 3.2 },        // mip bias on colour maps: paint has no pixel-level speckle
+  uSoft: { value: LOOK.palette.mip_bias },        // mip bias on colour maps: paint has no pixel-level speckle
+  uEdge: { value: LOOK.palette.edge_half_width },        // half-width of each band's wet edge (0.2 was a fixed smoothstep 0.3..0.7; 0.5 = no hard step at all); room-styles.js sets it per style
 };
+
+// The two palette weights, as text the shader reads: the dataset holds them, the shader cannot take an object.
+const SHADOW_FILL = Number(LOOK.palette.shadow_fill.weight).toFixed(2);
+const RIM_WEIGHT = Number(LOOK.palette.rim.weight).toFixed(2);
 
 const VERT_DECL = `varying vec3 vPaintPos;
 varying vec3 vPaintN;
@@ -50,6 +56,7 @@ uniform float uPaintStrength;
 uniform float uPaintBands;
 uniform float uPaintBrush;
 uniform float uPaintSoft;
+uniform float uPaintEdge;
 uniform vec3 uPaintRamp[5];
 uniform float uPaintStops[5];
 float pHash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
@@ -81,7 +88,7 @@ if (uPaintStrength > 0.001) {
   float x = L / (1.0 + L);
   float xb = x * uPaintBands * (1.0 + (stroke - 0.5) * 0.45 * uPaintBrush);
   float fl = floor(xb);
-  float fr = smoothstep(0.30, 0.70, fract(xb));
+  float fr = smoothstep(0.5 - uPaintEdge, 0.5 + uPaintEdge, fract(xb));
   float banded = (fl + fr) / uPaintBands;
   float lit = clamp(banded, 0.0, 1.0);
   float Lb = lit / max(1.0 - lit, 0.02);          // back to linear light
@@ -99,10 +106,10 @@ if (uPaintStrength > 0.001) {
   float cl = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col = mix(vec3(cl), col, 1.3);
   /* a warm fill in the shadows, as the pictures never go black: the ramp's mid brown, added, not multiplied */
-  col += uPaintRamp[2] * 0.14;
+  col += uPaintRamp[2] * ${SHADOW_FILL};
   /* rim: a thin warm paint-light on edges turned from the camera */
   float rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 3.2);
-  col += uPaintRamp[4] * rim * 0.16 * smoothstep(0.02, 0.25, L);
+  col += uPaintRamp[4] * rim * ${RIM_WEIGHT} * smoothstep(0.02, 0.25, L);
   outgoingLight = mix(outgoingLight, col, uPaintStrength);
 }
 `;
@@ -117,7 +124,7 @@ export function installPaint() {
     if (prev) prev.call(this, shader, renderer);
     if (this.userData && this.userData.noPaint) return;
     const u = shader.uniforms;
-    u.uPaintStrength = paint.uStrength; u.uPaintBands = paint.uBands; u.uPaintBrush = paint.uBrush; u.uPaintSoft = paint.uSoft;
+    u.uPaintStrength = paint.uStrength; u.uPaintBands = paint.uBands; u.uPaintBrush = paint.uBrush; u.uPaintSoft = paint.uSoft; u.uPaintEdge = paint.uEdge;
     u.uPaintRamp = paint.uRamp; u.uPaintStops = paint.uStops;
     shader.vertexShader = VERT_DECL + shader.vertexShader
       .replace("#include <project_vertex>", "#include <project_vertex>\n" + VERT_BODY);

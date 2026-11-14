@@ -3,6 +3,8 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins } from '@/lib/economy/coin-marks'
 
 /**
  * Creates a new sub-quest nested under a parent quest.
@@ -35,8 +37,9 @@ export async function createSubQuest(parentId: string, data: {
             if (!parent) throw new Error('Parent quest not found')
 
             // 2. Charge 1 Vibeulon
+            await releaseStaleStakes(tx, player.id)
             const wallet = await tx.vibulon.findMany({
-                where: { ownerId: player.id },
+                where: spendableWhere(player.id),
                 orderBy: { createdAt: 'asc' },
                 take: 1
             })
@@ -46,6 +49,7 @@ export async function createSubQuest(parentId: string, data: {
             }
 
             const tokenToBurn = wallet[0]
+            await markCoins(tx, [tokenToBurn], 'spent', { playerId: player.id, place: 'quest-nesting', barId: parentId, note: 'a sub-quest' })
             await tx.vibulon.delete({ where: { id: tokenToBurn.id } })
 
             // 3. Log the stake (Provenance)
@@ -161,8 +165,9 @@ export async function appendExistingQuest(parentId: string, questId: string) {
             if (child.parentId === parentId) throw new Error('Quest is already a sub-quest of this parent')
 
             // 2. Charge 1 Vibeulon
+            await releaseStaleStakes(tx, player.id)
             const wallet = await tx.vibulon.findMany({
-                where: { ownerId: player.id },
+                where: spendableWhere(player.id),
                 orderBy: { createdAt: 'asc' },
                 take: 1
             })
@@ -172,6 +177,7 @@ export async function appendExistingQuest(parentId: string, questId: string) {
             }
 
             const tokenToBurn = wallet[0]
+            await markCoins(tx, [tokenToBurn], 'spent', { playerId: player.id, place: 'quest-nesting', barId: parentId, note: 'adding to a quest' })
             await tx.vibulon.delete({ where: { id: tokenToBurn.id } })
 
             // 3. Log the stake

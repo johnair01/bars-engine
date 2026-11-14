@@ -2,7 +2,7 @@
 //
 // Source: content/ontology-game/ (game.jsx and game.css came from the claude.ai artifact;
 // site-shim.js gives the game browser-local storage off claude.ai). Output:
-// public/ontology-game/index.html, gitignored like public/understood-app.
+// public/ontology-game/index.html, gitignored.
 //
 // The artifact compiled its JSX in the browser with Babel standalone (about 3 MB, then a
 // compile of about 270 KB on every load). This compiles once at build time with the
@@ -103,6 +103,12 @@ const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
 const spiritFormsJs = readFileSync(path.join(srcDir, 'cave', 'spirit-forms.js'), 'utf8');
 // The one store for spirits kept between runs (oag.spirits.v1), read by both caves.
 const spiritStoreJs = readFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), 'utf8');
+// The inner vessel the WAVE room rides in (oag.vessel.v1), its parts, fuel and the places reached from it (cave/vessel.js).
+const vesselJs = readFileSync(path.join(srcDir, 'cave', 'vessel.js'), 'utf8');
+// The one organ state (oag.organs.v1): which seat of the body map a sitting reached, read by the WAVE room and the basin (cave/organs.js).
+const organsJs = readFileSync(path.join(srcDir, 'cave', 'organs.js'), 'utf8');
+// The basin: the body map's inside as a walkable place, entered by its one mouth from the WAVE room (cave/basin.js).
+const basinJs = readFileSync(path.join(srcDir, 'cave', 'basin.js'), 'utf8');
 // Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
 const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
@@ -133,9 +139,14 @@ ${inline(spiritFormsJs)}
 </script>
 <script>
 ${inline(spiritStoreJs)}
+${inline(vesselJs)}
+${inline(organsJs)}
 </script>
 <script>
 ${inline(caveJs)}
+</script>
+<script>
+${inline(basinJs)}
 </script>
 <script>
 ${inline(walkRoomJs)}
@@ -176,6 +187,7 @@ ${inline(spiritFormsJs)}
 </script>
 <script>
 ${inline(spiritStoreJs)}
+${inline(vesselJs)}
 </script>
 <script>
 ${inline(caveJs)}
@@ -192,6 +204,10 @@ mkdirSync(path.join(outDir, 'big-mind'), { recursive: true });
 writeFileSync(path.join(outDir, 'big-mind', 'index.html'), bigMindHtml);
 mkdirSync(path.join(outDir, 'cave'), { recursive: true });
 writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
+// The Between reads the same store on the same origin (its homeroom calls spirits from the caves), so it is served as a file too.
+copyFileSync(path.join(srcDir, 'cave', 'spirit-store.js'), path.join(outDir, 'cave', 'spirit-store.js'));
+// The daemons' spirit gas, for the block's room in the Between (public/between/block-room.js; Six-faces-council block-metabolize).
+copyFileSync(path.join(srcDir, 'cave', 'spirit-forms.js'), path.join(outDir, 'cave', 'spirit-forms.js'));
 copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
 copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 'spots.json'));
 // The stone tiles, baked by cave/bake_tiles.py and committed.
@@ -204,6 +220,10 @@ for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damag
 // The player's own figure: Average Dusk walking a CMU mocap clip (rig_mocap, bake_daemons.py --walker), worn over the avatar.
 mkdirSync(path.join(outDir, 'cave', 'player'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'player', 'walker.glb'), path.join(outDir, 'cave', 'player', 'walker.glb'));
+// The standard character in the basin: the Between's figure read through r128 (cave/dusk-figure.js; cave/vendor/README.md).
+mkdirSync(path.join(outDir, 'cave', 'vendor'), { recursive: true });
+copyFileSync(path.join(srcDir, 'cave', 'dusk-figure.js'), path.join(outDir, 'cave', 'dusk-figure.js'));
+for (const f of ['GLTFLoader.js', 'SkeletonUtils.js', 'three-shim.js', 'skeleton-utils-shim.js']) copyFileSync(path.join(srcDir, 'cave', 'vendor', f), path.join(outDir, 'cave', 'vendor', f));
 // The spirits' core and hologram per family (cave/bake_spirits.py, from the spirit page's GLBs), fetched by spirit-forms.js
 // only when a spirit first unfolds into one (board sic-unfold-by-sitting).
 mkdirSync(path.join(outDir, 'cave', 'spirits'), { recursive: true });

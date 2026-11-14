@@ -5,16 +5,43 @@ Auto-generated from all feature plans. Last updated: 2026-03-08
 ## Questions for Wendell go to the Council Board
 
 Every question whose answer changes what gets built goes through the six faces' reach test and onto the Council
-Board, https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho, never into chat. This holds in every session, mid-build,
+Board, https://bars-engine.vercel.app/board/council, never into chat. This holds in every session, mid-build,
 and for any worker a session starts.
 
 - Run the reach test first (`reach_test` in `council/faces.yaml`; the skill is `.claude/skills/six-faces/`). A
   question the record can answer becomes a position that stands unless he flips it.
-- Board rows are written in the council's home repo, `wendell-britt/six-faces-council`, in `board/board_data.json`
-  on main, then rebuilt and republished. Its `CLAUDE.md` holds the full rule.
+- Board rows are written in the council's home repo, `wendell-britt/six-faces-council`, as rows posted with
+  `board/post_rows.py` that the board-pull Action lands on main. Its `CLAUDE.md` holds the full rule.
 - A chat reply says what changed and names the new board rows with the link. It ends without a question.
 - A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
   anything.
+
+## Test locally before you push: there are no Vercel previews
+
+Since 2026-11-04 Vercel builds production only (merges to `main`); a branch gets no preview. Every session starts,
+tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.md`](docs/LOCAL_FIRST_TESTING.md).
+
+- Start: `scripts/local/dev.sh dev` (local Postgres, a database for this workspace, `next dev` on a free port; prints
+  the URL). Sign in as `admin@admin.local` / `password`, or player id `test-admin`. Stop: `scripts/local/dev.sh stop`.
+- Before pushing: `scripts/local/check.sh --build`. It replaces the Vercel preview as the build check;
+  name the command and its result in the pull request.
+- Show Wendell: a cloud session's `localhost` is the container, which he cannot open. Take pictures with
+  `AS=test-admin OUT=/mnt/project-files/looks/<name> scripts/local/dev.sh shot /page ...`, read them yourself, then
+  attach them or carry them into a look row. On his Mac (Remote Control) give him the `http://localhost:<port>` URL.
+- Never point local runs at production. A dev server refuses a non-local `DATABASE_URL` and a local build skips
+  `prisma migrate deploy` on one; `BARS_ALLOW_REMOTE_DB=1` is for a deliberate, named exception only. Do not run
+  `vercel env pull` to get a database, and do not create hosted preview deployments as routine testing.
+- A change that only Vercel can show (middleware, crons, Blob, Vercel-only env) says "needs hosted check" in its pull
+  request; the options are in the guide, section 7.
+
+## Ship once a day: do not merge your own pull request
+
+Wendell, 2026-11-04 (council board `lf-daily-ship`, answer A). Every merge to `main` is a production build, so threads
+no longer self-merge in bars-engine. When `scripts/local/check.sh --build` is green and no look gates the pull request
+(`board/answered.py --pr N` in the council repo), mark it ready for review and add the `ship-next` label, then stop. One
+shipping session a day merges every `ship-next` pull request in one batch (`docs/LOCAL_FIRST_TESTING.md` section 7).
+Only an urgent fix (production down, payment or sign-in broken) merges straight to `main` by hand, and its description
+says why. Council pull requests are unchanged.
 
 ## Hand off before the context passes 150,000 tokens
 
@@ -59,64 +86,20 @@ The project contains distinct narrative **voices** derived from the creator's ar
 
 The Portland community around this project has a strong allergy to AI. Design choices, documentation, and public-facing language should respect this. The non-AI version is not a fallback; it is a first-class delivery mode.
 
-## Active Technologies
-- TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK (main)
-- PostgreSQL (Prisma ORM) (main)
+## Stack
 
-- (main)
+TypeScript, Next.js 14+, Prisma (PostgreSQL), Tailwind CSS, AI SDK. Source in `src/`, tests in `tests/`.
 
-## Project Structure
+## Spec work
 
-```text
-src/
-tests/
-```
-
-## Commands
-
-# Add commands for 
-
-## Code Style
-
-: Follow standard conventions
-
-## Recent Changes
-- main: Added TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK
-- main: Added TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK
-
-- main: Added
-
-<!-- MANUAL ADDITIONS START -->
-
----
-
-## Spec Workflow
-
-- **Specs**: `.specify/specs/<feature>/` — each feature has spec.md, plan.md, tasks.md
-- **Backlog prompts**: `.specify/backlog/prompts/` — paste into Claude Code for spec-driven work
-- **Objective stack**: [.specify/backlog/BACKLOG.md](.specify/backlog/BACKLOG.md)
-
-### Creating or expanding spec kits (read first)
-
-Before authoring new feature specs, **read** [.agents/skills/spec-kit-translator/SKILL.md](.agents/skills/spec-kit-translator/SKILL.md) and scaffold from [.specify/spec-template.md](.specify/spec-template.md). The three-file folder alone is not enough: include Purpose/Practice where applicable, design decisions, conceptual model (WHO/WHAT/WHERE when relevant), data/API contracts before UI-heavy work, and a **Verification Quest** for user-facing changes (see skill § Verification Quests). After editing `BACKLOG.md`, run `npm run backlog:seed` per the skill. Rule reference: [.cursor/rules/spec-kit-plans.mdc](.cursor/rules/spec-kit-plans.mdc).
-
-## Agent Context Refresh
-
-Run when switching branches or after pulling new specs:
-
-```bash
-./.specify/scripts/bash/update-agent-context.sh claude
-```
-
-- On a feature branch: uses that spec's plan.md
-- On main: uses specs/main/plan.md
+Spec kits (`.specify/specs/`), the backlog, the agent-context refresh and Ouroboros (`ooo`) are in the skill
+`.claude/skills/spec-workflow/SKILL.md`; load it when the work touches a spec.
 
 ## Fail-Fix Workflow
 
-Before moving on, verify:
+Before moving on, verify (on the local database, docs/LOCAL_FIRST_TESTING.md):
 
-- `npm run build` — full Next.js build
-- `npm run check` — lint + type-check
+- `scripts/local/check.sh --build` — `npm run check` (lint + type-check), vitest, and the full `npm run build`
 
 After modifying `prisma/schema.prisma`:
 
@@ -136,47 +119,5 @@ See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 
 <!-- ooo:START -->
 <!-- ooo:VERSION:0.14.0 -->
-# Ouroboros — Specification-First AI Development
 
-> Before telling AI what to build, define what should be built.
-> As Socrates asked 2,500 years ago — "What do you truly know?"
-> Ouroboros turns that question into an evolutionary AI workflow engine.
-
-Most AI coding fails at the input, not the output. Ouroboros fixes this by
-**exposing hidden assumptions before any code is written**.
-
-1. **Socratic Clarity** — Question until ambiguity ≤ 0.2
-2. **Ontological Precision** — Solve the root problem, not symptoms
-3. **Evolutionary Loops** — Each evaluation cycle feeds back into better specs
-
-```
-Interview → Seed → Execute → Evaluate
-    ↑                           ↓
-    └─── Evolutionary Loop ─────┘
-```
-
-## ooo Commands
-
-Each command loads its agent/MCP on-demand. Details in each skill file.
-
-| Command | Loads |
-|---------|-------|
-| `ooo` | — |
-| `ooo interview` | `ouroboros:socratic-interviewer` |
-| `ooo seed` | `ouroboros:seed-architect` |
-| `ooo run` | MCP required |
-| `ooo evolve` | MCP: `evolve_step` |
-| `ooo evaluate` | `ouroboros:evaluator` |
-| `ooo unstuck` | `ouroboros:{persona}` |
-| `ooo status` | MCP: `session_status` |
-| `ooo setup` | — |
-| `ooo help` | — |
-
-## Agents
-
-Loaded on-demand — not preloaded.
-
-**Core**: socratic-interviewer, ontologist, seed-architect, evaluator,
-wonder, reflect, advocate, contrarian, judge
-**Support**: hacker, simplifier, researcher, architect
-<!-- ooo:END -->
+Ouroboros (`ooo`): `.claude/skills/spec-workflow/SKILL.md`.

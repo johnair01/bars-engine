@@ -24,6 +24,15 @@ describe('/api/board/session-writes', () => {
     dbm.boardSave.create.mockResolvedValue({})
   })
 
+  it('takes a council row, born unrecorded, and stores it for the next board read (worklist-api)', async () => {
+    const row = { collection: 'rows', docId: 'wl-probe', mode: 'set',
+                  data: { kind: 'terms', pass: 'p', term: 'probe', plain: 'A probe.' } }
+    const body = await (await POST(req({ docs: [row] }))).json()
+    expect(body).toMatchObject({ written: ['rows/wl-probe'], refused: [] })
+    expect(dbm.boardSave.create.mock.calls[0][0].data).toMatchObject({ collection: 'rows', recordedAt: null })
+    await POST(req({ docs: [row], dry: true }))
+  })
+
   it('needs COUNCIL_MENU_TOKEN', async () => {
     expect((await POST(req({ docs: [step] }, 'wrong'))).status).toBe(401)
     expect((await GET(req(null, null))).status).toBe(401)
@@ -62,6 +71,12 @@ describe('/api/board/session-writes', () => {
     const body = await (await GET(req(null, 'secret', 'collection=contacts'))).json()
     expect(body.hashes).toEqual({ contacts: { ari: docHash({ notes: 'private', name: 'Ari' }) } })
     expect(JSON.stringify(body)).not.toContain('private')
+  })
+
+  it('answers contents only for the ids asked', async () => {
+    store.latestDocs.mockResolvedValue({ contacts: { ari: { name: 'Ari' }, bo: { name: 'Bo' } }, steps: {} })
+    const body = await (await GET(req(null, 'secret', 'ids=contacts/ari,steps/none,other/x'))).json()
+    expect(body.docs).toEqual({ 'contacts/ari': { name: 'Ari' } })
   })
 
   it('hashes the same canonical form as board/store_write.py', () => {

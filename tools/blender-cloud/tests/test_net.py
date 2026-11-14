@@ -125,6 +125,76 @@ def p6():
     return f"cave-test.mjs: {passes} checks passed at 390 by 844"
 
 
+@test("J5c")
+def j5c():
+    """J5(c): in headless Chromium, swapping a garment on the walking figure (j5_swap.mjs: the wardrobe loaded and
+    bound to the figure's bones once, a swap takes one off and puts the next on) takes under 100 ms, and the frame after
+    a swap is no slower than the walk's own at the median. The frame line (no frame below 30 a second) is judged on his phone, as J1's was
+    (bpt-j1-frame-rate): the cloud browser draws without a graphics chip, so its own walking frames, before any swap,
+    already miss it. The numbers are reported either way."""
+    needs("registry.npmjs.org")
+    root = W / "cave-test"
+    if not (root / "node_modules/playwright").exists():
+        root.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run(["npm", "install", "--prefix", str(root), "--silent", *[f"{k}@{v}" for k, v in CAVE_PINS.items()]],
+                           capture_output=True, text=True, timeout=900)
+        check(r.returncode == 0, f"npm install failed: {r.stderr[-300:]}")
+    out = tmpdir("j5c")
+    r = subprocess.run([BLENV, str(GAME / "cave/garments.py"), "--build", "average", "--palette", "dusk", "--out", str(out)],
+                       capture_output=True, text=True, timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    shutil.copyfile(TESTS / "j5_swap.mjs", root / "j5_swap.mjs")
+    r = subprocess.run(["node", "j5_swap.mjs"], capture_output=True, text=True, cwd=root, timeout=600,
+                       env=dict(os.environ, J5_DIR=str(out)))
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"j5_swap.mjs failed: {r.stderr[-300:]}")
+    res = json.loads(line)
+    check(not res["errors"] and res["worst_swap_ms"] < 100, f"swap: {res}")
+    # a swap costs the frame nothing the walk alone does not: the frame after a swap is no slower, at the median
+    check(res["swap_frame_median_ms"] <= res["baseline_median_frame_ms"] + 2, f"swap frames slower: {res}")
+    return (f"{res['swaps']} swaps, worst {res['worst_swap_ms']} ms (median {res['median_swap_ms']}); frames: walking "
+            f"alone median {res['baseline_median_frame_ms']} ms, worst {res['baseline_worst_frame_ms']}; on a swap median "
+            f"{res['swap_frame_median_ms']}, worst {res['swap_frame_worst_ms']} (phone judges the 30 a second line)")
+
+
+@test("J5d")
+def j5d():
+    """J5(d): the robe's skirt as cloth in headless Chromium with three.js r128, as cave.js will run it (j5_cloth.mjs:
+    cloth.js's CaveCloth.attach on the robe GLB, bound to the walking figure, carried forward at the walk's speed).
+    With four figures walking, every cloth point stays a number, the skirt swings away from where skinning alone puts
+    it (more than 2 cm), a fifth figure standing still keeps its belt row still against the body (round 6: the largest
+    frame-to-frame change in the motion of the free points within 6 cm of the belt, relative to their skinned places,
+    under 0.2 mm), the walking figure's belt row keeps under 10 mm (99th percentile; the walk's own quaternion keys
+    once made it 132 mm), the sleeve cuffs, ankle ties, hem edge and turned hem stay under their jitter limits walking
+    and standing (round 7: j5_cloth.mjs LIMITS; the walk's corners made the cuffs 29 mm and the ankles 35), and the
+    cloth costs under 2.5 ms per figure for each 1/60 s of game time (5.5 with the sleeve panels as cloth, round 12, board
+    cd-panel-cost; skinning on the
+    CPU, the step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
+    frame rate; this bounds the cloth's own share."""
+    needs("registry.npmjs.org")
+    root = W / "cave-test"
+    if not (root / "node_modules/playwright").exists():
+        root.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run(["npm", "install", "--prefix", str(root), "--silent", *[f"{k}@{v}" for k, v in CAVE_PINS.items()]],
+                           capture_output=True, text=True, timeout=900)
+        check(r.returncode == 0, f"npm install failed: {r.stderr[-300:]}")
+    out = tmpdir("j5d")
+    r = subprocess.run([BLENV, str(GAME / "cave/garments.py"), "--build", "average", "--palette", "dusk", "--out", str(out)],
+                       capture_output=True, text=True, timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    shutil.copyfile(TESTS / "j5_cloth.mjs", root / "j5_cloth.mjs")
+    r = subprocess.run(["node", "j5_cloth.mjs"], capture_output=True, text=True, cwd=root, timeout=600,
+                       env=dict(os.environ, J5_DIR=str(out), FIGURES="4", CLOTH_JS=str(GAME / "cave/cloth.js")))
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"j5_cloth.mjs failed: {r.stderr[-300:]}")
+    res = json.loads(line)
+    check(res["pass"], f"cloth: {res}")
+    return (f"4 figures, {res['free']} cloth points each of {res['particles']}: {res['per_figure_ms']} ms a figure per "
+            f"1/60 s (median; p95 for all four {res['p95_ms']} ms), skirt swings {res['skirt_swing_m']} m, belt still to "
+            f"{res['belt_jitter_mm']} mm standing ({res['belt_walk_jitter_mm']} mm walking, p99); walking jitter p99: "
+            + ", ".join(f"{k} {res['jitter_mm'][k + 'Walk']} mm" for k in ("cuff", "ties", "hem", "fold")))
+
+
 @test("N1")
 def n1():
     needs("api.blenderkit.com", "assets.blenderkit.com")

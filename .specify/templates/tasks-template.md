@@ -249,3 +249,11 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+## Council contract (tasks)
+
+<!-- contract_check.py: every task is `- [ ] T001 [claude] FR-001 ...` or `[wendell]`; each FR in spec.md has a task; and one line below names the proof. -->
+
+- [ ] T001 [claude] FR-001 Run the falsification test in spec.md and record the result here.
+
+proof: [the still on the board, or preview: the one-click link opened at the state to test]

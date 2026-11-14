@@ -38,6 +38,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Wait for the Room to Show Itself',
+      bodyText:
+        'Before you organize, breathe and watch the group for one full minute. Do not assign anything to anyone. Write down who moved toward whom, and who stayed back.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: 'SKILLFUL_ORGANIZING',
+      faceMoveType: null,
+    },
+    {
+      title: 'Open the Floor to One Voice',
+      bodyText:
+        'Choose one person who has not spoken in the group and make a clear space for them. Do not prompt what they say. Write down what they added that changes the plan.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: 'SKILLFUL_ORGANIZING',
+      faceMoveType: null,
+    },
+    {
       title: 'The Coordination Failure',
       bodyText:
         'Where is the effort going sideways — not because people are bad but because the coordination is broken? Name the specific place where good people with good intentions are working against each other.',

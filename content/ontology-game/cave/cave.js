@@ -896,6 +896,13 @@
   // Looking with the thumb: how far a pixel of drag tilts, how far it can tilt (pushed up, then pulled down), how long the
   // thumb rests before the look eases back behind the figure (ms), and how close to the roof the camera may rise (choices).
   var LOOK = { pitchPerPx: 0.004, pitch: [-1.3, 0.6], settle: 600, roof: 1.75 };
+  // Touch on a phone (controls round 1, Six-faces-council council/callsheets/cave-controls.md; Wendell, 2026-10-21: "Ok the
+  // controls are pretty clunky still"). A touch that moves less than px and lifts within ms is a tap, anything else a drag
+  // (ctl-tap-rule). A thing that takes a tap answers within min px of it on screen, half again in still mode (ctl-generous-taps).
+  // A look turned by hand holds for hold seconds of walking before the camera eases back behind the figure, the camera
+  // follows at follow (it was 6), and pinch zooms its distance between zoom[0] and zoom[1] (ctl-gentle-camera). Still mode
+  // turns at still of the pace and moves the camera by itself not at all (ctl-still-mode).
+  var TOUCH = { px: 10, ms: 500, min: 48, hold: 2, follow: 3, zoom: [0.55, 1.5], still: 0.6 };
   // numbFog and numbFill (Wendell, 2026-10-13: "we need brighter light in the numbness"): the numb cave thins its fog to this
   // share so the circle round the figure isn't hazed out, its sky light is this share of the other caves', and the figure's
   // light burns this much brighter there. The circle is still one size, and steady along the whole walk.
@@ -1094,7 +1101,7 @@
     var g = d.g, target = Math.max(0.2, Math.min(0.62, Math.asin(Math.min(0.9, stepLen / 2 / LEG_WORLD))));
     d.amp += (target - d.amp) * Math.min(1, dt * 6);
     var A = d.amp, sL = Math.sin(ph), sR = Math.sin(ph + Math.PI);
-    J.hipL.rotation.x = -A * sL * g; J.hipR.rotation.x = -A * sR * g;
+    J.hipL.rotation.x = -A * sL * g; J.hipR.rotation.x = -A * sR * g; J.hipL.rotation.z = J.hipR.rotation.z = 0; // a sitting may have turned them out
     J.kneeL.rotation.x = g * (0.12 + 0.95 * Math.max(0, Math.cos(ph))); J.kneeR.rotation.x = g * (0.12 + 0.95 * Math.max(0, Math.cos(ph + Math.PI)));
     J.ankleL.rotation.x = -(J.hipL.rotation.x + J.kneeL.rotation.x) * 0.8; J.ankleR.rotation.x = -(J.hipR.rotation.x + J.kneeR.rotation.x) * 0.8;
     var B = A * 0.85, b = still ? 0.5 : breath;
@@ -1593,7 +1600,7 @@
         if (dd < bestD) { bestD = dd; off = f; }
       }
       var ci = J.findIndex(function (r) { return r[0] === "spine.003"; }), chest = chans.some(function (c) { return c.ch.joint === ci && c.ch.path === "r"; }) ? bones[ci] : null;
-      d.walker = { mesh: m, mat: mat, bones: bones, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
+      d.walker = { T3: THREE, mesh: m, mat: mat, bones: bones, rows: J, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
         tq: new THREE.Quaternion(), tq2: new THREE.Quaternion(), tv: new THREE.Vector3(), tv2: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion(), ws: new THREE.Vector3() };
     });
   }
@@ -1601,7 +1608,7 @@
   // and the rate the shared stride phase turns at; the stride is blended from the rest pose by the walk's weight g, with
   // the stand-in's opacity and glow, and its breath when standing.
   function poseWalker(d, dt, g, b) {
-    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null;
+    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null, py = p ? p.y : 0;
     var v = 0;
     if (p && w.at && dt > 0) v = Math.min(30, Math.hypot(p.x - w.at.x, p.z - w.at.z) / dt);
     if (p) w.at = (w.at || p.clone()).copy(p);
@@ -1627,6 +1634,103 @@
     }
     if (w.chest) w.chest.quaternion.multiply(w.q1.setFromAxisAngle(w.ax, -0.04 * (b - 0.5) * (1 - g)));
     w.mat.opacity = d.mat.opacity; w.mat.emissiveIntensity = d.mat.emissiveIntensity * 0.6;
+  }
+  // Sitting down (Wendell, 24 October 2026: "Instead of sitting the characters legs are just going through the ground"): the
+  // figure used to be lowered whole, so its legs went down through the floor. This poses it seated instead, k from 0 (as the
+  // walk or the idle left it) to 1 (seated), its hips lowered to the seat and its feet kept on the floor. On the floor (the
+  // cave, the Big Mind cave) it sits cross-legged with its hands on its knees; o.on lifts the whole seated pose onto what it
+  // sits on (the WAVE room's cushion), so it sits cross-legged on its top as it does on the floor. Each leg and arm is a
+  // two-bone reach (thigh and shin to the ankle, upper arm and forearm to the hand on the knee), bent about its own hinge so the knee and elbow do not twist. One pose for every place that sits, layered on the walker.
+  // o.on: the height of what it sits on, in the body's metres (0 on the floor). Wendell, 24 October 2026, the WAVE room: the
+  // cushion pose used to put the hips 0.1 over the top with the feet down on the floor in front, so the shins went through the
+  // cushion's front and the figure looked sunk in a drum. Now the floor's cross-legged pose is lifted onto the top whole.
+  var SEAT_FLOOR = 0.2; // the hip joints' height above what the figure sits on, in the body's metres
+  function seatAvatar(av, k, o) {
+    var d = av.userData, J = d.J, on = o && o.on ? o.on : 0;
+    k = Math.max(0, Math.min(1, k)); if (k <= 0) return;
+    // the stand-in (shown only until the worn body has loaded): hips down, knees out, cross-legged on what it sits on
+    var hy = 0.24 + on * DESIGN_H / BODY_FRAME_H;
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1;
+      J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - k) - 1.45 * k; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - k) + 2.4 * k;
+      J["hip" + n].rotation.z = J["hip" + n].rotation.z * (1 - k) + 0.7 * sgn * k;
+      J["ankle" + n].rotation.x *= 1 - k; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - k) - 0.35 * k; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - k) - 0.5 * k;
+    });
+    J.hips.position.y = J.hips.position.y * (1 - k) + hy * k;
+    if (d.walker) seatWalker(d.walker, k, on);
+  }
+  function seatWalker(w, k, on) {
+    var T = w.seatAt && w.seatAt.on === on ? w.seatAt : (w.seatAt = seatTargets(w, on));
+    // a bone the walk's keys do not set this frame starts from its rest turn, so the pose never builds up frame on frame
+    for (var i = 0; i < T.q.length; i++) if (T.q[i]) { if (!T.driven[i]) w.bones[i].quaternion.copy(T.lq[i]); w.bones[i].quaternion.slerp(T.q[i], k); }
+    if (!T.drivenAt) w.bones[T.root].position.copy(T.lp[T.root]);
+    w.bones[T.root].position.lerp(T.rootAt, k);
+  }
+  // The seated pose's bone turns, worked out once per height of what it sits on, from the body's rest pose.
+  function seatTargets(w, on) {
+    var seat = on + SEAT_FLOOR;
+    var rows = w.rows, V = w.T3.Vector3, Q = w.T3.Quaternion, M = new w.T3.Matrix4();
+    var idx = {}; rows.forEach(function (r, i) { idx[r[0]] = i; });
+    var lq = rows.map(function (r) { return new Q().fromArray(r[3]); }), lp = rows.map(function (r) { return new V().fromArray(r[2]); });
+    var root = rows.findIndex(function (r) { return r[1] < 0; });
+    // the rest pose in the body's own space, in order (a parent always comes before its children in the rig's rows)
+    var rq = [], rp = [];
+    rows.forEach(function (r, i) { if (r[1] < 0) { rq[i] = lq[i].clone(); rp[i] = lp[i].clone(); } else { rq[i] = rq[r[1]].clone().multiply(lq[i]); rp[i] = lp[i].clone().applyQuaternion(rq[r[1]]).add(rp[r[1]]); } });
+    var drop = rp[root].y - seat, nq = rq.map(function (q) { return q.clone(); }), np = rp.map(function (p) { return new V(p.x, p.y - drop, p.z); });
+    var out = rows.map(function () { return null; });
+    function basis(dir, side) { var x = side.clone().sub(dir.clone().multiplyScalar(side.dot(dir))).normalize(), z = new V().crossVectors(dir, x); return M.makeBasis(dir, x, z).clone(); }
+    // turn bone a (and its chain down to bone b) so a points from its joint along dir with its hinge on side
+    function aim(a, dir, side, restSide) {
+      var restDir = rp[childOf(a)].clone().sub(rp[a]).normalize();
+      var R = basis(dir, side).multiply(basis(restDir, restSide).transpose());
+      nq[a] = new Q().setFromRotationMatrix(R).multiply(rq[a]);
+    }
+    function childOf(a) { // the next joint down the limb, past any twist bone
+      var c = a; do { c = rows.findIndex(function (r) { return r[1] === c; }); } while (c >= 0 && /\.00\d$/.test(rows[c][0]) && rows[c][0].replace(/\.00\d$/, "") === rows[a][0]);
+      return c;
+    }
+    function len(a) { return rp[childOf(a)].distanceTo(rp[a]); }
+    function invert(q) { return q.clone().conjugate(); } // three r128 has no Quaternion.invert on every build
+    // two bones from joint a reaching target t, the middle joint pushed towards pole; returns the middle joint's place
+    function reach(a, t, pole) {
+      var b = childOf(a), L1 = len(a), L2 = len(b), h = np[a], dv = t.clone().sub(h), dist = Math.min(dv.length(), (L1 + L2) * 0.999), u = dv.normalize();
+      var x = (L1 * L1 - L2 * L2 + dist * dist) / (2 * dist), y = Math.sqrt(Math.max(0, L1 * L1 - x * x));
+      var pv = pole.clone().sub(u.clone().multiplyScalar(pole.dot(u))).normalize();
+      return h.clone().add(u.clone().multiplyScalar(x)).add(pv.multiplyScalar(y));
+    }
+    function limb(top, target, pole, restSide) {
+      var mid = childOf(top), end = childOf(mid), m = reach(top, target, pole);
+      var d1 = m.clone().sub(np[top]).normalize(), d2 = target.clone().sub(m).normalize(), side = new V().crossVectors(d1, d2);
+      if (side.lengthSq() < 1e-6) side.copy(restSide); side.normalize(); if (side.dot(restSide) < 0) side.negate();
+      aim(top, d1, side, restSide); aim(mid, d2, side, restSide);
+      np[mid] = m; np[end] = target.clone();
+      return { mid: mid, end: end };
+    }
+    var H = rp[root].y; // the rest hip height, in metres: the targets below are fractions of the body's own size
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1, th = idx["thigh." + n];
+      // cross-legged: the knee out and forward, the ankle tucked in front under the other knee, the left shin in front
+      var ankle = new V(-sgn * 0.13 * H, on + 0.08 * H, (i ? 0.2 : 0.32) * H), pole = new V(sgn * 0.9, 0.25, 0.5).normalize();
+      var L = limb(th, ankle, pole, new V(1, 0, 0));
+      var ft = L.end, toe = idx["toe." + n];
+      var fdir = new V(-sgn * 0.75, -0.25, 0.6).normalize();
+      // the foot keeps its own rest roll: aim its long axis and let its sole face the floor's way
+      var restF = rp[toe].clone().sub(rp[ft]).normalize(), R = new Q().setFromUnitVectors(restF, fdir);
+      nq[ft] = R.multiply(rq[ft]);
+    });
+    // the arms: hands resting on the thighs near the knees, the elbows a little out and back
+    ["L", "R"].forEach(function (n, i) {
+      var sgn = i ? -1 : 1, ua = idx["upper_arm." + n], kn = idx["shin." + n];
+      var hand = np[kn].clone().lerp(np[idx["thigh." + n]], 0.3).add(new V(0, 0.07 * H, 0)), pole = new V(sgn * 0.6, -0.1, -1).normalize();
+      limb(ua, hand, pole, new V(-1, 0, 0));
+    });
+    // back to each bone's own turn under its parent, for the bones the pose moves
+    var moved = {}; ["thigh", "shin", "foot", "upper_arm", "forearm"].forEach(function (b) { moved[idx[b + ".L"]] = moved[idx[b + ".R"]] = true; });
+    // twist bones under a moved bone keep their rest turn under it, so each bone's place is worked out down the chain
+    rows.forEach(function (r, i) { if (r[1] >= 0 && !moved[i]) nq[i] = nq[r[1]].clone().multiply(lq[i]); });
+    rows.forEach(function (r, i) { if (moved[i] && r[1] >= 0) out[i] = invert(nq[r[1]]).multiply(nq[i]); });
+    var driven = {}, drivenAt = false; w.chans.forEach(function (c) { if (c.ch.path === "r") driven[c.ch.joint] = true; else if (c.ch.joint === root) drivenAt = true; });
+    return { on: on, q: out, lq: lq, lp: lp, driven: driven, drivenAt: drivenAt, root: root, rootAt: new V(lp[root].x, lp[root].y - drop, lp[root].z) };
   }
   // Where a worn body's pose stands now, for tests and the viewer: its stance, the eased numbers and the Integrate frame.
   function bodyPose(g) {
@@ -2108,7 +2212,7 @@
     ".oagc button.alt{background:rgba(20,20,40,.85);border:1px solid rgba(255,255,255,.3);color:#e0e0e0;font-weight:400}" +
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
-    ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
+    ".oagc button.oagc-calm{right:10px}.oagc button.oagr-ship{right:84px}.oagc button.oagc-ringbtn{left:10px}" +
     // the walkthrough's glyph by the player's light and its "I know this", shared by the WAVE room and the caves
     ".oagr-teach{position:absolute;z-index:5;display:none;flex-direction:column;align-items:center;gap:.35rem;color:#fff1b0;pointer-events:none;transform:translate(-50%,-100%);filter:drop-shadow(0 0 6px rgba(255,220,150,.8))}" +
     ".oagr-teach .oagr-glyphs{display:flex;gap:.6rem;align-items:center;animation:oagr-pulse 1.6s ease-in-out infinite}.oagr-teach.still .oagr-glyphs,.oagr-teach.still .oagr-ring{animation:none}" +
@@ -2130,6 +2234,8 @@
     ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
     ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
+    ".oagr-stick.oagr-afloat{background:rgba(20,20,40,.3);cursor:grabbing}.oagr-still .oagr-stick{width:150px;height:150px}.oagr-still .oagr-knob{width:60px;height:60px}" +
+    ".oagr button.oagr-talk{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:88px;height:88px;min-width:88px;padding:0;border-radius:50%;background:rgba(20,20,40,.82);border:2px solid rgba(255,241,176,.7);color:#fff1d0;font-size:1rem;font-weight:600;touch-action:manipulation}" +
     ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
     ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc:has(.oagc-modal.open) .oagc-sitbtn{bottom:auto;top:calc(50vh - 3.4rem)}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
     ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
@@ -2182,6 +2288,32 @@
   function holdArea(node) {
     ["touchstart", "touchmove"].forEach(function (n) { node.addEventListener(n, function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false }); });
   }
+  // The floating stick (ctl-split-thumbs): a thumb that lands on the left half of the screen brings the walk stick under it,
+  // and the stick goes back to its corner when the thumb lifts. A mouse keeps the corner stick, and drags to look anywhere.
+  function floatStick(pad) {
+    return {
+      wants: function (e) {
+        var box = pad.offsetParent; if (!box || e.pointerType === "mouse" || pad.style.display === "none") return false;
+        var r = box.getBoundingClientRect(); return e.clientX - r.left < r.width / 2;
+      },
+      at: function (e) {
+        var r = pad.offsetParent.getBoundingClientRect(), w = pad.offsetWidth / 2;
+        pad.style.left = Math.round(e.clientX - r.left - w) + "px"; pad.style.top = Math.round(e.clientY - r.top - w) + "px"; pad.style.bottom = "auto";
+        pad.classList.add("oagr-afloat");
+      },
+      home: function () { pad.style.left = pad.style.top = pad.style.bottom = ""; pad.classList.remove("oagr-afloat"); },
+    };
+  }
+  // The ring on the floor where a tap sends the figure (ctl-generous-taps). It fades as the figure comes to it.
+  function tapRing(THREE) {
+    var m = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.46, 32), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.renderOrder = 3; m.visible = false; m.userData.k = 0;
+    m.userData.put = function (scene, x, y, z) { if (m.parent !== scene) scene.add(m); m.position.set(x, y + 0.04, z); m.visible = true; m.userData.k = 1; };
+    m.userData.step = function (dt, on) { var u = m.userData; u.k = on ? Math.min(1, u.k + dt * 4) : Math.max(0, u.k - dt * 2.5); m.material.opacity = 0.8 * u.k; m.visible = u.k > 0.01; };
+    return m;
+  }
+  // Within reach of a tap: the thing's own size on screen, but never less than TOUCH.min (more in still mode).
+  function tapReach(r) { return Math.max(r || 0, TOUCH.min * (reducedMotion ? 1.5 : 1)); }
 
   // The title screen (gd-title-as-game): the cave mouth in 3D with the player's figure standing in it, its light at the chest,
   // and the ways in: Continue (when there is a place to go back to), Begin (the WAVE room, where the walkthrough starts),
@@ -2235,6 +2367,36 @@
     ])]);
     root.appendChild(home);
     titleScene(stage, home, function () { drawMenu(); panel.style.display = "none"; });
+    // Skip-ahead for a preview link, so a look starts where the change is: ?go=elder opens home base (at the heart, or ?at=) with
+    // the figure by the elder spirit, ?go=home opens it as Begin does, and ?go=cave goes straight into the cave there. The same keys
+    // work after a # (#go=home&grown=7). &grown=N first keeps one summoned spirit at N sittings and brings it home with you, so its
+    // next sitting is seen (7: a creature that becomes an ally). &hidden=N brings the first charge in with a hidden part already on
+    // it, at polarity N (signal "preview"), so it comes in to "Something hides it" and its shadow spirit's gate is a few taps away.
+    // &tour=0 marks the walkthrough done first, since a preview's fresh browser would otherwise start it. ?go=basin opens home
+    // base's basin (basin.js) straight away, and its mouth walks back to the room. &brow=N (0 to 3) first sets the brow's floor
+    // in oag.organs.v1 (source "a preview link"; 0 clears it), so a look at the basin or the room's haze starts at the state to test.
+    var skip = null; try { skip = new URLSearchParams(window.location.search + "&" + String(location.hash || "").replace(/^#/, "")); } catch (e) {}
+    var skipGo = skip && skip.get("go"), skipAt = (skip && skip.get("at")) || "my heart";
+    var gn = skip && /^\d+$/.test(skip.get("grown") || "") ? +skip.get("grown") : null, hd = skip && /^\d+$/.test(skip.get("hidden") || "") ? +skip.get("hidden") : 0;
+    if (skip && /^[0-3]$/.test(skip.get("brow") || "") && window.__oagOrgans) window.__oagOrgans.store.preview("brow", +skip.get("brow"));
+    if (skip && skip.get("tour") === "0") keepTutorial(ROOM_LESSONS.concat(CAVE_LESSONS).map(function (l) { return l.id; })); // &tour=0: a look link skips the walkthrough
+    if (skipGo === "elder" || skipGo === "home") {
+      var sp = null;
+      if (gn !== null && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: gn }, "a preview link"); } catch (e) { sp = null; }
+      load().then(function (A) { return homeBase(A, home, { where: skipAt, near: skipGo === "elder" ? "elder" : null, spirit: sp, hidden: Math.min(10, hd) }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+    } else if (skipGo === "basin" && window.__oagBasin) {
+      load().then(function (A) { window.__oagBasin.open({ back: function () { homeBase(A, home, { where: skipAt }); } }); }).catch(function (e) { notice("The basin could not open: " + e.message, true); });
+    } else if (skipGo === "cave") dive(skipAt, home);
+    else if (skipGo === "bigmind") goOn({ at: "bigmind", where: "" });
+    // ?go=bigmind&sit=1 goes in and sits the figure down as soon as the hall lets it (a look at the seated pose)
+    if (skip && skip.get("sit") && skipGo === "bigmind") {
+      var sitTries = 0, sitPoll = setInterval(function () {
+        var e = document.querySelector("[data-bm-enter]"), b = document.querySelector("[data-bm-sitbtn]");
+        if (e && e.offsetParent) e.click();
+        else if (b && b.style.display !== "none" && !b.disabled && b.offsetParent) { clearInterval(sitPoll); b.click(); }
+        else if (++sitTries > 120) clearInterval(sitPoll);
+      }, 250);
+    }
   }
   // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
   function continueTo() {
@@ -2357,10 +2519,14 @@
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
     keepLast("room", o.where);
-    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
+    var basin = !!(window.__oagBasin && window.__oagBasin.open);
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, basin: basin, near: o.near, spirit: o.spirit || null, hidden: o.hidden || 0 }).then(function (r) {
       if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
-      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
+      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { if (window.__oagVessel) window.__oagVessel.store.visited("bigmind"); homeBase(A, home, { where: o.where, near: o.near }); } });
+      // The basin (basin.js): the body map's inside as a place, walked into through its one mouth (mab-one-mouth); its own mouth
+      // walks back here. Leaving it keeps the room as the last place played.
+      else if (r && r.basin && basin) window.__oagBasin.open({ back: function () { homeBase(A, home, { where: o.where, near: o.near }); } });
       return r;
     });
   }
@@ -2398,7 +2564,7 @@
     // walk = { route, s, s0, D, t, target (a stop on the route), arrived, blk }. stack holds where each branch left from.
     // speed scales the walk clock (the test sets it above 1 to cross a stretch faster than one breath); it is 1 in play.
     var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false, modal: false, auto: null };
-    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3();
+    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3();
     // A spirit that follows the player carries a small light of its own (Wendell, 2026-10-13: "The avaiable lighting centers
     // around the character and any spirits that are following them"). The spirits back from the WAVE room carry one each.
     function carryLight(obj, hex) { var l = new THREE.PointLight(hex || 0xc8e0ff, 0.6, LAMP.reach * 0.5, LAMP.decay); scene.add(l); carried.push({ obj: obj, light: l }); return l; }
@@ -2491,39 +2657,71 @@
     // look eases back behind the figure only once the thumb has rested a moment (LOOK.settle).
     // The camera goes where the finger goes, as if it were the viewer's head (Wendell, 2026-10-13): a drag to the right
     // swings the camera to the figure's right, a drag up lifts it, a drag down lowers it. A positive yaw is the right.
-    var ray = new THREE.Raycaster(), drag = null, dom = renderer.domElement;
+    // Round 1 of the phone controls (TOUCH, above): each finger is followed on its own, so a thumb walking on the left and a
+    // thumb looking on the right never take each other's place (ctl-split-thumbs). A finger that lands on the left half brings
+    // the stick under it; one on the right looks; two on the right pinch the camera nearer or farther; the mouse wheel zooms too.
+    var ray = new THREE.Raycaster(), ptrs = {}, pinch = null, dom = renderer.domElement, floater = null, lastLook = 0, looked = 0, tapMark = tapRing(THREE);
+    state.zoom = 1; state.handHold = 0;
+    function lookers() { return Object.keys(ptrs).filter(function (k) { return !ptrs[k].walk; }).map(function (k) { return ptrs[k]; }); }
+    function spread(l) { return l.length < 2 ? 0 : Math.hypot(l[0].x - l[1].x, l[0].y - l[1].y); }
+    function lookBy(dx, dy) {
+      var k = reducedMotion ? TOUCH.still : 1;
+      lastLook = Date.now(); state.handHold = TOUCH.hold;
+      state.look.yaw = clamp(state.look.yaw + dx * 0.006 * k, -Math.PI, Math.PI);
+      state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx * k, LOOK.pitch[0], LOOK.pitch[1]);
+      looked += Math.abs(dx) + Math.abs(dy); if (looked > 60 && teach) teach.learn("look");
+    }
     holdArea(dom);
     dom.addEventListener("pointerdown", function (e) {
       try { dom.setPointerCapture(e.pointerId); } catch (x) {}
-      drag = { x: e.clientX, y: e.clientY, moved: 0, t: Date.now(), last: 0 }; state.held = true;
+      var p = ptrs[e.pointerId] = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: e.timeStamp, drag: false, walk: false }; // the event's own time: a busy frame does not stretch a tap
+      if (!floater && stickPad) floater = floatStick(stickPad);
+      // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+      var sp0 = stickId != null && ptrs[stickId]; if (sp0 && Math.hypot(sp0.x - sp0.x0, sp0.y - sp0.y0) < TOUCH.px) { sp0.walk = false; stickUp(); }
+      else if (stickId == null && floater && canWalk() && floater.wants(e)) { p.walk = true; stickId = e.pointerId; floater.at(e); stickAt(e); }
+      var l = lookers(); if (l.length === 2) { pinch = { d: spread(l), z: state.zoom }; l.forEach(function (q) { q.drag = true; }); }
+      state.held = true;
     });
     dom.addEventListener("pointermove", function (e) {
-      if (!drag) return;
-      var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
-      if (drag.moved > 12) {
-        drag.last = Date.now();
-        state.look.yaw = clamp(state.look.yaw + dx * 0.006, -Math.PI, Math.PI);
-        state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx, LOOK.pitch[0], LOOK.pitch[1]);
-        if (drag.moved > 60 && teach) teach.learn("look");
-      }
+      var p = ptrs[e.pointerId]; if (!p) return;
+      var dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      if (!p.drag && Math.hypot(p.x - p.x0, p.y - p.y0) >= TOUCH.px) { p.drag = true; dx = p.x - p.x0; dy = p.y - p.y0; } // no dead band: past the line, all of it counts
+      if (p.walk) { if (stickId === e.pointerId) stickAt(e); return; }
+      if (pinch) { var d = spread(lookers()); if (pinch.d > 0 && d > 0) state.zoom = clamp(pinch.z * pinch.d / d, TOUCH.zoom[0], TOUCH.zoom[1]); return; }
+      if (p.drag) lookBy(dx, dy);
     });
-    function lift() { state.held = false; drag = null; }
-    dom.addEventListener("pointercancel", lift);
+    function lift(e, up) {
+      var p = ptrs[e.pointerId]; delete ptrs[e.pointerId];
+      if (p && p.walk && stickId === e.pointerId) stickUp();
+      if (lookers().length < 2) pinch = null;
+      state.held = Object.keys(ptrs).length > 0;
+      return up && p && !p.drag && e.timeStamp - p.t < TOUCH.ms ? p : null;
+    }
+    dom.addEventListener("pointercancel", function (e) { lift(e, false); });
+    dom.addEventListener("wheel", function (e) { e.preventDefault(); state.zoom = clamp(state.zoom * Math.exp(e.deltaY * 0.0015), TOUCH.zoom[0], TOUCH.zoom[1]); }, { passive: false });
+    // The element answers a tap on it or near it (tapReach), so a near miss no longer walks the figure away from it.
+    function nearElement(x, y, r) {
+      var c = ctxOf(); if (!c || !c.elObj || !c.elObj.visible) return false;
+      var bx = new THREE.Box3().setFromObject(c.elObj); if (bx.isEmpty()) return false;
+      var sp = bx.getBoundingSphere(new THREE.Sphere()), m = sp.center.clone().project(camera);
+      if (m.z > 1) return false;
+      var e2 = sp.center.clone().addScaledVector(tmpV.setFromMatrixColumn(camera.matrixWorld, 0), sp.radius).project(camera);
+      var sx = r.left + (m.x + 1) / 2 * r.width, sy = r.top + (1 - m.y) / 2 * r.height, rad = Math.hypot((e2.x - m.x) / 2 * r.width, (e2.y - m.y) / 2 * r.height);
+      return Math.hypot(x - sx, y - sy) < tapReach(rad);
+    }
     dom.addEventListener("pointerup", function (e) {
-      var wasTap = drag && drag.moved < 8 && Date.now() - drag.t < 350; lift();
+      var wasTap = lift(e, true);
       if (!wasTap || !ch || busy) return;
-      var r = dom.getBoundingClientRect(), c = ctxOf();
+      var r = dom.getBoundingClientRect();
+      if (nearElement(e.clientX, e.clientY, r)) { touch(); return; }
       ray.setFromCamera({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, camera);
-      var kids = [];
-      if (c && c.elObj) c.elObj.traverse(function (m) { if (m.isMesh) kids.push(m); });
-      var hit = ray.intersectObjects(kids)[0];
-      if (hit && hit.object.userData.interact) { touch(); return; }
       // A click on the floor walks the figure there (Wendell, 14 October 2026: "we want to be able to have click to walk for when
       // we're testing on the computer"). It goes as the stick would, so walls, the shut way and the stops all behave the same.
+      // A ring on the floor marks where it is going.
       var wk = state.walk;
       if (wk && canWalk() && !state.auto) {
         var fy = avatar ? avatar.position.y : figureAt(wk).y, o = ray.ray.origin, dv = ray.ray.direction;
-        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; }
+        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) { wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; tapMark.userData.put(scene, wk.goTo.x, fy, wk.goTo.z); } }
       }
     });
 
@@ -2736,7 +2934,7 @@
       stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
       stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
     }
-    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; if (floater) floater.home(); }
     holdArea(stickPad);
     stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
     stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
@@ -2771,6 +2969,15 @@
       var m = Math.hypot(x, z);
       var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var wk = state.walk;
+      // In the hall and the centre the stick's forward is the camera's as the thumb went down, held while the thumb stays (home
+      // base's R.stickFrame, 19 October 2026), and carried round with the ring: kept as a turn off the ring's way, so up held still
+      // walks round the ring to the next door, and the camera can come round behind the figure without bending the way it walks.
+      // A look turned by hand turns it too (walkStep). In a tunnel the camera turns along the way, so the stick keeps the live view.
+      if (m >= 0.15 && wk && wk.route.doors) {
+        var ringYaw = yawFacing(at(wk.route, wk.s));
+        if (state.stickOff == null) state.stickOff = wrapAng(Math.atan2(fx, fz) - ringYaw);
+        state.stickYaw = ringYaw + state.stickOff; fx = Math.sin(state.stickYaw); fz = Math.cos(state.stickYaw);
+      } else state.stickYaw = state.stickOff = null; // the thumb is off: the next push takes the camera's forward afresh
       if (m >= 0.15) { if (wk) wk.goTo = null; } // the stick or a key takes over from a click
       else if (wk && wk.goTo) { // a click on the floor walks there (for playing at a computer)
         var g = wk.goTo, p = figureAt(wk), dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz);
@@ -2806,6 +3013,8 @@
       }
       var on = canWalk();
       stickPad.style.display = runBtn.style.display = on ? "" : "none";
+      wrap.classList.toggle("oagr-still", reducedMotion);
+      tapMark.userData.step(dt, on && !!(wk && wk.goTo));
       if (!on) { if (stickId != null) stickUp(); keys = {}; if (promptBox.style.display !== "none" && (state.modal || sit || busy)) promptBox.style.display = "none"; return; }
       if (wk.near != null && promptBox.style.display === "none" && !wk.arrived) showPrompt(wk.route.stops[wk.near]);
       if (wk.arrived) wk.lat *= 1 - Math.min(1, dt * 2); // standing at a stop is standing on its spot
@@ -2816,7 +3025,13 @@
         // Walking away from the camera against the way it faces (the camera turned round by a drag): the camera takes that way
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
-        if (state.look.yaw && !state.peek) { wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); state.look.yaw = 0; } // a look turned by hand becomes the way the camera follows
+        if (state.look.yaw && !state.peek) { // a look turned by hand becomes the way the camera follows, and the stick's forward with it
+          wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); if (state.stickOff != null) state.stickOff = wrapAng(state.stickOff + state.look.yaw); state.look.yaw = 0;
+        }
+        // The figure faces the way the stick points (Wendell, 2026-10-21: "The player should face in the direction of the stick"),
+        // not the way it slid along a wall or round a stone.
+        var my = Math.atan2(w.x, w.z);
+        wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
         // Round a ring, a step along at radius rho moves the angle more than on the ring itself, so the pace stays the same.
         var inMid = r.doors ? wk.lat * r.inner : 0, rho = r.doors ? Math.max(r.R - inMid, MID_R) : 0, kS = r.doors ? r.R / rho : 1;
         var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt * kS, lim.lo, lim.hi);
@@ -2834,29 +3049,33 @@
         if (blocked()) { wk.lat = latOld; if (blocked()) { wk.s = sOld; wk.lat = lat1; if (blocked()) wk.lat = latOld; } }
         var p1 = at(r, wk.s), mx = p1.x - p1.fz * wk.lat - x0, mz = p1.z + p1.fx * wk.lat - z0, moved = Math.hypot(mx, mz);
         if (w.click) wk.goTo.stuck = moved > 0.3 * sp * dt ? 0 : (wk.goTo.stuck || 0) + dt; // walked into a wall: the click is done
+        // The camera turns by itself only once a look turned by hand has held for TOUCH.hold seconds of walking, and in still
+        // mode never (ctl-gentle-camera, ctl-still-mode): the hand turn and the follow no longer pull against each other.
+        var autoK = reducedMotion || state.handHold > 0 ? 0 : 1;
         if (moved > 1e-4) {
+          state.handHold = Math.max(0, state.handHold - dt);
           wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * runK() * w.m * STRIDE_K; teach.learn("walk");
-          var my = Math.atan2(mx, mz); // the way the figure actually went: along a wall it slides, so it faces along the wall
-          wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
           // Walking away from the camera, it comes round behind the figure; walking back or sideways it stays put, so the thumb
           // keeps meaning the same way (the WAVE room's rule).
           // It turns along the way, the way the figure is going, so up on the stick keeps walking round the bends of a tunnel and
           // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
           // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
-          // Out in the open middle of the hall or the centre it turns toward the way the figure walks, when that is ahead and
-          // nothing is in the way; on the ring it turns along the ring only as much as the walk goes along it, so walking in toward
-          // the middle keeps the view.
-          if (r.doors && inMid > r.w * 0.6) {
-            if (w.fwd > 0.7 && moved > 0.6 * sp * dt) wk.camYaw += wrapAng(my - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          // In the hall and the centre, ring and open middle alike, it comes round behind the way the figure faces, which is the
+          // stick's way; the stick's forward is held off the ring's way while the thumb stays, so the turn does not chase itself
+          // round the ring. (The turn along the ring flipped half round when a frame held still in the world took the walk backward
+          // along it, round 1, 2026-10-21.)
+          if (r.doors) {
+            wk.camYaw += wrapAng(yawFacing(at(r, wk.s)) - yawFacing(a)) * autoK; // it rides round with the ring, as the stick's forward does
+            if (w.fwd > 0.3) wk.camYaw += wrapAng(wk.yaw - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * autoK;
           } else if (w.fwd > 0.3) {
             if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;
             var want = yawFacing(at(r, wk.s)) + (wk.dir < 0 ? Math.PI : 0);
-            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1));
+            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1)) * autoK;
           }
         }
         if (deadEnd && w.fwd > 0.3) {
           // Pushed ahead into the dead end behind (the start of a branch, the way back): the camera turns round to the open way.
-          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * (reducedMotion ? 0 : 1);
         }
       }
       stopZones(wk);
@@ -3490,7 +3709,7 @@
       var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); scene.remove(o.g); dropLight(o.g); spiritsUi();
       setTimeout(function () {
         cancelAnimationFrame(running); wrap.style.display = "none";
-        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
+        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element, spirit: o.id ? { id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings || 0 } : null }).then(function (r) {
           wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
           var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity, family: o.family, id: o.id, sittings: o.sittings, stage: o.stage }];
           back.forEach(function (x) { addSpirit(x); });
@@ -3644,12 +3863,12 @@
         unstashPage(S.back);
       });
     }
-    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure lowers to sit.
+    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure sits down.
     function sitFrame(dt, nowMs, route, wk, h) {
       var S = sit; if (!S || route !== S.route) return;
       var a = at(route, Math.min(route.len || 1e9, wk.s + 2.4 + 9 * S.come));
       S.g.position.set(a.x, a.y - h * 0.92 + 0.15 + 0.05 * Math.sin(nowMs / 700), a.z);
-      avatar.position.y -= 0.32 * S.k;
+      seatAvatar(avatar, S.k); // sat on the tunnel floor, cross-legged
       var hex = sitHex(S), body = S.g.userData.body, col = S.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
       body.material.color.copy(col); body.material.emissive.copy(col);
       var grow = S.allowed ? 1 + S.allow.grow / 10 : 1; S.g.scale.setScalar(S.g.scale.x + (grow - S.g.scale.x) * Math.min(1, dt * 2));
@@ -3843,6 +4062,7 @@
     }
     // The spirit born on meeting the daemon becomes the ally; one let go, or never born, is sent in its own colour.
     function allyJoins(id) {
+      if (window.__oagVessel) window.__oagVessel.store.ally(id); // an ally makes the ship a part (board iv-daemon-not-part, his steer)
       var sid = "meet-" + id, mine = spirits.filter(function (o) { return o.id === sid; })[0];
       if (mine) { mine.ally = id; return mine; }
       if (spirits.some(function (o) { return o.ally === id; })) return null;
@@ -4245,6 +4465,7 @@
       if (busy) return;
       busy = true; closeModal();
       var where = state.level.where; leave(false);
+      if (window.__oagVessel) window.__oagVessel.store.visited("hall"); // a visit that ends mines the place's fuel for the ship
       setTimeout(function () { homeBase(A, home, { where: where }); }, 540);
     }
     function buildLevel(place, face) {
@@ -4574,11 +4795,14 @@
         // camera: behind the figure on the way it follows (wk.camYaw), and a little above. It follows the figure itself, not the
         // path's line (Wendell, 14 October 2026: "Camera controls are clunky in the game master space"): walking across the hall
         // to a door, the camera comes round behind the figure as in the WAVE room. The stone keeps it inside (keepIn, below).
-        var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
+        var frT = state.stack[state.stack.length - 1], back = (route.kind === "face" ? 3.6 : CAM_BACK) * (state.zoom || 1); // a face's tight loop keeps the camera closer; a pinch moves it
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
         a.fx = Math.sin(wk.camYaw); a.fz = Math.cos(wk.camYaw); // the way ahead, as the camera takes it
         var cs = wk.s - back, cby = at(route, route.loop ? (cs % route.len + route.len) % route.len : clamp(cs, 0, route.len)).y;
         var cbx = a.x - a.fx * back, cbz = a.z - a.fz * back;
+        // A tilt by hand eases back to level once the thumb has rested LOOK.settle ms and the figure walks on (ctl-gentle-camera).
+        if (!reducedMotion && wk.moving && Date.now() - lastLook > LOOK.settle) state.look.pitch *= Math.exp(-dt * 1.2);
+        if (state.peek && reducedMotion) state.peek = null; // still mode: the camera does not swing round to show an opening
         if (state.peek) { // while an opening appears the camera swings round to show it beside the figure, then lets go
           var px0 = cbx - a.x, pz0 = cbz - a.z, ox = state.peek.x - a.x, oz = state.peek.z - a.z, bestY = 0, bestD = -9;
           for (var yq = -1.4; yq <= 1.4; yq += 0.05) { // the swing that puts the opening straight past the figure; half of it frames both
@@ -4610,10 +4834,24 @@
           if (best && (best.ratio > f || best.room < m)) { var q = best.clamp(f, m); v.set(q.x, q.y, q.z); }
         };
         var free = !stCam && !state.rise && !state.camAt;
-        if (free) keepIn(want, 0.94, 0.35);
+        // Then a ray from the figure's head out to where the camera wants to be stops it in front of the first stone on the way
+        // (ctl-gentle-camera, as Cinemachine's deoccluder does), and the camera eases there: near a wall it closes in on the figure
+        // along its own line instead of being shoved sideways after the ease, which jumped. Only where the ease itself would cut
+        // through stone is the camera brought in at once, and keepIn stays the backstop where the head is not clear.
+        var pivot = tmpV2.set(a.x, fl + 1.6, a.z), probe = tmpV3;
+        var clear = function (v) { return tubes.some(function (tb) { var c2 = tb.contain(v, true); return c2 && c2.ratio <= 0.96 && c2.room >= 0.25; }); };
+        var pullIn = function (v) {
+          if (!clear(pivot)) return false;
+          var lo = 0, hi = 1, N = 10, i;
+          for (i = 1; i <= N; i++) { probe.lerpVectors(pivot, v, i / N); if (!clear(probe)) { hi = i / N; break; } lo = i / N; }
+          if (lo >= 1) return true;
+          for (i = 0; i < 4; i++) { var mid = (lo + hi) / 2; probe.lerpVectors(pivot, v, mid); if (clear(probe)) lo = mid; else hi = mid; }
+          v.lerpVectors(pivot, v, lo); return true;
+        };
+        if (free) { keepIn(want, 0.94, 0.35); pullIn(want); }
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
-        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
-        if (free) keepIn(camPos, 0.96, 0.25);
+        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : TOUCH.follow)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
+        if (free && !clear(camPos) && !pullIn(camPos)) keepIn(camPos, 0.96, 0.25); // the ease cut a corner: come in along the line
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         if (state.camFix) { var ca = state.camFix; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
         var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
@@ -4730,6 +4968,7 @@
         range: lim, halfWidth: hw, stick: stickPad.style.display !== "none", prompt: promptBox.style.display !== "none" ? promptBox.textContent : null, sit: sitBtn.style.display !== "none", modal: state.modal };
     };
     api.stick = function (x, z) { stick.x = x; stick.z = z; };
+    api.camAt = function () { return camera.position.toArray(); }; // tests: where the camera is this frame
     api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k,
@@ -5057,18 +5296,38 @@
       seat.position.set(SEAT.x, 0.23, SEAT.z + 0.15); seat.scale.z = 1.15; scene.add(seat);
       var SEAT_TOP = 0.46, CUSHION_R = 0.7 + 0.28; // its top, and how near the figure's middle comes to its edge (its own half-width)
       function cushionIn(x, z) { var dx = x - SEAT.x, dz = (z - SEAT.z - 0.15) / 1.15; return { dx: dx, dz: dz, k: Math.max(1e-4, Math.hypot(dx, dz) / CUSHION_R) / 1 }; }
+      // How the worn body (the walker) sits on the cushion, for the tests: its hip joints' height over the top, the lowest leg
+      // vertex, how far out from the cushion's middle the legs reach (1 is its top edge), and how many leg vertices are inside it.
+      function seatFit() {
+        var w = avatar.userData.walker; if (!w) return null;
+        var m = w.mesh, geo = m.geometry, pos = geo.attributes.position, si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight, v = new THREE.Vector3();
+        var legs = {}; w.bones.forEach(function (b, i) { if (/^(thigh|shin|foot|toe)\./.test(b.name)) legs[i] = true; });
+        avatar.updateMatrixWorld(true);
+        var hipY = Math.min.apply(null, ["thigh.L", "thigh.R"].map(function (n) { var b = w.bones.filter(function (x) { return x.name === n; })[0]; return b.getWorldPosition(v).y; }));
+        var low = Infinity, reach = 0, inside = 0, n = 0, zr = [Infinity, -Infinity];
+        for (var i = 0; i < pos.count; i++) {
+          var top = -1, tw = 0; for (var j = 0; j < 4; j++) if (sw.array[i * 4 + j] > tw) { tw = sw.array[i * 4 + j]; top = si.array[i * 4 + j]; }
+          if (!legs[top]) continue;
+          v.fromBufferAttribute(pos, i); m.boneTransform(i, v); v.applyMatrix4(m.matrixWorld); n++;
+          var y = v.y, dx = v.x - SEAT.x, dz = (v.z - SEAT.z - 0.15) / 1.15, rr = Math.hypot(dx, dz), rAt = 0.7 - 0.08 * Math.max(0, Math.min(1, y / SEAT_TOP));
+          zr[0] = Math.min(zr[0], v.z); zr[1] = Math.max(zr[1], v.z); low = Math.min(low, y); reach = Math.max(reach, rr / 0.62);
+          if (y < SEAT_TOP - 0.01 && rr < rAt - 0.01) inside++;
+        }
+        return { hipY: hipY, top: SEAT_TOP, lowLeg: low, reach: reach, legInside: inside, legVerts: n, legZ: zr };
+      }
       // Home base's portal (LEVELS.md): a second arch in the wall, behind the seat and to its side, glowing faintly. The charge's
       // door stays the charge's door: what comes in comes through the door, and the player goes out through the portal.
       // The Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room")
       // is the same kind of arch on the other side of the seat, marked with the seven daemons' colours in the order they are met.
       // The portal leads to the six game masters (the hall of the six). The player walks to either one; arriving opens its card.
       var EXITS = {};
-      function exitArch(id, ang, hex, glowHex, name) {
+      // dark: a mouth in the stone instead of a lit arch (the basin's): no frame, and the opening nearly black.
+      function exitArch(id, ang, hex, glowHex, name, dark) {
         var px = Math.sin(ang) * RR * 0.9, pz = Math.cos(ang) * RR * 0.9, pyaw = Math.atan2(-px, -pz);
-        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
+        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: dark ? 0.94 : 0.55, side: THREE.DoubleSide }));
         glow.position.set(px, 0.01, pz); glow.rotation.y = pyaw; scene.add(glow);
         var a2 = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: hex })); a2.scale.setScalar(DW / 2 + 0.1);
-        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2);
+        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2); a2.visible = !dark;
         var tag = labelSprite(THREE, name, "#" + new THREE.Color(hex).getHexString(), 2.6); tag.position.set(px * 0.9, DH + 0.45, pz * 0.9); scene.add(tag);
         var k = (RR - 2.2) / (RR * 0.9); // where the figure stands to go through: just in front of it
         EXITS[id] = { id: id, x: px, z: pz, yaw: pyaw, stand: { x: px * k, z: pz * k }, glow: glow, arch: a2 };
@@ -5083,6 +5342,13 @@
           dot.position.set(bm.x + Math.cos(bm.yaw) * lx + Math.sin(bm.yaw) * 0.12, ly, bm.z - Math.sin(bm.yaw) * lx + Math.cos(bm.yaw) * 0.12); scene.add(dot);
         });
       }
+      // The basin's mouth (basin.js): the body map's inside, a dark mouth in the stone on the side wall, clear of the portal, the
+      // Big Mind door and the charge's door. It has no card: walking into it goes in (mab-one-mouth: no menu, no button).
+      if (opts.basin) exitArch("basin", 1.9, 0x9aa8b8, 0x07060a, "The basin", true);
+      // The brow's floor in the one organ state (organs.js): once a sitting has reached it, the room's haze thins (the chamber's
+      // half of mao-first-organ-brow). Read when the room opens and again after a raise.
+      function browFloor() { try { var O = window.__oagOrgans; return O ? O.floorOf(O.store.get(), "brow") : 0; } catch (e) { return 0; } }
+      var hazeK = browFloor() >= 1 ? 0.6 : 1;
       var hemi = new THREE.HemisphereLight(0xfff4e0, 0x2a2420, 0.4); scene.add(hemi);
       var lamp = new THREE.PointLight(0xffe0b0, 1, 34); lamp.position.set(0, RH * 0.85, 1.4); scene.add(lamp);
       var doorLight = new THREE.PointLight(0xfff1d0, 0, 14); doorLight.position.set(0, 2, DZ + 1.2); scene.add(doorLight);
@@ -5096,21 +5362,116 @@
       lantern.add(lanternLight); scene.add(lantern);
 
       // ---- the charge: a grey shape that takes the texture, and then its element's colour -------------------------------------
-      var GREY = 0x8a8a92;
-      function buildCharge() {
+      // Since 21 October 2026 the charge is a gas spirit (Wendell: "the blobs that emerge from the door need to be the energy gas
+      // energy spirits"; board gs-door-gas): a cloud of motes from spirit-forms.js, drawn when it first comes in (formIn), whose
+      // motes stream out of the doorway. Every charge comes in as a gas, even one of your spirits come home (opts.spirit): it is
+      // fed to that spirit at the end and unfolds to its stage then (grow; Wendell, 21 October 2026: "it still showed up as a
+      // creature instead of the gas when it entered the room"). u.mat holds the colour and opacity the room works out each frame
+      // (syncForm puts them on the motes). The shadow spirit is a smaller gas of its own (summonShade, below).
+      var GREY = 0x8a8a92, SF = window.__oagSpiritForms || null, FORM_K = 2.2, FORM_Y = 1.1, FORM_AT = { hologram: 1.8, creature: 1.3, ally: 1.3 };
+      function buildCharge(blob) {
         var g = new THREE.Group(), body = new THREE.Group(), S = new THREE.SphereGeometry(1, 18, 12);
         var mat = new THREE.MeshStandardMaterial({ color: GREY, roughness: 0.6, emissive: GREY, emissiveIntensity: 0.2, transparent: true, opacity: 0.85 });
-        [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
+        blob = blob || !SF;
+        if (blob) [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
           var m = new THREE.Mesh(S, mat); m.position.set(q[0], q[1], q[2]); m.scale.set(q[3], q[4], q[5]); body.add(m);
         });
         var core = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
-        core.position.set(0, 1.2, 0.42); body.add(core); g.add(body);
+        core.position.set(0, 1.2, 0.42); if (blob) body.add(core); g.add(body);
         var aura = buildAura(THREE, 1.25); g.add(aura);
         // the shadow's veil: a dark haze round the creature that thickens with its polarity
         var veil = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: 0x1a1620, transparent: true, opacity: 0, depthWrite: false }));
         veil.position.y = 1.15; veil.scale.y = 1.25; veil.visible = false; g.add(veil);
-        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
+        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false, blob: blob, form: null };
         return g;
+      }
+      // The charge's gas, drawn the first time it is seen: from (a world point, the doorway) streams its motes in. A spirit come
+      // home wears its own family's forms, and comes in as their gas like any charge; it takes its stage when it is fed.
+      function formIn(c, from) {
+        var u = c.fig.userData; if (u.blob || u.form) return;
+        var sp = c.spirit, fam = sp && sp.family && SF.familyOf(sp.family) ? sp.family : "charge";
+        var f = SF.buildForm(THREE, fam, u.col.getHex(), { from: from || null, stage: "gas" });
+        f.position.y = FORM_Y; f.scale.setScalar(FORM_K); u.body.add(f); u.form = f; u.tint = SF.tintProxy(f);
+      }
+      // Defined by the work (board gw-form-by-step; Wendell, 21 October 2026: "the spirit should show up in an occluded gas form and
+      // as it's worked through should turn into a fully formed spirit"): a new charge comes in as an occluded gas, its motes spread
+      // wide, grey, faint, behind a dark haze, and each step of the W.A.V.E. done (definition: steps credited / ROOM_STEPS) gathers
+      // the motes, clears the haze and brings up its element's colour. A spirit of yours come home is defined the same way, step
+      // by step (it was defined at once until 21 October 2026). The stage still comes from sittings only, so a W.A.V.E. never jumps
+      // a stage.
+      // Until 21 October 2026 it came in fainter (0.3), spread wider (1.3), in the blobs' grey and behind a thicker haze (0.42),
+      // and was too hard to find on a phone (Wendell: "I can't see the spirit that has shown up in the room"); now its undefined
+      // motes are a pale grey that shows against the stone.
+      var HAZE = 0x2a2630, FAINT = 0.6, HAZE_K = 0.24, SPREAD = 0.8, greyC = new THREE.Color(0xc4c4d0), defC = new THREE.Color();
+      function definition(c) { var n = 0; for (var id in c.credit) if (c.credit[id]) n++; return Math.min(1, n / ROOM_STEPS.length); }
+      // Each frame the motes (and the core, hologram, creature or ally it has unfolded into) wear u.mat's colour and opacity.
+      function syncForm(c, now, dt) {
+        var u = c.fig.userData, f = u.form, st = f.userData.form, k = clamp(u.mat.opacity / 0.85, 0, 1), d = definition(c), fade = u.fade == null ? 1 : u.fade;
+        u.def = u.def == null ? d : u.def + (d - u.def) * Math.min(1, dt * 1.5);
+        st.spread = SPREAD * (1 - u.def);
+        u.tint.material.color.setHex(defC.copy(greyC).lerp(u.mat.color, u.def).getHex());
+        k *= FAINT + (1 - FAINT) * u.def;
+        if (!c.polarity && 1 - u.def > 0.01) { u.veil.visible = true; u.veil.material.color.setHex(HAZE); u.veil.material.opacity = HAZE_K * (1 - u.def) * fade; u.veil.scale.set(1.1, 1.35, 1.1); }
+        var kw = FORM_AT[st.drawn] || FORM_K; f.scale.setScalar(f.scale.x + (kw - f.scale.x) * 0.06); // the drawn bodies are bigger than the cloud
+        walkForm(c, u, f, st, dt);
+        if (st.mesh && now - (st.unfoldedAt || 0) < 2700) return; // the unfolding fades the forms itself
+        f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * k; });
+        if (st.mesh) st.mesh.children.forEach(function (m) { var L = m.userData.look || {}; m.material.opacity = (L.opacity == null ? 1 : L.opacity) * k; if (L.rgb || L.paint) m.material.transparent = k < 1; });
+      }
+      // Walking (Wendell, 21 October 2026: "spirit should be walking on the ground (if and when they turn into a creature) and ...
+      // we need walking animations"). A body without a rig has no legs to move, so the gait is drawn here: the body's lowest
+      // point is kept on the floor (measured each frame, a frame behind), and while it moves it bobs a step at GAIT_HZ, rolls side
+      // to side, squashes a little and faces where it goes. The gas, core and hologram float as before.
+      // A rigged body (spirit-forms.js poseRig) plays its own Walk instead, at most MAX_CYCLES a second, so a short-legged
+      // tortoise hurried across the room still steps rather than blurs.
+      var GAIT_HZ = 2, STEP_UP = 0.05, ROLL = 0.05, SQUASH = 0.04, WALKS = { creature: 1, ally: 1 }, footBox = new THREE.Box3(), MAX_CYCLES = 2.2, rigWs = new THREE.Vector3();
+      function walkForm(c, u, f, st, dt) {
+        var p = c.fig.position, vx = 0, vz = 0;
+        if (u.lastX != null && dt > 0) { vx = (p.x - u.lastX) / dt; vz = (p.z - u.lastZ) / dt; }
+        u.lastX = p.x; u.lastZ = p.z;
+        if (!st.mesh || !WALKS[st.drawn] || !SF.turnOf) { f.position.y = FORM_Y; f.rotation.z = 0; st.faceAt = null; u.walking = false; u.ground = null; return; }
+        var sy = c.fig.scale.y * u.body.scale.y, sc = f.scale.x;
+        { c.fig.updateMatrixWorld(true); footBox.setFromObject(st.mesh); if (isFinite(footBox.min.y)) u.low = ((footBox.min.y - p.y) / sy - f.position.y) / f.scale.y; }
+        u.walking = Math.hypot(vx, vz) > 0.15 && !reducedMotion;
+        var w = u.gaitW = (u.gaitW || 0) + ((u.walking && !R.calm ? 1 : 0) - (u.gaitW || 0)) * Math.min(1, dt * 4);
+        if (u.walking) {
+          u.gait = (u.gait || 0) + dt * GAIT_HZ * Math.PI * 2;
+          var yaw = Math.atan2(vx, vz) - (SF.turnOf(st.drawn) + Math.PI / 2); // the root's yaw that puts the body's front along the walk
+          st.faceAt = (st.faceAt || new THREE.Vector3()).set(p.x + 10 * Math.sin(yaw), p.y, p.z + 10 * Math.cos(yaw));
+        } else st.faceAt = null;
+        var rig = st.mesh.userData.rig;
+        if (rig) { // rigged (rig.py's frame, bars-engine #325): the Walk clip, its phase carried by the ground covered, the Idle when it stops
+          var cyc = rig.walk.travel * st.mesh.getWorldScale(rigWs).x; // world units the body covers in one Walk cycle
+          if (u.walking) st.mesh.userData.walkPh = (st.mesh.userData.walkPh + Math.min(MAX_CYCLES * dt, Math.hypot(vx, vz) * dt / Math.max(1e-3, cyc))) % 1;
+          st.mesh.userData.walkW = w; f.scale.y = sc; f.rotation.z = 0;
+          f.position.y = rig.low == null ? FORM_Y : -sc * rig.low * st.mesh.scale.y; // the clip's lowest point now (spirit-forms.js lowsOf) on the floor
+          u.ground = p.y; return;
+        }
+        var ph = u.gait || 0, sqY = sc * (1 - SQUASH * w * Math.abs(Math.cos(ph)));
+        f.scale.y = sqY; f.rotation.z = ROLL * w * Math.sin(ph);
+        f.position.y = u.low == null ? FORM_Y : STEP_UP * w * Math.abs(Math.sin(ph)) / sy - sqY * u.low;
+        u.ground = p.y;
+      }
+      // Growing (boards gs-two-acts, gs-same-charge-grows): a W.A.V.E. worked on a charge one of your spirits carries (the
+      // spirit taken home, or a summoned spirit of the same name) adds one sitting to it, and it unfolds in front of you if that
+      // crosses a stage (sic-unfold-by-sitting). It never makes a second spirit. Counted once a charge. Only a charge you keep
+      // grows: one let go by the door leaves as it came (Wendell, 21 October 2026: "when I finished and released the spirit it
+      // evolved and stayed in the room instead of being released").
+      // A charge let become a vibeulon (c.unkept) never grows a spirit either (board gw-unkept-vibeulon). Feed <name> on the kept
+      // card grows it there and then, so the gas it came in as unfolds to its stage by the wall, in front of you.
+      function carrier(c) { // the spirit of yours this charge is: the one come home, or a charge you have summoned before, by its name
+        if (!c.spirit && SPIRIT_STORE && c.name.trim()) {
+          var nm = c.name.trim().toLowerCase();
+          try { c.spirit = SPIRIT_STORE.all().filter(function (t) { return t.family === "charge" && (t.name || "").trim().toLowerCase() === nm; })[0] || null; } catch (e) { c.spirit = null; }
+        }
+        return c.spirit || null;
+      }
+      function grow(c) {
+        if (c.grownTo != null || c.push !== "toward" || c.unkept) return;
+        if (!carrier(c)) return;
+        c.grownTo = (c.spirit.sittings || 0) + 1;
+        var u = c.fig.userData, to = sittingStage(c.grownTo);
+        if (u.form && u.form.userData.form.stage !== to) { u.form.userData.unfold(to, true); c.unfolds = to; }
       }
       function dressCharge(c) {
         var u = c.fig.userData, look = AVATAR_LOOK[c.texture] || null, e = c.element && lookup(ELEMENTS, c.element);
@@ -5129,10 +5490,12 @@
         var l = { name: name, element: element || null, ring: ring, label: label, steady: !!c.steady };
         c.layers.push(l); return l;
       }
-      // A light the charge leaves on the threshold, named by the player, for the sitting.
+      // The vibeulon a charge not kept condenses into on the threshold (board gw-unkept-vibeulon; it was a light until 21 October
+      // 2026), named by the player: a gold coin standing on its edge in a halo, for the sitting. The count goes to the purse.
+      var VIBEULON_GOLD = 0xe8c050;
       function buildLight(hex, name, n) {
         var g = new THREE.Group();
-        var orb = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: hex })); orb.position.y = 0.32; g.add(orb);
+        var orb = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 24), new THREE.MeshBasicMaterial({ color: hex })); orb.rotation.x = Math.PI / 2; orb.position.y = 0.32; g.add(orb);
         var halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.22, depthWrite: false })); halo.position.y = 0.32; g.add(halo);
         var cv = document.createElement("canvas"); cv.width = 512; cv.height = 96;
         var cx = cv.getContext && cv.getContext("2d");
@@ -5149,9 +5512,11 @@
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
       var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [], all: [], startedAt: new Date().toISOString(), heat: { before: null, after: null }, ending: { kind: null, text: "" } };
       function newCharge(first, slot) {
-        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
+        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false, credit: {}, keepAs: null, unkept: false, home: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
           polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, askAt: 0, askAnswers: [], askLine: "", askPick: null, askBoss: null, shadeElement: null, shadeUnknown: false };
+        if (first && opts.spirit) { c.spirit = opts.spirit; c.home = true; c.name = opts.spirit.name || ""; c.element = c.element || opts.spirit.element || null; c.known = !!c.element; }
+        if (first && opts.hidden > 0) raiseShadow(c, "preview", opts.hidden); // a preview link's hidden part (#go=home&hidden=N)
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -5223,7 +5588,16 @@
       function elseBtn() { return btn("What else is here?", { "data-room-else": "" }, function () { R.prev = R.phase; R.phase = "else"; R.back = false; draw(); }, true); }
       function go(phase) { R.phase = phase; R.back = false; draw(); }
       function stepIndex(id) { for (var i = 0; i < ROOM_STEPS.length; i++) if (ROOM_STEPS[i].id === id) return i; return -1; }
-      function nextStep() { var i = stepIndex(R.phase); go(ROOM_STEPS[i + 1].id); }
+      // Each step done defines the charge a little more (board gw-form-by-step); Not now gives no credit, and a step done twice
+      // (after Step back) counts once.
+      function nextStep(noCredit) { var i = stepIndex(R.phase); if (noCredit !== true) { ch.credit[R.phase] = true; reachOrgan(ch); } go(ROOM_STEPS[i + 1].id); }
+      // A Fear charge's sitting reaches the brow (organs.js, mao-first-organ-brow): witnessed, accepted, validated set its floor.
+      // The floor only rises, so a step done again changes nothing; any other channel is left for a later pass.
+      function reachOrgan(c) {
+        var O = window.__oagOrgans; if (!O || (c.element !== "Fear" && c.element !== "Metal")) return;
+        try { O.store.raise({ channel: "fear", floor: O.floorFromCredit(c.credit), source: "the WAVE room" }); } catch (e) { return; }
+        hazeK = browFloor() >= 1 ? 0.6 : 1;
+      }
       function words(st) { return st.wave != null ? WAVE[st.wave] : [st.id, st.title, st.words]; }
       function nm() { return ch.name || "It"; }
 
@@ -5323,15 +5697,15 @@
             if (ph === "validate") { ch.steady = true; ch.dull = 0.6; ch.layers.forEach(function (l) { l.steady = true; }); dressCharge(ch); } // worked through: it dulls
             nextStep();
           })];
-          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, nextStep, true));
+          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, function () { nextStep(true); }, true));
           kk.push(elseBtn()); kk.push(stepBack()); k.push(row(kk));
           return { title: w[1], kids: k };
         }
         if (ph === "fork") {
           k.push(P(w[2], { "data-room-prompt": "" }));
           k.push(P("What do you actually want right now?", { "data-room-goal-ask": "" }));
-          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; startStays(); });
-          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; go("goes"); }, true);
+          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; ch.credit.fork = true; startStays(); });
+          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; ch.credit.fork = true; ch.unkept = true; go("goes"); }, true);
           var ok = function () { tw.disabled = aw.disabled = !ch.goal.trim(); };
           k.push(field("data-room-goal", ch.goal, "What you want, in your words", function (v) { ch.goal = v; ok(); }));
           k.push(P("Is " + nm() + " pushing your next move toward it, or away from it?"));
@@ -5344,10 +5718,10 @@
           if (ch.texture === "numbness") k.push(P("Numbness is how it feels, and it can also be what keeps it out of reach. The second one is a shadow.", { "data-room-shadow-numb": "" }));
           var order = ch.texture === "numbness" ? [SHADOWS[3], SHADOWS[0], SHADOWS[1], SHADOWS[2]] : SHADOWS;
           order.forEach(function (sh) {
-            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; go("unveil"); } });
+            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; summonShade(ch); go("unveil"); } });
             b.setAttribute("data-room-shadow", sh[0]); k.push(el("div", { class: "oagc-row" }, [b])); k.push(P(sh[2], { class: "oagr-note" }));
           });
-          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go("witness"); }, true)]));
+          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; summonShade(ch); go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go(shadeOpen(ch) ? "unveil" : "witness"); }, true)]));
           return { title: "Something hides it", kids: k };
         }
         if (ph === "flood") { // the practice that turns a flooding charge down, 3 of polarity a time
@@ -5387,7 +5761,7 @@
             return { title: "The shadow spirit", kids: k };
           }
           k.push(P(ch.polarity ? "The shadow spirit of " + shadowName(ch).toLowerCase() + " stands beside " + (ch.name || "it") + ". It does the shadow's work. Ask it what that work is for." : "The shadow has cleared. Its spirit stays beside " + (ch.name || "it") + ".", { "data-room-shade": "" }));
-          if (!ch.polarity) shadeReveal(k);
+          var clear = true; if (!ch.polarity) { shadeReveal(k); clear = shadeChoice(k); }
           var prev = ch.asks[ch.asks.length - 1], next = ch.polarity && prev && prev.boss ? lookup(SHADOW_ASKS, prev.boss) : null;
           if (next && !ch.asks.some(function (a) { return a.daemon === next[0]; })) { // follow who it works for
             k.push(P(lookup(SHADOW_ASKS, prev.daemon)[1] + " works for " + next[1].replace(/^The /, "the ") + ".", { "data-room-ask-chain-line": "" }));
@@ -5399,7 +5773,7 @@
             b.setAttribute("data-room-ask", q[0]); b.style.borderLeft = "6px solid #" + ("00000" + q[3].toString(16)).slice(-6);
             k.push(el("div", { class: "oagc-row" }, [b]));
           });
-          k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
+          if (clear) k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
           return { title: "The shadow spirit", kids: k };
         }
         if (ph === "unveil") { // the practice that thins the shadow, 3 of polarity a time
@@ -5408,7 +5782,7 @@
           if (!ch.polarity) {
             k.push(P("It is in plain sight now.", { "data-room-unveiled": "" }));
             if (ch.shade) shadeReveal(k);
-            k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
+            if (!ch.shade || shadeChoice(k)) k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
             return { title: "In plain sight", kids: k };
           }
           k.push(P(sh ? sh[3] : SHADOW_PLAIN, { "data-room-practice-ask": "" }));
@@ -5419,7 +5793,9 @@
             k.push(field("data-room-practice-line", ch.practiceLine, sh[0] === "distracting" ? "What pulled you away" : "Where feeling starts again", function (v) { ch.practiceLine = v; done.disabled = !v.trim(); }));
             done.disabled = !(ch.practiceLine || "").trim();
           }
-          k.push(row([done, btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)]));
+          // Its shadow spirit is a gate (Wendell, 21 October 2026: "that part has to be worked though ... before moving on to the
+          // existing spirit"): while it stands, there is no going on with it hidden.
+          k.push(row([done, shadeOpen(ch) ? null : btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)].filter(Boolean)));
           k.push(row([btn("What's in the way of it clearing?", { "data-room-shadow-spirit": "" }, function () { summonShade(ch); go("asks"); }, true)]));
           return { title: sh ? sh[1] : "A shadow", kids: k };
         }
@@ -5433,22 +5809,29 @@
             } }, k);
           return { title: title, kids: k };
         }
+        // Summoning has a price (Wendell, 21 October 2026; board gw-summon-price): a W.A.V.E. finished mints a vibeulon, and a charge
+        // kept as a spirit keeps that vibeulon in it. So the player chooses: keep it (or feed the spirit of theirs it is), or let it
+        // condense into a vibeulon as it goes out the door.
         if (ph === "kept") {
+          var sp = carrier(ch);
           k.push(P(nm() + " has a place in the room now.", { "data-room-kept": "" }));
           k.push(P("Your next move: " + ch.move));
-          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
+          k.push(P(sp ? "Feed it to " + sp.name + " and it grows by one sitting, with the vibeulon this W.A.V.E. makes inside it. Or let it condense into the vibeulon and go." :
+            "Keep it as a spirit, and the vibeulon this W.A.V.E. makes stays inside it. Or let it condense into the vibeulon and go.", { "data-room-price": String(SUMMON_PRICE) }));
+          k.push(row([btn(sp ? "Feed " + sp.name : "Keep it as a spirit", { "data-room-keep": "spirit" }, function () { ch.keepAs = "spirit"; grow(ch); go("checkin"); }),
+            btn("Let it become a vibeulon", { "data-room-keep": "vibeulon" }, function () { unkeep(ch); }, true)]));
           return { title: "It stays", kids: k };
         }
         if (ph === "goes") {
           k.push(P("Let the out-breath carry it. It leaves at its own pace, and it can come back."));
           k.push(field("data-room-line", ch.line, "A line to it, if you want", function (v) { ch.line = v; }));
-          k.push(field("data-room-light-name", ch.lightName, "A name for the light it leaves", function (v) { ch.lightName = v; }));
+          k.push(field("data-room-light-name", ch.lightName, "A name for the vibeulon it becomes", function (v) { ch.lightName = v; }));
           k.push(row([btn("Breathe out", { "data-room-exhale": "" }, function () { R.phase = "leaving"; R.wait = "door-out"; draw(); }), stepBack()]));
           return { title: "Exhale", kids: k };
         }
         if (ph === "leaving") return { title: "Exhale", kids: [P(R.calm ? "The door opens, and it goes when it's ready." : "On your out-breath the door opens, and it goes when it's ready.")], still: true };
         if (ph === "gone") {
-          k.push(P("A light in its colour stays on the threshold: " + lightName() + ". The door stays ajar. It can come back.", { "data-room-gone": "" }));
+          k.push(P("On the threshold it condensed into a vibeulon: " + lightName() + ". " + (ch.purse != null ? "You hold " + ch.purse + (ch.purse === 1 ? " vibeulon. " : " vibeulons. ") : "") + "The door stays ajar. It can come back.", { "data-room-gone": "" }));
           if (ch.line.trim()) k.push(P("You told it: " + ch.line.trim()));
           k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
           return { title: "It left", kids: k };
@@ -5456,8 +5839,8 @@
         if (ph === "checkin") {
           k.push(P("Did it leave, or did you get rid of it?", { "data-room-checkin-ask": "" }));
           var ans = [["left", "It left"], ["got-rid", "I got rid of it"]];
-          if (ch.push === "toward") ans.push(["stayed", "It stayed"]);
-          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v }); workedThrough(); }));
+          if (ch.push === "toward" && !ch.unkept) ans.push(["stayed", "It stayed"]);
+          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v, vibeulon: !!ch.unkept }); workedThrough(); }));
           k.push(P("Your answer and the round number stay on this device. What you wrote stays on this page.", { class: "oagr-note" }));
           return { title: "For the test", kids: k };
         }
@@ -5474,7 +5857,7 @@
         }
         // end
         k.push(P(R.rested ? "What's left rests by the door, with a lantern beside it." : "The room is quiet.", { "data-room-end": "" }));
-        if (R.lights.length) k.push(P("On the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
+        if (R.lights.length) k.push(P("Vibeulons on the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
         if (R.from === "board") boardEnding(k);
         if (R.from === "board" && R.heat.before != null && R.heat.after != null && R.heat.after >= R.heat.before && !R.all[0].lookedAgain)
           lookAgainRow(k, R.all[0], R.heat.after + " of 10 left, from " + R.heat.before, R.heat.after);
@@ -5485,11 +5868,65 @@
       function shadowRow(c) { return c.shadow ? lookup(SHADOWS, c.shadow) : null; }
       function shadowName(c) { var sh = shadowRow(c); return sh ? sh[1] : "a shadow"; }
       function shadowLine(c) { return c.polarity > 0 ? "Hidden " + c.polarity + " of 10, by " + shadowName(c).toLowerCase() + "." : c.polarity < 0 ? "Flooding " + (-c.polarity) + " of 10." : "In plain sight."; }
-      // A shadow spirit: the room's creature body in the shadow's colour, smaller, standing beside the one it hides.
+      // A shadow spirit (Wendell, 21 October 2026: "The part that was hiding it is still showing up as the blobs instead of its own
+      // gas form and that part has to be worked though and turned into a vibeulon/released or accepted as a spirit before moving
+      // on to the existing spirit"): a gas of its own in the shadow's colour, smaller, beside the one it hides, its motes streaming
+      // out of it as soon as the shadow is named. While the shadow stands it is faint and spread; it gathers as the practice and
+      // the asks bring the polarity down (its definition is how far it has come to 0). Cleared, it is a gate: kept as a spirit it
+      // takes a place by the wall and walks out with you; let go, it condenses into a vibeulon on the threshold. Only then does
+      // the W.A.V.E. go on with the one it hid. Its motes are drawn over the room, not added to it, so a dark gas reads as dark.
+      var SHADE_K = 1.5, SHADE_Y = 0.9, SHADE_DX = 1.5, SHADE_FAINT = 0.35;
       function summonShade(c) {
         if (c.shade) return;
-        var g = buildCharge(), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
-        g.scale.setScalar(0.55); g.position.set(c.fig.position.x + 1.4, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+        var g = new THREE.Group(); g.position.set(c.fig.position.x + SHADE_DX, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+        if (!SF) { var b = buildCharge(true), bu = b.userData; bu.mat.color.setHex(SHADOW_HEX); b.scale.setScalar(0.55); g.add(b); g.userData = { blob: b, def: 0 }; return; }
+        var f = SF.buildForm(THREE, "charge", SHADOW_HEX, { from: new THREE.Vector3(c.fig.position.x, FORM_Y, c.fig.position.z) });
+        f.userData.materials.forEach(function (m) { m.blending = THREE.NormalBlending; m.size *= 1.5; m.needsUpdate = true; }); // bigger motes, so the smaller gas still reads
+        f.position.y = SHADE_Y; f.scale.setScalar(SHADE_K); g.add(f);
+        g.userData = { form: f, tint: SF.tintProxy(f), def: 0, fade: null };
+      }
+      function shadeOpen(c) { return !!(c.shade && !c.shadeKeep); }
+      function shadeHexOf(c) { return c.shadeElement && !c.polarity ? shadeHex(c.shadeElement) : SHADOW_HEX; }
+      // Each frame: beside its creature until it is chosen for; defined as the shadow thins; its colour kin to its element once named.
+      function syncShade(c, dt) {
+        var sh = c.shade, su = sh.userData, f = su.form, src = c.fig.userData;
+        sh.visible = !su.gone && (c.shadeKeep ? true : c.fig.visible && !c.gone && c.fig.parent === scene);
+        if (!c.shadeKeep) {
+          sh.position.x += (c.fig.position.x + SHADE_DX * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
+        }
+        var d = c.polarity <= 0 ? 1 : c.shadowStart > 0 ? clamp(1 - c.polarity / c.shadowStart, 0, 1) : 0;
+        su.def += (d - su.def) * Math.min(1, dt * 1.5);
+        var fade = (su.fade == null ? 1 : su.fade) * (c.shadeKeep || src.fade == null ? 1 : src.fade);
+        if (!f) { su.blob.children[0].children.forEach(function (m) { m.material.opacity = 0.8 * fade; }); return; }
+        var st = f.userData.form; st.spread = SPREAD * (1 - su.def);
+        if (su.tint.material.color.getHex() !== shadeHexOf(c)) su.tint.material.color.setHex(shadeHexOf(c));
+        f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * (SHADE_FAINT + (1 - SHADE_FAINT) * su.def) * fade; });
+      }
+      // The gate's two ways, once the shadow has cleared. Returns true once one is chosen, so the page can offer to go on.
+      function shadeChoice(k) {
+        var c = ch;
+        if (c.shadeKeep) {
+          k.push(P(c.shadeKeep === "spirit" ? "The shadow spirit has a place by the wall now. It walks out with you." : c.shade.userData.gone ? "On the threshold it condensed into a vibeulon: " + shadeLight(c) + "." : "The shadow spirit goes to the door, to condense into a vibeulon there.", { "data-room-shade-kept": c.shadeKeep }));
+          return true;
+        }
+        k.push(P("Keep it as a spirit, and it takes a place by the wall and walks out with you. Or let it condense into a vibeulon on the threshold. Then you go on with " + nm() + ".", { "data-room-shade-ask": "" }));
+        k.push(row([btn("Keep it as a spirit", { "data-room-shade-keep": "spirit" }, function () { keepShade(c, "spirit"); }),
+          btn("Let it become a vibeulon", { "data-room-shade-keep": "vibeulon" }, function () { keepShade(c, "vibeulon"); }, true)]));
+        return false;
+      }
+      function shadeLight(c) { return shadowName(c) + ((c.name || "").trim() ? " of " + c.name.trim() : ""); }
+      function keepShade(c, how) {
+        var sh = c.shade, from = { x: sh.position.x, z: sh.position.z }; c.shadeKeep = how;
+        if (how === "spirit") R.moves.push({ c: { fig: sh }, from: from, to: keptSpot("shade"), t: 0, dur: 3 });
+        else { // to the door and out, as an unkept charge goes, and a vibeulon on the threshold for the purse
+          R.doorWant = 1;
+          R.moves.push({ c: { fig: sh }, from: from, to: { x: 0, z: DZ - 3 }, t: -0.3, dur: 4.5, fadeOut: true, then: function () {
+            sh.userData.gone = true; sh.visible = false; var l = buildLight(VIBEULON_GOLD, shadeLight(c), R.lights.length); scene.add(l); R.lights.push(l);
+            if (!c.shadeMinted) { c.shadeMinted = true; try { c.shadePurse = SPIRIT_STORE ? SPIRIT_STORE.mint(SUMMON_PRICE, "the WAVE room") : null; } catch (e) { c.shadePurse = null; } }
+            if (ch === c && (R.phase === "unveil" || R.phase === "asks")) draw();
+          } });
+        }
+        draw();
       }
       // Fully revealed, the shadow spirit shows its element, and from then on it can be dissolved like any spirit (Wendell, board
       // read 14 October 2026). Until the player names one it stays a shadow spirit with no element.
@@ -5562,7 +5999,7 @@
           texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
           move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
           layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0, reading: c.reading,
-          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null } : null,
+          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null, shadeKeep: c.shadeKeep || null } : null,
           hiddenOf: c.hiddenOf };
         Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
         return r;
@@ -5593,18 +6030,28 @@
       }
       // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
       function workedThrough() {
-        if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
+        grow(ch); if (R.worked.indexOf(ch) < 0) { R.worked.push(ch); shipEmber(ch); } // each W.A.V.E. worked here walks back out with the player as a spirit
         R.active.splice(R.active.indexOf(ch), 1);
         if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
         if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
         go("again");
       }
       function startStays() { ch.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }; go("stays"); }
-      function keep() { // the charge takes a place in the room, beside the wall, for the sitting
-        var n = R.kept.length % 4, spot = [[-5.2, 1.4], [5.2, 1.4], [-5.4, -2.4], [5.4, -2.4]][n]; // by the wall, clear of the three places
-        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 });
+      // A kept charge takes a place toward the back wall, right of the door, clear of the three places and the way in, where the
+      // seat's camera sees it on a phone held upright; a kept shadow spirit takes one on the left, in front of the elder, so a fed
+      // charge's ally never stands beside the elder's. The places by the side walls (x 5.2) were out of frame (Wendell, 21 October
+      // 2026: "I can't see the spirit that has shown up in the room").
+      var KEPT_AT = { charge: [[1.4, -4.4], [1.8, -6.2], [2.0, -2.9], [-2.4, -2.6]], shade: [[-0.9, -3.4], [-2.3, -3.3], [0.9, -6.0], [2.3, -4.2]] }, spotsUsed = { charge: 0, shade: 0 };
+      function keptSpot(kind) { var L = KEPT_AT[kind || "charge"], q = L[spotsUsed[kind || "charge"]++ % L.length]; return { x: q[0], z: q[1] }; }
+      function keep() { // the charge takes a place in the room, by the wall, for the sitting
+        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: keptSpot("charge"), t: 0, dur: 3 });
         ch.reading = { before: ch.t321.before, after: ch.t321.after }; // the shadow's second signal reads these
         ch.heat = ch.t321.after; ch.dull *= 0.6; R.kept.push(ch); ch.t321 = null; go("kept");
+      }
+      var SUMMON_PRICE = 1; // the vibeulon a finished W.A.V.E. mints, which a kept spirit keeps inside it (board gw-summon-price)
+      function unkeep(c) { // a kept charge let go after all: it leaves the wall by the door and condenses into a vibeulon there
+        c.keepAs = "vibeulon"; c.unkept = true; var i = R.kept.indexOf(c); if (i >= 0) R.kept.splice(i, 1);
+        R.phase = "leaving"; R.wait = "door-out"; draw();
       }
       function restart() {
         R.round++; if (ch.gone) scene.remove(ch.fig);
@@ -5616,24 +6063,48 @@
         var c = newCharge(false); c.fig.visible = true; c.fig.position.set(DW / 2 + 1.9, 0, DZ + 1.1); c.fig.scale.setScalar(0.45); R.restFig = c.fig;
         R.rested = true; R.doorWant = 0; go("end");
       }
+      // What a worked charge leaves as (boards gs-two-acts, gs-door-gas): one it grew is that spirit, with its sittings one up and
+      // no new entry in oag.spirits.v1; any other kept charge is a newly summoned spirit, stored once, at gas (0 sittings). One let
+      // go by the door is not kept: nothing is stored or grown, and it is a vibeulon in the purse (leave() does not take it along).
+      function spiritOf(c, n) {
+        var o = { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
+        if (c.push !== "toward") return o;
+        grow(c);
+        if (c.spirit) { o.id = c.spirit.id; o.family = c.spirit.family || "charge"; o.sittings = c.grownTo; o.name = c.spirit.name || o.name; o.element = c.spirit.element || o.element; o.hex = spiritHex(o.element); }
+        else { o.id = "charge-" + Date.now().toString(36) + "-" + n; o.family = "charge"; o.sittings = 0; o.summoned = true; }
+        o.stage = sittingStage(o.sittings);
+        try { if (SPIRIT_STORE) SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "the WAVE room"); } catch (e) { /* it still walks out with you */ }
+        return o;
+      }
       function leave(portal) {
         fade.style.opacity = 1;
         // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
         // it's been engaged with"), so one still being worked stays in the room, by any door.
-        var going = R.worked; saveRun(true);
-        var shades = going.filter(function (c) { return c.shade; }); // each shadow spirit called up walks out beside its creature
+        var going = R.worked.filter(function (c) { return !c.unkept; }); saveRun(true); // one let become a vibeulon is in the purse, not walking with you
+        var shades = R.all.filter(function (c) { return c.shade && c.shadeKeep === "spirit"; }); // only a shadow spirit kept walks out; one let go is a vibeulon in the purse
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
-          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
-            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
-          }).concat(shades.map(function (c) {
-            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.polarity ? null : c.shadeElement || null, hex: !c.polarity && c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !c.polarity && !!c.shadeElement };
+          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", basin: portal === "basin", spirits: going.map(spiritOf).concat(shades.map(function (c) {
+            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.shadeElement || null, hex: c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !!c.shadeElement };
           })) });
         }, 520);
       }
 
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
+      // The WAVE room is the ship's cabin (Six-faces-council council/callsheets/inner-vessel.md). Each charge worked through the
+      // whole W.A.V.E. gives the ship one ember (a 3-2-1 in it makes it a 3-2-1 ember, its bonus when the charge dropped by more
+      // than 2), and the spirits aboard power the ship. The button by Calm walks out to the living ship.
+      function shipEmber(c) {
+        var VS = window.__oagVessel && window.__oagVessel.store; if (!VS) return;
+        var drop = (c.heatStart != null ? c.heatStart : 6) - c.heat;
+        VS.route({ source: c.t321 ? "321" : "wave", element: c.element || null, intensity: c.heat, bonus: !!c.t321 && drop > 2 });
+        VS.spirits();
+      }
+      // The button walks out to the living ship (/calrunia/arrive), which reads the same stores; the grid dock is gone (sd-dock-scrapped).
+      if (window.__oagVessel) stage.appendChild(el("button", { class: "oagc-calm oagr-ship", "data-room-ship": "", text: "The ship", onclick: function () {
+        stopWalking(); location.href = "/calrunia/arrive";
+      } }));
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
       // The room's switch and its key, in the Menu (menu(), above); Sit down and a door's card show when they can be used.
       menu(wrap, [
@@ -5649,15 +6120,24 @@
       function spread() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
       if (renderer) {
         var dom = renderer.domElement;
+        var floatR = null, stickTap = null; // the floating stick and the tap a thumb on it may still be (ctl-split-thumbs, ctl-tap-rule)
         dom.addEventListener("pointerdown", function (e) {
+          if (!floatR) floatR = floatStick(stickPad);
+          // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+          if (stickId != null && stickTap) { ptrs[stickId] = { x: stickTap.x, y: stickTap.y }; stickTap = null; stickUp(); }
+          else if (stickId == null && !R.modal && !R.close && floatR.wants(e)) {
+            try { dom.setPointerCapture(e.pointerId); } catch (x) {}
+            stickId = e.pointerId; floatR.at(e); stickAt(e); stickTap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; return;
+          }
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
+          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; }
           else { drag = null; tap = null; pinch = { d: spread(), z: zoom }; }
         });
         dom.addEventListener("pointermove", function (e) {
+          if (e.pointerId === stickId) { if (stickTap && Math.hypot(e.clientX - stickTap.x, e.clientY - stickTap.y) >= TOUCH.px) stickTap = null; stickAt(e); return; }
           if (!ptrs[e.pointerId]) return;
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
+          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) >= TOUCH.px) tap = null;
           if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
           if (!drag) return;
           guide.dragged += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); if (guide.dragged > 60) learn("look");
@@ -5668,8 +6148,13 @@
           drag.x = e.clientX; drag.y = e.clientY;
         });
         ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
+          if (e.pointerId === stickId) {
+            var st = stickTap; stickTap = null; stickUp();
+            if (n === "pointerup" && st && e.timeStamp - st.t < TOUCH.ms) tapAt(e.clientX, e.clientY);
+            return;
+          }
           delete ptrs[e.pointerId];
-          if (n === "pointerup" && tap && performance.now() - tap.t < 600) tapAt(e.clientX, e.clientY);
+          if (n === "pointerup" && tap && e.timeStamp - tap.t < TOUCH.ms) tapAt(e.clientX, e.clientY);
           tap = null;
           var left = Object.keys(ptrs);
           if (left.length < 2) pinch = null;
@@ -5723,6 +6208,14 @@
       // or x out of the menu so the player and the spirit can be in shot"): one line, the forms in one row of short buttons, a fold
       // button that leaves only a chip (a tap opens it again), and an X that closes it. The elder's floating name shrinks while open.
       var elderMin = false;
+      // Talk (ctl-generous-taps): standing by the elder, a round 88px button by the right thumb opens its card, so the thumb
+      // does not have to find the creature on the screen. It sits above a door's card when one is up.
+      var talkBtn = el("button", { class: "oagr-talk", "data-room-talk": "", "aria-label": "Talk to the elder", text: "Talk", style: "display:none", onclick: function () { elderOpen(); } }); wrap.appendChild(talkBtn);
+      function talkShow() {
+        var on = !!elder && !R.modal && !R.close && elderBox.style.display === "none" && Math.hypot(fig.x - ELDER_AT.x, fig.z - ELDER_AT.z) < 3.2;
+        talkBtn.style.display = on ? "" : "none";
+        if (on) talkBtn.style.bottom = doorBox && doorBox.style.display !== "none" ? "calc(" + (doorBox.offsetHeight + 30) + "px + env(safe-area-inset-bottom))" : "";
+      }
       function elderLabel() { var l = elder && elder.g.userData.label, open = elderBox.style.display !== "none"; if (l) l.scale.set(open ? 1.2 : 2.4, (open ? 1.2 : 2.4) * 0.1875, 1); }
       function elderCard() {
         clearTimeout(elderShow); elderShow = null;
@@ -5757,6 +6250,15 @@
         return { x: rc.left + (c.x + 1) / 2 * rc.width, y: rc.top + (1 - c.y) / 2 * rc.height, r: Math.hypot((e.x - c.x) / 2 * rc.width, (e.y - c.y) / 2 * rc.height) };
       }
       if (opts.portal && spiritForms && spiritForms.buildForm) elderWear("ally");
+      // A preview link's skip-ahead (?go=elder): the figure stands up off the rug beside the elder, facing it.
+      var skipNear = opts.near === "elder"; // done on the first frame the room is free to walk, after its opening page has settled
+      function standByElder() {
+        skipNear = false; if (!elder) return;
+        // come from the rug's side, and stand a step to its right, so the camera behind the figure sees the elder past its shoulder
+        var dx = ELDER_AT.x - SEAT.x, dz = ELDER_AT.z - SEAT.z, d = Math.hypot(dx, dz); dx /= d; dz /= d;
+        fig.x = ELDER_AT.x - dx * 2.6 - dz * 1.2; fig.z = ELDER_AT.z - dz * 2.6 + dx * 1.2; fig.sit = 0; fig.yaw = Math.atan2(dx, dz);
+        R.roam = { free: true, x: fig.x, z: fig.z, exit: null, arrived: true }; R.walkYaw = fig.yaw;
+      }
       var stickId = null;
       // On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card, and a hidden stick
       // measures 0 wide: dividing by that walked the figure to nowhere and left the room dark (Wendell, 14 October 2026: "Stay in
@@ -5768,7 +6270,7 @@
         stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
         stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
       }
-      function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+      function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; if (floatR) floatR.home(); }
       stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
       stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
       ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { stickPad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
@@ -5797,6 +6299,7 @@
       function sitDown() { sitBtn.style.display = "none"; stopWalking(); if (modal.childNodes.length) openModal(); }
       function freeWalk(dt) {
         if (!isFinite(fig.x) || !isFinite(fig.z) || !isFinite(fig.yaw)) { fig.x = SEAT.x; fig.z = SEAT.z; fig.yaw = Math.PI; R.walkYaw = null; R.roam = null; snap = true; } // never lost: back on the rug
+        if (skipNear && !R.modal && !R.close) standByElder();
         var w = R.modal || R.close ? null : wantWalk();
         if (!w) R.stickFrame = null; // the thumb is off: the next push takes the camera's forward afresh
         if (w) {
@@ -5823,6 +6326,7 @@
           if (near && near !== R.atDoor) doorCard(near);
           else if (!near && R.atDoor) hideDoor();
         }
+        talkShow(); wrap.classList.toggle("oagr-still", reducedMotion);
         if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; loadBtn.style.display = "none"; loadBox.style.display = "none"; return !!w; }
         sitBtn.style.display = onRug() && !R.modal ? "" : "none";
         loadBtn.style.display = onRug() && !R.modal && keptSpirits().length ? "" : "none";
@@ -5845,14 +6349,14 @@
         if (!renderer) return;
         var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
         // the elder takes a tap on itself, except while the guide is teaching the tap on the floor (its spot can fall by the elder)
-        var es = !R.close && guide.shown !== "tap" && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < es.r) { elderOpen(); return; }
+        var es = !R.close && guide.shown !== "tap" && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < tapReach(es.r)) { elderOpen(); return; }
         var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
         seen().forEach(function (c) {
           var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
           if (p.z > 1) return; // behind the camera
           var sx = rc.left + (p.x + 1) / 2 * rc.width, sy = rc.top + (1 - p.y) / 2 * rc.height;
           var rad = Math.hypot((e.x - p.x) / 2 * rc.width, (e.y - p.y) / 2 * rc.height), d = Math.hypot(x - sx, y - sy);
-          var k = d / (rad * 1.4 + 24); if (k < 1 && k < bestK) { best = c; bestK = k; }
+          var k = d / Math.max(rad * 1.4 + 24, tapReach(0)); if (k < 1 && k < bestK) { best = c; bestK = k; }
         });
         if (best && best !== R.close) closeUp(best);
         else if (!best && !R.close) walkTap(x, y, rc);
@@ -5886,11 +6390,13 @@
         portal: ["The six game masters", "A hall with a door for each of the six faces.", "Go through"],
       };
       function doorCard(id) {
+        // The basin's mouth is walked into, not opened from a card (mab-one-mouth): arriving in front of it goes in.
+        if (id === "basin") { if (!R.leftBy) { R.leftBy = "basin"; stopWalking(); leave("basin"); } return; }
         if (!doorBox) { doorBox = el("div", { class: "oagr-door", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
         learn("doors");
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
         var kids = [el("h2", { text: w[0] }), P(w[1])];
-        var going = R.worked.length;
+        var going = R.worked.filter(function (c) { return !c.unkept; }).length;
         if (going) kids.push(P(going === 1 ? "The one you worked with comes along as a spirit." : "The " + going + " you worked with come along as spirits.", { class: "oagr-note" }));
         kids.push(btn(w[2], go, function () { leave(id === "portal" ? true : id); }));
         doorBox.innerHTML = ""; kids.forEach(function (n) { doorBox.appendChild(n); }); doorBox.style.display = ""; R.atDoor = id;
@@ -5987,9 +6493,10 @@
         // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
         if (R.wait && (R.calm || br.exhaling)) {
           var w0 = R.wait; R.wait = null; R.doorWant = 1;
-          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
-          else { var cout = ch; R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
-            cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+          if (w0 === "door-in") { var cin = ch; cin.credit.welcome = true; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); formIn(cin, new THREE.Vector3(0, 1.4, DZ + 0.2)); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
+          else { var cout = ch; grow(cout); R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: cout.unfolds ? -3.4 : -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
+            cout.gone = true; cout.fig.visible = false; var l = buildLight(VIBEULON_GOLD, (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+            if (!cout.minted) { cout.minted = true; try { cout.purse = SPIRIT_STORE ? SPIRIT_STORE.mint(SUMMON_PRICE, "the WAVE room") : null; } catch (e) { cout.purse = null; } }
             if (ch === cout) go("gone"); else cout.phase = "gone";
           } }); }
         }
@@ -6045,11 +6552,8 @@
           c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
         });
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
-        R.all.forEach(function (c) { // a shadow spirit keeps beside its creature, and goes when it goes
-          if (!c.shade) return; var sh = c.shade, su = sh.userData; sh.visible = c.fig.visible && !c.gone && c.fig.parent === scene; su.fade = c.fig.userData.fade;
-          sh.position.x += (c.fig.position.x + 1.4 * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
-          su.mat.opacity = 0.8 * (su.fade == null ? 1 : su.fade); su.mat.emissiveIntensity = 0.25 + 0.15 * br.b; stepAura(su.aura, su.col, 0.25, dt, R.calm);
-        });
+        R.all.forEach(function (c) { var u = c.fig.userData; if (u.blob || !c.fig.visible) return; if (!u.form) formIn(c, null); syncForm(c, now, dt); });
+        R.all.forEach(function (c) { if (c.shade) syncShade(c, dt); }); // a shadow spirit keeps beside its creature until it is chosen for
         // the figure: stands up, walks to its place, sits down again
         var stepping = freeWalk(dt);
         var hideStick = R.modal || R.close;
@@ -6068,15 +6572,11 @@
           if (tg.sit && Math.abs(angleDiff(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z))) < 0.15) fig.sit = Math.min(1, fig.sit + dt * 1.6);
         }
         avatar.position.set(fig.x, 0, fig.z); avatar.rotation.y = fig.yaw;
+        var sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
         poseAvatar(avatar, fig.clk, moving, dt, br.b, 0.7, R.calm);
-        var J = avatar.userData.J, sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
         if (sk > 0) {
-          ["L", "R"].forEach(function (n) {
-            J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - sk) - 1.45 * sk; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - sk) + 1.45 * sk;
-            J["ankle" + n].rotation.x *= 1 - sk; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - sk) - 0.35 * sk; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - sk) - 0.5 * sk;
-          });
-          J.hips.position.y = J.hips.position.y * (1 - sk) + 0.6 * sk;
-          avatar.position.z = fig.z - Math.cos(fig.yaw) * 0.25 * FIG_K * sk; avatar.position.x = fig.x - Math.sin(fig.yaw) * 0.25 * FIG_K * sk; // hips back over the seat
+          seatAvatar(avatar, sk, { on: SEAT_TOP / (FIG_K * AVATAR_H / BODY_FRAME_H) }); // cross-legged on the cushion's top
+          avatar.position.z = fig.z - Math.cos(fig.yaw) * 0.6 * FIG_K * sk; avatar.position.x = fig.x - Math.sin(fig.yaw) * 0.6 * FIG_K * sk; // hips back, so the crossed legs rest in the cushion's middle
         }
         loosenAvatar(avatar, 0, br.b);
         // the room's look follows the step, as the cave's path does; the walls breathe
@@ -6084,7 +6584,7 @@
         lamp.color.lerp(tmpC.setHex(lg.light).lerp(new THREE.Color(0xffffff), 0.45), fe);
         hemi.intensity += (lg.hemi * 0.8 - hemi.intensity) * fe;
         scene.fog.color.lerp(tmpC.setHex(lg.fog), fe); scene.background.copy(scene.fog.color);
-        scene.fog.density += (0.03 * lg.fogK - scene.fog.density) * fe;
+        scene.fog.density += (0.03 * lg.fogK * hazeK - scene.fog.density) * fe; // hazeK: thinner once the brow is reached
         lamp.intensity = 0.9 + 0.35 * (1 - br.b);
         var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
         R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
@@ -6127,7 +6627,8 @@
         if (id === "look") return out.set(SLOTS[1].x, 2.2, SLOTS[1].z);
         if (id === "tap") return out.set(guide.tapAt.x, 0.35, guide.tapAt.z);
         if (id === "rug") return out.set(SEAT.x, 0.7, SEAT.z);
-        var ex = Object.keys(EXITS).map(function (k) { return EXITS[k]; }).sort(function (a, b) { return Math.hypot(a.x - fig.x, a.z - fig.z) - Math.hypot(b.x - fig.x, b.z - fig.z); })[0];
+        // the basin's mouth has no card to teach, so the light waits in the nearer of the other doorways
+        var ex = Object.keys(EXITS).filter(function (k) { return k !== "basin"; }).map(function (k) { return EXITS[k]; }).sort(function (a, b) { return Math.hypot(a.x - fig.x, a.z - fig.z) - Math.hypot(b.x - fig.x, b.z - fig.z); })[0];
         return out.set(ex.x * 0.85, 1.9, ex.z * 0.85); // in the nearer doorway
       }
       function teachStep(dt, now, sk) {
@@ -6182,8 +6683,17 @@
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
           slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
           polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf,
-          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.mat.color.getHex(), x: ch.shade.position.x, element: ch.shadeElement || null } : null, asks: ch.asks.slice() }; },
+          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.tint ? ch.shade.userData.tint.material.color.getHex() : SHADOW_HEX, x: ch.shade.position.x, z: ch.shade.position.z, element: ch.shadeElement || null,
+            drawn: ch.shade.userData.form ? ch.shade.userData.form.userData.form.drawn : "blob", motes: ch.shade.userData.form ? ch.shade.userData.form.userData.form.motes : 0, def: ch.shade.userData.def, spread: ch.shade.userData.form ? ch.shade.userData.form.userData.form.spread : null,
+            keep: ch.shadeKeep || null, gone: !!ch.shade.userData.gone, open: shadeOpen(ch) } : null, asks: ch.asks.slice() }; },
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
+        // the charge's form: how defined it is, the stage drawn, whether it walks, and its lowest point above its own ground
+        form: function () {
+          var u = ch.fig.userData, f = u.form, st = f && f.userData.form, low = null;
+          if (st && st.mesh) { ch.fig.updateMatrixWorld(true); footBox.setFromObject(st.mesh); low = footBox.min.y - ch.fig.position.y; }
+          return { def: u.def == null ? null : u.def, credited: definition(ch), drawn: st ? st.drawn : null, spread: st ? st.spread : null, walking: !!u.walking, low: low, veil: u.veil.visible ? u.veil.material.opacity : 0 };
+        },
+        vibeulons: function () { try { return SPIRIT_STORE ? SPIRIT_STORE.vibeulons() : null; } catch (e) { return null; } },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
         run: function () { return runRecord(); },
@@ -6200,7 +6710,18 @@
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
         walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
-          exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
+          exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }), seated: fig.sit > 0.5 ? seatFit() : null }; },
+        // where a charge's form (or its shade's) is on screen, how opaque it is drawn, and whether it is clear of the card
+        seen: function (which) {
+          var c = typeof which === "number" ? R.all[which] : ch, root = which === "shade" ? ch.shade : c.fig, f = root && (which === "shade" ? root.userData.form : c.fig.userData.form);
+          if (!f || !renderer) return null;
+          var st = f.userData.form; root.updateMatrixWorld(true);
+          var bb = st.mesh ? new THREE.Box3().setFromObject(st.mesh) : null, mid = bb ? bb.getCenter(new THREE.Vector3()) : f.getWorldPosition(new THREE.Vector3()), p = mid.clone().project(camera), rc = renderer.domElement.getBoundingClientRect();
+          var op = st.mesh ? Math.max.apply(null, st.mesh.children.map(function (m) { return m.material.opacity; })) : f.userData.materials[0].opacity;
+          var card = modal.classList.contains("open") ? modal.getBoundingClientRect().top : rc.bottom, sy = rc.top + (1 - p.y) / 2 * rc.height;
+          return { stage: st.stage, drawn: st.drawn, gas: st.gas, opacity: op, visible: root.visible && f.visible, ndc: [p.x, p.y, p.z], x: rc.left + (p.x + 1) / 2 * rc.width, y: sy,
+            inFrame: Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95 && p.z < 1, aboveCard: sy < card, card: card, world: [mid.x, mid.y, mid.z], low: bb ? bb.min.y : null };
+        },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         // the elder spirit (slice 5): its form, whether its card shows, and where it is on screen for a test to tap it
         elder: function () { if (!elder) return null; var f = elder.g.userData.form; return { stage: elder.stage, drawn: f ? f.drawn : null, card: elderBox.style.display !== "none", x: elder.g.position.x, z: elder.g.position.z, screen: elderScreen() }; },
@@ -6235,7 +6756,7 @@
     el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
     makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
     buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
-    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, integrateBody: integrateBody, bodyPose: bodyPose, BODY_STANCES: BODY_STANCES, dressCave: dressCave, DAEMONS: DAEMONS,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, seatAvatar: seatAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, integrateBody: integrateBody, bodyPose: bodyPose, BODY_STANCES: BODY_STANCES, dressCave: dressCave, DAEMONS: DAEMONS,
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,

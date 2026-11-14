@@ -8,6 +8,7 @@
  * @agentDiscoverable false
  */
 import { NextResponse } from 'next/server'
+import { withChalk } from '@/lib/marks/chalk'
 
 export const dynamic = 'force-static'
 
@@ -89,5 +90,5 @@ button:disabled{opacity:.5}details{margin-top:16px}pre{white-space:pre-wrap;word
 </script></body></html>`
 
 export function GET() {
-  return new NextResponse(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } })
+  return new NextResponse(withChalk(PAGE), { headers: { 'content-type': 'text/html; charset=utf-8' } })
 }

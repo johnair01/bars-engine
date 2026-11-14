@@ -15,10 +15,18 @@ const nextConfig: NextConfig = {
       "./tools/**",
       "./content/ontology-game/cave/pictures/**",
       "./content/ontology-game/**/*.glb",
+      // The game sources themselves: build scripts copy what the browser needs into public/, and no route reads them at
+      // run time. The J5 garment pipeline (bars-engine PR #364) pushed api/guidance to 250.22 MB without this line.
+      "./content/ontology-game/**",
       "./public/ontology-game/**",
       // The Between's page and models (7 MB of .glb), loaded only by the browser. The first preview of bars-engine
       // PR #357 pushed api/guidance to 254.91 MB without this line.
       "./public/between/**",
+      // Chapter 1's arrival aboard the ship and its models, loaded only by the browser.
+      "./public/calrunia/**",
+      // Source art kept in git for the next round (the Between tea's .blend and its Blender build), never read at run
+      // time. The first preview of the tea round 5 (bars-engine #463) pushed api/guidance to 250.91 MB without this line.
+      "./art/**",
     ],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
@@ -37,6 +45,10 @@ const nextConfig: NextConfig = {
     return [
       // The booking page was /podcasts until 2026-09-15; it now closes the podcast page.
       { source: "/podcasts", destination: "/podcast#on-your-show", permanent: true },
+      // The standalone Vite game that served /game was retired (ember-economy-decompose T006);
+      // /play is the current guided creative loop.
+      { source: "/game", destination: "/play", permanent: false },
+      { source: "/game/:path*", destination: "/play", permanent: false },
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
       // wendell.masteringallyship.com is on this Vercel project and showed the home page. Its
@@ -52,8 +64,6 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      { source: '/understood/play', destination: '/understood-app/index.html' },
-      { source: '/understood/demo', destination: '/understood-app/index.html?demo=1' },
       // Ontology Alchemy Game (built by scripts/build-ontology-game.mjs). /ontology-game/wave
       // opens it with W.A.V.E. as the opening practice for the whole session.
       { source: '/ontology-game', destination: '/ontology-game/index.html' },
@@ -62,6 +72,11 @@ const nextConfig: NextConfig = {
       { source: '/ontology-game/body', destination: '/ontology-game/body.html' },
       // The Cave of Lessons: the block work walked inside the body map.
       { source: '/ontology-game/cave', destination: '/ontology-game/cave/index.html' },
+      // Chapter 1's arrival aboard the ship (scripts/build-calrunia-arrive.mjs). The passport rides in the #p= fragment.
+      // The living ship's trade deck (scripts/build-calrunia-deck.mjs); /calrunia/arrive?deck=trade opens it too.
+      { source: '/calrunia/arrive', has: [{ type: 'query', key: 'deck', value: 'trade' }], destination: '/calrunia/deck/index.html' },
+      { source: '/calrunia/arrive', destination: '/calrunia/arrive/index.html' },
+      { source: '/calrunia/deck', destination: '/calrunia/deck/index.html' },
     ];
   },
 };

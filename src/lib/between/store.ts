@@ -3,7 +3,13 @@ import { randomBytes } from 'crypto'
 import { cookies } from 'next/headers'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
-import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge } from './rules'
+import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge, plantedHome, roomSummary } from './rules'
+import { settle, viewGarden } from './shared-pick'
+import { cleanCopy } from '../../../public/between/friendcraft/deck.js'
+import { bowls } from '../../../public/between/growth.js'
+import { COST } from '../../../public/between/friendcraft/deck.js'
+import { draw, forYou, isMove, move, seen, worded } from './turn'
+import { cleanPath } from '../../../public/between/games/core.js'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -56,16 +62,32 @@ export async function snapshot(gardenId: string, who: Who) {
   ])
   const byId = <T extends { data: Prisma.JsonValue }>(rows: T[], key: (r: T) => string) =>
     Object.fromEntries(rows.map(r => [key(r), asDoc(r.data)]))
+  // a card asked of its owner (or opened with tea) reaches her with her own words, from her own deck, for her alone (turn.ts forYou)
+  const waitingOnMe = items.some(r => { const d = asDoc(r.data); return d.kind === 'turn' && d.owner === who.playerId && (d.status === 'asked' || d.status === 'opened') })
+  const myDeck = waitingOnMe ? await deckOf(who.playerId) : null
+  const itemView = (id: string, d: Doc): Doc => { const base = itemFor(who.playerId, d), fy = forYou(d, who.playerId, myDeck); return fy ? { ...base, forYou: fy } : base }
   return {
-    member: true, invite: g.inviteToken, garden: data, names, peers,
-    items: Object.fromEntries(items.map(r => [r.id, itemFor(who.playerId, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
+    member: true, invite: g.inviteToken, garden: viewGarden(data, who.playerId), names, peers,
+    items: Object.fromEntries(items.map(r => [r.id, itemView(r.id, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
     shown: byId(shown, r => r.playerId), mine: byId(mine, r => r.key),
   }
 }
 
+/** The games ride on presence (the Between has no socket): where a friend points on a lantern night, and the finger's path while a hand is up. */
+function gamePresence(p: Doc): Doc {
+  const out: Doc = {}
+  if (p.pt === null || (typeof p.pt === 'number' && Number.isInteger(p.pt) && p.pt >= 0 && p.pt < 3)) out.pt = p.pt as number | null
+  const f = p.f
+  if (f && typeof f === 'object' && !Array.isArray(f)) {
+    const fo = f as Doc
+    out.f = { up: !!fo.up, t0: typeof fo.t0 === 'number' && Number.isFinite(fo.t0) ? Math.round(fo.t0) : 0, p: cleanPath(fo.p) }
+  }
+  return out
+}
+
 export async function setPresence(gardenId: string, playerId: string, p: Doc) {
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null)
-  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: p.s === 0 || p.s === 1 ? p.s : null }
+  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: seatOf(p.s), ...gamePresence(p) }
   await db.betweenPresence.upsert({
     where: { gardenId_playerId: { gardenId, playerId } },
     create: { gardenId, playerId, data: asJson(data) },
@@ -122,21 +144,30 @@ async function put(tx: Prisma.TransactionClient, gardenId: string, t: Target, d:
   }
 }
 
+/** A seat in presence: the hollow's two cushions (0, 1), the hearth's cushion, or one set down on a floor spot (hollow.js seatsNow). */
+const seatOf = (s: unknown) => (s === 0 || s === 1 ? s : typeof s === 'string' && /^(hearth|spot:[a-z0-9-]{1,24})$/.test(s) ? s : null)
 /** One write from the page, checked against the rules and applied in a transaction so two people's tending merges. */
 export async function write(gardenId: string, who: Who, t: Target, op: Op, data: Doc | null) {
   return db.$transaction(async tx => {
+    // Two phones sending at once: hold the garden's row so the second letter or step reads the first (shared-pick.ts).
+    if (t.table === 'garden' && data && 'letters' in data) await tx.$queryRaw`SELECT id FROM between_gardens WHERE id = ${gardenId} FOR UPDATE`
     const g = await tx.betweenGarden.findUnique({ where: { id: gardenId } })
     if (!g) return { ok: false as const, status: 404, error: 'There is no garden here.' }
     const garden = asDoc(g.data)
     const cur = t.table === 'garden' ? garden : await current(tx, gardenId, t)
-    const verdict = mayWrite(who, garden, t, op, data, cur)
+    // a cup poured while the other friend is in the Between is written drunk at once (growth FR-007): the presence poll is the witness
+    const otherHere = t.table === 'items' && data?.kind === 'cup' && data.status === 'drunk'
+      && !!(await tx.betweenPresence.findFirst({ where: { gardenId, playerId: { not: who.playerId }, updatedAt: { gte: new Date(Date.now() - HERE_MS) } } }))
+    const verdict = mayWrite(who, garden, t, op, data, cur, gardenId, Date.now(), otherHere)
     if (!verdict.ok) return verdict
-    const next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
+    let next = op === 'delete' ? null : op === 'set' ? data! : merge(cur ?? {}, data!)
+    // both letters (or both steps) in: the server keeps the overcome obstacle as a story (shared-pick.ts settle)
+    if (t.table === 'garden' && next && data && 'letters' in data && next.letters && typeof next.letters === 'object') next = { ...next, letters: settle(next.letters as Doc) }
     await put(tx, gardenId, t, next)
     if (t.table === 'garden' && data && data.members && typeof data.members === 'object')
       for (const playerId of Object.keys(data.members as Doc))
         await tx.betweenMember.upsert({ where: { gardenId_playerId: { gardenId, playerId } }, create: { gardenId, playerId }, update: {} })
-    return { ok: true as const, doc: next }
+    return { ok: true as const, doc: t.table === 'garden' && next ? viewGarden(next, who.playerId) : next }
   })
 }
 
@@ -147,10 +178,198 @@ export async function plant(playerId: string, data: Doc) {
   })
 }
 
+/**
+ * The rooms the player tends, newest first, each with what it waits on for the next-move lanes (rules.ts roomSummary),
+ * and the homeroom apart from them. One query per table, however many rooms.
+ */
 export async function gardensOf(playerId: string) {
   const rows = await db.betweenMember.findMany({ where: { playerId }, include: { garden: true }, orderBy: { joinedAt: 'desc' } })
-  return rows.map(r => {
+  const homeRow = rows.find(r => asDoc(r.garden.data).kind === 'home') ?? null
+  const rooms = rows.filter(r => r !== homeRow)
+  const ids = rooms.map(r => r.gardenId)
+  const since = new Date(Date.now() - HERE_MS)
+  const [items, others, presence, homeDoc] = await Promise.all([
+    db.betweenItem.findMany({ where: { gardenId: { in: ids } }, select: { gardenId: true, id: true, data: true } }),
+    db.betweenMember.findMany({ where: { gardenId: { in: ids }, playerId: { not: playerId } }, select: { playerId: true } }),
+    db.betweenPresence.findMany({ where: { gardenId: { in: ids }, playerId: { not: playerId }, updatedAt: { gte: since } }, select: { gardenId: true } }),
+    homeRow ? db.betweenPrivate.findUnique({ where: { gardenId_playerId_key: { gardenId: homeRow.gardenId, playerId, key: 'home' } } }) : null,
+  ])
+  const people = await db.player.findMany({ where: { id: { in: [...new Set(others.map(o => o.playerId))] } }, select: { id: true, name: true } })
+  const names = Object.fromEntries(people.map(p => [p.id, p.name]))
+  const here = new Set(presence.map(p => p.gardenId))
+  const gardens = rooms.map(r => {
     const d = asDoc(r.garden.data), s = asDoc(d.setup as Prisma.JsonValue)
-    return { id: r.gardenId, phase: d.phase ?? null, who: s.who ?? null, kind: s.kind ?? null, updatedAt: r.garden.updatedAt }
+    const its = items.filter(i => i.gardenId === r.gardenId).map(i => ({ id: i.id, data: asDoc(i.data) }))
+    const sum = roomSummary(playerId, r.gardenId, d, its, { names, hereNow: here.has(r.gardenId) })
+    return { ...sum, kind: s.kind ?? null, personName: sum.person ? names[sum.person] ?? null : null, updatedAt: r.garden.updatedAt }
   })
+  const h = homeDoc ? asDoc(homeDoc.data) : {}
+  const goals = Object.entries(asDoc(h.goals as Prisma.JsonValue)).filter(([, g]) => g && typeof g === 'object').map(([id, g]) => ({ id, ...(g as Doc) }))
+  const home = homeRow && { id: homeRow.gardenId, style: asDoc(homeRow.garden.data).style ?? null, look: h.look ?? null, lastCheckin: h.lastCheckin ?? null, oriented: h.oriented ?? null, goals }
+  return { home, gardens }
+}
+
+/** The player's homeroom, made on the first call (br-home-is-a-room). */
+export async function ensureHome(playerId: string) {
+  const found = await gardensOf(playerId)
+  if (found.home) return found
+  await plant(playerId, plantedHome(playerId))
+  return gardensOf(playerId)
+}
+
+/** The games the coin table can be steered toward (his note 2026-11-02: everyone starts with general). */
+export const TABLE_GAMES = ['flirtcraft', 'friendcraft', 'allyship'] as const
+
+/** The games the player is enrolled in, read from the memberships they already hold (an instance whose slug is the game). */
+export async function enrolledGames(playerId: string): Promise<string[]> {
+  const rows = await db.instanceMembership.findMany({
+    where: { playerId, instance: { slug: { in: [...TABLE_GAMES] } } },
+    select: { instance: { select: { slug: true } } },
+  }).catch(() => [])
+  return [...new Set(rows.map(r => r.instance.slug))].filter(g => (TABLE_GAMES as readonly string[]).includes(g))
+}
+
+/**
+ * Friendcraft's stewards (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003): the players who hold
+ * `roleKey: "steward"` on the `friendcraft` instance. In slice 1 only a steward's spark link enrols a friend; whether any
+ * member's link may is reserved (the spec's Reserved items).
+ */
+export async function isSteward(playerId: string): Promise<boolean> {
+  const row = await db.instanceMembership.findFirst({
+    where: { playerId, roleKey: 'steward', instance: { slug: 'friendcraft' } },
+    select: { id: true },
+  }).catch(() => null)
+  return !!row
+}
+
+/**
+ * Enrols the signed-in player in Friendcraft through a steward's spark link: the token must be that spark's live invitation
+ * token and its starter a steward. Called twice it changes nothing. `null` means the link does not open Friendcraft.
+ */
+export async function joinFriendcraft(playerId: string, room: unknown, invite: unknown): Promise<string[] | null> {
+  if (typeof room !== 'string' || typeof invite !== 'string') return null
+  const found = await whoIs(room, playerId, invite)
+  if (!found || !found.who.invited) return null
+  if (asDoc(found.garden.data).phase === 'closed') return null
+  if (!(await isSteward(found.garden.startedById))) return null
+  const instance = await db.instance.findUnique({ where: { slug: 'friendcraft' }, select: { id: true } }).catch(() => null)
+  if (!instance) return null
+  await db.instanceMembership.upsert({
+    where: { instanceId_playerId: { instanceId: instance.id, playerId } },
+    create: { instanceId: instance.id, playerId },
+    update: {},
+  })
+  return enrolledGames(playerId)
+}
+
+/**
+ * The Friendcraft deck pages' default text, as an admin or steward last kept it (Instance.friendcraftCopy). Anything
+ * unreadable is the built-in text.
+ */
+export async function friendcraftCopy(): Promise<Record<string, string>> {
+  const row = await db.instance.findUnique({ where: { slug: 'friendcraft' }, select: { friendcraftCopy: true } }).catch(() => null)
+  return cleanCopy(row?.friendcraftCopy) as Record<string, string>
+}
+
+/** May this player change the default text: a site admin, or a steward of Friendcraft. */
+export async function mayEditFriendcraftCopy(playerId: string): Promise<boolean> {
+  if (await isSteward(playerId)) return true
+  const admin = await db.playerRole.findFirst({ where: { playerId, role: { key: 'admin' } }, select: { id: true } }).catch(() => null)
+  return !!admin
+}
+
+/** Keeps an edit: the cleaned fields replace the old ones whole, so a field cleared or set to its default goes back to the built-in text. `null` means no such instance. */
+export async function saveFriendcraftCopy(edit: unknown): Promise<Record<string, string> | null> {
+  const kept = cleanCopy(edit) as Record<string, string>
+  const done = await db.instance.updateMany({ where: { slug: 'friendcraft' }, data: { friendcraftCopy: kept } })
+  return done.count ? kept : null
+}
+
+/** The deck a player keeps in their homeroom, read on the server so a drawer never reads it through the poll (FR-003). */
+export async function deckOf(playerId: string): Promise<Doc | null> {
+  const rows = await db.betweenMember.findMany({ where: { playerId }, include: { garden: true } })
+  const home = rows.find(r => asDoc(r.garden.data).kind === 'home')
+  if (!home) return null
+  const row = await db.betweenPrivate.findUnique({ where: { gardenId_playerId_key: { gardenId: home.gardenId, playerId, key: 'deck' } } })
+  return row ? asDoc(row.data) : null
+}
+
+export type TurnResult = { ok: true; turn: Doc; id: string } | { ok: false; status: number; error: string }
+
+/**
+ * One move at the low table (POST /api/between/:gardenId/turn; spec .specify/specs/friendcraft-deck-2 FR-001). The two
+ * friends must share a Between and both be enrolled in Friendcraft. The draw, the spend and the BARs are written in one
+ * transaction with the garden row held, so two phones playing at once read each other's move.
+ *  - an asked card also leaves a slip, one private BAR the drawer made and shared with the owner (his steer on
+ *    fo-deck-2-look-3: "The Slip should be a BAR");
+ *  - a kept turn leaves one private BAR the owner made and shared with the drawer (FR-010), and keeps its id.
+ */
+export async function playTurn(gardenId: string, me: string, body: { do?: unknown; turn?: unknown; words?: unknown }): Promise<TurnResult> {
+  const found = await whoIs(gardenId, me, null)
+  if (!found) return { ok: false, status: 404, error: 'There is no garden here.' }
+  const data = asDoc(found.garden.data)
+  if (!found.who.member) return { ok: false, status: 403, error: 'Only the two people in this garden can sit at its table.' }
+  if (data.kind === 'home') return { ok: false, status: 403, error: 'A turn is played at a table two friends share.' }
+  const ids = Object.keys(asDoc(data.members as Prisma.JsonValue))
+  const other = ids.find(i => i !== me)
+  if (ids.length !== 2 || !other) return { ok: false, status: 403, error: 'A turn is played when two friends sit at the table.' }
+  const [mine, theirs] = await Promise.all([enrolledGames(me), enrolledGames(other)])
+  if (!mine.includes('friendcraft') || !theirs.includes('friendcraft')) return { ok: false, status: 403, error: 'Both friends need to be in Friendcraft to play a turn.' }
+  const act = body.do
+  if (act !== 'draw' && !isMove(act)) return { ok: false, status: 400, error: 'That is not a move at the table.' }
+  const names = Object.fromEntries((await db.player.findMany({ where: { id: { in: [me, other] } }, select: { id: true, name: true } })).map(p => [p.id, p.name]))
+  const seed = Math.floor(Math.random() * 4294967296), at = Date.now()
+  const tid = typeof body.turn === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(body.turn) ? body.turn : null
+  const deckFor = async (owner: string) => deckOf(owner)
+
+  return db.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM between_gardens WHERE id = ${gardenId} FOR UPDATE`
+    const rows = await tx.betweenItem.findMany({ where: { gardenId } })
+    const items = Object.fromEntries(rows.map(r => [r.id, asDoc(r.data)]))
+    const turns = Object.values(items).filter(i => i.kind === 'turn')
+    if (act === 'draw') {
+      const owner = other
+      const drawn = draw(await deckFor(owner), me, owner, names[owner] ?? 'Your friend', turns, seed, at)
+      if (!drawn.ok) return drawn
+      const id = 't' + randomBytes(9).toString('base64url')
+      await put(tx, gardenId, { table: 'items', id }, drawn.turn)
+      return { ok: true as const, turn: seen(drawn.turn), id }
+    }
+    if (!tid || !items[tid] || items[tid].kind !== 'turn') return { ok: false as const, status: 404, error: 'That card is no longer on the table.' }
+    const turn = items[tid]
+    const owner = turn.owner as string
+    return applyMove(tx, gardenId, items, tid, turn, act, me, names, body.words, at, act === 'offer' ? await deckFor(owner) : null)
+  })
+}
+
+async function applyMove(tx: Prisma.TransactionClient, gardenId: string, items: Record<string, Doc>, tid: string, turn: Doc, act: string, me: string,
+  names: Record<string, string>, words: unknown, at: number, ownerDeck: Doc | null): Promise<TurnResult> {
+  const owner = turn.owner as string, drawer = turn.by as string
+  const card = ownerDeck ? worded(ownerDeck).find(c => c.goal === turn.goal && c.depth === turn.depth) ?? null : null
+  const v = move(turn, act as never, me, names[owner] ?? 'Your friend', bowls(items), card, words, at)
+  if (!v.ok) return v
+  let next = v.turn
+  const sid = 's-' + tid
+  if (v.spend === 'add') await put(tx, gardenId, { table: 'items', id: sid }, { kind: 'spend', by: drawer, turn: tid, bowls: (COST as Record<string, number>)[turn.depth as string] ?? 0, at })
+  if (v.spend === 'remove') await put(tx, gardenId, { table: 'items', id: sid }, null)
+  if (v.slip && !next.slip) {
+    const slip = await tx.customBar.create({
+      data: { creatorId: drawer, title: `I asked ${names[owner] ?? 'you'} to offer a ${next.depth} card`, description: 'A paper slip from the low table.', visibility: 'private', reward: 0 },
+      select: { id: true },
+    })
+    await tx.barShare.create({ data: { barId: slip.id, fromUserId: drawer, toUserId: owner } })
+    next = { ...next, slip: slip.id }
+  }
+  if (v.kept && !next.bar) {
+    const lines = next.lines as Doc
+    const say = (u: string) => String((lines[u] as Doc).words)
+    const bar = await tx.customBar.create({
+      data: { creatorId: owner, title: String(next.words), description: say(drawer) + '\n' + say(owner), visibility: 'private', reward: 0 },
+      select: { id: true },
+    })
+    await tx.barShare.create({ data: { barId: bar.id, fromUserId: owner, toUserId: drawer } })
+    next = { ...next, bar: bar.id }
+  }
+  await put(tx, gardenId, { table: 'items', id: tid }, next)
+  return { ok: true, turn: seen(next), id: tid }
 }

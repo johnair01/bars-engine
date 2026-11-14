@@ -145,12 +145,12 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
     },
     'book-physical': {
       name: 'Mastering Allyship — Physical',
-      blurb: 'The printed book. Preorder now; ships after the print run.',
+      blurb: 'The printed paperback.',
       bestFor: 'Best if you want the printed book',
-      unlocks: 'Physical book preorder',
+      unlocks: 'The printed paperback',
       context:
         'Choose this when the object matters: reading away from the screen, gifting, marking up, returning.',
-      kicker: 'Physical preorder',
+      kicker: 'Paperback',
       image: '/launch/cover-front.png',
       heroImage: '/launch/cover-front.png',
       intents: ['curious', 'shelf'],

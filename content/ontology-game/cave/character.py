@@ -7,16 +7,17 @@
     python content/ontology-game/cave/character.py --one-number --out DIR [--sheet]  # the frame, eleven one number off
 
 The theme is the Taoist cultivation robe set (cc-robe-set, bpt-robe-theme), the wardrobe the 2D sprite creator also
-draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a tunic whose crossed collar
-runs as one band over the shoulders and round the back of the neck, falling
-to mid-thigh, tied trousers, a sash and cloth shoes. The long robe, the sash as cloth and the topknot are J5's separate
+draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a plain short-sleeved top to the
+waist, tied trousers, a sash and cloth shoes. The long robe, the sash as cloth and the topknot are J5's separate
 garments, skinned to this same rig.
 
 The body starts from the body map's figure (body/build_figure.py: rounded parts, 1.75 m, no face, no sex, age or skin
 colour) and is stylized away from it after his first look (a bigger head, a plain trunk, rounder limbs), widened or
 narrowed by the build and fused into one surface. Its rig carries the cave avatar's joint names
 (cave.js buildAvatar: hips, spine, neck, head; hip, knee, ankle; shoulder, elbow, wrist), and its one animation,
-"Walk", is cave.js poseAvatar baked at a mid stride: two steps a second, so one cycle is one second, 24 keys.
+"Walk", is cave.js poseAvatar baked at a mid stride: two steps a second, so one cycle is one second, 24 keys in
+Blender and 60 in the GLB (one a frame in the game), with the corners of poseAvatar's max() and abs() rounded (round 7
+of J5, ramp()).
 
 Each figure is one GLB under 300 KB (the kill line). report.json says, per figure, its bytes, triangles and the walk's
 joint checks; the test (J4 in tools/blender-cloud/tests/test_bpy.py) checks the exported GLBs again on their own.
@@ -245,6 +246,7 @@ SPINE_Z = (1.03, 1.42)                                                          
 
 # ---- the walk: cave.js poseAvatar with the stride held at its middle ------------------------------------------
 STEPS_PER_S, FPS, KEYS = 2, 24, 24          # cave.js STEPS_PER_S; one cycle (a left and a right step) is one second
+EXPORT_FPS = 60                             # the GLB's walk: a key a frame at the game's 60 (round 7)
 AMP = 0.4                                   # radians: cave.js clamps the swing to 0.2..0.62 by the step's length
 LEG = 0.96 - 0.085                          # hip to ankle, metres, for the hips' sink
 
@@ -257,6 +259,15 @@ CUTS = (*HEM, *SASH, CUFF, *TIE, NECK, NECK_BASE)
 SPLIT = 0.03                                                           # metres, longest edge where a line is cut
 COLLAR_R = 0.095                                                        # the collar's ring round the neck, metres
 COLLAR = 0.024                                                          # half the collar band's width, metres
+
+
+NECK_C, NECK_R = Vector((0, 0, 1.47)), 0.12                            # the top's round neck: where a ball meets the body
+
+
+def neckline(co):
+    """Below zero inside the top's round neck: the ball round the neck's base, which meets the body in a ring that
+    dips a little at the front and back and runs out along the shoulders."""
+    return (co - NECK_C).length - NECK_R
 
 
 def body_parts(build):
@@ -440,6 +451,10 @@ def joints(build):
         j["hip" + n] = ((s * hx, 0, 0.96), (s * (hx + 0.015), 0.0, 0.50))
         j["knee" + n] = ((s * (hx + 0.015), 0.0, 0.50), (s * (hx + 0.025), 0.015, 0.085))
         j["ankle" + n] = ((s * (hx + 0.025), 0.015, 0.085), (s * (hx + 0.03), -0.13, 0.03))
+    # two hem bones for J5's long robe, hanging from the hips: the front panel goes with whichever leg is forward and
+    # the back panel with whichever is back (garments.py). The body carries no weight on them.
+    j["hemF"] = ((0, -0.02, 0.96), (0, -0.02, 0.40))
+    j["hemB"] = ((0, 0.02, 0.96), (0, 0.02, 0.40))
     return j
 
 
@@ -525,6 +540,8 @@ for _n in ("L", "R"):
                    "hip" + _n: "hips", "knee" + _n: "hip" + _n, "ankle" + _n: "knee" + _n})
     for _f in FINGERS:
         PARENT.update({f"{_f}1{_n}": "wrist" + _n, f"{_f}2{_n}": f"{_f}1{_n}", f"{_f}3{_n}": f"{_f}2{_n}"})
+PARENT.update({"hemF": "hips", "hemB": "hips"})
+HEM_BONES = ("hemF", "hemB")             # no body part lies on them, so nearest_blend gives the body no weight there
 BODY = tuple(b for b in PARENT if b.rstrip("LR") not in FINGER_BONES)     # the bones the walk moves
 
 
@@ -768,6 +785,25 @@ def nearest_blend(co, trees, hand=None):
     return best, {b: x / tot for b, x in w.items() if x / tot > 0.02}
 
 
+SOFT = 0.3                                  # the width of the walk's rounded corners (round 7)
+
+
+def ramp(x, e=SOFT):
+    """max(0, x) with its corner rounded over -e..e so its speed and its acceleration never jump (its slope is a
+    smoothstep). J4's walk took max(0, x) and |x| straight from cave.js: the knee began to bend, the elbow to fold and
+    the hips to sink at full speed from a standstill, twice a step, and the ankles and cuffs jerked (round 7)."""
+    if x <= -e:
+        return 0.0
+    if x >= e:
+        return x
+    u = (x + e) / (2 * e)
+    return 2 * e * (u ** 3 - u ** 4 / 2)
+
+
+def sabs(x, e=SOFT):
+    return ramp(x, e) + ramp(-x, e)
+
+
 def pose(t):
     """cave.js poseAvatar at walk time t (seconds), moving, mid stride: {bone: (rot about X, rot about Z)} and the
     hips' drop. cave.js turns groups about their own x (the figure's left) and y (up); in Blender those are X and Z."""
@@ -775,17 +811,22 @@ def pose(t):
     sL, sR = math.sin(ph), math.sin(ph + math.pi)
     r = {}
     r["hipL"], r["hipR"] = -A * sL, -A * sR
-    r["kneeL"] = 0.12 + 0.95 * max(0.0, math.cos(ph))
-    r["kneeR"] = 0.12 + 0.95 * max(0.0, math.cos(ph + math.pi))
+    r["kneeL"] = 0.12 + 0.95 * ramp(math.cos(ph))
+    r["kneeR"] = 0.12 + 0.95 * ramp(math.cos(ph + math.pi))
     r["ankleL"], r["ankleR"] = -(r["hipL"] + r["kneeL"]) * 0.8, -(r["hipR"] + r["kneeR"]) * 0.8
     B = A * 0.85
     r["shoulderL"], r["shoulderR"] = B * sL, B * sR
-    r["elbowL"] = -(0.25 + 0.35 * max(0.0, -sL))
-    r["elbowR"] = -(0.25 + 0.35 * max(0.0, -sR))
+    r["elbowL"] = -(0.25 + 0.35 * ramp(-sL))
+    r["elbowR"] = -(0.25 + 0.35 * ramp(-sR))
+    # the hem bones (J5): the front panel follows the leg that is ahead, the back panel the thigh that is behind. A
+    # positive turn about X swings a hanging bone back. Round 6: no longer the shin's kick too; the robe's cloth is held
+    # near these bones (cloth.js blend), and a back panel that rose with the heel held the cloth up (CLOTH.md).
+    r["hemF"] = -0.9 * A * sabs(sL)                               # 0.9 min(hipL, hipR), rounded
+    r["hemB"] = 0.9 * A * sabs(sL)                                # 0.9 max(hipL, hipR), rounded
     rot = {k: (v, 0.0) for k, v in r.items()}
     rot["spine"] = (0.07, 0.14 * sL)
     rot["hips"] = (0.0, -0.1 * sL)
-    drop = LEG * (1 - math.cos(A)) * 0.85 * abs(sL)
+    drop = LEG * (1 - math.cos(A)) * 0.85 * sabs(sL)
     return rot, drop
 
 
@@ -824,15 +865,27 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     integrate: add the Integrate action beside Walk (INTEGRATE, by the warp's name)."""
     if boss is not None and boss not in BOSSES:
         raise SystemExit(f"no boss {boss}; there is {', '.join(BOSSES)}")
-    if theme not in THEMES:
-        raise SystemExit(f"no theme {theme}; there is {', '.join(THEMES)}")
-    if build_name not in BUILDS or palette not in PALETTES:
-        raise SystemExit(f"builds: {', '.join(BUILDS)}; palettes: {', '.join(PALETTES)}")
+    fig, rig = make(build_name, palette, theme, warp, warp_name, integrate)
+    return export(fig, rig, build_name, palette, out_dir, theme, boss)
+
+
+def warp_row(warp, warp_name):
+    """The warp's numbers over the frame's, and its name."""
     if isinstance(warp, str):
         if warp not in WARP:
             raise SystemExit(f"no warp {warp}; there is {', '.join(WARP)}")
         warp, warp_name = WARP[warp], warp
-    w = {**NEUTRAL, **(warp or {})}
+    return {**NEUTRAL, **(warp or {})}, warp_name
+
+
+def make(build_name, palette, theme="robe_set", warp=None, warp_name=None, integrate=False):
+    """The figure and its walking rig in a fresh scene, not yet exported (J5's garments are cut on these). The warp,
+    its name and the Integrate action, if any, ride on the rig for export()."""
+    if theme not in THEMES:
+        raise SystemExit(f"no theme {theme}; there is {', '.join(THEMES)}")
+    if build_name not in BUILDS or palette not in PALETTES:
+        raise SystemExit(f"builds: {', '.join(BUILDS)}; palettes: {', '.join(PALETTES)}")
+    w, warp_name = warp_row(warp, warp_name)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     scene.render.fps = FPS
@@ -869,8 +922,7 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     bm.from_mesh(fused)
     for z in CUTS:
         bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1))
-    collar = collar_path(bm, build_name)
-    cut_along(bm, lambda co: collar(co) - COLLAR)
+    cut_along(bm, neckline)
     bm.to_mesh(fused)
     bm.free()
     for p in fused.polygons:
@@ -918,12 +970,13 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     col = fused.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
 
     def paint(co, bone):
+        # a plain top to the waist with short sleeves, over tied trousers: the long robe is J5's garment, so the
+        # under-layer does not repeat its collar, cuffs or hem (Wendell, 2026-10-14: "The figrues without robes
+        # should have bare or basic tops so they aren't duplicating the robes")
         x, y, z = co
-        if bone in ("head", "neck"):
-            return SKIN if z > NECK else pal["trim"]                # the collar stands a little way up the neck
-        if z > NECK_BASE and bone == "spine":
-            return pal["trim"]                                      # and is one band all round where neck meets trunk
-        if in_hand(bone):
+        if bone.startswith(("shoulder", "elbow")):
+            return pal["tunic"] if z > SASH[1] else SKIN            # the sleeve ends near the elbow, on a level cut
+        if bone in ("head", "neck") or in_hand(bone) or neckline(Vector(co)) < 0:
             return SKIN
         if bone.startswith("ankle"):
             return pal["shoes"]
@@ -931,17 +984,8 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
             return pal["trim"] if TIE[0] < z < TIE[1] else pal["trousers"]   # the trousers tied at the ankle
         if SASH[0] < z < SASH[1] and not bone.startswith(("shoulder", "elbow")):
             return pal["sash"]
-        if bone.startswith("hip") and bone != "hips":
-            if z > HEM[0]:
-                return pal["trim"] if z < HEM[1] else pal["tunic"]  # the tunic falls to mid-thigh, hemmed
+        if bone.startswith("hip") or z < SASH[0]:
             return pal["trousers"]
-        if bone.startswith("elbow"):
-            # the sleeve runs to the wrist with a cuff
-            return pal["trim"] if z < CUFF else pal["tunic"]
-        if collar(Vector(co)) < COLLAR:
-            return pal["trim"]                                      # the crossed collar (collar_path above)
-        if bone.startswith("shoulder") or bone in ("spine", "hips"):
-            return pal["tunic"]
         return pal["tunic"]
 
     # one colour per face, so a band's edge is a clean step and never a streak smeared along a long triangle; the
@@ -962,15 +1006,34 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     nt.links.new(attr.outputs["Color"], bsdf.inputs["Base Color"])
     fused.materials.append(mat)
 
-    # the walk
-    act = bpy.data.actions.new("Walk")
+    # the walk, and the Integrate action beside it
     rig.animation_data_create()
+    walk = rig.animation_data.action = key_walk(rig, FPS)
+    scene.frame_start, scene.frame_end = 1, KEYS + 1
+    rig["warp"] = json.dumps({"w": w, "name": warp_name})
+    if integrate:
+        if warp_name not in INTEGRATE:
+            raise SystemExit(f"no integration for {warp_name}; there is {', '.join(INTEGRATE)}")
+        for pb in rig.pose.bones:
+            pb.location, pb.rotation_quaternion = (0, 0, 0), (1, 0, 0, 0)
+        act, n = integrate_action(rig, J0, w, {**w, **INTEGRATE_TO, **INTEGRATE[warp_name].get("to", {})},
+                                 build_name, INTEGRATE[warp_name])
+        act.use_fake_user = True
+        rig["integrate"] = n + 1
+        rig.animation_data.action = walk
+    return fig, rig
+
+
+def key_walk(rig, fps, name="Walk", first=1):
+    """The walk (one second, pose()) keyed fps times a second as a new action, from frame first."""
+    act = bpy.data.actions.new(name)
+    held = rig.animation_data.action
     rig.animation_data.action = act
     for pb in rig.pose.bones:
         pb.rotation_mode = "QUATERNION"
-    for k in range(KEYS + 1):
-        t = k / FPS
-        rot, drop = pose(t % 1.0)
+    prev = {}
+    for k in range(fps + 1):
+        rot, drop = pose((k / fps) % 1.0)
         for pb in rig.pose.bones:
             if pb.name not in BODY:
                 continue                                           # the walk leaves the fingers as posed
@@ -981,54 +1044,108 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
             if k and q.dot(prev[pb.name]) < 0:
                 q.negate()                                         # keep the keys on one side, so they interpolate short
             pb.rotation_quaternion = q
-            pb.keyframe_insert("rotation_quaternion", frame=k + 1)
+            pb.keyframe_insert("rotation_quaternion", frame=k + first)
             if pb.name == "hips":
                 pb.location = Bm.inverted() @ Vector((0, 0, -drop))
-                pb.keyframe_insert("location", frame=k + 1)
+                pb.keyframe_insert("location", frame=k + first)
         prev = {pb.name: pb.rotation_quaternion.copy() for pb in rig.pose.bones if pb.name in BODY}
-    scene.frame_start, scene.frame_end = 1, KEYS + 1
-    keys = {"Walk": KEYS + 1}
-    if integrate:
-        if warp_name not in INTEGRATE:
-            raise SystemExit(f"no integration for {warp_name}; there is {', '.join(INTEGRATE)}")
-        walk = act
-        for pb in rig.pose.bones:
-            pb.location, pb.rotation_quaternion = (0, 0, 0), (1, 0, 0, 0)
-        act, n = integrate_action(rig, J0, w, {**w, **INTEGRATE_TO, **INTEGRATE[warp_name].get("to", {})},
-                                 build_name, INTEGRATE[warp_name])
-        keys["Integrate"] = n + 1
-        for a_ in (walk, act):                                      # both actions export, each on its own track
-            tr = rig.animation_data.nla_tracks.new()
-            tr.name = a_.name
-            tr.strips.new(a_.name, 1, a_)
-        rig.animation_data.action = None
+    rig.animation_data.action = held
+    return act
 
+
+def retime(act, k):
+    """Moves an action's keys and handles to k times their frame, in place: the same seconds at k times the fps."""
+    for fc in fcurves(act):
+        for kp in fc.keyframe_points:
+            kp.co.x, kp.handle_left.x, kp.handle_right.x = (v * k for v in (kp.co.x, kp.handle_left.x, kp.handle_right.x))
+        fc.update()
+
+
+def export(fig, rig, build_name, palette, out_dir, theme="robe_set", boss=None):
+    warp = json.loads(rig.get("warp", "null")) or {"w": NEUTRAL, "name": None}
+    w, warp_name = warp["w"], warp["name"]
+    integrate = "integrate" in rig
+    name, fused = f"{build_name}-{palette}" + (f"-{warp_name}" if warp_name else ""), fig.data
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{name}.glb")
     # each bone's turn in the world from the held rest to each end of the trust stances, as integrate_action turns
     # bones, in glTF's axes (Blender's x, z, -y) as x, y, z, w
-    held = rest_turns(J0, w, build_name)
+    J0 = joints(build_name)
+    rest = rest_turns(J0, w, build_name)
     ends = {}
     for end, w_to in (("honored", {**w, **HONORED.get(warp_name or "player", HONORED["player"])}), ("charged", charged(w))):
         to = rest_turns(J0, w_to, build_name)
         ends[end] = {}
         for b in PARENT:
-            q = (to[b] @ held[b].inverted()).to_quaternion()
+            q = (to[b] @ rest[b].inverted()).to_quaternion()
             ends[end][b] = [round(q.x, 5), round(q.z, 5), round(-q.y, 5), round(q.w, 5)]
     with open(os.path.join(out_dir, f"{name}.stances.json"), "w") as f:
         json.dump({"note": "each bone's world turn from the held rest to the honored and charged ends (character.py "
                            "HONORED, charged)", **ends}, f)
-    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
-                              export_texcoords=False, export_skins=True, export_animations=True,
-                              export_animation_mode="ACTIONS", export_frame_range=not integrate, export_force_sampling=False,
-                              export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+    # The walk is sampled at every frame and written as linear keys (J5 round 6). Written from Blender's Bezier curves
+    # (export_force_sampling off) it became cubic splines whose quaternions flip sign between some keys (hips, hemB,
+    # hipL/R, shoulders) with tangents near 48; three.js interpolates those component by component, the long way
+    # round, so the hips and hem bones swung and snapped back every step: the jitter under the belt in the game.
+    # three.js slerps linear quaternion keys the short way. Blender keeps its Bezier curves, which garments.py's
+    # through test poses from (linear keys in Blender let the slight figure's knee through by 1 to 3 points).
+    # Round 7 (his note on round 6: "Better hems around arms and legs still a bit jittery"): the game gets the walk keyed
+    # 60 times a second, one key a frame, from pose() itself. At 24 linear keys a second the elbows, knees and ankles
+    # turned a corner in speed at every key, 2 or 3 frames apart, and the cuffs and ankles shook with it (CLOTH.md).
+    # The keys start at frame 0: the exporter writes a key's time as frame / fps, and keys from frame 1 started the clip
+    # at 1/24 s, so three.js held the first pose that long at every loop, a hitch once a second.
+    # Blender keeps its own 24 Bezier keys for the through test; the dense action exists only while the GLB is written.
+    # A figure with an Integrate action writes both as their keys, each on its own NLA track: the walk's 60 straight
+    # lines and the Integrate's keys moved to the same seconds at 60. Sampled at every frame, as the walk alone is, the
+    # two come to about 450 KB, over the byte line.
+    sc, keep = bpy.context.scene, rig.animation_data.action
+    held = (sc.render.fps, sc.frame_start, sc.frame_end)
+    keep.name, dense = "Walk-blender", key_walk(rig, EXPORT_FPS, first=0)
+    keys, extra = {"Walk": EXPORT_FPS + 1}, []
+    sc.render.fps, sc.frame_start, sc.frame_end = EXPORT_FPS, 0, EXPORT_FPS
+    opts = dict(filepath=path, export_format="GLB", export_yup=True, export_normals=True, export_texcoords=False,
+                export_skins=True, export_animations=True, export_force_sampling=True, export_vertex_color="ACTIVE",
+                export_all_vertex_colors=False)
+    try:
+        if integrate:
+            # the exporter's ACTIONS mode writes every action the rig can play, so Blender's own walk goes while the
+            # GLB is written (key_walk makes it again after) and the Integrate is moved to 60 and back
+            dense.name, integ = "Walk", bpy.data.actions["Integrate"]
+            for fc in fcurves(dense):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "LINEAR"
+            retime(integ, EXPORT_FPS / FPS)
+            extra.append(integ)
+            keys["Integrate"] = rig["integrate"]
+            rig.animation_data.action = None
+            bpy.data.actions.remove(keep)
+            keep = None
+            for a_ in (dense, integ):                               # both actions export, each on its own track
+                tr = rig.animation_data.nla_tracks.new()
+                tr.name = a_.name
+                tr.strips.new(a_.name, round(a_.frame_range[0]), a_)
+            bpy.ops.export_scene.gltf(**{**opts, "export_force_sampling": False}, export_animation_mode="ACTIONS")
+        else:
+            rig.animation_data.action = dense
+            bpy.ops.export_scene.gltf(**opts, export_animation_mode="ACTIVE_ACTIONS", export_frame_range=True,
+                                      export_nla_strips_merged_animation_name="Walk")   # the clip's name (round 9)
+    finally:
+        for tr in list(rig.animation_data.nla_tracks):
+            rig.animation_data.nla_tracks.remove(tr)
+        bpy.data.actions.remove(dense)
+        for a_ in extra:
+            retime(a_, FPS / EXPORT_FPS)
+        sc.render.fps, sc.frame_start, sc.frame_end = held
+        if keep is None:
+            keep = key_walk(rig, FPS)
+        rig.animation_data.action = keep
+        keep.name = "Walk"
     size = os.path.getsize(path)
     row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "warp": warp_name,
            "warp_numbers": {k: v for k, v in w.items() if v != NEUTRAL[k]}, "file": os.path.basename(path),
            "npc": {"daemon": warp_name if warp_name in WARP else None, "boss": boss,
                    "next": (NEXT_FIGURE[boss] or "frame") if boss else None},
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
-           "bones": len(PARENT), "keys": KEYS + 1, "actions": keys}
+           "bones": len(PARENT), "keys": keys["Walk"], "actions": keys}
     # a figure with the let-go carries a second action; the cave never loads it whole (bake_daemons.py keeps the keys)
     if size > MAX_BYTES + (24 * 1024 if integrate else 0):
         raise SystemExit(f"{name}.glb is {size // 1024} KB, over the {MAX_BYTES // 1024} KB line")
