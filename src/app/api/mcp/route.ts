@@ -29,7 +29,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.4.0'
+const SERVER_VERSION = '1.5.0'
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
@@ -255,6 +255,51 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
+    name: 'farm_world_change',
+    title: 'Change a player\'s farm',
+    description: 'Answer a player\'s capture by changing their farm. DATA changes apply at once and show on the next load: '
+      + 'kind seed (a seed labeled with text, 60 characters, one per slot; `sign` is accepted as the same thing), note (text, 280) or object (object: lantern, bench, stone, flowers '
+      + 'or scarecrow, with optional text) on a slot 0 to 153. Anything that changes how the farm plays (mana, costs, '
+      + 'growing days, the land\'s shape, a new act, a new object) is a RULE: it is refused, kept on the player\'s farm '
+      + 'as a not-yet with its reason, and you bring it to Wendell as one board row. Send `ask` instead of `kind` to '
+      + 'file a rule request. Pass `before`, an https link to a picture of the place as it was.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        playerId: { type: 'string', description: 'The player whose farm it is.' },
+        captureId: { type: 'string', description: 'The capture (BAR or backlog item) this answers.' },
+        slot: { type: 'integer', minimum: 0, maximum: 153 },
+        kind: { type: 'string', description: 'seed, note or object.' },
+        text: { type: 'string' },
+        object: { type: 'string', description: 'lantern, bench, stone, flowers or scarecrow.' },
+        before: { type: 'string', description: 'https link to the before picture.' },
+        ask: { type: 'string', description: 'A rule-level request, in words, to keep as a not-yet.' },
+        lane: { type: 'string', description: 'The environment that made the change, e.g. claude-code.' },
+      },
+      required: ['playerId', 'captureId'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  },
+  {
+    name: 'farm_world_read',
+    title: 'Read a player\'s farm world',
+    description: 'Read what agents have changed on a player\'s farm: every change with its status and pictures, the '
+      + 'not-yets waiting on a rule decision, and the log. Pass `after` with `changeId` to attach the after picture, or '
+      + '`revert` with `changeId` to take a change back.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        playerId: { type: 'string' },
+        changeId: { type: 'string' },
+        after: { type: 'string', description: 'https link to the after picture; needs changeId.' },
+        revert: { type: 'boolean', description: 'true takes the change back; needs changeId.' },
+        lane: { type: 'string' },
+      },
+      required: ['playerId'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -395,6 +440,29 @@ async function steerTool(args: Record<string, unknown>): Promise<ToolResult> {
   return ok({ board: 'council', ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane, lanes: r.ticket.lanes } })
 }
 
+async function farmWorldTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
+  const playerId = typeof args.playerId === 'string' ? args.playerId.trim() : ''
+  if (!playerId) return bad(`${name} needs playerId`)
+  // The farm lives in bars-engine's Between tables; load them only when a farm tool is called.
+  const { ensureHome } = await import('@/lib/between/store')
+  const { loadWorld, agentChange, agentAfter, agentRevert } = await import('@/lib/between/farm-world-store')
+  const { home } = await ensureHome(playerId).catch(() => ({ home: null }))
+  if (!home) return bad(`no homeroom for player ${playerId}`)
+  const now = new Date().toISOString()
+  const lane = typeof args.lane === 'string' ? args.lane : 'agent'
+  if (name === 'farm_world_change') {
+    const r = await agentChange(db, home.id, playerId, args, now)
+    if (r.tier === 'data') return ok({ tier: 'data', applied: true, change: r.change, note: 'It shows on the player\'s next load.' })
+    if (r.tier === 'rule') return ok({ tier: 'rule', applied: false, notYet: r.notYet, why: r.why,
+      next: 'This is a rule-level change. It is kept on the farm as a not-yet. Bring it to Wendell as one board row.' })
+    return bad(r.why)
+  }
+  const id = typeof args.changeId === 'string' ? args.changeId : ''
+  if (id && args.revert === true) { const r = await agentRevert(db, home.id, playerId, id, lane, now); return r.ok ? ok({ reverted: id }) : bad(r.why ?? 'not reverted') }
+  if (id && args.after !== undefined) { const r = await agentAfter(db, home.id, playerId, id, args.after, now); return r.ok ? ok({ afterAttached: id }) : bad(r.why ?? 'not attached') }
+  return ok(await loadWorld(db, home.id, playerId))
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
@@ -404,6 +472,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'post_board_docs') return postBoardDocs(args)
   if (name === 'list_tickets') return listTickets(args)
   if (name === 'steer_ticket') return steerTool(args)
+  if (name === 'farm_world_change' || name === 'farm_world_read') return farmWorldTool(name, args)
   if (name === 'read_answers') {
     const ids = Array.isArray(args.ids)
       ? args.ids.filter((v): v is string => typeof v === 'string' && v.trim() !== '').slice(0, MAX_IDS)
@@ -440,7 +509,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
- *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket and whoami
+ *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket, farm_world_change, farm_world_read and whoami
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
