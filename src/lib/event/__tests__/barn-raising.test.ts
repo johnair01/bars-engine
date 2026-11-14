@@ -64,6 +64,6 @@ const g2 = keepBuildingAfterWall(allDone, 'presale')
 assert.ok(g2, 'all full → still guidance (in-kind + access)')
 assert.strictEqual(g2!.actions.length, 2, 'only in-kind + access remain')
 assert.ok(g2!.actions.some((a) => a.href.includes('dswPath=time')), 'in-kind action present')
-assert.ok(g2!.actions.some((a) => a.href.includes('/game')), 'access action present')
+assert.ok(g2!.actions.some((a) => a.href === '/play'), 'access action present')
 
 console.log('✓ barn-raising keepBuildingAfterWall tests passed')

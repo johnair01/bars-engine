@@ -7,10 +7,11 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { lookPage } from '../art'
+import { withChalk } from '@/lib/marks/chalk'
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams
-  return new NextResponse(lookPage(q.get('t') ?? '', q.getAll('i')), {
+  return new NextResponse(withChalk(lookPage(q.get('t') ?? '', q.getAll('i'))), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' },
   })
 }

@@ -112,7 +112,7 @@
         }
       },
       "medium": {
-        "prompt": "Ask someone here to tell you the sharpest true thing they see in you. Let it land without correcting them.",
+        "prompt": "Ask a friend what they see in you that you would rather not hear. Leave your tea untouched until they finish.",
         "emotionalAlchemy": {
           "move": "channel_shift",
           "targetSatisfaction": "poignance"

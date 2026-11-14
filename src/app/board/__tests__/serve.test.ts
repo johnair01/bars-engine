@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/board/owner', () => ({ isBoardOwner: async () => true }))
 
-import { pageUrl, serveBoard, streamed } from '../serve'
+import { pageUrl, sameHost, serveBoard, streamed, wrap } from '../serve'
 import { setBackend } from '@/lib/board/content-store'
 import { memoryBackend } from '@/lib/board/__tests__/memory-backend'
 
@@ -17,6 +17,17 @@ describe('serveBoard', () => {
     expect(council).toContain('btn.hidden = true;')
     expect(council).toContain("const BOARD = \"council\"")
     expect(await (await serveBoard(req, 'nonprofit')).text()).toContain('btn.hidden = !mcp || !n;')
+    setBackend(undefined)
+  })
+
+  it('tells the shim which build it serves, so an open page knows when the board moved on (board-reverts)', async () => {
+    vi.stubGlobal('fetch', async () => { throw new Error('the repo is private: nothing may fetch it') })
+    const page = '<p>council</p>'
+    setBackend(memoryBackend({ 'board/council-board.html': page }).backend)
+    const req = { url: 'https://bars-engine.vercel.app/board/council' } as never
+    const html = await (await serveBoard(req, 'council')).text()
+    const { createHash } = await import('crypto')
+    expect(html).toContain(`PAGE = "${createHash('sha256').update(page).digest('hex')}"`)
     setBackend(undefined)
   })
 
@@ -40,9 +51,29 @@ describe('serveBoard', () => {
   })
 })
 
+describe('wrap', () => {
+  it('links the shared --ui-* tokens and lets them follow the device (unified UI build 2)', () => {
+    const council = wrap('<p>board</p>', 'council')
+    expect(council).toContain('<html lang="en" data-theme="auto">')
+    expect(council).toContain('<link rel="stylesheet" href="/ui/tokens.css">')
+    expect(council).toContain('family=Atkinson+Hyperlegible')
+    const whole = wrap('<!doctype html><html lang="en"><head><title>t</title></head><body></body></html>', 'nonprofit')
+    expect(whole).toContain('<html lang="en" data-theme="auto">')
+    expect(whole).toContain('href="/ui/tokens.css"')
+    expect(wrap('<!doctype html><html data-theme="light"><head></head></html>', 'nonprofit')).toContain('<html data-theme="light">')
+  })
+})
+
 describe('streamed', () => {
   it('sends a page over 4.5 MB, multi-byte text included, unchanged', async () => {
     const html = '<p>é—</p>'.repeat(600_000)
     expect(await new Response(streamed(html)).text()).toBe(html)
+  })
+})
+
+describe('sameHost', () => {
+  it('keeps board links on the host the page is opened from, and leaves other addresses alone', () => {
+    const out = sameHost('a https://bars-engine.vercel.app/board/look?t=x b https://bars-engine.vercel.app/board/council#open c https://bars-engine.vercel.app/tap-the-vein')
+    expect(out).toBe('a /board/look?t=x b /board/council#open c https://bars-engine.vercel.app/tap-the-vein')
   })
 })

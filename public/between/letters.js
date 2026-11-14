@@ -58,7 +58,14 @@ const css = `
 #letters-hand .lc::before { content: ""; position: absolute; left: 12px; right: 12px; top: 8px; height: 3px; border-radius: 2px; background: var(--el); box-shadow: 0 0 calc(4px + 6px * var(--ui-loud, .92)) var(--el); }
 #letters-hand .lc::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: calc((1 - var(--ui-paper, .17)) * .5); mix-blend-mode: soft-light;
   background: repeating-linear-gradient(115deg, rgba(255,240,210,.05) 0 2px, transparent 2px 5px), radial-gradient(90% 60% at 70% 90%, rgba(255,220,170,.06), transparent); }
-#letters-hand .lc small { position: absolute; left: 12px; right: 10px; bottom: 11px; font: italic 400 14px/1.15 var(--ui-body, system-ui, sans-serif); color: #ffd08a; opacity: .9; }
+/* spine titles (Wendell on uu-fan-titles, 2026-11-02: "Claude takes it: spine titles"): seven cards 100 px wide sit
+   about 52 px apart at 390 wide, so the next card hides the right half of each. The title runs up the left edge, inside
+   the strip that stays in sight, reading bottom to top like a book on a shelf; the pulled card shows it whole. */
+#letters-hand .lc .sp { position: absolute; left: 7px; top: 138px; width: 122px; transform-origin: 0 0; transform: rotate(-90deg);
+  font: 400 14px/1.12 var(--ui-display, "Marcellus", Georgia, serif); color: #f6ecdc; text-shadow: 0 1px 2px rgba(0,0,0,.7);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+#letters-hand .lc small { position: absolute; left: 38px; top: 138px; width: 122px; transform-origin: 0 0; transform: rotate(-90deg);
+  font: italic 400 14px/1.12 var(--ui-body, system-ui, sans-serif); color: #ffd08a; white-space: nowrap; }
 #letters-hand .lc:focus-visible { outline: 3px solid var(--ui-accent, #5fc2ba); outline-offset: 3px; }
 #letters-hand .lc.gone { filter: brightness(.5) saturate(.6); cursor: default; }
 #letters-hand.down .lc { transform: translateY(160%) !important; }
@@ -300,7 +307,7 @@ export function mount(B, opts = {}) {
     const used = view ? sentBy(view.L, view.me) : [];
     handEl.innerHTML = HAND.map((c, i) => {
       const t = (i - 3) / 3, gone = used.includes(c);
-      return `<button type="button" class="lc${gone ? " gone" : ""}" data-card="${c}" style="${elVars(elementOf(c))};left:${50 + t * 40}%;transform:translateY(${Math.abs(t) * 12}px) rotate(${t * 13}deg)">${esc(title(c))}${gone ? "<small>in the Between</small>" : ""}</button>`;
+      return `<button type="button" class="lc${gone ? " gone" : ""}" data-card="${c}" aria-label="${esc(title(c))}${gone ? ", in the Between" : ""}" style="${elVars(elementOf(c))};left:${50 + t * 40}%;transform:translateY(${Math.abs(t) * 12}px) rotate(${t * 13}deg)"><span class="sp">${esc(title(c))}</span>${gone ? "<small>in the Between</small>" : ""}</button>`;
     }).join("");
   }
   handEl.addEventListener("click", e => {
@@ -350,7 +357,9 @@ export function mount(B, opts = {}) {
   });
   function renderCard(view, force) {
     const card = up.card, enc = view.enc, l = lineFor(enc, card), between = !!view.mine;
-    const steps = between ? (l ? l.steps.map(s => s[0]) : []) : NOOK[card] || [];
+    // hib2-options-learned-together: before the letter is sent the card shows only its question; what it can do is written on
+    // its face when the Between opens both letters, so you and your partner learn the options at the same moment
+    const steps = between ? (l ? l.steps.map(s => s[0]) : []) : [];
     const theirs = view.theirCard;
     const key = JSON.stringify([card, enc, between, chosen, Object.keys(deck).length, view.partnerStepped]);
     if (!force && cardEl.dataset.key === key) return;
@@ -363,7 +372,7 @@ export function mount(B, opts = {}) {
       : `<div class="note">Your partner sends one of theirs. Where the two cards meet, the Between draws what you face together.</div><button type="button" class="send"><i></i><div>Seal it and send<small>It opens in the Between beside your partner's card.</small></div></button>`;
     cardEl.innerHTML = `<div class="face"><h2>${esc(title(card))}</h2><div class="kind">Wake Up · ${esc(faceOf(card))}</div>`
       + `<div class="q">${esc(question(card))}</div>`
-      + (between ? `<div class="against">Against ${esc(l ? l.part : "the obstacle")}</div>` : `<div class="lbl">In the Between, you can:</div>`)
+      + (between ? `<div class="against">Against ${esc(l ? l.part : "the obstacle")}</div>` : `<div class="lbl">What it can do</div><div class="against">Written when the Between opens. You and your partner learn it together.</div>`)
       + `<div class="steps">${steps.map((s, i) => `<button type="button" class="st${i === chosen ? " up" : ""}" data-i="${i}"><i></i><span>${esc(s)}</span></button>`).join("")}</div>${foot}</div>`;
     const down = { on: putBack };
     if (between && theirs) voice.say({ subject: () => rectOf(cardEl.querySelector(".face")), down, foot: view.partnerStepped ? "Your partner has taken their step." : `Your partner is choosing a step from ${title(theirs)}.` });
@@ -430,6 +439,7 @@ export function mount(B, opts = {}) {
     if (dismissed === b.key) { if (holding) { voice.quiet(); holding = false; camRelease(); } return; }
     if (b.key !== lastKey) { lastKey = b.key; if (b.cam === "edge") camTo(EDGE[shell()].cam, 900); else camRelease(); }
     const subject = b.obstacle && group.visible ? obstacleBox : b.hand ? () => rectOf(handEl) : null;
+    if (B.meState && B.meState.sitting && B.meState.seatWant === "coins") { if (holding) { voice.quiet(); holding = false; } return; } // sitting at the low table, the table's words (a turn, a cast) hold the glass; the hand speaks again when you stand
     if (dirtyF || !holding) voice.say({ ...b.say, subject });
     else voice.place();
     holding = true; dirtyF = false;

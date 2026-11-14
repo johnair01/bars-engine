@@ -19,14 +19,22 @@
 
 import { config } from 'dotenv'
 import { execSync } from 'child_process'
+import { databaseHost, remoteDatabaseRefused } from '../src/lib/local-db-guard'
 
 function hasDatabaseUrl(): boolean {
   return !!(process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL)
 }
 
+/** A build outside Vercel never migrates a remote (production) database: docs/LOCAL_FIRST_TESTING.md. */
+function remoteMigrateRefused(): boolean {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || ''
+  return !!url && remoteDatabaseRefused(url)
+}
+
 /** Skip migrate during build (still run prisma generate + next build). */
 function shouldSkipMigrateDeploy(): boolean {
   if (process.env.SKIP_PRISMA_MIGRATE_DEPLOY === '1') return true
+  if (remoteMigrateRefused()) return true
   const isPreview = process.env.VERCEL_ENV === 'preview'
   const forceMigrateOnPreview = process.env.VERCEL_RUN_MIGRATE_ON_PREVIEW === '1'
   if (isPreview && !forceMigrateOnPreview) return true
@@ -75,6 +83,13 @@ if (hasDatabaseUrl() && !shouldSkipMigrateDeploy()) {
     )
   } else if (process.env.SKIP_PRISMA_MIGRATE_DEPLOY === '1') {
     console.warn('⚠ SKIP_PRISMA_MIGRATE_DEPLOY=1 — skipping prisma migrate deploy.')
+  } else if (remoteMigrateRefused()) {
+    const url = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || ''
+    console.warn(
+      `⚠ Local build: DATABASE_URL points at ${databaseHost(url)}, not a local database, so prisma migrate deploy is skipped. ` +
+        'Local builds never migrate a remote database. Use scripts/local/dev.sh run -- npm run build (docs/LOCAL_FIRST_TESTING.md), ' +
+        'or set BARS_ALLOW_REMOTE_DB=1 if you really mean to migrate it.'
+    )
   }
   try {
     execSync('npx prisma generate', { stdio: 'inherit', shell: true })

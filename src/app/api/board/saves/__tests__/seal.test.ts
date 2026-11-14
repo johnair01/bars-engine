@@ -14,7 +14,6 @@ const db = vi.hoisted(() => {
 vi.mock('@/lib/db', () => ({ db }))
 vi.mock('@/lib/board/owner', () => owner)
 vi.mock('@/lib/board/store', () => store)
-vi.mock('@/lib/board/dispatch', () => ({ dispatchBoardPull: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('@/lib/tap-the-vein/board-seal', () => seal)
 vi.mock('@/lib/tap-the-vein/board-set-aside', () => aside)
 

@@ -9,12 +9,15 @@
  *
  * @route GET /api/work/tickets
  * @description The tickets of one lane or all, newest first (up to 50), for a session checking what is queued.
- * @permissions COUNCIL_MENU_TOKEN
+ * @permissions COUNCIL_MENU_TOKEN, or (GET only) the board owner's sign-in, which the harbour's lanterns read
  * @example GET /api/work/tickets?lane=claude&state=ready
+ * @example GET /api/work/tickets?rows=ctw-nook-look-2,harbour-loop-look-1   (every ticket whose basis.rows names one,
+ *   any state, up to 200: board/gates.py counts a claimed or done ticket as the gate's claim, writers-api FR-003)
  * @agentDiscoverable false
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isBoardOwner } from '@/lib/board/owner'
 import { cleanLanes, councilCaller } from '@/lib/work/lanes'
 import { pushTicket } from '@/lib/work/queue'
 
@@ -34,10 +37,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!councilCaller(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!councilCaller(req) && !(await isBoardOwner())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const lane = req.nextUrl.searchParams.get('lane') || undefined
   const state = req.nextUrl.searchParams.get('state') || undefined
-  const tickets = await db.workTicket.findMany({ where: { lane, state }, orderBy: { createdAt: 'desc' }, take: 50,
+  const rows = (req.nextUrl.searchParams.get('rows') || '').split(',').map(r => r.trim()).filter(Boolean).slice(0, 100)
+  const where = rows.length
+    ? { lane, state, OR: rows.map(r => ({ basis: { path: ['rows'], array_contains: [r] } })) }
+    : { lane, state }
+  const tickets = await db.workTicket.findMany({ where, orderBy: { createdAt: 'desc' }, take: rows.length ? 200 : 50,
     select: { id: true, title: true, lane: true, lanes: true, state: true, claimedBy: true, leaseUntil: true,
       attempts: true, result: true, createdAt: true, basis: true } })
   return NextResponse.json({ tickets }, { headers: NO_STORE })

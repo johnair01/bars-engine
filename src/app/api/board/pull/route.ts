@@ -43,14 +43,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!process.env.BOARD_PULL_TOKEN) return NextResponse.json({ error: 'BOARD_PULL_TOKEN not configured' }, { status: 503 })
   if (!authorized(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const b = (await req.json().catch(() => null)) as { board?: string; ids?: unknown; record?: unknown } | null
+  const b = (await req.json().catch(() => null)) as { board?: string; ids?: unknown; record?: unknown; held?: unknown } | null
   if (!b || !Array.isArray(b.ids) || !b.ids.every(i => typeof i === 'string') || typeof b.record !== 'string' || !b.record)
     return NextResponse.json({ error: 'Expected {board, ids: string[], record: string}' }, { status: 400 })
   const board = parseBoard(b.board)
   if (!board) return NextResponse.json({ error: 'board must be nonprofit or council' }, { status: 400 })
+  // held: true marks saves the pull left for a session on purpose; they stay unrecorded but stop counting as waiting
+  const held = b.held === true
   const r = await db.boardSave.updateMany({
-    where: { board, id: { in: b.ids as string[] }, recordedAt: null }, data: { recordedAt: new Date(), record: b.record },
+    where: { board, id: { in: b.ids as string[] }, recordedAt: null },
+    data: held ? { record: b.record } : { recordedAt: new Date(), record: b.record },
   })
-  await db.boardPull.create({ data: { board, recorded: r.count, record: b.record } })
-  return NextResponse.json({ recorded: r.count }, { headers: NO_STORE })
+  if (!held) await db.boardPull.create({ data: { board, recorded: r.count, record: b.record } })
+  return NextResponse.json(held ? { recorded: 0, held: r.count } : { recorded: r.count }, { headers: NO_STORE })
 }

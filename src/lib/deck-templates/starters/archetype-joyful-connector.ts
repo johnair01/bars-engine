@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Sit in the Quiet Between',
+      bodyText:
+        'Connectors fill every silence. Breathe, and let one silence stay empty until it gets heavy and then light again. Write down what was in the room when nobody was performing for it.',
+      faceKey: null,
+      archetypeKey: 'joyful-connector',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Be Reached For',
+      bodyText:
+        'You usually reach first. Wait for one person to reach toward you, and let them choose how. Receive it without improving it. Write down what you learned from being the one who was found.',
+      faceKey: null,
+      archetypeKey: 'joyful-connector',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'When Connection Became Performance',
       bodyText:
         'Is the joy you are bringing real, or are you performing it because the group needs it? Not a memory from the past — in the current situation. Name the most recent moment when you were offering brightness you did not feel. What were you protecting the group from by performing it?',

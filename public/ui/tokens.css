@@ -30,12 +30,9 @@
 :root[data-theme="light"] {
   --ui-bg: #f6f5f1; --ui-panel: #ffffff; --ui-ink: #1d1f1e; --ui-muted: #5d625f; --ui-line: #d9d8d1; --ui-accent: #1f6f6a; --ui-accent-ink: #ffffff; --ui-warn: #9a4b1e; --ui-ok: #2f7a3b; color-scheme: light;
 }
-:root[data-theme="dark"] {
-  --ui-bg: #17191a; --ui-panel: #1f2224; --ui-ink: #ece9e1; --ui-muted: #a4a8a3; --ui-line: #33373a; --ui-accent: #5fc2ba; --ui-accent-ink: #0f1a19; --ui-warn: #e8a06e; --ui-ok: #7cc488; color-scheme: dark;
-}
-@media (prefers-color-scheme: light) { :root[data-theme="auto"] {
+/* The theme follows the phone (Wendell on uu-theme-follow, 2026-11-02: "Turn to light when the phone is on light").
+   A phone set to dark gets dusk, his dialled look; a phone set to light gets light. data-theme="dusk" or "dark" holds a
+   page in dusk and data-theme="light" holds it in light; no data-theme, or "auto", follows the phone. */
+@media (prefers-color-scheme: light) { :root:not([data-theme="dusk"]):not([data-theme="dark"]) {
   --ui-bg: #f6f5f1; --ui-panel: #ffffff; --ui-ink: #1d1f1e; --ui-muted: #5d625f; --ui-line: #d9d8d1; --ui-accent: #1f6f6a; --ui-accent-ink: #ffffff; --ui-warn: #9a4b1e; --ui-ok: #2f7a3b; color-scheme: light;
-} }
-@media (prefers-color-scheme: dark) { :root[data-theme="auto"] {
-  --ui-bg: #17191a; --ui-panel: #1f2224; --ui-ink: #ece9e1; --ui-muted: #a4a8a3; --ui-line: #33373a; --ui-accent: #5fc2ba; --ui-accent-ink: #0f1a19; --ui-warn: #e8a06e; --ui-ok: #7cc488; color-scheme: dark;
 } }

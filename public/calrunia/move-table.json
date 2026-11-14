@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "about": "The one move table: 5 channels by 3 satisfaction states, and the 15 moves that step between those cells. Copies live in bars-engine (src/lib/quest-grammar/move-table.json) and sprout (data/move-table.json); tests/test_move_table.py fails when a copy differs. Built 2026-10-19 from Wendell's board answers (ledger council/ledger/2026-10-19-pull-225647.json).",
+  "rulings": {
+    "mn-q-what-move-is": "both: the cells are the engine (layer 1); actions owned by faces and daemons are named skins, each mapping to exactly one of the fifteen moves (layer 2).",
+    "mn-q-face-daemon": "own: each face and daemon owns its moves. Daemons have habits and their own moves, and no home channel.",
+    "mn-q-ke-state": "depends: what a control move does to satisfaction depends on the starting state (families.control.state).",
+    "mn-transcend-plus-two": "overruled: Transcend is two separate steps, dissatisfied to neutral, then neutral to satisfied.",
+    "mn-gold-names": "stands: Metal's satisfied name is Wonder-Excitement; Earth's channel is Neutrality, never Neutral.",
+    "mn-basic-moves-apart": "stands: the five Basic Moves (Wake, Open, Clean, Grow, Show) are not in this table."
+  },
+  "states": ["dissatisfied", "neutral", "satisfied"],
+  "channels": [
+    { "id": "fear", "name": "Fear", "element": "metal", "satisfied_name": "Wonder-Excitement" },
+    { "id": "sadness", "name": "Sadness", "element": "water", "satisfied_name": "Poignance" },
+    { "id": "joy", "name": "Joy", "element": "wood", "satisfied_name": "Bliss" },
+    { "id": "anger", "name": "Anger", "element": "fire", "satisfied_name": "Triumph" },
+    { "id": "neutrality", "name": "Neutrality", "element": "earth", "satisfied_name": "Peace" }
+  ],
+  "families": {
+    "transcend": {
+      "channel": "same",
+      "state": { "dissatisfied": "neutral", "neutral": "satisfied", "satisfied": null },
+      "steps": { "dissatisfied": "metabolize", "neutral": "transcend" },
+      "note": "Two steps in one channel. From satisfied there is no transcend step (null: not offered)."
+    },
+    "generative": {
+      "channel": "sheng",
+      "state": { "dissatisfied": "neutral", "neutral": "satisfied", "satisfied": "satisfied" },
+      "note": "Carries the charge to the channel sheng feeds and raises it one state; satisfied is the ceiling."
+    },
+    "control": {
+      "channel": "ke",
+      "state": { "dissatisfied": "dissatisfied", "neutral": "dissatisfied", "satisfied": "satisfied" },
+      "note": "Depends on where you start: from satisfied it holds, from neutral it pulls back, from dissatisfied it holds. Never raises; acts by releasing grip (ea13b-ke-release)."
+    }
+  },
+  "cycles": {
+    "sheng": { "joy": "anger", "anger": "neutrality", "neutrality": "fear", "fear": "sadness", "sadness": "joy" },
+    "ke": { "joy": "neutrality", "neutrality": "sadness", "sadness": "anger", "anger": "fear", "fear": "joy" }
+  },
+  "moves": [
+    { "id": "metal_transcend", "name": "Step Through (Wonder-Excitement)", "family": "transcend", "from": "fear", "to": "fear" },
+    { "id": "water_transcend", "name": "Reclaim Meaning", "family": "transcend", "from": "sadness", "to": "sadness" },
+    { "id": "wood_transcend", "name": "Commit to Growth", "family": "transcend", "from": "joy", "to": "joy" },
+    { "id": "fire_transcend", "name": "Achieve Breakthrough (Triumph)", "family": "transcend", "from": "anger", "to": "anger" },
+    { "id": "earth_transcend", "name": "Stabilize Coherence", "family": "transcend", "from": "neutrality", "to": "neutrality" },
+    { "id": "wood_fire", "name": "Declare Intention", "family": "generative", "from": "joy", "to": "anger" },
+    { "id": "fire_earth", "name": "Integrate Gains", "family": "generative", "from": "anger", "to": "neutrality" },
+    { "id": "earth_metal", "name": "Reveal Stakes", "family": "generative", "from": "neutrality", "to": "fear" },
+    { "id": "metal_water", "name": "Deepen Value", "family": "generative", "from": "fear", "to": "sadness" },
+    { "id": "water_wood", "name": "Renew Vitality", "family": "generative", "from": "sadness", "to": "joy" },
+    { "id": "wood_earth", "name": "Consolidate Energy", "family": "control", "from": "joy", "to": "neutrality" },
+    { "id": "fire_metal", "name": "Temper Action", "family": "control", "from": "anger", "to": "fear" },
+    { "id": "earth_water", "name": "Reopen Sensitivity", "family": "control", "from": "neutrality", "to": "sadness" },
+    { "id": "metal_wood", "name": "Activate Hope", "family": "control", "from": "fear", "to": "joy" },
+    { "id": "water_fire", "name": "Mobilize Grief", "family": "control", "from": "sadness", "to": "anger" }
+  ],
+  "owners": {
+    "about": "Layer 2. Each face and daemon owns its moves; an owned action always names one move id above. Faces are seeded from bars-engine lens-moves.ts. Daemons own moves too, with no home channel; their lists are not written yet.",
+    "faces": {
+      "shaman": ["water_wood", "metal_wood", "earth_water"],
+      "challenger": ["fire_transcend", "wood_fire", "water_fire"],
+      "regent": ["earth_transcend", "fire_earth", "wood_earth"],
+      "architect": ["earth_metal", "metal_water", "fire_earth"],
+      "diplomat": ["water_transcend", "metal_water", "earth_water"],
+      "sage": ["earth_transcend", "wood_transcend", "water_wood"]
+    },
+    "daemons": {}
+  },
+  "checks": [
+    { "id": "temper-action-play", "from": { "channel": "anger", "state": "dissatisfied" }, "move": "fire_metal", "ends": { "channel": "fear", "state": "dissatisfied" }, "why": "Pass move-nature1 Tests: one charge through Anger dissatisfied and Temper Action ends in one cell on every surface." }
+  ]
+}

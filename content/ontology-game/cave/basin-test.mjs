@@ -11,7 +11,7 @@ const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url
 const THREE_JS = process.env.OAG_THREE || new URL('../../../node_modules/three/build/three.min.js', import.meta.url).pathname;
 const SHOTS = process.env.OAG_SHOTS || '/tmp/basin-shots';
 mkdirSync(SHOTS, { recursive: true });
-const TYPES = { html: 'text/html', jpg: 'image/jpeg', glb: 'model/gltf-binary', json: 'application/json' };
+const TYPES = { html: 'text/html', jpg: 'image/jpeg', glb: 'model/gltf-binary', json: 'application/json', js: 'application/javascript' };
 const server = http.createServer((req, res) => {
   let u = decodeURIComponent(req.url.split('?')[0]);
   if (u === '/ontology-game/cave' || u === '/ontology-game/cave/') u = '/ontology-game/cave/index.html';
@@ -85,6 +85,9 @@ ok(/holds the whole of the stone/.test(w.live), 'at the crown, the answered pool
 s = await basinState();
 ok(s.view === 'near', 'the basin opens on the close follow camera: ' + s.view);
 ok(await page.evaluate(() => document.querySelector('[data-basin-view]') && document.querySelector('button[data-basin-view]').getAttribute('aria-pressed') === 'false'), 'the view button is there, not pressed');
+// the figure: the standard character of the nook and the Between (dusk-figure.js), not the stand-in; dressed, in the default coat
+ok(await page.waitForFunction(() => document.querySelector('[data-basin]').getAttribute('data-basin-figure') === 'dusk', null, { timeout: 20000 }).then(() => true, () => false), 'the figure is the standard character (Average Dusk, dressed by the Between\'s wardrobe), not the stand-in');
+ok(await page.evaluate(() => { const d = window.__oagDusk; return !!(d && d.dressed && d.layers.robe && d.layers.pants && d.holder.parent); }), 'it wears the robe and the trousers, and stands in the scene');
 await page.click('button[data-basin-view]');
 s = await basinState(); ok(s.view === 'far', 'pressing it gives the wide view');
 await page.waitForTimeout(1500);

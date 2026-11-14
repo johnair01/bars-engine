@@ -17,6 +17,7 @@ import {
     mergeStoryProgressGridPolarities,
 } from '@/lib/creator-scene-grid-deck/polarities'
 import { persistPlayerFeedbackToBacklog } from '@/lib/feedback/persist-player-feedback-to-backlog'
+import { markCoins, withCoinIds } from '@/lib/economy/coin-marks'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -264,6 +265,7 @@ export async function completeQuestForPlayer(
                 where: { barId: questId },
                 take: finalReward,
             })
+            await markCoins(tx, stakes.map((s) => s.vibulonId), 'given', { playerId: quest.creatorId ?? playerId, place: 'quest-bounty', barId: questId, toId: playerId })
             for (const stake of stakes) {
                 await tx.vibulon.update({
                     where: { id: stake.vibulonId },
@@ -278,7 +280,7 @@ export async function completeQuestForPlayer(
         } else if (finalReward > 0) {
             const creatorId =
                 quest.creatorId && !quest.isSystem ? quest.creatorId : null
-            const tokenData = []
+            const tokenData: Array<{ ownerId: string; creatorId: string | null; originSource: string; originId: string; originTitle: string }> = []
             for (let i = 0; i < finalReward; i++) {
                 tokenData.push({
                     ownerId: playerId,
@@ -288,7 +290,9 @@ export async function completeQuestForPlayer(
                     originTitle: quest.title
                 })
             }
-            await tx.vibulon.createMany({ data: tokenData })
+            const questCoins = withCoinIds(tokenData)
+            await tx.vibulon.createMany({ data: questCoins })
+            await markCoins(tx, questCoins, 'minted', { playerId, place: 'quest', barId: questId })
         }
 
         // BAR CREATOR MINT: Public BARs appended to this quest (parentId = questId) get 1 vibeulon per creator
@@ -311,15 +315,15 @@ export async function completeQuestForPlayer(
                     questId: questId,
                 },
             })
-            await tx.vibulon.create({
-                data: {
-                    ownerId: bar.creatorId,
-                    creatorId: bar.creatorId,
-                    originSource: 'bar_creator_quest_completion',
-                    originId: questId,
-                    originTitle: quest.title,
-                },
-            })
+            const [creatorCoin] = withCoinIds([{
+                ownerId: bar.creatorId,
+                creatorId: bar.creatorId,
+                originSource: 'bar_creator_quest_completion',
+                originId: questId,
+                originTitle: quest.title,
+            }])
+            await tx.vibulon.create({ data: creatorCoin })
+            await markCoins(tx, [creatorCoin], 'minted', { playerId: bar.creatorId, place: 'quest', barId: bar.id })
         }
 
         // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
@@ -811,14 +815,15 @@ async function processCompletionEffects(
                         })
                         const creatorId =
                             quest.creatorId && !quest.isSystem ? quest.creatorId : null
-                        const bonusTokens = Array.from({ length: amount }, () => ({
+                        const bonusTokens = withCoinIds(Array.from({ length: amount }, () => ({
                             ownerId: playerId,
                             creatorId,
                             originSource: 'completion_effect',
                             originId: quest.id,
                             originTitle: quest.title
-                        }))
+                        })))
                         await tx.vibulon.createMany({ data: bonusTokens })
+                        await markCoins(tx, bonusTokens, 'minted', { playerId, place: 'quest', barId: quest.id })
                         console.log(`[CompletionEffects] Granted ${amount} bonus vibeulons to player ${playerId}`)
                     }
                     break

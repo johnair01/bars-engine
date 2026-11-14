@@ -97,9 +97,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             DECK
                         </Link>
                         <Link
-                            href="/game/index.html"
-                            title="Play Mastering the Game of Allyship in your browser. No account needed."
-                            className={`shrink-0 px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/game')}`}
+                            href="/play"
+                            title="Play Mastering the Game of Allyship in your browser."
+                            className={`shrink-0 px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/play')}`}
                         >
                             PLAY
                         </Link>

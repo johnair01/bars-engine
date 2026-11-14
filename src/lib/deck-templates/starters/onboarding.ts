@@ -40,6 +40,34 @@ const onboardingDeck: DeckTemplate = {
       faceMoveType: null,
     },
 
+    // Open Up × 2
+    {
+      title: 'Breathe Before You Name It',
+      bodyText:
+        'Breathe in for four counts and out for six, twice. Do nothing with the charge you are carrying. Let it be in the room with you. What changes when you stop holding it still?',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let Something Arrive',
+      bodyText:
+        'Leave one question open for a day. Do not answer it. Watch for the first thing that shows up unasked: a sentence, a person, a feeling in the body. Write down what arrived.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+
     // Clean Up × 2
     {
       title: 'Name What Is in the Way',

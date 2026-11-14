@@ -9,22 +9,23 @@ export const BETWEEN_PAGE = `<!doctype html>
 <meta name="theme-color" content="#1a1018">
 <title>The Between</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&family=Marcellus&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&family=EB+Garamond:ital@0;1&family=Marcellus&display=swap">
 <link rel="stylesheet" href="/ui/tokens.css">
 <link rel="stylesheet" href="/between/garden.css">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
 } }
 </script>
 </head><body>
 <div id="stage" aria-label="The garden. Tap the floor to walk there; drag to look around."></div>
-<div id="labels" aria-hidden="true"></div>
+<div id="labels" aria-hidden="true" data-ui-layer="label"></div>
 <div class="loading" id="loading"><div><h1>The Between</h1><p id="loadMsg">Opening the hollow…</p><p id="loadStep" style="font-size:.8rem;opacity:.6;margin-top:8px">starting</p></div></div>
 
 <div class="hud" id="hud" hidden>
-  <div class="top">
+  <div class="top" data-ui-layer="row">
     <div class="namecard" id="namecard"></div>
     <div class="topbtns">
       <button class="glassbtn" type="button" data-act="sound" id="soundBtn" aria-pressed="true">Sound on</button>
@@ -33,10 +34,10 @@ export const BETWEEN_PAGE = `<!doctype html>
       <button class="glassbtn" type="button" data-open="menu">More</button>
     </div>
   </div>
-  <div class="bottom">
-    <div class="next" id="next" hidden></div>
-    <div class="hint" id="hint"></div>
-    <div class="near" id="near" hidden></div>
+  <div class="bottom" data-ui-layer="row">
+    <div class="next" id="next" hidden data-ui-layer="near"></div>
+    <div class="hint" id="hint" data-ui-layer="near"></div>
+    <div class="near" id="near" hidden data-ui-layer="near"></div>
     <div class="tools" id="tools"></div>
   </div>
 </div>

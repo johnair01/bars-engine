@@ -20,6 +20,8 @@
    What is kept: the homeroom's private doc (rules.ts homeWrite) holds `minute` = { ember, mirror, hope, vine: time done,
    skip: { ember, mirror, hope: time skipped } }, and `oriented`, the time the last vine fell. */
 
+import { stageOf as careOf } from "../between/focus.js";
+
 /** The beats in order, and the second each one may start at, as the still's storyboard times them. */
 export const STEPS = ["wake", "ember", "mirror", "hope", "vine", "open"];
 export const BEATS = { wake: 0, ember: 10, mirror: 22, hope: 35, vine: 48, open: 60 };
@@ -39,7 +41,7 @@ export const CAPTIONS = {
 };
 /** What each beat asks, plainly, while it waits for you (the HUD's hint line, not a caption). */
 export const PROMPTS = {
-  ember: "One ember glows in the hearth. Tap it.",
+  ember: "The hearth is cold and thick with old ash. Tap it.", // stand-in until the built look (Impeccable copy pass)
   mirror: "A mirror glows in your satchel. Set it on a spot.",
   hope: "Look into the mirror.",
   vine: "The last vine waits on the doorway. Touch it.",
@@ -69,8 +71,8 @@ export function minuteState(home) {
   return {
     step, oriented, done, skipped, fallen,
     vinesLeft: fallen.filter(f => !f).length,
-    /** the hearth burns once its ember is tended */
-    hearthLit: done.ember,
+    /** the hearth burns once its second care is done (the chapter's stage 2; a fire lit before it reads as done, focus.js careOf) */
+    hearthLit: careOf(h) >= 2,
     /** the ember glows in a cold hearth while its beat is on, or after it was skipped */
     emberGlows: !done.ember && (step === "ember" || skipped.ember),
     /** the mirror is in your satchel from its beat on (rk-earned-only: the mirror comes from the first minute) */

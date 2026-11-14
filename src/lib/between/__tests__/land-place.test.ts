@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 // Charge to world, build 3: the place generator's first walkable build reads the sample's encounter location.
 import { locations, read, sheet } from '../../../../public/calrunia/episode-sheet.js'
-import { plan, secretsHere, strongStart, toYou } from '../../../../public/between/land/place.js'
+import { friendHere, plan, secretsHere, strongStart, takeHome, toYou } from '../../../../public/between/land/place.js'
 
 const root = join(__dirname, '../../../..')
 const sample = () => JSON.parse(readFileSync(join(root, 'public/between/ctw/sample-player.json'), 'utf8'))
@@ -47,7 +47,8 @@ describe('the first land (place.js)', () => {
   it('the nook stand offers the doorway once the episode is unrolled, and the land page exists', () => {
     const cw = readFileSync(join(root, 'public/between/charge-world.js'), 'utf8')
     expect(cw).toMatch(/data-ctw="through"/)
-    expect(cw).toMatch(/location\.href = "\/between\/land\.html"/)
+    expect(cw).toMatch(/href \|\| "\/between\/land\.html"/)
+    expect(cw).toMatch(/location\.href = (to|href \|\| "\/between\/land\.html")/)
     const page = readFileSync(join(root, 'public/between/land.html'), 'utf8')
     expect(page).toMatch(/\/between\/land\/land\.js/)
   })
@@ -72,10 +73,43 @@ describe('the first land (place.js)', () => {
     const mid = { x: sh.GULLY.x, z: sh.BRIDGE_Z }
     expect(sh.walkable(mid.x, mid.z, false)).toBe(false)
     expect(sh.walkable(mid.x, mid.z, true)).toBe(true)
+    // laid plank: you stand at deck height over the gully instead of sinking to its floor
+    expect(sh.gullyH(mid.x)).toBeLessThan(-1)
+    expect(sh.standH(mid.x, mid.z, true, sh.gullyH(mid.x))).toBeGreaterThan(-0.05)
+    expect(sh.standH(mid.x, mid.z, false, sh.gullyH(mid.x))).toBe(sh.gullyH(mid.x))
     expect(sh.walkable(sh.ARRIVE.x, sh.ARRIVE.z, false)).toBe(true)
     expect(sh.walkable(0, 0, true)).toBe(false)
     const land = readFileSync(join(root, 'public/between/land/land.js'), 'utf8')
     expect(land).toMatch(/data-act="\$\{act\}"/)
     expect(land).toMatch(/go:scale-house/)
+  })
+
+  it('builds every aspect of the Friends\' Fire, the third land, and says what you take home', async () => {
+    const charge = sample()
+    const g = await read(charge)
+    const md = sheet(charge, g)
+    const loc = locations(charge, g).find((l: { role: string | number }) => l.role === 'road-home')
+    const p = plan(loc, '')
+    expect(p.name).toBe("The Friends' Fire")
+    expect(p.pieces.map((x: { id: string }) => x.id)).toEqual(['fire-ring', 'guitar-tuning', 'empty-crate'])
+    expect(p.unbuilt).toEqual([])
+    const secrets = secretsHere(md, p)
+    expect(secrets.some((s: string) => /key to the garage/.test(s))).toBe(true)
+    expect(secrets.some((s: string) => /kept a recording/.test(s))).toBe(true)
+    expect(takeHome(md)).toEqual({ capability: 'Play one unfinished song for one person this week.', key: 'The music I care about is one evening away, not a lifetime.' })
+    expect(friendHere(md)).toEqual({ name: 'Oriel', line: 'Play what you have so far?' })
+  })
+
+  it('the fire and the crates are walls, your crate is reached from behind, and the far bank leads there', async () => {
+    const ff = await import('../../../../public/between/land/friends-fire.js')
+    expect(ff.walkable(0, 0)).toBe(false)
+    for (const s of ff.SEATS) { const c = ff.seatAt(s); expect(ff.walkable(c.x, c.z)).toBe(false) }
+    expect(ff.walkable(ff.STAND.x, ff.STAND.z)).toBe(true)
+    expect(ff.walkable(ff.ARRIVE.x, ff.ARRIVE.z)).toBe(true)
+    expect(ff.walkable(ff.WALK_TO.x, ff.WALK_TO.z)).toBe(true)
+    expect(ff.SEATS.filter((s: { who: string }) => s.who === 'you')).toHaveLength(1)
+    const land = readFileSync(join(root, 'public/between/land/land.js'), 'utf8')
+    expect(land).toMatch(/btn\("go:friends-fire"/)
+    expect(land).not.toMatch(/That land is not built yet/)
   })
 })
