@@ -1,0 +1,77 @@
+{
+ "0": [
+  {
+   "title": "Notice Your Breath and Surroundings",
+   "description": "Breathe deeply. Feel the rhythm in your body and the pulse of the world around you. Do this in a quiet space for a moment, either at the start of the day or whenever you feel lost. Ground yourself by being present with yourself and your environment.",
+   "moveType": "wakeUp",
+   "elder": "shaman",
+   "sourceSentence": "take a deep breath and notice how you feel in your body, and how the world around you feels.",
+   "restPath": "If you’re rushing and can’t pause, do a quick inhale and exhale on the way to the bathroom and remember this moment."
+  }
+ ],
+ "6": [
+  {
+   "title": "Listen With All Your Senses",
+   "description": "Gather at dawn with a neighbor or friend and sit in silence for ten minutes, sharing what you hear from the world around you. Let’s hear… what the wind says, what the birds sing, what we feel inside. Do it when you can feel calm, not when you’re rushed.",
+   "moveType": "showUp",
+   "elder": "diplomat",
+   "sourceSentence": "I am listening now with all of my senses, as if the whole universe might exist just to teach me more about love.",
+   "restPath": "If you feel restless this day, step outside, breathe a minute, and feel the ground under your feet."
+  },
+  {
+   "title": "Practice Love in Action",
+   "description": "Choose one act of kindness for the coming day—help a stranger, hug a friend, or plant a seed for someone else. Notice how that gesture feels and how it changes the room. Do it when you see an opportunity, not when you’re tired of waiting.",
+   "moveType": "growUp",
+   "elder": "shaman",
+   "sourceSentence": "When we are engaged in acts of love, we humans are at our best and most resilient.",
+   "restPath": "If you cannot act, remember to be gentler with yourself this evening."
+  }
+ ],
+ "10": [
+  {
+   "title": "Imagine Beyond Fears",
+   "description": "Stand in the center of the room with a friend who feels pushed by old narratives, and together you cast away the limiting stories that bind you. Say aloud that you are stepping into fresh possibilities, freeing yourselves from the fear someone else built for you. Do this as soon as you can after a reflection, so the vision stays vivid.",
+   "moveType": "growUp",
+   "elder": "challenger",
+   "sourceSentence": "We have to imagine beyond those fears.",
+   "restPath": "Take a quiet walk tomorrow and simply listen to the wind—no planning, just breathing."
+  },
+  {
+   "title": "Collaborate to Ideate",
+   "description": "Invite a colleague or partner you haven’t spoken to in a while and tell them, \"Let’s sketch a world where no one is blamed for fear.\" Together you name the roads and bridges you would build. Hold this session for a solid hour so the ideas grow.",
+   "moveType": "growUp",
+   "elder": "diplomat",
+   "sourceSentence": "We must imagine new worlds that transition ideologies and norms, so that no one sees Black people as murderers, or Brown people as terrorists and aliens, but all of us as potential cultural and economic innovators.",
+   "restPath": "On your busiest day, pause for ten minutes, close the books, and simply breathe."
+  }
+ ],
+ "13": [],
+ "19": [
+  {
+   "title": "Stand Beside Them",
+   "description": "Stand or sit beside a person while they birth or transition, holding space for their body to speak. Do it with anyone who needs support, whenever they feel overwhelmed or in doubt. Speak no more than a breath, just be present.",
+   "moveType": "showUp",
+   "elder": "shaman",
+   "sourceSentence": "Standing or sitting with someone as they realize, remember their own wholeness—that is the work of the healer and the doula.",
+   "restPath": "If you are exhausted, simply breathe with them for a minute and let the silence be enough."
+  },
+  {
+   "title": "Write the Revolution Daily",
+   "description": "Write something you feel will transform the world, whether a poem, song, sketch or journal entry. Do it every day with a pen and paper, or your preferred tool, right after your morning coffee. Keep it honest, no filters.",
+   "moveType": "growUp",
+   "elder": "sage",
+   "sourceSentence": "I have to write, in some form, every day. It’s how I understand the world.",
+   "restPath": "When you cannot write, draw a single line that feels true and let it be your quiet practice."
+  }
+ ],
+ "26": [
+  {
+   "title": "Invite the Room",
+   "description": "You sit with a wanderer in the stillness of a hilltop clearing and say, 'Come share the breath with me,' and you both feel the rhythm of the earth beneath.",
+   "moveType": "wakeUp",
+   "elder": "shaman",
+   "sourceSentence": "We learn to disrespect Indigenous and direct ties to land.",
+   "restPath": "On a quiet day when the wind is still, you simply breathe and listen to the stones around you."
+  }
+ ]
+}

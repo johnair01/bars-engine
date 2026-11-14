@@ -38,7 +38,7 @@ For each practice you teach:
 - elder: the one Elder whose way the practice trains.
 - sourceSentence: copy ONE sentence from the passage word for word. Do not paraphrase, shorten or fix it. If no sentence supports the practice, drop the practice.
 - restPath: one sentence for a day the exile cannot do it, a smaller act or a rest that still counts.
-Teach only what the passage supports. Return 0-3 practices; return none for a passage with no practice in it. Leave nation, archetype and the other optional fields null unless the passage names them.`
+Teach only what the passage supports. Return 2 or 3 practices when the passage holds that many different acts, each with its own sourceSentence; return 1 if it holds only one; return none for a passage with no practice in it. Never pad: a practice without its own supporting sentence is dropped. Leave nation, archetype and the other optional fields null unless the passage names them.`
 
 const norm = (s: string) =>
   s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim()

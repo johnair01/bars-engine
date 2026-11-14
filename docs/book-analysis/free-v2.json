@@ -1,0 +1,133 @@
+{
+ "0": [
+  {
+   "title": "Observe Your Breath",
+   "description": "Sit beside someone you trust, inhale fully, feel your body, let the other witness your calm. Do this when you feel clumsy or unsettled.",
+   "moveType": "cleanUp",
+   "elder": "sage",
+   "sourceSentence": "Take a deep breath and notice how you feel in your body, and how the world around you feels.",
+   "restPath": "When you must attend to urgent tasks, simply pause for a minute, close your eyes, and breathe."
+  },
+  {
+   "title": "Move Mindfully",
+   "description": "Bike two miles to the beach, feel each pedal as a reminder of your kinship with the earth. Do this with a friend who also loves the sea.",
+   "moveType": "growUp",
+   "elder": "shaman",
+   "sourceSentence": "I feel good, I’ve been meditating, picking up my yoga practice, biking the two miles to the beach when the sun comes out.",
+   "restPath": "On a quiet day, sit still in the grass and simply notice the breeze."
+  },
+  {
+   "title": "Scan for Wonder",
+   "description": "Walk across town with a companion and point out one thing that makes you gasp with awe. Repeat everyday to keep the world alive.\"",
+   "moveType": "wakeUp",
+   "elder": "sage",
+   "sourceSentence": "The world is full of beauty, magic, miracles, and patterns that induce wonder.",
+   "restPath": "When you feel exhausted, rest in a quiet corner and let your mind settle quietly."
+  }
+ ],
+ "6": [
+  {
+   "title": "Listen With All Senses",
+   "description": "You gather with a friend or community member and take a moment to truly hear them, without planning what to say next. Let each breath be a pause that invites what the other is sharing. Do this when you feel a sliver of tension, before a decision or a conflict.",
+   "moveType": "cleanUp",
+   "elder": "shaman",
+   "sourceSentence": "I am listening now with all of my senses, as if the whole universe might exist just to teach me more about love.",
+   "restPath": "On a silent day, sit with a plant or a rock and observe without speaking."
+  },
+  {
+   "title": "Show Love In Action",
+   "description": "When a colleague, child, or stranger needs help, step forward to offer your support, no matter how small. Your offer changes the tone of the interaction and deepens the bond. Do it each time you notice someone relying on you, even if it's just a quick gesture.",
+   "moveType": "showUp",
+   "elder": "diplomat",
+   "sourceSentence": "When we are engaged in acts of love, we humans are at our best and most resilient.",
+   "restPath": "When chaos overwhelms you, take a walk outside and let the wind remind you of patience."
+  },
+  {
+   "title": "Practice Humble Listening",
+   "description": "Invite a mentor or anyone you admire to share their story. Listen with a ready heart, acknowledging that you can learn from anyone. Repeat this at least once a week when you feel your confidence is high.",
+   "moveType": "growUp",
+   "elder": "sage",
+   "sourceSentence": "Another part of walking this path has been the practice of humility—enough humility to learn, to be taught, to have teachers.",
+   "restPath": "On a day of rest, write a brief note of gratitude to someone you usually overlook."
+  }
+ ],
+ "10": [
+  {
+   "title": "Invite Others to Imagine Together",
+   "description": "You gather friends, share a story, and ask each person to add a new idea. Do this when the sun is low, in a circle of chairs, so everyone feels welcome.",
+   "moveType": "showUp",
+   "elder": "diplomat",
+   "sourceSentence": "We must imagine new worlds that transition ideologies and norms, so that no one sees Black people as murderers, or Brown people as terrorists and aliens, but all of us as potential cultural and economic innovators.",
+   "restPath": "Take a quiet walk alone, listen to the wind and let the ideas settle."
+  },
+  {
+   "title": "Practice Experimental Failure",
+   "description": "You stage a small experiment, like trying a new recipe, and note what goes wrong without judging yourself. Do it on a weekday after work with a kitchen buddy.",
+   "moveType": "growUp",
+   "elder": "challenger",
+   "sourceSentence": "We embody. We learn. We release the idea of failure, because it’s all data.",
+   "restPath": "Rehearse a short breathing exercise and allow yourself to feel no pressure."
+  },
+  {
+   "title": "Express Your Own Vision",
+   "description": "Write a paragraph in your journal about a hopeful future, then share it in your next meet-up. Do it on a your favorite quiet day.",
+   "moveType": "growUp",
+   "elder": "sage",
+   "sourceSentence": "But first we imagine.",
+   "restPath": "Read a page of poetry and let your mind drift."
+  }
+ ],
+ "13": [],
+ "19": [
+  {
+   "title": "Hold the Transition Gently",
+   "description": "When a friend faces a loss or a new beginning, sit beside them, keep your voice low and your presence steady. Listen without pushing solutions, simply observe and let the moment breathe. Do this with anyone in grief or joy, whenever they need an anchor.",
+   "moveType": "cleanUp",
+   "elder": "shaman",
+   "sourceSentence": "Life and death are transitions that want to be held gently.",
+   "restPath": "On a cold day when you feel too exhausted to hold someone, sit alone and breathe slowly, honoring the pause."
+  },
+  {
+   "title": "Listen to the Body",
+   "description": "During a visit or a meeting, set up a quiet corner and stay seated beside the person. Follow their breathing or subtle cues, and ask, \"What do you feel right now?\" Allow the conversation to unfold from that intimacy. Practice this when a family or friend is sharing about themselves.",
+   "moveType": "showUp",
+   "elder": "diplomat",
+   "sourceSentence": "helping the family attend to each other and listen to what the body is saying",
+   "restPath": "If no one is present, turn the practice inward by listening to your own breath for five minutes."
+  },
+  {
+   "title": "Write the Revolution",
+   "description": "Every dawn, take a notebook and write one page about the social change you yearn for. Let the words be concrete – describe people, places, policies, or feelings you want to see transformed. Do this each day, even if the page feels rough. The act itself moves reality forward.",
+   "moveType": "growUp",
+   "elder": "sage",
+   "sourceSentence": "Writing is one of the ways I participate in transformation.",
+   "restPath": "On a busy day, instead of a full page, jot two sentences that capture a spark of change."
+  }
+ ],
+ "26": [
+  {
+   "title": "Honor the Land",
+   "description": "You pause before a meeting, look around, say a brief thank you for the place and ask each person to share a thought of respect. Do this with the group that will meet you, at the start of the session.",
+   "moveType": "wakeUp",
+   "elder": "shaman",
+   "sourceSentence": "We learn to disrespect Indigenous and direct ties to land.",
+   "restPath": "If you are alone that day, sit with a plant or a photo of nature and silently thank it."
+  },
+  {
+   "title": "Speak Your Voice",
+   "description": "When someone says something that feels like a status‑quo trap, you raise your hand, claim a short time, and say one clear, honest thought. Do this in a staff meeting with your peers, when you see the chatter going in circles.",
+   "moveType": "showUp",
+   "elder": "diplomat",
+   "sourceSentence": "We learn to be quiet, polite, indirect, and submissive, not to disturb the status quo.",
+   "restPath": "If you find the room tense, instead of speaking, sit quietly and observe the silence."
+  },
+  {
+   "title": "Share Abundance",
+   "description": "You invite a colleague to pass along a resource or idea that can benefit the group. Do that in a shared workspace when you notice someone keeping a tool or knowledge to themselves.",
+   "moveType": "growUp",
+   "elder": "challenger",
+   "sourceSentence": "We learn to compete with each other in a scarcity-based economy that denies and destroys the abundant world we actually live in.",
+   "restPath": "If you are on a solo project, write down one way you could have helped a colleague instead of keeping hidden."
+  }
+ ]
+}
