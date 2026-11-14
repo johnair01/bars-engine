@@ -4,7 +4,7 @@
    the new path to the lookout stone, the lantern floats on along the thread, and the place lights and stays lit. */
 import { PLACES, KINDS, CALL_WORDS, COPY, callsFor, litPlaces, betweenDay, hash } from "./core.js";
 import { setExtraWalk } from "../hollow.js";
-import { LIGHT } from '../../look-data.js';
+import { LIGHT } from '../look-data.js';
 
 const MOUTH = { x: 0.6, z: -2.8, r: 1.9 };               // where the calls are chosen (inside the rope fence)
 const PATH = { ax: 0.6, az: -3.2, bx: 1.5, bz: -10.3, w: 0.95 };
