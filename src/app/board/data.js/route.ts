@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isBoardOwner } from '@/lib/board/owner'
 import { getCurrentPlayer } from '@/lib/auth'
 import { boardData } from '@/lib/board/data'
+import { originOf } from '@/lib/board/pictures'
 import { streamed } from '../serve'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
         { status: 403, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } })
     return NextResponse.redirect(new URL(`/login?returnTo=${encodeURIComponent('/board/council')}`, req.url))
   }
-  const data = await boardData('council')
+  const data = await boardData('council', originOf(req))
   if (!data) return new NextResponse(NOTHING, { status: 503, headers: HEADERS })
   // Streamed: the board's data is 2.2 MB today and Vercel buffers a function response under 4.5 MB.
   return new NextResponse(streamed(script(JSON.stringify(data))), { headers: HEADERS })

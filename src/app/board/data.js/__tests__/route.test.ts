@@ -27,6 +27,49 @@ describe('GET /board/data.js', () => {
     expect(await res.text()).toBe('window.__BOARD_DATA__ = null;\n')
   })
 
+  it('serves a large picture as a link to /api/board/picture, not as embedded base64', async () => {
+    const big = 'data:image/png;base64,' + 'A'.repeat(5000)
+    vi.mocked(latestDocs).mockResolvedValue({ rows: { q: { kind: 'questions', still: big, small: 'data:image/png;base64,AAAA' } } })
+    const text = await (await GET(req())).text()
+    expect(text).not.toContain(big)
+    expect(text).toContain('/api/board/picture?board=council&c=rows&id=q&p=still')
+    expect(text).toContain('data:image/png;base64,AAAA')
+  })
+
+  it('leaves a settled card and its resolved entry out of the page, but keeps a deferred one', async () => {
+    vi.mocked(latestDocs).mockResolvedValue({
+      rows: { done: { kind: 'questions', q: 'settled' }, later: { kind: 'questions', q: 'deferred' }, open: { kind: 'questions', q: 'still open' } },
+      resolved: { a: { kind: 'questions', id: 'done', decision: 'yes', recorded: '2026-11-01' },
+                  b: { kind: 'questions', id: 'later', decision: 'deferred', recorded: '2026-11-01' } },
+    })
+    const text = await (await GET(req())).text()
+    expect(text).not.toContain('settled')
+    expect(text).toContain('deferred')
+    expect(text).toContain('still open')
+  })
+
+  it('keeps a settled look that a mark can still find, so the mark does not turn into a cause to name', async () => {
+    vi.mocked(latestDocs).mockResolvedValue({
+      rows: {
+        look: { kind: 'questions', q: 'the look', href: 'https://x-preview.example.dev/a' },
+        timed: { kind: 'questions', q: 'timed look' },
+        gone: { kind: 'questions', q: 'unrelated' },
+        m1: { kind: 'causes', pass: 'preview-marks', mark: { page: 'https://x-preview.example.dev/a', at: '2026-11-01T10:00:00Z' } },
+        'mark-2': { kind: 'causes', mark: { page: 'https://other.dev/', at: '2026-11-02T10:00:00Z' } },
+      },
+      resolved: {
+        a: { kind: 'questions', id: 'look', decision: 'A', recorded: '2026-11-03' },
+        b: { kind: 'questions', id: 'timed', decision: 'A', saved_at: '2026-11-02T10:01:00Z' },
+        c: { kind: 'questions', id: 'gone', decision: 'A', saved_at: '2026-11-02T12:00:00Z' },
+      },
+    })
+    const data = await read(await GET(req()))
+    const ids = (data.questions as { id: string }[]).map((q) => q.id)
+    expect(ids).toContain('look')
+    expect((data.resolved as { questions: Record<string, unknown> }).questions.timed).toBeDefined()
+    expect(ids).not.toContain('gone')
+  })
+
   it('sets the script headers a page load can cache against', async () => {
     vi.mocked(latestDocs).mockResolvedValue({ rows: { p: { kind: 'positions', pos: 'from the store' } } })
     const res = await GET(req())
@@ -89,7 +132,9 @@ describe('GET /board/data.js', () => {
       intake: { latest: { date: '2026-10-21', items: [], savedAt: '2026-10-22T02:01:09Z' } },
     })
     const data = await read(await GET(req()))
-    expect(data.resolved.positions.build).toEqual({ decision: 'stands' })
+    // A settled card leaves the page with its resolved entry; the store keeps both.
+    expect(data.resolved.positions.build).toBeUndefined()
+    expect(data.positions).toEqual([])
     expect(data.draws).toEqual({ 'bar-intake--bi-look-1': { deck: 'bar-intake', card: 'bi-look-1', at: '2026-11-02T20:23:29Z' } })
     expect(data.morning).toEqual({ date: '2026-11-02', gathered_at: '2026-11-03T10:36:23Z' })
     expect(data.weather_log['weather--2026-11-02T07:00:00Z'].feeling).toBe('tender')
