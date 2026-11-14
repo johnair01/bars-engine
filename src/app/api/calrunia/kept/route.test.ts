@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { NextRequest } from 'next/server'
 
-const { currentPlayer, create, findMany } = vi.hoisted(() => ({ currentPlayer: vi.fn(), create: vi.fn(), findMany: vi.fn() }))
+const { currentPlayer, create, findMany, contextCreate, contextRead, transaction } = vi.hoisted(() => ({ currentPlayer: vi.fn(), create: vi.fn(), findMany: vi.fn(), contextCreate: vi.fn(), contextRead: vi.fn(), transaction: vi.fn() }))
 vi.mock('@/lib/between/store', () => ({ currentPlayer }))
-vi.mock('@/lib/db', () => ({ db: { customBar: { create, findMany } } }))
+vi.mock('@/lib/db', () => ({ db: { customBar: { create, findMany }, calruniaBarPrivateContext: { findFirst: contextRead }, $transaction: transaction } }))
 import { GET, POST } from './route'
 import { redactCalruniaReturnMetadata } from '@/lib/calrunia/bar-privacy'
 
@@ -14,7 +14,7 @@ const request = (body: unknown) => new NextRequest('http://localhost/api/calruni
 const get = (id = '') => new NextRequest('http://localhost/api/calrunia/kept' + (id ? '?id=' + id : ''))
 
 describe('private Calrunia BAR capture and return', () => {
-  beforeEach(() => { vi.clearAllMocks(); currentPlayer.mockResolvedValue({ id: 'owner' }); create.mockResolvedValue({}); findMany.mockResolvedValue([]) })
+  beforeEach(() => { vi.clearAllMocks(); currentPlayer.mockResolvedValue({ id: 'owner' }); create.mockResolvedValue({}); contextCreate.mockResolvedValue({}); contextRead.mockResolvedValue(null); findMany.mockResolvedValue([]); transaction.mockImplementation(fn => fn({ customBar: { create }, calruniaBarPrivateContext: { create: contextCreate } })) })
 
   it('requires a signed-in player and an explicit non-empty kernel', async () => {
     currentPlayer.mockResolvedValueOnce(null)
@@ -30,9 +30,12 @@ describe('private Calrunia BAR capture and return', () => {
     const { data } = create.mock.calls[0][0]
     expect(data).toMatchObject({ creatorId: 'owner', visibility: 'private', type: 'bar', description: 'Invite a friend to hear this', rootId: data.id })
     const meta = JSON.parse(data.agentMetadata)
-    expect(meta).toMatchObject({ source: 'calrunia_return_v1', notes: [1, 3, 0] })
-    expect(meta.charge.q1).toEqual(charge.q1)
-    expect(meta.charge.drafted).toBeUndefined()
+    expect(meta).toEqual({ source: 'calrunia_return_v2' })
+    const context = contextCreate.mock.calls[0][0].data
+    expect(context.barId).toBe(data.id)
+    expect(context.data.notes).toEqual([1, 3, 0])
+    expect(context.data.charge.q1).toEqual(charge.q1)
+    expect(context.data.charge.drafted).toBeUndefined()
   })
 
   it('refuses bad return data without writing', async () => {
@@ -43,19 +46,22 @@ describe('private Calrunia BAR capture and return', () => {
 
   it('queries the current owner and returns the stored context only for a matching record', async () => {
     const charge = sample()
-    findMany.mockResolvedValueOnce([{ id: 'bar-1', title: 'mine', description: 'mine', createdAt: new Date(), agentMetadata: JSON.stringify({ source: 'calrunia_return_v1', charge, notes: [2] }) }])
+    findMany.mockResolvedValueOnce([{ id: 'bar-1', title: 'mine', description: 'mine', createdAt: new Date(), agentMetadata: JSON.stringify({ source: 'calrunia_return_v2' }) }])
+    contextRead.mockResolvedValueOnce({ data: { charge, notes: [2] } })
     const response = await GET(get('bar-1'))
     expect(response.status).toBe(200)
     expect((await response.json()).bar).toMatchObject({ id: 'bar-1', content: 'mine', charge, notes: [2] })
     expect(findMany.mock.calls[0][0].where).toMatchObject({ creatorId: 'owner', id: 'bar-1', type: 'bar' })
+    expect(contextRead.mock.calls[0][0].where).toMatchObject({ barId: 'bar-1', bar: { creatorId: 'owner' } })
     currentPlayer.mockResolvedValueOnce({ id: 'other' })
     findMany.mockResolvedValueOnce([])
     expect((await GET(get('bar-1'))).status).toBe(404)
     expect(findMany.mock.calls[1][0].where.creatorId).toBe('other')
+    expect(contextRead).toHaveBeenCalledTimes(1)
   })
 
   it('lists titles without exposing the saved context', async () => {
-    findMany.mockResolvedValueOnce([{ id: 'bar-1', title: 'mine', description: 'mine', createdAt: new Date(), agentMetadata: JSON.stringify({ source: 'calrunia_return_v1', charge: sample(), notes: [2] }) }])
+    findMany.mockResolvedValueOnce([{ id: 'bar-1', title: 'mine', description: 'mine', createdAt: new Date(), agentMetadata: JSON.stringify({ source: 'calrunia_return_v2' }) }])
     const body = await (await GET(get())).json()
     expect(body.bars[0]).not.toHaveProperty('charge')
     expect(body.bars[0]).not.toHaveProperty('notes')
@@ -70,7 +76,10 @@ describe('private Calrunia BAR capture and return', () => {
 
   it('keeps and reloads the same BAR across requests while excluding another owner', async () => {
     const records: any[] = []
+    const contexts = new Map<string, unknown>()
     create.mockImplementation(async ({ data }) => { records.push({ ...data, createdAt: new Date(), archivedAt: null }); return data })
+    contextCreate.mockImplementation(async ({ data }) => { contexts.set(data.barId, data.data); return data })
+    contextRead.mockImplementation(async ({ where }) => contexts.has(where.barId) ? { data: contexts.get(where.barId) } : null)
     findMany.mockImplementation(async ({ where }) => records.filter(row => row.creatorId === where.creatorId && (!where.id || row.id === where.id)))
     const charge = sample()
     const saved = await (await POST(request({ content: 'A phrase to share', charge, notes: [0, 4] }))).json()

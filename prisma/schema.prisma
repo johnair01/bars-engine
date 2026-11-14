@@ -411,6 +411,7 @@ model CustomBar {
   /// CSHE: clothing-swap listing excluded from public gallery (host/co-host moderation)
   swapListingHidden                    Boolean                @default(false) @map("swap_listing_hidden")
   assets                               Asset[]
+  calruniaPrivateContext               CalruniaBarPrivateContext?
   bindings                             BarBinding[]
   barForgeRecordsAsPrimary             BarForgeRecord[]       @relation("BarForgePrimaryQuest")
   barMedia                             BarMedia[]
@@ -475,6 +476,17 @@ model CustomBar {
   @@index([creatorId, type, status])
   @@index([lensGoalId])
   @@map("custom_bars")
+}
+
+/// Private encounter context must not be included in normal BAR share responses.
+model CalruniaBarPrivateContext {
+  barId     String    @id @map("bar_id")
+  data      Json
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+
+  @@map("calrunia_bar_private_contexts")
 }
 
 /// Bounded in-world inventory ("hand"). Each player has up to 6 ordered slots

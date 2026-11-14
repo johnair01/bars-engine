@@ -9,6 +9,7 @@ export default defineConfig({
     environment: 'node',
     include: [
       'src/app/api/calrunia/kept/route.test.ts',
+      'src/app/api/calrunia/kept/route.integration.test.ts',
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
       'src/lib/wake-up/__tests__/check-content.test.ts',
       'src/lib/economy/__tests__/bar-mint.test.ts',
