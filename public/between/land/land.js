@@ -801,7 +801,7 @@ function showCard() {
   } else if (n === "arch" && WALK) { key = "arch"; html = card("The doorway back", "The visitor's nook, where the map was unrolled, is through the roots. The path out through the far trees leads on.", btn("home", "Back through to the nook"));
   } else if (n === "arch") { key = "arch"; html = `<div><b>The doorway home</b><div class="t">Your nook is through the roots, the hearth where you left it.</div></div><div class="row"><button type="button" data-act="home">Back through to your nook</button></div>`; }
   else if (n && n.startsWith("melt:")) { const c = state.block.card(n); key = c.key; html = c.html; }
-  else if (n === "ch-home" && WALK) { key = n; html = card("The end of the walk", "One charge on a map stand, and four lands it made: the clearing's song, the Weigher's plank, the fire where Oriel played it on, and this room, where what the cold leaves is kept.", btn("again", "Walk it again from the nook")); }
+  else if (n === "ch-home" && WALK) { key = n; html = card("The four lands, walked", "One charge on a map stand, and four lands it made: the clearing's song, the Weigher's plank, the fire where Oriel played it on, and this room, where what the cold leaves is kept. A friend waits in the Hollow, past your nook.", btn("walkhome", "Home to the nook, then the Hollow")); }
   else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
   else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
     html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
@@ -833,6 +833,7 @@ $("#card").addEventListener("click", e => {
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act === "again") walkAgain();
+  else if (b.dataset.act === "walkhome") { const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on")); setTimeout(() => { location.href = WALK_NOOK + "?home=1"; }, 700); }
   else if (b.dataset.act && b.dataset.act.startsWith("go:")) goPlace(b.dataset.act.slice(3));
   else if (b.dataset.act && b.dataset.act.startsWith("walk:")) { const w = b.dataset.act.slice(5);
     me.target = w === "balance" ? V(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05) : w === "bridge" ? V(SH.BRIDGE_END.x + 0.5, 0, SH.BRIDGE_END.z) : V(SH.FAR_BANK.x, 0, SH.FAR_BANK.z); }
@@ -1174,7 +1175,7 @@ function frame() {
     $("#hud").hidden = false;
     if (WALK && PLACE === "clearing" && !Q.get("at")) caption("The first of four lands their charge made: this clearing, then the Scale-House, the Friends' Fire and the keeping chamber.", 7);
     for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
-    if (WALK && CHX) caption("The arch you came in by ends the walk, whenever you are done here.", 6);
+    if (WALK && CHX) caption("The arch you came in by leads home to the nook, and on to the Hollow, whenever you are done here.", 6);
     if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);
     if (FFX) { caption("The road home, at the homeroom's rim.", 5); caption("Round the fire, someone is tuning a guitar, and the others laugh at something said.", 6); }
     if (SHX) { caption(`${state.ep.loc.purpose ? state.ep.loc.purpose.replace(/^./, c => c.toUpperCase()) : "The Weigher's ground"}.`, 5); const t = secret(/Tinker built/i); if (t) caption(t, 6); }

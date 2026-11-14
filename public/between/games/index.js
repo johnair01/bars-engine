@@ -48,7 +48,7 @@ export function mount(B, opts = {}) {
       const src = usingLocal() ? local.items : B.view().items;
       return [...src].filter(([, d]) => d).map(([id, d]) => ({ id, ...d }));
     },
-    name: uid => (uid === OTHER ? "Your stand-in partner" : B.nameOf(uid)),
+    name: uid => (uid === OTHER ? (opts.walk ? "Mara" : "Your stand-in partner") : B.nameOf(uid)),
     hue: uid => { const g = ctx.g(); return g && g.startedBy === uid ? "#3e9e93" : "#8f3f78"; },
     now: () => Date.now(),
     player: () => (B.meState && B.meState.placed ? { x: B.meState.pos.x, z: B.meState.pos.z } : null),
@@ -62,7 +62,7 @@ export function mount(B, opts = {}) {
     wantPoll: (key, ms) => { const was = B.gameFeel.poll; if (ms) polls.set(key, ms); else polls.delete(key); B.gameFeel.poll = polls.size ? Math.min(...polls.values()) : 0; if (B.gameFeel.poll && !was) B.pollSoon(); }, // the poll's pending wait (up to 5 s) is cut short the moment a hand goes up
     active: game => inHollow() && (previewMode || !usingLocal()) && (!focus || focus === game),
   };
-  let focus = opts.game && GAMES.includes(opts.game) ? opts.game : null;
+  let focus = opts.walk ? "lantern-out" : opts.game && GAMES.includes(opts.game) ? opts.game : null;
   const inHollow = () => !!(B.room && B.room().shell === "hollow");
 
   /* ---- the stand-in friend (previews): where they stand and what they point at ---- */
@@ -129,7 +129,9 @@ export function mount(B, opts = {}) {
   /* ---- previews: where &game= puts you, and what the stand-in friend does ---- */
   let pvDone = false, pvT0 = 0;
   function previewTick() {
-    if (!opts.preview || !focus || !B.meState.placed) return;
+    if (!(opts.preview || opts.walk) || !focus || !B.meState.placed) return;
+    // the walk's Hollow (hollow-demo): nobody is moved; Mara goes to the mouth when you reach it, and looks at a call after a breath
+    if (opts.walk && !pvDone) { if (!mods["lantern-out"].view().mouth) return; pvDone = true; pvT0 = performance.now(); standinMove(1.2, -2.6); si.pt = null; }
     if (!pvDone) {
       pvDone = true; pvT0 = performance.now();
       const n = Math.max(0, Math.min(3, parseInt(opts.jars, 10) || 0));
