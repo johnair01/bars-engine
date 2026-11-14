@@ -105,7 +105,12 @@ export function terrain(S) {
       // court and the ranges reads as land (it was one flat haze blue, which hid the road out)
       // round 13b: and the slopes that rise straight out of the court (up to 45 m) go grey-blue with height, so from the
       // anchor view they read as the painting's ranges in haze behind the hall instead of a green hill
-      const far = dG < 160 ? Math.min(1, Math.max(0, (dG - 32) / 60, (y - 28) / 10)) * Math.min(1, (160 - dG) / 40) : 0; if (far > 0) c.lerp(t.set('#9cafc2'), far); if (dG < 160 && y > 22) c.lerp(t.set('#b4c3d2'), Math.min(0.85, (y - 22) / 22)); } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
+      const dS0 = Math.hypot(x - P.summit[0], z - P.summit[1]);
+      // round 17: the ridge under the crag is near ground, not distant range, so it keeps a moss and earth colour (it
+      // was the pale grey-blue haze tone, which read from the gate as one empty mound in front of the cliff)
+      const near = dS0 < 150 && y > 24 ? Math.min(1, (150 - dS0) / 30) : 0;
+      const far = (dG < 160 ? Math.min(1, Math.max(0, (dG - 32) / 60, (y - 28) / 10)) * Math.min(1, (160 - dG) / 40) : 0) * (1 - near); if (far > 0) c.lerp(t.set('#9cafc2'), far); if (dG < 160 && y > 22) c.lerp(t.set('#b4c3d2'), Math.min(0.85, (y - 22) / 22) * (1 - near));
+      if (near > 0) { const w = 0.5 + 0.5 * Math.sin(x * 0.11 + Math.sin(z * 0.07) * 2) * Math.sin(z * 0.09 + 1.3); c.lerp(t.set('#66744a').lerp(new THREE.Color('#8f7f62'), w * 0.7), near); } } // round 12, 13b: the summit slope goes pale and crag-grey with distance, so the ranges read over it (13b: hazier grey-blue)
     let steep = false;
     { // round 13: cliffs are bare rock, banded and streaked like the painting's crag; its crown keeps a little moss
       const sl = Math.hypot(heightAt(x + 1.5, z) - heightAt(x - 1.5, z), heightAt(x, z + 1.5) - heightAt(x, z - 1.5)) / 3;

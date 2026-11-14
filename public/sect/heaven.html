@@ -22,12 +22,13 @@
 </style>
 <script type="importmap">{"imports":{
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
 }}</script>
 </head><body>
 <div class="hud" id="hud"><b id="where">The road</b><span id="what">The summit is in view from the first step.</span></div>
 <div class="stops" id="stops"></div>
-<div class="views"><button id="watchBtn">Walk to the Watch</button><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
+<div class="views"><button id="watchBtn">Walk to the Watch</button><button id="crestBtn">Climb to the crest</button><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
 <div class="hint">WASD or arrows to walk; tap the ground to walk there; drag to look round.</div>
 <script type="module">
 import * as THREE from 'three';
@@ -41,6 +42,8 @@ import { farLand } from './heaven/far.js';
 import { people } from './heaven/people.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
 import { atmosphere, placeSun } from './heaven/atmo.js';
+import { CREST_STAIR, stairTread, TREAD } from './heaven/crag.js';
+import { cultWalker, GAIT } from './cult/cultwalk.js';
 
 const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight);
@@ -91,9 +94,12 @@ const models = Promise.all(['Stone_Fire_Pit.glb', 'Ceramic_Pot.glb', 'Antique_Ce
 }).catch(e => console.warn('models', e));
 
 const A = avatar(S);
-// Round 11: robed students in the great court and a robed avatar (people.js); the frame loop dresses them.
-let dressAll = null;
-const ready = people(S, gl, { court: GREAT.G, avatar: A }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
+// Round 11: robed students in the great court (people.js); the frame loop dresses them. Round 19: the avatar is the
+// cultivation figure walking with planted feet (cult/cultwalk.js), one step per tread on the pilgrim stair.
+let dressAll = null, walker = null;
+const ready = people(S, gl, { court: GREAT.G }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
+const walking = cultWalker(S, A, { groundAt, tread: stairTread, stepOn: (x, z) => stairTread(x, z) ? TREAD : GAIT.step })
+  .then(w => { walker = w; return w; }).catch(e => { console.warn('cultivation figure', e); A.children.forEach(c => { c.visible = true; }); });
 const cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 3000);
 const orbit = new OrbitControls(cam, R.domElement);
 orbit.enableDamping = true; orbit.maxPolarAngle = Math.PI * 0.49; orbit.minDistance = 2; orbit.maxDistance = 120; orbit.enablePan = false;
@@ -125,8 +131,9 @@ for (const r of ROUTE) { const b = document.createElement('button'); b.textConte
 // Round 16: Wendell (cc-heaven-r14d, 5/10): "I don't see how one actually walks the path". This button stands the
 // avatar where the road leaves the ring walk and walks it there, bend by bend, up the stair to the Watch; the camera
 // follows behind. Any key or a tap on the ground takes the walk back.
-let roadLeg = -1;
+let roadLeg = -1, walkRoute = FAR_ROAD;
 function walkToWatch() {
+  walkRoute = FAR_ROAD;
   if (topView) document.getElementById('topBtn').click();
   const [x, z] = FAR_ROAD[0], [nx, nz] = FAR_ROAD[1], dx = nx - x, dz = nz - z, L = Math.hypot(dx, dz);
   A.position.set(x, groundAt(x, z), z); A.rotation.y = Math.atan2(-dx, -dz);
@@ -136,6 +143,22 @@ function walkToWatch() {
   hud.where.textContent = 'The road to the Watch'; hud.what.textContent = 'Down off the ring walk, over the saddle and up the switchbacks; the lanterns mark the way.';
 }
 document.getElementById('watchBtn').onclick = walkToWatch;
+// Round 18: the stair behind the founder's hall can be walked. This button stands the avatar inside the great court and
+// walks it round the hall's side, up the stair to the gate on the crest; any key or a tap takes the walk back.
+function walkToCrest() {
+  if (topView) document.getElementById('topBtn').click();
+  // inside the court, down its east side between the side hall and the wall, behind the hall's terrace to the stair's foot
+  const G = GREAT.G; G.updateWorldMatrix(true, false);
+  const w = ([x, z]) => { const v = G.localToWorld(new THREE.Vector3(x, 0, z)); return [v.x, v.z]; };
+  walkRoute = [[0, 4], [19.8, -2], [19.8, -26.5]].map(w).concat(CREST_STAIR);
+  const [x, z] = walkRoute[0], [nx, nz] = walkRoute[1], dx = nx - x, dz = nz - z, L = Math.hypot(dx, dz);
+  A.position.set(x, groundAt(x, z), z); A.rotation.y = Math.atan2(-dx, -dz);
+  cam.position.set(x - dx / L * 10, A.position.y + 5.5, z - dz / L * 10);
+  orbit.target.set(x + dx / L * 8, A.position.y + 2, z + dz / L * 8);
+  roadLeg = 1; input.target = new THREE.Vector3(nx, 0, nz);
+  hud.where.textContent = 'The stair to the crest'; hud.what.textContent = "Round the founder's hall and up the pilgrim stair to the gate on the ridge.";
+}
+document.getElementById('crestBtn').onclick = walkToCrest;
 document.getElementById('topBtn').onclick = () => { topView = !topView; S.getObjectByName('farLand')?.userData.mapView?.(topView); document.body.classList.toggle('top', topView); document.getElementById('topBtn').textContent = topView ? 'Walk' : 'Top view'; };
 
 const input = { keys: new Set(), target: null };
@@ -157,7 +180,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   prev.copy(A.position);
   const yaw = Math.atan2(cam.position.x - orbit.target.x, cam.position.z - orbit.target.z);
-  if (roadLeg > 0 && !input.target) { if (input.keys.size || roadLeg >= FAR_ROAD.length - 1) roadLeg = -1; else { roadLeg++; const [x, z] = FAR_ROAD[roadLeg]; input.target = new THREE.Vector3(x, 0, z); } }
+  if (roadLeg > 0 && !input.target) { if (input.keys.size || roadLeg >= walkRoute.length - 1) roadLeg = -1; else { roadLeg++; const [x, z] = walkRoute[roadLeg]; input.target = new THREE.Vector3(x, 0, z); } }
   step(A, input, dt, yaw);
   const d = A.position.clone().sub(prev); cam.position.add(d); orbit.target.add(d);
   if (roadLeg > 0 && d.lengthSq() > 1e-6) { // on the road, the camera eases round behind the avatar
@@ -167,6 +190,7 @@ function frame(now) {
   }
   orbit.update();
   if (dressAll) dressAll(dt);
+  if (walker) walker.update(dt);
   placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
   requestAnimationFrame(frame);
@@ -210,7 +234,7 @@ function shot(name) {
   cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { walkToWatch, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
+window.heaven = { walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 </script>
 </body></html>
