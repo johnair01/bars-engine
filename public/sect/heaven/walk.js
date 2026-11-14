@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { heightAt } from './layout.js';
 import { colliders, interiors } from './world.js';
+import { roadGround } from './far.js';
 
 export const SPEED = 4, RADIUS = 0.35;
 
@@ -25,7 +26,7 @@ export function inside(p) {
 
 export function groundAt(x, z) {
   const r = inside({ x, z });
-  return r ? r.y + 0.06 : heightAt(x, z);
+  return r ? r.y + 0.06 : roadGround(x, z); // round 16: stand on the far mesh where it is drawn above the heightfield
 }
 
 // Push the avatar's circle out of every box whose height spans its body.

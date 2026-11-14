@@ -65,7 +65,9 @@ export const GREAT_FACE = [P.great[0] + (_u[0] * Math.cos(GREAT_YAW) + _l[0] * M
 // Round 14: a hollow of haze left of the axis between the great court and the crag. In the painting the land falls
 // away left of the hall to layered ranges and bright sky; here a grey-green shoulder filled that half of the anchor
 // frame. Nothing stands in it; the axis ridge and the ring walk keep their pads.
-for (const [fw, lf, h, r] of [[105, 38, -60, 14], [150, 70, -70, 18], [70, 48, -30, 6], [140, 20, -50, 8]])
+// Round 16: the fourth pad [140, 20, -50, 8] stood 26 m from the summit, inside the crag's crown, and pressed a 50 m pit
+// into the cliff; it is gone.
+for (const [fw, lf, h, r] of [[105, 38, -60, 14], [150, 70, -70, 18], [70, 48, -30, 6]])
   PADS.push([P.great[0] + _u[0] * fw + _l[0] * lf, P.great[1] + _u[1] * fw + _l[1] * lf, h, r]);
 // The skirt: cloud sea falls away south and east, the forest slopes off north and west.
 for (let a = 0; a < 360; a += 12) {

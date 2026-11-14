@@ -15,6 +15,20 @@ function glow(size, alpha, y) {
   s.scale.set(size, size, 1); s.position.y = y; return s;
 }
 
+// Round 16: the height of the far mesh as drawn, triangle by triangle. Its 12.7 m triangles stand above heightAt in every
+// hollow, so the road ribbon and the avatar sank under the grass at the road's last bend (round 15's stair frame).
+const FN = 300, FC = FAR_EXTENT * 2 / FN, FX0 = 24 - FAR_EXTENT, FZ0 = -9 - FAR_EXTENT;
+const fv = (ix, iz) => { const x = FX0 + ix * FC, z = FZ0 + iz * FC, { x0, z0, step, nx, nz } = GRID;
+  const inner = x > x0 + 6 && x < x0 + (nx - 1) * step - 6 && z > z0 + 6 && z < z0 + (nz - 1) * step - 6; return heightAt(x, z) - (inner ? 4 : 0); };
+export function farSurface(x, z) {
+  const fx = (x - FX0) / FC, fz = (z - FZ0) / FC, ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz;
+  if (ix < 0 || iz < 0 || ix >= FN || iz >= FN) return -1e9;
+  const a = fv(ix, iz), b = fv(ix, iz + 1), d = fv(ix + 1, iz);
+  if (u + v <= 1) return a + (d - a) * u + (b - a) * v;
+  const c = fv(ix + 1, iz + 1); return c + (b - c) * (1 - u) + (d - c) * (1 - v);
+}
+export const roadGround = (x, z) => Math.max(heightAt(x, z), farSurface(x, z));
+
 export function farLand(S, floors) {
   const E = FAR_EXTENT, N = 300, cx = 24, cz = -9;
   const g = new THREE.PlaneGeometry(E * 2, E * 2, N, N); g.rotateX(-Math.PI / 2); g.translate(cx, 0, cz);
@@ -57,14 +71,16 @@ export function farLand(S, floors) {
   S.add(W);
   // Round 14c (part 7): the road as its own paved ribbon laid on the ground, so it reads in every view; the far mesh's
   // 13 m spacing smeared the painted road over whole hillsides.
-  { const v = [], idx = [], wHalf = 3;
+  { const v = [], idx = [], wHalf = 3, OFFS = [-wHalf, -wHalf / 2, 0, wHalf / 2, wHalf];
     for (let k = 1; k < FAR_ROAD.length; k++) { const a = FAR_ROAD[k - 1], b = FAR_ROAD[k], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
       const nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L;
       // round 14d: the last leg stops at the foot of the Watch's stair instead of ramping up the plinth's side
       const Le = k === FAR_ROAD.length - 1 ? L - STAIR_FOOT : L;
       for (let s = k === 1 ? 0 : 2; s <= Le; s += 2) { const x = a[0] + (b[0] - a[0]) * s / L, z = a[1] + (b[1] - a[1]) * s / L;
-        for (const o of [-wHalf, wHalf]) { const px = x + nx * o, pz = z + nz * o; v.push(px, heightAt(px, pz) + 0.3, pz); } } }
-    for (let i = 0; i + 3 < v.length / 3; i += 2) idx.push(i, i + 1, i + 2, i + 1, i + 3, i + 2);
+        // round 16: five points across, each on the ground, so a crest under the road no longer pokes through its middle
+        for (const o of OFFS) { const px = x + nx * o, pz = z + nz * o; v.push(px, roadGround(px, pz) + 0.35, pz); } } }
+    const C = OFFS.length;
+    for (let r = 0; (r + 2) * C <= v.length / 3; r++) for (let q = 0; q < C - 1; q++) { const i = r * C + q; idx.push(i, i + 1, i + C, i + 1, i + C + 1, i + C); }
     const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); rg.setIndex(idx); rg.computeVertexNormals();
     const rm = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ color: '#cdb994', roughness: 0.95, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }));
     rm.receiveShadow = true; rm.name = 'farRoad'; S.add(rm); }
