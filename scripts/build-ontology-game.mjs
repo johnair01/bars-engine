@@ -2,7 +2,7 @@
 //
 // Source: content/ontology-game/ (game.jsx and game.css came from the claude.ai artifact;
 // site-shim.js gives the game browser-local storage off claude.ai). Output:
-// public/ontology-game/index.html, gitignored like public/understood-app.
+// public/ontology-game/index.html, gitignored.
 //
 // The artifact compiled its JSX in the browser with Babel standalone (about 3 MB, then a
 // compile of about 270 KB on every load). This compiles once at build time with the

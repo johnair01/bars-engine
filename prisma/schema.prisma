@@ -1763,12 +1763,36 @@ model Vibulon {
   originTitle   String
   generation    Int          @default(1)
   stakedOnBarId String?
+  /// What made this coin: { move?: string, feel?: string }, or null (src/lib/economy/coin-marks.ts).
+  energy        Json?
+  /// The coin's face (ember-to-vibeulon FR-009): { v, ring, tex, seal, color, mat }; null before the face shipped.
+  face          Json?
   createdAt     DateTime     @default(now())
   bountyStake   BountyStake?
   creator       Player?      @relation("VibulonCreator", fields: [creatorId], references: [id])
   owner         Player?      @relation(fields: [ownerId], references: [id])
 
   @@map("vibulons")
+}
+
+/// One mark for each act done to a vibeulon. No relation: a mark outlives a burned coin (src/lib/economy/coin-marks.ts).
+model VibulonMark {
+  id           String   @id @default(cuid())
+  vibulonId    String
+  act          String
+  playerId     String
+  place        String
+  barId        String?
+  toId         String?
+  note         String?
+  originSource String
+  originId     String
+  originTitle  String
+  energy       Json?
+  createdAt    DateTime @default(now())
+
+  @@index([vibulonId])
+  @@map("vibulon_marks")
 }
 
 model Nation {
@@ -2165,6 +2189,8 @@ model Instance {
   communityCharacterCorpus     Json?                   @map("community_character_corpus")
   /// GM-overridable CYOA Composer step ordering per campaign (JSON)
   composerStepOverrides        Json?
+  /// Friendcraft: admin/steward-edited default text of the deck pages (public/between/friendcraft/deck.js COPY_FIELDS); null = the built-in text
+  friendcraftCopy              Json?                   @map("friendcraft_copy")
   activeInConfigs              AppConfig[]
   scopedArchetypes             Archetype[]             @relation("ArchetypeInstance")
   barShareExternals            BarShareExternal[]
@@ -5258,6 +5284,7 @@ model BetweenGarden {
   shown    BetweenShown[]
   privates BetweenPrivate[]
   presence BetweenPresence[]
+  notices  BetweenNotice[]
 
   @@index([startedById])
   @@map("between_gardens")
@@ -5272,6 +5299,18 @@ model BetweenMember {
   @@id([gardenId, playerId])
   @@index([playerId])
   @@map("between_members")
+}
+
+/// One notice email per Between per day of the Between per friend (friendship-between-growth FR-009). Written before the send.
+model BetweenNotice {
+  gardenId String   @map("garden_id")
+  playerId String   @map("player_id")
+  day      Int
+  sentAt   DateTime @default(now()) @map("sent_at")
+  garden   BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId, day])
+  @@map("between_notices")
 }
 
 /// Agreements and offerings (kind, status and who planted it are inside data, as the page writes them).
@@ -5349,6 +5388,21 @@ model BetweenPresence {
 
   @@id([gardenId, playerId])
   @@map("between_presence")
+}
+
+/// Lantern Hall (six-faces-council council/callsheets/lantern-hall.md, brief "Lantern Hall, port 1"): one table a player
+/// deals from their intake. `intake` is the reel's `intake/game` doc as `parseIntake` accepts it (goal, want, now, truth,
+/// truthCtx, res, tags); the board state is replayed from it by src/lib/lantern/engine.ts, so nothing else is stored yet.
+/// playerId is Player.id as a plain column, the way the Between keeps its owners.
+model LanternTable {
+  id        String   @id @default(cuid())
+  playerId  String   @map("player_id")
+  intake    Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([playerId, updatedAt])
+  @@map("lantern_tables")
 }
 
 /// The Calrunian passport (six-faces-council pass calrunia-world1, cw-passport): the one record that crosses Calrunia's places,

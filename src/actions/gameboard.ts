@@ -27,6 +27,8 @@ import type { UnpackingAnswers, SerializableQuestPacket } from '@/lib/quest-gram
 import { getAlignmentContext, drawAlignedHexagram } from '@/lib/iching-alignment'
 import { getHexagramStructure } from '@/lib/iching-struct'
 import { getStageAction } from '@/lib/kotter'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins, withCoinIds } from '@/lib/economy/coin-marks'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
@@ -358,13 +360,14 @@ export async function releaseSlotQuest(slotId: string) {
   await db.$transaction(async (tx) => {
     if (highestBid) {
       // Transfer bid amount to outgoing steward (mint inside tx for atomicity)
-      const mintData = Array.from({ length: highestBid.amount }, () => ({
+      const mintData = withCoinIds(Array.from({ length: highestBid.amount }, () => ({
         ownerId: outgoingStewardId!,
         originSource: 'gameboard_bid_win',
         originId: highestBid.id,
         originTitle: 'Bid won for slot quest',
-      }))
+      })))
       await tx.vibulon.createMany({ data: mintData })
+      await markCoins(tx, mintData, 'minted', { playerId: outgoingStewardId!, place: 'gameboard' })
       await tx.gameboardBid.update({
         where: { id: highestBid.id },
         data: { status: 'won' },
@@ -416,8 +419,9 @@ export async function placeBid(slotId: string, amount: number) {
   const highestBid = slot.bids[0]?.amount ?? 0
   if (amount <= highestBid) return { error: `Bid must exceed current highest (${highestBid}v)` }
 
+  await releaseStaleStakes(db, player.id)
   const wallet = await db.vibulon.findMany({
-    where: { ownerId: player.id },
+    where: spendableWhere(player.id),
     orderBy: { createdAt: 'asc' },
     take: amount,
   })
@@ -425,6 +429,7 @@ export async function placeBid(slotId: string, amount: number) {
 
   await db.$transaction(async (tx) => {
     const tokenIds = wallet.map((t) => t.id)
+    await markCoins(tx, wallet, 'spent', { playerId: player.id, place: 'gameboard', note: 'a bid on a slot' })
     await tx.vibulon.deleteMany({ where: { id: { in: tokenIds } } })
     await tx.vibulonEvent.create({
       data: {
@@ -464,13 +469,14 @@ export async function withdrawBid(bidId: string) {
       where: { id: bidId },
       data: { status: 'withdrawn' },
     })
-    const mintData = Array.from({ length: bid.amount }, () => ({
+    const mintData = withCoinIds(Array.from({ length: bid.amount }, () => ({
       ownerId: player.id,
       originSource: 'gameboard_bid_withdraw',
       originId: bidId,
       originTitle: 'Bid withdrawn',
-    }))
+    })))
     await tx.vibulon.createMany({ data: mintData })
+    await markCoins(tx, mintData, 'minted', { playerId: player.id, place: 'gameboard' })
   })
 
   revalidatePath('/campaign/board')
@@ -970,8 +976,9 @@ export async function attachQuestToSlot(
   if (quest.parentId) return { error: 'Quest is already attached as a subquest' }
   if (quest.status !== 'active') return { error: 'Quest must be active' }
 
+  await releaseStaleStakes(db, player.id)
   const wallet = await db.vibulon.findMany({
-    where: { ownerId: player.id },
+    where: spendableWhere(player.id),
     orderBy: { createdAt: 'asc' },
     take: 1,
   })
@@ -979,6 +986,7 @@ export async function attachQuestToSlot(
 
   await db.$transaction(async (tx) => {
     const tokenToBurn = wallet[0]
+    await markCoins(tx, [tokenToBurn], 'spent', { playerId: player.id, place: 'gameboard', note: 'attaching a quest to a slot' })
     await tx.vibulon.delete({ where: { id: tokenToBurn.id } })
     await tx.vibulonEvent.create({
       data: {

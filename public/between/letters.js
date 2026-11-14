@@ -439,6 +439,7 @@ export function mount(B, opts = {}) {
     if (dismissed === b.key) { if (holding) { voice.quiet(); holding = false; camRelease(); } return; }
     if (b.key !== lastKey) { lastKey = b.key; if (b.cam === "edge") camTo(EDGE[shell()].cam, 900); else camRelease(); }
     const subject = b.obstacle && group.visible ? obstacleBox : b.hand ? () => rectOf(handEl) : null;
+    if (B.meState && B.meState.sitting && B.meState.seatWant === "coins") { if (holding) { voice.quiet(); holding = false; } return; } // sitting at the low table, the table's words (a turn, a cast) hold the glass; the hand speaks again when you stand
     if (dirtyF || !holding) voice.say({ ...b.say, subject });
     else voice.place();
     holding = true; dirtyF = false;

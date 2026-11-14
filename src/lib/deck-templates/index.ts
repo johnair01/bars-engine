@@ -14,7 +14,8 @@ export type AllyshipDomain =
   | 'RAISE_AWARENESS'
   | 'SKILLFUL_ORGANIZING'
 
-export type MoveType = 'wake_up' | 'clean_up' | 'grow_up' | 'show_up'
+/** Five moves in the record's order. playCost reads as charge: what the player spends to play the card. */
+export type MoveType = 'wake_up' | 'open_up' | 'clean_up' | 'grow_up' | 'show_up'
 
 export type DeckTemplateCategory = 'domain' | 'archetype' | 'nation' | 'onboarding'
 

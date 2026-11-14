@@ -38,3 +38,15 @@ export const BOOK_DIGITAL_GUMROAD_URL =
  */
 export const BOOK_PHYSICAL_GUMROAD_URL =
   process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL?.trim() ?? ''
+
+/**
+ * The Amazon editions (KDP paperback and Kindle), shown beside the $30 direct
+ * digital copy on /listen (council row lr-book-door: "both, side by side").
+ *
+ * No literal default: the listing address is Wendell's to supply, and a guessed
+ * link is a dead link. Empty means the /listen page leaves that card out.
+ */
+export const BOOK_AMAZON_PAPERBACK_URL =
+  process.env.NEXT_PUBLIC_AMAZON_BOOK_PAPERBACK_URL?.trim() ?? ''
+export const BOOK_AMAZON_KINDLE_URL =
+  process.env.NEXT_PUBLIC_AMAZON_BOOK_KINDLE_URL?.trim() ?? ''

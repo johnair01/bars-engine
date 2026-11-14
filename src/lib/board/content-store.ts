@@ -30,12 +30,18 @@ const ALLOWED = [
   /^board\/council-board\.html$/,
   /^board\/nonprofit\/nonprofit-board\.html$/,
   /^board\/board_data\.json$/,
+  /^board\/council-board-decided\.json$/,
   /^board\/stills\/[0-9a-f]{16}\.(jpe?g|png|gif|webp)$/,
   /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp)$/i,
+  /** A look's reference frames and the recipe that regenerates them (2026-11-09): the pictures a look was drawn
+   * against. Served only to the owner or a council session, never at /board/stills. */
+  /^council\/callsheets\/stills\/[A-Za-z0-9._\/ -]+\/refs\/[A-Za-z0-9._\/ -]+\.(jpe?g|png|gif|webp|json)$/i,
   /^council\/callsheets\/INDEX\.md$/,
   /^council\/loops\/[A-Za-z0-9._-]+\.json$/,
   /^council\/ledger\/[A-Za-z0-9._-]+\.json$/,
   /^council\/needs-work-done\.json$/,
+  /** The asset gallery's finished crates and planned holes, built by six-faces-council council/tools/gallery_index.py. */
+  /^council\/gallery\/(crates|holes)\.json$/,
 ]
 export function allowedPath(p: string): boolean {
   return !p.includes('..') && !p.includes('//') && ALLOWED.some(r => r.test(p))
@@ -133,6 +139,21 @@ export async function missingObjects(shas: string[]): Promise<string[]> {
   return out
 }
 
+/** A reference object, kept out of the `sha/` namespace that the public stills route serves by hash. A reference is
+ * readable through /board/refs only, which asks for the board owner or a session (2026-11-09: the first reference
+ * pushed answered 200 at /board/stills/sha/<sha>, to a caller who could not open /board/refs at all). */
+export async function storeRefObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {
+  const b = backend()
+  if (!b) throw new Error('no content store configured')
+  await b.write('refs/' + sha, bytes, type)
+}
+
+export async function readRefObject(sha: string): Promise<{ body: ReadableStream<Uint8Array>; type?: string } | null> {
+  const b = backend()
+  if (!b || !/^[0-9a-f]{64}$/.test(sha)) return null
+  return b.read('refs/' + sha).catch(() => null)
+}
+
 export async function storeObject(sha: string, bytes: Uint8Array, type: string): Promise<void> {
   const b = backend()
   if (!b) throw new Error('no content store configured')
@@ -141,9 +162,31 @@ export async function storeObject(sha: string, bytes: Uint8Array, type: string):
 
 const rawOn = () => process.env.BOARD_CONTENT_RAW_FALLBACK === '1'
 
+/** Local-first testing (docs/LOCAL_FIRST_TESTING.md): outside production, BOARD_CONTENT_DIR names a six-faces-council
+ * checkout and the board files are read from it (dev server only; tests and builds keep the store), so a local server shows the board without the production Blob store.
+ * scripts/local/dev.sh sets it when it finds the checkout. */
+function localDir(): string | null {
+  const dir = process.env.BOARD_CONTENT_DIR
+  return dir && process.env.NODE_ENV === 'development' ? dir : null
+}
+
+async function readLocal(dir: string, path: string): Promise<{ body: ReadableStream<Uint8Array>; type: string; sha: null } | null> {
+  const { readFile: read } = await import('node:fs/promises')
+  const { join } = await import('node:path')
+  const bytes = await read(join(dir, path)).catch(() => null)
+  if (!bytes) return null
+  const ext = path.split('.').pop()?.toLowerCase() ?? ''
+  const type = ({ html: 'text/html; charset=utf-8', json: 'application/json', md: 'text/markdown; charset=utf-8',
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' } as Record<string, string>)[ext]
+    ?? 'application/octet-stream'
+  return { body: new Response(new Uint8Array(bytes)).body!, type, sha: null }
+}
+
 /** One pushed file as a stream, with its type and hash; null when the store does not have it. */
 export async function readFile(path: string): Promise<{ body: ReadableStream<Uint8Array>; type: string; sha: string | null } | null> {
   if (!allowedPath(path)) return null
+  const dir = localDir()
+  if (dir) return readLocal(dir, path)
   const e = (await manifest()).files[path], b = backend()
   if (e && b) {
     const got = await b.read('sha/' + e.sha).catch(() => null)

@@ -100,7 +100,7 @@ export function UnpackQuestFlow({
       <div className="space-y-6 animate-in fade-in">
         <div className="space-y-2">
           <h2 className="text-white font-semibold">Before you begin, sit with these.</h2>
-          <p className="text-zinc-500 text-sm">No answers required. Just let them land.</p>
+          <p className="text-zinc-500 text-sm">You can leave the answers blank. Read each question aloud by the lamp, then turn the page.</p>
         </div>
 
         <div className="space-y-4">
