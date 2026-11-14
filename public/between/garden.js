@@ -568,11 +568,16 @@ const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
 /* The stand-in room (previews only, Six-faces-council hollow-interface, his note on hib2-look-1): a walkable room of two with a
    stand-in partner already in it, so the partner's side can be tested alone. It opens from the nook's doorway ("Stand-in room")
    or at once with ?room=standin. It reads and writes nothing in the store. */
-const STANDIN_ROOM = PREVIEW_HOST && (new URLSearchParams(location.search).get("room") === "standin" || (new URLSearchParams(location.search).get("turn") && new URLSearchParams(location.search).get("live") !== "1")); // ?turn= (Friendcraft slice 2) seats you in the stand-in room
+/* The Hollow on the walk (Six-faces-council hollow-demo, his A on hdw-route, 2026-11-06): /between/walk/hollow is the walk's
+   last stop. It is the stand-in room on any host, with no sign-in and no store: Mara, the sample player whose charge made the
+   four lands, sits across the low table. You draw a card from her deck, then carry a lantern out with her, and the walk ends. */
+const VISIT_HOLLOW = location.pathname === "/between/walk/hollow";
+const STANDIN_ROOM = VISIT_HOLLOW || PREVIEW_HOST && (new URLSearchParams(location.search).get("room") === "standin" || (new URLSearchParams(location.search).get("turn") && new URLSearchParams(location.search).get("live") !== "1")); // ?turn= (Friendcraft slice 2) seats you in the stand-in room
 /* The visitor's nook (Six-faces-council charge-to-world, his B on ctw-walk-demo-look-1, 2026-11-04): /between/walk opens a
    nook anyone can stand in, with no sign-in and no store. It reads and writes nothing; the map stand holds the sample's
    charge, and its doorway leads into the walk through the four lands (/between/land.html?walk=1). */
 const VISIT = location.pathname === "/between/walk";
+const WALK_HOME = VISIT && new URLSearchParams(location.search).get("home") === "1";   // back from the four lands: the doorway leads to the Hollow
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
@@ -1796,7 +1801,7 @@ function refreshHud() {
   const hud = $("#hud"); if (hud.hidden) return;
   const V = view(); const g = V.g;
   const nc = $("#namecard");
-  if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">${VISIT ? "A visitor's nook" : storeDown ? "The room only: the store did not answer" : "No garden here yet"}</span>`; }
+  if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">${VISIT ? "A visitor's nook" : VISIT_HOLLOW ? "The Hollow, with Mara" : storeDown ? "The room only: the store did not answer" : "No garden here yet"}</span>`; }
   else if (isHome(g)) { nc.innerHTML = `<h1>Your homeroom</h1><span class="sub">Only you come in here · ${esc(styleOf(g.style).name)}</span>`; }
   else if (g.phase === "closed") { nc.innerHTML = `<h1>The Between</h1><span class="sub">This garden is closed</span>`; }
   else {
@@ -1812,7 +1817,9 @@ function refreshHud() {
 
   const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (VISIT) hintText = "A visitor's nook. Someone left their charge on the map stand by the window: tap the floor to walk there. Nothing here is kept.";
+  if (VISIT && WALK_HOME) hintText = "Home in the nook, with the four lands walked. The doorway now leads to the Hollow, where a friend waits: walk to it.";
+  else if (VISIT_HOLLOW) hintText = window.__between && window.__between.walkHollow ? window.__between.walkHollow.hint() : "The Hollow, where two friends meet. Tap the floor to walk; drag to look around. Nothing here is kept.";
+  else if (VISIT) hintText = "A visitor's nook. Someone left their charge on the map stand by the window: tap the floor to walk there. Nothing here is kept.";
   else if (STANDIN_ROOM) hintText = "A stand-in room: your partner is here to rehearse with, and nothing is saved. Walk to them, or wait a few breaths for the letter. Tap the floor to walk; drag to look around.";
   else if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
@@ -3565,7 +3572,7 @@ async function answerGold(id) {
   P.busy = false; n.answer = ans; renderPaper();
 }
 async function fetchCouncil() {
-  if (PREVIEW_HOST || VISIT) return;
+  if (PREVIEW_HOST || VISIT || VISIT_HOLLOW) return;
   try { const r = await fetch("/api/tap-the-vein/scroll", { credentials: "same-origin", cache: "no-store" }); if (r.ok) councilScrolls = ((await r.json()).scrolls || []).slice(0, 3); } catch {}
 }
 /* Pressing the seal: it rolls up, and leaves through the doorway on a gust of leaves. */
@@ -4414,7 +4421,7 @@ let booted = false;
   syncShelf();
   if (SCROLL_PREVIEW === "write" && inNook()) openPaper("write", { fromShelf: true });
   if (SCROLL_PREVIEW === "council" && KQ.get("open") && inNook()) { openPaper("council", COUNCIL_PREVIEW); if (KQ.get("open") === "broken") { paper.open = true; openCouncil(COUNCIL_PREVIEW); renderPaper(); } }
-  if (STANDIN_ROOM) { names["stand-in"] = "Your stand-in partner"; onPeers([{ uid: "stand-in", x: 0.9, z: 1.4, h: Math.PI + 0.4, w: false }]); }
+  if (STANDIN_ROOM) { names["stand-in"] = VISIT_HOLLOW ? "Mara" : "Your stand-in partner"; onPeers([{ uid: "stand-in", x: 0.9, z: 1.4, h: Math.PI + 0.4, w: false }]); }
   booted = true;
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
@@ -4432,11 +4439,11 @@ window.__between = { gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
-  visit: VISIT, addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
+  visit: VISIT, walkHome: WALK_HOME, walkHollow: null, hud: () => refreshHud(), addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
   openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
-import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("ctw") : null, visit: VISIT }); }).catch(e => noteError(e, "ctw"));
+import("./charge-world.js").then(m => { window.__between.ctw = m.mount(window.__between, { open: WALK_HOME ? "episode" : PREVIEW_HOST ? KQ.get("ctw") : null, visit: VISIT, home: WALK_HOME }); }).catch(e => noteError(e, "ctw"));
 // the block's room (Six-faces-council block-metabolize, his A on bm-room-look-2): a charge on the map stand whose weather is a
 // storm or a season shows its signs at the nook's doorway (block-room.js mountSigns); through the doorway the land is its room.
 // Preview: ?nook=1&ctw=episode (the sample's charge is a storm).
@@ -4448,15 +4455,17 @@ import("./chamber-arch.js").then(m => { window.__between.chamberArch = m.mount(w
 // holds letters plays its encounter, every word through the one screen owner (voice.js, hi-screen-owner). Previews: ?pick=a6
 // opens them (from the nook too; with a stand-in partner when you are alone), ?pick=a8 at the hollow with A6 overcome
 import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.createVoice(); refreshHud(); return import("./letters.js"); })
-  .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") || (STANDIN_ROOM ? "a6" : null) : null }); }).catch(e => noteError(e, "letters"));
+  .then(m => { window.__between.letters = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("pick") || (STANDIN_ROOM && !VISIT_HOLLOW ? "a6" : null) : null }); }).catch(e => noteError(e, "letters"));
 // the coin table and the I Ching book, in the nook and the hollow: advice on coming closer to yourself or to someone you share a
 // Between with (Six-faces-council bar-intake-2; his yes on fb-look-01, his note on bi-table-look-1). Previews write nothing:
 // ?nook=1&coins=self casts for yourself, ?nook=1&coins=them for a stand-in, ?room=first&coins=faceup opens the hollow with a stand-in's cast face up; ?nook=1&coins=spark casts for a stand-in spark (Show Up: the invitation); ?nook=1&coins=who&games=flirtcraft sits at the table and stops at who the toss is for
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
-import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null, turn: PREVIEW_HOST ? KQ.get("turn") : null, bowls: PREVIEW_HOST ? KQ.get("bowls") : null, as: PREVIEW_HOST ? KQ.get("as") : null, live: PREVIEW_HOST ? KQ.get("live") === "1" : false }); }).catch(e => noteError(e, "coins"));
+import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST || VISIT_HOLLOW, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null, turn: VISIT_HOLLOW ? "walk" : PREVIEW_HOST ? KQ.get("turn") : null, bowls: PREVIEW_HOST ? KQ.get("bowls") : null, as: PREVIEW_HOST ? KQ.get("as") : null, live: PREVIEW_HOST ? KQ.get("live") === "1" : false }); }).catch(e => noteError(e, "coins"));
 // the hollow's games (Six-faces-council friendship-between-growth, "The hollow's games"; his A on bsp-games-look-1): Found lights on the
 // jar shelf, Firefly lead on the dais, Lantern out at the mouth. Previews: &game=found-lights|firefly-lead|lantern-out opens that game's
 // place with a stand-in friend, &jars=<n> seeds left jars, &calls=1 seeds tonight's three calls (e.g. ?room=standin&game=lantern-out&calls=1)
-import("./games/index.js").then(m => { window.__between.games = m.mount(window.__between, { preview: PREVIEW_HOST, game: PREVIEW_HOST ? KQ.get("game") : null, jars: PREVIEW_HOST ? KQ.get("jars") : null, calls: PREVIEW_HOST ? KQ.get("calls") : null, lit: PREVIEW_HOST ? KQ.get("lit") : null, standin: STANDIN_ROOM }); }).catch(e => noteError(e, "games"));
+// the walk's Hollow (hollow-demo): the guide names each step and ends the walk once the lantern lands
+if (VISIT_HOLLOW) import("./walk-hollow.js").then(m => { window.__between.walkHollow = m.mount(window.__between); }).catch(e => noteError(e, "walk"));
+import("./games/index.js").then(m => { window.__between.games = m.mount(window.__between, { preview: PREVIEW_HOST, walk: VISIT_HOLLOW, game: PREVIEW_HOST ? KQ.get("game") : null, jars: PREVIEW_HOST ? KQ.get("jars") : null, calls: PREVIEW_HOST ? KQ.get("calls") : null, lit: PREVIEW_HOST ? KQ.get("lit") : null, standin: STANDIN_ROOM }); }).catch(e => noteError(e, "games"));

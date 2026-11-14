@@ -112,7 +112,10 @@ export function mount(B, h) {
     else if (name === "back") { set({ status: "back" }); local.delete("s-" + t.id); }
     else if (name === "line") {
       const w = draft.replace(/\s+/g, " ").trim(); if (!w) throw new Error("Write a few words first.");
-      const lines = { ...cur.lines, [m]: { words: w, at: Date.now() } }, both = lines[cur.by] && lines[cur.owner];
+      const lines = { ...cur.lines, [m]: { words: w, at: Date.now() } };
+      // the walk's Hollow (hollow-demo): Mara, the stand-in, writes her line back, so a newcomer sees a turn kept
+      if (h.opts.turn === "walk") { const o = cur.by === m ? cur.owner : cur.by; if (!lines[o]) lines[o] = { words: o === cur.owner ? "Cold toast on the garage step, and the radio on. Thank you for asking." : "I would love to be asked.", at: Date.now() + 1 }; }
+      const both = lines[cur.by] && lines[cur.owner];
       set(both ? { lines, status: "kept", keptAt: Date.now() } : { lines }); draft = "";
       if (both) { lastKept = t.id; if (B.toast) B.toast(say("kept", otherName())); }
     }
