@@ -1,0 +1,90 @@
+{
+  "0": [
+    {
+      "title": "Take a breath before you begin",
+      "description": "Before you open your next meeting or session with others, take one slow breath. Notice how your body feels and how the room feels, then say one sentence aloud about it to the people you are with. Do this every time you start something new together.",
+      "moveType": "wakeUp",
+      "elder": "shaman",
+      "sourceSentence": "Wherever you are beginning this, take a deep breath and notice how you feel in your body, and how the world around you feels.",
+      "restPath": "On a day you cannot pause to notice, take one breath in the car or at your desk before you speak to anyone.",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null,
+      "allyshipDomain": null
+    }
+  ],
+  "6": [
+    {
+      "title": "Listen to the people around you",
+      "description": "Once a week, pick one stranger, one critic and one elder, and listen to each of them for a whole conversation without planning your reply. Afterward, write down one thing you heard that you had not expected. Keep the same day each week so listening becomes a habit.",
+      "moveType": "wakeUp",
+      "elder": "diplomat",
+      "sourceSentence": "I listen to strangers, I listen to random invitations, I listen to criticisms, I listen to my body, I listen to my creativity and to the artists who inspire me, I listen to elders, I listen to my dreams and the books I am reading.",
+      "restPath": "On a day you cannot have a full conversation, listen for one minute to whoever is talking near you and do not interrupt.",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null,
+      "allyshipDomain": null
+    }
+  ],
+  "10": [
+    {
+      "title": "Write down what a failed attempt taught you",
+      "description": "After a project or attempt goes badly, sit down with the person who worked beside you on the same day. Name what happened and what it taught you, and call it data, not failure. Then agree together on one thing you will try next.",
+      "moveType": "cleanUp",
+      "elder": "sage",
+      "sourceSentence": "We release the idea of failure, because it’s all data.",
+      "restPath": "On a day you cannot meet, write two lines alone in a notebook: what happened, and what it taught you.",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null,
+      "allyshipDomain": null
+    },
+    {
+      "title": "Imagine a fair future with others",
+      "description": "Once a month, invite two or three people you trust to an evening where each of you writes a short story about a future you want to live in. Read the stories aloud to each other and ask what each one would need to become real. Meet with the same people each time so the picture grows together.",
+      "moveType": "wakeUp",
+      "elder": "shaman",
+      "sourceSentence": "Science fiction is simply a way to practice the future together.",
+      "restPath": "In a month you cannot gather, send one friend a paragraph describing a future you want and ask what they imagine.",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null,
+      "allyshipDomain": null
+    }
+  ],
+  "13": [],
+  "19": [
+    {
+      "title": "Sit with someone while they remember who they are",
+      "description": "When a friend is struggling, sit or stand beside them and let them speak without fixing anything. Stay until they say something that sounds like their own strength coming back, and tell them you heard it. Do this with the person closest to you this week.",
+      "moveType": "growUp",
+      "elder": "diplomat",
+      "sourceSentence": "Standing or sitting with someone as they realize, remember their own wholeness—that is the work of the healer and the doula.",
+      "restPath": "On a day you have no energy to sit with someone, send a short message that says you are glad they are there and asks nothing back.",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null,
+      "allyshipDomain": null
+    },
+    {
+      "title": "Write something every day",
+      "description": "Choose one fixed time each day, and write a few lines in any form you like, such as a note, a poem or a list. Tell one friend who writes too, and check in with them each Sunday to see whether you kept your word. Keep the promise to yourself even on short days.",
+      "moveType": "showUp",
+      "elder": "regent",
+      "sourceSentence": "And I have to write, in some form, every day.",
+      "restPath": "On a day you cannot write, write one sentence about how the day went and count it.",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null,
+      "allyshipDomain": null
+    }
+  ],
+  "26": []
+}

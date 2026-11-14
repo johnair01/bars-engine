@@ -7,6 +7,7 @@ import { getOpenAI } from '@/lib/openai'
 import { z } from 'zod'
 import { chunkBookText, chunkBookTextWithToc, type TextChunk } from '@/lib/book-chunker'
 import { chunkIsActionable } from '@/lib/chunk-filter'
+import { SECT_LENS_PROMPT, sectLensFields, keepVerifiedSource, bookAnalysisLens } from '@/lib/book-analysis/sect-lens'
 import { suggestDomain, CONFIDENCE_THRESHOLD } from '@/lib/quest-classifier'
 import { suggestMove, suggestNation, suggestKotterStage, suggestArchetype } from '@/lib/book-section-mapper'
 import { ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT } from '@/lib/allyship-domains-parser-context'
@@ -88,6 +89,7 @@ const analysisSchema = z.object({
       archetype: z.string().nullable().describe('Thematic archetype (Bold Heart, Danger Walker, Truth Seer, etc.). Null if unclear.'),
       kotterStage: z.number().min(1).max(8).nullable().describe('Kotter change stage 1-8. Null if unclear (downstream defaults to 1).'),
       lockType: z.enum(LOCK_TYPES).nullable().describe('Transformation lock: identity_lock, emotional_lock, action, possibility. Null if unclear.'),
+      ...sectLensFields,
     })
   ),
 })
@@ -101,6 +103,9 @@ type QuestResult = {
   archetype?: string | null
   kotterStage?: number | null
   lockType?: string | null
+  elder?: string | null
+  sourceSentence?: string | null
+  restPath?: string | null
 }
 
 async function requireAdmin(): Promise<string> {
@@ -218,6 +223,7 @@ async function runChunkAnalysis(
   let cacheMisses = 0
   let heuristicHits = 0
   const modelId = getBookAnalysisModel()
+  const lens = bookAnalysisLens()
 
   for (let i = 0; i < chunksToProcess.length; i += PARALLEL_BATCH) {
     if (Date.now() - startedAt > TIME_BUDGET_MS) break
@@ -228,7 +234,7 @@ async function runChunkAnalysis(
         if (domainHint && confidence >= CONFIDENCE_THRESHOLD) heuristicHits++
 
         // Tier 1: Try Agent (Architect analyze-chunk)
-        if (process.env.AGENT_ROUTING_ENABLED !== 'false') {
+        if (lens === 'generic' && process.env.AGENT_ROUTING_ENABLED !== 'false') {
           try {
             const backendUp = await isBackendAvailable()
             if (backendUp) {
@@ -251,13 +257,13 @@ async function runChunkAnalysis(
           domainHint && confidence >= CONFIDENCE_THRESHOLD
             ? `Domain hint (high confidence): ${domainHint}. Prioritize this domain when clear.\n\n`
             : ''
-        const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}:hint:${domainHint ?? 'none'}:target:${targetPromptLine.slice(0, 100)}`
+        const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}:hint:${domainHint ?? 'none'}:target:${targetPromptLine.slice(0, 100)}:lens:${lens}`
         return generateObjectWithCache<z.infer<typeof analysisSchema>>({
           feature: 'book_analysis',
           inputKey,
           model: modelId,
           schema: analysisSchema,
-          system: SYSTEM_PROMPT,
+          system: lens === 'sect' ? SECT_LENS_PROMPT : SYSTEM_PROMPT,
           prompt: `Analyze this book chunk and extract quests:\n\n${targetPromptLine}${hintLine}---\n${chunk.text}\n---`,
           getModel: () => getOpenAI()(modelId),
         })
@@ -265,10 +271,10 @@ async function runChunkAnalysis(
 
     )
     processedChunks.push(...batch)
-    results.forEach((r) => {
+    results.forEach((r, bi) => {
       if (r.fromCache) cacheHits++
       else cacheMisses++
-      allQuests.push(...r.object.quests)
+      allQuests.push(...r.object.quests.map((q) => keepVerifiedSource(q, batch[bi].text)))
     })
 
     if (i + PARALLEL_BATCH < chunksToProcess.length) {
@@ -311,7 +317,13 @@ async function createQuestsFromAnalysis(
         archetype: q.archetype ?? null,
         kotterStage: q.kotterStage != null ? q.kotterStage : 1,
         lockType: q.lockType ?? null,
-        completionEffects: JSON.stringify({ source: 'library', bookId }),
+        completionEffects: JSON.stringify({
+          source: 'library',
+          bookId,
+          ...(q.elder ? { elder: q.elder } : {}),
+          ...(q.sourceSentence ? { sourceSentence: q.sourceSentence } : {}),
+          ...(q.restPath ? { restPath: q.restPath } : {}),
+        }),
         inputs: JSON.stringify([
           { key: 'reflection', label: 'Response', type: 'textarea', placeholder: 'Share what you did or learned' },
         ]),
