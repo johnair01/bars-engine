@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { describe, expect, it } from 'vitest'
-import { claimGuest, FIELD_OWNERS, PASSPORT_KEYS, PLACES, validatePassport, writeFromPlace, type Passport } from '@/lib/passport/passport'
+import { claimGuest, FIELD_OWNERS, OPTIONAL_KEYS, PASSPORT_KEYS, PLACES, validatePassport, writeFromPlace, type Passport } from '@/lib/passport/passport'
 
 // The passport contract (six-faces-council pass calrunia-world1): schema/passport.schema.json, its fixtures, the guest fold the
 // browser runs (public/passport/guest.js) and the claim at sign-in, with tests W1 and W2 of the pass at the desk.
@@ -29,7 +29,7 @@ describe('passport contract', () => {
   it.each(load('invalid'))('refuses %s', (_name, p) => { expect(validatePassport(p).ok).toBe(false) })
 
   it('names the same fields and places as the JSON schema', () => {
-    expect([...schema.required].sort()).toEqual([...PASSPORT_KEYS].sort())
+    expect([...schema.required].sort()).toEqual(PASSPORT_KEYS.filter(k => !(OPTIONAL_KEYS as readonly string[]).includes(k)).sort())
     expect(Object.keys(schema.properties).sort()).toEqual([...PASSPORT_KEYS].sort())
     expect(schema.$defs.place.enum).toEqual([...PLACES])
     expect(guest.PLACES).toEqual([...PLACES])
@@ -71,6 +71,15 @@ describe('passport contract', () => {
     expect(p.spirits.map(s => s.id)).toEqual(['a', 'b', 'c', 'sp-fox', 'sp-heron'])
     expect(p.spirits.filter(s => s.loadout).map(s => s.id)).toEqual(['a', 'b', 'c'])
     expect([p.vibeulons, p.qi]).toEqual([3, 5])
+  })
+
+  it('appearance: absent is valid, a bad one is refused, the guest fold fills the default', () => {
+    const p = ok(guest.fold(SPIRITS, VESSEL, 'guest-1', AT))
+    expect(p.appearance).toEqual({ outside: 'arcade', inside: 'cultivation', who: 'f', outfit: 'B2', ring: null })
+    const { appearance: _drop, ...older } = p
+    ok(older)
+    expect(validatePassport({ ...p, appearance: { ...p.appearance, inside: 'between' } }).ok).toBe(false)
+    expect(validatePassport({ ...p, appearance: { ...p.appearance, ring: -1 } }).ok).toBe(false)
   })
 
   it('W2: a place writes only the fields it owns, and adds only its own id to places_reached', () => {

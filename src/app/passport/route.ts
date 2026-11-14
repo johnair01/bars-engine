@@ -40,7 +40,7 @@ button:disabled{opacity:.5}details{margin-top:16px}pre{white-space:pre-wrap;word
 <h2>Places reached</h2><div id="places"></div>
 <h2>Spirits</h2><div id="spirits"></div>
 <h2>Meters</h2><div id="meters" class="card"></div>
-<h2>Embers</h2><div id="embers"></div>
+<h2>How you are drawn</h2><div id="appearance"></div><h2>Embers</h2><div id="embers"></div>
 <h2>Hand</h2><div id="hand"></div>
 <p id="msg" class="dim"></p>
 <details><summary class="dim">The passport as data</summary><pre id="raw"></pre></details>
@@ -65,6 +65,8 @@ button:disabled{opacity:.5}details{margin-top:16px}pre{white-space:pre-wrap;word
         esc([s.element, s.family].filter(Boolean).join(" · ")) + " · " + s.sittings + " sitting" + (s.sittings === 1 ? "" : "s") + " · born in " + esc(s.born.where) +
         (s.care ? " · care: " + esc(s.care.state) : "") + "</div></div>"; }).join("") : none("No spirits yet. Wake one in the caves.");
     el("meters").innerHTML = '<div class="row"><span>Qi</span><strong>' + p.qi + '</strong></div><div class="row"><span>Vibeulons</span><strong>' + p.vibeulons + "</strong></div>";
+    var ap = p.appearance || { outside: "arcade", inside: "cultivation", who: "f", outfit: "B2" };
+    el("appearance").innerHTML = '<div class="row"><span>In the Arcade</span><strong>' + esc(ap.outside) + '</strong></div><div class="row"><span>In Calrunia</span><strong>' + esc(ap.inside) + " model, " + (ap.who === "m" ? "him" : "her") + ", outfit " + esc(ap.outfit) + "</strong></div>";
     el("embers").innerHTML = p.embers.length ? p.embers.map(function (m) { return '<div class="card row"><span>' + esc(m.label || "An ember") + '</span><span class="dim">' + esc([m.element, m.source, m.state].filter(Boolean).join(" · ")) + "</span></div>"; }).join("") : none("No embers yet.");
     el("hand").innerHTML = p.hand.length ? p.hand.map(function (h) { return '<span class="tag">' + esc(h.title) + "</span>"; }).join("") : none("Your hand comes with you from Chapter 1.");
     el("raw").textContent = JSON.stringify(p, null, 2);

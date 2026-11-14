@@ -34,8 +34,8 @@ import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
 import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
-import { makeCultBody, useKneel } from "./cult/player-body.js";
-import { makeKneel } from "./cult/kneel.js";
+import { makeCultBody, useKneel } from "../sect/cult/player-body.js";
+import { makeKneel } from "../sect/cult/kneel.js";
 useKneel(makeKneel);
 //   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
@@ -3764,7 +3764,7 @@ function doCare(c, eid) {
   if (!e) { toast("No ember waits. Checking in leaves one."); return; }
   caredThisVisit = true;
   /* hearth give (his A on hw5-hearth-give-look-2): a figure that kneels at the hearth stays knelt and holds the ember
-     out to the fire (cult/kneel.js); any other figure gets up and walks to the hearth as before */
+     out to the fire (sect/cult/kneel.js); any other figure gets up and walks to the hearth as before */
   const knelt = meState.sitting && meState.body && meState.body.give && (meState.body.kneeling || (meState.body.stance && meState.body.stance() === "sit"));
   if (knelt) meState.body.give(); else standUp();
   const d = meState.pos.clone().sub(HEARTH_AT).setY(0); if (!knelt && d.length() > 1.6) meState.target = pushOut(HEARTH_AT.clone().add(d.normalize().multiplyScalar(1.4)));

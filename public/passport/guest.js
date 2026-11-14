@@ -5,7 +5,7 @@
 // POST /api/passport. Runs in the page (window.__calruniaPassport) and under vitest (passport-contract.test.ts).
 (function (root) {
   "use strict";
-  var SPIRITS_KEY = "oag.spirits.v1", VESSEL_KEY = "oag.vessel.v1", GUEST_KEY = "calrunia.guest.v1", HAND_KEY = "calrunia.hand.v1";
+  var SPIRITS_KEY = "oag.spirits.v1", VESSEL_KEY = "oag.vessel.v1", GUEST_KEY = "calrunia.guest.v1", HAND_KEY = "calrunia.hand.v1", APPEARANCE_KEY = "calrunia.appearance.v1";
   var PLACES = ["vessel", "sprout", "cave", "root", "between", "element-lands"];
   // The ship's own rooms and lands, as places of calrunia/world.yaml (vessel.js PLACES).
   var SHIP_PLACE = { home: "vessel", hall: "cave", bigmind: "cave", wood: "element-lands", fire: "element-lands", earth: "element-lands", metal: "element-lands", water: "element-lands" };
@@ -35,7 +35,7 @@
   // fold(spiritsRecord, vesselRecord, guestId, at, handRecord) -> passport. Pure: the records are what the places stored, or null.
   // The hand is the one Chapter 1 dealt, laid down by the arrival page (arrive.js) as `calrunia.hand.v1`.
   function purse(spirits) { var n = spirits && spirits.v === 1 ? Number(spirits.vibeulons) : 0; return n > 0 ? Math.floor(n) : 0; }
-  function fold(spirits, vessel, guestId, at, handRec) {
+  function fold(spirits, vessel, guestId, at, handRec, appearanceRec) {
     var reached = {};
     var list = spirits && spirits.v === 1 && Array.isArray(spirits.spirits) ? spirits.spirits.filter(function (r) { return r && r.id; }) : [];
     var seen = {}, out = [], inLoadout = 0;
@@ -67,9 +67,23 @@
       embers: embers,
       places_reached: PLACES.filter(function (p) { return reached[p]; }),
       updated_at: at || new Date().toISOString(),
+      appearance: foldAppearance(appearanceRec),
     };
   }
 
+  // How this browser draws the player (cd-figure-look-1). Absent or malformed means the default: Arcade outside, cultivation model inside.
+  var MODELS = ["arcade", "cultivation"];
+  function foldAppearance(rec) {
+    var a = rec && rec.v === 1 && rec.appearance ? rec.appearance : {};
+    var ring = Number(a.ring);
+    return {
+      outside: MODELS.indexOf(a.outside) >= 0 ? a.outside : "arcade",
+      inside: MODELS.indexOf(a.inside) >= 0 ? a.inside : "cultivation",
+      who: a.who === "m" ? "m" : "f",
+      outfit: str(a.outfit) || "B2",
+      ring: a.ring != null && isFinite(ring) && ring >= 0 && ring <= 0xffffff ? Math.floor(ring) : null,
+    };
+  }
   var HAND_KINDS = ["card", "bar"];
   function foldHand(rec) {
     var list = rec && rec.v === 1 && Array.isArray(rec.hand) ? rec.hand : [], seen = {};
@@ -88,9 +102,9 @@
     return id;
   }
   // The guest passport as it stands in this browser now.
-  function read() { return fold(readJson(SPIRITS_KEY), readJson(VESSEL_KEY), guestId(), undefined, readJson(HAND_KEY)); }
+  function read() { return fold(readJson(SPIRITS_KEY), readJson(VESSEL_KEY), guestId(), undefined, readJson(HAND_KEY), readJson(APPEARANCE_KEY)); }
 
-  var api = { KEYS: { spirits: SPIRITS_KEY, vessel: VESSEL_KEY, guest: GUEST_KEY, hand: HAND_KEY }, PLACES: PLACES, fold: fold, read: read };
+  var api = { KEYS: { spirits: SPIRITS_KEY, vessel: VESSEL_KEY, guest: GUEST_KEY, hand: HAND_KEY, appearance: APPEARANCE_KEY }, PLACES: PLACES, fold: fold, read: read };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.__calruniaPassport = api;
 })(typeof window !== "undefined" ? window : globalThis);

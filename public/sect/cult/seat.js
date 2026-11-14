@@ -16,7 +16,7 @@ import * as THREE from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 import { aim } from './figure.js';
 import { partWorld } from './mix.js';
-import { LIGHT } from '../../look-data.js';
+import { LIGHT } from '../../between/look-data.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const wp = b => b.getWorldPosition(V());

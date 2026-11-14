@@ -152,7 +152,7 @@ function routeTo(to) { const from = avatar.position, a = inField(from), b = inFi
 function walkTo(i) { const [x, z] = slotXZ(i); const d = V(avatar.position.x - x, 0, avatar.position.z - z); if (d.length() < 0.01) d.set(0, 0, 1); d.setLength(0.85); faceTo = V(x, 0, z); routeTo(V(x + d.x, 0, z + d.z)); }
 
 // ---------- the cultivator figure and the hoe (his steer on bgf-farm-build-look-1: "No cultivator pose, no hoe object created") ----------
-// The figure is the cultivation kit's A2 training wrap, the work clothes of the round 3 stills, built by cult/walker.js as the
+// The figure is the cultivation kit's A2 training wrap, the work clothes of the round 3 stills, built by sect/cult/walker.js as the
 // hollow builds the player. The hoe is its own object, placed every frame from the hands: carried while walking, held in
 // the stills' hoeing stance at rest, raised and struck on a till. If the kit cannot load, the drawn figure above stays.
 const hoeTool = new THREE.Group(); hoeTool.visible = false; scene.add(hoeTool);
@@ -168,9 +168,9 @@ const faceDir = () => V(Math.sin(avatar.rotation.y), 0, Math.cos(avatar.rotation
 let CU = null;   // { W, F, FG, ank0 }
 async function loadCultivator() {
   try {
-    const [{ makeWalker }, FG] = await Promise.all([import('../cult/walker.js'), import('../cult/make/figure.js')]);
+    const [{ makeWalker }, FG] = await Promise.all([import('../../sect/cult/walker.js'), import('../../sect/cult/figure.js')]);
     const W = await makeWalker({ who: 'f', outfit: 'A2' }), F = W.X.F;
-    const turn = -Math.atan2(F.fr.f.x, F.fr.f.z);   // face +z in the holder, as cult/player-body.js does, so avatar.rotation.y turns her
+    const turn = -Math.atan2(F.fr.f.x, F.fr.f.z);   // face +z in the holder, as sect/cult/player-body.js does, so avatar.rotation.y turns her
     if (Math.abs(turn) > 1e-3) { F.root.rotation.y = turn; F.fr.f.applyAxisAngle(V(0, 1, 0), turn); F.fr.l.applyAxisAngle(V(0, 1, 0), turn); F.root.updateMatrixWorld(true); }
     // the farm's one toon ramp on her clothes too (the round 3 keep list)
     W.holder.traverse(o => { if (!o.isMesh) return; o.castShadow = true; const swap = m => { if (!m || m.isMeshToonMaterial || m.isMeshBasicMaterial) return m;

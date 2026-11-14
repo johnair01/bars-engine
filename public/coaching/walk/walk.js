@@ -12,8 +12,8 @@
    Reused, not redrawn: the Between land's forest (public/between/land/land.js: its tree, ground, grass, mist and glow
    recipes, the hollow's bark, root and moss materials, the paint pass), with the land's tap-to-walk, drag-to-look and
    arrow keys. The traveller (round 2, his steer on cw-walk-look-1): one of the cultivation characters, her or him in
-   the light travel robe, built in the page by public/between/cult/ (a copy of the shells preview) and walked by
-   cult/walker.js. If that figure cannot be built, the Between's Average Dusk walks instead (land.js makeFigure).
+   the light travel robe, built in the page by public/sect/cult/ (the Heaven sect build) and walked by
+   sect/cult/walker.js. If that figure cannot be built, the Between's Average Dusk walks instead (land.js makeFigure).
 
    Nothing typed leaves the tab (cg-browser-only): the walk lives in sessionStorage "coaching-walk"; the copy button is
    how the visitor's words reach Calendly's notes box, by their own paste. The utm tags they arrived with ride every door.
@@ -342,7 +342,7 @@ function chooseWho() {
     box.hidden = true; res(b.dataset.who); }; });
 }
 async function makeTraveller(who) {
-  const { makeWalker } = await import("/between/cult/walker.js");   // loaded here, so a failure leaves the Dusk fallback standing
+  const { makeWalker } = await import("/sect/cult/walker.js");   // loaded here, so a failure leaves the Dusk fallback standing
   const w = await makeWalker({ who, outfit: "B2" });
   scene.add(w.holder);
   return w;
