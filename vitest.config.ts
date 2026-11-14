@@ -120,6 +120,7 @@ export default defineConfig({
       'src/lib/board/__tests__/dispatch.test.ts',
       'src/lib/board/__tests__/ready-drafts.test.ts',
       'src/app/api/work/tickets/__tests__/route.test.ts',
+      'src/app/api/work/[id]/steer/__tests__/route.test.ts',
       'src/app/api/board/live/__tests__/route.test.ts',
       'src/app/api/board/receipts/__tests__/route.test.ts',
       'src/lib/board/__tests__/council-page.test.ts',
