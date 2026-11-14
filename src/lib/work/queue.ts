@@ -58,6 +58,26 @@ export async function claimTicket(db: Db, lane: string, by: string, now = new Da
 
 type Move = 'heartbeat' | 'done' | 'release' | 'failed'
 
+/**
+ * Steer a ticket to another lane (fleet-altitude-look-1, "a + C": he steers every ticket, even inside a lane). The lane
+ * goes to the front of the ticket's order, so a later dry-lane handoff still follows his choice first. A ready or held
+ * ticket keeps its state; a failed one goes back to ready in its new lane; a claimed one is taken from its worker and
+ * waits ready in the new lane. A done ticket stays where it finished. The write names the state and lane it read, so a
+ * claim that lands between the read and the write wins and the steer answers 409.
+ */
+export async function steerTicket(db: Db, id: string, lane: string, now = new Date()) {
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state === 'done') return { ok: false as const, status: 409, error: 'The ticket is done' }
+  if (t.lane === lane) return { ok: true as const, ticket: t, moved: false }
+  const lanes = [lane, ...t.lanes.filter(l => l !== lane)]
+  const reset = t.state === 'claimed' || t.state === 'failed'
+  const data = { lane, lanes, updatedAt: now, ...(reset ? { state: 'ready', claimedBy: null, leaseUntil: null } : {}) }
+  const r = await db.workTicket.updateMany({ where: { id, state: t.state, lane: t.lane }, data })
+  if (r.count !== 1) return { ok: false as const, status: 409, error: 'The ticket moved while it was being steered' }
+  return { ok: true as const, ticket: { ...t, ...data }, moved: true }
+}
+
 /** Lift a hold: a held ticket goes back to ready, in the lane it rests in. Any other state is left alone. */
 export async function unholdTicket(db: Db, id: string) {
   const t = await db.workTicket.findUnique({ where: { id } })
