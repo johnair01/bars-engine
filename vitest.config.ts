@@ -117,6 +117,7 @@ export default defineConfig({
       'src/lib/work/__tests__/queue.test.ts',
       'src/lib/work/__tests__/stats.test.ts',
       'src/lib/work/__tests__/homeport.test.ts',
+      'src/lib/work/__tests__/fleet.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',
       'src/lib/board/__tests__/ready-drafts.test.ts',
       'src/app/api/work/tickets/__tests__/route.test.ts',
