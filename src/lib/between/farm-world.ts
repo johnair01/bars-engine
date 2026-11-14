@@ -7,7 +7,7 @@
  * rewrites the whole farm doc, and an agent write inside it would be lost to the next act.
  *
  * The line (Wendell, ntw-tier-look-1, A: "Data at once, rules to me"). DATA is something the running page already
- * draws: a sign on a slot, a note on a slot, a small object from the list below. An agent applies it at once and
+ * draws: a labeled seed on a slot, a note on a slot, a small object from the list below. An agent applies it at once and
  * logs it. A RULE is anything that changes how the farm plays or needs code: mana, costs, days to grow, the grid, a
  * new act, a new kind of object. A rule request is refused here, kept on the capture as "not yet" with its reason,
  * and goes to Wendell as one board row. Pure: no database, so a test clock and a test farm run it as it is.
@@ -17,10 +17,10 @@ import { SLOTS } from './farm'
 /** What the page draws today. Adding a name here needs the matching mesh in public/between/farm/farm.js, so it is code. */
 export const OBJECTS = ['lantern', 'bench', 'stone', 'flowers', 'scarecrow'] as const
 export type WorldObject = (typeof OBJECTS)[number]
-export const DATA_KINDS = ['sign', 'note', 'object'] as const
+export const DATA_KINDS = ['seed', 'note', 'object'] as const
 export type DataKind = (typeof DATA_KINDS)[number]
 
-export const SIGN_MAX = 60
+export const SIGN_MAX = 60 // a seed's label
 export const NOTE_MAX = 280
 export const MAX_CHANGES = 40
 
@@ -77,13 +77,14 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
   const lane = clean(input.lane, 40) || 'agent'
   const captureId = clean(input.captureId, 120)
   if (!captureId) return { ok: false, tier: 'invalid', why: 'Every change answers a capture: name captureId' }
-  const kind = input.kind
+  // A seed carries the words a signpost used to carry; `sign` is still accepted and means the same seed.
+  const kind = input.kind === 'sign' ? 'seed' : input.kind
   const isData = typeof kind === 'string' && (DATA_KINDS as readonly string[]).includes(kind)
 
   if (!isData) {
     const ask = clean(input.ask ?? input.text ?? kind, 280)
     if (!ask) return { ok: false, tier: 'invalid', why: `kind is one of ${DATA_KINDS.join(', ')}, or send ask for a rule request` }
-    const why = RULE_WORDS.find(([re]) => re.test(ask))?.[1] ?? 'it is not a sign, a note or one of the farm\'s objects'
+    const why = RULE_WORDS.find(([re]) => re.test(ask))?.[1] ?? 'it is not a seed, a note or one of the farm\'s objects'
     const w = clone(doc)
     if (w.notYet.length >= MAX_CHANGES) return { ok: false, tier: 'invalid', why: 'Too many open requests on this farm' }
     const notYet: NotYet = { id: `ny-${stamp(Date.parse(now))}-${w.notYet.length}`, captureId, slot: inGrid(input.slot) ? input.slot : null, ask, why, lane, at: now }
@@ -96,7 +97,7 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
   const k = kind as DataKind
   let text = ''
   let object: WorldObject | null = null
-  if (k === 'sign') text = clean(input.text, SIGN_MAX)
+  if (k === 'seed') text = clean(input.text, SIGN_MAX)
   if (k === 'note') text = clean(input.text, NOTE_MAX)
   if (k === 'object') {
     if (typeof input.object !== 'string' || !(OBJECTS as readonly string[]).includes(input.object))
@@ -104,13 +105,13 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
     object = input.object as WorldObject
     text = clean(input.text, SIGN_MAX)
   }
-  if ((k === 'sign' || k === 'note') && !text) return { ok: false, tier: 'invalid', why: `a ${k} needs its words in text` }
+  if ((k === 'seed' || k === 'note') && !text) return { ok: false, tier: 'invalid', why: `a ${k} needs its words in text` }
 
   const w = clone(doc)
   const live = w.changes.filter(c => c.status === 'applied')
   if (live.length >= MAX_CHANGES) return { ok: false, tier: 'invalid', why: 'This farm already holds the most changes it can show' }
-  // One sign per slot: a second sign replaces the first, so the place never shows two voices at once.
-  if (k === 'sign') for (const c of w.changes) if (c.slot === input.slot && c.kind === 'sign' && c.status === 'applied') c.status = 'reverted'
+  // One seed per slot: a second seed replaces the first, so the place never shows two voices at once.
+  if (k === 'seed') for (const c of w.changes) if (c.slot === input.slot && c.kind === 'seed' && c.status === 'applied') c.status = 'reverted'
   const c: Change = {
     id: `chg-${stamp(Date.parse(now))}-${w.changes.length}`, slot: input.slot, kind: k, text, object, captureId,
     before: link(input.before), after: null, lane, at: now, status: 'applied',

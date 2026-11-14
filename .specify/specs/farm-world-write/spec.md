@@ -18,7 +18,7 @@ Wendell's words (ntw-tier-look-1, A): "Data at once, rules to me."
 
 | Tier | What it is | Who acts | Where it lands |
 |------|-----------|----------|----------------|
-| **Data** | Something the running page already draws: a **sign** on a slot (60 chars, one live sign per slot), a **note** on a slot (280 chars), or an **object** from the drawn list (lantern, bench, stone, flowers, scarecrow). | An agent, at once, through MCP `farm_world_change`. | BetweenPrivate key `farm-world`. Shows on the player's next load. Logged. |
+| **Data** | Something the running page already draws: a **seed** on a slot, labeled with its words (60 chars, one live seed per slot; Wendell, farm-world-write-look-1: "spawn seeds instead of sign posts"), a **note** on a slot (280 chars), or an **object** from the drawn list (lantern, bench, stone, flowers, scarecrow). | An agent, at once, through MCP `farm_world_change`. | BetweenPrivate key `farm-world`. Shows on the player's next load. Logged. |
 | **Rule** | Anything that changes how the farm plays or needs code: mana, costs, days to grow, the grid, a new act or tool, a new kind of object. | Wendell. The agent never applies it. | Kept on the farm as a **not-yet** with its reason; the first one a capture asks for goes to the Council Board as one row. |
 
 The test for the line is one question: does the running page already know how to draw this? If yes it is data. If it needs
@@ -48,8 +48,8 @@ a new mesh, a new act or a number changed in `farm.ts`, it is a rule. A new obje
 
 ## Drawing
 
-`public/between/farm/farm.js` draws `world.changes` in a `world` group: a sign is a wooden board on a stake with the words
-wrapped to it; an object is a small toon mesh on its slot (a lantern also lights); a note is a folded paper on the ground.
+`public/between/farm/farm.js` draws `world.changes` in a `world` group: a seed is a small glowing seed on the earth with a paper label standing above it, the words
+wrapped to the label; an object is a small toon mesh on its slot (a lantern also lights); a note is a folded paper on the ground.
 The page draws only what is in the list. An unknown object name is skipped, never guessed.
 
 ## Falsification test (Challenger, from the Skeptic)

@@ -5,16 +5,20 @@ const t0 = '2026-11-14T20:00:00.000Z'
 const live = (o: ReturnType<typeof change>) => { if (!o.ok) throw new Error(o.why); return o }
 
 describe('farm world: data at once, rules to Wendell', () => {
-  it('applies a sign at once and shows it to the player without the lane', () => {
-    const o = live(change(newWorld(), { slot: 17, kind: 'sign', text: 'The bench by the stream', captureId: 'bar-1', lane: 'claude-code', before: 'https://x.test/before.jpg' }, t0))
+  it('applies a labeled seed at once and shows it to the player without the lane', () => {
+    const o = live(change(newWorld(), { slot: 17, kind: 'seed', text: 'The bench by the stream', captureId: 'bar-1', lane: 'claude-code', before: 'https://x.test/before.jpg' }, t0))
     const p = forPlayer(o.doc)
     expect(p.changes).toHaveLength(1)
-    expect(p.changes[0]).toMatchObject({ slot: 17, kind: 'sign', text: 'The bench by the stream', before: 'https://x.test/before.jpg' })
+    expect(p.changes[0]).toMatchObject({ slot: 17, kind: 'seed', text: 'The bench by the stream', before: 'https://x.test/before.jpg' })
     expect(JSON.stringify(p)).not.toContain('claude-code')
   })
-  it('a second sign on a slot replaces the first', () => {
-    let d = live(change(newWorld(), { slot: 3, kind: 'sign', text: 'one', captureId: 'a' }, t0)).doc
-    d = live(change(d, { slot: 3, kind: 'sign', text: 'two', captureId: 'b' }, t0)).doc
+  it('the old kind name sign still makes a seed', () => {
+    const o = live(change(newWorld(), { slot: 4, kind: 'sign', text: 'water here', captureId: 'a' }, t0))
+    expect(o.change.kind).toBe('seed')
+  })
+  it('a second seed on a slot replaces the first', () => {
+    let d = live(change(newWorld(), { slot: 3, kind: 'seed', text: 'one', captureId: 'a' }, t0)).doc
+    d = live(change(d, { slot: 3, kind: 'seed', text: 'two', captureId: 'b' }, t0)).doc
     expect(forPlayer(d).changes.map(c => c.text)).toEqual(['two'])
   })
   it('places a listed object and keeps a rule request as a not-yet with its reason', () => {
@@ -30,8 +34,8 @@ describe('farm world: data at once, rules to Wendell', () => {
     expect(r.tier).toBe('rule')
   })
   it('refuses malformed data and a capture-less change', () => {
-    expect(change(newWorld(), { slot: 999, kind: 'sign', text: 'x', captureId: 'a' }, t0).tier).toBe('invalid')
-    expect(change(newWorld(), { slot: 1, kind: 'sign', text: 'x' }, t0).tier).toBe('invalid')
+    expect(change(newWorld(), { slot: 999, kind: 'seed', text: 'x', captureId: 'a' }, t0).tier).toBe('invalid')
+    expect(change(newWorld(), { slot: 1, kind: 'seed', text: 'x' }, t0).tier).toBe('invalid')
     expect(change(newWorld(), { slot: 1, kind: 'note', text: '', captureId: 'a' }, t0).tier).toBe('invalid')
   })
   it('strips markup, attaches an after picture and reverts', () => {

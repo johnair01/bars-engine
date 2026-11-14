@@ -237,16 +237,21 @@ function tag(x, y, z, lines) {   // a paper tag; its stake ends at the tag's bot
   lines.forEach((l, i) => { g.font = (i === 0 ? 'italic 40px' : 'bold 34px') + ' Georgia'; g.fillText(l, 160, (lines.length === 1 ? 88 : 64) + i * 48); });
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const H = 0.3, m = new THREE.Mesh(new THREE.PlaneGeometry(0.64, H), new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide, toneMapped: false })); m.position.set(x, y, z);
   const bottom = y - H / 2, st = mesh(new THREE.CylinderGeometry(0.012, 0.012, bottom, 5), toon(PAL.woodDark), false); st.position.set(x, bottom / 2, z); const G = new THREE.Group(); G.add(m, st); return G; }
-// ---------- the world an agent changed (farm-world-write): signs, notes and small objects on a slot, drawn from GET /api/between/farm `world` ----------
+// ---------- the world an agent changed (farm-world-write): seeds, notes and small objects on a slot, drawn from GET /api/between/farm `world` ----------
 const worldGroup = new THREE.Group(); worldGroup.name = 'world'; scene.add(worldGroup);
 function wrapLines(text, per = 16, max = 4) { const out = []; let cur = ''; for (const w of String(text).split(' ')) { if ((cur + ' ' + w).trim().length > per && cur) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); } if (cur) out.push(cur); return out.slice(0, max); }
-function signBoard(x, z, text) {   // a wooden sign on a stake; the words wrap to the board, never past it
-  const lines = wrapLines(text), W = 0.78, H = 0.16 + lines.length * 0.1, y = 0.62 + H / 2;
-  const c = document.createElement('canvas'); c.width = 390; c.height = Math.round(390 * H / W); const g = c.getContext('2d'); g.fillStyle = '#f3e6c8'; g.fillRect(0, 0, c.width, c.height);
-  g.strokeStyle = '#7c5232'; g.lineWidth = 10; g.strokeRect(5, 5, c.width - 10, c.height - 10); g.fillStyle = '#2a1a12'; g.textAlign = 'center'; g.font = 'bold 40px Georgia';
-  lines.forEach((l, i) => g.fillText(l, c.width / 2, c.height / (lines.length + 1) * (i + 1) + 13));
+function seedLabel(x, z, text) {   // a glowing seed on a small mound with its label standing above it; the words wrap to the label, never past it
+  const lines = wrapLines(text, 12), W = 1.15, H = 0.22 + lines.length * 0.2, y = 0.5 + H / 2;
+  const c = document.createElement('canvas'); c.width = 575; c.height = Math.round(575 * H / W); const g = c.getContext('2d'); g.fillStyle = '#fff6d8'; g.fillRect(0, 0, c.width, c.height);
+  g.strokeStyle = '#d9a43a'; g.lineWidth = 12; g.strokeRect(6, 6, c.width - 12, c.height - 12); g.fillStyle = '#2a1a12'; g.textAlign = 'center'; g.font = "bold 72px Georgia";
+  lines.forEach((l, i) => g.fillText(l, c.width / 2, c.height / (lines.length + 1) * (i + 1) + 26));
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const m = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide, toneMapped: false })); m.position.set(0, y, 0);
-  const st = mesh(new THREE.CylinderGeometry(0.02, 0.02, y - H / 2, 6), toon(PAL.woodDark), false); st.position.set(0, (y - H / 2) / 2, 0); const G = new THREE.Group(); G.add(m, st); G.position.set(x, 0, z); G.rotation.y = -0.25; return G; }
+  const G = new THREE.Group(); G.add(m);
+  const mound = mesh(new THREE.SphereGeometry(0.16, 10, 6), toon(PAL.bark), false); mound.scale.y = 0.35; G.add(mound);
+  const sd = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 10), glow(PAL.seed)); sd.scale.set(0.8, 1.2, 0.8); sd.position.y = 0.17; G.add(sd);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), glow('#fff2c0', { transparent: true, opacity: 0.35, depthWrite: false })); halo.position.y = 0.17; G.add(halo);
+  const st = mesh(new THREE.CylinderGeometry(0.012, 0.012, y - H / 2 - 0.2, 5), toon(PAL.woodDark), false); st.position.y = 0.2 + (y - H / 2 - 0.2) / 2; G.add(st);
+  G.position.set(x, 0, z); G.rotation.y = -0.25; return G; }
 const WORLD_OBJECTS = {
   lantern(G) { const post = mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.8, 6), toon(PAL.woodDark)); post.position.y = 0.4; const box = mesh(new THREE.BoxGeometry(0.16, 0.2, 0.16), toon(PAL.portal, { emissive: new THREE.Color('#ffb84a'), emissiveIntensity: 0.9 }), false); box.position.y = 0.9; const cap = mesh(new THREE.ConeGeometry(0.15, 0.1, 4), toon(PAL.woodDark)); cap.position.y = 1.05; cap.rotation.y = Math.PI / 4; G.add(post, box, cap); const l = new THREE.PointLight('#ffcf80', 0.8, 3); l.position.y = 0.9; G.add(l); },
   bench(G) { const seat = mesh(new THREE.BoxGeometry(0.7, 0.06, 0.26), toon(PAL.wood)); seat.position.y = 0.3; G.add(seat); for (const k of [-1, 1]) { const leg = mesh(new THREE.BoxGeometry(0.06, 0.3, 0.22), toon(PAL.woodDark)); leg.position.set(k * 0.28, 0.15, 0); G.add(leg); } const back = mesh(new THREE.BoxGeometry(0.7, 0.2, 0.04), toon(PAL.wood)); back.position.set(0, 0.5, -0.11); G.add(back); },
@@ -258,8 +263,8 @@ function drawWorld(world) {
   for (const o of [...worldGroup.children]) worldGroup.remove(o);
   for (const c of (world && world.changes) || []) {
     if (!(c.slot >= 0 && c.slot < SLOTS)) continue; const [x, z] = slotXZ(c.slot);
-    if (c.kind === 'sign') worldGroup.add(signBoard(x, z, c.text));
-    else if (c.kind === 'object' && WORLD_OBJECTS[c.object]) { const G = new THREE.Group(); G.position.set(x, 0, z); WORLD_OBJECTS[c.object](G); worldGroup.add(G); if (c.text) worldGroup.add(signBoard(x + 0.45, z + 0.3, c.text)); }
+    if (c.kind === 'seed') worldGroup.add(seedLabel(x, z, c.text));
+    else if (c.kind === 'object' && WORLD_OBJECTS[c.object]) { const G = new THREE.Group(); G.position.set(x, 0, z); WORLD_OBJECTS[c.object](G); worldGroup.add(G); if (c.text) worldGroup.add(seedLabel(x + 0.45, z + 0.3, c.text)); }
     else if (c.kind === 'note') { const p = mesh(new THREE.BoxGeometry(0.22, 0.01, 0.28), toon('#f3e6c8'), false); p.position.set(x, 0.06, z); p.rotation.y = 0.4; worldGroup.add(p); }
   }
 }
