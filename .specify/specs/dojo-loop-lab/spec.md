@@ -113,7 +113,20 @@ The Lab asks the player to set sample reads for the three relevant words:
 
 The player can alter or leave these reads. They are intentionally separate from EA anchors. The Lab should state that a read is present-time player language, not a fact the game has inferred.
 
-The production board currently has a scalar `-3…+3` charge control. The Lab uses the target two-axis presentation—activation `0…3` and orientation `constricting`, `supportive`, `mixed`, or `unread`—in its isolated fixture state. This proves the replacement interaction before the persistent schema is migrated.
+The live board uses a signed `-3…+3` charge, and it keeps it: ruling `dr-charge-model` (Wendell, 2026-11-02, answer B) chose the signed charge for the live dojo, where below 0 is dissatisfaction, above 0 is satisfaction, and a triangle's sum is worked toward 0 or above. The Lab keeps its own two-axis read—activation `0…3` and orientation `constricting`, `supportive`, `mixed`, or `unread`—in its isolated fixture state. That read is a Lab presentation, not a replacement for the live charge, and no migration of the persistent schema follows from it.
+
+#### Boundary with the live dojo
+
+The product holds two reads for the same word, so this boundary states how a Lab read becomes a live charge. It applies only when the player carries a word into live practice by hand; nothing crosses the threshold automatically.
+
+| Lab read | Starting charge the live dojo offers |
+|---|---|
+| supportive, activation *a* | +*a* |
+| constricting, activation *a* | −*a* |
+| mixed, any activation | 0, marked "set this yourself" |
+| unread | 0 |
+
+The live dojo shows this number as a starting point, and the player keeps it or changes it before it counts in any triangle sum. A mixed read carries no sign of its own, so the live dojo does not invent one. The Lab never shows a signed number or a triangle sum.
 
 ### 2. Confirm optional EA anchors
 
