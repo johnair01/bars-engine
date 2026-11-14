@@ -6,6 +6,8 @@ import { getSeedLibrary, getToday, getUnchosen, listPlayerCampaigns } from '@/ac
 import { UNCHOSEN_SAMPLE } from '@/lib/tap-the-vein/unchosen-sample'
 import type { ElementKey } from '@/lib/ui/card-tokens'
 import { loadNextLensDomain } from '@/lib/lenses/onboarding-data'
+import { loadClose } from '@/lib/close/store'
+import { morningSeed } from '@/lib/close/seed'
 import { TapTheVeinRunner } from './TapTheVeinRunner'
 
 /**
@@ -30,6 +32,11 @@ const VALID_ELEMENTS: ReadonlySet<string> = new Set(['fire', 'water', 'wood', 'm
 function normalizeElement(raw: string | null | undefined): ElementKey {
   const v = (raw ?? '').toLowerCase()
   return (VALID_ELEMENTS.has(v) ? v : 'earth') as ElementKey
+}
+
+/** Yesterday in Pacific time, as YYYY-MM-DD. */
+function yesterday(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date(now.getTime() - 24 * 3600 * 1000))
 }
 
 export default async function TapTheVeinPage({ searchParams }: { searchParams?: Promise<{ view?: string; sample?: string }> }) {
@@ -57,6 +64,8 @@ export default async function TapTheVeinPage({ searchParams }: { searchParams?: 
 
   const lensDomain = await loadNextLensDomain(player.id).catch(() => null)
 
+  const closeSeed = await loadClose(yesterday()).then(morningSeed).catch(() => null)
+
   let vibulons = 0
   try {
     vibulons = await spendableBalance(db, player.id)
@@ -74,6 +83,7 @@ export default async function TapTheVeinPage({ searchParams }: { searchParams?: 
       seeds={'error' in libraryRes ? [] : libraryRes.seeds}
       unchosen={params.sample === '1' ? { ...UNCHOSEN_SAMPLE, sample: true } : 'error' in unchosenRes ? undefined : unchosenRes}
       openUnchosen={params.view === 'unchosen'}
+      closeSeed={closeSeed}
       campaigns={'error' in campaignsRes ? [] : campaignsRes.campaigns}
     />
   )
