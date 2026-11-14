@@ -252,7 +252,7 @@ const YUKI: NpcProfile = {
   },
   forestSeeds: [
     "A second truth gets dismissed",
-    "An ally goes quiet",
+    "Your ally banks their ember",
     "You start self-censoring without noticing",
   ],
   shadowDeck: [],
@@ -473,7 +473,7 @@ const PRIYA: NpcProfile = {
       id: "priya-s-strategic-withdrawal",
       name: "Strategic Withdrawal",
       channel: "Water",
-      text: "Goes quiet. No progress this round.",
+      text: "Your ally banks their ember. They play no card this round.",
       effect: { skipProgress: true },
       counter: "Check In",
     },

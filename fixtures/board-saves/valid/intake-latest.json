@@ -1,0 +1,15 @@
+{
+  "board": "council",
+  "collection": "intake",
+  "docId": "latest",
+  "data": {
+    "date": "2026-10-21",
+    "items": [
+      {
+        "id": "menu-task:1",
+        "text": "Finish the podcast pipeline"
+      }
+    ],
+    "savedAt": "2026-10-22T02:01:09Z"
+  }
+}

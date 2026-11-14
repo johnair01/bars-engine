@@ -2,51 +2,69 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wendell-britt/Six-faces-council/blob/main/schema/board-save.schema.json",
   "title": "Board save",
-  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only. A stores document is one placement in the Stores' move (bars-engine /board/studio?stores=1): a run's thing put on the shelf, in the seed basket, up the bell line or in the compost ring, or taken by the tide; board/pull.py records it with the steps.",
+  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A rows document is a council row a session posts through POST /api/board/session-writes (docs/worklist-api.md): one row of a rows file, its id the docId, its board list named in `kind` (a look's own `list` is its strand, as on a step), always a whole document. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only. A resolved document is one settled answer the board's Resolved tab draws, at <kind>--<id>, written by board/resolved_write.py from what board/pull.py records. A battle document is one battle's record at battles/<id>; an intake document is the intake's one run at intake/latest; a morning document at morning/gather is the gather the page draws, and at morning/weather--<time> one weather reading; board/copy_write.py sends those. A stores document is one placement in the Stores' move (bars-engine /board/studio?stores=1): a run's thing put on the shelf, in the seed basket, up the bell line or in the compost ring, or taken by the tide; board/pull.py records it with the steps.",
   "type": "object",
   "additionalProperties": false,
   "required": ["board", "collection", "docId", "data"],
   "properties": {
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
-                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws"]},
-    "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\\\u0000-\\u001f]+$"},
+                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws", "records", "constraint", "resolved",
+                            "battles", "intake"]},
+    "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\u0000-\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}
   },
   "$defs": {
     "text": {"type": "string", "pattern": "\\S"},
-    "faces": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-    "row": {
-      "properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
-        "required": ["kind", "pass"], "not": {"required": ["id"]},
-        "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
-                       "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"}},
-        "allOf": [
-          {"if": {"properties": {"kind": {"const": "positions"}}},
-           "then": {"required": ["faces", "pos"], "properties": {"faces": {"$ref": "#/$defs/faces"}, "pos": {"$ref": "#/$defs/text"}}}},
-          {"if": {"properties": {"kind": {"const": "questions"}}},
-           "then": {"required": ["faces", "q", "options"], "properties": {"faces": {"$ref": "#/$defs/faces"},
-             "q": {"$ref": "#/$defs/text"}, "options": {"type": "array", "minItems": 1, "items": {"type": "object",
-               "required": ["v", "label"], "properties": {"v": {"$ref": "#/$defs/text"}, "label": {"type": "string"}}}}}}},
-          {"if": {"properties": {"kind": {"const": "terms"}}},
-           "then": {"required": ["term", "plain"], "properties": {"term": {"$ref": "#/$defs/text"}, "plain": {"type": "string"}}}},
-          {"if": {"properties": {"kind": {"const": "causes"}}},
-           "then": {"required": ["desc"], "properties": {"desc": {"$ref": "#/$defs/text"}}}},
-          {"if": {"properties": {"kind": {"const": "battles"}}},
-           "then": {"required": ["name", "rounds"], "properties": {"name": {"$ref": "#/$defs/text"}, "rounds": {"type": "array"}}}}
-        ]}}
-    },
+    "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
     "iso": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"},
-    "decided": {
-      "anyOf": [
-        {"required": ["deferred"], "properties": {"deferred": {"const": true}}},
-        {"required": ["steer"], "properties": {"steer": {"type": "string", "minLength": 1, "pattern": "\\S"}}}
-      ]
-    }
+    "faces": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "decided": {"anyOf": [
+      {"required": ["deferred"], "properties": {"deferred": {"const": true}}},
+      {"required": ["steer"], "properties": {"steer": {"type": "string", "minLength": 1, "pattern": "\\S"}}}
+    ]},
+    "record": {"properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
+      "required": ["kind", "path", "body"],
+      "properties": {"kind": {"enum": ["callsheet", "pass", "ledger", "rows", "resolved"]},
+                     "path": {"type": "string", "pattern": "^(council|board)/."},
+                     "body": {"type": "string", "maxLength": 1048576}}}}},
+    "row": {"properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
+      "required": ["kind"], "not": {"required": ["id"]},
+      "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
+                     "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"}},
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "positions"}}},
+         "then": {"required": ["faces", "pos"], "properties": {"faces": {"$ref": "#/$defs/faces"}, "pos": {"$ref": "#/$defs/text"}}}},
+        {"if": {"properties": {"kind": {"const": "questions"}}},
+         "then": {"required": ["faces", "q", "options"], "properties": {"faces": {"$ref": "#/$defs/faces"},
+           "q": {"$ref": "#/$defs/text"}, "options": {"type": "array", "minItems": 1, "items": {"type": "object",
+             "required": ["v", "label"], "properties": {"v": {"$ref": "#/$defs/text"}, "label": {"type": "string"}}}}}}},
+        {"if": {"properties": {"kind": {"const": "terms"}}},
+         "then": {"required": ["term", "plain"], "properties": {"term": {"$ref": "#/$defs/text"}, "plain": {"type": "string"}}}},
+        {"if": {"properties": {"kind": {"const": "causes"}}},
+         "then": {"required": ["desc"], "properties": {"desc": {"$ref": "#/$defs/text"}}}},
+        {"if": {"properties": {"kind": {"const": "battles"}}},
+         "then": {"required": ["name", "rounds"], "properties": {"name": {"$ref": "#/$defs/text"}, "rounds": {"type": "array"}}}}
+      ]}}},
+    "resolved": {"properties": {"board": {"const": "council"}, "docId": {"pattern": "^(positions|questions|terms|causes)--\\S"}, "data": {
+      "required": ["kind", "id", "savedAt"],
+      "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes"]},
+                     "id": {"$ref": "#/$defs/text"},
+                     "savedAt": {"$ref": "#/$defs/iso"}}}}},
+    "battle": {"properties": {"board": {"const": "council"}, "docId": {"type": "string", "pattern": "\\S"}, "data": {
+      "required": ["id", "name"],
+      "properties": {"id": {"$ref": "#/$defs/text"}, "name": {"$ref": "#/$defs/text"}}}}},
+    "intake": {"properties": {"board": {"const": "council"}, "docId": {"const": "latest"}, "data": {
+      "required": ["date", "items", "savedAt"],
+      "properties": {"date": {"$ref": "#/$defs/date"}, "items": {"type": "array"}, "savedAt": {"$ref": "#/$defs/iso"}}}}}
   },
   "allOf": [
     {"if": {"properties": {"collection": {"const": "rows"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/row"}},
+    {"if": {"properties": {"collection": {"const": "records"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/record"}},
+    {"if": {"properties": {"collection": {"const": "battles"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/battle"}},
+    {"if": {"properties": {"collection": {"const": "intake"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/intake"}},
+    {"if": {"properties": {"collection": {"const": "resolved"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/resolved"}},
     {"if": {"properties": {"mode": {"const": "update"}}, "required": ["mode"]}, "then": {}, "else": {"allOf": [
       {"if": {"properties": {"collection": {"enum": ["positions", "questions", "terms", "causes", "picks", "blockers"]}}},
        "then": {"properties": {"data": {"required": ["savedAt"], "properties": {"savedAt": {"$ref": "#/$defs/iso"}}}}}},
@@ -78,7 +96,10 @@
          "deck": {"$ref": "#/$defs/text"}, "card": {"$ref": "#/$defs/text"}, "at": {"$ref": "#/$defs/iso"}}}}}},
       {"if": {"properties": {"collection": {"const": "morning"}, "docId": {"const": "menu"}}, "required": ["docId"]},
        "then": {"properties": {"data": {"required": ["menu", "savedAt"], "properties": {
-         "menu": {"type": "string", "not": {"pattern": "\"rawEntry\""}}, "savedAt": {"$ref": "#/$defs/iso"}}}}}}
+         "menu": {"type": "string", "not": {"pattern": "\"rawEntry\""}}, "savedAt": {"$ref": "#/$defs/iso"}}}}}},
+      {"if": {"properties": {"collection": {"const": "morning"}, "docId": {"const": "gather"}}, "required": ["collection", "docId"]},
+       "then": {"properties": {"data": {"required": ["date", "savedAt"], "properties": {
+         "date": {"$ref": "#/$defs/date"}, "savedAt": {"$ref": "#/$defs/iso"}}}}}}
     ]}}
   ]
 }

@@ -13,6 +13,9 @@
    view: { enc, cards: [card, card], given: Set(card), overcome } */
 import * as THREE from "three";
 import { paperLantern } from "./hollow.js";
+import { LOOK } from "./look-data.js";
+
+const HEARTH = new THREE.Color(LOOK.palette.light_colours.hearth);
 
 const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true, ...o });
 const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };
@@ -113,9 +116,9 @@ function buildA8() {
   let walk = 0, settle = 0;
   // the embers it hoards in the roots
   const embers = new THREE.Group(); root.add(embers);
-  const em = Array.from({ length: 7 }, (_, i) => { const m = mesh(new THREE.SphereGeometry(0.03, 6, 4), new THREE.MeshBasicMaterial({ color: 0xff8a3a, transparent: true }), 0, 0, 0); m.userData.a = i / 7 * Math.PI * 2; embers.add(m); return m; });
+  const em = Array.from({ length: 7 }, (_, i) => { const m = mesh(new THREE.SphereGeometry(0.03, 6, 4), new THREE.MeshBasicMaterial({ color: HEARTH, transparent: true }), 0, 0, 0); m.userData.a = i / 7 * Math.PI * 2; embers.add(m); return m; });
   parts["WAKE-GR-SHAMAN"] = { obj: embers, anchor: new THREE.Vector3(0.28, GROUND + 0.08, 0.22),
-    set(k, t) { em.forEach((m, i) => { const a = m.userData.a; m.position.set(0.28 + Math.cos(a) * lerp(0.07, 0.5, k), GROUND + 0.04 + k * (0.5 + (i % 3) * 0.18) + Math.sin(t * 2 + i) * 0.02 * k, 0.22 + Math.sin(a) * lerp(0.05, 0.3, k)); m.material.opacity = lerp(1, 0.55, k); m.material.color.setHex(k > 0.5 ? 0xffd08a : 0xff8a3a); }); } };
+    set(k, t) { em.forEach((m, i) => { const a = m.userData.a; m.position.set(0.28 + Math.cos(a) * lerp(0.07, 0.5, k), GROUND + 0.04 + k * (0.5 + (i % 3) * 0.18) + Math.sin(t * 2 + i) * 0.02 * k, 0.22 + Math.sin(a) * lerp(0.05, 0.3, k)); m.material.opacity = lerp(1, 0.55, k); m.material.color.set(k > 0.5 ? 0xffd08a : HEARTH); }); } };
   // the old hunger in its shape: its shadow, much bigger than it, on the dark behind
   const shadow = mesh(new THREE.CircleGeometry(0.5, 20), new THREE.MeshBasicMaterial({ color: 0x0c0810, transparent: true, opacity: 0.55, depthWrite: false }), 0, GROUND + 0.6, -0.55); shadow.scale.set(1, 1.5, 1); root.add(shadow);
   parts["WAKE-GR-SAGE"] = { obj: shadow, anchor: new THREE.Vector3(-0.32, GROUND + 0.9, -0.5),

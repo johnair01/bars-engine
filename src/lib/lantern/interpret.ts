@@ -185,7 +185,7 @@ export function interpret(q: Question, text: string, intake?: Pick<Intake, 'now'
     if (!top) return { q, heard: [], line: `${NOTHING}, so the lantern's flame stays as it is. Tap the lantern to set it by hand.` }
     const lead = score.filter(s => s.ws.length === top)
     const life: LifeState = lead.length > 1 ? 'Neutral' : lead[0].life
-    const flame = { Flowing: 'burns high and steady', Stalled: 'gutters low', Neutral: 'holds still' }[life]
+    const flame = { Flowing: 'burns high and steady', Stalled: 'gutters low', Stuck: 'gutters low', Neutral: 'holds still' }[life]
     return { q, life, heard, line: `I heard ${quoteList(heard)}, so the lantern's flame ${flame}: ${life}.` }
   }
 

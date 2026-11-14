@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { fireTrigger } from '@/actions/quest-engine'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins } from '@/lib/economy/coin-marks'
 
 const APPRECIATION_TYPES = ['courage', 'care', 'clarity', 'support', 'creativity', 'completion'] as const
 const MIN_AMOUNT = 1
@@ -92,8 +94,9 @@ export async function sendAppreciationAction(
       return { error: 'Cannot appreciate yourself' }
     }
 
+    await releaseStaleStakes(tx, sender.id)
     const wallet = await tx.vibulon.findMany({
-      where: { ownerId: sender.id },
+      where: spendableWhere(sender.id),
       orderBy: { createdAt: 'asc' },
       take: amount,
     })
@@ -115,6 +118,7 @@ export async function sendAppreciationAction(
     const senderNotes = `Appreciation to ${recipientLabel}${notesSuffix ? ` (${notesSuffix})` : ''}`
     const recipientNotes = `Appreciation from ${senderLabel}${notesSuffix ? ` (${notesSuffix})` : ''}`
 
+    await markCoins(tx, wallet, 'given', { playerId: sender.id, place: 'appreciation', toId: recipientId, barId: targetType === 'quest' ? targetId : null })
     for (const token of wallet) {
       await tx.vibulon.update({
         where: { id: token.id },

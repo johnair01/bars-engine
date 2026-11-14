@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
+import { releaseBarStake } from '@/lib/economy/bar-mint'
 import { getCurrentPlayer } from '@/lib/auth'
 import { isGameAccountReady } from '@/lib/auth'
 import { compostEligibleWhere, loadCompostEligibleBars } from '@/lib/vault-queries'
@@ -69,6 +70,8 @@ export async function runVaultCompost(input: {
                 },
                 data: { archivedAt: now, status: 'archived' },
             })
+            // A composted BAR gives back the vibeulon staked on it (FR-003).
+            await releaseBarStake(tx, { barIds: sourceIds })
 
             await tx.playerQuest.deleteMany({
                 where: {

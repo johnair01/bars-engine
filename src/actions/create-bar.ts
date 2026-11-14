@@ -17,6 +17,7 @@ import {
     type SceneAtlasBarTemplateMeta,
 } from '@/lib/creator-scene-grid-deck/bar-template'
 import { assertCanCreatePrivateDraft, assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
+import { mintBarVibulon, spendableVibulons, stakeBarVibulon } from '@/lib/economy/bar-mint'
 import {
     clampCampaignAllyshipDomain,
     resolveCampaignInstanceForRef,
@@ -254,40 +255,9 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
         }
         const completionEffects = JSON.stringify(completionEffectsPayload)
 
-        // TRANSACTION: If public, burn token. Then create bar.
+        // TRANSACTION: create the BAR, mint its vibeulon, and stake it when public (ee-bar-mint-stake A, 2026-10-29).
+        // The old burn of one vibeulon per public BAR retired with that ruling.
         const result = await db.$transaction(async (tx) => {
-            if (effectiveVisibility === 'public') {
-                // Check balance defined by available vibeulons
-                const wallet = await tx.vibulon.findMany({
-                    where: { ownerId: playerId },
-                    orderBy: { createdAt: 'asc' },
-                    take: 1
-                })
-
-                if (wallet.length < 1) {
-                    effectiveVisibility = 'private'
-                    warning = 'Insufficient balance to stake public BAR; saved as private.'
-                } else {
-                    const tokenToBurn = wallet[0]
-
-                    // Burn the token
-                    await tx.vibulon.delete({
-                        where: { id: tokenToBurn.id }
-                    })
-
-                    // Log the burn
-                    await tx.vibulonEvent.create({
-                        data: {
-                            playerId,
-                            source: 'quest_creation_stake',
-                            amount: -1,
-                            notes: `Staked on public quest: ${title}`,
-                            archetypeMove: 'INITIATE' // General move for starting something
-                        }
-                    })
-                }
-            }
-
             // Create the Bar (InsightBAR when from 321 flow)
             const barType = metadata321 ? 'insight' : 'vibe'
             const newBar = await tx.customBar.create({
@@ -321,6 +291,11 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                     where: { id: newBar.id },
                     data: { rootId: newBar.id }
                 })
+            }
+
+            await mintBarVibulon(tx, { barId: newBar.id, playerId, title })
+            if (effectiveVisibility === 'public') {
+                await stakeBarVibulon(tx, { barId: newBar.id, playerId })
             }
 
             // If this is a private assignment, make it appear in the recipient's Active Quests.
@@ -639,30 +614,13 @@ export async function createQuestFromWizard(data: any) {
         }
 
         const newBar = await db.$transaction(async (tx) => {
-            if (effectiveVisibility === 'public') {
-                const needed = isBountyMode ? stake : 1
-                const wallet = await tx.vibulon.findMany({
-                    where: { ownerId: playerId },
-                    orderBy: { createdAt: 'asc' },
-                    take: needed
-                })
-
-                if (wallet.length < needed) {
+            // A bounty escrows its stake from spendable vibeulons; a plain public quest stakes the vibeulon it mints
+            // below instead of burning one (ee-bar-mint-stake A, 2026-10-29).
+            if (isBountyMode) {
+                const wallet = await spendableVibulons(tx, playerId, stake)
+                if (wallet.length < stake) {
                     effectiveVisibility = 'private'
-                    warning = isBountyMode
-                        ? `Insufficient balance for bounty (need ${needed}); saved as private.`
-                        : 'Insufficient balance to stake public quest; saved as private.'
-                } else if (!isBountyMode) {
-                    await tx.vibulon.delete({ where: { id: wallet[0].id } })
-                    await tx.vibulonEvent.create({
-                        data: {
-                            playerId,
-                            source: 'quest_creation_stake',
-                            amount: -1,
-                            notes: `Staked on public quest: ${finalTitle}`,
-                            archetypeMove: 'INITIATE'
-                        }
-                    })
+                    warning = `Insufficient balance for bounty (need ${stake}); saved as private.`
                 }
             }
 
@@ -701,11 +659,7 @@ export async function createQuestFromWizard(data: any) {
             })
 
             if (isBountyMode && effectiveVisibility === 'public') {
-                const walletForBounty = await tx.vibulon.findMany({
-                    where: { ownerId: playerId },
-                    orderBy: { createdAt: 'asc' },
-                    take: stake
-                })
+                const walletForBounty = await spendableVibulons(tx, playerId, stake)
                 for (const v of walletForBounty) {
                     await tx.bountyStake.create({
                         data: { barId: created.id, vibulonId: v.id, playerId }
@@ -717,6 +671,12 @@ export async function createQuestFromWizard(data: any) {
                 where: { id: created.id },
                 data: { rootId: created.id }
             })
+
+            // Mint after the bounty escrow so the new coin is the maker's to keep, never escrowed.
+            await mintBarVibulon(tx, { barId: created.id, playerId, title: finalTitle })
+            if (effectiveVisibility === 'public' && !isBountyMode) {
+                await stakeBarVibulon(tx, { barId: created.id, playerId })
+            }
 
             // Private quests should immediately appear in the creator's active list.
             if (effectiveVisibility === 'private') {

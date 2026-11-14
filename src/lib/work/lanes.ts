@@ -3,17 +3,25 @@ import { givenToken, tokenMatches } from '@/lib/council/token'
 
 /**
  * The lanes, in Wendell's order on the board (`wq-lanes`): Claude Teams, Freebuff, Codex, Zo. Slice 1 opens the first
- * two (`wq-two-lanes-first`). Each lane has its own token, so a leaked token reaches one lane: WORK_TOKEN_CLAUDE,
- * WORK_TOKEN_FREEBUFF. COUNCIL_MENU_TOKEN (the council's own sessions) may act in any lane and push tickets.
+ * two (`wq-two-lanes-first`); DeepAI Code opens as a third so its environment can pull from the same queue and be
+ * measured beside the others. Each lane has its own token, so a leaked token reaches one lane: WORK_TOKEN_CLAUDE,
+ * WORK_TOKEN_FREEBUFF, WORK_TOKEN_DEEPAI. COUNCIL_MENU_TOKEN (the council's own sessions) may act in any lane and push
+ * tickets.
  */
-export const LANES = ['claude', 'freebuff'] as const
+export const LANES = ['claude', 'freebuff', 'deepai'] as const
 export type Lane = (typeof LANES)[number]
-/** Where his answers go by themselves (`wq-who-routes`): Claude first, Freebuff when Claude runs dry. */
+/**
+ * Where his answers go by themselves (`wq-who-routes`): Claude first, Freebuff when Claude runs dry. DeepAI is
+ * deliberately not here. It opens as an explicit lane (a ticket naming it, or a claim from it) so its throughput and
+ * quality can be measured before it carries work he did not route to it himself.
+ */
 export const DEFAULT_LANES: Lane[] = ['claude', 'freebuff']
 /** A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. */
 export const LEASE_MS = 2 * 60 * 60 * 1000
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */
 export const DRY_MS = 5 * 60 * 60 * 1000
+/** The furthest out he can set the renewal gate by hand. Beyond this the gate is a guess, not a signal. */
+export const MAX_DRY_MS = 7 * 24 * 60 * 60 * 1000
 
 export function isLane(v: unknown): v is Lane {
   return typeof v === 'string' && (LANES as readonly string[]).includes(v)

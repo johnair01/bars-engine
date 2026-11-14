@@ -56,6 +56,13 @@ describe('first minute: where it stands', () => {
     expect(minuteWrite('hope', 'skip', 1)).toEqual({ minute: { skip: { hope: 1 } } })
     expect(minuteWrite('vine', 'done', 4)).toEqual({ minute: { vine: 4 }, oriented: 4 })
   })
+  it('the hearth is lit from its second care, not by the ember beat alone', () => {
+    expect(minuteState({ minute: { ember: 1 }, hearth: { care: 1 } }).hearthLit).toBe(false)
+    expect(minuteState({ minute: { ember: 1 }, hearth: { care: 2 } }).hearthLit).toBe(true)
+    expect(minuteState({ hearth: { care: 1 } }).emberGlows).toBe(true)
+    expect(minuteState({ minute: { ember: 1 }, hearth: { stage: 1 } }).hearthLit).toBe(false) // stage reads first (FR-023)
+    expect(minuteState({ minute: { ember: 1 }, hearth: { stage: 2 } }).hearthLit).toBe(true)
+  })
   it('a homeroom oriented before the minute existed counts as done, nothing to come back to', () => {
     const s = minuteState({ oriented: 5 })
     expect(s.step).toBe('open')
