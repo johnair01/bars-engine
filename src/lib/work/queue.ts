@@ -112,11 +112,26 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
  * the only other sweep runs inside claimTicket — which a dry lane never gets, so those tickets were unreachable for
  * good: not in its deck, not in the next lane's, and no claim would ever return them (found 2026-11-11: 35 stranded).
  */
+export const MANUAL = 'manual:'
+/** True when his own switch last set this lane (owner or council caller), not a worker's usage-limit mark. */
+export async function laneIsPinned(db: Db, lane: string): Promise<boolean> {
+  const row = await db.workLane.findUnique({ where: { lane } })
+  return !!row?.note?.startsWith(MANUAL)
+}
+
+/**
+ * `manual` marks a change from his own switch on the board. It stays until he flips it: a manual dry has no renewal
+ * gate, and a worker's automatic mark cannot override a manual setting (2026-11-14: the Claude lamp went dark again
+ * after he relit it, and answers went to Freebuff). Automatic marks on an unpinned lane work as before.
+ */
 export async function setLaneDry(db: Db, lane: string, dry: boolean, note: string | null, now = new Date(),
-                                 until: Date | null = null) {
+                                 until: Date | null = null, manual = false) {
+  if (!manual && await laneIsPinned(db, lane)) return { lane, dry: !dry, moved: 0, ignored: true as const }
+  if (manual) note = MANUAL + (note ?? '')
   // The renewal gate: when the lamp comes back on. Default five hours; he can name the hour instead, so a lane whose
   // usage is out overnight stays out until the morning rather than relighting at 3 a.m. and filling again.
   const dryUntil = !dry ? null
+    : manual ? null
     : until && until > now ? new Date(Math.min(until.getTime(), now.getTime() + MAX_DRY_MS)) : new Date(now.getTime() + DRY_MS)
   await db.workLane.upsert({ where: { lane }, create: { lane, dry, dryUntil, note }, update: { dry, dryUntil, note } })
   if (!dry) return { lane, dry, moved: 0 }
@@ -136,10 +151,11 @@ export async function setLaneDry(db: Db, lane: string, dry: boolean, note: strin
 /** Each lane as the board draws it: lamp lit or out, and the height of its deck (ready) and crew's hands (claimed). */
 export async function laneState(db: Db, lanes: readonly string[], now = new Date()) {
   const out = await dryLanes(db, now)
+  const pinned = new Set((await db.workLane.findMany({ where: { note: { startsWith: MANUAL } } })).map(r => r.lane))
   const counts = await db.workTicket.groupBy({ by: ['lane', 'state'], where: { state: { in: ['ready', 'claimed'] } },
     _count: { _all: true } })
   return lanes.map(lane => ({
-    lane, lit: !out.has(lane),
+    lane, lit: !out.has(lane), manual: pinned.has(lane),
     deck: counts.find(c => c.lane === lane && c.state === 'ready')?._count._all ?? 0,
     held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
   }))

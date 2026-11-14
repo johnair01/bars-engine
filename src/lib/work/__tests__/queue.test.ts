@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import { moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
 
-function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
+function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null; note?: string | null }[] = []) {
   return {
     workLane: {
-      findMany: vi.fn(async () => lanes.filter(l => l.dry)),
-      upsert: vi.fn(async ({ create }: { create: { lane: string; dry: boolean; dryUntil: Date | null } }) => {
+      findMany: vi.fn(async ({ where }: { where: { dry?: boolean; note?: { startsWith: string } } }) =>
+        where.note ? lanes.filter(l => l.note?.startsWith(where.note!.startsWith)) : lanes.filter(l => l.dry)),
+      findUnique: vi.fn(async ({ where }: { where: { lane: string } }) => lanes.find(l => l.lane === where.lane) ?? null),
+      upsert: vi.fn(async ({ create }: { create: { lane: string; dry: boolean; dryUntil: Date | null; note?: string | null } }) => {
         const i = lanes.findIndex(l => l.lane === create.lane); if (i >= 0) lanes[i] = create; else lanes.push(create)
       }),
     },
@@ -120,5 +122,14 @@ describe('the queue', () => {
       expect(await steerTicket(fakeDb(tickets), 'c', 'nowhere', 'owner')).toMatchObject({ ok: false, status: 400 })
       expect(await steerTicket(fakeDb(tickets), 'zz', 'claude', 'owner')).toMatchObject({ ok: false, status: 404 })
     })
+  })
+
+  it('his manual switch sticks: a worker mark cannot undo it, and a manual dry has no renewal gate', async () => {
+    const db = fakeDb([]), now = new Date('2026-11-14T20:00:00Z')
+    await setLaneDry(db, 'claude', false, null, now, null, true)
+    const r = await setLaneDry(db, 'claude', true, 'usage limit', now)
+    expect(r).toMatchObject({ ignored: true, dry: false })
+    const off = await setLaneDry(db, 'claude', true, null, now, null, true)
+    expect(off.dryUntil).toBeNull()
   })
 })
