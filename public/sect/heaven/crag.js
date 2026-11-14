@@ -13,11 +13,26 @@ const rimAt = th => CRAG.rim + cragNoise(th) * 7;
 // on the ridge's crest (the axis point at +50), and a bridge carries the way over the saddle behind it to the foot of the
 // winding wall, so the eye can follow one road from the hall to the crown.
 const _tg = Math.atan2(P.great[1] - P.summit[1], P.great[0] - P.summit[0]);
-const WALL_TH = _tg - 1.1, WALL_Y = 46; // where the winding wall starts (cragCrown)
-const wallFoot = () => { const th = WALL_TH, dy = 90 - WALL_Y, slope = 3.2 + 1.6 * cragNoise(th * 3 + 1);
-  const r = rimAt(th) + dy / slope + 7.8 + Math.floor(dy / 7.5) * 0.35 + dy * 0.03; return [P.summit[0] + Math.cos(th) * r, P.summit[1] + Math.sin(th) * r]; };
+const WALL_TH = _tg - 1.1; // where the winding road starts its turn (ROAD)
 const LAND = AXIS[9];
-const WAY = [PILGRIM.foot, ...PILGRIM.landings.map(l => [l.x, l.z]), PILGRIM.top, LAND, wallFoot()]; // round 20: the zigzag's turns
+// Round 24: the winding road's nodes, shared by cragCrown (which draws it) and wayGround (which lets the figure walk it).
+// [x, z, y, th]; y is the road's centre line, its paved top stands 0.25 m above.
+export const ROAD = (() => { const steps = 150, turn = Math.PI * 2.4, yLo = 46, yHi = 89, out = [];
+  for (let i = 0; i <= steps; i++) { const t = i / steps, th = WALL_TH + t * turn, y = yLo + (yHi - yLo) * t;
+    const slope = 3.2 + 1.6 * cragNoise(th * 3 + 1), dy = Math.max(0, 90 - y), r = rimAt(th) + dy / slope + 7.8 + Math.floor(dy / 7.5) * 0.35 + dy * 0.03;
+    out.push([P.summit[0] + Math.cos(th) * r, P.summit[1] + Math.sin(th) * r, y, th]); }
+  return out; })();
+// Round 24: Wendell on cc-heaven-r22, "The first image has steps on a pier that lead to nowhere". Round 20 put the zigzag's
+// landings into WAY, so WAY[2], which had been the winding wall's foot, became the second landing, and the bridge ran from
+// the gate back over the zigzag to a deck 10 m in the air. Walkability rule 2 (calrunian-sect.md): a bridge joins walkable
+// ground or another way at both ends at the same height. The bridge now runs from the gate terrace to the node of the
+// winding road nearest the gate whose top is no more than 2 m above the gate, and the road starts there; its lower turn,
+// which ended 3 m above the ground at the crag's foot, is gone.
+const ROAD_J = (() => { const ya = 50.15; let best = 0, bd = 1e9;
+  ROAD.forEach(([x, z, y], i) => { const d = Math.hypot(x - LAND[0], z - LAND[1]); if (y + 0.25 >= ya - 0.5 && y + 0.25 <= ya + 2 && d < bd) { bd = d; best = i; } });
+  return best; })();
+export const ROAD_START = ROAD_J;
+const WAY = [PILGRIM.foot, ...PILGRIM.landings.map(l => [l.x, l.z]), PILGRIM.top, LAND, ROAD[ROAD_J]]; // round 20: the zigzag's turns
 function nearWay(x, z) { let best = 1e9;
   for (let i = 1; i < WAY.length; i++) { const [a, b] = [WAY[i - 1], WAY[i]], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz;
     const k = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2)); best = Math.min(best, Math.hypot(x - a[0] - k * dx, z - a[1] - k * dz)); }
@@ -29,6 +44,7 @@ function nearWay(x, z) { let best = 1e9;
 // on, and the walls and the gate's posts stop the avatar. CREST_STAIR ends the walk the "Climb to the crest" button takes.
 export const wayColliders = [];
 export const TREAD = PILGRIM.T; // round 20: the gentle stair's tread depth (0.28 m), one step of the figure per tread
+const FOOT = 3; // round 24: the apron before the first tread, at the court's height (rule 1)
 const TW = 1.2; // half the width of a tread; the walls stand outside it, to PILGRIM.HW
 // where a foot should land on the stair: the middle of the tread under (x, z) as [x, z, top], or null off the stair
 export function stairTread(x, z) {
@@ -38,17 +54,28 @@ export function stairTread(x, z) {
     return [f.a[0] + f.ux * sc + f.nx * v, f.a[1] + f.uz * sc + f.nz * v, f.y + PILGRIM.R * (k + 1)]; }
   return null;
 }
-const way = { stair: null, land: null, bridge: null };
+const way = { stair: null, land: null, bridge: null, terrace: null };
 const wallBox = (x, z, len, thick, ry, y0, y1) => wayColliders.push({ x, z, c: Math.cos(ry), s: Math.sin(ry), hw: len / 2, hd: thick / 2, y0, y1 });
 // ground of the way at (x, z), or -Infinity off it
 export function wayGround(x, z) {
-  for (const l of PILGRIM.landings) if (Math.hypot(x - l.x, z - l.z) < l.r + 0.25) return l.y;
+  // round 24: the landing's ground and its pad stop at its radius (were 0.25 m wider, which buried the last and first
+  // treads of every flight under the pad and left a double riser of 0.34 m at each turn; walkability rule 1)
+  for (const l of PILGRIM.landings) if (Math.hypot(x - l.x, z - l.z) < l.r) return l.y;
   const t = stairTread(x, z); if (t) return t[2];
+  { const f = PILGRIM.flights[0], s = (x - f.a[0]) * f.ux + (z - f.a[1]) * f.uz, v = (x - f.a[0]) * f.nx + (z - f.a[1]) * f.nz;
+    if (s >= -FOOT && s < f.s0 && Math.abs(v) < PILGRIM.HW) return f.y; } // round 24: the paved apron at the stair's foot
   const ld = way.land;
   if (ld) { const dx = x - ld.x, dz = z - ld.z, lx = dx * ld.c - dz * ld.s, lz = dx * ld.s + dz * ld.c; if (Math.abs(lx) < 5 && Math.abs(lz) < 5) return ld.y; }
+  const tr = way.terrace;
+  if (tr) { const dx = x - tr.x, dz = z - tr.z; if (Math.abs(dx * tr.ux + dz * tr.uz) < tr.hl && Math.abs(dx * tr.nx + dz * tr.nz) < tr.hw) return tr.y; }
   const br = way.bridge;
   if (br) { const u = ((x - br.a[0]) * br.ux + (z - br.a[1]) * br.uz) / br.L, v = (x - br.a[0]) * br.nx + (z - br.a[1]) * br.nz;
-    if (u >= 0 && u <= 1 && Math.abs(v) < 1.8) return br.ya + (br.yb - br.ya) * u; }
+    if (u >= 0 && u <= 1 && Math.abs(v) < 1.8) return br.yAt(u); }
+  // round 24: the winding road is walkable from the bridge to the crown (rule 4: nothing drawn as a road is decor only)
+  if (Math.hypot(x - P.summit[0], z - P.summit[1]) < 110) {
+    for (let i = ROAD_J + 1; i < ROAD.length; i++) { const [px, pz, py] = ROAD[i - 1], [qx, qz, qy] = ROAD[i], dx = qx - px, dz = qz - pz, L2 = dx * dx + dz * dz;
+      const t = ((x - px) * dx + (z - pz) * dz) / L2; if (t < -0.05 || t > 1.05) continue;
+      if (Math.abs(((x - px) * dz - (z - pz) * dx) / Math.sqrt(L2)) < 1.8) return py + (qy - py) * Math.max(0, Math.min(1, t)) + 0.25; } }
   return -Infinity;
 }
 // the stair's foot, the landing and a step through the gate: the last legs of the "Climb to the crest" walk
@@ -71,20 +98,25 @@ export function cragWay(S, M) {
         const sc = f.s0 + (k + 0.5) * TREAD, x = f.a[0] + f.ux * sc, z = f.a[1] + f.uz * sc, top = f.y + R * (k + 1);
         const low = lowUnder(x, z, f.ux, f.uz, f.nx, f.nz, TREAD, TW), hgt = top - low + 0.6;
         const st = box(G, TREAD + 0.01, hgt, TW * 2, M.plinth, x, top - hgt / 2, z); st.rotation.y = f.ry;
-        if (k % 3 === 0) { const n = Math.min(3, f.m - 1 - k), sm = f.s0 + (k + n / 2) * TREAD, xm = f.a[0] + f.ux * sm, zm = f.a[1] + f.uz * sm, wt = f.y + R * (k + n) + 0.75, len = n * TREAD + 0.02;
+        if (k % 2 === 0) { const n = Math.min(2, f.m - 1 - k), sm = f.s0 + (k + n / 2) * TREAD, xm = f.a[0] + f.ux * sm, zm = f.a[1] + f.uz * sm, wt = f.y + R * (k + n) + 0.4, // round 22: a 0.4 m kerb in pairs (was 0.75 m in threes), so side views see the feet
+             len = n * TREAD + 0.02;
           for (const sg of [-1, 1]) { const wx = xm + f.nx * wy * sg, wz = zm + f.nz * wy * sg, wl = lowUnder(wx, wz, f.ux, f.uz, f.nx, f.nz, len, 0.15), wh = wt - wl + 0.6;
             const w = box(G, len, wh, WT, M.stone, wx, wt - wh / 2, wz); w.rotation.y = f.ry; wallBox(wx, wz, len, WT, f.ry, wl - 0.6, wt); } }
       }
     }
+    // round 24: a paved apron 3 m long at the court's height before the first tread, so the court meets the stair with
+    // one riser (the earthwork had cut a 0.45 m trench in front of it)
+    { const f = flights[0], sc = f.s0 - FOOT / 2, x = f.a[0] + f.ux * sc, z = f.a[1] + f.uz * sc, lo = lowUnder(x, z, f.ux, f.uz, f.nx, f.nz, FOOT, HW), h = f.y - lo + 0.6;
+      const ap = box(G, FOOT, h, HW * 2, M.plinth, x, f.y - h / 2, z); ap.rotation.y = f.ry; }
     // the landings: a round stone platform, and a wall round its outside, open where a flight meets it
     landings.forEach((l, i) => {
-      const r = l.r + 0.25, low = (() => { let lo = 1e9; for (let a = 0; a < 12; a++) for (const q of [0, 0.6, 1]) lo = Math.min(lo, heightAt(l.x + Math.cos(a * Math.PI / 6) * r * q, l.z + Math.sin(a * Math.PI / 6) * r * q)); return lo; })();
+      const r = l.r, low = (() => { let lo = 1e9; for (let a = 0; a < 12; a++) for (const q of [0, 0.6, 1]) lo = Math.min(lo, heightAt(l.x + Math.cos(a * Math.PI / 6) * r * q, l.z + Math.sin(a * Math.PI / 6) * r * q)); return lo; })();
       const h = l.y - low + 0.6, pad = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 24), M.plinth); pad.position.set(l.x, l.y - h / 2, l.z); pad.castShadow = pad.receiveShadow = true; G.add(pad);
       const open = [flights[i], flights[i + 1]].map((f, j) => Math.atan2(j ? f.uz : -f.uz, j ? f.ux : -f.ux)), half = Math.atan2(HW + 0.3, r);
       const NS = 20; for (let s = 0; s < NS; s++) { const th = (s + 0.5) / NS * Math.PI * 2;
         if (open.some(o => Math.abs(Math.atan2(Math.sin(th - o), Math.cos(th - o))) < half)) continue;
         const wr = r - WT / 2, wx = l.x + Math.cos(th) * wr, wz = l.z + Math.sin(th) * wr, len = 2 * Math.PI * wr / NS + 0.04, ry = -th + Math.PI / 2;
-        const w = box(G, len, 0.75 + 0.6, WT, M.stone, wx, l.y + 0.75 - 0.675, wz); w.rotation.y = ry; wallBox(wx, wz, len, WT, ry, l.y - 0.6, l.y + 0.75); }
+        const w = box(G, len, 0.4 + 0.6, WT, M.stone, wx, l.y + 0.4 - 0.5, wz); w.rotation.y = ry; wallBox(wx, wz, len, WT, ry, l.y - 0.6, l.y + 0.4); }
     }); }
   // the landing on the crest, and a gate on it facing the court
   { const [x, z] = LAND, y = heightAt(x, z), face = Math.atan2(P.great[0] - x, P.great[1] - z);
@@ -93,15 +125,31 @@ export function cragWay(S, M) {
     const gate = paifang(M, { w: 6.5, h: 5.2, plaque: '登天' }); gate.position.set(x, y + 0.15, z); gate.rotation.y = face; G.add(gate);
     for (const px of [-6.5 / 2, -6.5 / 6.5, 6.5 / 6.5, 6.5 / 2]) wallBox(x + Math.cos(face) * px, z - Math.sin(face) * px, 0.5, 0.5, face, y, y + 5); }
   // the bridge over the saddle to the wall's foot: a deck with parapets on stone piers
-  { const [a, b] = [LAND, WAY[2]], ya = heightAt(...a) + 0.15, yb = WALL_Y, dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
+  { const [a, b] = [LAND, ROAD[ROAD_J]], ya = heightAt(...a) + 0.15, yb = ROAD[ROAD_J][2] + 0.25, dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
     const n = Math.ceil(L / 2), ry = -Math.atan2(dz, dx), nx = -dz / L, nz = dx / L;
-    way.bridge = { a, L, ux: dx / L, uz: dz / L, nx, nz, ya, yb };
-    for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, x = a[0] + dx * t, z = a[1] + dz * t, y = ya + (yb - ya) * t;
+    // round 24: the deck stays level across the crest terrace and only then climbs to the road (rule 2: same height where they meet)
+    const t0 = Math.min(0.9, 6.5 / L), yAt = t => ya + (yb - ya) * Math.max(0, (t - t0) / (1 - t0));
+    way.bridge = { a, L, ux: dx / L, uz: dz / L, nx, nz, ya, yb, yAt };
+    // round 22: the crest beyond the gate. A paved terrace 10 m wide and 6 m deep runs on from the gate toward the bridge, held
+    // by a stone block down to the ground, with a 0.45 m kerb on its two sides and a stone lantern at each of its far corners.
+    { const ux = dx / L, uz = dz / L, TL = 6, TWD = 10, cx = a[0] + ux * (TL / 2 + 0.5), cz = a[1] + uz * (TL / 2 + 0.5), top = ya;
+      let lo = 1e9; for (const t of [0, 0.5, 1]) for (const s of [-1, 0, 1]) lo = Math.min(lo, heightAt(cx + ux * (t - 0.5) * TL + nx * s * TWD / 2, cz + uz * (t - 0.5) * TL + nz * s * TWD / 2));
+      const th = Math.max(0.5, top - lo + 0.6), ter = box(G, TL, th, TWD, M.plinth, cx, top - th / 2, cz); ter.rotation.y = ry;
+      way.terrace = { x: cx, z: cz, ux, uz, nx, nz, hl: TL / 2, hw: TWD / 2 - 0.3, y: top }; // round 24: walkable (rule 4)
+      for (const sg of [-1, 1]) { const wx = cx + nx * (TWD / 2 - 0.15) * sg, wz = cz + nz * (TWD / 2 - 0.15) * sg;
+        const k = box(G, TL, 0.45 + 0.1, 0.3, M.stone, wx, top + 0.225, wz); k.rotation.y = ry; wallBox(wx, wz, TL, 0.3, ry, top - 0.2, top + 0.45);
+        const lx = cx + ux * (TL / 2 - 0.6) + nx * (TWD / 2 - 0.15) * sg, lz = cz + uz * (TL / 2 - 0.6) + nz * (TWD / 2 - 0.15) * sg;
+        const base = box(G, 0.5, 0.5, 0.5, M.stone, lx, top + 0.25, lz), post = box(G, 0.22, 0.9, 0.22, M.stone, lx, top + 0.95, lz), cap = box(G, 0.55, 0.14, 0.55, M.stone, lx, top + 1.5, lz), box_ = box(G, 0.34, 0.34, 0.34, M.stone, lx, top + 1.74, lz);
+        wallBox(lx, lz, 0.5, 0.5, 0, top - 0.2, top + 1.9); [base, post, cap, box_].forEach(m => { m.rotation.y = ry; }); } }
+    for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, x = a[0] + dx * t, z = a[1] + dz * t, y = yAt(t);
       const d = box(G, L / n + 0.05, 0.8, 4, M.plinth, x, y - 0.4, z); d.rotation.y = ry;
       for (const s of [-1, 1]) { const wx = x + nx * 2 * s, wz = z + nz * 2 * s, w = box(G, L / n + 0.05, 1.1, 0.45, M.stone, wx, y + 0.55, wz); w.rotation.y = ry;
         if (t * L > 5.5) wallBox(wx, wz, L / n + 0.05, 0.45, ry, y - 0.8, y + 1.1); }
       if (k % 4 === 2) { const g = Math.min(heightAt(x + nx * 1.5, z + nz * 1.5), heightAt(x - nx * 1.5, z - nz * 1.5)), h = y - 0.8 - g + 2;
-        if (h > 1.5) { const pr = box(G, 2.4, h, 3.6, M.stone, x, g - 2 + h / 2, z); pr.rotation.y = ry; } } } }
+        if (h > 1.5) { if (h <= 4) { const pr = box(G, 2.4, h, 3.6, M.stone, x, g - 2 + h / 2, z); pr.rotation.y = ry; }
+          else { // round 23: over a real hollow (the ground is 10 m under the deck here) the pier is a slim trestle, two 0.8 m posts with a cross-beam, not one 12 m slab
+            for (const sg of [-1, 1]) { const px = x + nx * 1.2 * sg, pz = z + nz * 1.2 * sg, gp = heightAt(px, pz), hp = y - 0.8 - gp + 1, post = box(G, 0.8, hp, 0.8, M.stone, px, gp - 1 + hp / 2, pz); post.rotation.y = ry; }
+            const bm = box(G, 1.2, 0.6, 3.6, M.stone, x, y - 1.1, z); bm.rotation.y = ry; } } } } }
   // rock outcrops on the ridge either side of the way, flat-faced like the crag
   { const geo = new THREE.DodecahedronGeometry(1, 0), mat = new THREE.MeshStandardMaterial({ color: '#b3a68f', roughness: 1, flatShading: true });
     const R = new THREE.InstancedMesh(geo, mat, 70), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), p = new THREE.Vector3();
@@ -244,18 +292,21 @@ export function cragCrown(S, M) {
 
   // the winding wall: a walled road cut into the cliff, climbing from the crag's foot toward the great court round to
   // the crown, a turn and a quarter, held to the contour where the ground stands at the road's height
-  const steps = 150, start = toGreat - 1.1, turn = Math.PI * 2.4, yLo = 46, yHi = 89;
+  // round 16: held to the new rock face, with a stone retaining wall under it so it reads built into the cliff.
+  // Round 24: the nodes are ROAD (above), and the road starts where the bridge from the gate meets it (ROAD_START). The
+  // parapet is a collider and an inner kerb keeps the figure off the cliff; the first segment's parapet is open for the bridge.
   let prev = null;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps, th = start + t * turn, y = yLo + (yHi - yLo) * t;
-    // round 16: held to the new rock face, with a stone retaining wall under it so it reads built into the cliff
-    const slope = 3.2 + 1.6 * cragNoise(th * 3 + 1), dy = Math.max(0, 90 - y);
-    const r = rimAt(th) + dy / slope + 7.8 + Math.floor(dy / 7.5) * 0.35 + dy * 0.03, [x, z] = at(th, r); // smooth: clears every pillar
+  for (let i = ROAD_START; i < ROAD.length; i++) {
+    const [x, z, y, th] = ROAD[i];
     if (prev) {
       const [px, pz, py] = prev, L = Math.hypot(x - px, z - pz), ry = -Math.atan2(z - pz, x - px);
       const road = box(G, L + 0.4, 0.9, 3.6, M.plinth, (x + px) / 2, (y + py) / 2 - 0.2, (z + pz) / 2); road.rotation.y = ry;
       const [ox, oz] = [Math.cos(th) * 1.95, Math.sin(th) * 1.95];
-      const wall = box(G, L + 0.4, 1.6, 0.8, M.stone, (x + px) / 2 + ox, (y + py) / 2 + 0.8, (z + pz) / 2 + oz); wall.rotation.y = ry;
+      const ym = (y + py) / 2;
+      if (i > ROAD_START + 1) { const wall = box(G, L + 0.4, 1.6, 0.8, M.stone, (x + px) / 2 + ox, ym + 0.8, (z + pz) / 2 + oz); wall.rotation.y = ry;
+        wallBox((x + px) / 2 + ox, (z + pz) / 2 + oz, L + 0.4, 0.8, ry, ym, ym + 1.6); }
+      { const kx = (x + px) / 2 - ox, kz = (z + pz) / 2 - oz, k = box(G, L + 0.4, 0.45, 0.3, M.stone, kx, ym + 0.25 + 0.2, kz); k.rotation.y = ry;
+        wallBox(kx, kz, L + 0.4, 0.3, ry, ym, ym + 0.7); }
       const base = box(G, L + 0.4, 6, 9, M.stone, (x + px) / 2 - ox * 1.2, (y + py) / 2 - 3.6, (z + pz) / 2 - oz * 1.2); base.rotation.y = ry;
       if (i % 3 === 0) { const m = box(G, 0.8, 0.6, 0.85, M.stone, x + ox, y + 1.9, z + oz); m.rotation.y = ry; }
     }

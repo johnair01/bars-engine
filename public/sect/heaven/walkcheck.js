@@ -1,0 +1,20 @@
+// Round 24: the walkability check (rules in the council's calrunian-sect.md, "Walkability rules"). It walks a route of
+// [x, z] points in 0.1 m steps with the same ground the figure stands on and reports every place where the ground jumps
+// more than one riser (0.22 m) between two steps: a flight that ends in the air, a deck that stops short, a ledge.
+// Run it in the page before any look of the way is posted: `(await import('/sect/heaven/walkcheck.js')).wayCheck()`.
+import { groundAt } from './walk.js';
+import { CREST_STAIR, ROAD, ROAD_START } from './crag.js';
+
+export function walkCheck(route, ground = groundAt, maxJump = 0.22) {
+  const breaks = []; let prev = null, len = 0;
+  for (let i = 1; i < route.length; i++) {
+    const [ax, az] = route[i - 1], [bx, bz] = route[i], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 0.1));
+    for (let k = 0; k <= n; k++) { const x = ax + (bx - ax) * k / n, z = az + (bz - az) * k / n, y = ground(x, z);
+      if (prev !== null && Math.abs(y - prev) > maxJump) breaks.push({ leg: i, at: [+x.toFixed(2), +z.toFixed(2)], from: +prev.toFixed(2), to: +y.toFixed(2) });
+      prev = y; }
+    len += L;
+  }
+  return { ok: breaks.length === 0, metres: Math.round(len), breaks };
+}
+// the sect's one climbing way: the great court, the zigzag, the gate, the bridge and the winding road to the crown
+export function wayCheck() { return walkCheck([...CREST_STAIR.slice(0, -1), ...ROAD.slice(ROAD_START).map(([x, z]) => [x, z])]); }

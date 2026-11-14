@@ -29,7 +29,9 @@ export function inside(p) {
 
 export function groundAt(x, z) {
   const r = inside({ x, z });
-  return r ? r.y + 0.06 : Math.max(roadGround(x, z), wayGround(x, z)); // round 16: the far mesh; round 18: the crag's stair, landing and bridge
+  if (r) return r.y + 0.06;
+  // round 24: on a paved way the figure stands on the paving, even where the hill under it rises a hand above (rule 1)
+  const w = wayGround(x, z); return w > -Infinity ? w : roadGround(x, z); // round 16: the far mesh; round 18: the crag's stair, landing and bridge
 }
 
 // Push the avatar's circle out of every box whose height spans its body.
