@@ -1,6 +1,6 @@
 ---
 name: blender-rendering
-description: Render with Blender 5.2 Cycles/EEVEE/Workbench - quality presets, GPU setup, adaptive sampling, denoising, light paths, color management (AgX, Khronos PBR Neutral, ACES), PNG/EXR/MP4 output, passes, the 5.0 compositor API, CLI and multi-camera batch rendering. Use for any still, animation or turntable render.
+description: Render with Blender 5.2 Cycles/EEVEE/Workbench. Use for any still, animation or turntable render.
 license: MIT
 metadata:
   author: blender-agent-skills

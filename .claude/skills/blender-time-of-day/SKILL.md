@@ -1,6 +1,6 @@
 ---
 name: blender-time-of-day
-description: Time of day and atmosphere in Blender 5.2 - measured sky + sun for dawn, morning, noon, golden hour, sunset, blue hour, overcast, night/moonlight with stars and city glow, exposure balance, height fog from visibility, god rays, Cycles vs EEVEE volumes, compositor grade, stylized moods (cyberpunk neon, horror, underwater, desert). Use for any day/night, sunset, foggy or mood lighting scene.
+description: Time of day and atmosphere in Blender 5.2. Use for any day/night, sunset, foggy or mood lighting scene.
 license: MIT
 metadata:
   author: blender-agent-skills

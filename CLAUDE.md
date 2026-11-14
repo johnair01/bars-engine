@@ -4,17 +4,11 @@ Auto-generated from all feature plans. Last updated: 2026-03-08
 
 ## Questions for Wendell go to the Council Board
 
-Every question whose answer changes what gets built goes through the six faces' reach test and onto the Council
-Board, https://bars-engine.vercel.app/board/council, never into chat. This holds in every session, mid-build,
-and for any worker a session starts.
-
-- Run the reach test first (`reach_test` in `council/faces.yaml`; the skill is `.claude/skills/six-faces/`). A
-  question the record can answer becomes a position that stands unless he flips it.
-- Board rows are written in the council's home repo, `wendell-britt/six-faces-council`, as rows posted with
-  `board/post_rows.py` that the board-pull Action lands on main. Its `CLAUDE.md` holds the full rule.
-- A chat reply says what changed and names the new board rows with the link. It ends without a question.
-- A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
-  anything.
+Every question whose answer changes what gets built goes through the reach test and onto the Council Board,
+https://bars-engine.vercel.app/board/council, never into chat, in every session and for any worker a session starts.
+Full rule and steps: the council repo's `AGENTS.md` (`wendell-britt/six-faces-council`). A chat reply says what changed,
+names the new board rows with the link, and ends without a question. Put this rule in the prompt of any worker that
+might ask him anything.
 
 ## Test locally before you push: there are no Vercel previews
 
@@ -45,11 +39,8 @@ says why. Council pull requests are unchanged.
 
 ## Hand off before the context passes 150,000 tokens
 
-A PostToolUse hook (`.claude/settings.json`, `council/tools/context_size.py --hook`, a copy of the council's) adds the
-handoff order to every tool result once the session rereads 150,000 tokens a call. Finish the step, record the work in
-the repo and on the board, send the coordinator the handoff, drop PR watches and resolve. Why: council #272.
-
-Wendell, 2026-10-04: *"If you need rulings from me this should've gone to the council?"*
+A PostToolUse hook adds the handoff order once the session rereads 150,000 tokens a call. Finish the step, record the
+work in the repo and on the board, send the coordinator the handoff, drop PR watches and resolve (council #272).
 
 ## UI Work — Read First
 

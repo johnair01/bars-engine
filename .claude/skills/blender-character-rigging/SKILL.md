@@ -1,6 +1,6 @@
 ---
 name: blender-character-rigging
-description: Character rigging in Blender 5.2 - Rigify metarig fit/generate, bone naming/roll/collections, DEF/MCH/control layers, IK/FK, robust skinning (heat + proxy fallback), weight-painting rules, correctives, engine game skeletons (Unity, Unreal, Roblox R15), rig validation and deformation stress tests. Use for armature, skinning or weights tasks.
+description: Character rigging in Blender 5.2. Use for armature, skinning or weights tasks.
 license: MIT
 metadata:
   author: blender-agent-skills

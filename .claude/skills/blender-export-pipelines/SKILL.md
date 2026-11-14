@@ -1,6 +1,6 @@
 ---
 name: blender-export-pipelines
-description: Export from Blender 5.2 with verified presets - Roblox (FBX/glTF, cages, R15, SurfaceAppearance), Unity (FBX, Humanoid), Unreal (FBX skeletal, Nanite, UCX), Godot/web (GLB, meshopt/Draco, WebP), USD. Scale/axes, smoothing, tangents, leaf bones, clips, batch export, post-export verification. Use whenever an asset leaves Blender.
+description: Export from Blender 5.2 with verified presets. Use whenever an asset leaves Blender.
 license: MIT
 metadata:
   author: blender-agent-skills

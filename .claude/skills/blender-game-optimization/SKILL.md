@@ -1,6 +1,6 @@
 ---
 name: blender-game-optimization
-description: Optimize Blender assets for real-time engines - triangle/material/texture/bone budgets per platform (mobile, Roblox, web, VR, console, PC), LOD chains, decimation modes, mesh cleanup, draw-call reduction (material merging, atlases, trim sheets), instancing, vertex-split costs, collision proxies, texture memory. Use when an asset is too heavy, before export, or when targeting a platform budget.
+description: Optimize Blender assets for real-time engines. Use when an asset is too heavy, before export, or when targeting a platform budget.
 license: MIT
 metadata:
   author: blender-agent-skills

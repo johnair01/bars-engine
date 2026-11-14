@@ -1,6 +1,6 @@
 ---
 name: blender-geometry-nodes
-description: Geometry Nodes in Blender 5.2 - fields, domains, attributes, instancing, zones (simulation/repeat/for-each), closures/bundles, lists, SDF grids, node tools, baking, plus a JSON-to-node-tree builder and socket inspector. Use for scattering, procedural assets/environments, parametric tools and modifier inputs.
+description: Geometry Nodes in Blender 5.2. Use for scattering, procedural assets/environments, parametric tools and modifier inputs.
 license: MIT
 metadata:
   author: blender-agent-skills

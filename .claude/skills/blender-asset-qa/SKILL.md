@@ -1,6 +1,6 @@
 ---
 name: blender-asset-qa
-description: Mandatory review gate for any mesh or asset created or edited in Blender. Detects z-fighting (coplanar overlaps), floating/detached parts, inverted or inconsistent normals, non-manifold/open geometry, degenerate faces, duplicate verts, n-gons, unapplied scale, UV problems, bad skin weights, and renders multi-angle review sheets. Use before calling any modeling, export or delivery task done.
+description: Mandatory review gate for any mesh or asset created or edited in Blender. Use before calling any modeling, export or delivery task done.
 license: MIT
 metadata:
   author: blender-agent-skills
