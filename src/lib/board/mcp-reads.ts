@@ -1,6 +1,7 @@
 import 'server-only'
 import { db } from '@/lib/db'
-import { latestDoc } from '@/lib/board/store'
+import { latestDoc, latestDocs } from '@/lib/board/store'
+import { merge, recordedAt, LISTS, type Resolved } from '@/lib/board/data'
 import { answerOf, type AnswerDoc, type RowDoc } from '@/lib/work/ticket'
 
 /**
@@ -70,6 +71,8 @@ interface Head {
   steer: string | null
   deferred: string | null
   rounds: unknown
+  body: string | null
+  decision: string | null
   saved_at: string | null
   received_at: Date
 }
@@ -85,8 +88,21 @@ const PER_LANE = 10
 export function openFrom(heads: Head[], limit: number) {
   const saved = new Map<string, Head>()
   const rows = new Map<string, Head>()
-  for (const h of heads) (h.collection === 'questions' ? saved : rows).set(h.doc_id, h)
+  for (const h of heads) if (h.collection === 'questions') saved.set(h.doc_id, h)
+    else if (h.collection === 'rows') rows.set(h.doc_id, h)
+  // A row the record settled (a `resolved` doc, or a `records` file named resolved/questions/<id>) is not open either,
+  // the page leaves it off Open; a deferred one comes back, so it stays.
+  const settled = new Set<string>()
+  for (const h of heads) {
+    if (h.collection === 'resolved' && h.doc_id.startsWith('questions--') && h.decision !== 'deferred') settled.add(h.doc_id.slice('questions--'.length))
+    if (h.collection === 'records' && h.kind === 'resolved' && h.name?.startsWith('questions/')) {
+      let deferred = false
+      try { deferred = JSON.parse(h.body ?? '{}').decision === 'deferred' } catch { /* settled */ }
+      if (!deferred) settled.add(h.name.slice('questions/'.length))
+    }
+  }
   const answered = (id: string) => {
+    if (settled.has(id)) return true
     const s = saved.get(id)
     if (!s) return false
     const many = Array.isArray(s.choices) ? s.choices.filter(Boolean) : []
@@ -113,11 +129,13 @@ export async function listOpen(limit: number) {
   const heads = await db.$queryRaw<Head[]>`
     SELECT DISTINCT ON (collection, doc_id) collection, doc_id,
       data->>'kind' AS kind, data->>'q' AS q, data->>'name' AS name,
+      data->>'decision' AS decision,
+      CASE WHEN collection = 'records' THEN data->>'body' END AS body,
       data->>'choice' AS choice, data->'choices' AS choices, data->>'steer' AS steer, data->>'deferred' AS deferred,
       CASE WHEN data->>'kind' = 'battles' OR collection = 'battles' THEN data->'rounds' END AS rounds,
       data->>'savedAt' AS saved_at, received_at
     FROM board_saves
-    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles')
+    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved', 'records')
     ORDER BY collection, doc_id, received_at DESC, id DESC`
   const ready = await db.workTicket.findMany({
     where: { state: 'ready' }, orderBy: { createdAt: 'asc' },
@@ -135,4 +153,54 @@ export async function listOpen(limit: number) {
     }
   }
   return { board: 'council', asOf: new Date().toISOString(), ...openFrom(heads, limit), readyTickets: lanes }
+}
+
+export interface VisibleRead {
+  id: string
+  visible: boolean
+  where: string
+  why: string
+}
+
+/**
+ * Pure: for each id, whether the page will draw it and where, from the data the page's script would carry. It runs the
+ * same `merge` as /board/data.js, then the page's own status rule (`status` and `qLook` in board/template.html): a save
+ * later than the record is `saved`, a record alone is `recorded`, neither is `open`; a look sits on Your eyes, a card
+ * inside a battle sits in the battle, and a look a newer open look supersedes asks nothing.
+ */
+export function visibleFrom(docs: Parameters<typeof merge>[0], ids: string[]): VisibleRead[] {
+  const out = merge(docs)
+  const resolved = (out.resolved ?? {}) as Resolved
+  const inBattle = new Set<string>()
+  for (const b of (out.battles as Record<string, unknown>[] | undefined) ?? [])
+    for (const r of (b.rounds as Record<string, unknown>[] | undefined) ?? [])
+      for (const id of [...((r.questions as string[]) ?? []), ...((r.positions as string[]) ?? [])]) inBattle.add(id)
+  const cards = (kind: string) => (out[kind] as Record<string, unknown>[] | undefined) ?? []
+  const statusOf = (kind: string, c: Record<string, unknown>) => {
+    const r = resolved[kind]?.[String(c.id)]
+    if (typeof c.savedAt === 'string' && (!r || Date.parse(c.savedAt) > recordedAt(r))) return 'saved'
+    return r ? 'recorded' : 'open'
+  }
+  const openLooks = cards('questions').filter((q) => q.look === true && statusOf('questions', q) === 'open')
+  const superseded = new Set(openLooks.flatMap((q) => (Array.isArray(q.supersedes) ? (q.supersedes as string[]) : [])))
+  return ids.map((id): VisibleRead => {
+    const raw = docs.rows?.[id]
+    if (!raw) return { id, visible: false, where: 'nowhere', why: 'No row with this id in the store, so the page has nothing to draw.' }
+    const kind = typeof raw.kind === 'string' ? raw.kind : ''
+    if (!(LISTS as readonly string[]).includes(kind))
+      return { id, visible: false, where: 'nowhere', why: `The row's kind is "${kind}", and the page draws only ${LISTS.join(', ')}.` }
+    const card = cards(kind).find((c) => c.id === id)
+    if (!card) return { id, visible: false, where: 'nowhere', why: 'The record settled it, so /board/data.js leaves it out; it stays in the store.' }
+    const st = statusOf(kind, card)
+    if (st === 'saved') return { id, visible: false, where: 'Answered', why: `He answered it (saved ${String(card.savedAt)}), so it left Open. It is not missing.` }
+    if (st === 'recorded') return { id, visible: false, where: 'Settled', why: 'The record holds a decision for it, so it is off Open.' }
+    if (inBattle.has(id)) return { id, visible: true, where: 'a battle card', why: 'A battle names it, so it draws inside the battle, not on Open.' }
+    if (kind === 'questions' && superseded.has(id)) return { id, visible: false, where: 'nowhere', why: 'A newer open look supersedes it.' }
+    if (kind === 'questions' && card.look === true) return { id, visible: true, where: 'Your eyes', why: 'Open look; the page draws it on Your eyes.' }
+    return { id, visible: true, where: 'Open', why: 'Open and not in a battle; the page draws it on Open.' }
+  })
+}
+
+export async function checkVisible(ids: string[]): Promise<VisibleRead[]> {
+  return visibleFrom(await latestDocs('council'), ids)
 }
