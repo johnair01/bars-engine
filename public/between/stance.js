@@ -15,3 +15,7 @@ export const SIT_DROP = 0.84;
 /* On a seat (a cushion, the hearth's cushion): the hip joints rest this far over its top (metres), as the caves' seatAvatar
    rests them (#434), so the figure sits on the cushion rather than sinking into it. SIT_DROP stays for a caller with no seat. */
 export const SEAT_PAD = 0.1;
+/* Sat on a crate by the fire (charge-to-world build 5, the Friends' Fire): thighs level, shins down, knees a little apart,
+   hands toward the lap. The same bend over the bind pose as SIT; the hips come to rest SEAT_PAD over the crate's top. */
+export const CRATE_SIT = [["hipL", -1.45, 0, -0.1], ["hipR", -1.45, 0, 0.1], ["kneeL", 1.5, 0, 0], ["kneeR", 1.5, 0, 0], ["spine", 0.14, 0, 0], ["neck", 0.1, 0, 0],
+  ["shoulderL", -0.55, 0, -0.12], ["shoulderR", -0.55, 0, 0.12], ["elbowL", -1.05, 0, 0], ["elbowR", -1.05, 0, 0]];

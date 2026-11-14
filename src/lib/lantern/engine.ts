@@ -13,7 +13,15 @@
  * of each watch; a strike in a new channel surfaces a loop; a strike on a fogged keep brings it out of the fog; gold loops
  * on both sides of an edge name a milestone. The block's cost is the sum of its loop strengths in refinements.
  *
- * Port 3 adds the hand (`lh-hand-basic`, `lh-hand-share`) and the block's size (`lh-block-size`) on top of this.
+ * Port 3 adds the hand (`lh-hand-basic`, `lh-hand-share`), the purchase cap and the spendable mint (`lh-buy-cap`,
+ * `lh-bar-mint`), the minor wins (`lh-block-victory`) and the block's size from three sliders (`lh-block-size`,
+ * `lh-payout-sliders`) on top of this (bars-engine .specify/specs/lantern-table/spec.md):
+ * - a `basic` move, open to everyone, costs 1 oil and strikes for 1 whatever its kind;
+ * - a `buy` move spends 1 vibeulon on a basic move, only when the oil is 0, at most BUY_CAP a watch;
+ * - a BAR (`story`) mints 1 vibeulon into `vibeulons`, which buys a basic move at the same table;
+ * - `share` weighs refinement dealt: a BAR's (and a logged action's or a kibitzer's BAR's) at 2, a basic move's at 1;
+ * - `wins` marks each block found (a loop surfaces or a keep comes out of the fog) and each keep dissolved (held);
+ *   `done` is set once every emerged keep is held.
  */
 
 export type Channel = 'fire' | 'wood' | 'water' | 'metal' | 'earth'
@@ -101,9 +109,27 @@ export interface State {
   surfaced: { i: number; ch: Channel } | null
   opened?: boolean
   fx?: string
+  /** Vibeulons spendable at this table: a BAR's mint lands here (`lh-bar-mint`). */
+  vibeulons: number
+  /** Weighted refinement by contributor: BAR 2, basic 1 (`lh-hand-share`). `payoutShare` normalizes it. */
+  share: Record<string, number>
+  /** Basic moves bought with vibeulons this watch (`lh-buy-cap`). */
+  bought: number
+  /** Minor wins, in order (`lh-block-victory`). */
+  wins: Win[]
+  /** Every emerged keep has dissolved: the round is done. */
+  done: boolean
 }
 
-export type MoveType = 'intake' | 'fire' | 'story' | 'tick' | 'ghost' | 'light' | 'kibitzOut' | 'kibitzIn' | 'door' | 'read' | 'open'
+/** A minor win: a block found (a loop surfaced, or a keep out of the fog) or a keep dissolved. */
+export interface Win { type: 'found' | 'dissolved'; i: number; w: number; ch?: Channel }
+
+/** Basic moves a player may buy with vibeulons in one watch: the oil, 4 (`lh-buy-cap`). */
+export const BUY_CAP = 4
+/** Payout weight per refinement dealt (`lh-hand-share`). */
+export const WEIGHT = { bar: 2, basic: 1 } as const
+
+export type MoveType = 'intake' | 'fire' | 'story' | 'tick' | 'ghost' | 'light' | 'kibitzOut' | 'kibitzIn' | 'door' | 'read' | 'open' | 'basic' | 'buy'
 export interface Move {
   w: number
   type: MoveType
@@ -122,10 +148,14 @@ export interface Move {
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x))
 const igStrength = (g: number) => clamp(g, 1, 3)
 
-/** Deal the table from an intake: each reservation that is on becomes a keep; one turned off becomes a fogged keep. */
-export function init(intake: Pick<Intake, 'res' | 'tags'>): State {
-  return {
+/**
+ * Deal the table from an intake: each reservation that is on becomes a keep; one turned off becomes a fogged keep.
+ * With `blockSize` (from `payout()`), the loop strengths are scaled to that total, each loop kept between 1 and 3.
+ */
+export function init(intake: Pick<Intake, 'res' | 'tags'>, opts: { blockSize?: number } = {}): State {
+  const s: State = {
     w: 1, oil: 4, lit: false, milestones: [], minted: 0, bars: [], dealt: {}, surfaced: null,
+    vibeulons: 0, share: {}, bought: 0, wins: [], done: false,
     keeps: KEEPS.map((k, i) => {
       const on = !!intake.res[i]
       const tg = intake.tags[i] || {}
@@ -136,6 +166,47 @@ export function init(intake: Pick<Intake, 'res' | 'tags'>): State {
       return { loops, held: false, holder: null, ch: null, touched: false, ghost: null, fog: !on, ph }
     }),
   }
+  if (opts.blockSize !== undefined) sizeBlock(s, opts.blockSize)
+  return s
+}
+
+/** Scale the loops toward a block of `target` refinements: raise the weakest loop or lower the strongest, one at a time. */
+function sizeBlock(s: State, target: number) {
+  const loops = s.keeps.filter(k => !k.fog).flatMap(k => k.loops)
+  if (!loops.length) return
+  const total = () => loops.reduce((a, l) => a + l.g, 0)
+  for (let guard = 0; guard < 100 && total() !== target; guard++) {
+    if (total() < target) {
+      const l = loops.filter(x => x.g < 3).sort((a, b) => a.g - b.g)[0]
+      if (!l) break
+      l.g++
+    } else {
+      const l = loops.filter(x => x.g > 1).sort((a, b) => b.g - a.g)[0]
+      if (!l) break
+      l.g--
+    }
+  }
+}
+
+/** The goal's three sliders (1 to 3 each). */
+export interface Sliders { size: 1 | 2 | 3; charge: 1 | 2 | 3; deadline: 1 | 2 | 3 }
+
+/**
+ * The draft payout (`lh-payout-sliders` A, `lh-block-size`): the block's starting size is twice the sliders' sum (6 to
+ * 18 refinements; 12 at the middle, the size six untagged keeps deal), and the vibeulon payout is that size weighted by
+ * the deadline, a quarter more for each step nearer. A draft, shown at his look and tuned after two real tables.
+ */
+export function payout(sl: Sliders): { blockSize: number; vibeulons: number } {
+  const c = (v: number) => clamp(Math.round(v), 1, 3)
+  const blockSize = 2 * (c(sl.size) + c(sl.charge) + c(sl.deadline))
+  return { blockSize, vibeulons: Math.round(blockSize * (0.75 + 0.25 * c(sl.deadline))) }
+}
+
+/** Each contributor's share of the payout: weighted refinement (BAR 2, basic 1), normalized to sum to 1. */
+export function payoutShare(s: Pick<State, 'share'>): Record<string, number> {
+  const total = Object.values(s.share).reduce((a, v) => a + v, 0)
+  if (!total) return {}
+  return Object.fromEntries(Object.entries(s.share).map(([k, v]) => [k, v / total]))
 }
 
 export const nHeld = (s: State) => s.keeps.filter(k => k.held).length
@@ -197,9 +268,12 @@ const need = <T>(v: T | undefined, what: string): T => { if (v === undefined) th
 /** Apply one move to a state. Returns a new state with `fx`, the line the table reads out; the input is not changed. */
 export function apply(prev: State, m: Move): State {
   const s: State = JSON.parse(JSON.stringify(prev))
+  s.vibeulons ??= 0; s.share ??= {}; s.bought ??= 0; s.wins ??= []; s.done ??= false
   s.surfaced = null
   let fx = ''
-  if (m.w > s.w) { s.w = m.w; s.oil = 4; s.keeps.forEach(k => { k.touched = false }) }
+  if (m.w > s.w) { s.w = m.w; s.oil = 4; s.bought = 0; s.keeps.forEach(k => { k.touched = false }) }
+  const weigh = (by: string, before: number, w: number) => { const d = (s.dealt[by] || 0) - before; if (d > 0) s.share[by] = (s.share[by] || 0) + d * w }
+  const dealtBy = (by: string) => s.dealt[by] || 0
   switch (m.type) {
     case 'intake': {
       const a = nActive(s), f = 6 - a, ph = s.keeps.filter(k => k.ph).length
@@ -209,10 +283,31 @@ export function apply(prev: State, m: Move): State {
     }
     case 'story': {
       const i = need(m.keep, 'keep'), kind = need(m.kind, 'kind'), ch = need(m.ch, 'ch')
-      s.oil--; s.minted++
+      s.oil--; s.minted++; s.vibeulons++
       if (KEEPS[i].witness && !m.withWitness) { s.keeps[i].touched = true; fx = 'No witness in the story, so it deals no damage. It still mints a vibeulon.'; break }
-      const match = kind === KEEPS[i].kind
-      fx = (match ? 'Kind matches. ' : 'Kind differs. ') + strike(s, i, match ? 2 : 1, ch, 'You') + ' Mints a vibeulon.'
+      const match = kind === KEEPS[i].kind, by = m.who || 'You', b0 = dealtBy(by)
+      fx = (match ? 'Kind matches. ' : 'Kind differs. ') + strike(s, i, match ? 2 : 1, ch, by) + ' Mints a vibeulon.'
+      weigh(by, b0, WEIGHT.bar)
+      break
+    }
+    case 'basic': {
+      const i = need(m.keep, 'keep'), ch = need(m.ch, 'ch'), by = m.who || 'You'
+      if (s.oil <= 0) { fx = 'The oil is out for this watch. A vibeulon buys a basic move now.'; break }
+      const b0 = dealtBy(by)
+      s.oil--
+      fx = 'A basic move. ' + strike(s, i, 1, ch, by)
+      weigh(by, b0, WEIGHT.basic)
+      break
+    }
+    case 'buy': {
+      const i = need(m.keep, 'keep'), ch = need(m.ch, 'ch'), by = m.who || 'You'
+      if (s.oil > 0) { fx = `You still have ${s.oil} oil, so a vibeulon buys nothing yet.`; break }
+      if (s.vibeulons < 1) { fx = 'You have no vibeulons to spend.'; break }
+      if (s.bought >= BUY_CAP) { fx = `You have bought ${BUY_CAP} moves this watch, as many as the oil. Turn the watch.`; break }
+      const b0 = dealtBy(by)
+      s.vibeulons--; s.bought++
+      fx = 'A vibeulon buys a basic move. ' + strike(s, i, 1, ch, by)
+      weigh(by, b0, WEIGHT.basic)
       break
     }
     case 'ghost': {
@@ -226,7 +321,9 @@ export function apply(prev: State, m: Move): State {
       const i = need(m.keep, 'keep')
       if (!prev.keeps[i].ghost) s.oil--
       s.keeps[i].ghost = null
+      const b0 = dealtBy('You')
       fx = 'Logged. ' + strike(s, i, 2, need(m.ch, 'ch'), 'You')
+      weigh('You', b0, WEIGHT.bar)
       break
     }
     case 'light': s.lit = true; fx = 'Your table is open to kibitzers.'; break
@@ -234,7 +331,9 @@ export function apply(prev: State, m: Move): State {
     case 'kibitzIn': {
       const i = need(m.keep, 'keep'), match = need(m.kind, 'kind') === KEEPS[i].kind
       s.bars.push({ dir: 'in' })
+      const b0 = dealtBy('Kibitzers')
       fx = (match ? 'Kind matches. ' : 'Kind differs. ') + strike(s, i, match ? 2 : 1, need(m.ch, 'ch'), 'Kibitzers')
+      weigh('Kibitzers', b0, WEIGHT.bar)
       break
     }
     case 'door': {
@@ -260,8 +359,21 @@ export function apply(prev: State, m: Move): State {
       break
     }
   }
+  markWins(prev, s)
   s.fx = fx
   return s
+}
+
+/** Record the minor wins a move made (`lh-block-victory`) and whether the round is done. */
+function markWins(prev: State, s: State) {
+  s.keeps.forEach((k, i) => {
+    const was = prev.keeps[i]
+    if (was.fog && !k.fog) s.wins.push({ type: 'found', i, w: s.w, ch: k.loops[0]?.ch })
+    else for (const l of k.loops) if (!was.loops.some(x => x.ch === l.ch)) s.wins.push({ type: 'found', i, w: s.w, ch: l.ch })
+    if (k.held && !was.held) s.wins.push({ type: 'dissolved', i, w: s.w })
+  })
+  const emerged = s.keeps.filter(k => !k.fog)
+  s.done = emerged.length > 0 && emerged.every(k => k.held)
 }
 
 /** Play a whole script from an intake. Returns the state after each move. */

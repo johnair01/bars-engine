@@ -38,6 +38,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Breathe Into Enough',
+      bodyText:
+        'Scarcity tightens the chest. Breathe slowly until your chest loosens, then look at what is already in reach. Write down one resource you hold that you stopped counting.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: 'GATHERING_RESOURCES',
+      faceMoveType: null,
+    },
+    {
+      title: 'Hold the Door for Their Resource',
+      bodyText:
+        'Choose one person who is gathering something for their own work and make room for it: a seat, an hour, an introduction. Write down what you offered and what they accepted.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: 'GATHERING_RESOURCES',
+      faceMoveType: null,
+    },
+    {
       title: 'The Ask You Have Been Avoiding',
       bodyText:
         'What resource do you need that requires asking someone for it? Name the ask. Name why you have been avoiding it.',

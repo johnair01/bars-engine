@@ -1,4 +1,6 @@
 import { db } from '@/lib/db'
+import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins, withCoinIds } from '@/lib/economy/coin-marks'
 
 export type LedgerEventType = 'MINT' | 'ATTUNE' | 'SPEND' | 'TRANSMUTE'
 
@@ -11,8 +13,9 @@ export class LedgerService {
 
         return await db.$transaction(async (tx) => {
             // 1. Check global balance (vibulon tokens)
+            await releaseStaleStakes(tx, playerId)
             const globalTokens = await tx.vibulon.findMany({
-                where: { ownerId: playerId },
+                where: spendableWhere(playerId),
                 take: amount
             })
 
@@ -24,6 +27,7 @@ export class LedgerService {
             // Or should we just change ownership? The spec says "global decreases, local increases".
             // We'll delete the tokens from the global set as they are now "attuned" to the instance.
             const tokenIds = globalTokens.map(t => t.id)
+            await markCoins(tx, tokenIds, 'spent', { playerId, place: 'attune', note: 'attuning to an instance' })
             await tx.vibulon.deleteMany({
                 where: { id: { in: tokenIds } }
             })
@@ -101,7 +105,9 @@ export class LedgerService {
                         originTitle: 'Transmuted from Local'
                     })
                 }
-                await tx.vibulon.createMany({ data: tokens })
+                const transmuted = withCoinIds(tokens)
+                await tx.vibulon.createMany({ data: transmuted })
+                await markCoins(tx, transmuted, 'minted', { playerId, place: 'transmute' })
             } else {
                 // Transmute to another LOCAL instance
                 await tx.instanceParticipation.upsert({
@@ -181,7 +187,9 @@ export class LedgerService {
                     originTitle: metadata?.questTitle || 'System Mint'
                 })
             }
-            await tx.vibulon.createMany({ data: tokens })
+            const minted = withCoinIds(tokens)
+            await tx.vibulon.createMany({ data: minted })
+            await markCoins(tx, minted, 'minted', { playerId, place: 'ledger' })
 
             return await tx.vibeulonLedger.create({
                 data: {

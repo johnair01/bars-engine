@@ -71,7 +71,7 @@ case "$MODE" in
   --install)
     if path="$(find_chrome)"; then echo "$path"; exit 0; fi
     echo "No Chrome found — installing Playwright Chromium…" >&2
-    npx -y playwright@latest install chromium >&2
+    npx -y playwright@1.64.1 install chromium >&2
     path="$(ls -d "${HOME}/.cache/ms-playwright"/chromium-*/chrome-linux/chrome 2>/dev/null | sort | tail -1 || true)"
     if [[ -z "$path" || ! -x "$path" ]]; then
       echo "ERROR: Chromium install failed (egress?). ${GUIDANCE}" >&2

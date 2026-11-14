@@ -13,6 +13,7 @@ import { loadShaman, type StepDoc, type StoreCold } from '@/lib/studio/shaman'
 import { shamanPage } from '@/lib/studio/shaman-page'
 import { demoStores, loadStores, type Placement } from '@/lib/studio/stores'
 import { storesPage } from '@/lib/studio/stores-page'
+import { withChalk } from '@/lib/marks/chalk'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
   if (req.nextUrl.searchParams.get('stores') === '1') return stores(req.nextUrl.searchParams.get('demo') === '1')
   const world = await loadFleet()
   if (!world) return new NextResponse('The board ledger could not be loaded from GitHub. Try again in a minute.', { status: 503 })
-  return new NextResponse(studioPage(world), {
+  return new NextResponse(withChalk(studioPage(world)), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY',
                'Referrer-Policy': 'same-origin' },
   })
@@ -46,13 +47,13 @@ async function shaman() {
   }
   const world = await loadShaman(steps, new Date(), storeCold)
   if (!world) return new NextResponse('The board ledger could not be loaded from GitHub. Try again in a minute.', { status: 503 })
-  return new NextResponse(shamanPage(world), { headers: HEADERS })
+  return new NextResponse(withChalk(shamanPage(world)), { headers: HEADERS })
 }
 
 /** The Stores' move. Placements already saved come from the board store; with no store (local, CI) none are. A ledger
  * that can't be read, or &demo=1, plays the round's mock run, which saves nothing. */
 async function stores(demo: boolean) {
-  if (demo) return new NextResponse(storesPage(demoStores()), { headers: HEADERS })
+  if (demo) return new NextResponse(withChalk(storesPage(demoStores())), { headers: HEADERS })
   let placed: Record<string, Placement> = {}
   try {
     const { latestDocs } = await import('@/lib/board/store')
@@ -60,5 +61,5 @@ async function stores(demo: boolean) {
   } catch { placed = {} }
   const world = await loadStores(placed)
   if (!world) return new NextResponse('The board ledger could not be loaded. Try again in a minute.', { status: 503 })
-  return new NextResponse(storesPage(world), { headers: HEADERS })
+  return new NextResponse(withChalk(storesPage(world)), { headers: HEADERS })
 }

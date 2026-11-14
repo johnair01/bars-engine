@@ -221,15 +221,28 @@ export function ForestWalk() {
             </p>
             {H(<>Whatever brought you here came with you.</>)}
             <p className="text-base leading-relaxed text-emerald-100/80">
-              Two ways in. Tell me what you are working on, or walk in and find it with six questions. At the
-              centre is the help that fits. What you write stays in this tab, with no account and no AI.
+              Walk the path into the forest with your own traveller, tell me what you are working on, or find it
+              here with six questions. At the centre is the help that fits. What you write stays in this tab, with
+              no account and no AI.
             </p>
             <div className="flex flex-col items-center gap-4">
+              {/* The six questions as a walk (council spec coaching-walk; his steer on cp-send-look-1, 2026-11-05).
+                  The visitor's utm tags ride along, so the walk's doors keep the source. */}
+              <a
+                href="/coaching/walk.html"
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.location.href = `/coaching/walk.html${window.location.search}`
+                }}
+                className={`inline-block ${go_on}`}
+              >
+                Walk the path
+              </a>
               <button type="button" onClick={() => go('know')} className={go_on}>
                 I know what I&rsquo;m working on
               </button>
-              <button type="button" onClick={next} className={go_on}>
-                Help me find it
+              <button type="button" onClick={next} className={quiet}>
+                Help me find it here, as six questions
               </button>
               <a href="/ontology-game" className={quiet}>
                 Play the ontology game first, then bring what happened here
@@ -601,6 +614,17 @@ export function ForestWalk() {
                 If booking can wait, start here. The parts that stall us have names, and I&rsquo;ll introduce them one at a time. Only your
                 address leaves this page; what you carried in stays here.
               </p>
+              <video
+                className="w-full rounded-xl border border-emerald-200/15"
+                controls
+                muted
+                playsInline
+                preload="none"
+                poster="/coaching/meet-your-daemons-poster.jpg"
+                aria-label="Thirty-second animation: a child at dusk meets a tortoise guardian called the Protector"
+              >
+                <source src="/coaching/meet-your-daemons.mp4" type="video/mp4" />
+              </video>
               <EmailCaptureForm
                 askName
                 promise={LIST_TERMS.daemons.promise}

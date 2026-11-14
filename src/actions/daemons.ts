@@ -125,6 +125,8 @@ export async function maybePromoteDaemonToNpc(daemonId: string): Promise<void> {
     include: { player: { select: { id: true, nationId: true, archetypeId: true } } },
   })
   if (!daemon || daemon.promotedToPlayerId) return
+  // A part raised from a 3-2-1 turns into a person only when its player says the need is met (npc-from-321 FR-006).
+  if (daemon.source === '321_raised') return
   const minLevel = getDaemonNpcPromotionMinLevel()
   if (daemon.level < minLevel) return
 
@@ -159,6 +161,38 @@ export async function maybePromoteDaemonToNpc(daemonId: string): Promise<void> {
 
   revalidatePath('/daemons')
   revalidatePath('/')
+}
+
+/**
+ * npc-from-321 FR-006: a part raised from a 3-2-1 becomes a person on "met", with no level or owner nation/archetype gate.
+ * Nation and archetype come from the casting sheet or the owner when present, and stay empty otherwise.
+ */
+export async function promoteRaisedPartOnMet(daemonId: string): Promise<{ npcId?: string }> {
+  const daemon = await db.daemon.findUnique({
+    where: { id: daemonId },
+    include: { player: { select: { nationId: true, archetypeId: true } } },
+  })
+  if (!daemon || daemon.source !== '321_raised') return {}
+  if (daemon.promotedToPlayerId) return { npcId: daemon.promotedToPlayerId }
+
+  const digest = (daemon.innerWorkDigest ?? {}) as { casting?: { fields?: { nationId?: string; classId?: string } } }
+  const invite = await getOrCreateAgentSimInvite()
+  const npc = await db.player.create({
+    data: {
+      name: daemon.name.slice(0, 120),
+      creatorType: 'agent',
+      contactType: 'email',
+      contactValue: `daemon-npc-${daemon.id}@npc.local`,
+      inviteId: invite.id,
+      nationId: digest.casting?.fields?.nationId ?? daemon.player.nationId ?? null,
+      archetypeId: daemon.player.archetypeId ?? null,
+      onboardingComplete: true,
+    },
+  })
+  await db.daemon.update({ where: { id: daemonId }, data: { promotedToPlayerId: npc.id } })
+  revalidatePath('/daemons')
+  revalidatePath('/')
+  return { npcId: npc.id }
 }
 
 /** Increment daemon level (e.g. school quest graduation). Runs promotion check after update. */

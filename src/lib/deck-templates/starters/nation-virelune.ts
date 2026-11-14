@@ -40,6 +40,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Feel the Light Before You Grow',
+      bodyText:
+        'Wood turns toward light before it grows. Breathe, and notice where your attention leans on its own. Follow the lean without pushing it. Write down what it is reaching for.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'virelune',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let Another Branch Cross Yours',
+      bodyText:
+        'Choose one person whose growth goes a different direction and let it share your light for a day. Notice the shade and the support. Write down what the crossing gave you.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'virelune',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'What Has Overgrown Its Container?',
       bodyText:
         'Wood that grows too fast without tending becomes tangled. What in your current work or commitments has outgrown its container — expanded beyond what the structure can hold? Name what needs pruning or transplanting.',

@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { KOTTER_STAGES, type KotterStage } from '@/lib/kotter'
+import { markCoins, withCoinIds } from '@/lib/economy/coin-marks'
 
 /**
  * Get the current stage info for a quest
@@ -109,13 +110,15 @@ export async function advanceQuestStage(questId: string) {
 
     // Award bonus Vibeulon if affinity match
     if (bonusAmount > 0) {
-        await db.vibulon.create({
-            data: {
+        await db.$transaction(async (tx) => {
+            const [row] = withCoinIds([{
                 ownerId: player.id,
                 originSource: 'stage_bonus',
                 originId: questId,
                 originTitle: `Affinity Bonus: ${quest.title}`
-            }
+            }])
+            await tx.vibulon.create({ data: row })
+            await markCoins(tx, [row], 'minted', { playerId: player.id, place: 'quest' })
         })
     }
 

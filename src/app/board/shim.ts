@@ -5,14 +5,17 @@
  * the pages' Send button is hidden by the board builds, and the board-pull Action records saves on main. `barsEngine`
  * marks the host, so the Council Board offers "Set aside" only where the save reaches bars-engine (seeds collection).
  * boardHome names the board the page saves as (`nonprofit` on /board, `council` on /board/council).
- * Typed words survive the 30-second refresh, a re-render and a reload (board-drafts, 2026-10-31): see DRAFTS below.
+ * The page stays live through the change log, GET /api/board/changes, asked every 5 seconds (live board, 2026-11-03):
+ * see LIVE below. Typed words survive a refresh, a re-render and a reload (board-drafts, 2026-10-31): see DRAFTS below.
+ * pageSha names the page build this shim rides on, so an open page can tell when it is older than the board
+ * (board-reverts, 2026-11-03): see STALE PAGE below.
  */
-export function boardShim(boardHome: string, returnTo = '/board'): string {
-  const board = JSON.stringify(boardHome), back = JSON.stringify(returnTo)
+export function boardShim(boardHome: string, returnTo = '/board', pageSha: string | null = null): string {
+  const board = JSON.stringify(boardHome), back = JSON.stringify(returnTo), built = JSON.stringify(pageSha)
   return `<script>
 (() => {
-  const BOARD = ${board}, API = '/api/board/saves';
-  let docs = {}, sig = '', ready = false, lastPull = null, unrecorded = null;
+  const BOARD = ${board}, API = '/api/board/saves', CHANGES = '/api/board/changes', PAGE = ${built};
+  let docs = {}, sig = '', ready = false, lastPull = null, unrecorded = null, wrote = 0, cursor = null;
   const subs = [];
   const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
   const snapDoc = (c, id) => { const d = (docs[c] || {})[id]; return {id, exists: !!d, data: () => clone(d)}; };
@@ -61,22 +64,15 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
   // that took focus away land on the button it was aimed at before the page is rebuilt.
   const show = () => { if (typing()){ held = true; return; } held = false; notify(); };
   document.addEventListener('focusout', () => { if (held) setTimeout(() => { if (held && !typing()) show(); }, 1500); }, true);
+  // The pull and hold line is retired (Wendell, 2026-11-03: the live database is the truth, and the board is a view of
+  // it). A save is in the database the moment it is made, so the page no longer says how long main has waited, no
+  // longer offers Pull now, and no longer counts saves held for a Claude read. Main is a copy; it is not the page's
+  // business. This only clears a note a fault left behind when the store loads again.
   function pullNote(){
-    let el = document.getElementById('board-pull-note');
-    if (!el){ el = document.createElement('div'); el.id = 'board-pull-note';
-      el.style.cssText = 'font-size:.8rem;opacity:.75;text-align:center;padding:6px 8px 72px';
-      document.body.appendChild(el); }
-    const ago = mins => mins < 1 ? 'just now' : mins < 120 ? mins + ' min ago' : Math.round(mins / 60) + ' h ago';
-    const waiting = unrecorded && unrecorded.count > 0 && unrecorded.oldestReceivedAt ? unrecorded : null;
-    const wait = waiting ? Math.round((Date.now() - new Date(waiting.oldestReceivedAt)) / 60000) : 0;
-    const pulled = lastPull ? 'Last board pull: ' + ago(Math.round((Date.now() - new Date(lastPull.at)) / 60000)) + '.'
-      : 'Main has not recorded a pull from this board yet.';
-    if (waiting && wait > 60){
-      el.textContent = 'Warning: ' + waiting.count + (waiting.count === 1 ? ' save has' : ' saves have') + ' waited for main '
-        + (wait < 120 ? wait + ' min' : Math.round(wait / 60) + ' h') + ' (the oldest). ' + pulled
-        + ' Run board-pull by hand from the Actions tab of six-faces-council.';
-      el.style.color = 'var(--warn, #b45309)';
-    } else { el.textContent = pulled; el.style.color = ''; }
+    const el = document.getElementById('board-pull-note');
+    if (el) el.remove();
+    const ask = document.getElementById('board-pull-ask');
+    if (ask) ask.remove();
   }
   // A store that will not load turns saving off; say why on the page, so the cause is not a guess.
   function showFault(e){
@@ -87,16 +83,83 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
     el.style.color = 'var(--warn, #b45309)';
     el.textContent = 'Saving is off: the board store did not load (' + (e && e.message || 'error') + '). Reload; if it stays, tell Claude this line.';
   }
+  // STALE PAGE. The page carries the board's cards as it was built; the store only adds rows main has not recorded.
+  // A page left open for hours (a phone tab) kept its old build after main recorded new rows, so those rows vanished
+  // from it and it looked like the board had gone back (Wendell, 2026-11-03: "The page keeps refreshing to an earlier
+  // state"). When the store names a newer build, the page reloads itself the next time it comes back into view, or
+  // says so with a button while it stays open. Typed words survive the reload (DRAFTS).
+  let stale = false;
+  const reloadNow = () => { if (typing()) staleNote(); else location.reload(); };
+  function staleNote(){
+    if (document.getElementById('board-stale')) return;
+    const el = document.createElement('div'); el.id = 'board-stale'; el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:16px;right:16px;top:calc(12px + env(safe-area-inset-top));z-index:9999;margin:0 auto;max-width:28rem;justify-content:space-between;'
+      + 'display:flex;gap:12px;align-items:center;padding:10px 10px 10px 16px;border-radius:999px;font:14px/1.3 system-ui,sans-serif;'
+      + 'background:#1f2937;color:#f9fafb;box-shadow:0 4px 16px rgba(0,0,0,.3)';
+    const t = document.createElement('span'); t.textContent = 'The board has changed since you opened it.';
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Show it';
+    b.style.cssText = 'flex:none;font:inherit;font-weight:600;padding:8px 14px;border-radius:999px;border:0;background:#f9fafb;color:#1f2937;cursor:pointer';
+    b.onclick = () => location.reload();
+    el.appendChild(t); el.appendChild(b); document.body.appendChild(el);
+  }
+  const seePage = p => { if (PAGE && p && p !== PAGE && !stale){ stale = true; if (!document.hidden) staleNote(); } };
   async function refresh(){
+    // A save made while this read was out wins over it: the read may have left before the save landed and would put
+    // the old answer back on screen until the next refresh (board-reverts, 2026-11-03).
+    const asked = wrote;
     const r = await fetch(API + '?board=' + BOARD, {credentials: 'same-origin', cache: 'no-store'});
     if (r.status === 401){ location.href = '/login?returnTo=' + ${back}; return; }
     if (!r.ok) throw new Error('board load ' + r.status);
     const j = await r.json(); lastPull = j.lastPull; unrecorded = j.unrecorded; pullNote();
-    const s = JSON.stringify(j.docs || {});
-    if (s !== sig){ sig = s; docs = j.docs || {}; if (ready) show(); }
+    seePage(j.page);
+    if (asked !== wrote || writing) return;
+    // A row this page already shows stays, even when the read leaves it out because main has recorded it since: rows
+    // only ever grow, and the page build that carries it may not have been pushed yet (board-reverts).
+    const next = j.docs || {};
+    if (docs.rows) for (const id in docs.rows) if (!(next.rows && id in next.rows)) (next.rows = next.rows || {})[id] = docs.rows[id];
+    if (typeof j.cursor === 'number') cursor = j.cursor;
+    const s = JSON.stringify(next);
+    if (s !== sig){ sig = s; docs = next; if (ready) show(); }
+  }
+  // LIVE. The live database is the board's truth (Wendell, 2026-11-03). Every few seconds the page asks the change log
+  // for the saves after the number it holds and patches only those documents, so a row a session posts or an answer
+  // saved on another device shows within seconds, without a rebuild or a reload (live board step 3). Saves inside the
+  // last few seconds come again on the next ask, in order, so applying one twice changes nothing. Where the log is not
+  // there (an older server), the page keeps its whole-store refresh every 30 seconds.
+  const LIVE_MS = 5000, WHOLE_MS = 30000, CHECK_MS = 300000;
+  let live = true, misses = 0, lastWhole = Date.now();
+  async function changes(){
+    if (cursor === null) return false;
+    for (let round = 0; round < 10; round++){
+      const asked = wrote;
+      const r = await fetch(CHANGES + '?board=' + BOARD + '&after=' + cursor, {credentials: 'same-origin', cache: 'no-store'});
+      if (r.status === 401){ location.href = '/login?returnTo=' + ${back}; return true; }
+      if (!r.ok) throw new Error('changes ' + r.status);
+      const j = await r.json(); seePage(j.page); pullNote();
+      if (asked !== wrote || writing) return true;  // a save crossed this ask; the next ask carries it in order
+      let moved = false;
+      for (const ch of j.changes || []){
+        const col = docs[ch.collection] = docs[ch.collection] || {};
+        if (JSON.stringify(col[ch.docId]) !== JSON.stringify(ch.data)){ col[ch.docId] = ch.data; moved = true; }
+      }
+      if (typeof j.next === 'number') cursor = j.next;
+      if (moved){ sig = JSON.stringify(docs); if (ready) show(); }
+      if (!j.more) return true;
+    }
+    return true;
+  }
+  async function tick(){
+    if (document.hidden) return;
+    const now = Date.now();
+    if (live && cursor !== null){
+      try { await changes(); misses = 0; } catch (e){ if (++misses >= 3) live = false; }
+      // The whole store, now and then, keeps the pull note and the build check honest.
+      if (now - lastWhole < CHECK_MS) return;
+    } else if (now - lastWhole < WHOLE_MS) return;
+    lastWhole = now; await refresh().catch(() => {});
   }
   async function write(c, id, data, mode){
-    writing++;
+    writing++; wrote++;
     try {
       const r = await fetch(API, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({board: BOARD, collection: c, docId: id, mode, data})});
@@ -114,6 +177,17 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
   };
   const mcp = {
     async callTool(server, tool, input){
+      // Send to Claude on a berth card: save a ticket in the Claude lane (POST /api/work/send); the hourly pickup runs it.
+      // No Claude Code Remote connector or page permission is involved.
+      if (server === 'Claude Code Remote' && tool === 'fire_trigger'){
+        const m = /harbour:([A-Za-z0-9_-]+)/.exec((input && input.text) || '');
+        if (m){
+          const r = await fetch('/api/work/send', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({berth: m[1]})});
+          if (!r.ok) throw Object.assign(new Error('send ' + r.status), {code: 'upstream_error'});
+          return {payload: await r.json()};
+        }
+      }
       if (server !== 'Vercel' || tool !== 'web_fetch_vercel_url')
         throw Object.assign(new Error(server + ' ' + tool + ' is not available on bars-engine'), {code: 'capability_disabled'});
       const u = new URL(input.url);
@@ -123,8 +197,10 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
     },
   };
   const dbReady = refresh().then(() => { ready = true; setTimeout(() => { notify(); refill(); }, 0);
-    setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
+    let ticking = false;
+    setInterval(() => { if (ticking) return; ticking = true; tick().finally(() => { ticking = false; }); }, LIVE_MS);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) return;
+      if (stale) return reloadNow(); lastWhole = Date.now(); refresh().then(() => { if (stale) reloadNow(); }).catch(() => {}); });
     return db; }, e => { showFault(e); return null; });
   // barsEngine tells the page its saves reach bars-engine, so a Council Board "Set aside" can rest the task here.
   window.claude = {barsEngine: true, use: name => name === 'db' ? dbReady : name === 'mcp' ? Promise.resolve(mcp) : Promise.resolve(null)};

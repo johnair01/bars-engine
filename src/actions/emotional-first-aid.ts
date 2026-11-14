@@ -15,6 +15,7 @@ import {
     VibesEmergencyTag,
 } from '@/lib/emotional-first-aid'
 import { queryActiveSummonedDaemonId } from '@/lib/daemon-active-state'
+import { markCoins, withCoinIds } from '@/lib/economy/coin-marks'
 
 type SessionSummary = {
     id: string
@@ -375,15 +376,15 @@ export async function completeEmotionalFirstAidSession(input: {
                     }
                 })
 
-                await tx.vibulon.createMany({
-                    data: Array.from({ length: mintedAmount }).map(() => ({
-                        ownerId: player.id,
-                        creatorId: player.id,
-                        originSource: 'emotional_first_aid',
-                        originId: session.id,
-                        originTitle: `Emotional First Aid: ${toolUsed?.name || session.tool?.name || 'Protocol'}`,
-                    }))
-                })
+                const efaCoins = withCoinIds(Array.from({ length: mintedAmount }).map(() => ({
+                    ownerId: player.id,
+                    creatorId: player.id,
+                    originSource: 'emotional_first_aid',
+                    originId: session.id,
+                    originTitle: `Emotional First Aid: ${toolUsed?.name || session.tool?.name || 'Protocol'}`,
+                })))
+                await tx.vibulon.createMany({ data: efaCoins })
+                await markCoins(tx, efaCoins, 'minted', { playerId: player.id, place: 'emotional-first-aid' })
             }
 
             // Gold star: 321 Shadow Process always mints 1 vibeulon for completing the process
@@ -411,15 +412,15 @@ export async function completeEmotionalFirstAidSession(input: {
                         questId: session.contextQuestId || null,
                     }
                 })
-                await tx.vibulon.create({
-                    data: {
-                        ownerId: player.id,
-                        creatorId: player.id,
-                        originSource: 'shadow_321_completion',
-                        originId: session.id,
-                        originTitle: '321 Shadow Process (gold star)',
-                    }
-                })
+                const [goldStar] = withCoinIds([{
+                    ownerId: player.id,
+                    creatorId: player.id,
+                    originSource: 'shadow_321_completion',
+                    originId: session.id,
+                    originTitle: '321 Shadow Process (gold star)',
+                }])
+                await tx.vibulon.create({ data: goldStar })
+                await markCoins(tx, [goldStar], 'minted', { playerId: player.id, place: 'shadow-321' })
             }
 
             // GP-CLB: When applyToQuesting, create BAR draft with nextAction

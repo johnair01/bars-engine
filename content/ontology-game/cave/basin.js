@@ -458,6 +458,23 @@
 
       // ---- the figure ---------------------------------------------------------------------------------------------------------
       var avatar = K.buildAvatar(THREE, "self", true); avatar.scale.setScalar(FIG_K); scene.add(avatar);
+      // The standard character (Wendell, 2026-11-02, cb-built-look-2: "replace this dummy with the standard character we've been
+      // using in the nook and the between"): the Between's own figure, Average Dusk dressed by /between/wardrobe.js, stands where the
+      // stand-in does once it has loaded (dusk-figure.js). The stand-in keeps pose-driving the gait; with no network, or no
+      // /between/ beside the page, it simply stays.
+      var dusk = null, DUSK_H = 3.6 * FIG_K, DUSK_RATE = (WALK / DUSK_H) / 0.82; // the walk clip is cut for about 0.8 heights a second
+      (function () {
+        var base = window.__oagCaveBase || "/ontology-game/cave/";
+        if (!document.querySelector("script[data-oag-importmap]")) {
+          var im = document.createElement("script"); im.type = "importmap"; im.setAttribute("data-oag-importmap", "1");
+          im.textContent = JSON.stringify({ imports: { "three": base + "vendor/three-shim.js", "three/addons/utils/SkeletonUtils.js": base + "vendor/skeleton-utils-shim.js" } });
+          document.head.appendChild(im);
+        }
+        var q = /[?&]look=([^&]+)/.exec(location.search); // a Between look text, to try another traveller
+        import(base + "dusk-figure.js").then(function (m) { return m.makeDusk(THREE, base, DUSK_H, q ? decodeURIComponent(q[1]) : null); })
+          .then(function (d) { dusk = d; window.__oagDusk = d; scene.add(d.holder); avatar.visible = false; wrap.setAttribute("data-basin-figure", "dusk"); })
+          .catch(function (e) { wrap.setAttribute("data-basin-figure", "stand-in"); if (window.console) console.warn("basin: the standard character did not load, the stand-in stays:", e && e.message); });
+      })();
       var carried = new THREE.PointLight(0xffd9a0, 0.6, 6, K.LAMP.decay); scene.add(carried);
       fig = { x: LEDGE.x, z: LEDGE.z, yaw: 0, clk: 0, to: null, moving: false };
       var keys = {}, camYaw = 0, PITCH = 0.78, NEAR_D = 5, NEAR_PITCH = 0.42, camD = 18, zoom = 1, br = { t0: performance.now() / 1000, b: 0.5 };
@@ -608,6 +625,7 @@
         var gy = groundY(fig.x, fig.z);
         avatar.position.set(fig.x, gy, fig.z); avatar.rotation.y = fig.yaw;
         K.poseAvatar(avatar, fig.clk, moving, dt, br.b, WALK / K.STEPS_PER_S * FIG_K, reduced); K.loosenAvatar(avatar, 0, br.b);
+        if (dusk) { dusk.holder.position.set(fig.x, gy, fig.z); dusk.holder.rotation.y = fig.yaw; dusk.update(dt, moving, DUSK_RATE); }
         lamp.position.set(fig.x, gy + K.LAMP.above + 2.4, fig.z); carried.position.set(fig.x + Math.sin(fig.yaw) * 0.3, gy + 1.4, fig.z + Math.cos(fig.yaw) * 0.3); lampHalo.position.copy(carried.position);
         // the springs at rest move as still things do: the motes hang and drift, the vent's air wavers
         var ts = reduced ? 0 : t - t0;

@@ -12,8 +12,11 @@ import { config } from 'dotenv'
 import { execSync } from 'child_process'
 
 // Match Next.js: base env first, then .env.local wins on duplicate keys (dotenv default = no override).
+// Under scripts/local/dev.sh (BARS_LOCAL=1) the local values it set win: nothing in a pulled .env.local may move a
+// command back onto the production database (docs/LOCAL_FIRST_TESTING.md).
+const local = process.env.BARS_LOCAL === '1'
 config({ path: '.env' })
-config({ path: '.env.local', override: true })
+config({ path: '.env.local', override: !local })
 
 const cmd = process.argv.slice(2).join(' ')
 if (!cmd) {

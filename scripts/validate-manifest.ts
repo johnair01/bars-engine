@@ -53,7 +53,10 @@ function stripCommentsAndStrings(content: string): string {
         .replace(/\/\/[^\n]*/g, ' ')             // line comments
         .replace(/`(?:\\[\s\S]|[^`\\])*`/g, ' ') // template literals
         .replace(/'(?:\\.|[^'\\\n])*'/g, ' ')    // single-quoted
-        .replace(/"(?:\\.|[^"\\\n])*"/g, ' ')    // double-quoted
+        .replace(/"(?:\\.|[^"\\\n])*"/g, ' ')    // double-quoted        // Regex literals in argument position (e.g. .replace(/^x\./, '')): a regex that names a client
+        // global (`/^window\.__BOARD_DATA__/`) is data, not code, and tripped the client-only patterns
+        // (route.test.ts, 2026-11-07). Regex-strip runs before matching, after strings are gone.
+        .replace(/(?<=[(,=:[!&|?{};\n\s]|\breturn\b|\btypeof\b)\s*\/(?:\\.|[^/\\\n])+?\/[gimsuy]*/g, ' ')
 }
 
 function usesHooksOrClientOnly(content: string): boolean {

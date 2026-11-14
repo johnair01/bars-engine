@@ -35,6 +35,13 @@ export function onPath(x, z) {
   return near(main) || near(fork);
 }
 
+/* How high you stand: the ground, except on the laid bridge, which spans the gully at deck height (no falling through the plank). */
+export const DECK_Y = -0.02;
+export function standH(x, z, laid, ground) {
+  if (laid && Math.abs(z - BRIDGE_Z) < 0.5 && Math.abs(x - GULLY.x) < GULLY.w + 0.2) return Math.max(ground, DECK_Y);
+  return ground;
+}
+
 /* Where you can stand. The hut and the gully are walls; once the plank is laid the bridge is a way over. */
 export function walkable(x, z, laid) {
   if (Math.hypot(x, z) < HUT_R + 0.35) return false;                                     // the hut
