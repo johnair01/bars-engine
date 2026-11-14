@@ -1,6 +1,6 @@
 ---
 name: blender-scene-setup
-description: Set up and audit Blender scenes the way studios do - units and real-world scale, collection layout, naming conventions (SM_/SK_/T_/M_), origins, linking vs appending, library overrides, asset libraries and catalogs, collection exporters, orphan/path cleanup. Use when starting a project, organizing a .blend, or before handoff/export.
+description: Set up and audit Blender scenes the way studios do. Use when starting a project, organizing a .blend, or before handoff/export.
 license: MIT
 metadata:
   author: blender-agent-skills

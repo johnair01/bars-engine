@@ -1,6 +1,6 @@
 ---
 name: blender-pipeline-automation
-description: Automate Blender 5.2 at scale - headless CLI flags, batch convert/inventory/run-any-skill-script over folders of .blend/.fbx/.glb/.obj/.usd, sharding, bpy pip module, library linking, path management, render-farm and CI patterns. Use for batch jobs, format conversion, library maintenance and pipeline tooling.
+description: Automate Blender 5.2 at scale. Use for batch jobs, format conversion, library maintenance and pipeline tooling.
 license: MIT
 metadata:
   author: blender-agent-skills

@@ -1,6 +1,6 @@
 ---
 name: blender-animation
-description: Animation in Blender 5.2 - slotted/layered actions and the channelbag API, Python keyframing, F-curves, game loops, NLA clips, pose library, mocap/BVH retargeting via constraints, baking control rigs to export skeletons, root motion, per-clip export. Use for any keyframe, action, NLA, mocap, or animation-export task.
+description: Animation in Blender 5.2. Use for any keyframe, action, NLA, mocap, or animation-export task.
 license: MIT
 metadata:
   author: blender-agent-skills

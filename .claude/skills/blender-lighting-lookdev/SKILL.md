@@ -1,6 +1,6 @@
 ---
 name: blender-lighting-lookdev
-description: Lighting, cameras and look-dev in Blender 5.2 - studio 3-point and product lighting, HDRI environments, sun/sky exteriors, interiors, light linking, physically based light units, camera focal lengths/composition/DOF, cyclorama backdrops, looping turntables for asset presentation. Use when presenting assets, setting up scenes for rendering, or judging materials under consistent light.
+description: Lighting, cameras and look-dev in Blender 5.2. Use when presenting assets, setting up scenes for rendering, or judging materials under consistent light.
 license: MIT
 metadata:
   author: blender-agent-skills
