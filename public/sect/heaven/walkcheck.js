@@ -3,7 +3,7 @@
 // more than one riser (0.22 m) between two steps: a flight that ends in the air, a deck that stops short, a ledge.
 // Run it in the page before any look of the way is posted: `(await import('/sect/heaven/walkcheck.js')).wayCheck()`.
 import { groundAt } from './walk.js';
-import { CREST_STAIR, ROAD, ROAD_START } from './crag.js';
+import { CREST_STAIR, ROAD, ROAD_START, CROWN } from './crag.js';
 
 export function walkCheck(route, ground = groundAt, maxJump = 0.22) {
   const breaks = []; let prev = null, len = 0;
@@ -17,4 +17,7 @@ export function walkCheck(route, ground = groundAt, maxJump = 0.22) {
   return { ok: breaks.length === 0, metres: Math.round(len), breaks };
 }
 // the sect's one climbing way: the great court, the zigzag, the gate, the bridge and the winding road to the crown
-export function wayCheck() { return walkCheck([...CREST_STAIR.slice(0, -1), ...ROAD.slice(ROAD_START).map(([x, z]) => [x, z])]); }
+// round 25: the walk goes on past the road's top, along the crown deck, through the crown gate, over the forecourt and up
+// the hall's stair to its door (round 24 stopped at the road's last node, which is why it missed the gap to the crown)
+export function wayCheck() { const C = CROWN;
+  return walkCheck([...CREST_STAIR.slice(0, -1), ...ROAD.slice(ROAD_START).map(([x, z]) => [x, z]), C.at(C.rWall), C.at(C.rStair), C.at(C.rPlinth - 0.8)]); }
