@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto'
 import type { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
-import { LENS_DOMAIN_KEYS, isLensDomainKey } from '@/lib/lenses/domains'
+import { LENS_DOMAIN_KEYS, isLensChannel, isLensDomainKey, type LensChannel } from '@/lib/lenses/domains'
 import {
   ensureCadenceLens,
   ensureYearlyLens,
@@ -131,6 +131,9 @@ export async function saveYearLensFrame(input: SaveYearFrameInput) {
   const lens = await ensureYearlyLens(player.id)
   const superpower = await getLatestSuperpowerForPlayer(player.id)
   const units = normalizeUnits(input.units)
+  if (!isLensChannel(input.satisfactionChannel)) {
+    return { error: 'Pick the channel this satisfaction belongs to.' }
+  }
 
   const missingDomains = LENS_DOMAIN_KEYS.filter(
     (domain) => !units.some((unit) => unit.domain === domain),
@@ -172,7 +175,7 @@ export async function saveYearLensFrame(input: SaveYearFrameInput) {
           freewrite: unit.freewrite.trim() || null,
           options,
           keptOrder: keptIndexes,
-          feelings: input.feelings,
+          feelings: input.satisfactionWords?.trim() ? [input.satisfactionWords.trim()] : [],
           vagueMovement: input.vagueMovement.trim() || null,
           status,
         },
@@ -192,7 +195,9 @@ export async function saveYearLensFrame(input: SaveYearFrameInput) {
             domain: unit.domain,
             cadence: 'year',
             title: option.text,
-            satisfactionPayoff: input.feelings.join(', ') || null,
+            satisfactionChannel: input.satisfactionChannel,
+            satisfactionPolarity: 'satisfied',
+            satisfactionPayoff: input.satisfactionWords?.trim() || null,
             superpowerSource: superpower.superpower
               ? `${superpower.superpower}${superpower.superpowerOrientation ? `:${superpower.superpowerOrientation}` : ''}`
               : null,
@@ -233,12 +238,16 @@ export async function saveYearLensFrame(input: SaveYearFrameInput) {
  */
 export async function saveYearLensDomain(input: {
   vagueMovement: string
-  feelings: string[]
+  satisfactionChannel: LensChannel
+  satisfactionWords?: string
   unit: LensWorkshopUnit
 }) {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   if (!isLensDomainKey(input.unit.domain)) return { error: 'Unknown lens.' }
+  if (!isLensChannel(input.satisfactionChannel)) {
+    return { error: 'Pick the channel this satisfaction belongs to.' }
+  }
 
   const [unit] = normalizeUnits([input.unit])
   const parked = unit.status === 'parked' || unit.status === 'skipped'
@@ -264,7 +273,7 @@ export async function saveYearLensDomain(input: {
         freewrite: unit.freewrite.trim() || null,
         options,
         keptOrder: keptIndexes,
-        feelings: input.feelings,
+        feelings: input.satisfactionWords?.trim() ? [input.satisfactionWords.trim()] : [],
         vagueMovement: input.vagueMovement.trim() || null,
         status: parked ? unit.status : 'locked',
       },
@@ -286,7 +295,9 @@ export async function saveYearLensDomain(input: {
         domain: unit.domain,
         cadence: 'year',
         title: option.text,
-        satisfactionPayoff: input.feelings.join(', ') || null,
+        satisfactionChannel: input.satisfactionChannel,
+        satisfactionPolarity: 'satisfied',
+        satisfactionPayoff: input.satisfactionWords?.trim() || null,
         superpowerSource: superpower.superpower
           ? `${superpower.superpower}${superpower.superpowerOrientation ? `:${superpower.superpowerOrientation}` : ''}`
           : null,
@@ -417,6 +428,8 @@ export async function saveLensGoalDescent(input: SaveLensDescentInput) {
           cadence: input.cadence,
           title: option.text,
           parentGoalId: parent.id,
+          satisfactionChannel: parent.satisfactionChannel,
+          satisfactionPolarity: parent.satisfactionPolarity,
           satisfactionPayoff: parent.satisfactionPayoff,
           superpowerSource: parent.superpowerSource,
           alignmentType,

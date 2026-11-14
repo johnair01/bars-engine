@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveYearLensDomain, saveYearLensFrame } from '@/actions/lens-goals'
-import { LENS_DOMAINS, LENS_FEELINGS, type LensDomainKey } from '@/lib/lenses/domains'
+import { LENS_DOMAINS, LENS_SATISFACTION, type LensChannel, type LensDomainKey } from '@/lib/lenses/domains'
 import { getPromptSeeds } from '@/lib/lenses/prompt-seeds'
 import { createClientOptionKey, optionText } from '@/lib/lenses/workshop-options'
 import type { LensesOnboardingState, LensWorkshopStatus, LensWorkshopUnit } from '@/lib/lenses/types'
@@ -68,7 +68,8 @@ export function LensesOnboardingClient({
   const [phase, setPhase] = useState<Phase>('write')
   const [domainIndex, setDomainIndex] = useState(Math.max(0, focusIndex))
   const [vagueMovement, setVagueMovement] = useState(initialState.drafts[0]?.vagueMovement ?? '')
-  const [feelings, setFeelings] = useState<string[]>(initialState.drafts[0]?.feelings.length ? initialState.drafts[0].feelings : ['settled', 'connected'])
+  const [satisfactionChannel, setSatisfactionChannel] = useState<LensChannel | null>(null)
+  const [satisfactionWords, setSatisfactionWords] = useState('')
   const [units, setUnits] = useState< LensWorkshopUnit[] >(() => emptyUnits(initialState))
   const [timerSeconds, setTimerSeconds] = useState(600)
   const [timerRunning, setTimerRunning] = useState(false)
@@ -131,7 +132,11 @@ export function LensesOnboardingClient({
   /** Save one lens as it is locked in, so a closed tab loses nothing. */
   function saveDomain(unit: LensWorkshopUnit, then: () => void) {
     startTransition(async () => {
-      const result = await saveYearLensDomain({ vagueMovement, feelings, unit })
+      if (!satisfactionChannel) {
+        setMessage('Pick the channel this satisfaction belongs to.')
+        return
+      }
+      const result = await saveYearLensDomain({ vagueMovement, satisfactionChannel, satisfactionWords, unit })
       if ('error' in result && result.error) {
         setMessage(result.error)
         return
@@ -212,7 +217,11 @@ export function LensesOnboardingClient({
   function saveFrame() {
     setMessage(null)
     startTransition(async () => {
-      const result = await saveYearLensFrame({ vagueMovement, feelings, units })
+      if (!satisfactionChannel) {
+        setMessage('Pick the channel this satisfaction belongs to.')
+        return
+      }
+      const result = await saveYearLensFrame({ vagueMovement, satisfactionChannel, satisfactionWords, units })
       if ('error' in result && result.error) {
         setMessage(result.error)
         return
@@ -290,24 +299,29 @@ export function LensesOnboardingClient({
               />
               <div className="space-y-3">
                 <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#6b6965]">The satisfaction feeling</p>
+                <p className="text-sm leading-6 text-[#a09e98]">
+                  Pick the channel this satisfaction belongs to. One of five. You can add your own words after.
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {LENS_FEELINGS.map((feeling) => {
-                    const selected = feelings.includes(feeling)
+                  {LENS_SATISFACTION.map((option) => {
+                    const selected = satisfactionChannel === option.channel
                     return (
                       <button
-                        key={feeling}
-                        onClick={() =>
-                          setFeelings((current) =>
-                            selected ? current.filter((item) => item !== feeling) : [...current, feeling],
-                          )
-                        }
+                        key={option.channel}
+                        onClick={() => setSatisfactionChannel(option.channel)}
                         className={`rounded-full border px-3 py-2 text-sm ${selected ? 'border-[#7c3aed] bg-[#7c3aed]/20 text-[#d8b4fe]' : 'border-white/10 bg-[#1a1a18] text-[#a09e98]'}`}
                       >
-                        {feeling}
+                        {option.label}
                       </button>
                     )
                   })}
                 </div>
+                <input
+                  value={satisfactionWords}
+                  onChange={(event) => setSatisfactionWords(event.target.value)}
+                  placeholder="Your own words for it, if you have them."
+                  className="w-full rounded-xl border border-white/10 bg-[#111110] p-3 text-sm text-[#e8e6e0] outline-none focus:border-[#7c3aed]"
+                />
               </div>
             </div>
             <button className="w-full rounded-lg bg-[#7c3aed] px-5 py-4 font-bold text-white" onClick={() => setScreen('workshop')}>
