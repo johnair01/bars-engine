@@ -5,6 +5,9 @@
  */
 export const CHALK_TAG = '<script src="/marks/chalk.js" defer></script>'
 
+/** The Council Board's tag: the ring there takes a hold only on a picture inside a look (art-cost-look-3). */
+export const CHALK_TAG_IMAGES = '<script src="/marks/chalk.js" data-scope="images" defer></script>'
+
 /** Whether this build carries the chalk ring: Vercel preview deployments only (they sit behind Vercel's own login). */
 export const chalkOn = (env = process.env.VERCEL_ENV) => env === 'preview'
 
