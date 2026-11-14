@@ -1,0 +1,6298 @@
+{
+ "founder": {
+  "key": "founder",
+  "title": "The founder's hall, on the summit",
+  "sub": "Where ranks are certified. Plain at the centre, crowded with witnesses at the edge.",
+  "Wd": 30,
+  "D": 20,
+  "Ht": 7.5,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -0.6,
+    13,
+    0.6,
+    7.5,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    17,
+    -0.6,
+    13,
+    0.6,
+    7.5,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.6,
+    -0.6,
+    0.6,
+    20.6,
+    7.5,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    0,
+    20,
+    12,
+    0.6,
+    0.5,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    18,
+    20,
+    12,
+    0.6,
+    0.5,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    30,
+    -0.6,
+    0.6,
+    21.2,
+    0.5,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    23,
+    5,
+    7,
+    0.25,
+    3.0,
+    "#b9a27a"
+   ],
+   [
+    "w",
+    "",
+    23,
+    0,
+    0.25,
+    3.6,
+    3.0,
+    "#b9a27a"
+   ],
+   [
+    "0",
+    "",
+    5.65,
+    5.65,
+    0.7,
+    0.7,
+    7.5,
+    "#9c2a22"
+   ],
+   [
+    "c",
+    "",
+    5.65,
+    14.65,
+    0.7,
+    0.7,
+    0.5,
+    "#9c2a22"
+   ],
+   [
+    "0",
+    "",
+    11.65,
+    5.65,
+    0.7,
+    0.7,
+    7.5,
+    "#9c2a22"
+   ],
+   [
+    "c",
+    "",
+    11.65,
+    14.65,
+    0.7,
+    0.7,
+    0.5,
+    "#9c2a22"
+   ],
+   [
+    "0",
+    "",
+    17.65,
+    5.65,
+    0.7,
+    0.7,
+    7.5,
+    "#9c2a22"
+   ],
+   [
+    "c",
+    "",
+    17.65,
+    14.65,
+    0.7,
+    0.7,
+    0.5,
+    "#9c2a22"
+   ],
+   [
+    "c",
+    "",
+    23.65,
+    14.65,
+    0.7,
+    0.7,
+    0.5,
+    "#9c2a22"
+   ],
+   [
+    1,
+    "dais, one step up",
+    11,
+    1.2,
+    8,
+    3.2,
+    0.45,
+    "#8a6b48"
+   ],
+   [
+    2,
+    "the founder's mat, plain",
+    14.3,
+    2.0,
+    1.4,
+    1.2,
+    0.5,
+    "#d8c08a"
+   ],
+   [
+    3,
+    "lineage wall: 36 rank tablets",
+    0,
+    3,
+    0.25,
+    11,
+    4.2,
+    "#5b3a22"
+   ],
+   [
+    5,
+    "Elders' seats, three a side",
+    3.3,
+    7.5,
+    1.4,
+    6.0,
+    0.4,
+    "#6d4c35"
+   ],
+   [
+    0,
+    "",
+    25.3,
+    7.5,
+    1.4,
+    6.0,
+    0.4,
+    "#6d4c35"
+   ],
+   [
+    6,
+    "witness benches",
+    4,
+    16.6,
+    7,
+    1.0,
+    0.45,
+    "#7a4a2a"
+   ],
+   [
+    0,
+    "",
+    19,
+    16.6,
+    7,
+    1.0,
+    0.45,
+    "#7a4a2a"
+   ],
+   [
+    7,
+    "censer and the bell",
+    14.4,
+    17.2,
+    1.2,
+    1.2,
+    1.1,
+    "#7d6a3a"
+   ],
+   [
+    8,
+    "the founder's cell: mat, desk, his unfinished BARs",
+    24.5,
+    1.0,
+    2.2,
+    1.0,
+    0.75,
+    "#c9b48a"
+   ],
+   [
+    0,
+    "",
+    27.8,
+    0.8,
+    1.6,
+    2.4,
+    0.25,
+    "#e6dcc3"
+   ]
+  ],
+  "floor": [
+   [
+    "circle",
+    15,
+    11,
+    3.6,
+    "#c9a35a",
+    "#8a6b48"
+   ],
+   [
+    "circle",
+    15,
+    11,
+    1.0,
+    "#e9d9a8",
+    "#8a6b48"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    13,
+    17,
+    0,
+    6.0,
+    "#cfdbe0"
+   ],
+   [
+    "N",
+    2,
+    10,
+    4.8,
+    6.6,
+    "#f3ead6"
+   ],
+   [
+    "N",
+    20,
+    28,
+    4.8,
+    6.6,
+    "#f3ead6"
+   ],
+   [
+    "N",
+    0,
+    30,
+    6.8,
+    7.3,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    0,
+    20,
+    6.8,
+    7.3,
+    "#2f6f6a"
+   ]
+  ],
+  "tablets": [
+   [
+    3.3,
+    0.4,
+    false
+   ],
+   [
+    3.3,
+    1.05,
+    false
+   ],
+   [
+    3.3,
+    1.7000000000000002,
+    false
+   ],
+   [
+    3.3,
+    2.35,
+    false
+   ],
+   [
+    3.3,
+    3.0,
+    false
+   ],
+   [
+    3.3,
+    3.65,
+    false
+   ],
+   [
+    5.1,
+    0.4,
+    false
+   ],
+   [
+    5.1,
+    1.05,
+    false
+   ],
+   [
+    5.1,
+    1.7000000000000002,
+    false
+   ],
+   [
+    5.1,
+    2.35,
+    true
+   ],
+   [
+    5.1,
+    3.0,
+    false
+   ],
+   [
+    5.1,
+    3.65,
+    false
+   ],
+   [
+    6.9,
+    0.4,
+    false
+   ],
+   [
+    6.9,
+    1.05,
+    false
+   ],
+   [
+    6.9,
+    1.7000000000000002,
+    true
+   ],
+   [
+    6.9,
+    2.35,
+    false
+   ],
+   [
+    6.9,
+    3.0,
+    false
+   ],
+   [
+    6.9,
+    3.65,
+    true
+   ],
+   [
+    8.7,
+    0.4,
+    false
+   ],
+   [
+    8.7,
+    1.05,
+    false
+   ],
+   [
+    8.7,
+    1.7000000000000002,
+    false
+   ],
+   [
+    8.7,
+    2.35,
+    false
+   ],
+   [
+    8.7,
+    3.0,
+    true
+   ],
+   [
+    8.7,
+    3.65,
+    false
+   ],
+   [
+    10.5,
+    0.4,
+    false
+   ],
+   [
+    10.5,
+    1.05,
+    true
+   ],
+   [
+    10.5,
+    1.7000000000000002,
+    false
+   ],
+   [
+    10.5,
+    2.35,
+    false
+   ],
+   [
+    10.5,
+    3.0,
+    false
+   ],
+   [
+    10.5,
+    3.65,
+    false
+   ],
+   [
+    12.3,
+    0.4,
+    false
+   ],
+   [
+    12.3,
+    1.05,
+    false
+   ],
+   [
+    12.3,
+    1.7000000000000002,
+    false
+   ],
+   [
+    12.3,
+    2.35,
+    true
+   ],
+   [
+    12.3,
+    3.0,
+    false
+   ],
+   [
+    12.3,
+    3.65,
+    false
+   ]
+  ],
+  "people": [
+   [
+    15,
+    11.6,
+    "you",
+    "#a3322a"
+   ],
+   [
+    15.6,
+    3.6,
+    "founder",
+    "#b8862b"
+   ],
+   [
+    4,
+    9,
+    "",
+    "#4b5d6e"
+   ],
+   [
+    4,
+    12,
+    "",
+    "#6e4b4b"
+   ],
+   [
+    26,
+    9,
+    "",
+    "#4f6e4b"
+   ],
+   [
+    26,
+    12,
+    "",
+    "#6e604b"
+   ],
+   [
+    6,
+    17.1,
+    "",
+    "#55606a"
+   ],
+   [
+    9,
+    17.1,
+    "",
+    "#55606a"
+   ],
+   [
+    21,
+    17.1,
+    "",
+    "#55606a"
+   ]
+  ],
+  "route": [
+   [
+    15,
+    22
+   ],
+   [
+    15,
+    19.5
+   ],
+   [
+    15,
+    16
+   ],
+   [
+    15,
+    12
+   ]
+  ],
+  "floor_col": "#d8c9a6",
+  "size": "30 m by 20 m, 7.5 m to the beam",
+  "labels_extra": [
+   [
+    4,
+    "the eight-trigram floor: you kneel at its centre"
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    12,
+    18,
+    "great doors from the great court"
+   ],
+   [
+    "N",
+    13,
+    17,
+    "doors to the Heaven altar, open sky"
+   ]
+  ],
+  "does": [
+   "You walk in at the great doors with your witnesses on the benches behind you.",
+   "You kneel at the centre of the trigram floor; the Elder who taught you stands at your side.",
+   "The founder reads your BAR aloud from the plain mat, then hangs your tablet on the lineage wall.",
+   "The gold seams on his own tablets are the ranks he only squeaked through. He shows you them."
+  ],
+  "bend": "The founder's own plan, unbent: red plaster, teal and gold beam, nothing he did not need."
+ },
+ "elder": {
+  "key": "elder",
+  "title": "The Shaman Elder's house, at the cave mouth",
+  "sub": "The founder's plan bent by one Elder: low, earthen, the mountain itself for a back wall.",
+  "Wd": 14,
+  "D": 10,
+  "Ht": 3.2,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -1.2,
+    14,
+    1.2,
+    3.8000000000000003,
+    "#6f6a5e"
+   ],
+   [
+    "w",
+    "",
+    -0.5,
+    0,
+    0.5,
+    10,
+    3.2,
+    "#a8805a"
+   ],
+   [
+    "w",
+    "",
+    9,
+    0,
+    0.3,
+    6.2,
+    3.2,
+    "#a8805a"
+   ],
+   [
+    "w",
+    "",
+    9.3,
+    4.6,
+    4.7,
+    0.25,
+    3.2,
+    "#a8805a"
+   ],
+   [
+    "c",
+    "",
+    0,
+    10,
+    4.5,
+    0.5,
+    0.45,
+    "#a8805a"
+   ],
+   [
+    "c",
+    "",
+    6.5,
+    10,
+    7.5,
+    0.5,
+    0.45,
+    "#a8805a"
+   ],
+   [
+    "c",
+    "",
+    14,
+    0,
+    0.5,
+    10.5,
+    0.45,
+    "#a8805a"
+   ],
+   [
+    1,
+    "sunken hearth, smoke hole above",
+    3.6,
+    3.6,
+    2.0,
+    2.0,
+    0.12,
+    "#5b4636"
+   ],
+   [
+    2,
+    "spirit shelf: ember jars",
+    0.5,
+    0.15,
+    6.5,
+    0.5,
+    2.0,
+    "#6d4c35"
+   ],
+   [
+    3,
+    "listening stone in the cave niche",
+    7.4,
+    -0.9,
+    1.0,
+    0.9,
+    0.5,
+    "#8d8778"
+   ],
+   [
+    4,
+    "student cushions",
+    2.2,
+    6.4,
+    4.8,
+    0.7,
+    0.18,
+    "#c7a15f"
+   ],
+   [
+    5,
+    "the Elder's sleeping mat",
+    10.0,
+    0.6,
+    2.2,
+    1.4,
+    0.25,
+    "#d9c7e8"
+   ],
+   [
+    6,
+    "robe chest and the mask",
+    12.6,
+    0.4,
+    1.0,
+    0.7,
+    0.8,
+    "#7a4a2a"
+   ],
+   [
+    7,
+    "herb room: drying rack, water jar",
+    10.0,
+    6.0,
+    3.2,
+    0.5,
+    2.0,
+    "#7d8a4e"
+   ],
+   [
+    0,
+    "",
+    12.6,
+    8.4,
+    0.7,
+    0.7,
+    0.9,
+    "#6f8a9a"
+   ],
+   [
+    8,
+    "tea kettle on the low table",
+    1.0,
+    7.8,
+    1.4,
+    0.9,
+    0.35,
+    "#7a4a2a"
+   ],
+   [
+    9,
+    "rain porch and the shoe step",
+    4.5,
+    10.1,
+    2.0,
+    0.9,
+    0.2,
+    "#9a8f7a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    9,
+    10,
+    "#b89a72",
+    null
+   ],
+   [
+    "rect",
+    9,
+    0,
+    5,
+    10,
+    "#c9b48a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    14,
+    2.6,
+    3.2,
+    "#5d584e"
+   ],
+   [
+    "W",
+    2,
+    5,
+    1.0,
+    2.2,
+    "#efe2c0"
+   ],
+   [
+    "W",
+    0,
+    10,
+    2.8000000000000003,
+    3.1,
+    "#2f6f6a"
+   ]
+  ],
+  "embers": [
+   [
+    0.9,
+    0.4,
+    1.2
+   ],
+   [
+    1.65,
+    0.4,
+    1.7999999999999998
+   ],
+   [
+    2.4,
+    0.4,
+    1.2
+   ],
+   [
+    3.15,
+    0.4,
+    1.7999999999999998
+   ],
+   [
+    3.9,
+    0.4,
+    1.2
+   ],
+   [
+    4.65,
+    0.4,
+    1.7999999999999998
+   ],
+   [
+    5.4,
+    0.4,
+    1.2
+   ],
+   [
+    6.15,
+    0.4,
+    1.7999999999999998
+   ]
+  ],
+  "people": [
+   [
+    6.1,
+    4.6,
+    "Shaman Elder",
+    "#5b3a22"
+   ],
+   [
+    3.0,
+    6.75,
+    "",
+    "#55606a"
+   ],
+   [
+    5.0,
+    6.75,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    5.5,
+    12.0
+   ],
+   [
+    5.5,
+    10.4
+   ],
+   [
+    5.5,
+    7.6
+   ],
+   [
+    5.1,
+    6.9
+   ]
+  ],
+  "floor_col": "#c4a982",
+  "size": "14 m by 10 m, 3.2 m to the beam; the cave goes 1.2 m deeper",
+  "labels_extra": [],
+  "doors": [
+   [
+    "S",
+    4.5,
+    6.5,
+    "door from the court's yard"
+   ],
+   [
+    "E",
+    7.0,
+    9.4,
+    "side door to the garden"
+   ]
+  ],
+  "does": [
+   "You leave your shoes on the step and duck in under the one teal beam the founder insisted on.",
+   "The Elder sits at the hearth; your team sits on the cushions. Tea first, then the Wake Up scan.",
+   "The ember jars on the shelf are spirits the Elder has cleaned up. One glows when you are near.",
+   "The listening stone is where the Elder sits alone. You are not asked in until Practitioner."
+  ],
+  "bend": "Founder's standard kept: the teal beam, the court's red gate. Elder's bend: earth walls, cave, smoke."
+ },
+ "lieutenant": {
+  "key": "lieutenant",
+  "title": "A lieutenant's room: Virelune, in the Shaman's court",
+  "sub": "One of thirty. Your team's mentor lives here; the room is the nation, the walls are the founder's.",
+  "Wd": 5.5,
+  "D": 4.5,
+  "Ht": 2.8,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -0.35,
+    5.5,
+    0.35,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.35,
+    -0.35,
+    0.35,
+    4.85,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    0,
+    4.5,
+    2.0,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    3.0,
+    4.5,
+    2.5,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    5.5,
+    -0.35,
+    0.35,
+    5.2,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    1,
+    "sleeping mat, rolled by day",
+    0.2,
+    0.25,
+    1.0,
+    2.0,
+    0.22,
+    "#d8c08a"
+   ],
+   [
+    2,
+    "writing desk, one lamp",
+    2.0,
+    0.2,
+    1.6,
+    0.6,
+    0.7,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "three cubbies: your team's BAR folders",
+    4.4,
+    0.15,
+    0.9,
+    0.45,
+    1.6,
+    "#6d4c35"
+   ],
+   [
+    4,
+    "seed trays, the growing shelf",
+    0.15,
+    2.7,
+    0.45,
+    1.6,
+    1.2,
+    "#5f8f45"
+   ],
+   [
+    5,
+    "drill board: the team's wax-on marks",
+    5.35,
+    1.3,
+    0.12,
+    1.8,
+    1.6,
+    "#e8dcc0"
+   ],
+   [
+    6,
+    "potted plum, the Virelune shrine",
+    4.5,
+    3.4,
+    0.7,
+    0.7,
+    1.5,
+    "#4f7a3a"
+   ],
+   [
+    7,
+    "three floor cushions",
+    1.6,
+    2.7,
+    2.4,
+    0.6,
+    0.15,
+    "#c7a15f"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    5.5,
+    4.5,
+    "#cdb68a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    5.5,
+    2.5,
+    2.8,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    1.0,
+    2.0,
+    "#efe2c0"
+   ]
+  ],
+  "vines": [
+   [
+    0.2,
+    2.75
+   ],
+   [
+    0.65,
+    2.75
+   ],
+   [
+    1.1,
+    2.75
+   ],
+   [
+    1.55,
+    2.75
+   ],
+   [
+    2.0,
+    2.75
+   ],
+   [
+    2.45,
+    2.75
+   ],
+   [
+    2.9000000000000004,
+    2.75
+   ],
+   [
+    3.35,
+    2.75
+   ],
+   [
+    3.8000000000000003,
+    2.75
+   ],
+   [
+    4.25,
+    2.75
+   ],
+   [
+    4.7,
+    2.75
+   ],
+   [
+    5.15,
+    2.75
+   ]
+  ],
+  "people": [
+   [
+    3.4,
+    1.4,
+    "Virelune lieutenant",
+    "#5f8f45"
+   ],
+   [
+    2.6,
+    3.2,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    2.5,
+    6.0
+   ],
+   [
+    2.5,
+    4.9
+   ],
+   [
+    2.6,
+    3.7
+   ]
+  ],
+  "floor_col": "#cdb68a",
+  "size": "5.5 m by 4.5 m, 2.8 m to the trellis",
+  "labels_extra": [
+   [
+    8,
+    "vine trellis for a ceiling"
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.0,
+    3.0,
+    "door onto the court's row"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    "window over the practice yard"
+   ]
+  ],
+  "does": [
+   "Your mentor's door is the one with a vine over it. You knock; you are let in to sit.",
+   "Your team's three folders are in the cubbies. The mentor reads your last BAR at the desk.",
+   "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
+   "The other four lieutenants' rooms in this court share the walls and differ in everything else."
+  ],
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: plants, seeds, a vine roof."
+ },
+ "elder-challenger": {
+  "key": "elder-challenger",
+  "title": "The Challenger Elder's house, at the forge",
+  "Wd": 14,
+  "D": 10,
+  "Ht": 3.6,
+  "floor_col": "#b9a58a",
+  "sub": "The founder's plan bent by one Elder: one wall is a rail over the drop, and the floor is for fighting on.",
+  "bend": "Founder's standard kept: the teal beam, the south door. Elder's bend: a forge, a sand floor, an open side.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    14.6,
+    0.3,
+    3.6,
+    "#a8574a"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    10,
+    3.6,
+    "#a8574a"
+   ],
+   [
+    "w",
+    "",
+    14,
+    0,
+    0.3,
+    10,
+    1.0,
+    "#5a4030"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    10,
+    6.3,
+    0.3,
+    3.6,
+    "#a8574a"
+   ],
+   [
+    "w",
+    "",
+    8,
+    10,
+    6.3,
+    0.3,
+    3.6,
+    "#a8574a"
+   ],
+   [
+    "w",
+    "",
+    6,
+    10,
+    2,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    3.1
+   ],
+   [
+    1,
+    "the forge and its bellows",
+    0.3,
+    0.3,
+    2.4,
+    1.8,
+    1.2,
+    "#5b4636"
+   ],
+   [
+    2,
+    "anvil on its stump",
+    3.4,
+    1.0,
+    0.8,
+    0.5,
+    0.85,
+    "#4a4a4a"
+   ],
+   [
+    3,
+    "quench trough",
+    0.3,
+    2.6,
+    0.6,
+    1.8,
+    0.7,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "the sparring floor, raked sand",
+    5.0,
+    3.0,
+    6.0,
+    4.6,
+    0.12,
+    "#dccaa0"
+   ],
+   [
+    5,
+    "rack of staves and wooden swords",
+    5.6,
+    0.15,
+    3.0,
+    0.4,
+    2.0,
+    "#7a4a2a"
+   ],
+   [
+    6,
+    "the Elder's bare mat",
+    11.4,
+    0.4,
+    2.0,
+    1.0,
+    0.08,
+    "#8a7a62"
+   ],
+   [
+    7,
+    "the challenge gong",
+    9.4,
+    0.3,
+    1.4,
+    0.3,
+    2.2,
+    "#b8862b"
+   ],
+   [
+    8,
+    "bench for whoever waits to be tested",
+    0.3,
+    8.6,
+    3.0,
+    0.5,
+    0.45,
+    "#7a4a2a"
+   ],
+   [
+    9,
+    "water jar and ladle",
+    12.6,
+    8.6,
+    0.7,
+    0.7,
+    0.9,
+    "#6f8a9a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    14,
+    10,
+    "#b9a58a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    14,
+    3.0,
+    3.6,
+    "#2f6f6a"
+   ]
+  ],
+  "people": [
+   [
+    8.0,
+    5.2,
+    "Challenger Elder",
+    "#c4512f"
+   ],
+   [
+    7.0,
+    6.2,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    7.0,
+    12.0
+   ],
+   [
+    7.0,
+    10.4
+   ],
+   [
+    7.0,
+    8.8
+   ],
+   [
+    7.0,
+    7.0
+   ]
+  ],
+  "does": [
+   "The east wall stops at your waist. Past the rail the cliff drops into the cloud sea.",
+   "The Elder fights you on the sand before saying a word. How you fall is the first lesson.",
+   "Strike the gong and the Elder must answer a challenge. Students rarely strike it twice.",
+   "The forge mends the court's tools, and its heat is the Elder's: you work beside it, not away from it."
+  ],
+  "size": "14 m by 10 m, 3.6 m to the beam",
+  "doors": [
+   [
+    "S",
+    6.0,
+    8.0,
+    "door from the court's yard"
+   ]
+  ]
+ },
+ "elder-regent": {
+  "key": "elder-regent",
+  "title": "The Regent Elder's house, the hall of records",
+  "Wd": 14,
+  "D": 10,
+  "Ht": 3.4,
+  "floor_col": "#a9946f",
+  "sub": "The founder's plan bent by one Elder: every wall is shelving, and the middle of the floor is still water.",
+  "bend": "Founder's standard kept: red plaster, the teal beam. Elder's bend: records to the roof, a basin, a screen.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    14.6,
+    0.3,
+    3.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    10,
+    3.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    14,
+    0,
+    0.3,
+    10,
+    3.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    10,
+    6.3,
+    0.3,
+    3.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    8,
+    10,
+    6.3,
+    0.3,
+    3.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    10,
+    2,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.9
+   ],
+   [
+    1,
+    "record shelves, every rank since the founding",
+    0.2,
+    0.15,
+    9.0,
+    0.6,
+    2.8,
+    "#6d4c35"
+   ],
+   [
+    2,
+    "record shelves, the nations",
+    0.15,
+    1.0,
+    0.6,
+    6.0,
+    2.8,
+    "#6d4c35"
+   ],
+   [
+    3,
+    "the still basin",
+    5.0,
+    3.4,
+    3.0,
+    2.4,
+    0.12,
+    "#5f8fa3"
+   ],
+   [
+    4,
+    "reading desk and the rank register",
+    9.8,
+    3.6,
+    2.2,
+    0.9,
+    0.75,
+    "#7a4a2a"
+   ],
+   [
+    5,
+    "seal chest",
+    12.6,
+    0.4,
+    1.0,
+    0.7,
+    0.8,
+    "#4a3a2a"
+   ],
+   [
+    6,
+    "paper screen before the sleeping alcove",
+    9.8,
+    1.8,
+    4.0,
+    0.12,
+    1.9,
+    "#efe5cf"
+   ],
+   [
+    7,
+    "the Elder's mat",
+    11.2,
+    0.4,
+    2.0,
+    1.2,
+    0.22,
+    "#d9c7e8"
+   ],
+   [
+    8,
+    "water clock",
+    13.0,
+    6.0,
+    0.6,
+    0.6,
+    1.6,
+    "#4a6f95"
+   ],
+   [
+    9,
+    "copyists' desk",
+    1.5,
+    7.2,
+    1.4,
+    0.6,
+    0.35,
+    "#7a4a2a"
+   ],
+   [
+    0,
+    "",
+    3.7,
+    7.2,
+    1.4,
+    0.6,
+    0.35,
+    "#7a4a2a"
+   ],
+   [
+    0,
+    "",
+    5.9,
+    7.2,
+    1.4,
+    0.6,
+    0.35,
+    "#7a4a2a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    14,
+    10,
+    "#a9946f",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    14,
+    2.8,
+    3.4,
+    "#2f6f6a"
+   ]
+  ],
+  "people": [
+   [
+    10.9,
+    4.9,
+    "Regent Elder",
+    "#4a6f95"
+   ],
+   [
+    6.5,
+    6.6,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    7.0,
+    12.0
+   ],
+   [
+    7.0,
+    10.4
+   ],
+   [
+    7.0,
+    8.8
+   ],
+   [
+    6.5,
+    6.6
+   ]
+  ],
+  "does": [
+   "Your name is already on a shelf. The Regent finds it without looking.",
+   "The register on the desk is where a rank becomes true. The Elder writes it; the founder signs it.",
+   "Nobody walks through the basin. You walk round it, and you see yourself in it on the way.",
+   "The copyists are students working off a debt. The water clock tells them when they may stop."
+  ],
+  "size": "14 m by 10 m, 3.4 m to the beam",
+  "doors": [
+   [
+    "S",
+    6.0,
+    8.0,
+    "door from the court's yard"
+   ]
+  ]
+ },
+ "elder-architect": {
+  "key": "elder-architect",
+  "title": "The Architect Elder's house, beside the timber yard",
+  "Wd": 14,
+  "D": 10,
+  "Ht": 4.4,
+  "floor_col": "#c9b48a",
+  "sub": "The founder's plan bent by one Elder: tall enough for a loft, and the sect itself on a table in the middle.",
+  "bend": "Founder's standard kept: red plaster, the teal beam. Elder's bend: a loft, timber, the sect in miniature.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    14.6,
+    0.3,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    10,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    14,
+    0,
+    0.3,
+    10,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    10,
+    6.3,
+    0.3,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    8,
+    10,
+    6.3,
+    0.3,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    10,
+    2,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    3.9000000000000004
+   ],
+   [
+    1,
+    "drafting table, tilted to the light",
+    1.0,
+    1.0,
+    2.4,
+    1.4,
+    1.0,
+    "#b8954a"
+   ],
+   [
+    2,
+    "the sect in miniature, every court",
+    4.8,
+    3.4,
+    3.4,
+    2.4,
+    0.9,
+    "#cdbf9e"
+   ],
+   [
+    3,
+    "seasoned beams, stacked",
+    0.2,
+    6.6,
+    4.0,
+    1.2,
+    1.1,
+    "#8a5a32"
+   ],
+   [
+    4,
+    "tool wall: squares, chisels, the plumb bob",
+    5.0,
+    0.1,
+    4.0,
+    0.2,
+    2.2,
+    "#5a4030"
+   ],
+   [
+    5,
+    "the loft",
+    9.8,
+    0.0,
+    4.2,
+    4.0,
+    0.2,
+    "#8a5a32",
+    2.4
+   ],
+   [
+    0,
+    "",
+    9.8,
+    3.8,
+    0.2,
+    0.2,
+    2.4,
+    "#5a4030"
+   ],
+   [
+    0,
+    "",
+    13.8,
+    3.8,
+    0.2,
+    0.2,
+    2.4,
+    "#5a4030"
+   ],
+   [
+    6,
+    "ladder to the loft",
+    9.3,
+    3.0,
+    0.4,
+    0.8,
+    2.6,
+    "#7a4a2a"
+   ],
+   [
+    7,
+    "workbench and the joint samples",
+    9.8,
+    6.4,
+    3.4,
+    0.9,
+    0.85,
+    "#7a4a2a"
+   ],
+   [
+    8,
+    "the Elder's mat, up in the loft",
+    10.4,
+    0.6,
+    2.2,
+    1.4,
+    0.22,
+    "#d9c7e8",
+    2.6
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    14,
+    10,
+    "#c9b48a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    14,
+    3.8000000000000003,
+    4.4,
+    "#2f6f6a"
+   ]
+  ],
+  "people": [
+   [
+    8.6,
+    4.6,
+    "Architect Elder",
+    "#b8954a"
+   ],
+   [
+    6.5,
+    6.6,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    7.0,
+    12.0
+   ],
+   [
+    7.0,
+    10.4
+   ],
+   [
+    7.0,
+    8.8
+   ],
+   [
+    6.5,
+    6.8
+   ]
+  ],
+  "does": [
+   "The model on the table is the sect, every court to scale. Your bunk is on it, as a pin.",
+   "The Architect asks what you would build, then hands you a chisel and a joint to finish first.",
+   "The loft is the only room in the sect with a ladder. The Elder sleeps above the work.",
+   "Beams in the stack are seasoning for halls that are not drawn yet. Some have your team's mark."
+  ],
+  "size": "14 m by 10 m, 4.4 m to the beam",
+  "doors": [
+   [
+    "S",
+    6.0,
+    8.0,
+    "door from the court's yard"
+   ]
+  ]
+ },
+ "elder-diplomat": {
+  "key": "elder-diplomat",
+  "title": "The Diplomat Elder's house, the tea room and guest rooms",
+  "Wd": 14,
+  "D": 10,
+  "Ht": 3.2,
+  "floor_col": "#cbb98a",
+  "sub": "The founder's plan bent by one Elder: a room for sitting in a circle, and beds for whoever arrives.",
+  "bend": "Founder's standard kept: red plaster, the teal beam. Elder's bend: a garden window, screens, guest rooms.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    14.6,
+    0.3,
+    3.2,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    2.6,
+    3.2,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    6.6,
+    0.3,
+    3.4,
+    3.2,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    2.6,
+    0.3,
+    4.0,
+    0.8,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    2.6,
+    0.3,
+    4.0,
+    0.6,
+    "#c25a3d",
+    2.6
+   ],
+   [
+    "w",
+    "",
+    14,
+    0,
+    0.3,
+    10,
+    3.2,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    10,
+    5.3,
+    0.3,
+    3.2,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    7.0,
+    10,
+    7.3,
+    0.3,
+    3.2,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    5.0,
+    10,
+    2.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.7
+   ],
+   [
+    1,
+    "the low tea table",
+    3.2,
+    3.4,
+    1.8,
+    1.6,
+    0.35,
+    "#7a4a2a"
+   ],
+   [
+    2,
+    "six cushions, one for each face",
+    3.0,
+    2.6,
+    0.7,
+    0.7,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    0,
+    "",
+    4.8,
+    2.6,
+    0.7,
+    0.7,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    0,
+    "",
+    5.6,
+    4.2,
+    0.7,
+    0.7,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    0,
+    "",
+    4.8,
+    5.8,
+    0.7,
+    0.7,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    0,
+    "",
+    3.0,
+    5.8,
+    0.7,
+    0.7,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    0,
+    "",
+    2.2,
+    4.2,
+    0.7,
+    0.7,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    3,
+    "brazier and kettle",
+    6.4,
+    1.0,
+    0.8,
+    0.8,
+    0.6,
+    "#5b4636"
+   ],
+   [
+    4,
+    "gift shelf",
+    0.6,
+    0.15,
+    2.6,
+    0.5,
+    1.8,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "paper screens to the guest rooms",
+    9.0,
+    0.0,
+    0.12,
+    1.8,
+    2.2,
+    "#efe5cf"
+   ],
+   [
+    0,
+    "",
+    9.0,
+    3.0,
+    0.12,
+    4.0,
+    2.2,
+    "#efe5cf"
+   ],
+   [
+    0,
+    "",
+    9.0,
+    8.2,
+    0.12,
+    1.8,
+    2.2,
+    "#efe5cf"
+   ],
+   [
+    0,
+    "",
+    9.0,
+    4.9,
+    5.0,
+    0.12,
+    2.2,
+    "#efe5cf"
+   ],
+   [
+    6,
+    "guest bedding, the north room",
+    11.0,
+    1.2,
+    2.0,
+    1.4,
+    0.2,
+    "#e8dcc0"
+   ],
+   [
+    7,
+    "guest bedding, the south room",
+    11.0,
+    7.0,
+    2.0,
+    1.4,
+    0.2,
+    "#e8dcc0"
+   ],
+   [
+    8,
+    "the Elder's mat, by the door",
+    7.4,
+    8.4,
+    1.4,
+    1.2,
+    0.2,
+    "#d9c7e8"
+   ],
+   [
+    9,
+    "shoe shelf for guests",
+    2.6,
+    9.4,
+    1.8,
+    0.4,
+    0.6,
+    "#7a4a2a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    9,
+    10,
+    "#d4c49a",
+    null
+   ],
+   [
+    "rect",
+    9,
+    0,
+    5,
+    10,
+    "#c9b48a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    14,
+    2.6,
+    3.2,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    2.6,
+    6.6,
+    0.8,
+    2.6,
+    "#9fc08a"
+   ]
+  ],
+  "people": [
+   [
+    5.6,
+    3.0,
+    "Diplomat Elder",
+    "#5f8f45"
+   ],
+   [
+    4.1,
+    6.4,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    6.0,
+    12.0
+   ],
+   [
+    6.0,
+    10.4
+   ],
+   [
+    6.0,
+    8.8
+   ],
+   [
+    4.1,
+    6.6
+   ]
+  ],
+  "does": [
+   "The Diplomat sleeps by the door, so whoever arrives in the night is met by a person, not a latch.",
+   "Six cushions round the tea table, one for each Elder. When they meet, they meet here.",
+   "The garden window is a whole wall open at sitting height. Tea is poured looking at the garden.",
+   "The guest rooms are for visitors from the settlements. You may be asked to give up your bunk for one."
+  ],
+  "size": "14 m by 10 m, 3.2 m to the beam",
+  "doors": [
+   [
+    "S",
+    5.0,
+    7.0,
+    "door from the court's yard"
+   ]
+  ]
+ },
+ "elder-sage": {
+  "key": "elder-sage",
+  "title": "The Sage Elder's library cave, on the crag",
+  "Wd": 10,
+  "D": 8,
+  "Ht": 3.0,
+  "floor_col": "#a39a88",
+  "sub": "The founder's plan bent furthest: half cave, one seat, a window over the cloud sea, and books in the rock.",
+  "bend": "Founder's standard kept: the teal beam, the red door. Elder's bend: the rock for a wall, the sea for a view.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -1.0,
+    10.6,
+    1.0,
+    3.6,
+    "#6f6a5e"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    8,
+    3.0,
+    "#9a8f7a"
+   ],
+   [
+    "w",
+    "",
+    10,
+    0,
+    0.3,
+    8,
+    3.0,
+    "#9a8f7a"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    8,
+    1.1,
+    0.3,
+    3.0,
+    "#9a8f7a"
+   ],
+   [
+    "w",
+    "",
+    0.8,
+    8,
+    1.5999999999999999,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    1,
+    "scroll niches cut into the rock",
+    0.2,
+    0.05,
+    9.6,
+    0.5,
+    2.4,
+    "#5d584e"
+   ],
+   [
+    2,
+    "scroll racks",
+    0.15,
+    1.2,
+    0.6,
+    4.8,
+    2.2,
+    "#6d4c35"
+   ],
+   [
+    3,
+    "the one seat, facing the window",
+    5.6,
+    5.4,
+    0.8,
+    0.8,
+    0.15,
+    "#c7a15f"
+   ],
+   [
+    4,
+    "reading lectern",
+    3.6,
+    2.8,
+    0.8,
+    0.6,
+    1.1,
+    "#7a4a2a"
+   ],
+   [
+    5,
+    "a pot of tea gone cold",
+    7.4,
+    3.6,
+    0.5,
+    0.5,
+    0.4,
+    "#7a4a2a"
+   ],
+   [
+    6,
+    "the Elder's mat, in a niche",
+    8.0,
+    0.6,
+    1.6,
+    1.2,
+    0.2,
+    "#d9c7e8"
+   ],
+   [
+    7,
+    "oil lamp on the rock shelf",
+    4.6,
+    0.1,
+    0.3,
+    0.3,
+    0.3,
+    "#b8862b",
+    1.6
+   ],
+   [
+    "w",
+    "",
+    2.4,
+    8,
+    1.2,
+    0.3,
+    3.0,
+    "#9a8f7a"
+   ],
+   [
+    "w",
+    "",
+    3.6,
+    8,
+    4.4,
+    0.3,
+    0.9,
+    "#9a8f7a"
+   ],
+   [
+    "w",
+    "",
+    3.6,
+    8,
+    4.4,
+    0.3,
+    0.4,
+    "#2f6f6a",
+    2.6
+   ],
+   [
+    "w",
+    "",
+    8.0,
+    8,
+    2.3,
+    0.3,
+    3.0,
+    "#9a8f7a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    10,
+    8,
+    "#a39a88",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "W",
+    1.2,
+    6.0,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "people": [
+   [
+    6.0,
+    5.8,
+    "Sage Elder",
+    "#9aa3ad"
+   ],
+   [
+    3.6,
+    4.6,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    1.6,
+    10.0
+   ],
+   [
+    1.6,
+    8.4
+   ],
+   [
+    1.6,
+    6.8
+   ],
+   [
+    3.4,
+    5.2
+   ]
+  ],
+  "does": [
+   "There is no yard and no gate. The path to the door bends three times, and the door is off-centre.",
+   "One seat, and the Sage is in it. You stand. Most students leave before being spoken to.",
+   "The window is the whole south wall above the sill: cloud sea, the summit, and the road you came by.",
+   "The scrolls are not catalogued. The Sage says the finding is the reading."
+  ],
+  "size": "10 m by 8 m, 3.0 m to the beam",
+  "doors": [
+   [
+    "S",
+    0.6000000000000001,
+    2.6,
+    "door from the court's yard"
+   ]
+  ]
+ },
+ "lt-argyra": {
+  "key": "lt-argyra",
+  "title": "A lieutenant's room: Argyra",
+  "sub": "One of thirty. The Argyra lieutenant teaches the Elder's practice the metal way; the walls are the founder's.",
+  "Wd": 5.5,
+  "D": 4.5,
+  "Ht": 2.8,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -0.35,
+    5.5,
+    0.35,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.35,
+    -0.35,
+    0.35,
+    4.85,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    0,
+    4.5,
+    2.0,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    3.0,
+    4.5,
+    2.5,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    5.5,
+    -0.35,
+    0.35,
+    5.2,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    1,
+    "sleeping mat, rolled by day",
+    0.2,
+    0.25,
+    1.0,
+    2.0,
+    0.22,
+    "#d8c08a"
+   ],
+   [
+    2,
+    "writing desk, one lamp",
+    2.0,
+    0.2,
+    1.6,
+    0.6,
+    0.7,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "three cubbies: your team's BAR folders",
+    4.4,
+    0.15,
+    0.9,
+    0.45,
+    1.6,
+    "#6d4c35"
+   ],
+   [
+    4,
+    "whetstone bench and the polished blades",
+    0.15,
+    2.7,
+    0.45,
+    1.6,
+    1.2,
+    "#9aa3ad"
+   ],
+   [
+    5,
+    "drill board: the team's wax-on marks",
+    5.35,
+    1.3,
+    0.12,
+    1.8,
+    1.6,
+    "#e8dcc0"
+   ],
+   [
+    6,
+    "a bronze mirror, the Argyra shrine",
+    4.5,
+    3.4,
+    0.7,
+    0.7,
+    1.5,
+    "#9aa3ad"
+   ],
+   [
+    7,
+    "three floor cushions",
+    1.6,
+    2.7,
+    2.4,
+    0.6,
+    0.15,
+    "#c7a15f"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    5.5,
+    4.5,
+    "#cdb68a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    5.5,
+    2.5,
+    2.8,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    1.0,
+    2.0,
+    "#efe2c0"
+   ]
+  ],
+  "people": [
+   [
+    3.4,
+    1.4,
+    "Argyra lieutenant",
+    "#9aa3ad"
+   ],
+   [
+    2.6,
+    3.2,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    2.5,
+    6.0
+   ],
+   [
+    2.5,
+    4.9
+   ],
+   [
+    2.6,
+    3.7
+   ]
+  ],
+  "floor_col": "#cdb68a",
+  "size": "5.5 m by 4.5 m, 2.8 m to the trellis",
+  "labels_extra": [],
+  "doors": [
+   [
+    "S",
+    2.0,
+    3.0,
+    "door onto the court's row"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    "window over the practice yard"
+   ]
+  ],
+  "does": [
+   "Your mentor's door has a bronze plate on it. Everything in the room is sharpened or polished.",
+   "Your team's three folders are in the cubbies. The mentor reads your last BAR at the desk.",
+   "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
+   "The other four lieutenants' rooms in this court share the walls and differ in everything else."
+  ],
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: whetstone bench and the polished blades, a bronze mirror."
+ },
+ "lt-lamenth": {
+  "key": "lt-lamenth",
+  "title": "A lieutenant's room: Lamenth",
+  "sub": "One of thirty. The Lamenth lieutenant teaches the Elder's practice the water way; the walls are the founder's.",
+  "Wd": 5.5,
+  "D": 4.5,
+  "Ht": 2.8,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -0.35,
+    5.5,
+    0.35,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.35,
+    -0.35,
+    0.35,
+    4.85,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    0,
+    4.5,
+    2.0,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    3.0,
+    4.5,
+    2.5,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    5.5,
+    -0.35,
+    0.35,
+    5.2,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    1,
+    "sleeping mat, rolled by day",
+    0.2,
+    0.25,
+    1.0,
+    2.0,
+    0.22,
+    "#d8c08a"
+   ],
+   [
+    2,
+    "writing desk, one lamp",
+    2.0,
+    0.2,
+    1.6,
+    0.6,
+    0.7,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "three cubbies: your team's BAR folders",
+    4.4,
+    0.15,
+    0.9,
+    0.45,
+    1.6,
+    "#6d4c35"
+   ],
+   [
+    4,
+    "basin stand and the tide chart",
+    0.15,
+    2.7,
+    0.45,
+    1.6,
+    1.2,
+    "#4a6f95"
+   ],
+   [
+    5,
+    "drill board: the team's wax-on marks",
+    5.35,
+    1.3,
+    0.12,
+    1.8,
+    1.6,
+    "#e8dcc0"
+   ],
+   [
+    6,
+    "a still bowl of water, the Lamenth shrine",
+    4.5,
+    3.4,
+    0.7,
+    0.7,
+    1.5,
+    "#4a6f95"
+   ],
+   [
+    7,
+    "three floor cushions",
+    1.6,
+    2.7,
+    2.4,
+    0.6,
+    0.15,
+    "#c7a15f"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    5.5,
+    4.5,
+    "#cdb68a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    5.5,
+    2.5,
+    2.8,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    1.0,
+    2.0,
+    "#efe2c0"
+   ]
+  ],
+  "people": [
+   [
+    3.4,
+    1.4,
+    "Lamenth lieutenant",
+    "#4a6f95"
+   ],
+   [
+    2.6,
+    3.2,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    2.5,
+    6.0
+   ],
+   [
+    2.5,
+    4.9
+   ],
+   [
+    2.6,
+    3.7
+   ]
+  ],
+  "floor_col": "#cdb68a",
+  "size": "5.5 m by 4.5 m, 2.8 m to the trellis",
+  "labels_extra": [],
+  "doors": [
+   [
+    "S",
+    2.0,
+    3.0,
+    "door onto the court's row"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    "window over the practice yard"
+   ]
+  ],
+  "does": [
+   "Your mentor's door has a blue cloth over it. A basin stands by the window, and nothing is hurried.",
+   "Your team's three folders are in the cubbies. The mentor reads your last BAR at the desk.",
+   "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
+   "The other four lieutenants' rooms in this court share the walls and differ in everything else."
+  ],
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: basin stand and the tide chart, a still bowl of water."
+ },
+ "lt-pyrakanth": {
+  "key": "lt-pyrakanth",
+  "title": "A lieutenant's room: Pyrakanth",
+  "sub": "One of thirty. The Pyrakanth lieutenant teaches the Elder's practice the fire way; the walls are the founder's.",
+  "Wd": 5.5,
+  "D": 4.5,
+  "Ht": 2.8,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -0.35,
+    5.5,
+    0.35,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.35,
+    -0.35,
+    0.35,
+    4.85,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    0,
+    4.5,
+    2.0,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    3.0,
+    4.5,
+    2.5,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    5.5,
+    -0.35,
+    0.35,
+    5.2,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    1,
+    "sleeping mat, rolled by day",
+    0.2,
+    0.25,
+    1.0,
+    2.0,
+    0.22,
+    "#d8c08a"
+   ],
+   [
+    2,
+    "writing desk, one lamp",
+    2.0,
+    0.2,
+    1.6,
+    0.6,
+    0.7,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "three cubbies: your team's BAR folders",
+    4.4,
+    0.15,
+    0.9,
+    0.45,
+    1.6,
+    "#6d4c35"
+   ],
+   [
+    4,
+    "brazier and the drill candles",
+    0.15,
+    2.7,
+    0.45,
+    1.6,
+    1.2,
+    "#c4512f"
+   ],
+   [
+    5,
+    "drill board: the team's wax-on marks",
+    5.35,
+    1.3,
+    0.12,
+    1.8,
+    1.6,
+    "#e8dcc0"
+   ],
+   [
+    6,
+    "the ember lamp, the Pyrakanth shrine",
+    4.5,
+    3.4,
+    0.7,
+    0.7,
+    1.5,
+    "#c4512f"
+   ],
+   [
+    7,
+    "three floor cushions",
+    1.6,
+    2.7,
+    2.4,
+    0.6,
+    0.15,
+    "#c7a15f"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    5.5,
+    4.5,
+    "#cdb68a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    5.5,
+    2.5,
+    2.8,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    1.0,
+    2.0,
+    "#efe2c0"
+   ]
+  ],
+  "people": [
+   [
+    3.4,
+    1.4,
+    "Pyrakanth lieutenant",
+    "#c4512f"
+   ],
+   [
+    2.6,
+    3.2,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    2.5,
+    6.0
+   ],
+   [
+    2.5,
+    4.9
+   ],
+   [
+    2.6,
+    3.7
+   ]
+  ],
+  "floor_col": "#cdb68a",
+  "size": "5.5 m by 4.5 m, 2.8 m to the trellis",
+  "labels_extra": [],
+  "doors": [
+   [
+    "S",
+    2.0,
+    3.0,
+    "door onto the court's row"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    "window over the practice yard"
+   ]
+  ],
+  "does": [
+   "Your mentor's door is scorched round the frame. The brazier is always lit, even in summer.",
+   "Your team's three folders are in the cubbies. The mentor reads your last BAR at the desk.",
+   "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
+   "The other four lieutenants' rooms in this court share the walls and differ in everything else."
+  ],
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: brazier and the drill candles, the ember lamp."
+ },
+ "lt-meridia": {
+  "key": "lt-meridia",
+  "title": "A lieutenant's room: Meridia",
+  "sub": "One of thirty. The Meridia lieutenant teaches the Elder's practice the earth way; the walls are the founder's.",
+  "Wd": 5.5,
+  "D": 4.5,
+  "Ht": 2.8,
+  "items": [
+   [
+    "w",
+    "",
+    0,
+    -0.35,
+    5.5,
+    0.35,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.35,
+    -0.35,
+    0.35,
+    4.85,
+    2.8,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    0,
+    4.5,
+    2.0,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    3.0,
+    4.5,
+    2.5,
+    0.35,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    "c",
+    "",
+    5.5,
+    -0.35,
+    0.35,
+    5.2,
+    0.45,
+    "#c25a3d"
+   ],
+   [
+    1,
+    "sleeping mat, rolled by day",
+    0.2,
+    0.25,
+    1.0,
+    2.0,
+    0.22,
+    "#d8c08a"
+   ],
+   [
+    2,
+    "writing desk, one lamp",
+    2.0,
+    0.2,
+    1.6,
+    0.6,
+    0.7,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "three cubbies: your team's BAR folders",
+    4.4,
+    0.15,
+    0.9,
+    0.45,
+    1.6,
+    "#6d4c35"
+   ],
+   [
+    4,
+    "clay jars of seed grain",
+    0.15,
+    2.7,
+    0.45,
+    1.6,
+    1.2,
+    "#b8954a"
+   ],
+   [
+    5,
+    "drill board: the team's wax-on marks",
+    5.35,
+    1.3,
+    0.12,
+    1.8,
+    1.6,
+    "#e8dcc0"
+   ],
+   [
+    6,
+    "a standing stone, the Meridia shrine",
+    4.5,
+    3.4,
+    0.7,
+    0.7,
+    1.5,
+    "#b8954a"
+   ],
+   [
+    7,
+    "three floor cushions",
+    1.6,
+    2.7,
+    2.4,
+    0.6,
+    0.15,
+    "#c7a15f"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    5.5,
+    4.5,
+    "#cdb68a",
+    null
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    5.5,
+    2.5,
+    2.8,
+    "#2f6f6a"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    1.0,
+    2.0,
+    "#efe2c0"
+   ]
+  ],
+  "people": [
+   [
+    3.4,
+    1.4,
+    "Meridia lieutenant",
+    "#b8954a"
+   ],
+   [
+    2.6,
+    3.2,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "route": [
+   [
+    2.5,
+    6.0
+   ],
+   [
+    2.5,
+    4.9
+   ],
+   [
+    2.6,
+    3.7
+   ]
+  ],
+  "floor_col": "#a8805a",
+  "size": "5.5 m by 4.5 m, 2.8 m to the trellis",
+  "labels_extra": [],
+  "doors": [
+   [
+    "S",
+    2.0,
+    3.0,
+    "door onto the court's row"
+   ],
+   [
+    "W",
+    0.6,
+    2.4,
+    "window over the practice yard"
+   ]
+  ],
+  "does": [
+   "Your mentor's door is propped with a stone. The floor is beaten earth, swept twice a day.",
+   "Your team's three folders are in the cubbies. The mentor reads your last BAR at the desk.",
+   "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
+   "The other four lieutenants' rooms in this court share the walls and differ in everything else."
+  ],
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: clay jars of seed grain, a standing stone."
+ },
+ "dojo": {
+  "title": "The dojo",
+  "Wd": 18,
+  "D": 14,
+  "Ht": 5.0,
+  "floor_col": "#b9a58a",
+  "sub": "Where teams spar. The floor is straw mats, and the Root circle in the middle is where you learn to stand.",
+  "bend": "Founder's standard: red plaster, the teal beam, the founder's tablet over the floor. Its own: a drum and racks.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    18.6,
+    0.3,
+    5.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    14,
+    5.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    18,
+    0,
+    0.3,
+    14,
+    5.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    14,
+    7.3,
+    0.3,
+    5.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    11,
+    14,
+    7.3,
+    0.3,
+    5.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    7,
+    14,
+    4,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    4.5
+   ],
+   [
+    1,
+    "the founder's tablet: stand where you are",
+    7.5,
+    0.05,
+    3.0,
+    0.2,
+    1.4,
+    "#b8862b",
+    2.4
+   ],
+   [
+    2,
+    "rack of staves",
+    0.15,
+    2.0,
+    0.45,
+    5.0,
+    2.0,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "rack of wooden swords and spears",
+    17.4,
+    2.0,
+    0.45,
+    5.0,
+    2.0,
+    "#7a4a2a"
+   ],
+   [
+    4,
+    "drill board: the five basic moves, each team's wax-on marks",
+    0.12,
+    8.0,
+    0.12,
+    3.2,
+    1.8,
+    "#efe5cf",
+    0.4
+   ],
+   [
+    5,
+    "the teaching drum",
+    1.0,
+    0.8,
+    1.2,
+    1.2,
+    1.1,
+    "#8a3a2a"
+   ],
+   [
+    6,
+    "bench for the team that waits its turn",
+    12.0,
+    13.2,
+    4.6,
+    0.5,
+    0.45,
+    "#7a4a2a"
+   ],
+   [
+    7,
+    "bench for the team that waits its turn",
+    1.4,
+    13.2,
+    4.6,
+    0.5,
+    0.45,
+    "#7a4a2a"
+   ],
+   [
+    8,
+    "practice robes on pegs",
+    13.0,
+    0.1,
+    4.0,
+    0.25,
+    1.6,
+    "#d8c9a6",
+    0.3
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    18,
+    14,
+    "#b9a58a",
+    null
+   ],
+   [
+    "rect",
+    2.5,
+    2.5,
+    13,
+    9,
+    "#cdb68a",
+    null
+   ],
+   [
+    "rect",
+    7,
+    5,
+    4,
+    4,
+    "#8a6b48",
+    null
+   ],
+   [
+    "rect",
+    7.4,
+    5.4,
+    3.2,
+    3.2,
+    "#cdb68a",
+    null
+   ]
+  ],
+  "models": [
+   [
+    "Ceramic_Pot.glb",
+    16.8,
+    12.6,
+    0,
+    0.6,
+    0.6,
+    0.6,
+    0.6
+   ],
+   [
+    "Ceramic_Pot.glb",
+    1.2,
+    12.0,
+    0,
+    0.6,
+    0.6,
+    0.6,
+    0.6
+   ]
+  ],
+  "people": [
+   [
+    8.2,
+    6.4,
+    "teammate",
+    "#5f8f45"
+   ],
+   [
+    9.8,
+    7.6,
+    "teammate",
+    "#4a6f95"
+   ],
+   [
+    9.0,
+    10.0,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "does": [
+   "The Root circle is the first drill. Your teammate pushes; you learn to stay where you stand.",
+   "Teams spar in threes on the mats. The team that waits sits on the bench by the door and watches.",
+   "Every move done clean earns a chalk mark on the drill board. Wax-on: the same move until it is yours.",
+   "The founder's tablet over the floor says one thing: stand where you are."
+  ],
+  "key": "dojo",
+  "size": "18 m by 14 m, 5.0 m to the beam",
+  "route": [
+   [
+    9.0,
+    16.0
+   ],
+   [
+    9.0,
+    14.4
+   ],
+   [
+    9.0,
+    12.8
+   ],
+   [
+    9.0,
+    10.0
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    7,
+    11,
+    "doors onto the sparring ring"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    18,
+    4.4,
+    5.0,
+    "#2f6f6a"
+   ]
+  ]
+ },
+ "refectory": {
+  "title": "The refectory",
+  "Wd": 24,
+  "D": 10,
+  "Ht": 4.4,
+  "floor_col": "#a9946f",
+  "sub": "Where the sect eats. Each low table seats one team of three, and this is where you meet yours.",
+  "bend": "Founder's standard: red plaster, the teal beam. Its own: a kitchen hearth, and the founder's empty seat.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    24.6,
+    0.3,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    10,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    24,
+    0,
+    0.3,
+    10,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    10,
+    11.3,
+    0.3,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    13,
+    10,
+    11.3,
+    0.3,
+    4.4,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    11,
+    10,
+    2,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    3.9000000000000004
+   ],
+   [
+    1,
+    "the kitchen hearth wall",
+    0.15,
+    0.15,
+    3.6,
+    0.6,
+    2.2,
+    "#5d584e"
+   ],
+   [
+    2,
+    "serving counter",
+    4.4,
+    0.6,
+    0.6,
+    4.2,
+    0.9,
+    "#7a4a2a"
+   ],
+   [
+    3,
+    "bowl shelves",
+    0.15,
+    4.4,
+    0.45,
+    3.4,
+    1.8,
+    "#6d4c35"
+   ],
+   [
+    4,
+    "the head table, and the founder's seat kept empty",
+    15.0,
+    0.9,
+    4.0,
+    0.9,
+    0.55,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "the founder's cushion, never sat on",
+    16.6,
+    0.25,
+    0.8,
+    0.6,
+    0.12,
+    "#b8862b"
+   ],
+   [
+    6,
+    "chore board: who carries water, who cooks",
+    23.85,
+    6.0,
+    0.12,
+    2.6,
+    1.6,
+    "#efe5cf",
+    0.4
+   ],
+   [
+    7,
+    "water butt by the door",
+    13.6,
+    9.0,
+    0.8,
+    0.8,
+    0.9,
+    "#6f8a9a"
+   ]
+  ],
+  "models": [
+   [
+    "Stone_Fire_Pit.glb",
+    2.0,
+    2.2,
+    0,
+    1.0,
+    1.4,
+    1.4,
+    0.4
+   ],
+   [
+    "Ceramic_Pot.glb",
+    0.8,
+    1.4,
+    0,
+    0.8,
+    0.6,
+    0.6,
+    0.6
+   ],
+   [
+    "Antique_Ceramic_Vase_01.glb",
+    3.2,
+    1.2,
+    0,
+    0.8,
+    0.5,
+    0.5,
+    0.6
+   ],
+   [
+    "WoodenTable_01.glb",
+    8.0,
+    4.0,
+    0,
+    1.0,
+    1.8,
+    0.66,
+    0.55
+   ],
+   [
+    "WoodenTable_01.glb",
+    8.0,
+    7.2,
+    0,
+    1.0,
+    1.8,
+    0.66,
+    0.55
+   ],
+   [
+    "WoodenTable_01.glb",
+    13.0,
+    4.0,
+    0,
+    1.0,
+    1.8,
+    0.66,
+    0.55
+   ],
+   [
+    "WoodenTable_01.glb",
+    13.0,
+    7.2,
+    0,
+    1.0,
+    1.8,
+    0.66,
+    0.55
+   ],
+   [
+    "WoodenTable_01.glb",
+    19.0,
+    4.0,
+    0,
+    1.0,
+    1.8,
+    0.66,
+    0.55
+   ],
+   [
+    "WoodenTable_01.glb",
+    19.0,
+    7.2,
+    0,
+    1.0,
+    1.8,
+    0.66,
+    0.55
+   ],
+   [
+    "folding_wooden_stool.glb",
+    7.5,
+    3.3,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    8.5,
+    3.3,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    8.0,
+    4.7,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    7.5,
+    6.5,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    8.5,
+    6.5,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    8.0,
+    7.9,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    12.5,
+    3.3,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    13.5,
+    3.3,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    13.0,
+    4.7,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    12.5,
+    6.5,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    13.5,
+    6.5,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    13.0,
+    7.9,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    18.5,
+    3.3,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    19.5,
+    3.3,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    19.0,
+    4.7,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    18.5,
+    6.5,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    19.5,
+    6.5,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ],
+   [
+    "folding_wooden_stool.glb",
+    19.0,
+    7.9,
+    0,
+    0.9,
+    0.5,
+    0.5,
+    0.4
+   ]
+  ],
+  "people": [
+   [
+    12.5,
+    6.5,
+    "teammate",
+    "#5f8f45"
+   ],
+   [
+    13.5,
+    6.5,
+    "teammate",
+    "#4a6f95"
+   ],
+   [
+    5.0,
+    2.6,
+    "the cook",
+    "#b8954a"
+   ],
+   [
+    13.0,
+    8.4,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "does": [
+   "Your team is the two at the table with the empty stool. You sit, and the three of you are a team.",
+   "Teams eat together and clear together. The chore board by the door says whose day it is.",
+   "The head table has one cushion nobody sits on. It is the founder's, kept for when the founder comes home.",
+   "The kitchen fire never goes out. Anyone may ask the cook for tea after the bell."
+  ],
+  "key": "refectory",
+  "size": "24 m by 10 m, 4.4 m to the beam",
+  "route": [
+   [
+    12.0,
+    12.0
+   ],
+   [
+    12.0,
+    10.4
+   ],
+   [
+    12.0,
+    8.8
+   ],
+   [
+    13.0,
+    8.4
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    11,
+    13,
+    "doors onto the refectory terrace"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    24,
+    3.8000000000000003,
+    4.4,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    24,
+    10,
+    "#a9946f",
+    null
+   ]
+  ]
+ },
+ "arrival-hall": {
+  "title": "The arrival hall",
+  "Wd": 16,
+  "D": 8,
+  "Ht": 4.0,
+  "floor_col": "#b9a58a",
+  "sub": "Twelve bunks for exiles in their first nights. The Steward senior keeps the register at the door.",
+  "bend": "Founder's standard: red plaster, the teal beam. Its own: two tiers of bunks, a register, a screen.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    16.6,
+    0.3,
+    4.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    8,
+    4.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    16,
+    0,
+    0.3,
+    8,
+    4.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    8,
+    7.3,
+    0.3,
+    4.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    9,
+    8,
+    7.3,
+    0.3,
+    4.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    7,
+    8,
+    2,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    3.5
+   ],
+   [
+    10,
+    "bunk, lower",
+    0.3,
+    0.2,
+    1.0,
+    2.0,
+    0.45,
+    "#a3322a"
+   ],
+   [
+    10,
+    "bunk, upper",
+    0.3,
+    0.2,
+    1.0,
+    2.0,
+    0.16,
+    "#d8c08a",
+    1.5
+   ],
+   [
+    10,
+    "bunk post",
+    0.3,
+    2.1,
+    1.0,
+    0.1,
+    1.9,
+    "#7a4a2a"
+   ],
+   [
+    10,
+    "trunk at the bunk foot",
+    0.4,
+    2.4,
+    0.8,
+    0.5,
+    0.45,
+    "#6d4c35"
+   ],
+   [
+    11,
+    "bunk, lower",
+    1.9000000000000001,
+    0.2,
+    1.0,
+    2.0,
+    0.45,
+    "#d8c08a"
+   ],
+   [
+    11,
+    "bunk, upper",
+    1.9000000000000001,
+    0.2,
+    1.0,
+    2.0,
+    0.16,
+    "#d8c08a",
+    1.5
+   ],
+   [
+    11,
+    "bunk post",
+    1.9000000000000001,
+    2.1,
+    1.0,
+    0.1,
+    1.9,
+    "#7a4a2a"
+   ],
+   [
+    11,
+    "trunk at the bunk foot",
+    2.0,
+    2.4,
+    0.8,
+    0.5,
+    0.45,
+    "#6d4c35"
+   ],
+   [
+    12,
+    "bunk, lower",
+    3.5,
+    0.2,
+    1.0,
+    2.0,
+    0.45,
+    "#d8c08a"
+   ],
+   [
+    12,
+    "bunk, upper",
+    3.5,
+    0.2,
+    1.0,
+    2.0,
+    0.16,
+    "#d8c08a",
+    1.5
+   ],
+   [
+    12,
+    "bunk post",
+    3.5,
+    2.1,
+    1.0,
+    0.1,
+    1.9,
+    "#7a4a2a"
+   ],
+   [
+    12,
+    "trunk at the bunk foot",
+    3.6,
+    2.4,
+    0.8,
+    0.5,
+    0.45,
+    "#6d4c35"
+   ],
+   [
+    13,
+    "bunk, lower",
+    7.300000000000001,
+    0.2,
+    1.0,
+    2.0,
+    0.45,
+    "#d8c08a"
+   ],
+   [
+    13,
+    "bunk, upper",
+    7.300000000000001,
+    0.2,
+    1.0,
+    2.0,
+    0.16,
+    "#d8c08a",
+    1.5
+   ],
+   [
+    13,
+    "bunk post",
+    7.300000000000001,
+    2.1,
+    1.0,
+    0.1,
+    1.9,
+    "#7a4a2a"
+   ],
+   [
+    13,
+    "trunk at the bunk foot",
+    7.4,
+    2.4,
+    0.8,
+    0.5,
+    0.45,
+    "#6d4c35"
+   ],
+   [
+    14,
+    "bunk, lower",
+    8.9,
+    0.2,
+    1.0,
+    2.0,
+    0.45,
+    "#d8c08a"
+   ],
+   [
+    14,
+    "bunk, upper",
+    8.9,
+    0.2,
+    1.0,
+    2.0,
+    0.16,
+    "#d8c08a",
+    1.5
+   ],
+   [
+    14,
+    "bunk post",
+    8.9,
+    2.1,
+    1.0,
+    0.1,
+    1.9,
+    "#7a4a2a"
+   ],
+   [
+    14,
+    "trunk at the bunk foot",
+    9.0,
+    2.4,
+    0.8,
+    0.5,
+    0.45,
+    "#6d4c35"
+   ],
+   [
+    15,
+    "bunk, lower",
+    10.5,
+    0.2,
+    1.0,
+    2.0,
+    0.45,
+    "#d8c08a"
+   ],
+   [
+    15,
+    "bunk, upper",
+    10.5,
+    0.2,
+    1.0,
+    2.0,
+    0.16,
+    "#d8c08a",
+    1.5
+   ],
+   [
+    15,
+    "bunk post",
+    10.5,
+    2.1,
+    1.0,
+    0.1,
+    1.9,
+    "#7a4a2a"
+   ],
+   [
+    15,
+    "trunk at the bunk foot",
+    10.6,
+    2.4,
+    0.8,
+    0.5,
+    0.45,
+    "#6d4c35"
+   ],
+   [
+    1,
+    "the Steward's desk and the arrivals register",
+    10.6,
+    5.6,
+    1.6,
+    0.8,
+    0.75,
+    "#7a4a2a"
+   ],
+   [
+    2,
+    "lamp stand",
+    12.6,
+    5.6,
+    0.3,
+    0.3,
+    1.5,
+    "#b8862b"
+   ],
+   [
+    3,
+    "notice of the first week: bell, water, class",
+    0.12,
+    4.0,
+    0.12,
+    2.0,
+    1.4,
+    "#efe5cf",
+    0.6
+   ],
+   [
+    4,
+    "washstand and basin",
+    15.2,
+    3.4,
+    0.6,
+    1.0,
+    0.85,
+    "#6f8a9a"
+   ]
+  ],
+  "models": [
+   [
+    "chinese_screen_panels.glb",
+    13.5,
+    4.6,
+    0,
+    1.0,
+    1.3,
+    0.4,
+    1.6
+   ]
+  ],
+  "people": [
+   [
+    11.4,
+    6.6,
+    "Steward senior",
+    "#4a6f95"
+   ],
+   [
+    5.6,
+    3.0,
+    "another exile",
+    "#9aa3ad"
+   ],
+   [
+    1.4,
+    3.4,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "does": [
+   "The Steward writes your name in the register, then hands you the bunk with the red blanket.",
+   "Twelve bunks, two tiers. Exiles sleep here until their team takes them to a house in the rows.",
+   "The notice on the wall says the whole first week: the bell, the water, the first class.",
+   "Nobody asks why you were exiled. The register has a column for it, and it is blank."
+  ],
+  "key": "arrival-hall",
+  "size": "16 m by 8 m, 4.0 m to the beam",
+  "route": [
+   [
+    8.0,
+    10.0
+   ],
+   [
+    8.0,
+    8.4
+   ],
+   [
+    8.0,
+    6.8
+   ],
+   [
+    1.4,
+    3.4
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    7,
+    9,
+    "door onto the arrival court"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    16,
+    3.4,
+    4.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    16,
+    8,
+    "#b9a58a",
+    null
+   ]
+  ]
+ },
+ "team-1": {
+  "title": "A team house: house 1",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-1",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-2": {
+  "title": "A team house: house 2",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-2",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-3": {
+  "title": "A team house: yours, house 3",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "Your team's house: three mats, one low table, and the lantern lit at your door.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#a3322a"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#b8862b",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [
+   [
+    1.6,
+    4.0,
+    "teammate",
+    "#5f8f45"
+   ],
+   [
+    3.0,
+    3.6,
+    "you",
+    "#a3322a"
+   ]
+  ],
+  "does": [
+   "The lantern at your door is lit because you are home. Every team lights its own.",
+   "Three mats, three trunks, one table. What you keep here is what you carried up the mountain.",
+   "The team's mark on the wall is painted the night the team forms. Yours is new gold.",
+   "Breakfast is at the low table before the bell. It is where the team decides who leads the day."
+  ],
+  "key": "team-3",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-4": {
+  "title": "A team house: house 4",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-4",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-5": {
+  "title": "A team house: house 5",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-5",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-6": {
+  "title": "A team house: house 6",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-6",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-7": {
+  "title": "A team house: house 7",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-7",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ },
+ "team-8": {
+  "title": "A team house: house 8",
+  "Wd": 6,
+  "D": 5,
+  "Ht": 3.0,
+  "floor_col": "#cdb68a",
+  "sub": "One of eight in the exiles' rows. A team of three sleeps, eats breakfast and argues here.",
+  "bend": "Founder's standard: red plaster, the teal beam, the same door in every house. Its own: the team's mark.",
+  "items": [
+   [
+    "w",
+    "",
+    -0.3,
+    -0.3,
+    6.6,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    6,
+    0,
+    0.3,
+    5,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    3.5,
+    5,
+    2.8,
+    0.3,
+    3.0,
+    "#c25a3d"
+   ],
+   [
+    "w",
+    "",
+    2.5,
+    5,
+    1.0,
+    0.3,
+    0.5,
+    "#2f6f6a",
+    2.5
+   ],
+   [
+    "w",
+    "",
+    -0.3,
+    1.2,
+    0.3,
+    1.6,
+    1.4,
+    "#2f6f6a",
+    1.0
+   ],
+   [
+    1,
+    "sleeping mat",
+    0.2,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#8a7a62"
+   ],
+   [
+    2,
+    "sleeping mat",
+    1.3,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#5f8f45"
+   ],
+   [
+    3,
+    "sleeping mat",
+    2.4,
+    0.2,
+    0.9,
+    2.0,
+    0.18,
+    "#4a6f95"
+   ],
+   [
+    4,
+    "three trunks",
+    3.6,
+    0.15,
+    2.2,
+    0.5,
+    0.5,
+    "#6d4c35"
+   ],
+   [
+    5,
+    "peg rail and three practice robes",
+    5.75,
+    1.0,
+    0.2,
+    2.0,
+    1.4,
+    "#d8c9a6",
+    0.4
+   ],
+   [
+    6,
+    "the team's mark, painted on the north wall",
+    3.9,
+    0.02,
+    1.4,
+    0.06,
+    0.9,
+    "#8a6b48",
+    1.4
+   ]
+  ],
+  "models": [
+   [
+    "chinese_tea_table.glb",
+    2.0,
+    3.3,
+    0,
+    0.9,
+    0.76,
+    0.76,
+    0.45
+   ]
+  ],
+  "people": [],
+  "does": [
+   "Another team's house. The door is open if they are home; you knock anyway.",
+   "Their mark on the wall is older than yours. Ask them what it means."
+  ],
+  "key": "team-8",
+  "size": "6 m by 5 m, 3.0 m to the beam",
+  "route": [
+   [
+    3.0,
+    7.0
+   ],
+   [
+    3.0,
+    5.4
+   ],
+   [
+    3.0,
+    3.8
+   ],
+   [
+    3.0,
+    3.6
+   ]
+  ],
+  "doors": [
+   [
+    "S",
+    2.5,
+    3.5,
+    "door onto the exiles' rows"
+   ]
+  ],
+  "deco": [
+   [
+    "N",
+    0,
+    6,
+    2.4,
+    3.0,
+    "#2f6f6a"
+   ]
+  ],
+  "floor": [
+   [
+    "rect",
+    0,
+    0,
+    6,
+    5,
+    "#cdb68a",
+    null
+   ]
+  ]
+ }
+}
