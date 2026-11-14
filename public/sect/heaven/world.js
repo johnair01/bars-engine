@@ -244,7 +244,7 @@ export function places(S, rooms) {
   // gate hall in front of it and the tower beside it keep 2.5 m between eaves; the altar moved back with it
   { const G = frame(S, P.summit, 90, [P.summit[0] + Math.cos(CROWN.th) * 100, P.summit[1] + Math.sin(CROWN.th) * 100], true);
     const H = new THREE.Group(); H.position.set(0, 0, -3.5); G.add(H); room(H, rooms.founder); dressFounder(H, rooms.founder, M()); // round 28: dressed inside (founder.js)
-    for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(7 - i * 2, 7 - i * 2, 0.5, 40), mat(i % 2 ? PAL.paper : PAL.stone)); c.position.set(0, 0.25 + i * 0.5, -23); c.receiveShadow = c.castShadow = true; G.add(c); }
+    // round 29: the three bare discs that stood here are now the Heaven altar (altar.js, built with the crown in crag.js)
   }
   // Round 9: the dojo, the refectory, the arrival hall and the team houses are rooms you can walk into. Each stands
   // where its grey hall stood, turned so its south door faces the summit side (the ring, the terrace, the lane).
