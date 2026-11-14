@@ -118,7 +118,7 @@ function hostOf(url: unknown): string {
 }
 
 /** When the record settled an entry, as the page reads it (`recordedAt` in board/template.html). */
-function recordedAt(entry: Doc): number {
+export function recordedAt(entry: Doc): number {
   const history = Array.isArray(entry.history) ? (entry.history as Doc[]) : []
   const last = history[history.length - 1]
   const at = entry.saved_at ?? last?.saved_at
