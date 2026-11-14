@@ -1,0 +1,194 @@
+{
+  "0": [
+    {
+      "title": "Take a breath and notice your body",
+      "description": "Before reading, pause and breathe. Notice how you feel in your body and how the world around you feels. Take a breath for the day you have had, one for this moment, and one for the day and night coming.",
+      "moveType": "wakeUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null
+    },
+    {
+      "title": "Look for emergence in everyday systems",
+      "description": "Emergence is the way complex systems and patterns arise out of many relatively simple interactions. Pick one system in your life or community, such as a group, a household or a neighborhood, and name the simple interactions that produce its patterns.",
+      "moveType": "wakeUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null
+    }
+  ],
+  "6": [
+    {
+      "title": "Listen as if everyone were your teacher",
+      "description": "Listen to strangers, criticisms, elders, your body, your creativity and your dreams as if each one could teach you something. Practice the humility to be taught, and notice where resistance to authority gets in the way.",
+      "moveType": "growUp",
+      "allyshipDomain": null,
+      "nation": "Virelune",
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "identity_lock"
+    },
+    {
+      "title": "Write down the patterns in small events",
+      "description": "Pay attention to small or seemingly random events in your day. Write down the order, clear messages, patterns and invitations you notice. Review the notes each week.",
+      "moveType": "wakeUp",
+      "allyshipDomain": null,
+      "nation": "Argyra",
+      "archetype": "Truth Seer",
+      "kotterStage": null,
+      "lockType": null
+    },
+    {
+      "title": "Listen and merge before starting something new",
+      "description": "Before you start a new group or project, find the wisdom and experience already present in the communities you love. Listen, support, collaborate and merge with them before competing with them. Measure the strength of the work by the depth of its relationships.",
+      "moveType": "showUp",
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null
+    }
+  ],
+  "10": [
+    {
+      "title": "Release the idea of failure",
+      "description": "Treat each attempt as data. When an effort does not work, write down what it taught you instead of judging it a failure. Then choose the next step.",
+      "moveType": "cleanUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "emotional_lock"
+    },
+    {
+      "title": "Imagine the future before you plan",
+      "description": "Before making a plan, describe the world you want in concrete detail and the viable futures it could grow from. Question which fears, hierarchies or inherited stories shaped that picture.",
+      "moveType": "wakeUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "possibility"
+    },
+    {
+      "title": "Name the imagination that holds you",
+      "description": "Identify one story that other people's imagination has placed on you or on a group you belong to. Use your own imagination to picture yourself outside that story.",
+      "moveType": "wakeUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "identity_lock"
+    },
+    {
+      "title": "Run a collaborative ideation session",
+      "description": "Gather the people your plan will affect and ask what ideas would liberate all of them. Let the people the new world serves help shape it, and write down the ideas they name.",
+      "moveType": "showUp",
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "nation": "Meridia",
+      "archetype": null,
+      "kotterStage": 3,
+      "lockType": "possibility"
+    }
+  ],
+  "13": [
+    {
+      "title": "Borrow a pattern from natural systems",
+      "description": "Study one natural system, such as a forest, a mushroom network or a permaculture garden. Name one pattern it uses, such as resilience through decentralization or cycling of materials, and apply that pattern to a problem you face.",
+      "moveType": "growUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "possibility"
+    },
+    {
+      "title": "Practice complexity through one simple interaction",
+      "description": "Choose one small, repeated interaction with your home or community. Practice it on purpose, with care, so that larger change can grow from it over time.",
+      "moveType": "showUp",
+      "allyshipDomain": null,
+      "nation": "Virelune",
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null
+    }
+  ],
+  "19": [
+    {
+      "title": "Write every day",
+      "description": "Write, in some form, every day, as a way to understand the world. Let the writing name the revolutions you long for, and treat it as a transformative act even when it is not explicitly political.",
+      "moveType": "showUp",
+      "allyshipDomain": null,
+      "nation": "Argyra",
+      "archetype": "Truth Seer",
+      "kotterStage": null,
+      "lockType": null
+    },
+    {
+      "title": "Engage tension without feeding drama",
+      "description": "When a conflict rises, stay with the tension and the facts. Do not add to the drama. Ask what the situation needs from you and respond to that.",
+      "moveType": "growUp",
+      "allyshipDomain": null,
+      "nation": "Lamenth",
+      "archetype": "Still Point",
+      "kotterStage": null,
+      "lockType": "emotional_lock"
+    },
+    {
+      "title": "Remove the obstacles that make a process harder",
+      "description": "When someone is working through a hard process, find the systems that make it harder and intervene with them. Help the person attend to their own body and their own wholeness.",
+      "moveType": "showUp",
+      "allyshipDomain": "DIRECT_ACTION",
+      "nation": "Virelune",
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null
+    },
+    {
+      "title": "Make room for people to try on their authentic selves",
+      "description": "Create space where people can try on their most authentic selves without pressure. Remember that it is okay to feel beautiful in the process of creating justice.",
+      "moveType": "cleanUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "emotional_lock"
+    }
+  ],
+  "26": [
+    {
+      "title": "Notice the habits that work against emergence",
+      "description": "Review the socialized habits the book names: staying quiet to avoid disturbing the status quo, competing in a scarcity economy, denying your longings, and selling to or manipulating others. Name which of these you carry.",
+      "moveType": "wakeUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "identity_lock"
+    },
+    {
+      "title": "Name a longing you have been denying",
+      "description": "Write down one longing or skill you have set aside to fit into work that does not inspire your greatness. Choose one small way to honor it this week.",
+      "moveType": "cleanUp",
+      "allyshipDomain": null,
+      "nation": "Lamenth",
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": "emotional_lock"
+    },
+    {
+      "title": "Use the assessment to find a missing practice",
+      "description": "Work through the brief emergent strategy assessment for your life and work. Pick one practice it shows you lack, and practice it for one month.",
+      "moveType": "growUp",
+      "allyshipDomain": null,
+      "nation": null,
+      "archetype": null,
+      "kotterStage": null,
+      "lockType": null
+    }
+  ]
+}
