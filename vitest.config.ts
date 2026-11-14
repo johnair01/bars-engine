@@ -175,6 +175,8 @@ export default defineConfig({
       'src/lib/studio/__tests__/stores.test.ts',
       'src/lib/work/__tests__/seals.test.ts',
       'src/lib/work/__tests__/wake.test.ts',
+      'src/lib/close/__tests__/close.test.ts',
+      'src/lib/close/__tests__/grammar.test.ts',
       'src/lib/coaching/__tests__/walk-data.test.ts',
       'scripts/__tests__/look-row.test.mjs',
     ],
