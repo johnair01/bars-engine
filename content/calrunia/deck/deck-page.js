@@ -4,8 +4,10 @@
 // When the crate is sent the captain steps back onto the pier and the boat sails with it. Tap where to walk; tap the
 // crate, the spirit, the plank, the crew bell, a studio boat, a boat at anchor, the tide post or the route book to go to
 // it. Drag turns the view. ?build=1 assembles the deck part by part with each part's source (his note on mb-gate-look-3).
-// ?demo=1 plays the sample chart without writing to this device.
-const TH = window.__tradeHand;
+// ?demo=1 plays the sample chart without writing to this device; ?demo=return also brings a boat home at once.
+// The return (his note on mb-return-build-look-1): a boat out a day or more sails home on its own when the player visits;
+// its crate opens on one opportunity card from fixtures/trade-deck/opportunities.json, drawn in the app's card system.
+const TH = window.__tradeHand, OPPS = window.__tradeDeckOpps;
 const params = new URLSearchParams(location.search);
 const DEMO = ["1", "return"].includes(params.get("demo")), BUILD = params.get("build") === "1";
 const now = () => new Date().toISOString();
@@ -15,7 +17,7 @@ TH.deal(S, now()); TH.settleFog(S, now());
 // A disposable sample opens at the returning boat for the board's look. It never writes the player's store.
 if (params.get("demo") === "return") TH.release(S, "sent", now());
 save();
-const page = window.__tradeDeck = { ready: false, frames: 0, parts: PARTS.map((p) => p.id), build: BUILD, bubble: null, model: null };
+const page = window.__tradeDeck = { ready: false, frames: 0, parts: PARTS.map((p) => p.id), build: BUILD, bubble: null, model: null, card: null };
 
 // ---- page --------------------------------------------------------------------------------------------------------------
 const rootEl = document.getElementById("deck-root");
@@ -112,7 +114,9 @@ const near = (v) => {
 };
 
 // ---- live state the parts draw -----------------------------------------------------------------------------------------
-const live = { sending: null, crew: false, ringing: 0, rowing: -1, ret: params.get("demo") === "return" && S.boats[0] ? { id: S.boats[0].id, come: 1, open: 0, kind: null } : null };
+// A boat out a day or more is already sailing home when the player arrives; ?demo=return brings the sample's boat at once.
+const homeBoat = params.get("demo") === "return" ? S.boats.find((b) => !b.back) : BUILD ? null : TH.homeward(S, now());
+const live = { sending: null, crew: false, ringing: 0, rowing: -1, ret: homeBoat ? { id: homeBoat.id, come: 1, open: 0, kind: null } : null };
 const LEVEL = { stranger: 0, known: 0.33, trusted: 0.66, route: 1 };
 function st(t) {
   const waiting = !!S.crate && S.crate.state === "waiting";
@@ -135,7 +139,7 @@ const btn = (text, fn, quiet) => { const b = el("button", quiet ? "quiet" : "", 
 const row = (...kids) => { const r = el("div", "dk-row"); r.append(...kids); return r; };
 const field = (ph, big) => { const f = el(big ? "textarea" : "input", "dk-field"); f.placeholder = ph; if (ph) f.setAttribute("aria-label", ph); if (big) f.rows = 2; f.addEventListener("pointerdown", (e) => e.stopPropagation()); return f; };
 const portName = (id) => (S.ports.find((p) => p.id === id) || { name: "a port" }).name;
-const done = () => { save(); drawPlate(); };
+const done = () => { save(); drawPlate(); returnHint = null; }; // the frame puts a return hint back on the plate
 const crateAt = () => hitOf("crate").clone().add(new THREE.Vector3(0, 1.6, 0));
 const spiritAt = () => hitOf("spirit").clone().add(new THREE.Vector3(0, 1.1, 0));
 
@@ -149,8 +153,8 @@ const ACTS = {
         row(btn("Chalk it", () => { if (!act.value.trim()) return act.focus(); TH.chalk(S, pick.value, act.value.trim(), ask.value.trim(), now()); done(); say(crateAt(), null, "Chalked. It will be on the hatch in the morning."); })));
     }
     if (c.state !== "waiting") return say(crateAt(), null, c.state === "sent" ? "Today's crate sailed. The tide has turned." : c.state === "sat" ? "You sat with today's crate. The tide has turned." : "The crew has today's crate. The tide has turned.");
-    const b = TH.bounty(S, now());
-    const head = portName(c.port) + (b ? " · it has waited, and pays " + (TH.PAY.crate + b) : "");
+    const b = TH.bounty(S, now()), extra = +c.bonus || 0;
+    const head = portName(c.port) + (b ? " · it has waited, and pays " + (TH.PAY.crate + b + extra) : extra ? " · a boat brought it, and it pays " + (TH.PAY.crate + extra) : "");
     if (c.presence == null) {
       return say(crateAt(), head, c.action + (c.ask ? " Ask: " + c.ask + "." : ""), el("p", "dk-q", "How present are you right now? 1 is far away, 5 is fully here."),
         row(...[1, 2, 3, 4, 5].map((n) => btn(String(n), () => { TH.presence(S, n, now()); done(); ACTS.crate(); }, true))));
@@ -192,21 +196,27 @@ const ACTS = {
   boat(h) {
     const b = S.boats.filter((boat) => !boat.back)[h.i]; if (!b) return;
     const at = h.pos.clone().add(new THREE.Vector3(0, 2.4, 0));
-    if (live.ret) return say(at, "A boat at anchor", "One boat is already at the return berth. Open its crate first.");
-    say(at, "A boat at anchor", "It carried " + b.action + " to " + portName(b.port) + ". Has it come home?",
-      row(btn("She's back", () => { live.ret = { id: b.id, come: 1, open: 0, kind: null }; yaw = 0; hush(); }), btn("Still out", hush, true)));
+    const out = Math.max(0, Math.floor((Date.parse(now()) - Date.parse(b.sentAt)) / 864e5));
+    say(at, "A boat out at " + portName(b.port), "It carried “" + b.action + "”. " + (out < TH.HOME_AFTER_DAYS ? "It sailed today, and it sails home on its own once a day has passed." : "It sails home on its own; one boat comes in each time you visit."));
   },
   returnCrate() {
-    if (!returnMoored()) return;
+    if (!returnMoored() || live.ret.open) return;
     const b = S.boats.find((boat) => boat.id === live.ret.id && !boat.back); if (!b) return;
-    live.ret.open = 1;
-    const at = window.__ret.crate.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 1.6, 0));
-    const amt = field("Amount"); amt.type = "number"; amt.min = "0.01"; amt.step = "0.01"; amt.inputMode = "decimal"; amt.addEventListener("input", () => amt.setCustomValidity("")); const note = field("What the no taught you (optional)");
-    say(at, "The returning crate", "What came back from " + portName(b.port) + "?", amt,
-      row(btn("Coin", () => { if (!(+amt.value > 0) || !Number.isFinite(+amt.value)) { amt.setCustomValidity("Enter an amount greater than zero."); amt.reportValidity(); return; } TH.logReturn(S, b.id, { kind: "coin", amount: +amt.value }, now()); live.ret.kind = "coin"; live.ret.open = 1; done(); keep(b, at); })), note,
-      row(btn("A no", () => { TH.logReturn(S, b.id, { kind: "lesson", line: note.value.trim() }, now()); live.ret.kind = "lesson"; live.ret.open = 1; done(); say(at, "The spirit", "I'll hold that one. Nothing of yours is any less.", row(btn("Leave the boat", departReturn))); }, true), btn("Still out", departReturn, true)));
+    const opp = TH.opportunity(S, b.id, OPPS); if (!opp) return departReturn();
+    hush(); live.ret.open = 1; live.ret.kind = "opportunity"; showCard(opp);
   },
-  tide() { const t = TH.tideLine(S, now()); say(hitOf("tide").clone().add(new THREE.Vector3(0, 2.6, 0)), "The tide post", "This month: " + money(t.coin) + (t.goal ? " of " + money(t.goal) + "." : ".")); },
+  // Coin is logged here, quietly, and never asked for at the return (his note on mb-return-build-look-1).
+  tide(_, adding) {
+    const at = hitOf("tide").clone().add(new THREE.Vector3(0, 2.6, 0)), t = TH.tideLine(S, now());
+    const line = "This month: " + money(t.coin) + (t.goal ? " of " + money(t.goal) + "." : ".");
+    if (!adding) return say(at, "The tide post", line, row(btn("Add coin", () => ACTS.tide(null, true), true)));
+    const amt = field("Amount"); amt.type = "number"; amt.min = "0.01"; amt.step = "0.01"; amt.inputMode = "decimal"; amt.addEventListener("input", () => amt.setCustomValidity(""));
+    const pick = el("select", "dk-field"); pick.setAttribute("aria-label", "Which port it came from"); S.ports.forEach((p) => pick.appendChild(Object.assign(el("option", "", p.name), { value: p.id })));
+    say(at, "The tide post", line + " Coin that came in raises the water.", amt, pick, row(btn("Add it", () => {
+      if (!(+amt.value > 0) || !Number.isFinite(+amt.value)) { amt.setCustomValidity("Enter an amount greater than zero."); amt.reportValidity(); return; }
+      TH.addCoin(S, +amt.value, pick.value, now()); done(); ACTS.tide();
+    }), btn("Not now", hush, true)));
+  },
   book() {
     const lines = TH.routeBook(S).filter((p) => p.routes.length).map((p) => el("p", "", p.port.name + ": " + p.routes.map((r) => r.action + (r.words ? " (“" + r.words + "”)" : "")).join("; ")));
     say(hitOf("book").clone().add(new THREE.Vector3(0, 0.8, 0)), "The route book", lines.length ? "The routes that brought coin back:" : "No routes yet. A boat that comes back with coin writes the first page.", ...lines);
@@ -214,9 +224,44 @@ const ACTS = {
   port(h) { const p = S.ports[h.i]; if (!p) return; const words = { stranger: "still in fog: no boat has reached it yet", known: "known: a boat has reached it", trusted: "trusted: coin has come back from it", route: "a standing route: coin came back twice" }; say(h.pos, p.name, words[p.standing] + "."); },
 };
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
-function keep(b, at) {
-  const words = field("The words that worked (optional)");
-  say(at, "Coin came back", "Keep this as a route in the route book?", words, row(btn("Keep the route", () => { TH.keepRoute(S, b.id, words.value.trim(), now()); done(); say(at, null, "Kept. The route book has a new page.", row(btn("Leave the boat", departReturn))); }), btn("Not now", departReturn, true)));
+// ---- the opportunity card the returning crate opens on (bars-engine UI_COVENANT.md: a Cultivation Card) -----------------
+// Element: the port's (opportunities.json "elements"). Altitude: satisfied, since it is a gift the port sent back.
+// Stage: growing (full card: art window, name banner, description, stat block). Primary action in liminal purple.
+const SIGIL = { wood: ["木", "Wood"], fire: ["火", "Fire"], earth: ["土", "Earth"], metal: ["金", "Metal"], water: ["水", "Water"] };
+const ART = '<svg viewBox="0 0 160 84" aria-hidden="true" focusable="false"><defs><radialGradient id="opL" cx="50%" cy="58%" r="55%"><stop offset="0" stop-color="var(--el-glow)" stop-opacity=".9"/><stop offset="1" stop-color="var(--el-glow)" stop-opacity="0"/></radialGradient><linearGradient id="opB" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffe2a0" stop-opacity=".85"/><stop offset="1" stop-color="#ffe2a0" stop-opacity="0"/></linearGradient></defs><ellipse cx="80" cy="50" rx="78" ry="40" fill="url(#opL)"/><path d="M58 52 L48 2 L112 2 L102 52 Z" fill="url(#opB)" class="op-beam"/><path d="M54 52 L106 52 L104 80 L56 80 Z" fill="#7a4e30"/><path d="M56 52 L104 52 L103 58 L57 58 Z" fill="#ffd27a"/><path d="M66 52 v28 M94 52 v28" stroke="#5a3a24" stroke-width="5"/><path d="M54 52 L106 52 L114 30 L62 30 Z" fill="#9a6a44" stroke="#5a3a24" stroke-width="2" stroke-linejoin="round"/><g class="op-motes" fill="#ffe2a0"><circle cx="72" cy="36" r="2.4"/><circle cx="86" cy="24" r="1.8"/><circle cx="80" cy="12" r="2.2"/><circle cx="92" cy="40" r="1.6"/></g></svg>';
+const card = el("article", "op-card"); card.hidden = true; card.setAttribute("aria-live", "polite"); rootEl.appendChild(card);
+card.addEventListener("pointerdown", (e) => e.stopPropagation()); card.addEventListener("pointerup", (e) => e.stopPropagation());
+function showCard(o) {
+  const [sigil, label] = SIGIL[o.element] || SIGIL.earth;
+  card.dataset.element = o.element; card.className = "op-card op-enter";
+  card.setAttribute("aria-label", label + " element card, satisfied altitude, growing stage: " + o.title + ", from " + o.portName);
+  const art = el("div", "op-art"); art.innerHTML = ART;
+  const from = el("p", "op-from"); from.append(el("span", "op-sigil", sigil), el("span", "", label + " · from " + o.portName)); art.appendChild(from);
+  const cost = el("div", "op-cost"); cost.append(el("b", "", "15"), el("span", "", "min")); cost.setAttribute("aria-label", "about fifteen minutes");
+  const name = el("h2", "op-name"); name.append(el("i", "op-gem"), el("span", "", o.title));
+  const well = el("div", "op-well"); well.append(el("p", "op-line", o.line), el("p", "op-act", o.action));
+  const stats = el("div", "op-stats");
+  const plus = el("p", "op-plus"); plus.append(el("b", "", "+" + o.bonus), el("span", "", " vibeulons"));
+  stats.append(plus, el("p", "op-pay", "on top of the usual " + o.pay));
+  const take = cardBtn("Take it aboard", () => {
+    const r = TH.takeAboard(S, o, now()); if (!r) return; done();
+    settle(r.today ? "It is aboard, and it waits on the hatch now. It pays " + (o.pay + o.bonus) + " when it is off." : "It is aboard, chalked for the next hatch. It pays " + (o.pay + o.bonus) + " when it is off.", true);
+  });
+  const drift = cardBtn("Let it drift", () => { TH.letDrift(S, o, now()); done(); settle("It drifts back out to sea. Another boat will bring another.", false); }, true);
+  const moves = el("div", "op-moves"); moves.append(take, drift);
+  card.replaceChildren(el("div", "op-grad"), cost, art, name, well, stats, moves);
+  card.hidden = false; page.card = { title: o.title, action: o.action, bonus: o.bonus, element: o.element, state: "open" };
+  try { navigator.vibrate?.([15, 5, 10]); } catch (e) { /* no haptics here */ }
+  requestAnimationFrame(() => take.focus({ preventScroll: true }));
+}
+function cardBtn(text, fn, quiet) { const b = el("button", quiet ? "op-btn quiet" : "op-btn", text); b.type = "button"; b.addEventListener("click", (e) => { e.stopPropagation(); fn(); }); return b; }
+function settle(text, taken) {
+  card.classList.add(taken ? "op-taken" : "op-drift");
+  const note = el("p", "op-settled", text); note.setAttribute("role", "status");
+  card.querySelector(".op-moves").replaceWith(note);
+  page.card.state = taken ? "aboard" : "drifted";
+  if (live.ret) live.ret.open = taken ? 1 : 0.35;
+  setTimeout(() => { card.classList.remove("op-enter"); card.classList.add("op-leave"); setTimeout(() => { card.hidden = true; page.card = null; departReturn(); }, 420); }, 2600);
 }
 function departReturn() {
   hush();
@@ -300,7 +345,8 @@ function frame() {
   player.pos.y = heightAt(player.pos.x, player.pos.z);
   player.group.position.copy(player.pos);
   if (player.mixer) player.mixer.update(dt);
-  const hint = live.ret && !live.ret.leaving ? (live.ret.come > 0 ? "A boat is coming home." : "Your boat is home. Tap its crate to board and open it.") : "";
+  const homeFrom = live.ret ? portName((S.boats.find((b) => b.id === live.ret.id) || {}).port) : "";
+  const hint = live.ret && !live.ret.leaving ? (page.card ? (page.card.state === "open" ? "The crate from " + homeFrom + " opened on a card." : "The boat heads back out to sea.") : live.ret.come > 0 ? "A boat is sailing home from " + homeFrom + "." : "Your boat is home from " + homeFrom + ", and its crate is glowing. Tap it to open it.") : "";
   if (hint !== returnHint) { returnHint = hint; if (hint) plate.textContent = hint; else drawPlate(); }
   const s = st(t); PARTS.forEach((p) => p.update && p.update(s));
   // a phone stands the camera further back, so the boat's stern stays in frame (money pier round 1, "not checked")
@@ -318,3 +364,4 @@ requestAnimationFrame(frame);
 // For checks (board/checks style): where a thing is on screen, and the trade hand's state.
 page.where = (kind, i = 0) => { const h = hits().filter((x) => x.kind === kind)[i]; return h ? toScreen(h.pos) : null; };
 page.state = () => JSON.parse(JSON.stringify(S));
+page.live = () => ({ ret: live.ret ? { ...live.ret } : null, plate: plate.textContent });
