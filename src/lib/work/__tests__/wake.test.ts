@@ -89,4 +89,13 @@ describe('answers start the work: the pickup wake', () => {
     expect(await wakePickupBatched('x', { db: fakeDb(0), sleep: async () => undefined })).toBe('nothing-ready')
     expect(f).not.toHaveBeenCalled()
   })
+
+  it('fires when answers landed outside the Claude lane while it was dry', async () => {
+    process.env.PICKUP_ROUTINE_FIRE_URL = 'https://x.test/fire'; process.env.PICKUP_ROUTINE_TOKEN = 'tok'
+    const f = vi.fn().mockResolvedValue(new Response('{}', { status: 200 })); vi.stubGlobal('fetch', f)
+    const db = fakeDb(0) as any
+    db.workTicket.count = async ({ where }: any) => (where.lane === 'claude' ? 0 : 2)
+    expect(await wakePickupBatched('x', { db, sleep: async () => undefined })).toBe('sent')
+    expect(JSON.parse(f.mock.calls[0][1].body).text).toContain('outside the Claude lane')
+  })
 })

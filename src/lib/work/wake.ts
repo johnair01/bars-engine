@@ -103,7 +103,14 @@ export async function wakePickupBatched(reason: string, opts: { db?: PrismaClien
   if (!owns) return 'batched'
   await (opts.sleep ?? realSleep)(windowMs)
   const ready = await db.workTicket.count({ where: { lane: 'claude', state: 'ready' } }).catch(() => -1)
-  if (ready === 0) return 'nothing-ready'
+  if (ready === 0) {
+    // A dry Claude lane hands answers to Freebuff, and nothing wakes Freebuff. Fire for answers that landed in another
+    // lane inside this window, so a session sees them and can steer them back (2026-11-14: 50 answers sat unseen).
+    const since = new Date(Date.now() - 2 * windowMs)
+    const elsewhere = await db.workTicket.count({ where: { lane: { not: 'claude' }, state: 'ready', createdAt: { gte: since } } }).catch(() => 0)
+    if (!elsewhere) return 'nothing-ready'
+    return wakePickup(`${elsewhere} answers landed outside the Claude lane (it may be dry), the first: ${reason}`, Date.now() + windowMs)
+  }
   const what = ready > 1 ? `${ready} answers waiting in the Claude lane, the first: ${reason}` : reason
   return wakePickup(what, Date.now() + windowMs)
 }
