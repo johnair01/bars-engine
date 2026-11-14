@@ -177,6 +177,7 @@ export default defineConfig({
       'src/lib/work/__tests__/wake.test.ts',
       'src/lib/close/__tests__/close.test.ts',
       'src/lib/close/__tests__/grammar.test.ts',
+      'src/lib/close/__tests__/rail.test.ts',
       'src/lib/close/__tests__/store-chat.test.ts',
       'src/lib/coaching/__tests__/walk-data.test.ts',
       'scripts/__tests__/look-row.test.mjs',
