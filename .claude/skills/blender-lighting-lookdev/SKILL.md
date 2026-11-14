@@ -1,6 +1,6 @@
 ---
 name: blender-lighting-lookdev
-description: Lighting. Use when presenting assets, setting up scenes for rendering, or judging materials under consistent light.
+description: Lighting, cameras and look-dev in Blender 5.2. Use when presenting assets, setting up scenes for rendering, or judging materials under consistent light.
 license: MIT
 metadata:
   author: blender-agent-skills
