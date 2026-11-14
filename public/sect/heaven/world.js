@@ -117,14 +117,20 @@ export function court(S, c, rooms) {
     G.add(E); room(E, rooms.elder);
     // fire circle in the yard
     for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; box(G, Math.cos(a) * 2.4, -10 + Math.sin(a) * 2.4, 0.6, 0.6, 0.5, PAL.stone, { collide: false }); }
+  } else if (rooms['elder-' + c.key]) {
+    // Round 8: every Elder's house is a room you can walk into, its south door onto the yard like the Shaman's.
+    const E = new THREE.Group(); E.position.set(-22, 0, -6); E.rotation.y = Math.PI / 2;
+    G.add(E); room(E, rooms['elder-' + c.key], 'elder-' + c.key, c);
   } else {
     hall(G, -22, -6, 10, 14, 3.6, { col: c.key === 'challenger' ? '#a8574a' : PAL.plaster });
   }
   NATIONS.forEach(([name, , ncol], i) => {
     const z = -18 + i * 6.2;
-    if (c.key === 'shaman' && name === 'Virelune') {
+    const R = name === 'Virelune' ? rooms.lieutenant : rooms['lt-' + name.toLowerCase()];
+    if (R) {
+      // Round 8: all thirty lieutenants' rooms are enterable; each nation's dress repeats in every court.
       const L = new THREE.Group(); L.position.set(18, 0, z); L.rotation.y = -Math.PI / 2;
-      G.add(L); room(L, rooms.lieutenant);
+      G.add(L); room(L, R, c.key === 'shaman' && name === 'Virelune' ? 'lieutenant' : `lt-${name.toLowerCase()}-${c.key}`, c);
     } else {
       const R = new THREE.Group(); R.position.set(18, 0, z); R.rotation.y = -Math.PI / 2; G.add(R);
       hall(R, 0, 0, 5.5, 4.5, 2.8, { door: ncol, roofRise: 1.2 });
@@ -135,7 +141,8 @@ export function court(S, c, rooms) {
 
 // ---------- a room from rooms.json ----------
 // Room plan coords: x across (0..Wd), y from the north wall (0) to the south door wall (D). Local +z is south.
-export function room(E, R, roofCol = PAL.roof) {
+export function room(E, R, tag = R.key, court = null) {
+  const roofCol = PAL.roof;
   const ox = R.Wd / 2, oz = R.D / 2;
   const add = (x, y, w, d, h, col, o = {}) => {
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(col));
@@ -146,10 +153,21 @@ export function room(E, R, roofCol = PAL.roof) {
   };
   const fl = new THREE.Mesh(new THREE.BoxGeometry(R.Wd, 0.06, R.D), mat(R.floor_col));
   fl.position.y = 0.03; fl.receiveShadow = true; E.add(fl);
+  // floor rects (round 8 draws them; earlier rooms only had the one floor colour)
+  if (R.key !== 'founder' && R.key !== 'elder' && R.key !== 'lieutenant')
+    for (const [, x, y, w, d, col] of R.floor || []) add(x, y, w, d, 0.02, col, { y0: 0.06, collide: false });
   for (const it of R.items) {
-    const [k, , x, y, w, d, h, col] = it;
-    if (k === 'w' || k === 'c' || k === '0') add(x, y, w, d, k === 'w' ? h : R.Ht, col);
-    else add(x, y, w, d, h, col, { collide: h > 0.5 });
+    const [k, , x, y, w, d, h, col, y0 = 0] = it;
+    if (k === 'w' || k === 'c' || k === '0') add(x, y, w, d, k === 'w' ? h : R.Ht, col, { y0 });
+    else add(x, y, w, d, h, col, { collide: h > 0.5 || y0 > 0, y0 });
+  }
+  // the people who live here, as plain robed figures; 'you' is the avatar and is not drawn
+  for (const [px, py, who, col] of R.people || []) {
+    if (!who || who === 'you') continue;
+    const f = new THREE.Group(); f.position.set(px - ox, 0, py - oz);
+    const robe = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.45, 14), mat(col)); robe.position.y = 0.72;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 10), mat('#c9a27e')); head.position.y = 1.62;
+    robe.castShadow = head.castShadow = true; f.add(robe, head); E.add(f);
   }
   // the teal beam band and gold-trimmed door frames on the deco list
   for (const [side, a, b, z0, z1, col] of R.deco || []) {
@@ -160,7 +178,7 @@ export function room(E, R, roofCol = PAL.roof) {
   const top = R.Ht + (R.key === 'elder' ? 0.6 : 0);
   const rf = roof(E, 0, 0, R.Wd, R.D, top, Math.min(R.Wd, R.D) * 0.3, roofCol);
   const F = wf(E);
-  interiors.push({ x: F.x, z: F.z, c: F.c, s: F.s, hw: R.Wd / 2 + 0.3, hd: R.D / 2 + 0.3, y: F.y, roof: rf, key: R.key, R, E });
+  interiors.push({ x: F.x, z: F.z, c: F.c, s: F.s, hw: R.Wd / 2 + 0.3, hd: R.D / 2 + 0.3, y: F.y, roof: rf, key: tag, R, E, court });
   return E;
 }
 
