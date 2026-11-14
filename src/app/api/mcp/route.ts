@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
+import { steerTicket } from '@/lib/work/queue'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
@@ -27,7 +28,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.1.0'
+const SERVER_VERSION = '1.2.0'
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
@@ -188,6 +189,31 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
+    name: 'list_tickets',
+    title: 'List work tickets',
+    description: 'List the work tickets the lanes hold (newest first, up to 100), so a client can find the id to steer. '
+      + 'Filter by `lane` (claude, freebuff, deepai) and `state` (ready, claimed, held, done, failed).',
+    inputSchema: {
+      type: 'object',
+      properties: { lane: { type: 'string' }, state: { type: 'string' } },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'steer_ticket',
+    title: 'Steer a ticket to another lane',
+    description: 'The same move as the harbour page\'s lantern drag (POST /api/work/:id/steer), written to the store at '
+      + 'once: send a ready or held ticket to the lane `lane` (claude, freebuff, deepai), or pass `hold` to hold it back. '
+      + 'A claimed ticket is its crew\'s and is refused.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The ticket id, from list_tickets.' },
+        lane: { type: 'string', description: 'claude, freebuff, deepai, or hold.' } },
+      required: ['id', 'lane'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -313,6 +339,21 @@ async function postBoardDocs(args: Record<string, unknown>): Promise<ToolResult>
   return ok({ board: 'council', dry, ...result })
 }
 
+async function listTickets(args: Record<string, unknown>): Promise<ToolResult> {
+  const lane = typeof args.lane === 'string' && args.lane ? args.lane : undefined
+  const state = typeof args.state === 'string' && args.state ? args.state : undefined
+  const tickets = await db.workTicket.findMany({ where: { lane, state }, orderBy: { createdAt: 'desc' }, take: 100,
+    select: { id: true, title: true, lane: true, lanes: true, state: true, claimedBy: true, attempts: true, createdAt: true } })
+  return ok({ board: 'council', tickets })
+}
+
+async function steerTool(args: Record<string, unknown>): Promise<ToolResult> {
+  if (typeof args.id !== 'string' || typeof args.lane !== 'string') return bad('steer_ticket needs id and lane')
+  const r = await steerTicket(db, args.id, args.lane, 'mcp')
+  if (!r.ok) return bad(r.error)
+  return ok({ board: 'council', ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane, lanes: r.ticket.lanes } })
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
@@ -320,6 +361,8 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'read_picture') return readPicture(args)
   if (name === 'list_pictures') return listPicturesTool(args)
   if (name === 'post_board_docs') return postBoardDocs(args)
+  if (name === 'list_tickets') return listTickets(args)
+  if (name === 'steer_ticket') return steerTool(args)
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -338,7 +381,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
- *   read_picture, list_pictures, post_board_docs and whoami
+ *   read_picture, list_pictures, post_board_docs, list_tickets, steer_ticket and whoami
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
