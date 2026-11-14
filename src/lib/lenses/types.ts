@@ -1,4 +1,4 @@
-import type { LensDomainKey } from './domains'
+import type { LensChannel, LensDomainKey } from './domains'
 
 export type LensCadence = 'year' | 'quarter' | 'month' | 'week'
 export type LensWorkshopStatus = 'draft' | 'locked' | 'parked' | 'skipped'
@@ -21,7 +21,8 @@ export type LensWorkshopUnit = {
 
 export type SaveYearFrameInput = {
   vagueMovement: string
-  feelings: string[]
+  satisfactionChannel: LensChannel
+  satisfactionWords?: string
   units: LensWorkshopUnit[]
 }
 

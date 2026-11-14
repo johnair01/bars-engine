@@ -470,7 +470,17 @@ model CustomBar {
   threadQuests                         ThreadQuest[]
   handSlots                            HandSlot[]
 
+  // Compose-and-validate: the belief an authored quest is against, and the dated disproof it
+  // predicts. All five stay null on rows that predate the feature so they are excluded from the
+  // capability index rather than counted as unvalidated.
+  questBeliefKey                        String?
+  prediction                            String?
+  predictionDue                         DateTime?
+  predictionOutcome                     String?
+  predictionFrozenAt                    DateTime?
+
   @@index([collapsedFromInstanceId, type])
+  @@index([questBeliefKey])
   // QLA: Vault "All BARs" room + inventory-by-owner queries, and quest-by-goal lookups.
   @@index([creatorId, type, status])
   @@index([lensGoalId])
@@ -877,7 +887,15 @@ model LensGoal {
   cadence            String    @default("year") // year | quarter | month | week
   title              String
   description        String?
+  /// The player's own words for the satisfaction they are moving toward. Optional
+  /// and free-form; the pair below is the data.
   satisfactionPayoff String?
+  /// One of Wood | Water | Fire | Earth | Metal — the engine's five Element names.
+  /// Null on rows written before 2026-11-13, when satisfactionPayoff carried free
+  /// text with no channel.
+  satisfactionChannel String?
+  /// One of dissatisfied | neutral | satisfied.
+  satisfactionPolarity String?
   metric             String?
   parentGoalId       String?
   superpowerSource   String?
