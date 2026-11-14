@@ -4,6 +4,22 @@ import { NextRequest } from 'next/server'
 // The route reaches the board's store, which imports 'server-only'; every sibling suite stubs it the same way.
 vi.mock('server-only', () => ({}))
 
+// The steer tools write the work queue; the suite gives them a one-ticket store.
+const tix = vi.hoisted(() => ({ rows: [] as Record<string, unknown>[] }))
+vi.mock('@/lib/db', () => ({
+  db: {
+    workTicket: {
+      findUnique: async ({ where }: { where: { id: string } }) => tix.rows.find((t) => t.id === where.id) ?? null,
+      findMany: async () => tix.rows,
+      update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const t = tix.rows.find((x) => x.id === where.id)!
+        Object.assign(t, data)
+        return t
+      },
+    },
+  },
+}))
+
 import { setBackend, type ContentBackend } from '@/lib/board/content-store'
 import { POST } from '../route'
 
@@ -61,6 +77,23 @@ describe('the board MCP server', () => {
     expect(names).toContain('read_picture')
     expect(names).toContain('list_pictures')
     expect(names).toContain('post_board_docs')
+    expect(names).toContain('steer_ticket')
+    expect(names).toContain('list_tickets')
+  })
+
+  it('steer_ticket writes the store at once, and refuses a claimed ticket', async () => {
+    tix.rows = [
+      { id: 't1', title: 'x', state: 'ready', lane: 'claude', lanes: ['claude'], basis: {} },
+      { id: 't2', title: 'y', state: 'claimed', lane: 'claude', lanes: ['claude'], basis: {} },
+    ]
+    const moved = await rpc('tools/call', { name: 'steer_ticket', arguments: { id: 't1', lane: 'freebuff' } })
+    expect(moved.result?.isError).toBe(false)
+    expect(tix.rows[0]).toMatchObject({ lane: 'freebuff', state: 'ready' })
+    const refused = await rpc('tools/call', { name: 'steer_ticket', arguments: { id: 't2', lane: 'freebuff' } })
+    expect(refused.result?.isError).toBe(true)
+    expect(tix.rows[1].lane).toBe('claude')
+    const listed = await rpc('tools/call', { name: 'list_tickets', arguments: {} })
+    expect(listed.result?.content?.[0].text).toContain('t1')
   })
 
   it('stores a picture, shows it back as image content, and lists it', async () => {
