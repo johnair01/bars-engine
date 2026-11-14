@@ -40,6 +40,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Breathe the Fire Down to Embers',
+      bodyText:
+        'Fire gives light before it gives heat. Breathe slowly until the urgency settles into a steady glow, and hold it there for one minute. Write down what the glow lets you see.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'pyrakanth',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Let Another Fire Warm You',
+      bodyText:
+        'Sit near one person whose passion is not yours and listen to what feeds it for a full five minutes. Do not compare. Write down one thing their fire lit up in you.',
+      faceKey: null,
+      archetypeKey: null,
+      nationKey: 'pyrakanth',
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'What Did the Fire Consume That Was Not Fuel?',
       bodyText:
         'Pyrakanth burns hot and does not always discriminate. What did your passion, urgency, or conviction consume that was not meant to be burned — a relationship, a resource, an opportunity? Name it. Fire learns by accounting for what it consumed.',

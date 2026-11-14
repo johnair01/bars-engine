@@ -130,13 +130,13 @@ You gain:
 
 Altitude correspondence: **Diplomat interpretation**
 
-You can use this School's capacity relationally across conflict, difference, coalition, and consent.
+You can hold several valid forms of this School's practice at once, do it in forms other than your home form, and tell which form a particular student needs.
 
 You gain:
 
-- one relational integration move
-- the ability to reduce Faction Heat through this School
-- permission to mediate between this School and another School or House
+- one translation move: run this School's basic practice in a form other than your home form
+- the ability to match a student to the form of this School's practice that works for them, and send them to the lieutenant who teaches it
+- permission to name a second valid reading of this School's practice when a scene stalls on one reading
 
 ### Keeper
 
@@ -228,7 +228,7 @@ Suggested costs:
 - Practitioner: 3 Growth + complete one lieutenant training
 - Adept: 5 Growth + pass the School Trial
 - Steward: 5 Growth + create a durable tool, structure, or strategy through the School
-- Integrator: 6 Growth + resolve or transform a relationship/faction tension through the School
+- Integrator: 6 Growth + practice the School in two forms other than your home form + match a student to a form that works for them
 - Keeper: 8 Growth + pass the Shadow Exam + teach or protect someone else using the School's full capacity
 
 These costs are placeholders until playtest.

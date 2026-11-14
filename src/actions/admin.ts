@@ -10,6 +10,7 @@ import { hashPassword } from '@/lib/auth-utils'
 import { deriveAvatarConfig } from '@/lib/avatar-utils'
 import { getSpriteDirForLayer } from '@/lib/avatar-parts'
 import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins } from '@/lib/economy/coin-marks'
 
 // ===================================
 // ADMIN STATS
@@ -562,6 +563,7 @@ export async function deleteAdminPlayer(playerId: string) {
             await tx.threadProgress.deleteMany({ where: { playerId } })
             await tx.packProgress.deleteMany({ where: { playerId } })
             await tx.vibulonEvent.deleteMany({ where: { playerId } })
+            await markCoins(tx, (await tx.vibulon.findMany({ where: { ownerId: playerId }, select: { id: true } })).map((v) => v.id), 'burned', { playerId: admin.id, place: 'admin-delete-player', note: 'the player was removed' })
             await tx.vibulon.deleteMany({ where: { ownerId: playerId } })
             await tx.starterPack.deleteMany({ where: { playerId } })
             await tx.player.delete({ where: { id: playerId } })
@@ -835,6 +837,7 @@ export async function adminTransferVibulons(sourcePlayerId: string, targetPlayer
         }
 
         // 2. Transfer Tokens
+        await markCoins(tx, wallet, 'given', { playerId: sourcePlayerId, place: 'admin-transfer', toId: targetPlayerId })
         for (const token of wallet) {
             await tx.vibulon.update({
                 where: { id: token.id },

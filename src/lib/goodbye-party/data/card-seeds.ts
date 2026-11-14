@@ -55,7 +55,7 @@ export const CARD_SEEDS: Record<string, CardSeed> = {
     goodbye: {
       motif: 'the Sharpening',
       easy: 'Say the sharpest true kind thing you have about someone in this room, to their face, in one sentence.',
-      medium: 'Ask someone here to tell you the sharpest true thing they see in you. Let it land without correcting them.',
+      medium: 'Ask a friend what they see in you that you would rather not hear. Leave your tea untouched until they finish.',
       hard: 'Collect a one-line portrait of Wendell from three people who see him differently and write them down side by side. That triptych is the going-away gift.',
     },
     spicy: {

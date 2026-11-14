@@ -39,6 +39,32 @@ const deck: DeckTemplate = {
       faceMoveType: null,
     },
     {
+      title: 'Slow Your Chest Down',
+      bodyText:
+        'Bold Hearts reach for the next move before the last one lands. Breathe out longer than you breathe in, three times. Stay with whatever is in front of you until it finishes speaking.',
+      faceKey: null,
+      archetypeKey: 'bold-heart',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
+      title: 'Make Room at the Front',
+      bodyText:
+        'You usually go first. Tell one person you will wait for their idea before you offer yours. Write down what they bring that you would have walked past.',
+      faceKey: null,
+      archetypeKey: 'bold-heart',
+      nationKey: null,
+      moveType: 'open_up',
+      playCost: 1,
+      playEffect: { type: 'bar_create', magnitude: 1, target: 'community' },
+      allyshipDomain: null,
+      faceMoveType: null,
+    },
+    {
       title: 'The Fear of Beginning',
       bodyText:
         'Bold Hearts move fast and do not always look back. The shadow is not hesitation — it is the moment your courage colonizes the room before others can enter. Name one time your initiative moved before others were ready. Who did not get to show up because you had already gone?',

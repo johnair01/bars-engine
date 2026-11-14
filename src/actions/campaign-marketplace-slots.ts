@@ -6,6 +6,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { MARKETPLACE_BASE_SLOTS, vibeulonCostForNextSlot } from '@/lib/campaign-marketplace'
 import { getOrCreateMarketplaceProfile } from '@/lib/campaign-marketplace-queries'
 import { releaseStaleStakes, spendableWhere } from '@/lib/economy/bar-mint'
+import { markCoins } from '@/lib/economy/coin-marks'
 
 export type AttachArtifactToSlotResult = { success: true } | { error: string }
 
@@ -91,6 +92,7 @@ export async function purchaseAdditionalMarketplaceSlot(campaignRef: string): Pr
 
   await db.$transaction(async (tx) => {
     const tokenIds = wallet.map((t) => t.id)
+    await markCoins(tx, wallet, 'spent', { playerId: player.id, place: 'marketplace-slot', note: `a stall for ${ref}` })
     await tx.vibulon.deleteMany({ where: { id: { in: tokenIds } } })
     await tx.vibulonEvent.create({
       data: {

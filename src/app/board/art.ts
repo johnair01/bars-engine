@@ -16,6 +16,10 @@ export function artPath(parts: string[]): string | null {
   let p: string
   try { p = parts.map(decodeURIComponent).join('/') } catch { return null }
   if (!/\.(jpe?g|png|gif|webp)$/i.test(p) || p.includes('..') || p.includes('//') || /[^A-Za-z0-9._\/ -]/.test(p)) return null
+  // A look's references are not the board's to publish: /board/refs serves them to the owner and to a session, and this
+  // route must not become the way round that gate. Found live on 2026-11-09, minutes after the first reference landed:
+  // a refs path answered 200 here while /board/refs answered 401 to the same caller.
+  if (p.includes('/refs/')) return null
   if (/^[0-9a-f]{16}\.[a-z]+$/.test(p)) return 'board/stills/' + p
   if (p.startsWith('sha/')) return /^sha\/[0-9a-f]{64}\.[a-z]+$/.test(p) ? p : null
   return p.startsWith('council/callsheets/stills/') ? p : null

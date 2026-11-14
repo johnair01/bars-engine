@@ -227,7 +227,7 @@ export const STORYTELLER_OVERRIDES: Record<string, Technique> = {
     remediation: 'Cut the most impressive line; keep the truest one.',
     tell: { working: 'It costs a little and feels more real.', performed: 'You workshop the applause line.' },
     contraindications: ['When rawness would harm, not serve'],
-    example: 'You tell a story without the punchline you usually lean on, and it lands deeper.',
+    example: 'You tell the story without your usual punchline. Someone by the hearth asks you for the rest.',
     tier: 'canonical',
     status: 'published',
   },

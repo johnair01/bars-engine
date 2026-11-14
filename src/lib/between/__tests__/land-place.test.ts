@@ -47,7 +47,8 @@ describe('the first land (place.js)', () => {
   it('the nook stand offers the doorway once the episode is unrolled, and the land page exists', () => {
     const cw = readFileSync(join(root, 'public/between/charge-world.js'), 'utf8')
     expect(cw).toMatch(/data-ctw="through"/)
-    expect(cw).toMatch(/location\.href = "\/between\/land\.html"/)
+    expect(cw).toMatch(/href \|\| "\/between\/land\.html"/)
+    expect(cw).toMatch(/location\.href = (to|href \|\| "\/between\/land\.html")/)
     const page = readFileSync(join(root, 'public/between/land.html'), 'utf8')
     expect(page).toMatch(/\/between\/land\/land\.js/)
   })
