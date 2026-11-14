@@ -1296,15 +1296,16 @@
 
         // The player's record (Wendell, 7 October 2026: "This program is to help peopel keep
         // track of charges and their resolutions and emergent beliefs that pop up based on my
-        // ontology"). It lives in this browser only, and only once the player switches it on,
-        // so the 24 September boundary (no belief text in storage) still holds for anyone who
-        // leaves it off. Open board question oag-record asks Wendell whether that switch is
-        // the right line; the coach code stays belief-free either way.
+        // ontology"). It lives in this browser only. Wendell answered B on oag-record-switch on
+        // 11 November 2026, "On for everyone, with Erase": the record starts on, the player
+        // can switch it off, and Erase removes it. That lifts the 24 September boundary for
+        // the record of charges and beliefs only; the coach code stays belief-free.
+        // The off state is stored as "0", so a player who never touched the switch is on.
         const RECORD_KEY = "oag:record";
         const RECORD_ON_KEY = "oag:record:on";
         const recordStore = {
-            on() { try { return window.localStorage.getItem(RECORD_ON_KEY) === "1"; } catch (e) { return false; } },
-            setOn(v) { try { if (v) window.localStorage.setItem(RECORD_ON_KEY, "1"); else window.localStorage.removeItem(RECORD_ON_KEY); } catch (e) {} },
+            on() { try { return window.localStorage.getItem(RECORD_ON_KEY) !== "0"; } catch (e) { return true; } },
+            setOn(v) { try { if (v) window.localStorage.removeItem(RECORD_ON_KEY); else window.localStorage.setItem(RECORD_ON_KEY, "0"); } catch (e) {} },
             list() { try { const l = JSON.parse(window.localStorage.getItem(RECORD_KEY) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } },
             add(entry) {
                 if (!this.on()) return;
@@ -3758,7 +3759,7 @@
                                     <SizeSlider value={frame.size} onChange={(n) => updateTopFrame({ size: n })} dataKey="before" />
                                     <label className="record-switch" style={{ display: "block", fontSize: "0.8rem", opacity: 0.85, marginTop: "0.4rem" }}>
                                         <input type="checkbox" data-record-switch checked={recordOn} onChange={(e) => setRecordOn(e.target.checked)} />
-                                        {" "}Keep a record of what I find on this device. {recordOn ? "It goes in Your record, and you can erase it there." : "Left off, nothing here is saved."}
+                                        {" "}Keep a record of what I find on this device. {recordOn ? "It goes in Your record, and you can erase it there." : "Switched off, nothing here is saved."}
                                     </label>
                                 </div>
                             )}
@@ -4063,7 +4064,7 @@
                             </label>
                             <p style={{ fontSize: "0.85rem", opacity: 0.75 }}>The record stays in this browser. Nothing is sent anywhere, and the coach code never carries it.</p>
                             {entries.length === 0 && (
-                                <p className="prompt" data-record-empty>{recordOn ? "Nothing yet. Work a block or complete a cycle and it will show here." : "The record is off. Switch it on and the blocks you work and the cycles you complete will show here."}</p>
+                                <p className="prompt" data-record-empty>{recordOn ? "Nothing yet. Work a block or complete a cycle and it will show here." : "The record is switched off. Switch it on and the blocks you work and the cycles you complete will show here."}</p>
                             )}
                             {entries.map(e => (
                                 <div key={e.id} className="mini-section record-entry" data-record-entry={e.kind}>

@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto'
 import { MOVES } from '@/lib/between/rules'
 import { releaseStaleStakes, spendableWhere, type Tx } from './bar-mint'
 
-export type CoinAct = 'minted' | 'staked' | 'released' | 'set' | 'takenBack' | 'given' | 'spent' | 'burned'
+export type CoinAct = 'minted' | 'staked' | 'released' | 'set' | 'finished' | 'takenBack' | 'given' | 'spent' | 'burned'
 
 export type CoinEnergy = { move?: string | null; feel?: string | null } | null
 
@@ -96,6 +96,7 @@ export async function coinStory(tx: Tx, vibulonId: string, viewerId?: string): P
                 else lines.push(`Set on this page by ${name(m.playerId)}.`)
                 break
             }
+            case 'finished': lines.push(`Finished by ${name(m.playerId)}.`); break
             case 'staked': lines.push('Rested on a BAR.'); break
             case 'released': lines.push('Rested on a BAR for a while.'); break
             case 'takenBack': lines.push(`Taken back by ${name(m.playerId)}.`); break

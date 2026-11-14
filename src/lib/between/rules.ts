@@ -165,7 +165,7 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'from', 'in'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'from', 'in', 'did'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -201,6 +201,7 @@ export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
     if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
+    if (e.did != null && !(typeof e.did === 'string' && e.did.length <= 140)) return no(400, 'What you did is one short line.')
   }
   return yes
 }
@@ -533,11 +534,20 @@ const HEARTH_CHANNELS = ['earth', 'fire', 'wood', 'metal', 'water']
 function hearthOk(h: unknown): boolean {
   if (h == null) return true
   if (!isObj(h)) return false
-  if (Object.keys(h).some(k => !['sits', 'at', 'told', 'care', 'careAt'].includes(k))) return false
+  if (Object.keys(h).some(k => !['sits', 'at', 'told', 'care', 'careAt', 'stage', 'stageAt', 'spirit'].includes(k))) return false
   if (h.sits != null && !(isNum(h.sits) && Number.isInteger(h.sits) && h.sits >= 0 && h.sits <= 1_000_000)) return false
   if (h.at != null && !isNum(h.at)) return false
   if (h.care != null && !(isNum(h.care) && Number.isInteger(h.care) && h.care >= 0 && h.care <= 4)) return false
   if (h.careAt != null && !isNum(h.careAt)) return false
+  if (h.stage != null && !(isNum(h.stage) && Number.isInteger(h.stage) && h.stage >= 0 && h.stage <= 4)) return false
+  if (h.stageAt != null && !isNum(h.stageAt)) return false
+  if (h.spirit != null) {
+    const sp = h.spirit
+    if (!isObj(sp) || Object.keys(sp).some(k => !['sat', 'vit', 'at'].includes(k))) return false
+    if (!(isNum(sp.sat) && Number.isInteger(sp.sat) && sp.sat >= 1 && sp.sat <= 10)) return false
+    if (!(isNum(sp.vit) && sp.vit >= 0 && sp.vit <= 100)) return false
+    if (sp.at != null && !isNum(sp.at)) return false
+  }
   if (h.told != null) {
     if (!isObj(h.told)) return false
     for (const [c, v] of Object.entries(h.told)) if (!HEARTH_CHANNELS.includes(c) || !isNum(v)) return false
