@@ -1,3 +1,4 @@
+import { encounterErrors } from './encounter-beats'
 import { recordErrors } from './records'
 import { rowErrors } from './rows'
 
@@ -114,6 +115,9 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
       if (s.board !== 'council') errors.push('the battles are the Council Board\'s')
       if (!nonBlank(data.name)) errors.push('a battle names its name')
       if (data.id !== s.docId) errors.push('a battle lives at battles/<id> and names that id')
+      // An encounter on the epiphany bridge (encounter-bridge-look-1, A): its beats and buds, checked when present.
+      if (data.encounter !== undefined) errors.push(...encounterErrors(data.encounter))
+      if (data.budOf !== undefined && !nonBlank(data.budOf)) errors.push('a bud battle names the battle it grew from in budOf')
     }
     if (c === 'intake') { // the intake's one run, at intake/latest
       if (s.board !== 'council') errors.push('the intake is the Council Board\'s')

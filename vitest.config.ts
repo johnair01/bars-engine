@@ -86,6 +86,7 @@ export default defineConfig({
       'src/lib/__tests__/local-db-guard.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
       'src/lib/board/__tests__/records.test.ts',
+      'src/lib/board/__tests__/encounter-beats.test.ts',
       'src/app/api/board/records/[docId]/__tests__/route.test.ts',
       'src/lib/__tests__/passport-contract.test.ts',
       'src/app/api/board/gallery/__tests__/route.test.ts',
