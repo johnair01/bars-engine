@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
+import { createHash } from 'node:crypto'
 import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
@@ -33,6 +34,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
 const MAX_IDS = 50
 const MAX_DOCS = 50
+const DESIGN_FACES = ['shaman', 'architect', 'challenger', 'regent', 'diplomat', 'sage']
 const BOARD_DOC_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'records'])
 
 type RpcId = string | number | null
@@ -211,6 +213,34 @@ function rpcError(id: RpcId, code: number, message: string) {
   return NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } }, { headers: NO_STORE })
 }
 
+/** A look is a design look when it carries `look` (or kind look) and names a face. */
+function isDesignLook(data: Record<string, unknown>): boolean {
+  if (!data.look && data.kind !== 'look') return false
+  const faces = Array.isArray(data.faces) ? data.faces.join(' ') : typeof data.faces === 'string' ? data.faces : ''
+  const named = faces.toLowerCase()
+  return DESIGN_FACES.some((f) => named.includes(f))
+}
+
+/** The sentence that refuses a design look without a sealed pass, or null when the look may be posted. */
+async function unsealedPass(docId: string, data: Record<string, unknown>): Promise<string | null> {
+  if (!isDesignLook(data)) return null
+  const refuse = (why: string) =>
+    `${docId}: this look names design faces, so it needs a pass that ran the design steps. ${why} `
+    + 'Run `python3 council/tools/pass_check.py <pass.md> --seal`, then post the look with `pass: <pass id>`.'
+  const passId = typeof data.pass === 'string' ? data.pass.trim() : ''
+  if (!passId) return refuse('Its `pass` field is empty.')
+  const pass = await latestDoc('council', 'records', passId)
+  if (!pass || pass.kind !== 'pass' || typeof pass.body !== 'string')
+    return refuse(`The records doc "${passId}" is not a stored pass.`)
+  const check = await latestDoc('council', 'records', `pass-check-${passId}`)
+  let sealed: { ok?: unknown; sha256?: unknown } = {}
+  try { sealed = JSON.parse(typeof check?.body === 'string' ? check.body : '{}') } catch { /* unsealed */ }
+  if (sealed.ok !== true) return refuse(`The pass "${passId}" has no passing pass-check record.`)
+  if (sealed.sha256 !== createHash('sha256').update(pass.body, 'utf8').digest('hex'))
+    return refuse(`The pass "${passId}" changed after it was sealed.`)
+  return null
+}
+
 async function postRows(args: Record<string, unknown>): Promise<ToolResult> {
   const raw = args.docs
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_ROWS)
@@ -225,6 +255,8 @@ async function postRows(args: Record<string, unknown>): Promise<ToolResult> {
     const data = doc ? doc.data : null
     if (!data || typeof data !== 'object' || Array.isArray(data))
       return bad(`${docId}: data is the row itself, an object with kind, pass and its list's fields`)
+    const unsealed = await unsealedPass(docId, data as Record<string, unknown>)
+    if (unsealed) return bad(unsealed)
     const lifted = await liftInlinePictures(data, { maker: 'mcp' })
     if (lifted.error) return bad(`${docId}: ${lifted.error}`)
     pictures.push(...lifted.pictures)

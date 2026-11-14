@@ -4,7 +4,18 @@ import { NextRequest } from 'next/server'
 // The route reaches the board's store, which imports 'server-only'; every sibling suite stubs it the same way.
 vi.mock('server-only', () => ({}))
 
+import { createHash } from 'node:crypto'
 import { setBackend, type ContentBackend } from '@/lib/board/content-store'
+const docs = new Map<string, Record<string, unknown>>()
+vi.mock('@/lib/board/store', async (orig) => ({
+  ...(await orig<typeof import('@/lib/board/store')>()),
+  latestDoc: async (_b: string, c: string, id: string) => docs.get(`${c}/${id}`) ?? null,
+}))
+vi.mock('@/lib/board/session-write', async (orig) => ({
+  ...(await orig<typeof import('@/lib/board/session-write')>()),
+  sessionWrite: async (_db: unknown, w: unknown[]) => ({ written: w.length }),
+}))
+
 import { POST } from '../route'
 
 const KEY = 'test-council-key'
@@ -82,6 +93,21 @@ describe('the board MCP server', () => {
     const put = await call('put_picture', { data: 'data:image/bmp;base64,AAAA' })
     expect(put.result?.isError).toBe(true)
     expect(put.result?.content?.[0]?.text).toContain('image/png')
+  })
+
+  it('refuses a design look without a sealed pass, and accepts it with one', async () => {
+    docs.clear()
+    const look = { kind: 'look', look: true, faces: ['shaman', 'regent'], pass: 'demo-pass' }
+    const refused = await call('post_rows', { docs: [{ docId: 'look-1', data: look }] })
+    expect(refused.result?.isError).toBe(true)
+    expect(refused.result?.content?.[0]?.text).toContain('pass_check.py')
+
+    const body = 'Ontology: profile game_design\n'
+    docs.set('records/demo-pass', { kind: 'pass', body })
+    docs.set('records/pass-check-demo-pass', { kind: 'ledger', body: JSON.stringify({
+      pass: 'demo-pass', ok: true, sha256: createHash('sha256').update(body, 'utf8').digest('hex') }) })
+    const accepted = await call('post_rows', { docs: [{ docId: 'look-1', data: look }] })
+    expect(accepted.result?.isError).toBe(false)
   })
 
   it('refuses a call without the key', async () => {
