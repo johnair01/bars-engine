@@ -477,7 +477,10 @@ export function buildHollow(scene, opts = {}) {
     // pots on the mantel
     const pot = (h, rr, mat) => { const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push(new THREE.Vector2(rr * (0.55 + Math.sin(u * Math.PI) * 0.6) * (u > 0.85 ? 0.75 : 1), u * h)); } return new THREE.Mesh(new THREE.LatheGeometry(pts, 12), mat); };
     const clays = [M.clay, new THREE.MeshStandardMaterial({ color: 0x8a5a3a, roughness: 0.8 }), new THREE.MeshStandardMaterial({ color: 0x6e6a5a, roughness: 0.7 })];
-    if (!nook) for (let i = 0; i < 6; i++) { const p = pot(0.22 + r() * 0.2, 0.1 + r() * 0.06, clays[i % 3]); p.position.set(-1.1 + i * 0.44, 1.99, 0.1); hearth.add(p); }
+    // the six mantel pots: friendship-between-growth finds them one at a time as the Between grows (growth-view.js lights them)
+    const mantelPots = [];
+    if (!nook) for (let i = 0; i < 6; i++) { const p = pot(0.22 + r() * 0.2, 0.1 + r() * 0.06, clays[i % 3]); p.position.set(-1.1 + i * 0.44, 1.99, 0.1); hearth.add(p); mantelPots.push(p); }
+    anim.mantelPots = mantelPots;
     if (nook) { // the nook's one shelf: a plank on the wall right of the hearth, on two root brackets (the `shelf` spot)
       const sp = SHELLS.nook.spots.find(x => x.id === "shelf"), [sx, sy, sz] = sp.at;
       const plank = new THREE.Group(); plank.position.set(sx, sy, sz); plank.rotation.y = sp.face || 0; root.add(plank);
@@ -803,7 +806,7 @@ export function buildHollow(scene, opts = {}) {
     ? { shell: "nook", portal: { x: Math.sin(1.35) * 2.9, z: -Math.cos(1.35) * 2.9, yaw: -1.35 }, spawn: [[1.55, 1.55], [-1.55, 1.55]], window: windowAt }
     : { shell: "hollow", portal: { x: 1.3, z: -1.15, yaw: -0.3 }, spawn: [[-0.8, 3.1], [0.8, 3.1]], window: windowAt };
   // what a room style sets (public/calrunia/room-styles.js applyStyle); values only. `spots` is what applyRoom sets.
-  const handles = { stage, sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots, hearth: hearthFx };
+  const handles = { stage, sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, pots: anim.mantelPots || [], base, land, rain, spots, hearth: hearthFx };
   return { root, update, cushions, handles, layout };
 }
 
