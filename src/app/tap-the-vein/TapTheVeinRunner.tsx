@@ -11,7 +11,7 @@
  * visuals. Cards use the CultivationCard primitive; chrome uses --bars-* tokens.
  */
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -90,6 +90,20 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
   const [rawEntry, setRawEntry] = useState(initial.rawEntry)
   const [draft, setDraft] = useState('')
+  // The free write saves itself five seconds after he stops typing, so a closed tab keeps it (ttv-autosave-draft).
+  const lastSaved = useRef(initial.rawEntry)
+  useEffect(() => {
+    if (rawEntry === lastSaved.current) return
+    const timer = setTimeout(() => {
+      const snapshot = rawEntry
+      void saveBrainstorm(snapshot)
+        .then((res) => {
+          if (!('error' in res)) lastSaved.current = snapshot
+        })
+        .catch(() => {})
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [rawEntry])
   // Quests hang on a WEEKLY goal (QLA). Default to the first active weekly goal;
   // empty = commit as a shadow quest (surfaced for fold-in).
   const [lensGoalId, setLensGoalId] = useState(
@@ -167,6 +181,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
         if (!t) continue
         const res = await commitTask({ text: t, lensGoalId: lensGoalId || null })
         if ('error' in res) {
+          // A line already on today's list is skipped, not a stop: the lines after it still carry forward.
+          if (res.error.startsWith('Already on')) continue
           setError(res.error)
           break
         }
