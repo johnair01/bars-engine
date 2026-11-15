@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { emberWarmth, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES, FRAGMENT_ORDER, fragmentFor, hearthRecord, CARES, HEARTH_K, careOf, hearthStage, careOffered } from '../../../../public/between/focus.js'
+import { emberWarmth, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES, FRAGMENT_ORDER, fragmentFor, hearthRecord, CARES, HEARTH_K, stageOf, hearthStage, careOffered, spiritWord, spiritGlow, spiritFed } from '../../../../public/between/focus.js'
 import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from '../../../../public/between/fragments.js'
 
 // The focus sit at the hearth (council pass integral-octalysis2; his yes on io-focus-sit-look-1, 2026-10-25): the sticks you
@@ -83,9 +83,20 @@ describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
     expect(hearthStage(9).care).toBe(4); expect(hearthStage(-2).care).toBe(0); expect(hearthStage(undefined).care).toBe(0)
   })
   it('reads a fire already lit as stage 4 and a new home as 0', () => {
-    expect(careOf({})).toBe(0); expect(careOf(null)).toBe(0)
-    expect(careOf({ minute: { ember: 1 } })).toBe(4); expect(careOf({ oriented: 1 })).toBe(4)
-    expect(careOf({ hearth: { care: 2 } })).toBe(2); expect(careOf({ hearth: { care: 0 }, minute: { ember: 1 } })).toBe(0)
+    expect(stageOf({})).toBe(0); expect(stageOf(null)).toBe(0)
+    expect(stageOf({ minute: { ember: 1 } })).toBe(4); expect(stageOf({ oriented: 1 })).toBe(4)
+    expect(stageOf({ hearth: { stage: 3, care: 1 } })).toBe(3); expect(stageOf({ hearth: { stage: 0 }, oriented: 1 })).toBe(0)
+    expect(stageOf({ hearth: { care: 2 } })).toBe(2); expect(stageOf({ hearth: { care: 0 }, minute: { ember: 1 } })).toBe(0)
+  })
+  it('dims the hearth spirit by its word and never without a feeding (FR-024, FR-025)', () => {
+    expect(spiritWord({}, 5)).toBe('thriving'); expect(spiritGlow({ hearth: {} }, 5)).toBe(1)
+    const at = 1e12, home = { hearth: { spirit: { sat: 7, vit: 100, at } } }
+    expect(spiritWord(home, at)).toBe('thriving')
+    expect(spiritWord(home, at + 10 * 864e5)).toBe('dimming')
+    expect(spiritGlow(home, at + 10 * 864e5)).toBe(0.6)
+    expect(spiritWord({ hearth: { spirit: { sat: 3, vit: 100, at } } }, at)).toBe('unsettled')
+    expect(spiritFed({}, 'fire', at)).toEqual({ sat: 9, vit: 100, at }) // own element twice over
+    expect(spiritFed({}, 'wood', at).sat).toBe(8)
   })
   it('offers one care a visit', () => {
     expect(careOffered(0, false)).toBe('sweep'); expect(careOffered(0, true)).toBe(null)
@@ -99,9 +110,17 @@ describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
     expect(garden).toMatch(/canSitOn = id => !seatTaken\(id\) && !\(sitBlocked\(\)/)
     expect(garden).toMatch(/function sitAtHearth\(\) \{ if \(sitBlocked\(\)\) return;/)
     expect(garden).toMatch(/if \(hm \|\| sitBlocked\(\)/)
-    expect(garden).toMatch(/PREVIEW_HOST && \/\^\[0-4\]\$\/\.test\(KQ\.get\("care"\)/) // ?care= is a preview only
+    expect(garden).toMatch(/PREVIEW_HOST && \/\^\[0-4\]\$\/\.test\(KQ\.get\("stage"\) \|\| KQ\.get\("care"\)/) // ?stage= (alias ?care=) is a preview only
+    expect(garden).toMatch(/SPIRIT_SEED = PREVIEW_HOST/) // ?spirit=<days> too (FR-031)
     const doCare = garden.slice(garden.indexOf('function doCare('), garden.indexOf('/* What a tap on the nook does'))
     expect(doCare).toContain('minuteAct("ember", "done", patch)') // care 0 and the ember beat are one write (FR-019)
     expect(doCare).not.toMatch(/care: c \+ 2|care: 4/)
+    expect(doCare).toMatch(/stage: c \+ 1, stageAt: at, spirit: spiritFed\(/) // one write: the stage and the hearth spirit's feeding (FR-023, FR-024)
+    expect(doCare).toContain('given: { spirit: "hearth", room: null, at }')
+    expect(garden).toContain('case "hearthgive"')
+    expect(garden).toContain('data-act="hearthGive"')
+    expect(garden).toContain("No ember waits. Checking in leaves one.")
+    expect(garden).toContain("Go do it. The fire keeps your ember warm until you're back.")
+    expect(garden).not.toMatch(/Sit at the hearth|sit with it/i)
   })
 })

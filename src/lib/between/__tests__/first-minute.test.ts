@@ -60,6 +60,8 @@ describe('first minute: where it stands', () => {
     expect(minuteState({ minute: { ember: 1 }, hearth: { care: 1 } }).hearthLit).toBe(false)
     expect(minuteState({ minute: { ember: 1 }, hearth: { care: 2 } }).hearthLit).toBe(true)
     expect(minuteState({ hearth: { care: 1 } }).emberGlows).toBe(true)
+    expect(minuteState({ minute: { ember: 1 }, hearth: { stage: 1 } }).hearthLit).toBe(false) // stage reads first (FR-023)
+    expect(minuteState({ minute: { ember: 1 }, hearth: { stage: 2 } }).hearthLit).toBe(true)
   })
   it('a homeroom oriented before the minute existed counts as done, nothing to come back to', () => {
     const s = minuteState({ oriented: 5 })

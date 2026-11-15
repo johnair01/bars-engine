@@ -29,8 +29,10 @@ export type AnalysisFilters = {
 const FILTER_CONFIDENCE_THRESHOLD = 0.5
 
 const MAX_CHUNKS = 15
-const PARALLEL_BATCH = 2
-const BATCH_DELAY_MS = 6000
+const PARALLEL_BATCH = 3
+const BATCH_DELAY_MS = 1000
+/** page.tsx maxDuration is 120s; stop starting new batches after this so the run saves and returns instead of timing out. */
+const TIME_BUDGET_MS = 90_000
 const RESUME_LIMIT_PER_DAY = 3
 
 function getBookAnalysisModel(): string {
@@ -208,7 +210,9 @@ async function runChunkAnalysis(
   bookId: string,
   chunksToProcess: TextChunk[],
   targetPromptLine = ''
-): Promise<{ quests: QuestResult[]; cacheHits: number; cacheMisses: number; heuristicHits: number }> {
+): Promise<{ quests: QuestResult[]; cacheHits: number; cacheMisses: number; heuristicHits: number; processedChunks: TextChunk[] }> {
+  const startedAt = Date.now()
+  const processedChunks: TextChunk[] = []
   const allQuests: QuestResult[] = []
   let cacheHits = 0
   let cacheMisses = 0
@@ -216,6 +220,7 @@ async function runChunkAnalysis(
   const modelId = getBookAnalysisModel()
 
   for (let i = 0; i < chunksToProcess.length; i += PARALLEL_BATCH) {
+    if (Date.now() - startedAt > TIME_BUDGET_MS) break
     const batch = chunksToProcess.slice(i, i + PARALLEL_BATCH)
     const results = await Promise.all(
       batch.map(async (chunk) => {
@@ -259,6 +264,7 @@ async function runChunkAnalysis(
       })
 
     )
+    processedChunks.push(...batch)
     results.forEach((r) => {
       if (r.fromCache) cacheHits++
       else cacheMisses++
@@ -278,7 +284,7 @@ async function runChunkAnalysis(
     return true
   })
 
-  return { quests: uniqueQuests, cacheHits, cacheMisses, heuristicHits }
+  return { quests: uniqueQuests, cacheHits, cacheMisses, heuristicHits, processedChunks }
 }
 
 /** Create CustomBar records from quests and return created IDs. */
@@ -615,7 +621,7 @@ export async function analyzeBook(bookId: string, options?: { filters?: Analysis
     const targetPromptLine = hasFilters && filters ? buildTargetPromptLine(filters) : ''
 
     const creatorId = await getSystemCreatorId()
-    const { quests, cacheHits, cacheMisses, heuristicHits } = await runChunkAnalysis(
+    const { quests, cacheHits, cacheMisses, heuristicHits, processedChunks } = await runChunkAnalysis(
       bookId,
       chunksToProcess,
       targetPromptLine
@@ -623,7 +629,7 @@ export async function analyzeBook(bookId: string, options?: { filters?: Analysis
     const createdIds = await createQuestsFromAnalysis(bookId, quests, creatorId)
 
     const analysisMeta = {
-      chunksAnalyzed: chunksToProcess.length,
+      chunksAnalyzed: processedChunks.length,
       chunksTotal,
       chunksSkipped,
       ...(hasFilters && chunksFilteredByTarget > 0 && { chunksFilteredByTarget }),
@@ -632,7 +638,7 @@ export async function analyzeBook(bookId: string, options?: { filters?: Analysis
       heuristicHits,
       questsExtracted: quests.length,
       questsCreated: createdIds.length,
-      analyzedChunkIndices: chunksToProcess.map((c) => c.index),
+      analyzedChunkIndices: processedChunks.map((c) => c.index),
       analyzedAt: new Date().toISOString(),
     }
     await db.book.update({
@@ -647,7 +653,7 @@ export async function analyzeBook(bookId: string, options?: { filters?: Analysis
     return {
       success: true,
       questsCreated: createdIds.length,
-      chunkCount: chunksToProcess.length,
+      chunkCount: processedChunks.length,
       chunksTotal,
       ...(chunksFilteredByTarget > 0 && { chunksFilteredByTarget }),
     }
@@ -715,13 +721,13 @@ export async function analyzeBookMore(bookId: string) {
     const chunksTotal = chunks.length
 
     const creatorId = await getSystemCreatorId()
-    const { quests, cacheHits, cacheMisses, heuristicHits } = await runChunkAnalysis(bookId, chunksToProcess)
+    const { quests, cacheHits, cacheMisses, heuristicHits, processedChunks } = await runChunkAnalysis(bookId, chunksToProcess)
     const createdIds = await createQuestsFromAnalysis(bookId, quests, creatorId)
 
-    const newIndices = chunksToProcess.map((c) => c.index)
+    const newIndices = processedChunks.map((c) => c.index)
     const updatedMeta = {
       ...analysis,
-      chunksAnalyzed: (analysis.chunksAnalyzed ?? 0) + chunksToProcess.length,
+      chunksAnalyzed: (analysis.chunksAnalyzed ?? 0) + processedChunks.length,
       chunksTotal,
       cacheHits: (analysis.cacheHits ?? 0) + cacheHits,
       cacheMisses: (analysis.cacheMisses ?? 0) + cacheMisses,
@@ -751,7 +757,7 @@ export async function analyzeBookMore(bookId: string) {
     return {
       success: true,
       questsCreated: createdIds.length,
-      chunkCount: chunksToProcess.length,
+      chunkCount: processedChunks.length,
       chunksTotal,
     }
   } catch (e) {

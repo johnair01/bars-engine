@@ -262,7 +262,9 @@ ok(notes.some(n => n === "Accept was blocked by “I can't accept it”. Its siz
   && notes.some(n => n === 'Welcome was blocked.') && notes.some(n => n.includes('it kept me careful')),
   'route notes carry the block words, sizes and appreciation: ' + JSON.stringify(notes));
 const belief = outer.userBelief;
-const stored = await p5.evaluate(() => Object.keys(localStorage).map(k => localStorage.getItem(k)).join('\n'));
+// The record (oag:record) is on by default and holds this text by design (oag-record-switch B);
+// the 24 September boundary still holds for every other key.
+const stored = await p5.evaluate(() => Object.keys(localStorage).filter(k => k !== 'oag:record').map(k => localStorage.getItem(k)).join('\n'));
 ok(belief && !stored.includes(belief), 'belief text never stored');
 ok(!stored.includes("accept it") && !stored.includes('my sister') && !stored.includes('kept me careful'), 'block words, start words and appreciation never stored');
 ok((await p5.locator('svg.route-map').textContent()).includes(belief.split(' ')[0]), 'belief drawn under the map');
@@ -299,11 +301,14 @@ const p7 = await ctx.newPage();
 p7.on('pageerror', e => errors.push('pageerror7: ' + e.message));
 p7.on('dialog', d => d.accept());
 await p7.goto(B + '/ontology-game/wave');
+// The record is on by default now, so blocks worked on earlier pages of this shared context are in it.
+await p7.evaluate(() => localStorage.removeItem('oag:record'));
+await p7.reload();
 await p7.getByRole('button', { name: 'Begin with W.A.V.E.' }).click();
 await p7.locator('[data-wave-step="welcome"] [data-wave-block]').click();
 ok((await p7.locator('[data-block-steps-preview] li').count()) === 4, 'block screen lists the four steps');
-ok(!(await gs(p7)).recordOn, 'the record starts switched off');
-await p7.locator('[data-record-switch]').check();
+ok((await gs(p7)).recordOn, 'the record starts switched on (oag-record-switch B)');
+ok(await p7.locator('[data-record-switch]').isChecked(), 'the switch shows on, so a player can turn it off');
 await p7.locator('[data-block-words]').fill('I do not want to feel this');
 await p7.locator('[data-block-work]').click();
 await waveFrom(p7, 'welcome', 'release');
@@ -401,6 +406,10 @@ ok(await p7.locator('[data-record-entry="block"]').count() === 3 && recText.incl
 await p7.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-record.png', fullPage: true });
 await p7.locator('[data-record-erase]').click();
 ok(await p7.evaluate(() => localStorage.getItem('oag:record')) === null, 'Erase my record removes it from the device');
+await p7.goto(B + '/ontology-game');
+await p7.locator('[data-record-open]').click();
+await p7.locator('[data-record-switch]').uncheck();
+ok(await p7.evaluate(() => localStorage.getItem('oag:record:on')) === '0', 'switching the record off is remembered');
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); server.close();

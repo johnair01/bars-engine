@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { moveTicket, pushTicket, setLaneDry, unholdTicket } from '../queue'
+import { moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -90,5 +90,35 @@ describe('the queue', () => {
     expect(tickets[0]).toMatchObject({ state: 'ready' })
     expect(await unholdTicket(db, id)).toMatchObject({ ok: false, status: 409 })
     expect(await unholdTicket(db, 'nope')).toMatchObject({ ok: false, status: 404 })
+  })
+
+  describe('steerTicket', () => {
+    const ready = () => [{ id: 'a', state: 'ready', lane: 'claude', lanes: ['claude', 'freebuff'], basis: { rows: ['r'] } }]
+    it('sends a ready ticket to another lane and puts that lane first in its order', async () => {
+      const tickets = ready()
+      const r = await steerTicket(fakeDb(tickets), 'a', 'freebuff', 'owner')
+      expect(r.ok).toBe(true)
+      expect(tickets[0]).toMatchObject({ lane: 'freebuff', state: 'ready', lanes: ['freebuff', 'claude'], leaseUntil: null })
+      expect((tickets[0].basis as unknown as { steered: { from: string; by: string } }).steered).toMatchObject({ from: 'claude', by: 'owner' })
+    })
+    it('adds a lane the ticket did not list', async () => {
+      const tickets = ready()
+      await steerTicket(fakeDb(tickets), 'a', 'deepai', 'mcp')
+      expect(tickets[0]).toMatchObject({ lane: 'deepai', lanes: ['deepai', 'claude', 'freebuff'] })
+    })
+    it('holds a ticket back, and a steer to a lane lifts the hold', async () => {
+      const tickets = ready()
+      await steerTicket(fakeDb(tickets), 'a', 'hold', 'owner')
+      expect(tickets[0]).toMatchObject({ state: 'held', lane: 'claude' })
+      await steerTicket(fakeDb(tickets), 'a', 'claude', 'owner')
+      expect(tickets[0]).toMatchObject({ state: 'ready' })
+    })
+    it('leaves a claimed ticket to its crew, and refuses an unknown lane or ticket', async () => {
+      const tickets = [{ id: 'c', state: 'claimed', lane: 'claude', lanes: ['claude'], basis: {} }]
+      expect(await steerTicket(fakeDb(tickets), 'c', 'freebuff', 'owner')).toMatchObject({ ok: false, status: 409 })
+      expect(tickets[0].lane).toBe('claude')
+      expect(await steerTicket(fakeDb(tickets), 'c', 'nowhere', 'owner')).toMatchObject({ ok: false, status: 400 })
+      expect(await steerTicket(fakeDb(tickets), 'zz', 'claude', 'owner')).toMatchObject({ ok: false, status: 404 })
+    })
   })
 })
