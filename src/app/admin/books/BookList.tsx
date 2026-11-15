@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { AnalysisFilters } from '@/actions/book-analyze'
+import { deleteBook } from '@/actions/books'
 import { BookPraxisBadge, BookPraxisPanel } from './BookPraxisPanel'
 import { BookPipelineActions } from './BookPipelineActions'
 import { useBookPipelineActions } from './useBookPipelineActions'
@@ -51,6 +52,18 @@ export function BookList({ books }: { books: AdminBookRow[] }) {
   const router = useRouter()
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<AnalysisFilters>({})
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<{ id: string; msg: string } | null>(null)
+
+  async function handleDelete(book: AdminBookRow) {
+    if (!window.confirm(`Delete "${book.title}"? This removes the book, its text and sections. Quests already generated from it stay in the library.`)) return
+    setDeletingId(book.id)
+    setDeleteError(null)
+    const result = await deleteBook(book.id)
+    setDeletingId(null)
+    if (result.error) setDeleteError({ id: book.id, msg: result.error })
+    else router.refresh()
+  }
 
   const hasActiveFilters =
     (filters.moveType?.length ?? 0) > 0 ||
@@ -211,6 +224,17 @@ export function BookList({ books }: { books: AdminBookRow[] }) {
               <BookPraxisPanel bookId={book.id} metadataJson={book.metadataJson} />
             </div>
             <BookPipelineActions book={book} meta={meta} layout="list" shared={shared} />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleDelete(book)}
+                disabled={deletingId === book.id}
+                className="text-xs px-2 py-1 rounded border border-red-900/60 text-red-400 hover:bg-red-900/20 disabled:opacity-50"
+              >
+                {deletingId === book.id ? 'Deleting…' : 'Delete book'}
+              </button>
+              {deleteError?.id === book.id && <span className="text-xs text-red-400">{deleteError.msg}</span>}
+            </div>
           </div>
         )
       })}
