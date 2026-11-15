@@ -2176,6 +2176,7 @@ function refreshHud() {
     tools.push(`<button class="glassbtn" type="button" data-open="spirit">Bring a spirit</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="daemon">Bring a daemon</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="hearth">Hearth</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="coin" aria-label="Turn your coin">Coin</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="pictures">Pictures</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="invite">Invite</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
@@ -3041,6 +3042,8 @@ async function itemAct(id, act, payload) {
    =================================================================================================== */
 function openSheet(name, arg) {
   const g = view().g;
+  // the coin turn (ember-to-vibeulon FR-012): the turntable opens at any time and changes only the coins minted after it
+  if (name === "coin") { if (window.__between && window.__between.coin) window.__between.coin.open({}); return; }
   // the mirror stands in the homeroom: from a room, the Look takes you home to it
   if (name === "look" && g && !isHome(g)) { markSeen(); location.href = ROOM_URL(null) + "?sheet=look"; return; }
   if (name === "spirits" && !isHome(g)) name = "spirit";
@@ -4900,6 +4903,9 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
+// the coin turn (ember-to-vibeulon T014): window.__between.coin.open({ vibulonId, face }) opens the turntable for that bare coin (the
+// /bar answer's choose:true), open({}) changes the style for the next coins; previews: ?coin=demo shows a bare demo coin, nothing written
+import("./coin.js").then(m => { window.__between.coin = m.mount(window.__between, { demo: PREVIEW_HOST && KQ.get("coin") === "demo" }); }).catch(e => noteError(e, "coin"));
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null, turn: PREVIEW_HOST ? KQ.get("turn") : null, bowls: PREVIEW_HOST ? KQ.get("bowls") : null, as: PREVIEW_HOST ? KQ.get("as") : null, live: PREVIEW_HOST ? KQ.get("live") === "1" : false }); }).catch(e => noteError(e, "coins"));
 // the hollow's games (Six-faces-council friendship-between-growth, "The hollow's games"; his A on bsp-games-look-1): Found lights on the
 // jar shelf, Firefly lead on the dais, Lantern out at the mouth. Previews: &game=found-lights|firefly-lead|lantern-out opens that game's
