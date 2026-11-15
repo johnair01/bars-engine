@@ -2023,6 +2023,9 @@ function frameBody() {
   }
   if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
   camera.lookAt(focus); lastFocus.copy(focus);
+  if (brushFig && brushSeat && brushWrite && brushWrite.isOpen) { // the writing: framed on the kneeling writer, beside the strip
+    brushFig.tick(dt); const [bp, bf] = brushFig.view(brushSeat, innerWidth < innerHeight); camera.position.copy(bp); camera.lookAt(bf);
+  }
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
   figureLightTick(t, dt, me3);
   renderer.render(scene, camera);
@@ -2173,6 +2176,7 @@ function refreshHud() {
     tools.push(`<button class="glassbtn" type="button" data-open="spirit">Bring a spirit</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="daemon">Bring a daemon</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="hearth">Hearth</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="coin" aria-label="Turn your coin">Coin</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="pictures">Pictures</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="invite">Invite</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
@@ -2417,14 +2421,28 @@ async function lightNow() {
 function lightSoon() { setTimeout(lightNow, 400); }
 /* The blank strips and the brush wait on the Nook's shelf once one ember is kept (FR-004): the BAR-making opens after the first worked charge. */
 const stripsOpen = () => keptHere() > 0 || roomLight.mine > 0;
-let brushWrite = null;
+let brushWrite = null, brushFig = null, brushFigLoading = null, brushSeat = null;
+/* FR-005 (his A on ee2-brush-cult-look-5, "This is how she writes"): while you write, the cultivation figure kneels on the
+   hearth's seat with the brush upright in her hand, in place of your dressed figure (which has no finger bones). She is
+   built the first time the strip opens, and follows the strip: the dip when an ember is chosen, the stroke as you draw. */
+function brushFigureOn() {
+  const s = seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth); if (!s) return;
+  brushSeat = s;
+  if (!brushFigLoading) brushFigLoading = import("./brush-figure.js").then(m => m.createBrushFigure(scene)).then(f => { brushFig = f; return f; })
+    .catch(e => { noteError(e, "brush figure"); brushFigLoading = null; return null; });
+  brushFigLoading.then(f => { if (!f || !brushWrite || !brushWrite.isOpen) return; f.place(brushSeat); f.show(true); if (meState.body) meState.body.holder.visible = false; if (brushWrite.ember) f.ember(); });
+}
+function brushFigureOff() { if (brushFig) brushFig.show(false); if (meState.body) meState.body.holder.visible = true; }
 function openBrush() {
-  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar, onClose: done => { if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
+  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar,
+    onDip: () => brushFig && brushFig.ember(), onStroke: e => brushFig && brushFig.stroke(e), onSet: () => brushFig && brushFig.finish(),
+    onClose: done => { brushFigureOff(); if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
   const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0))
     .map(([id, e]) => { const el = MOVES[e.move][1]; return { id, el, name: MOVES[e.move][0], light: cssHue(elHex(el)), demo: isDemoEmber(id) }; });
   if (!held.length) { toast(stripsOpen() ? "Every ember you hold is written or lit. Keep another at the hearth." : "Keep an ember at the hearth first."); return; }
   if (shelf.brush) shelf.brush.userData.wet(null);
   brushWrite.open(held);
+  brushFigureOn();
 }
 /* Saving the BAR: the route mints its vibeulon and marks the ember written. A preview's demo ember writes on this page only. */
 async function writeBar({ ember, mark, demo }) {
@@ -3024,6 +3042,8 @@ async function itemAct(id, act, payload) {
    =================================================================================================== */
 function openSheet(name, arg) {
   const g = view().g;
+  // the coin turn (ember-to-vibeulon FR-012): the turntable opens at any time and changes only the coins minted after it
+  if (name === "coin") { if (window.__between && window.__between.coin) window.__between.coin.open({}); return; }
   // the mirror stands in the homeroom: from a room, the Look takes you home to it
   if (name === "look" && g && !isHome(g)) { markSeen(); location.href = ROOM_URL(null) + "?sheet=look"; return; }
   if (name === "spirits" && !isHome(g)) name = "spirit";
@@ -4895,6 +4915,9 @@ import("./voice.js").then(v => { voiceMod = v; window.__between.voice = v.create
 // ?door=flirtcraft (any host, build 3b): the Flirtcraft door walks you to the coin table once your first minute is done
 // ?nook=1&deck=1&skipHome=1 (Friendcraft slice 1): seated at the table, enrolled, first minute done, a mirror hope, an empty deck at the blank goal leaf; &deck=2 adds one written goal with three cards
 // ?nook=1&book=1 (the record book, his A on rb-ad-look-1): seated with the book open on stand-in pages, three casts on Jun's
+// the coin turn (ember-to-vibeulon T014): window.__between.coin.open({ vibulonId, face }) opens the turntable for that bare coin (the
+// /bar answer's choose:true), open({}) changes the style for the next coins; previews: ?coin=demo shows a bare demo coin, nothing written
+import("./coin.js").then(m => { window.__between.coin = m.mount(window.__between, { demo: PREVIEW_HOST && KQ.get("coin") === "demo" }); }).catch(e => noteError(e, "coin"));
 import("./coin-table.js").then(m => { window.__between.coins = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("coins") : null, book: PREVIEW_HOST ? KQ.get("book") : null, preview: PREVIEW_HOST, door: KQ.get("door"), games: PREVIEW_HOST ? KQ.get("games") : null, deck: PREVIEW_HOST ? KQ.get("deck") : null, turn: PREVIEW_HOST ? KQ.get("turn") : null, bowls: PREVIEW_HOST ? KQ.get("bowls") : null, as: PREVIEW_HOST ? KQ.get("as") : null, live: PREVIEW_HOST ? KQ.get("live") === "1" : false }); }).catch(e => noteError(e, "coins"));
 // the hollow's games (Six-faces-council friendship-between-growth, "The hollow's games"; his A on bsp-games-look-1): Found lights on the
 // jar shelf, Firefly lead on the dais, Lantern out at the mouth. Previews: &game=found-lights|firefly-lead|lantern-out opens that game's
