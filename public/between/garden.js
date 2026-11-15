@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
-import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
+import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, seatsNow, routeTo, CUSHION_TOP, WALK_R, DAIS_Y, HEARTH, TABLE } from "./hollow.js";
 import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 /* Room kit, part 2 (Still B, the scroll; Still C, the first minute). */
 import { COPY as DECK_COPY, applyCopy as applyDeckCopy } from "./friendcraft/deck.js";
@@ -26,7 +26,8 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
-import { makeQiSky, qiOf } from "./sky-qi.js";
+import { makeQiSky, qiOf, qiFromEmbers, roomLift, isKept } from "./sky-qi.js";
+import { stripsMesh, brushMesh, createBrushWrite, INK } from "./brush-write.js"; // ember-to-vibeulon: the BAR written with a brush
 import { read as growthRead, standIn as growthStandIn, FORM_OF } from "./growth.js";   // friendship-between-growth: health, kept days, bowls, found pots from the Between's own items
 import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
@@ -291,7 +292,7 @@ function nameOf(uid, g) {
 const possessive = (uid, g) => uid === me ? "yours" : nameOf(uid, g) + "'s";
 /* A lantern counts toward the Between once, when someone other than its maker has said yes (lanternLit in rules.ts). */
 const lanternLit = it => it.kind === "lantern" && !!it.yes && typeof it.yes === "object" && Object.entries(it.yes).some(([k, v]) => k !== it.by && typeof v === "number" && Number.isFinite(v));
-const isFed = it => it.kind === "lantern" ? lanternLit(it) : it.kind !== "agreement" && (it.status === "received" || it.status === "kept");
+const isFed = it => it.kind === "lantern" ? lanternLit(it) : it.kind === "bar" ? it.status === "found" : it.kind !== "agreement" && (it.status === "received" || it.status === "kept");
 /* The Between's health (FR-003): the built inputs (agreements held, offerings fed) plus the feeds of the last seven days and the
    kept-days lift, all read by growth.js from the shared items and spirits, so both friends compute the same light. ?growth=<feeds>
    &kept=<days>&lapsed=<days>&cup=1 add a stand-in's items on a preview host only (FR-014); ?growth=0 adds nothing and reads as today. */
@@ -873,6 +874,7 @@ function stepBetween(t, dt) {
   betweenLight.color.setHex(phase === "spark" ? 0xd48bc0 : state === "charged" ? 0xd9a0c8 : 0x9ad8cf);
   if (hollow) hollow.update(t, dt, lightScale, camera.position, lastFocus);
   if (qiSky) qiSky.step(dt, QI_PREVIEW != null ? QI_PREVIEW : qiOf(look));
+  if (hollow && hollow.handles.hearth) { const hf = hollow.handles.hearth; hf.qi = roomLift(qiFromEmbers(roomEmbers())); hf.qiSnap = REDUCE_MOTION; }
 }
 
 /* ===================================================================================================
@@ -959,12 +961,106 @@ function orbMesh(it, g) {
   if (sealed) { const seam = new THREE.Mesh(new THREE.TorusGeometry(0.172, 0.012, 6, 28), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1 })); seam.position.y = 0.62; seam.rotation.x = Math.PI / 2; grp.add(seam); }
   return grp;
 }
+/* ---------- bars on the low table (council friendship-between, bb-look-1 B, 2026-11-04) ----------
+   His note: a bar is not folded; it lies on the table, highlighted, like a Taoist talisman and a trading card. Up to five lie
+   in a fan on the side nearest the hollow's mouth; past five they gather into a Bar deck. The glow rising off a bar the
+   other person left is the only signal: no count, dot or toast. */
+const BAR_FAN = 5, BAR_TOP = () => DAIS_Y + 0.292;
+function wrapLines(x, text, w) {
+  const out = []; let cur = "";
+  for (const word of String(text).split(/\s+/)) { const t = cur ? cur + " " + word : word; if (cur && x.measureText(t).width > w) { out.push(cur); cur = word; } else cur = t; }
+  if (cur) out.push(cur); return out;
+}
+function barFaceTexture(it, hue) {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 384; const x = c.getContext("2d");
+  const css = cssHue(hue);
+  x.fillStyle = css; x.fillRect(0, 0, 256, 384);                         // the rim, in the leaver's hue
+  x.fillStyle = "#f0dfae"; x.fillRect(12, 12, 232, 360);                  // talisman paper
+  x.strokeStyle = "#a3341f"; x.lineWidth = 3; x.strokeRect(20, 20, 216, 344);   // cinnabar frame
+  x.fillStyle = "rgba(163,52,31,0.14)"; x.fillRect(26, 26, 204, 40);      // the name bar
+  x.fillStyle = "#4a1c12"; x.font = "bold 22px serif"; x.textBaseline = "middle";
+  let title = String(it.title || ""); while (title.length > 1 && x.measureText(title).width > 192) title = title.slice(0, -2) + "…";
+  x.fillText(title, 34, 47);
+  x.strokeStyle = "#a3341f"; x.lineWidth = 2; x.strokeRect(34, 76, 188, 112);   // the art box: a seal-script scrawl from the title
+  let h = 7; for (const ch of String(it.title || "") + (it.at || 0)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const r = () => (h = (h * 1664525 + 1013904223) >>> 0) / 4294967296;
+  x.lineWidth = 3.2; x.lineCap = "round"; x.beginPath(); let px = 128, py = 84; x.moveTo(px, py);
+  for (let i = 0; i < 9; i++) { px = 48 + r() * 160; py = 88 + (i + 1) * 10 + r() * 6; x.lineTo(px, py); if (i % 3 === 2) { x.moveTo(px - 30 + r() * 60, py - 8); } }
+  x.stroke();
+  x.fillStyle = css; x.beginPath(); x.arc(196, 164, 11, 0, 7); x.fill(); x.strokeStyle = "#4a1c12"; x.lineWidth = 1.5; x.stroke();   // the wax seal
+  x.fillStyle = "#3a2a1c"; x.font = "15px serif"; x.textBaseline = "alphabetic";
+  let y = 214; for (const ln of (Array.isArray(it.lines) ? it.lines : [])) for (const w of wrapLines(x, ln, 188)) { if (y > 350) break; x.fillText(w, 34, y); y += 19; }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+function barBackTexture(hue) {
+  const c = document.createElement("canvas"); c.width = 128; c.height = 192; const x = c.getContext("2d");
+  x.fillStyle = cssHue(hue); x.fillRect(0, 0, 128, 192); x.fillStyle = "#e8d49c"; x.fillRect(8, 8, 112, 176);
+  x.strokeStyle = "#a3341f"; x.lineWidth = 2; x.strokeRect(14, 14, 100, 164);
+  x.beginPath(); x.arc(64, 96, 26, 0, 7); x.stroke(); x.beginPath(); x.moveTo(64, 56); x.lineTo(64, 136); x.moveTo(40, 96); x.lineTo(88, 96); x.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const BAR_W = 0.24, BAR_L = 0.36;
+function barGlow(hue, k) { // the highlight: a soft rim under the card and, for the finder until read, light rising off it
+  const g = new THREE.Group();
+  const rim = new THREE.Mesh(new THREE.PlaneGeometry(BAR_W * 1.5, BAR_L * 1.4).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: hue, transparent: true, opacity: 0.28 * k, blending: THREE.AdditiveBlending, depthWrite: false }));
+  rim.position.y = -0.004; rim.userData.pulse = true; g.add(rim);
+  if (k > 0.9) {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.16, 0.95, 16, 1, true), new THREE.MeshBasicMaterial({ color: hue, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    col.position.y = 0.475; g.add(col);
+    const mote = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff2cf })); mote.userData.bob = true; g.add(mote);
+  }
+  return g;
+}
+function barMesh(it, g) {
+  const grp = new THREE.Group(), hue = hueOf(it.by, g);
+  const geo = new THREE.PlaneGeometry(BAR_W, BAR_L).rotateX(-Math.PI / 2).rotateY(Math.PI);   // top edge toward the far side, facing up
+  const card = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: barFaceTexture(it, hue) })); card.position.y = 0.004; grp.add(card);
+  grp.add(barGlow(hue, it.status === "left" && it.by !== me ? 1 : 0.55));
+  return grp;
+}
+function deckMesh(bars, g) {
+  const grp = new THREE.Group(), n = Math.min(bars.length, 14);
+  const newest = bars[bars.length - 1][1], unread = bars.filter(([, i]) => i.status === "left" && i.by !== me);
+  for (let k = 0; k < n; k++) {
+    const it = bars[bars.length - 1 - k][1], hue = hueOf(it.by, g);
+    const layer = new THREE.Mesh(new THREE.BoxGeometry(BAR_W, 0.006, BAR_L), new THREE.MeshBasicMaterial({ color: k % 2 ? 0xe8d49c : cssHue(hue) }));
+    layer.position.y = 0.003 + (n - 1 - k) * 0.006; layer.rotation.y = Math.sin(k * 2.3) * 0.12; grp.add(layer);
+  }
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(BAR_W, BAR_L).rotateX(-Math.PI / 2).rotateY(Math.PI), new THREE.MeshBasicMaterial({ map: barBackTexture(hueOf(newest.by, g)) }));
+  top.position.y = 0.006 * n + 0.001; top.rotation.y = Math.sin(0) * 0.12; grp.add(top);
+  const gl = barGlow(unread.length ? hueOf(unread[unread.length - 1][1].by, g) : hueOf(newest.by, g), unread.length ? 1 : 0.55); gl.position.y = 0.006 * n; grp.add(gl);
+  return grp;
+}
+/* The bars on the table: five or fewer lie in a fan on the mouth side (the spark stands in the middle of the view, so the fan
+   keeps to the edge); more than five are one deck. Read or not, they stay; only their glow changes. */
+function syncBars(V, g, want) {
+  if (!g || isHome(g)) return;
+  const bars = [...V.items.entries()].filter(([, i]) => i.kind === "bar" && (i.status === "left" || i.status === "found")).sort((a, b) => (a[1].at - b[1].at) || (a[0] < b[0] ? -1 : 1));
+  if (!bars.length) return;
+  const put = (id, item, sig, build, x, z, yaw) => {
+    want.add(id);
+    let t = things.get(id); if (t && t.sig !== sig) { gardenGroup.remove(t.group); t = null; }
+    if (!t) { const group = build(); group.position.set(x, BAR_TOP(), z); group.rotation.y = yaw; gardenGroup.add(group); t = { id, kind: "bar", group, pos: new THREE.Vector3(x, 0, z), sig }; things.set(id, t); }
+    t.item = item;
+  };
+  if (bars.length > BAR_FAN) {
+    const sig = "deck:" + bars.map(([id, i]) => id + i.status + (i.by === me ? "m" : "")).join(",");
+    put("deck:bars", { kind: "bardeck" }, sig, () => deckMesh(bars, g), TABLE.x, TABLE.z - 0.3, 0.1);
+    return;
+  }
+  const n = bars.length, spread = 0.33;
+  bars.forEach(([id, it], k) => {
+    const a = n === 1 ? 0 : (k / (n - 1) - 0.5) * 2 * spread * Math.min(1, (n + 1) / 4) * 1.6, r = 0.3;
+    put(id, it, "bar:" + it.status + (it.by === me ? "m" : "") + ":" + n + ":" + k, () => barMesh(it, g), TABLE.x + Math.sin(a) * r, TABLE.z - Math.cos(a) * r, -a);
+  });
+}
 const fly = []; // offerings flying into the Between
 function syncThings() {
   const V = view(); const g = V.g;
   const want = new Set();
   const prevStatus = syncThings.prev || new Map(); const nextStatus = new Map();
   for (const [id, it] of V.items) {
+    if (it.kind === "bar") continue; // bars lie on the low table (syncBars)
     const lan = it.kind === "lantern";
     nextStatus.set(id, lan ? "lantern:" + (it.element || "") + (lanternLit(it) ? "+lit" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z + (it.pos.hang ? "@" + it.pos.hang : "") : "")
       : it.status + (it.pending ? "+p" : "") + (it.opened && it.opened[me] ? "+o" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z : "")
@@ -1002,6 +1098,7 @@ function syncThings() {
     }
     t.item = it;
   }
+  syncBars(V, g, want);
   for (const [id, t] of things) if (!want.has(id)) { gardenGroup.remove(t.group); things.delete(id); if (selected === "item:" + id) selected = null; }
   syncThings.prev = nextStatus;
   // a hook with a hearth lantern on it lights as the room kit's own hung lantern does
@@ -1822,6 +1919,7 @@ function drawLabels(t) {
     const sh = myShelf();
     if (sh.sealed.length) placeLabel(label("shelfS", sh.sealed.length > 1 ? sh.sealed.length + " scrolls, sealed" : "A scroll from " + (sh.sealed[0].name || "someone"), ""), shelf.at.clone().add(new THREE.Vector3(-0.3, 0.42, 0)));
     else if (sh.blank && !minuteOn()) placeLabel(label("shelfB", "A blank scroll", "dim"), shelf.at.clone().add(new THREE.Vector3(0.3, 0.4, 0)));
+    if (shelf.brush && !(brushWrite && brushWrite.isOpen)) placeLabel(label("shelfW", "Blank strips and a brush", "dim"), shelf.at.clone().add(new THREE.Vector3(0.25, 0.3, 0.1)));
   }
   if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting && seatBy(meState.seatWant) ? seatBy(meState.seatWant).top + 0.85 : groundY(meState.pos.x, meState.pos.z) + 1.95));
   for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting && seatBy(p.seat) ? seatBy(p.seat).top + 0.85 : groundY(p.pos.x, p.pos.z) + 1.95));
@@ -1911,6 +2009,7 @@ function refreshHud() {
   }
   else if (g.phase !== "closed" && isMember(g) && !readOnly) {
     tools.push(`<button type="button" data-open="offer">${g.phase === "spark" ? "Tend the spark" : "Offer something"}</button>`);
+    if (g.phase === "between" && !isHome(g)) tools.push(`<button class="glassbtn" type="button" data-open="barleave">Leave a bar</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="agreement">Plant an agreement</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="spirit">Bring a spirit</button>`);
@@ -2027,8 +2126,20 @@ function nearHtml(key, V, g) {
     return `<div class="what"><b>${name}</b><span class="t">Anyone can sit here.${spells ? " Spells start from whichever cushion you sit on." : ""}</span></div><div class="row"><button type="button" data-act="sit">Sit here</button>${spells}</div>`;
   }
   if (key.startsWith("item:")) {
-    const id = key.slice(5), it = V.items.get(id); if (!it) return "";
+    const id = key.slice(5);
+    if (id === "deck:bars") {
+      const bars = [...V.items.values()].filter(i => i.kind === "bar");
+      const waiting = bars.some(i => i.status === "left" && i.by !== me);
+      return `<div class="what"><b>The bar deck</b><span class="t">${waiting ? "Something new is in it for you." : "The bars you have left each other, kept together."}</span></div><div class="row"><button type="button" data-open="bardeck">Look through it</button></div>`;
+    }
+    const it = V.items.get(id); if (!it) return "";
     const mineIt = it.by === me;
+    if (it.kind === "bar") {
+      const left = it.status === "left";
+      const txt = mineIt ? (left ? `You left it on the table for ${esc(nameOf(other(g), g))}.` : `${esc(nameOf(other(g), g))} has read it.`) : (left ? `${esc(nameOf(it.by, g))} left it on the table for you.` : "You read it.");
+      const acts = `<button type="button" data-open="bar" data-id="${id}">${mineIt ? "Read it again" : left ? "Pick it up and read" : "Read it again"}</button>${mineIt && left && canTend ? `<button class="quiet" type="button" data-act="barBack" data-id="${id}">Take it back</button>` : ""}`;
+      return `<div class="what"><b>${esc(it.title)}</b><span class="t">${txt}</span></div><div class="row">${acts}</div>`;
+    }
     if (it.kind === "agreement") {
       let acts = ""; const p = it.pending;
       if (canTend) {
@@ -2128,6 +2239,49 @@ async function keepEmber() {
   // Only the move, its feeling and the private glow: no words, and nothing of which charge it came from.
   await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null } } });
   hd = {}; if (hm) { closeSheet(); hmSync(); } else toast("An ember, in your pouch."); // by the fire, it rises out of the satchel instead
+  roomLight.mine = Math.max(roomLight.mine, keptHere()); roomLight.room = Math.max(roomLight.room, roomLight.mine); lightSoon(); syncShelf();
+}
+/* ---------- the room's light and the BAR written with a brush (ember-to-vibeulon FR-004, FR-005, FR-007, FR-008) ----------
+   Qi is the embers kept (his A on ee-qi-role), shown as the room's own light: the hearth and the lamps step up as embers are
+   kept and never fall (sky-qi.js qiFromEmbers). Kept embers go with you, so the count is read from the server across your
+   pouches (GET .../bar); in a shared Between the Hollow's light is both members' counts summed, and neither number is
+   written anywhere. Until the server answers, this page's own pouch stands in. */
+const REDUCE_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const roomLight = { mine: 0, room: 0, at: 0, busy: false };
+const keptHere = () => embers().filter(([, e]) => isKept(e)).length;
+function roomEmbers() { const here = keptHere(); return Math.max(here, roomLight.room, roomLight.mine); }
+async function lightNow() {
+  if (!gardenId || roomLight.busy || EMBER_DEMO) return;
+  roomLight.busy = true;
+  try { const r = await fetch("/api/between/" + gardenId + "/bar", { credentials: "same-origin", cache: "no-store" }); if (r.ok) { const j = await r.json(); roomLight.mine = +j.mine || 0; roomLight.room = +j.room || 0; syncShelf(); } }
+  catch {} finally { roomLight.busy = false; roomLight.at = Date.now(); }
+}
+function lightSoon() { setTimeout(lightNow, 400); }
+/* The blank strips and the brush wait on the Nook's shelf once one ember is kept (FR-004): the BAR-making opens after the first worked charge. */
+const stripsOpen = () => keptHere() > 0 || roomLight.mine > 0;
+let brushWrite = null;
+function openBrush() {
+  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar, onClose: done => { if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
+  const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0))
+    .map(([id, e]) => { const el = MOVES[e.move][1]; return { id, el, name: MOVES[e.move][0], light: cssHue(elHex(el)), demo: isDemoEmber(id) }; });
+  if (!held.length) { toast(stripsOpen() ? "Every ember you hold is written or lit. Keep another at the hearth." : "Keep an ember at the hearth first."); return; }
+  if (shelf.brush) shelf.brush.userData.wet(null);
+  brushWrite.open(held);
+}
+/* Saving the BAR: the route mints its vibeulon and marks the ember written. A preview's demo ember writes on this page only. */
+async function writeBar({ ember, mark, demo }) {
+  const el = MOVES[(embers().find(([k]) => k === ember) || [, {}])[1].move]?.[1];
+  if (demo || !gardenId || storeDown) {
+    if (demoPouch[ember]) demoPouch[ember] = { ...demoPouch[ember], state: "written", bar: "local-" + hkey() };
+    return { ink: el && INK[el] ? INK[el].set : null };
+  }
+  let j;
+  try { j = await api("/api/between/" + gardenId + "/bar", { ember, mark }); }
+  catch (e) { throw new Error(e && e.code === "unavailable" ? "No connection. The strip waits until you are back online." : (e && e.message) || "It did not set. Try again in a moment."); }
+  const p = myPouch && myPouch.embers ? myPouch : { embers: {} };
+  myPouch = { ...p, embers: { ...p.embers, [ember]: { ...(p.embers[ember] || {}), state: "written", bar: j.barId } } };
+  refresh();
+  return j;
 }
 async function makeLantern(eid) {
   const e = embers().find(([k]) => k === eid); if (!e || e[1].state !== "held") return null;
@@ -2143,6 +2297,7 @@ async function makeLantern(eid) {
 function moveRight(it) {
   if (!it || readOnly) return null;
   if (it.kind === "lantern") return it.by === me ? "own" : null;
+  if (it.kind === "bar" || it.kind === "bardeck") return null; // a bar stays where it was laid
   if (it.kind === "agreement") return it.status === "draft" ? (it.by === me ? "own" : null) : ["proposed", "agreed", "revisit"].includes(it.status) ? "shared" : null;
   return it.by === me && it.status === "offered" ? "own" : null;
 }
@@ -2678,6 +2833,11 @@ function fsTick(t, dt, h, F) {
 function fsBurn(dt) { for (const s of fsLaid.children.slice()) { if (hm && hm.fs && hm.fs.flies.some(f => f.m === s)) continue; s.scale.multiplyScalar(Math.pow(0.9, dt)); s.position.y -= dt * 0.004; if (s.scale.x < 0.35) fsLaid.remove(s); } }
 const ASK_TEXT = { revisit: "asked to revisit an agreement", broken: "named a break in an agreement", retire: "asked to retire an agreement", compost: "asked to compost an agreement" };
 const YES_TEXT = { revisit: "agreed to revisit it", broken: "owned the break; the agreement is up for revisit", retire: "agreed to retire it", compost: "agreed to compost it" };
+async function readBar(id) { // reading marks it found for both; the glow goes (rules.ts barWrite)
+  const it = items.get(id); if (!it || it.kind !== "bar" || it.by === me || it.status !== "left") return;
+  await op("items/" + id, "update", { status: "found", foundAt: now(), history: hist("read a bar") });
+  await touch();
+}
 async function itemAct(id, act, payload) {
   const { items: its } = view();
   const it = its.get(id); if (!it) return;
@@ -2755,6 +2915,20 @@ function renderSheet() {
       <label for="oText">In your words<textarea id="oText" maxlength="2000" placeholder="A line, a gesture, a drawing described in words. Small counts as much as long."></textarea></label>
       <p class="small muted" id="oHint">${g.phase === "spark" ? "While it is a spark, what you bring feeds it straight away." : "It waits on a stone where you stand. It changes the Between only when the other person walks up and says yes. A worked-through charge arrives sealed."}</p>
       <div class="row"><button type="submit">${g.phase === "spark" ? "Give it to the spark" : "Set it down"}</button>${close}</div></form>`; break;
+    case "barleave": h = `<form class="stack" id="barForm"><h2>Leave a bar</h2>
+      <p class="muted small">It lies on the low table in your hue. ${esc(nameOf(other(g), g))} finds it glowing when they come in. Nothing asks them to answer.</p>
+      <label for="bTitle">Its name<input id="bTitle" maxlength="60" autocomplete="off" placeholder="What it is, in a few words"></label>
+      <label for="bLines">Its lines<textarea id="bLines" rows="5" maxlength="600" placeholder="Up to four short lines, one to a line."></textarea></label>
+      <div class="row"><button type="submit">Lay it on the table</button>${close}</div></form>`; break;
+    case "bar": { const it = V.items.get(sheetArg); if (!it || it.kind !== "bar") { closeSheet(); return; }
+      const mineB = it.by === me; if (!mineB && it.status === "left") readBar(sheetArg);
+      h = `<div class="stack"><h2>${esc(it.title)}</h2><p class="small muted">${mineB ? "You left this on the table." : esc(nameOf(it.by, g)) + " left this on the table."}</p>
+      ${(Array.isArray(it.lines) ? it.lines : []).map(l => `<p>${esc(l)}</p>`).join("")}
+      <div class="row">${mineB && it.status === "left" ? `<button class="quiet" type="button" data-act="barBack" data-id="${sheetArg}">Take it back</button>` : ""}<button class="glassbtn" type="button" data-close>${mineB ? "Close" : "Set it back down"}</button></div></div>`; break; }
+    case "bardeck": { const bars = [...V.items.entries()].filter(([, i]) => i.kind === "bar").sort((a, b) => b[1].at - a[1].at);
+      h = `<div class="stack"><h2>The bar deck</h2><p class="small muted">The bars you have left each other, kept together on the table.</p>
+      ${bars.map(([id, i]) => `<div class="row"><button class="ghost" type="button" data-open="bar" data-id="${id}">${esc(i.title)}</button><span class="small muted">${i.by === me ? "yours" : esc(nameOf(i.by, g)) + "'s"}${i.status === "left" && i.by !== me ? ", not read yet" : ""}</span></div>`).join("")}
+      <div class="row">${close}</div></div>`; break; }
     case "agreement": h = `<form class="stack" id="agForm"><h2>Plant an agreement</h2>
       <p class="muted small">It goes in the ground where you stand, as a draft. Propose it when it reads right; it flowers once you both say yes.</p>
       <label for="aText">The agreement<textarea id="aText" maxlength="2000" placeholder="What the two of you will do, or won't"></textarea></label>
@@ -3446,7 +3620,7 @@ const vines = [];
   }
 }
 /* ---------- the shelf: the blank scroll, scrolls that arrived sealed, keepsakes ---------- */
-const shelf = { group: null, at: new THREE.Vector3(), face: 0, sig: "", taps: [], sealedSeen: null };
+const shelf = { group: null, at: new THREE.Vector3(), face: 0, sig: "", taps: [], sealedSeen: null, brush: null, stripsSeen: null };
 function scrollMesh(kind, hue) {
   const g = new THREE.Group(), s = kind === "keep" ? 0.5 : kind === "council" ? 0.74 : 0.68;
   const paper = new THREE.MeshStandardMaterial({ color: 0xd9ccb0, roughness: 0.9, emissive: 0xefe2c4, emissiveIntensity: 0.22 }), rod = new THREE.MeshStandardMaterial({ color: 0x7a5236, roughness: 0.7 });
@@ -3505,7 +3679,7 @@ const paperDone = new Set(); // scrolls answered on this page, before the list c
 function syncShelf() {
   const want = inNook() && hollow && garden && isHome(garden);
   if (!want) { if (shelf.group) { scene.remove(shelf.group); shelf.group = null; shelf.sig = ""; } return; }
-  const sh = myShelf(), sig = JSON.stringify([sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
+  const sh = myShelf(), strips = stripsOpen(), sig = JSON.stringify([strips, sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
   if (sig === shelf.sig && shelf.group) return;
   // a sealed scroll that was not here a moment ago has just landed: a puff of leaves
   const ids = new Set(sh.sealed.map(x => x.room + "|" + x.id));
@@ -3514,7 +3688,7 @@ function syncShelf() {
   if (shelf.group) scene.remove(shelf.group);
   const sp = SHELLS.nook.spots.find(x => x.id === "shelf");
   const g = new THREE.Group(); g.position.set(sp.at[0], sp.at[1], sp.at[2]); g.rotation.y = sp.face || 0; scene.add(g);
-  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = [];
+  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = []; shelf.brush = null;
   const put = (m, x, y, z, ry, tap) => { m.position.set(x, y, z); m.rotation.y = ry; g.add(m); if (tap) shelf.taps.push({ ...tap, m }); };
   // stills round 2026-11-03-council-scroll-ad1: the book stands on the shelf's left half since fb-look-01 and hid the sealed
   // scrolls at -0.27; every scroll now sits on the right half, sealed ones in front, the council's on top of them
@@ -3523,6 +3697,14 @@ function syncShelf() {
   sh.council.slice(0, 1).forEach((x, i) => put(scrollMesh("council"), sh.sealed.length > 1 ? 0.3 : 0.38, sh.sealed.length > 1 ? 0.072 : 0, 0.1, 0.03, { key: "council", i }));
   sh.keepsakes.slice(0, 4).forEach((x, i) => put(scrollMesh("keep", KEEP_HUE[x.answer] || KEEP_HUE.no), 0.48 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? 0.15 : -0.1), { key: "keep", i }));
   sh.councilKept.slice(0, 2).forEach((x, i) => put(scrollMesh("councilKeep"), 0.2 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? -0.12 : 0.08), { key: "councilKeep", i }));
+  // the blank strips and the hearth's brush, at the front edge of the shelf once one ember is kept (FR-004; stills round
+  // 2026-11-04-ember-first-1 frame 2): tapping either takes a strip to the cloth
+  if (strips) {
+    put(stripsMesh(THREE), 0.24, 0, 0.02, 0.05, { key: "strip" });
+    const b = brushMesh(THREE); b.scale.setScalar(1.4); put(b, 0.26, 0.012, 0.14, 0.15, { key: "strip" }); shelf.brush = b;
+    if (shelf.stripsSeen === false) burst(shelf.at.clone().add(new THREE.Vector3(0, 0.1, 0.15)), 0xe8cf7a);
+  }
+  shelf.stripsSeen = strips;
   if (landed) burst(shelf.at.clone().add(new THREE.Vector3(-0.25, 0.1, 0.1)), 0x8fd08a);
 }
 function shelfTapPos(tp) { const v = new THREE.Vector3(); tp.m.getWorldPosition(v); v.y += 0.03; return v; }
@@ -3811,6 +3993,7 @@ function minuteHint() {
 /* Your shelf, tapped: the blank scroll to write on, a sealed one to open, a keepsake to read again. */
 function shelfTap(kind, i) {
   const sh = myShelf();
+  if (kind === "strip") { openBrush(); return; }
   if (kind === "blank") { if (minuteOn()) { toast("Your first scroll. You can write it once the doorway opens."); return; } openPaper("write", { fromShelf: true }); return; }
   if (kind === "sealed" && sh.sealed[i]) { openPaper("read", sh.sealed[i]); return; }
   if (kind === "keep" && sh.keepsakes[i]) openPaper("keep", sh.keepsakes[i]);
@@ -3902,6 +4085,7 @@ document.addEventListener("click", async ev => {
     else if (a === "hKeep") await keepEmber();
     else if (a === "lanternHere") { if (placing) await moveItem(placing.id, spotAhead(0.9)); }
     else if (a === "moveYes" || a === "moveNo") await moveAnswer(id, a === "moveYes");
+    else if (a === "barBack") { await op("items/" + id, "delete"); await touch(); closeSheet(); toast("You took it back."); }
     else if (a === "lanternBack" || a === "lanternCompost") await unmakeLantern(id, a === "lanternCompost");
     else if (a === "lanternYes") { await op("items/" + id, "update", { yes: { [me]: now() }, history: lanternLog("welcomed") }); await touch(); toast("Welcomed. It lights your home together."); }
     else if (a === "lanternNo") await op("items/" + id, "update", { yes: { [me]: null } });
@@ -4061,6 +4245,12 @@ document.addEventListener("submit", async ev => {
       await addItem(kind, text, kind === "charge");
       closeSheet();
       toast(view().g.phase === "spark" ? "The spark took it in." : "Set down. It waits for their yes.");
+    } else if (f.id === "barForm") {
+      const title = $("#bTitle").value.trim(), lines = $("#bLines").value.split("\n").map(l => l.trim()).filter(Boolean);
+      if (!title) { toast("Give the bar a name first."); return; }
+      if (lines.length > 4 || lines.some(l => l.length > 140)) { toast("A bar holds four short lines."); return; }
+      await op("items/b" + hkey(), "set", { kind: "bar", by: me, at: now(), status: "left", title, lines, history: hist("left a bar") });
+      await touch(); closeSheet(); toast("It lies on the table. They will see it glowing when they come in.");
     } else if (f.id === "agForm") {
       const text = $("#aText").value.trim(); if (!text) { toast("Write the agreement first."); return; }
       await addItem("agreement", text, false); closeSheet(); toast("Planted as a draft. Walk up to it to propose it.");
@@ -4384,7 +4574,7 @@ async function poll() {
   clearTimeout(pollTimer);
   if (!gardenId || stopped) return;
   polling = true;
-  try { take(await api("/api/between/" + gardenId + "/poll", { presence: document.hidden ? null : presenceNow(), invite })); }
+  try { take(await api("/api/between/" + gardenId + "/poll", { presence: document.hidden ? null : presenceNow(), invite })); if (Date.now() - roomLight.at > 30000 && isMember(view().g)) lightNow(); }
   catch (e) {
     if (e.code === "unauthenticated") return toLogin();
     if (e.code === "permission_denied" || e.code === "not_found") return stop(e.message || "This garden is not open to you.");
@@ -4498,7 +4688,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { brush: () => openBrush(), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   hearthCare: () => ({ care: hearthCareNow(), stage: hollow && hollow.handles.stage ? hollow.handles.stage.care : null, offer: !!(hollow && hollow.handles.stage && hollow.handles.stage.offer), caredThisVisit, sitBlocked: sitBlocked() }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
@@ -4541,3 +4731,15 @@ import("./games/index.js").then(m => { window.__between.games = m.mount(window._
 // The Between's growth drawn as things in the hollow (friendship-between-growth FR-004 to FR-008, growth-view.js): bowls of tea on the low table,
 // the mantel's pots found one at a time, a covered cup to drink, the nook's door lantern. Previews: ?growth=<feeds>&kept=<days>&lapsed=<days>&cup=1, ?nook=1&waiting=1
 import("./growth-view.js").then(m => { window.__between.growthView = m.mount(window.__between, { waiting: PREVIEW_HOST && KQ.get("waiting") === "1", standin: STANDIN_ROOM }); }).catch(e => noteError(e, "growth"));
+
+/* The way back to the Infinite Arcade (his note on bars-engine #559, 2026-11-03 19:44Z: a player can always leave a game
+   and come back to the hall). A player who came in through The Between's cabinet carries the hall's return address in
+   ctw-back (public/between/arcade/arcade.js); the garden shows a "Back to the hall" button beside Sound for them only. */
+(() => {
+  let back = null; try { back = sessionStorage.getItem("ctw-back"); } catch { back = null; }
+  if (!back || !/[?&]place=arcade\b/.test(back)) return;
+  const bar = document.querySelector("#hud .topbtns"); if (!bar) return;
+  const b = document.createElement("button"); b.className = "glassbtn"; b.type = "button"; b.id = "arcadeBackBtn"; b.textContent = "Back to the hall";
+  b.addEventListener("click", e => { e.stopPropagation(); location.href = back; });
+  bar.prepend(b);
+})();

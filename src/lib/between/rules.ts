@@ -123,6 +123,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
       if (data?.kind === 'turn' || cur?.kind === 'turn' || data?.kind === 'spend' || cur?.kind === 'spend') return turnWrite()
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
+      if (data?.kind === 'bar' || cur?.kind === 'bar') return home ? no(400, 'A bar is left in a room you share.') : barWrite(me, op, data, cur)
       if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
       if (data?.kind === 'cup' || cur?.kind === 'cup') return home ? no(400, 'A cup is poured for someone.') : cupWrite(me, op, data, cur, garden, otherHere)
       if (data?.kind === 'jar' || cur?.kind === 'jar') return home ? no(400, 'A jar is left on a shelf you share.') : jarWrite(me, op, data, cur)
@@ -168,7 +169,7 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'from', 'in', 'woke', 'did'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'bar', 'from', 'in', 'woke', 'did'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -202,7 +203,9 @@ export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
     if (!m) return no(400, 'Choose one of the fifteen moves.')
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
-    if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
+    if (e.state !== 'held' && e.state !== 'lit' && e.state !== 'written') return no(400, 'An ember is held, lit or written.')
+    // Written into a BAR with the brush (ember-to-vibeulon FR-005): it names that BAR (the /bar route marks it).
+    if (e.bar != null && !(typeof e.bar === 'string' && e.bar.length <= 40)) return no(400, 'An ember names one BAR.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
     if (e.woke != null && !(isObj(e.woke) && Object.keys(e.woke).every(k => k === 'spirit' || k === 'at') && typeof e.woke.spirit === 'string' && ID.test(e.woke.spirit) && isNum(e.woke.at) && e.risen === true))
       return no(400, 'An ember wakes once, after it has risen, as one spirit.')
@@ -538,6 +541,33 @@ function castWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdi
   if (!(typeof next.line === 'string' && next.line.length > 0 && isNote(next.line))) return no(400, 'A move is a short line.')
   if (op === 'set' && isObj(next.answer) && Object.keys(next.answer).length) return no(400, 'Only the other person answers.')
   if (op !== 'set' && data && 'answer' in data) return no(400, 'Only the other person answers.')
+  return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
+}
+/* ---------- a bar left on the low table (council friendship-between, bb-look-1 B, 2026-11-04) ----------
+ * One friend lays a bar (a title and up to four short lines) on the table for the other. Only the leaver writes it or takes
+ * it back, and only before it is found. The other person writes one thing: that they read it (`status: 'found'`, `foundAt`)
+ * and a line in the log in their name. It carries no reply and no count. */
+const BAR_KEYS = new Set(['kind', 'by', 'at', 'status', 'title', 'lines', 'foundAt', 'history'])
+function barWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+  const leaver = cur ? cur.by : data?.by
+  if (op === 'delete') {
+    if (leaver !== me) return no(403, 'Only the one who left a bar takes it back.')
+    return cur && cur.status === 'found' ? no(400, 'It has been read. It stays on the table.') : yes
+  }
+  if (leaver !== me) {
+    const keys = Object.keys(data!)
+    if (!keys.every(k => k === 'status' || k === 'foundAt' || k === 'history')) return no(400, 'A bar stays its leaver\'s; you can read it.')
+    if (data!.status !== 'found' || !isNum(data!.foundAt)) return no(400, 'Reading a bar marks it found.')
+    return logOk(data!.history, me) ? yes : no(400, 'The log names acts, nothing more.')
+  }
+  if (op !== 'set') return no(400, 'A bar is left once. Take it back to write another.')
+  const next = data!
+  for (const k of Object.keys(next)) if (!BAR_KEYS.has(k)) return no(400, 'A bar carries a title and a few lines, nothing more.')
+  if (next.status !== 'left') return no(400, 'Only the other person finds it.')
+  if (!(typeof next.title === 'string' && next.title.trim().length > 0 && next.title.length <= 60)) return no(400, 'Give the bar a short title.')
+  const L = next.lines
+  if (!Array.isArray(L) || L.length > 4 || !L.every(l => typeof l === 'string' && l.length <= 140)) return no(400, 'A bar holds up to four short lines.')
+  if (!isNum(next.at)) return no(400, 'A bar is left at a time.')
   return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
 }
 /* A turn at the table and the tea a card cost are written only by POST /api/between/:gardenId/turn, which reads the other
