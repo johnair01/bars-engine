@@ -75,7 +75,7 @@ async function main() {
   {
     const store = new InMemoryStore()
     store.seedCanon(villagerPlan.npc.id, villagerPlan.canon)
-    assert.ok((await runTrial({ store, voice: scriptedVoice() }, villagerPlan, 'player-a', 'player-b')).pass)
+    const vr = await runTrial({ store, voice: scriptedVoice() }, villagerPlan, 'player-a', 'player-b'); assert.ok(vr.pass, JSON.stringify(vr))
   }
   console.log('memory-trial harness: all 6 checks passed')
 }

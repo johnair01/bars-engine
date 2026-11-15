@@ -212,7 +212,7 @@ export async function runTrial(
   const a = await recallAll(deps, plan, playerA)
   // Player B talked to nobody about these facts; B's prompt must hold none of A's words.
   const bMemories = await deps.store.list(plan.npc.id, playerB)
-  const bText = bMemories.map((m) => m.summary).join(' ').toLowerCase()
+  const bText = bMemories.filter((m) => !m.isCanon).map((m) => m.summary).join(' ').toLowerCase()
   const leaks = plan.facts.filter((f) => f.about === 'player' && has(bText, f.expect)).map((f) => f.id)
   const total = plan.facts.length
   return {
