@@ -4501,6 +4501,16 @@ async function deckOp(data) {
   const j = await api("/api/between/" + homeId + "/doc", { path: deckPath(), op: "update", data });
   setDeck(j.doc); refresh();
 }
+/* The healing journey (Six-faces-council spec .specify/specs/healing-journey, slice 1): one private doc beside `home` and `deck`
+   (rules.ts journeyWrite). The shelf, the diary, the woodpile and the sheet live in journey-nook.js and read it through here. */
+let myJourney = {};
+const setJourney = doc => { myJourney = doc && typeof doc === "object" ? { ...doc } : {}; };
+const journeyPath = () => "data/users/" + me + "/journey";
+async function journeyOp(data) {
+  if (!homeId) throw fail("invalid_argument", "no homeroom");
+  const j = await api("/api/between/" + homeId + "/doc", { path: journeyPath(), op: "update", data });
+  setJourney(j.doc); refresh();
+}
 const friendcraftOn = () => !!(list && (list.games || []).includes("friendcraft"));
 const deckEmpty = () => !Object.values(myDeck.goals || {}).some(g => g && g.text);
 /* The first minute's last line names the book, for a friend enrolled in Friendcraft with an empty deck (FR-006). */
@@ -4751,6 +4761,7 @@ function take(j) {
   myPouch = j.mine && j.mine.pouch && typeof j.mine.pouch === "object" ? j.mine.pouch : null;
   if (isHome(garden) && j.mine && j.mine.home && typeof j.mine.home === "object") setHome(j.mine.home);
   if (isHome(garden) && j.mine && j.mine.deck && typeof j.mine.deck === "object") setDeck(j.mine.deck);
+  if (isHome(garden) && j.mine && j.mine.journey && typeof j.mine.journey === "object") setJourney(j.mine.journey);
   gardenLoaded = true;
   refresh();
 }
@@ -4830,7 +4841,7 @@ let booted = false;
   }
   if (first) {
     take(first);
-    if (isHome(garden)) { setHome((first.mine || {}).home); setDeck((first.mine || {}).deck); }
+    if (isHome(garden)) { setHome((first.mine || {}).home); setDeck((first.mine || {}).deck); setJourney((first.mine || {}).journey); }
     if (isMember(garden)) {
       myPrivate = { ...((first.mine || {}).garden || {}) };
       awaySince = myPrivate.lastSeen || null;
@@ -4884,6 +4895,7 @@ window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => 
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },
   visit: VISIT, addSeat: f => { seatExtras.push(f); }, homeWrite: data => homeOp(data), deck: () => myDeck, deckWrite: data => deckOp(data), friendcraft: () => friendcraftOn(),
+  journey: () => myJourney, journeyWrite: data => journeyOp(data), fsLogGeo, logMats: [fsGrain, fsBark], hearthAt: () => HEARTH_AT.clone(),
   openSheet: (name, arg) => openSheet(name, arg), minuteOn: () => minuteOn(), sparkUrl: id => sparkUrl(id), sparkLink: (to, note) => sparkLink(to, note) };
 // the charge-to-world map stand stands in every nook (Six-faces-council ctw-in-the-nook, his yes on ctw-nook-look-1).
 // previews: ?ctw=episode brings the sample charge and opens with the episode unrolled, ?ctw=sheet opens the six questions. E.g. ?nook=1&ctw=episode
@@ -4927,3 +4939,8 @@ import("./growth-view.js").then(m => { window.__between.growthView = m.mount(win
   b.addEventListener("click", e => { e.stopPropagation(); location.href = back; });
   bar.prepend(b);
 })();
+// the healing journey's nook pieces (Six-faces-council spec .specify/specs/healing-journey, slice 1; his A on hj-homeroom-look-1): the
+// shelf of carried objects, the diary at the table, the woodpile by the hearth, the sheet's counts. They show only for a player whose
+// journey has a program. Previews write nothing: ?nook=1&journey=demo stands a program, three objects and seven logs on this page only;
+// &journey=diary opens the diary on the water object, &journey=pile30 a pile of thirty, &journey=none an enrolled player with no logs.
+import("./journey-nook.js").then(m => { window.__between.journeyNook = m.mount(window.__between, { open: PREVIEW_HOST ? KQ.get("journey") : null, preview: PREVIEW_HOST }); }).catch(e => noteError(e, "journey"));
