@@ -4541,3 +4541,15 @@ import("./games/index.js").then(m => { window.__between.games = m.mount(window._
 // The Between's growth drawn as things in the hollow (friendship-between-growth FR-004 to FR-008, growth-view.js): bowls of tea on the low table,
 // the mantel's pots found one at a time, a covered cup to drink, the nook's door lantern. Previews: ?growth=<feeds>&kept=<days>&lapsed=<days>&cup=1, ?nook=1&waiting=1
 import("./growth-view.js").then(m => { window.__between.growthView = m.mount(window.__between, { waiting: PREVIEW_HOST && KQ.get("waiting") === "1", standin: STANDIN_ROOM }); }).catch(e => noteError(e, "growth"));
+
+/* The way back to the Infinite Arcade (his note on bars-engine #559, 2026-11-03 19:44Z: a player can always leave a game
+   and come back to the hall). A player who came in through The Between's cabinet carries the hall's return address in
+   ctw-back (public/between/arcade/arcade.js); the garden shows a "Back to the hall" button beside Sound for them only. */
+(() => {
+  let back = null; try { back = sessionStorage.getItem("ctw-back"); } catch { back = null; }
+  if (!back || !/[?&]place=arcade\b/.test(back)) return;
+  const bar = document.querySelector("#hud .topbtns"); if (!bar) return;
+  const b = document.createElement("button"); b.className = "glassbtn"; b.type = "button"; b.id = "arcadeBackBtn"; b.textContent = "Back to the hall";
+  b.addEventListener("click", e => { e.stopPropagation(); location.href = back; });
+  bar.prepend(b);
+})();
