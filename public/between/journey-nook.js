@@ -503,8 +503,22 @@ export function mount(B, opts = {}) {
     layShelf(); layPile(); layFurnishings(); layDiary(); draw();
   }
 
+  /* the road out (land/road.js) leaves a picked-up letter in this tab's sessionStorage "hj-pickup"; it joins the pack the
+     first time the nook opens with the journey loaded. Leaving the letter on the road wrote nothing, so nothing is here. */
+  async function applyPickup() {
+    let o = null; try { o = JSON.parse(sessionStorage.getItem("hj-pickup") || "null"); } catch (e) { return; }
+    if (!o || typeof o.id !== "string" || !FEEL[o.feeling]) { try { sessionStorage.removeItem("hj-pickup"); } catch (e) { /* none */ } return; }
+    for (let i = 0; i < 40 && !(B.journey && B.journey() && enrolled(doc())); i++) await new Promise(r => setTimeout(r, 250));
+    if (!enrolled(doc())) return;   // not in a program (yet): keep it for next time
+    const clip = t => String(t || "").slice(0, 140);
+    const obj = { id: o.id, feeling: o.feeling, setOff: clip(o.setOff), body: clip(o.body), pickedOn: String(o.pickedOn || "").slice(0, 10), state: "carried" };
+    if (!(doc().pack || []).some(x => x.id === obj.id)) await write({ pack: [...(doc().pack || []), obj] });
+    try { sessionStorage.removeItem("hj-pickup"); } catch (e) { /* none */ }
+  }
+
   (async function start() {
     while (!B.room || !["nook", "hollow"].includes(B.room().shell)) await new Promise(r => setTimeout(r, 250));
+    if (!demo) await applyPickup();
     if (demo) { // a stand-in program, three objects and seven logs, on this page only
       const o = opts.open, day = n => dayOf(new Date(Date.now() - n * 864e5)), mv = (m, n, life) => ({ move: m, on: day(n), at: new Date(Date.now() - n * 864e5).toISOString(), ...(life ? { life: true } : {}) });
       const seven = [mv("hearth", 6), mv("window", 5), mv("diary", 5), mv("hearth", 3), mv("floorboards", 3, true), mv("window", 1), mv("chair", 0)];

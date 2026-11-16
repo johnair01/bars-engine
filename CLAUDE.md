@@ -38,7 +38,7 @@ tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.m
 
 Wendell, 2026-11-04 (council board `lf-daily-ship`, answer A). Every merge to `main` is a production build, so threads
 no longer self-merge in bars-engine. When `scripts/local/check.sh --build` is green and no look gates the pull request
-(`board/answered.py --pr N` in the council repo), mark it ready for review and add the `ship-next` label, then stop. One
+(`board/answered.py --repo johnair01/bars-engine --pr N` in the council repo; without `--repo` the number reads as a council PR), mark it ready for review and add the `ship-next` label, then stop. One
 shipping session a day merges every `ship-next` pull request in one batch (`docs/LOCAL_FIRST_TESTING.md` section 7).
 Only an urgent fix (production down, payment or sign-in broken) merges straight to `main` by hand, and its description
 says why. Council pull requests are unchanged.
