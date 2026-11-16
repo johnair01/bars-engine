@@ -5,10 +5,11 @@ import { givenToken, tokenMatches } from '@/lib/council/token'
  * The lanes, in Wendell's order on the board (`wq-lanes`): Claude Teams, Freebuff, Codex, Zo. Slice 1 opens the first
  * two (`wq-two-lanes-first`); DeepAI Code opens as a third so its environment can pull from the same queue and be
  * measured beside the others. Each lane has its own token, so a leaked token reaches one lane: WORK_TOKEN_CLAUDE,
- * WORK_TOKEN_FREEBUFF, WORK_TOKEN_DEEPAI. COUNCIL_MENU_TOKEN (the council's own sessions) may act in any lane and push
+ * WORK_TOKEN_FREEBUFF, WORK_TOKEN_DEEPAI. Zo is the night crew: it opens as an explicit lane too (WORK_TOKEN_ZO), never in DEFAULT_LANES, and only
+ * the closing ritual's lever (src/lib/close/lever.ts) puts tickets in it. COUNCIL_MENU_TOKEN (the council's own sessions) may act in any lane and push
  * tickets.
  */
-export const LANES = ['claude', 'freebuff', 'deepai'] as const
+export const LANES = ['claude', 'freebuff', 'deepai', 'zo'] as const
 export type Lane = (typeof LANES)[number]
 /**
  * Where his answers go by themselves (`wq-who-routes`): Claude first, Freebuff when Claude runs dry. DeepAI is

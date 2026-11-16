@@ -5,8 +5,10 @@ usage: python _integrate_check.py FIGURE.glb
 Joints are read where the glTF puts them (each bone's head and tail, posed, in world space), so the check does not
 trust the builder. The figure faces -Y and its own left is +X once imported (Z up).
   hands   each hand opens: the middle fingertip ends at least a third farther from the wrist than it starts
-  arms    each wrist comes away from where it was held, by 10 cm or more, and the forearm ends hanging or held out
-          (the honored form), never raised more than a fifth of its length above its elbow
+  arms    each wrist comes away from where it was held, by 10 cm or more. Then two named checks on the last key's
+          forearms (_arm_checks.py): the general check (the floor: hanging or held out, never raised more than a fifth
+          of its length) and this build's honored form (a guard on HONORED["controller"] in character.py: the left
+          forearm hangs, the right is offered forward and no more than 5 cm above its elbow)
   ground  every key, the lower foot is within 1 cm of the ground it stands on at rest
   knees, elbows  as the walk: never folding the wrong way
   still   the first two keys are the same pose, and so are the last two (a held beat at each end)
@@ -14,6 +16,8 @@ trust the builder. The figure faces -Y and its own left is +X once imported (Z u
 import json, sys
 
 import bpy
+sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__)))
+from _arm_checks import general_arm_problems, honored_form_problems
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=sys.argv[1])
@@ -69,8 +73,8 @@ for s in "LR":
     # every let-go ends in the daemon's honored form (character.py HONORED, Wendell 2026-10-16), where a hand may be
     # held out to the child, so the forearm ends hanging or held out, never raised above its elbow
     fore = last["wrist" + s][0] - last["elbow" + s][0]
-    if -fore.z < -0.2 * fore.length:
-        problems.append(f"forearm {s} ends raised")
+    problems += general_arm_problems(s, tuple(fore))
+    problems += honored_form_problems(s, tuple(fore))
 still = max(max((a[b][0] - c[b][0]).length for b in a) for a, c in ((P[0], P[1]), (P[-2], P[-1])))
 if still > 1e-4:
     problems.append(f"no held beat at an end: {still * 100:.2f} cm between the end keys")

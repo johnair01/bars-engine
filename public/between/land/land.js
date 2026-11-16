@@ -52,8 +52,11 @@ import * as SH from "./scale-house.js";
 import * as FF from "./friends-fire.js";
 import * as FS from "./fire-song.js";
 import * as CH from "./chamber.js";
+import { makeCultSeated } from "./cult-seat.js";
+import { cultPick } from "../cult/pick.js";
 import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
+import { mountRoad } from "./road.js";
 installPaint();
 
 const Q = new URLSearchParams(location.search);
@@ -69,6 +72,9 @@ const WALK_NOOK = "/between/walk";
 const WALK = Q.get("walk") === "1";
 const WALK_STOPS = ["clearing", "scale-house", "friends-fire", "chamber"];
 if (WALK && PLACE === "clearing" && !Q.get("at")) { try { sessionStorage.removeItem("ctw-song"); } catch (e) { /* the cadence */ } }
+/* the road out (healing journey slice 2): ?road=1 on the clearing; the cultivation character walks it (?who=f|m, or
+   sessionStorage "hj-who", else f) */
+const ROAD = Q.get("road") === "1" && PLACE === "clearing";
 const LOW = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 const $ = s => document.querySelector(s);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -405,24 +411,45 @@ function seatPoser(obj, holder) {
 }
 /* The friends round the fire: Average Dusk in each seat's look, sat on their crates, breathing; Oriel holds the guitar. */
 async function makeFriends(ff) {
-  const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
-  const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
-  const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
-  const k = 1.7 / Math.max(box.getSize(V(0, 0, 0)).y, 0.01), P = await loadParts(u => loader.loadAsync(u));
-  const out = [];
+  const out = []; let i = 0;
   for (const seat of FF.SEATS) { if (seat.who === "you") continue;
-    const obj = skClone(root); obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
-    const wardrobe = dressFigure(obj, P); wardrobe.set(parseLook(seat.look));
-    obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-    const c = FF.seatAt(seat), holder = new THREE.Group(); holder.add(obj); holder.position.set(c.x, groundH(c.x, c.z), c.z); holder.rotation.y = c.yaw; scene.add(holder);
-    const mixer = new THREE.AnimationMixer(obj), idle = gl.animations.find(a => a.name === "Idle"); if (idle) { const a = mixer.clipAction(idle); a.play(); a.setEffectiveWeight(0); }
-    const poser = seatPoser(obj, holder);
+    const S = await makeCultSeated({ who: cultPick(), outfit: i++ % 2 ? "B2" : "B1" });
+    const c = FF.seatAt(seat), holder = S.holder; holder.position.set(c.x, groundH(c.x, c.z), c.z); holder.rotation.y = c.yaw; scene.add(holder);
     if (seat.who === "oriel") { const g = ff.guitar; holder.add(g); g.position.set(0.04, 0.64, 0.3); g.rotation.set(-0.15, 0.25, 1.05); }
-    out.push({ seat, holder, mixer, wardrobe, poser, oriel: seat.who === "oriel", phase: out.length * 1.7, laugh: 0 });
+    out.push({ seat, holder, mixer: { update() {} }, wardrobe: { dress() {} }, poser: { apply(dt, want, seatTop, T, lean = 0, strum = 0) { S.sit(seatTop, T, lean, strum); } }, oriel: seat.who === "oriel", phase: out.length * 1.7, laugh: 0 });
   }
   return out;
 }
+async function makeCultFigure(M) {
+  const S = await makeCultSeated({ who: cultPick(), outfit: "B2" }), holder = S.holder, body = S.body;
+  scene.add(holder);
+  const bag = toolbagGroup(M); bag.position.set(0, 0.88, -0.22); holder.add(bag);
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
+  let bagOn = true;
+  return {
+    holder, bag, plank,
+    setBag(on) { bagOn = on; bag.visible = on; },
+    get bagOn() { return bagOn; },
+    update(dt, moving, sitting = false, seatTop = 0, T = 0) {
+      if (sitting) { S.sit(seatTop, T, 0.02); return; }
+      if (S.seated) { S.stood(); body.setWalking(true); body.pose(T, dt, false, false); }   // walker.js holds a rested pose until it moves: wake it once
+      body.setWalking(moving); body.pose(T, dt, false, false);
+    },
+  };
+}
+/* the cultivation walker, wrapped in makeFigure's shape. The pack is an empty group on the back; the road hangs its bundle there. */
+async function makeRoadFigure() {
+  let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
+  const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
+  scene.add(W.holder);
+  const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
+  const plank = new THREE.Group();
+  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, update(dt, moving) { W.update(dt, moving); } };
+}
 async function makeFigure(M) {
+  if (ROAD) return makeRoadFigure();
+  if (Q.get("cult") !== "0") return makeCultFigure(M);   // the one model: the cultivation figure the player picks; ?cult=0 keeps Average Dusk
   const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
   const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
   const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
@@ -527,7 +554,7 @@ async function build() {
   const ep = await episode(); state.ep = ep; state.p = ep.p;
   const chName = "The keeping chamber";
   $("#placeName").textContent = PLACE === "chamber" ? chName : ep.p.name;
-  $("#placeLand").textContent = PLACE === "chamber" ? "under the nook's shelf, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
+  $("#placeLand").textContent = PLACE === "chamber" ? "past the nook's doorway, built the cave's way" : `${ep.loc.land}${ep.p.land || ep.loc.role === "road-home" ? "" : " (the forest stands in until it is built)"}, on the ${String(ep.p.line).replace(/_/g, " ")} line`;
   if (WALK) { $("#placeLand").textContent = `The walk, land ${WALK_STOPS.indexOf(PLACE) + 1} of ${WALK_STOPS.length}`; $("#homeBtn").textContent = "Start over"; }
   document.title = PLACE === "chamber" ? chName : ep.p.name;
   step("growing the forest");
@@ -654,6 +681,7 @@ async function build() {
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
+  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show(); }
 }
 
 /* ===================================================================================================
@@ -674,6 +702,7 @@ function walkable(x, z) {
   if (FFX) return FF.walkable(x, z);
   if (CHX) return CH.walkable(x, z);
   if (Math.abs(x) < 0.9 && z < -CLR + 1.3 && z > -CLR - 0.6) return true;   // a step onto the path out
+  if (state.road && state.road.onRoad(x, z)) return true;   // the road out, from the arch
   const d = Math.hypot(x, z);
   if (d < STUMP_R + 0.32) return false;
   if (d < CLR - 1.2) return true;
@@ -754,6 +783,7 @@ function nearNow() {
     const bs = state.block && state.block.near(p); if (bs) return bs;
     const st = state.ch && state.ch.near(p); return st ? "kept:" + state.ch.stones.indexOf(st) : null;
   }
+  if (state.road && state.road.nearLetter(p.x, p.z)) return "letter";
   if (Math.hypot(p.x - OUT.x, p.z - OUT.z) < 1.5 && state.ep.next) return "out";
   const dArch = Math.hypot(p.x - ARCH.x, p.z - ARCH.z);
   if (dArch > 2.6) state.leftArch = true;                 // the way home is offered once you have stepped away from it
@@ -770,6 +800,7 @@ function showCard() {
   const btn = (act, label) => `<button type="button" data-act="${act}">${label}</button>`;
   const card = (title, text, ...btns) => `<div><b>${title}</b><div class="t">${text}</div></div><div class="row">${btns.join("")}</div>`;
   if (n === "out") { const there = esc(state.ep.next.location).replace(/^The /, "the "); key = "out"; html = card("The path out", `Through the far trees, an amber light: ${there}, where ${esc(state.ep.villain || "the Weigher")} is met.`, btn("go:scale-house", `Follow the path to ${there}`)); }
+  else if (n === "letter") { key = "letter"; html = card("A letter in the grass", "It lies at the edge of the road, a glint on its fold. Nobody has opened it.", btn("letter", "Pick it up")); }
   else if (n === "back") { key = "back"; html = card("The path back", "It runs back through the heavy trees to the clearing.", btn("go:clearing", "Walk back to the clearing")); }
   else if (n === "far") { const there = state.ep.next ? esc(state.ep.next.location) : "the Friends' Fire"; key = "far"; html = card("The far bank", `Past the last trees, a fire is lit, and someone is tuning a guitar. The path runs on to ${there.replace(/^The /, "the ")}.`, btn("go:friends-fire", `Follow the path to ${there.replace(/^The /, "the ")}`), btn("walk:bridge", "Back over the bridge")); }
   else if (n === "ff-back") { key = "ff-back"; html = card("The path back", "It runs back through the trees to the Scale-House and the bridge you mended.", btn("go:scale-house-far", "Walk back to the Scale-House")); }
@@ -804,7 +835,7 @@ function showCard() {
   else if (n === "ch-home" && WALK) { key = n; html = card("The four lands, walked", "One charge on a map stand, and four lands it made: the clearing's song, the Weigher's plank, the fire where Oriel played it on, and this room, where what the cold leaves is kept. A friend waits in the Hollow, past your nook.", btn("walkhome", "Home to the nook, then the Hollow")); }
   else if (n === "ch-home") { key = n; html = card("The arch home", "Your nook is through it, the shelf above the arch where you left it.", btn("home", "Back through to your nook")); }
   else if (n && n.startsWith("kept:")) { const st = state.ch.stones[+n.slice(5)]; key = n;
-    html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.`) : ""; }
+    html = st ? card(state.ch.name(st.pc), `What the cold left when a block cleared: ${esc(st.pc.feeling || "heavy")}, the size of ${esc(st.pc.strength || "a storm")}. ${{ water: "A crystal bed", metal: "A spire", fire: "A glow cap", earth: "A clump of mushrooms" }[st.pc.element] || "Something"} has grown beside it.${st.pc.pouch ? " The piece itself is in your satchel's pouch; this light marks where it lay." : ""}`) : ""; }
   else if (n === "stump") {
     const left = ADD - state.given.length;
     key = "stump:" + state.given.length + (state.done ? "d" : "");
@@ -831,6 +862,7 @@ $("#card").addEventListener("click", e => {
   else if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
+  else if (b.dataset.act === "letter" && state.road) state.road.card();
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act === "again") walkAgain();
   else if (b.dataset.act === "walkhome") { const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on")); setTimeout(() => { location.href = WALK_NOOK + "?home=1"; }, 700); }
@@ -1036,6 +1068,8 @@ function walkAgain() {
   setTimeout(() => { location.href = WALK_NOOK; }, 700);
 }
 $("#homeBtn").onclick = () => (WALK ? walkAgain() : goHome());
+// a player sent here from the Infinite Arcade's change machine sees where the button goes (his note on #559, 2026-11-03)
+try { if (/[?&]place=arcade\b/.test(sessionStorage.getItem("ctw-back") || "")) $("#homeBtn").textContent = "Back to the hall"; } catch (e) { /* plain */ }
 $("#soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("between-sound", soundOn ? "1" : "0"); } catch (e) { /* this page only */ }
   $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off"; $("#soundBtn").setAttribute("aria-pressed", String(soundOn)); if (audio()) master.gain.value = soundOn ? 0.5 : 0; };
 $("#soundBtn").textContent = soundOn ? "Sound on" : "Sound off";
@@ -1158,7 +1192,7 @@ function frame() {
       if (d.dense && d.where === here && (fromNook || qb)) {
         step("the cold comes through with you");
         const chRoom = CHX ? { center: [0, 0], R: CH.R - 0.8, top: CH.TOP, avoid: [V(CH.POOL.x, 0, CH.POOL.z), V(CH.PORTAL.x, 0, CH.PORTAL.z + 0.6)], keepAt: V(CH.POOL.x, 0, CH.POOL.z), keepY: 1.6, basins: [CH.POOL],
-          where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "It goes onto the next stone, and the cave's kit grows beside it.",
+          where: "the keeping chamber", dry: !!qb && !fromNook, keepSay: "A stone rises for it here and the cave's kit grows beside it. The piece goes into your satchel's pouch.",
           onKeep: rec => { setTimeout(() => state.ch.add(rec), 1200); } } : {};
         state.block = await mountRoom({ scene, d, center: [0, 0.6], R: CLR, top: 5.5, floor: 0, startK, avoid: instruments.map(i => i.stand),
           exclude: [state.me && state.me.holder], live: [state.warm, stumpFx && stumpFx.light, archFx && archFx.light], keepAt: V(0, 0, 0), keepY: 0.95, ...chRoom,
