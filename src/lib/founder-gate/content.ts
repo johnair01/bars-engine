@@ -275,3 +275,10 @@ export const DREAMS: Dream[] = [
   { id: 'become', name: 'Someone I will become', line: 'A seed that grows slowly while your attention is elsewhere.' },
   { id: 'give', name: 'Something I will give', line: 'A gift you are saving for the right season.' },
 ]
+
+export function dreamLine(dreamId: string | null): string {
+  const d = DREAMS.find((x) => x.id === dreamId)
+  return d
+    ? `Your cultivator stands in the sect. Beside it you planted: ${d.name.charAt(0).toLowerCase()}${d.name.slice(1)}. It rests here and grows while your attention is elsewhere.`
+    : 'Your cultivator stands in the sect. Plant a dream beside it.'
+}

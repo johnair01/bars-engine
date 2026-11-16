@@ -3,28 +3,22 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import {
   DEFAULT_CULTIVATOR,
-  FEELINGS,
-  FEELING_LINES,
   FRAMES,
   PAY,
+  LINKS,
+  dreamLine,
   STORY,
-  IMPACT_LINE,
-  STUCK_INTRO,
   DREAMS,
   PLACES,
   ROBES,
   SKIN_RAMP,
-  courierLine,
-  keepsakeLine,
-  placesFor,
-  stuckStep,
   type Cultivator,
   type Offer,
   type Place,
 } from '@/lib/founder-gate/content'
 import { setShippedCount } from '@/actions/founder-gate'
 
-type Screen = 'gate' | 'story' | 'make' | 'feeling' | 'grounds' | 'place' | 'keepsake'
+type Screen = 'gate' | 'story' | 'make' | 'place' | 'dream'
 
 const GOLD = '#f3d27a'
 const INK = '#f1ebf7'
@@ -109,10 +103,6 @@ function OfferView({ offer }: { offer: Offer }) {
 export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin: boolean }) {
   const [screen, setScreen] = useState<Screen>('gate')
   const [me, setMe] = useState<Cultivator>(DEFAULT_CULTIVATOR)
-  const [feeling, setFeeling] = useState<string | null>(null)
-  const [place, setPlace] = useState<Place | null>(null)
-  const [visited, setVisited] = useState<string[]>([])
-  const [stuck, setStuck] = useState(false)
   const [name, setName] = useState('')
   const [view, setView] = useState(0)
   const [beat, setBeat] = useState(0)
@@ -134,10 +124,9 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
   }, [])
   useEffect(() => { send() }, [send])
 
-  const go = (s: Screen) => { setScreen(s); setStuck(false); window.scrollTo({ top: 0 }) }
-  const feel = FEELINGS.find((f) => f.id === feeling) ?? null
-  const big = screen === 'gate' || screen === 'make' || screen === 'keepsake'
-  const lit = feeling ? placesFor(feeling) : []
+  const go = (s: Screen) => { setScreen(s); window.scrollTo({ top: 0 }) }
+  const place: Place = PLACES.find((p) => p.id === 'quiet-room') ?? PLACES[0]
+  const big = screen === 'gate' || screen === 'make' || screen === 'dream'
 
   return (
     <main style={{ minHeight: '100vh', background: 'radial-gradient(125% 85% at 50% -10%, #2a1f35 0%, #17121c 62%)', color: INK, fontFamily: 'var(--bars-font-body, system-ui, sans-serif)' }}>
@@ -168,7 +157,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
         {screen === 'story' && (() => { const sb = STORY[beat]; const last = beat === STORY.length - 1; return (
           <section style={{ display: 'grid', gap: 14 }}>
             <img src={sb.img} alt={sb.alt} style={{ width: '100%', maxHeight: 300, objectFit: 'cover', borderRadius: 18, border: `1px solid ${LINE}` }} />
-            <p style={{ margin: 0, color: MUTED, fontSize: '.75rem' }}>{beat + 1} of {STORY.length}{sb.standIn ? ' · stand-in picture, the storyboard replaces it' : ''}</p>
+            <p style={{ margin: 0, color: MUTED, fontSize: '.75rem' }}>{beat + 1} of {STORY.length} · draft, waiting on Wendell’s read{sb.standIn ? '; stand-in picture' : ''}</p>
             <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.5rem' }}>{sb.title}</h2>
             {sb.paras.map((t) => <p key={t} style={{ margin: 0, lineHeight: 1.55 }}>{t}</p>)}
             <div style={{ display: 'flex', gap: 8 }}>
@@ -212,70 +201,30 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
             </fieldset>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" style={{ ...btn, flex: '0 0 auto' }} onClick={() => setView((v) => (v + 1) % 4)}>Turn</button>
-              <button type="button" style={{ ...primary, flex: 1 }} onClick={() => go('feeling')}>This is my cultivator</button>
+              <button type="button" style={{ ...primary, flex: 1 }} onClick={() => go('place')}>This is my cultivator</button>
             </div>
           </section>
         )}
 
-        {screen === 'feeling' && (
-          <section style={{ display: 'grid', gap: 12 }}>
-            <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>Which feeling did you come for?</h2>
-            <p style={{ margin: 0, color: MUTED, fontSize: '.92rem' }}>Pick the one you would most like to feel today. It lights the places that serve it.</p>
-            {FEELINGS.map((f) => (
-              <button key={f.id} type="button" style={{ ...btn, display: 'grid', gap: 2 }} onClick={() => { setFeeling(f.id); go('grounds') }}>
-                <b style={{ fontSize: '1.1rem' }}>{f.name}</b>
-                <span style={{ color: MUTED, fontSize: '.9rem' }}>{FEELING_LINES[f.id]}</span>
-              </button>
-            ))}
-          </section>
-        )}
-
-        {screen === 'grounds' && feel && (
-          <section style={{ display: 'grid', gap: 12 }}>
-            <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>The outer grounds</h2>
-            <p style={{ margin: 0, color: MUTED, fontSize: '.92rem' }}>Each lit place is a move toward {feel.name}. Walk to one.</p>
-            <p style={{ margin: 0, color: MUTED, fontSize: '.88rem' }}>{IMPACT_LINE}</p>
-            {PLACES.map((p) => {
-              const on = lit.includes(p)
-              return (
-                <button key={p.id} type="button" disabled={!on} style={{ ...btn, display: 'grid', gap: 2, opacity: on ? 1 : 0.38, borderColor: on ? GOLD : LINE }}
-                  onClick={() => { setPlace(p); setVisited((v) => (v.includes(p.id) ? v : [...v, p.id])); go('place') }}>
-                  <b>{p.name}</b>
-                  <span style={{ color: MUTED, fontSize: '.88rem' }}>{p.blurb}</span>
-                </button>
-              )
-            })}
-            <button type="button" style={btn} onClick={() => setStuck((s) => !s)} aria-expanded={stuck}>Stuck?</button>
-            {stuck && (() => { const s = stuckStep(feel.id); return (
-              <div style={{ ...btn, cursor: 'default', display: 'grid', gap: 6 }}>
-                <span style={{ color: MUTED, fontSize: '.85rem' }}>{STUCK_INTRO}</span>
-                <b style={{ color: GOLD }}>{s.move}</b>
-                <span>{s.action}</span>
-              </div>) })()}
-            <button type="button" style={primary} onClick={() => go('keepsake')}>I am ready to take my keepsake</button>
-          </section>
-        )}
-
-        {screen === 'place' && place && feel && (
+        {screen === 'place' && (
           <section style={{ display: 'grid', gap: 12 }}>
             <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>{place.name}</h2>
             <p style={{ margin: 0, color: MUTED }}>{place.blurb}</p>
-            {place.id === 'couriers-post' && courierLine(shipped) && <p style={{ margin: 0, color: GOLD }}>{courierLine(shipped)}</p>}
-            <div style={{ display: 'grid', gap: 8 }}>
+                        <div style={{ display: 'grid', gap: 8 }}>
               {place.offers.map((o) => <OfferView key={o.label} offer={o} />)}
             </div>
             <a href={place.window.href} target="_blank" rel="noopener noreferrer" style={{ ...btn, display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', background: 'rgba(243,210,122,.08)' }}>
               {place.window.img ? <img src={place.window.img} alt="" width={64} height={64} style={{ objectFit: 'cover', borderRadius: 10 }} /> : null}
               <span><span style={{ color: MUTED, fontSize: '.75rem', display: 'block' }}>A window</span>{place.window.label}</span>
             </a>
-            <button type="button" style={btn} onClick={() => go('grounds')}>Back to the grounds</button>
+            <button type="button" style={primary} onClick={() => go('dream')}>Plant your dream</button>
           </section>
         )}
 
-        {screen === 'keepsake' && feel && (
+        {screen === 'dream' && (
           <section style={{ display: 'grid', gap: 12 }}>
-            <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>{name.trim() ? `${name.trim()}, your keepsake` : 'Your keepsake'}</h2>
-            <p style={{ margin: 0, lineHeight: 1.5 }}>{keepsakeLine(feel.id, visited)}</p>
+            <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>{name.trim() ? `${name.trim()}, your dream` : 'Your dream'}</h2>
+            <p style={{ margin: 0, lineHeight: 1.5 }}>{dreamLine(dream)}</p>
             <div style={{ display: 'grid', gap: 8 }}>
               <b style={{ color: GOLD, fontSize: '.85rem' }}>Plant your own dream beside your figure</b>
               <p style={{ margin: 0, color: MUTED, fontSize: '.88rem' }}>The sect keeps it safe while your attention is elsewhere. This is an exchange: you are not only giving.</p>
@@ -288,10 +237,13 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
             </div>
             <p style={{ margin: 0, color: MUTED, fontSize: '.9rem' }}>Your cultivator stands in the sect. Take a screenshot to keep this. You are the hero of this story, and the move was yours.</p>
             <label style={{ display: 'grid', gap: 4, color: MUTED, fontSize: '.85rem' }}>
-              Name on the keepsake (optional)
+              Name beside your dream (optional)
               <input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} style={{ ...btn, cursor: 'text' }} />
             </label>
-            <button type="button" style={btn} onClick={() => go('grounds')}>Walk some more</button>
+            {dream && (
+              <a href={LINKS.coachingFree} target="_blank" rel="noopener noreferrer" style={{ ...primary, display: 'block', textDecoration: 'none' }}>Start it together</a>
+            )}
+            {dream && <p style={{ margin: 0, color: MUTED, fontSize: '.85rem' }}>This opens my calendar. The first session is about your idea, and you pay what feels right.</p>}
           </section>
         )}
 
