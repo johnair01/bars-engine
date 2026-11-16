@@ -52,6 +52,8 @@ import * as SH from "./scale-house.js";
 import * as FF from "./friends-fire.js";
 import * as FS from "./fire-song.js";
 import * as CH from "./chamber.js";
+import { makeCultSeated } from "./cult-seat.js";
+import { cultPick } from "../cult/pick.js";
 import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 installPaint();
@@ -405,24 +407,34 @@ function seatPoser(obj, holder) {
 }
 /* The friends round the fire: Average Dusk in each seat's look, sat on their crates, breathing; Oriel holds the guitar. */
 async function makeFriends(ff) {
-  const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
-  const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
-  const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
-  const k = 1.7 / Math.max(box.getSize(V(0, 0, 0)).y, 0.01), P = await loadParts(u => loader.loadAsync(u));
-  const out = [];
+  const out = []; let i = 0;
   for (const seat of FF.SEATS) { if (seat.who === "you") continue;
-    const obj = skClone(root); obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
-    const wardrobe = dressFigure(obj, P); wardrobe.set(parseLook(seat.look));
-    obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-    const c = FF.seatAt(seat), holder = new THREE.Group(); holder.add(obj); holder.position.set(c.x, groundH(c.x, c.z), c.z); holder.rotation.y = c.yaw; scene.add(holder);
-    const mixer = new THREE.AnimationMixer(obj), idle = gl.animations.find(a => a.name === "Idle"); if (idle) { const a = mixer.clipAction(idle); a.play(); a.setEffectiveWeight(0); }
-    const poser = seatPoser(obj, holder);
+    const S = await makeCultSeated({ who: cultPick(), outfit: i++ % 2 ? "B2" : "B1" });
+    const c = FF.seatAt(seat), holder = S.holder; holder.position.set(c.x, groundH(c.x, c.z), c.z); holder.rotation.y = c.yaw; scene.add(holder);
     if (seat.who === "oriel") { const g = ff.guitar; holder.add(g); g.position.set(0.04, 0.64, 0.3); g.rotation.set(-0.15, 0.25, 1.05); }
-    out.push({ seat, holder, mixer, wardrobe, poser, oriel: seat.who === "oriel", phase: out.length * 1.7, laugh: 0 });
+    out.push({ seat, holder, mixer: { update() {} }, wardrobe: { dress() {} }, poser: { apply(dt, want, seatTop, T, lean = 0, strum = 0) { S.sit(seatTop, T, lean, strum); } }, oriel: seat.who === "oriel", phase: out.length * 1.7, laugh: 0 });
   }
   return out;
 }
+async function makeCultFigure(M) {
+  const S = await makeCultSeated({ who: cultPick(), outfit: "B2" }), holder = S.holder, body = S.body;
+  scene.add(holder);
+  const bag = toolbagGroup(M); bag.position.set(0, 1.05, -0.26); holder.add(bag);
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
+  let bagOn = true;
+  return {
+    holder, bag, plank,
+    setBag(on) { bagOn = on; bag.visible = on; },
+    get bagOn() { return bagOn; },
+    update(dt, moving, sitting = false, seatTop = 0, T = 0) {
+      if (sitting) { S.sit(seatTop, T, 0.02); return; }
+      if (S.seated) { S.stood(); body.setWalking(true); body.pose(T, dt, false, false); }   // walker.js holds a rested pose until it moves: wake it once
+      body.setWalking(moving); body.pose(T, dt, false, false);
+    },
+  };
+}
 async function makeFigure(M) {
+  if (Q.get("cult") !== "0") return makeCultFigure(M);   // the one model: the cultivation figure the player picks; ?cult=0 keeps Average Dusk
   const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
   const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
   const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
