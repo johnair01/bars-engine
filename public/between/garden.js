@@ -37,7 +37,7 @@ import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
 import { makeCultBody, useKneel } from "./cult/player-body.js";
 import { makeKneel } from "./cult/kneel.js";
-import { cultPick } from "./cult/pick.js";
+import { cultPick, cultLook, setCultLook, HAIRS } from "./cult/pick.js";
 useKneel(makeKneel);
 //   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
@@ -764,6 +764,134 @@ function setMirror(on) {
   probeDirty = true; // the capture is taken where you stand: at the glass, or back in the room
 }
 let mirrorCut = false;
+
+/* The touches beside the glass (hj-mirror-look-1 B, hj-comb-look-1 A): no menu. Mirror mode puts the camera behind the glass
+   looking back at you, so what she touches stands in that view, low at the sides, at the glass's own depth. Each touch
+   writes one key of the shared look (cult/pick.js), fogs the glass with one breath, and the breath clears on the changed
+   reflection. Walking away keeps it: the look is already stored. */
+const mirrorProps = new THREE.Group(); mirrorProps.visible = false; scene.add(mirrorProps);
+const mirrorBreath = document.createElement("div"); mirrorBreath.id = "mirrorBreath"; mirrorBreath.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorBreath);
+const comb = (() => {
+  // the boxwood comb with a red bead, hung on a peg low at the glass's left (the picture is flipped, so it shows on the right); metres
+  const g = new THREE.Group(), bw = new THREE.MeshStandardMaterial({ color: 0xd9b878, roughness: 0.5 }), CW = 0.17, nT = 16;
+  const spine = new THREE.Mesh(new THREE.BoxGeometry(CW, 0.028, 0.012), bw); spine.position.y = 0.07; g.add(spine);
+  for (let i = 0; i < nT; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.0045, 0.062 - 0.006 * Math.abs(i - nT / 2) / nT, 0.008), bw); t.position.set(-CW / 2 + 0.006 + i * (CW - 0.012) / (nT - 1), 0.025, 0); g.add(t); }
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.014, 20), new THREE.MeshStandardMaterial({ color: 0x7a2630, roughness: 0.5 })); cap.rotation.x = Math.PI / 2; cap.position.set(0, 0.07, 0); g.add(cap);
+  const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.09, 8), new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 })); peg.rotation.x = Math.PI / 2; peg.position.set(0, 0.11, -0.03); g.add(peg);
+  g.rotation.z = -0.18; g.position.set(0.36, 0.78, 0);
+  // a wide invisible target so a thumb finds it: the comb is small
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.06; g.add(hit);
+  mirrorProps.add(g); return { g, hit };
+})();
+// the bowl of river stones at the glass's foot: eight stones, the skin ramp; touching one sets skin (metres)
+const SKINS = ["#e9c9ae", "#dfb595", "#cf9f7c", "#bb8763", "#a46f4e", "#8a593d", "#6d4430", "#513224"];
+const stones = (() => {
+  const g = new THREE.Group(), meshes = [];
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.07, 28, 1, true), new THREE.MeshStandardMaterial({ color: 0x5c4a3a, roughness: 0.7, side: THREE.DoubleSide })); bowl.position.y = 0.035; g.add(bowl);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(0.165, 28), new THREE.MeshStandardMaterial({ color: 0x2a3b3a, roughness: 0.1, metalness: 0.3 })); water.rotation.x = -Math.PI / 2; water.position.y = 0.06; g.add(water);
+  SKINS.forEach((c, i) => {
+    const a = i / 8 * Math.PI * 2, r = i % 2 ? 0.095 : 0.05 + 0.0;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.03, 14, 10), new THREE.MeshStandardMaterial({ color: c, roughness: 0.35 }));
+    m.scale.set(1.25, 0.55, 1); m.position.set(Math.cos(a) * (0.05 + (i % 2) * 0.05), 0.065, Math.sin(a) * (0.05 + (i % 2) * 0.05)); m.userData.skin = i; g.add(m); meshes.push(m);
+  });
+  g.position.set(-0.3, 0.3, 0.55);
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.2, 12), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.08; g.add(hit);
+  mirrorProps.add(g); return { g, meshes, hit };
+})();
+// the carved figure on the shelf, at the glass's other side; turning it (a touch) steps body and build: six carvings, no words
+// slight and broad need their morph targets (cult/ubc/teenf, ubcf, teenm, ubcm .json), which are not in the repo yet: only the average build of each body is steppable until they are
+const BODY_STEPS = [["f", "average"], ["m", "average"]]; // later: ["f","slight"],["f","broad"],["m","slight"],["m","broad"]
+const carved = (() => {
+  const g = new THREE.Group(), lw = new THREE.MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.55 }), wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.025, 0.14), wood); g.add(shelf);
+  const fig = new THREE.Group(); fig.position.y = 0.0125; g.add(fig);
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.09, 14), lw); cone.position.y = 0.045; fig.add(cone);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.025, 0.09, 6, 10), lw); body.position.y = 0.1; fig.add(body);
+  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.022, 14, 10), lw); hd.position.y = 0.185; fig.add(hd);
+  g.position.set(-0.36, 0.78, 0);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.1; g.add(hit);
+  mirrorProps.add(g); return { g, fig, hit };
+})();
+function syncCarved() { // the carving shows the chosen build and body: wider or slighter, taller for him
+  const L = cultLook(), b = L.build || "average", w = b === "broad" ? 1.25 : b === "slight" ? 0.8 : 1;
+  carved.fig.scale.set(w, (L.body || cultPick()) === "m" ? 1.08 : 1, w);
+}
+// the palm on the glass: a faint hand mark where her crown is; the touch's height on the glass sets her height (no marks, no numbers)
+const palm = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+  x.fillStyle = "rgba(255,255,255,0.8)"; x.beginPath(); x.ellipse(64, 78, 28, 32, 0, 0, 7); x.fill();
+  for (const [dx, dy, r] of [[-30, 30, -0.3], [-14, 20, -0.1], [4, 16, 0], [22, 22, 0.15]]) { x.save(); x.translate(64 + dx, 50 + dy - 22); x.rotate(r); x.beginPath(); x.ellipse(0, -12, 7, 18, 0, 0, 7); x.fill(); x.restore(); }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthWrite: false }));
+  m.scale.x = -1; mirrorProps.add(m); return m;
+})();
+// three robes on pegs, one per direction (sect disciple, wandering cultivator, inner-alchemy adept): touch the robe to wear
+// that direction, touch its hem to turn the cut (the robe's 1 and 2). Small, hung high on the glass's right, in the figure's view.
+const DIRS = ["A", "B", "C"], ROBE_COL = ["#3c4658", "#6b5a3f", "#d9d3c3"], HEM_COL = ["#2f3647", "#7a2630"];
+const pegs = (() => {
+  const g = new THREE.Group(), rob = [], hits = [], wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.025, 0.025), wood); rail.position.y = 0.3; g.add(rail);
+  DIRS.forEach((d, i) => {
+    const x = (i - 1) * 0.105, col = new THREE.MeshStandardMaterial({ color: ROBE_COL[i], roughness: 0.85, side: THREE.DoubleSide });
+    const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 6), wood); peg.rotation.x = Math.PI / 2; peg.position.set(x, 0.3, 0.02); g.add(peg);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.058, 0.26, 16, 1, true), col); body.position.set(x, 0.165, 0.02); g.add(body);
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(0.031, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), col); sh.position.set(x, 0.295, 0.02); g.add(sh);
+    const hem = new THREE.Mesh(new THREE.CylinderGeometry(0.0555, 0.0585, 0.04, 16, 1, true), new THREE.MeshStandardMaterial({ color: HEM_COL[0], roughness: 0.8, side: THREE.DoubleSide })); hem.position.set(x, 0.055, 0.02); g.add(hem);
+    const hitB = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.17, 0.12), new THREE.MeshBasicMaterial({ visible: false })); hitB.position.set(x, 0.2, 0.02); hitB.userData.dir = d; g.add(hitB);
+    const hitH = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.09, 0.12), new THREE.MeshBasicMaterial({ visible: false })); hitH.position.set(x, 0.05, 0.02); hitH.userData.hemOf = d; g.add(hitH);
+    rob.push({ d, hem }); hits.push(hitB, hitH);
+  });
+  g.position.set(0.25, 1.0, 0);
+  mirrorProps.add(g); return { g, rob, hits };
+})();
+function syncPegs() { // the hems show the worn cut: indigo for 1, red for 2
+  const o = cultLook().outfit || "B2";
+  pegs.rob.forEach(({ hem }) => hem.material.color.set(HEM_COL[o[1] === "1" ? 0 : 1]));
+}
+syncPegs();
+let palmFade = 0; syncCarved();
+let breathBusy = false;
+function breathe(then) {
+  if (breathBusy) return; breathBusy = true;
+  mirrorBreath.classList.add("on");
+  setTimeout(async () => {
+    try { await then(); } finally { setTimeout(() => { mirrorBreath.classList.remove("on"); breathBusy = false; }, 250); }
+  }, 520);
+}
+function touchMirror(cx, cy) {
+  if (breathBusy) return;
+  const ndc = new THREE.Vector2(-(cx / innerWidth * 2 - 1), -(cy / innerHeight) * 2 + 1); // the canvas is flipped by CSS
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects([comb.hit, carved.hit, stones.hit, ...stones.meshes, ...pegs.hits], false);
+  if (hits.length) {
+    const o = hits[0].object;
+    if (o.userData.dir || o.userData.hemOf) { // a robe on its peg: that direction; its hem: the other cut
+      const cur = cultLook().outfit || "B2";
+      setCultLook({ outfit: o.userData.dir ? o.userData.dir + (cur[0] === o.userData.dir ? cur[1] : "2") : cur[0] + (cur[1] === "1" ? "2" : "1") }); syncPegs();
+    } else if (o === comb.hit) { // the comb: each touch is the next hair, a breath between
+      const i = HAIRS.indexOf(cultLook().hair);
+      setCultLook({ hair: HAIRS[(i + 1) % HAIRS.length] });
+    } else if (o === carved.hit) { // the carved figure turns: the next body and build
+      const L = cultLook(), cur = BODY_STEPS.findIndex(([w, b]) => w === (L.body || cultPick()) && b === (L.build || "average"));
+      const [w, b] = BODY_STEPS[(cur + 1) % BODY_STEPS.length];
+      setCultLook({ body: w, build: b }); syncCarved();
+    } else { // a river stone, or the bowl's nearest stone: that skin
+      let sk = o.userData.skin;
+      if (sk === undefined) { let best = 1e9; hits[0].point && stones.meshes.forEach(m => { const d = m.getWorldPosition(new THREE.Vector3()).distanceTo(hits[0].point); if (d < best) { best = d; sk = m.userData.skin; } }); }
+      setCultLook({ skin: sk });
+    }
+    breathe(() => ensureMyBody()); return;
+  }
+  // the palm on the glass: a touch on the glass above the figure's shoulders, at its depth; the height touched is her height
+  const pz = MIRROR_STAND.z, d = (pz - ray.ray.origin.z) / (ray.ray.direction.z || 1e-6);
+  if (d > 0) {
+    const p = ray.ray.origin.clone().addScaledVector(ray.ray.direction, d), gy = groundY(MIRROR_STAND.x, MIRROR_STAND.z), h = p.y - gy;
+    if (h > 1.35 && Math.abs(p.x - MIRROR_STAND.x) < 0.45) {
+      setCultLook({ height: Math.round(Math.min(1.95, Math.max(1.5, h - 0.04)) * 100) / 100 }); // the crown sits a little under the palm
+      palm.position.set(p.x - mirrorProps.position.x, p.y - mirrorProps.position.y, pz - mirrorProps.position.z); palmFade = 1.5;
+      breathe(() => ensureMyBody());
+    }
+  }
+}
 
 /* The doorway beside the mirror is the Nook's one world-threshold. It opens after orientation and lets a player choose
    a shared room or the private Triangle Workshop without making the small Nook sprout a corridor of extra doors. */
@@ -1498,19 +1626,19 @@ function lookOf(uid) {
 const CULT_ME = KQ.get("cult") !== "0";
 async function ensureMyBody() {
   const g = view().g;
-  const hue = hueOf(me, g), lk = lookOf(me);
+  const hue = hueOf(me, g), lk = lookOf(me) + "|" + JSON.stringify(cultLook());
   if ((meState.body && myBodyHue === hue && myBodyLook === lk) || myBodyBusy) return;
   myBodyBusy = true;
   try {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
        here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
     let b = null;
-    if (CULT_ME) { try { b = await makeCultBody({ who: cultPick(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
-    if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
+    if (CULT_ME) { try { b = await makeCultBody({ who: cultLook().body || cultPick(), outfit: cultLook().outfit || "B2", look: (({ body, outfit, ...r }) => r)(cultLook()), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
+    if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lookOf(me)) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
   } finally { myBodyBusy = false; }
-  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me)) ensureMyBody();
+  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me) + "|" + JSON.stringify(cultLook())) ensureMyBody();
 }
 function placeMe() {
   if (meState.placed) return;
@@ -1644,7 +1772,7 @@ function placeAt() {
   moveItem(placing.id, { x: +hit.x.toFixed(2), z: +hit.z.toFixed(2) });
 }
 function tapAt(cx, cy) {
-  if (mirrorOn) return; // in the mirror a tap only chooses; the floor is behind you
+  if (mirrorOn) { touchMirror(cx, cy); return; } // in the mirror a tap only touches what stands by the glass; the floor is behind you
   if (veil) return; // at the veil a tap only chooses; Step back leaves it
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
@@ -2025,6 +2153,8 @@ function frameBody() {
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
   mirror.visible = mirrorShown() && me3 < 0.35; // the glass is where the camera looks from
+  if (palmFade > 0) { palmFade -= 0.016; palm.material.opacity = Math.max(0, Math.min(0.7, palmFade)); }
+  mirrorProps.visible = mirrorOn && me3 > 0.9; mirrorProps.position.set(MIRROR_STAND.x, groundY(MIRROR_STAND.x, MIRROR_STAND.z), MIRROR_STAND.z - 0.9); // at the glass's own depth
   spotRings(t);
   if (me3 > 0 || rk > 0.001 || camera.fov !== fov || (camera.view && camera.view.enabled)) {
     camera.fov = fov;
