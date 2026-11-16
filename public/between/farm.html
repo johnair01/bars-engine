@@ -18,6 +18,7 @@
   button:focus-visible, input:focus-visible { outline: 2px solid #ffc46a; outline-offset: 2px; }
   .card { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(92vw, 520px); box-sizing: border-box;
     background: rgba(42,51,47,.88); color: #f3ece2; border-radius: 16px; padding: 12px 14px; display: grid; gap: 8px; }
+  .card[hidden] { display: none; }
   .card h2 { margin: 0; font: 400 1.25rem Marcellus, serif; } .card p { margin: 0; font-size: .92rem; opacity: .85; }
   .card .row { display: flex; gap: 8px; flex-wrap: wrap; }
   .card input { flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.28); background: rgba(0,0,0,.25); color: inherit; font: 1rem sans-serif; }
@@ -29,7 +30,12 @@
   .cap.on { opacity: 1; }
   #loading { position: fixed; inset: 0; z-index: 60; background: #cfe8f3; display: grid; place-items: center; font: 1.2rem Marcellus, serif; color: #2a332f; transition: opacity .8s; } #loading.gone { opacity: 0; pointer-events: none; }
 </style>
-<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+<!-- three/addons and three-mesh-bvh: the cultivation figure (between/cult, the A2 work clothes) needs them, as walk.html does -->
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
+} }</script>
 </head><body>
 <div id="stage" aria-label="Your farm. Tap a slot to walk there and choose what to do."></div>
 <div id="loading">Through the portal…</div>

@@ -94,7 +94,20 @@ const distToStream = (x, z) => { let d = Infinity; for (const p of STREAM_PTS) {
 
 /* ---------- where people and walkers may stand ---------- */
 export function groundY(x, z) { return DAIS_R > 0 && Math.hypot(x, z) <= DAIS_R + 0.12 ? DAIS_Y : 0; }
+/* Extra ground past the hollow's mouth (the hollow's games, lantern-out.js): corridors { ax, az, bx, bz, w } that are walkable
+   whatever the rope fence and the rim say. Empty until a game sets one; the walk to the lookout stone is the first. */
+const EXTRA = [];
+export function setExtraWalk(list) { EXTRA.length = 0; for (const c of list || []) EXTRA.push(c); }
+function inExtra(x, z, pad = 0) {
+  for (const c of EXTRA) {
+    const dx = c.bx - c.ax, dz = c.bz - c.az, L2 = dx * dx + dz * dz || 1;
+    const u = Math.max(0, Math.min(1, ((x - c.ax) * dx + (z - c.az) * dz) / L2));
+    if (Math.hypot(x - (c.ax + dx * u), z - (c.az + dz * u)) <= c.w - pad) return true;
+  }
+  return false;
+}
 export function walkable(x, z, pad = 0.35) {
+  if (EXTRA.length && inExtra(x, z, pad)) return true;
   if (Math.hypot(x, z) > WALK_R - pad) return false;
   if (LAY.fence && z < -WALK_R + 0.9 + pad) return false; // the rope fence along the ledge
   for (const [ox, oz, r] of LAY.obst) if (Math.hypot(x - ox, z - oz) < r + pad) return false;
@@ -137,6 +150,7 @@ export function routeTo(from, goal, pad = 0.42) {    // a little wider than push
   return out;
 }
 export function pushOut(v, pad = 0.35) {
+  if (EXTRA.length && (inExtra(v.x, v.z, 0.0) && v.z < -WALK_R + 0.9 + pad)) return v; // out on the lookout path: nothing to push against
   for (let k = 0; k < 3; k++) {
     const d = Math.hypot(v.x, v.z), max = WALK_R - pad;
     if (d > max) { v.x *= max / d; v.z *= max / d; }
@@ -463,7 +477,10 @@ export function buildHollow(scene, opts = {}) {
     // pots on the mantel
     const pot = (h, rr, mat) => { const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push(new THREE.Vector2(rr * (0.55 + Math.sin(u * Math.PI) * 0.6) * (u > 0.85 ? 0.75 : 1), u * h)); } return new THREE.Mesh(new THREE.LatheGeometry(pts, 12), mat); };
     const clays = [M.clay, new THREE.MeshStandardMaterial({ color: 0x8a5a3a, roughness: 0.8 }), new THREE.MeshStandardMaterial({ color: 0x6e6a5a, roughness: 0.7 })];
-    if (!nook) for (let i = 0; i < 6; i++) { const p = pot(0.22 + r() * 0.2, 0.1 + r() * 0.06, clays[i % 3]); p.position.set(-1.1 + i * 0.44, 1.99, 0.1); hearth.add(p); }
+    // the six mantel pots: friendship-between-growth finds them one at a time as the Between grows (growth-view.js lights them)
+    const mantelPots = [];
+    if (!nook) for (let i = 0; i < 6; i++) { const p = pot(0.22 + r() * 0.2, 0.1 + r() * 0.06, clays[i % 3]); p.position.set(-1.1 + i * 0.44, 1.99, 0.1); hearth.add(p); mantelPots.push(p); }
+    anim.mantelPots = mantelPots;
     if (nook) { // the nook's one shelf: a plank on the wall right of the hearth, on two root brackets (the `shelf` spot)
       const sp = SHELLS.nook.spots.find(x => x.id === "shelf"), [sx, sy, sz] = sp.at;
       const plank = new THREE.Group(); plank.position.set(sx, sy, sz); plank.rotation.y = sp.face || 0; root.add(plank);
@@ -698,7 +715,9 @@ export function buildHollow(scene, opts = {}) {
   /* The focus sit (garden.js fs*): `bank` (0..1) banks the fire to coals, as it is when you come back early; `room` (about
      0.4..1.15) is the rest of the room's light, dropped to the fire, the window and the lanterns for a sit, raised a little
      after one (qi as weather). Both ease. */
-  const hearthFx = { want: 1, k: 1, ember: 0, bank: 0, room: 1, bankK: 0, roomK: 1 };
+  /* `qi` (1..2, sky-qi.js roomLift) is the room's light from the embers kept (ember-to-vibeulon FR-007): the hearth and the lamps
+     burn a step brighter for each; `qiSnap` (reduced motion) takes the step in one change. */
+  const hearthFx = { want: 1, k: 1, ember: 0, bank: 0, room: 1, bankK: 0, roomK: 1, qi: 1, qiK: 1, qiSnap: false };
   const emberMat = new THREE.MeshStandardMaterial({ color: 0x3a1a0c, emissive: 0xff6a1a, emissiveIntensity: 0, roughness: 0.6 });
   const emberMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 1), emberMat); emberMesh.position.set(0.05, 0.3, 0.16); emberMesh.scale.set(1.3, 0.75, 1); hearth.add(emberMesh);
   emberMesh.userData.keep = true;
@@ -719,18 +738,19 @@ export function buildHollow(scene, opts = {}) {
     hearthFx.k += (hearthFx.want - hearthFx.k) * Math.min(1, dt * (hearthFx.want > hearthFx.k ? 0.9 : 3));
     if (Math.abs(hearthFx.want - hearthFx.k) < 0.002) hearthFx.k = hearthFx.want;
     hearthFx.bankK += (hearthFx.bank - hearthFx.bankK) * Math.min(1, dt * 0.8); hearthFx.roomK += (hearthFx.room - hearthFx.roomK) * Math.min(1, dt * 0.5);
-    const hk = hearthFx.k, eg = hearthFx.ember * (0.75 + 0.25 * Math.sin(t * 2.6)) * (1 - hk), bk = 1 - hearthFx.bankK * 0.72, rm = hearthFx.roomK;
-    fire.intensity = base.fire * fl * scale * hk * bk + base.fire * 0.09 * eg;
+    hearthFx.qiK = hearthFx.qiSnap ? hearthFx.qi : hearthFx.qiK + (hearthFx.qi - hearthFx.qiK) * Math.min(1, dt * 0.6);
+    const hk = hearthFx.k, eg = hearthFx.ember * (0.75 + 0.25 * Math.sin(t * 2.6)) * (1 - hk), bk = 1 - hearthFx.bankK * 0.72, rm = hearthFx.roomK, ql = hearthFx.qiK;
+    fire.intensity = base.fire * fl * scale * hk * bk * ql + base.fire * 0.09 * eg;
     M.soot.emissiveIntensity = 0.08 + hk * bk * (0.75 + 0.25 * fl) + 0.3 * eg; // the firebox glows with the fire, banks with it, and goes dark when it is out
     emberMat.emissiveIntensity = 0.25 + 2.6 * eg + hk * 0.8; emberHalo.material.opacity = 0.55 * eg; if (cam && eg > 0) emberHalo.lookAt(cam);
     for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; const g = hk * (0.6 + 0.4 * hk) * (1 - hearthFx.bankK * 0.8); f.m.visible = g > 0.01; f.m.scale.set(f.base.x * (1.1 - k * 0.2) * Math.max(0.2, g), f.base.y * k * 1.15 * g, f.base.z * Math.max(0.2, g)); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
-    for (const sp of spotList) if (sp.light) sp.light.intensity = base.lantern * 0.9 * scale * sp.glow * Math.min(1, rm + 0.35) * (0.93 + Math.sin(t * 7 + 1.3) * 0.04 + Math.sin(t * 17) * 0.03);
+    for (const sp of spotList) if (sp.light) sp.light.intensity = base.lantern * 0.9 * scale * sp.glow * Math.min(1, rm + 0.35) * ql * (0.93 + Math.sin(t * 7 + 1.3) * 0.04 + Math.sin(t * 17) * 0.03);
     for (const sp of spotList) if (sp.takes === "hang" && sp.item) { sp.slot.rotation.z = Math.sin(t * 0.7 + 2) * 0.03; sp.slot.rotation.x = Math.sin(t * 0.5 + 2) * 0.025; }
-    for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = base.lantern * scale * Math.min(1.1, rm + 0.35) * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
+    for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = base.lantern * scale * Math.min(1.1, rm + 0.35) * ql * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
     if (anim.water) anim.water.uniforms.uT.value = t;
     if (rain.visible) { const { seeds, pos, geo } = anim.rain; seeds.forEach((q, i) => { const y = 9 - ((t * q.sp / 20 + q.ph) % 1) * 24; pos.set([q.x, y, q.z, q.x - 0.04, y - 0.55, q.z], i * 6); }); geo.attributes.position.needsUpdate = true; }
     if (anim.crystalLight) { anim.crystalLight.intensity = 6 * (0.85 + Math.sin(t * 1.3) * 0.15); anim.crystalMat.emissiveIntensity = 1.2 + Math.sin(t * 1.3) * 0.25; }
-    hemi.intensity = base.hemi * (0.6 + 0.4 * scale) * (1 + (1 - hearthFx.k) * 1.1) * rm; // a cold hearth: the dusk through the window carries the room
+    hemi.intensity = base.hemi * (0.6 + 0.4 * scale) * (1 + (1 - hearthFx.k) * 1.1) * rm * (1 + (ql - 1) * 0.5); // a cold hearth: the dusk through the window carries the room
     // vines sway
     if (anim.vines) {
       const { mesh, strands } = anim.vines; let k = 0;
@@ -789,7 +809,7 @@ export function buildHollow(scene, opts = {}) {
     ? { shell: "nook", portal: { x: Math.sin(1.35) * 2.9, z: -Math.cos(1.35) * 2.9, yaw: -1.35 }, spawn: [[1.55, 1.55], [-1.55, 1.55]], window: windowAt }
     : { shell: "hollow", portal: { x: 1.3, z: -1.15, yaw: -0.3 }, spawn: [[-0.8, 3.1], [0.8, 3.1]], window: windowAt };
   // what a room style sets (public/calrunia/room-styles.js applyStyle); values only. `spots` is what applyRoom sets.
-  const handles = { stage, sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain, spots, hearth: hearthFx };
+  const handles = { stage, sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, pots: anim.mantelPots || [], base, land, rain, spots, hearth: hearthFx };
   return { root, update, cushions, handles, layout };
 }
 
@@ -831,6 +851,7 @@ function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
   // glows: the coal under the swept ash, the care's own faint glow, the fire's two eyes
   const coal = sprite(0.55, 0xff6a20), coalCore = sprite(0.18, 0xffd090); coal.position.set(0.02, 0.2, 0.1); coalCore.position.copy(coal.position);
   const careGlow = sprite(0.5, 0xffd49a);
+  const fireGlow = sprite(0.5, 0xffb060); fireGlow.position.set(0, 0.95, 0.1); // the hearth spirit's own glow in the fire (FR-025)
   const eyes = [-1, 1].map(sg => { const e = sprite(0.075, 0xfff0c8); e.position.set(0.06 * sg, 0.95, 0.12); return e; });
   // the three spirits: a cool dim glow asleep, a warm one with two small eyes awake, in a frame turned to the world so their eyes face the camera
   const SPIRIT = new THREE.Group(); SPIRIT.userData.keep = true; hearth.parent.add(SPIRIT);
@@ -845,7 +866,7 @@ function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
   const ease = (cur, want, dt, rate) => { const d = want - cur; return Math.abs(d) < 0.002 ? want : cur + d * Math.min(1, dt * rate); };
   const sm = k => k * k * (3 - 2 * k);
   const API = {
-    care: 0, offer: false,
+    care: 0, offer: false, dim: 1, // dim 0..1: how bright the hearth spirit's glow and eyes are drawn (focus.js spiritGlow); the fire's size stays the stage's
     /* The hearth at `care` cares done. jump = at once (loading, reduced motion); otherwise each part eases there (a care's act). */
     setCare(n, jump = false) {
       const c = Math.max(0, Math.min(4, Math.floor(+n || 0))); st.care = c; API.care = c;
@@ -872,7 +893,8 @@ function buildHearthStage(hearth, logs, anim, fx, emberMesh) {
       // the care waiting is the drawn object, glowing faintly; nothing else says so
       const spot = c < 4 ? CARE_AT[c] : null, show = API.offer && !!spot;
       careGlow.visible = show; if (show) { careGlow.position.set(spot[0], spot[1] + 0.12, spot[2]); careGlow.material.opacity = 0.3 + 0.12 * Math.sin(t * 2.2); }
-      for (const e of eyes) e.material.opacity = 0.9 * st.turn * ((t % 5.3) < 0.12 ? 0.1 : 1); // the hearth spirit's eyes in the fire, the chapter's end
+      fireGlow.material.opacity = 0.32 * st.turn * API.dim * (0.9 + Math.sin(t * 1.7) * 0.1);
+      for (const e of eyes) e.material.opacity = 0.9 * st.turn * API.dim * ((t % 5.3) < 0.12 ? 0.1 : 1); // the hearth spirit's eyes in the fire, the chapter's end
       if (anim.flies) anim.flies.mat.visible = c >= 4 && st.turn > 0.5; // the room's fireflies come out with the last care
       const toCam = cam ? V(cam.x - HP.x, 0, cam.z - HP.z).normalize() : V(0, 0, 1), side = V(-toCam.z, 0, toCam.x);
       spirits.forEach((sp, i) => {
@@ -949,8 +971,10 @@ export function paperLantern(color, bright = 1) {
   }
   const key = color + ":" + bright;
   if (!lanternMats.has(key)) {
-    const c = new THREE.Color(color).lerp(new THREE.Color(0xffd9a0), 0.25);
-    lanternMats.set(key, new THREE.MeshStandardMaterial({ map: paperShared, color: 0xfff1d6, emissive: c, emissiveMap: paperShared, emissiveIntensity: 1.1 * bright, roughness: 0.9, side: THREE.DoubleSide }));
+    // the paper is the ember's colour (ember-to-vibeulon, the lantern's paper): it was cream lit from inside, which read near
+    // white in stills round 2026-11-04-ember-first-1; now the paper is dyed and only a little warmed, so a blue lantern is blue
+    const c = new THREE.Color(color).lerp(new THREE.Color(0xffd9a0), 0.1), dye = new THREE.Color(color).lerp(new THREE.Color(0xfff1d6), 0.35);
+    lanternMats.set(key, new THREE.MeshStandardMaterial({ map: paperShared, color: dye, emissive: c, emissiveMap: paperShared, emissiveIntensity: 0.85 * bright, roughness: 0.9, side: THREE.DoubleSide }));
   }
   const g = new THREE.Group();
   const body = new THREE.Mesh(lanternParts.geo, lanternMats.get(key)); body.position.y = 0.43; g.add(body);

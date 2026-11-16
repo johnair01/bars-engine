@@ -23,10 +23,11 @@ describe('readableHeads', () => {
   const heads = [
     { id: '1', collection: 'rows', recorded: true }, { id: '2', collection: 'rows', recorded: false },
     { id: '3', collection: 'questions', recorded: true }, { id: '4', collection: 'records', recorded: false },
+    { id: '5', collection: 'resolved', recorded: false },
   ]
-  it('leaves out recorded rows and stored records, and only when asked', () => {
+  it('leaves out recorded rows, stored records and resolved answers, and only when asked', () => {
     expect(readableHeads(heads, true).map(h => h.id)).toEqual(['2', '3'])
-    expect(readableHeads(heads, false)).toHaveLength(4)
+    expect(readableHeads(heads, false)).toHaveLength(5)
   })
 })
 

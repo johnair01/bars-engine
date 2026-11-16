@@ -19,6 +19,7 @@ import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
+import { SlipSeedPanel } from '@/components/bars/SlipSeedPanel'
 import { QuestLineagePanel } from '@/components/quests/QuestLineagePanel'
 import { getQuestLineage, listActiveWeeklyGoals } from '@/actions/quests'
 import { readHandDb } from '@/lib/hand-service'
@@ -120,6 +121,14 @@ export default async function BarDetailPage({
     const shadowWeeklyGoals =
         questLineageOk && !questLineageOk.aligned ? await listActiveWeeklyGoals() : []
 
+    const slipSnap = (bar.plantSnapshot ?? null) as { source?: string; side?: 'inner' | 'outer'; trigram?: string; good?: string } | null
+    let slipInputs: { whatHappened?: string | null; storyFit?: string | null } = {}
+    try { slipInputs = bar.inputs ? JSON.parse(bar.inputs) : {} } catch { /* a plain BAR's inputs are not ours */ }
+    const slipPanel = isOwner && slipSnap?.source === 'iching-two-move' && slipSnap.trigram && slipSnap.good && slipSnap.side ? (
+        <SlipSeedPanel barId={bar.id} maturity={barMaturity} trigram={slipSnap.trigram} good={slipSnap.good} side={slipSnap.side}
+            whatHappened={slipInputs.whatHappened ?? null} storyFit={slipInputs.storyFit ?? null} />
+    ) : null
+
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
@@ -173,6 +182,8 @@ export default async function BarDetailPage({
                         </div>
                     )}
                 </div>
+
+                {slipPanel}
 
                 {/* QLA — quest lens lineage + alignment / shadow state (fold-in when shadow) */}
                 {questLineageOk && (

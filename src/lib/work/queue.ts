@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, LEASE_MS, MAX_DRY_MS } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LEASE_MS, MAX_DRY_MS } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -64,6 +64,25 @@ export async function unholdTicket(db: Db, id: string) {
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not held` }
   const ticket = await db.workTicket.update({ where: { id }, data: { state: 'ready' } })
+  return { ok: true as const, ticket }
+}
+
+/**
+ * Steer a ticket he has not started: a ready or held ticket goes to another lane (`to` a lane name) or is held back
+ * (`to` 'hold'). The ticket keeps its other lanes after the one it is steered to, so a dry lane still hands it on. A
+ * claimed, done or failed ticket is left alone: its crew holds it, and the crew's own `release` gives it back. Fleet
+ * by altitude, his A + C on fleet-altitude-look-1 (2026-11-13). Both the harbour page and the MCP tool come here.
+ */
+export async function steerTicket(db: Db, id: string, to: string, by: string, now = new Date()) {
+  if (to !== 'hold' && !isLane(to)) return { ok: false as const, status: 400, error: `to must be hold or one of ${LANES.join(', ')}` }
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state !== 'ready' && t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}; only a ready or held ticket can be steered` }
+  const basis = { ...((t.basis ?? {}) as object), steered: { to, by, at: now.toISOString(), from: t.lane } }
+  const data: Prisma.WorkTicketUpdateInput = to === 'hold'
+    ? { state: 'held', claimedBy: null, leaseUntil: null, basis }
+    : { state: 'ready', lane: to, lanes: [to, ...t.lanes.filter(l => l !== to)], claimedBy: null, leaseUntil: null, basis }
+  const ticket = await db.workTicket.update({ where: { id }, data })
   return { ok: true as const, ticket }
 }
 

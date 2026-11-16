@@ -17,9 +17,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
+import { createHash } from 'node:crypto'
 import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
+import { steerTicket } from '@/lib/work/queue'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
+import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
+import { closeRead, closeSay } from '@/lib/close/chat'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
 import {
@@ -31,12 +35,13 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.2.0'
+const SERVER_VERSION = '1.5.0'
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
 const MAX_IDS = 50
 const MAX_DOCS = 50
+const DESIGN_FACES = ['shaman', 'architect', 'challenger', 'regent', 'diplomat', 'sage']
 const BOARD_DOC_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'records'])
 
 type RpcId = string | number | null
@@ -206,6 +211,17 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
+    name: 'list_tickets',
+    title: 'List work tickets',
+    description: 'List the work tickets the lanes hold (newest first, up to 100), so a client can find the id to steer. '
+      + 'Filter by `lane` (claude, freebuff, deepai) and `state` (ready, claimed, held, done, failed).',
+    inputSchema: {
+      type: 'object',
+      properties: { lane: { type: 'string' }, state: { type: 'string' } },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'pipeline.status',
     title: 'Where a strand stands',
     description: 'Answer a strand\'s callsheet, the stage it has signed, the open gaps the loop reports and the next gate, '
@@ -214,6 +230,20 @@ const TOOLS = [
       type: 'object',
       properties: { strand: STRAND },
       required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'read_answers',
+    title: 'Read his answers',
+    description: 'Read what Wendell answered for each board row, live from the store: state (answered, open or unknown id), '
+      + 'his choice, the option label, his steer note, and when he saved it. Use it before saying anything waits on him.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ids: { type: 'array', minItems: 1, maxItems: MAX_IDS, items: { type: 'string' }, description: 'The question row ids.' },
+      },
+      required: ['ids'],
     },
     annotations: { readOnlyHint: true },
   },
@@ -256,6 +286,21 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: 'check_visible',
+    title: 'Check a row will show',
+    description: 'For each row id, say whether the Council Board page will draw it and where (Open, Your eyes, a battle), '
+      + 'or why not (answered, settled, wrong kind, superseded). It runs the same data merge and status rule as the page. '
+      + 'Run it after post_rows: nobody may say a row is on the board without this answer.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ids: { type: 'array', minItems: 1, maxItems: MAX_IDS, items: { type: 'string' }, description: 'The row ids just posted.' },
+      },
+      required: ['ids'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'asset.verify',
     title: 'Judge a round before it posts',
     description: 'Read the round\'s judge.json receipt and refuse a round whose receipt is missing, belongs to another '
@@ -272,6 +317,17 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: 'list_open',
+    title: 'List what is open',
+    description: 'List what waits: unanswered question rows (newest first), battles with an open turn, and the ready work '
+      + 'tickets per lane with their brief and owner lane. Rows posted before the store kept them may be missing.',
+    inputSchema: {
+      type: 'object',
+      properties: { limit: { type: 'integer', minimum: 1, maximum: 200, description: 'Most questions and battle turns to list; 50 unless given.' } },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'canon.lookup',
     title: 'One canon block',
     description: 'Answer one canon/mechanics file or one rule in canon/play-canon.md: its rule, the words he is quoted '
@@ -282,6 +338,34 @@ const TOOLS = [
       required: ['name'],
     },
     annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'steer_ticket',
+    title: 'Steer a ticket to another lane',
+    description: 'The same move as the harbour page\'s lantern drag (POST /api/work/:id/steer), written to the store at '
+      + 'once: send a ready or held ticket to the lane `lane` (claude, freebuff, deepai), or pass `hold` to hold it back. '
+      + 'A claimed ticket is its crew\'s and is refused.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The ticket id, from list_tickets.' },
+        lane: { type: 'string', description: 'claude, freebuff, deepai, or hold.' } },
+      required: ['id', 'lane'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'close_read',
+    title: 'Read the evening close',
+    description: 'Show the closing ritual for a date (today in Pacific time unless given), at the move it is on: the same text the board page draws, then what a reply may say. Starts the close from the day\'s work tickets if none exists.',
+    inputSchema: { type: 'object', properties: { date: { type: 'string', description: 'YYYY-MM-DD; today if omitted.' } } },
+    annotations: { readOnlyHint: false },
+  },
+  {
+    name: 'close_say',
+    title: 'Say one thing in the evening close',
+    description: 'Apply one reply to the close: a sentence at the glass move, "p4 t3 w5" ratings, "win <id> <1-5>", three lines at the unpacking move, "keep <n>", "push <n>: <reason>", "lantern <n>", "next", "skip", "send <n>" at the lever. Returns the next screen. The lever sends one ticket to Zo per "send", and only after he says it.',
+    inputSchema: { type: 'object', properties: { say: { type: 'string' }, date: { type: 'string' } }, required: ['say'] },
+    annotations: { readOnlyHint: false },
   },
   {
     name: 'ontology.profile',
@@ -345,6 +429,34 @@ function rpcError(id: RpcId, code: number, message: string) {
   return NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } }, { headers: NO_STORE })
 }
 
+/** A look is a design look when it carries `look` (or kind look) and names a face. */
+function isDesignLook(data: Record<string, unknown>): boolean {
+  if (!data.look && data.kind !== 'look') return false
+  const faces = Array.isArray(data.faces) ? data.faces.join(' ') : typeof data.faces === 'string' ? data.faces : ''
+  const named = faces.toLowerCase()
+  return DESIGN_FACES.some((f) => named.includes(f))
+}
+
+/** The sentence that refuses a design look without a sealed pass, or null when the look may be posted. */
+async function unsealedPass(docId: string, data: Record<string, unknown>): Promise<string | null> {
+  if (!isDesignLook(data)) return null
+  const refuse = (why: string) =>
+    `${docId}: this look names design faces, so it needs a pass that ran the design steps. ${why} `
+    + 'Run `python3 council/tools/pass_check.py <pass.md> --seal`, then post the look with `pass: <pass id>`.'
+  const passId = typeof data.pass === 'string' ? data.pass.trim() : ''
+  if (!passId) return refuse('Its `pass` field is empty.')
+  const pass = await latestDoc('council', 'records', passId)
+  if (!pass || pass.kind !== 'pass' || typeof pass.body !== 'string')
+    return refuse(`The records doc "${passId}" is not a stored pass.`)
+  const check = await latestDoc('council', 'records', `pass-check-${passId}`)
+  let sealed: { ok?: unknown; sha256?: unknown } = {}
+  try { sealed = JSON.parse(typeof check?.body === 'string' ? check.body : '{}') } catch { /* unsealed */ }
+  if (sealed.ok !== true) return refuse(`The pass "${passId}" has no passing pass-check record.`)
+  if (sealed.sha256 !== createHash('sha256').update(pass.body, 'utf8').digest('hex'))
+    return refuse(`The pass "${passId}" changed after it was sealed.`)
+  return null
+}
+
 async function postRows(args: Record<string, unknown>): Promise<ToolResult> {
   const raw = args.docs
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_ROWS)
@@ -359,6 +471,8 @@ async function postRows(args: Record<string, unknown>): Promise<ToolResult> {
     const data = doc ? doc.data : null
     if (!data || typeof data !== 'object' || Array.isArray(data))
       return bad(`${docId}: data is the row itself, an object with kind, pass and its list's fields`)
+    const unsealed = await unsealedPass(docId, data as Record<string, unknown>)
+    if (unsealed) return bad(unsealed)
     const lifted = await liftInlinePictures(data, { maker: 'mcp' })
     if (lifted.error) return bad(`${docId}: ${lifted.error}`)
     pictures.push(...lifted.pictures)
@@ -445,6 +559,21 @@ async function postBoardDocs(args: Record<string, unknown>): Promise<ToolResult>
   const dry = args.dry === true
   const result = await sessionWrite(db, writes, dry)
   return ok({ board: 'council', dry, ...result })
+}
+
+async function listTickets(args: Record<string, unknown>): Promise<ToolResult> {
+  const lane = typeof args.lane === 'string' && args.lane ? args.lane : undefined
+  const state = typeof args.state === 'string' && args.state ? args.state : undefined
+  const tickets = await db.workTicket.findMany({ where: { lane, state }, orderBy: { createdAt: 'desc' }, take: 100,
+    select: { id: true, title: true, lane: true, lanes: true, state: true, claimedBy: true, attempts: true, createdAt: true } })
+  return ok({ board: 'council', tickets })
+}
+
+async function steerTool(args: Record<string, unknown>): Promise<ToolResult> {
+  if (typeof args.id !== 'string' || typeof args.lane !== 'string') return bad('steer_ticket needs id and lane')
+  const r = await steerTicket(db, args.id, args.lane, 'mcp')
+  if (!r.ok) return bad(r.error)
+  return ok({ board: 'council', ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane, lanes: r.ticket.lanes } })
 }
 
 async function pipelineStatusTool(args: Record<string, unknown>): Promise<ToolResult> {
@@ -544,6 +673,31 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'read_picture') return readPicture(args)
   if (name === 'list_pictures') return listPicturesTool(args)
   if (name === 'post_board_docs') return postBoardDocs(args)
+  if (name === 'list_tickets') return listTickets(args)
+  if (name === 'steer_ticket') return steerTool(args)
+  if (name === 'read_answers') {
+    const ids = Array.isArray(args.ids)
+      ? args.ids.filter((v): v is string => typeof v === 'string' && v.trim() !== '').slice(0, MAX_IDS)
+      : []
+    if (ids.length === 0) return bad('read_answers needs ids: the question rows to look up')
+    return ok({ board: 'council', answers: await readAnswers(ids) })
+  }
+  if (name === 'check_visible') {
+    const ids = Array.isArray(args.ids)
+      ? args.ids.filter((v): v is string => typeof v === 'string' && v.trim() !== '').slice(0, MAX_IDS)
+      : []
+    if (ids.length === 0) return bad('check_visible needs ids: the row ids just posted')
+    return ok({ board: 'council', rows: await checkVisible(ids) })
+  }
+  if (name === 'list_open') {
+    const n = Number(args.limit)
+    return ok(await listOpen(Number.isInteger(n) && n >= 1 ? Math.min(n, 200) : 50))
+  }
+  if (name === 'close_read') return ok(await closeRead(db, typeof args.date === 'string' ? args.date : undefined))
+  if (name === 'close_say') {
+    if (typeof args.say !== 'string' || !args.say.trim()) return bad('close_say needs say: what he replies at this step')
+    return ok(await closeSay(db, args.say, typeof args.date === 'string' ? args.date : undefined))
+  }
   if (name === 'pipeline.status') return pipelineStatusTool(args)
   if (name === 'pipeline.next') return pipelineNextTool(args)
   if (name === 'loop.checks') return loopChecks(args)
@@ -571,8 +725,9 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
- *   read_picture, list_pictures, post_board_docs, whoami, and the pipeline door's nine (pipeline.status, pipeline.next,
- *   loop.checks, asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)
+ *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
+ *   close_read, close_say, whoami, and the pipeline door's nine (pipeline.status, pipeline.next, loop.checks,
+ *   asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0

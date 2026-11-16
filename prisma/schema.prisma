@@ -1765,6 +1765,8 @@ model Vibulon {
   stakedOnBarId String?
   /// What made this coin: { move?: string, feel?: string }, or null (src/lib/economy/coin-marks.ts).
   energy        Json?
+  /// The coin's face (ember-to-vibeulon FR-009): { v, ring, tex, seal, color, mat }; null before the face shipped.
+  face          Json?
   createdAt     DateTime     @default(now())
   bountyStake   BountyStake?
   creator       Player?      @relation("VibulonCreator", fields: [creatorId], references: [id])
@@ -5282,6 +5284,7 @@ model BetweenGarden {
   shown    BetweenShown[]
   privates BetweenPrivate[]
   presence BetweenPresence[]
+  notices  BetweenNotice[]
 
   @@index([startedById])
   @@map("between_gardens")
@@ -5296,6 +5299,18 @@ model BetweenMember {
   @@id([gardenId, playerId])
   @@index([playerId])
   @@map("between_members")
+}
+
+/// One notice email per Between per day of the Between per friend (friendship-between-growth FR-009). Written before the send.
+model BetweenNotice {
+  gardenId String   @map("garden_id")
+  playerId String   @map("player_id")
+  day      Int
+  sentAt   DateTime @default(now()) @map("sent_at")
+  garden   BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId, day])
+  @@map("between_notices")
 }
 
 /// Agreements and offerings (kind, status and who planted it are inside data, as the page writes them).
@@ -5508,4 +5523,45 @@ model WorkLane {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("work_lanes")
+}
+
+/// The Chronicler's story ladder (six-faces-council callsheet chronicler-ladder, Wendell 2026-11-15). A card is a
+/// BAR placed on one of six rungs; a link joins a higher rung's card to a lower one (several parents allowed,
+/// never upward: cl-parents-1 B, cl-loops-1 A); a flag is one question the Chronicler still owes him after an approval.
+model ChroniclerNode {
+  barId     String   @id @map("bar_id")
+  rung      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([rung])
+  @@map("chronicler_nodes")
+}
+
+model ChroniclerLink {
+  id        String   @id @default(cuid())
+  parentId  String   @map("parent_id")
+  childId   String   @map("child_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([parentId, childId])
+  @@index([childId])
+  @@map("chronicler_links")
+}
+
+model ChroniclerFlag {
+  id           String    @id @default(cuid())
+  barId        String    @map("bar_id")
+  causedByBarId String   @map("caused_by_bar_id")
+  /// 'ripple' (a card above or below the approved one) or 'horizontal' (the approved card's own rung).
+  kind         String
+  ask          String
+  /// 'open' | 'answered' | 'dismissed'
+  status       String    @default("open")
+  answer       String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  answeredAt   DateTime? @map("answered_at")
+
+  @@index([status, createdAt])
+  @@index([barId])
+  @@map("chronicler_flags")
 }

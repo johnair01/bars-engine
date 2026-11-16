@@ -11,7 +11,7 @@ and for any worker a session starts.
 - Run the reach test first (`reach_test` in `council/faces.yaml`; the skill is `.claude/skills/six-faces/`). A
   question the record can answer becomes a position that stands unless he flips it.
 - Board rows are written in the council's home repo, `wendell-britt/six-faces-council`, as rows posted with
-  `board/post_rows.py` that the board-pull Action lands on main. Its `CLAUDE.md` holds the full rule.
+  `board/post_rows.py` that a session lands on main with `python3 board/live_pull.py` (no Action runs since 2026-11-02). Its `AGENTS.md` holds the full rule.
 - A chat reply says what changed and names the new board rows with the link. It ends without a question.
 - A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
   anything.
@@ -38,7 +38,7 @@ tests and shows its change locally. Full procedure: [`docs/LOCAL_FIRST_TESTING.m
 
 Wendell, 2026-11-04 (council board `lf-daily-ship`, answer A). Every merge to `main` is a production build, so threads
 no longer self-merge in bars-engine. When `scripts/local/check.sh --build` is green and no look gates the pull request
-(`board/answered.py --pr N` in the council repo), mark it ready for review and add the `ship-next` label, then stop. One
+(`board/answered.py --repo johnair01/bars-engine --pr N` in the council repo; without `--repo` the number reads as a council PR), mark it ready for review and add the `ship-next` label, then stop. One
 shipping session a day merges every `ship-next` pull request in one batch (`docs/LOCAL_FIRST_TESTING.md` section 7).
 Only an urgent fix (production down, payment or sign-in broken) merges straight to `main` by hand, and its description
 says why. Council pull requests are unchanged.
