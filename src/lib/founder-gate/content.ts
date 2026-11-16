@@ -192,45 +192,86 @@ export function courierLine(shipped: number | null, goal = 300): string | null {
   return `${Math.floor(shipped)} of about ${goal} shipped`
 }
 
-/* ───── The backstory: the story that makes a friend's part in it make sense ─────
- * PLACEHOLDER. Wendell: two lines is not enough; it must carry impact and be shown, not imagined. The interview thread
- * is drawing the real story out of him and will hand over a seed v3. Each beat is a picture and a few sentences; swap
- * the text and the picture, add or remove beats, and the walk follows. Pictures are existing files only.
+/* ───── The backstory: his words, draft 2 (Six-faces-council fundraiser-2026-11-16 drafts/backstory.md, seed v3) ─────
+ * The text is his, shaped by the interview thread, and waits on his read (one [ASK] gap: why this friend, why now).
+ * The pictures are STAND-INS: the interview thread's storyboard will replace them. Swap text and picture per beat.
  */
 export interface StoryBeat {
   title: string
-  text: string
+  paras: string[]
   img: string
   alt: string
-  placeholder: boolean
+  /** true while the picture is a stand-in for the storyboard frame */
+  standIn: boolean
 }
 export const STORY: StoryBeat[] = [
   {
-    title: 'The old friend',
-    text: 'PLACEHOLDER. Who Wendell is to you: the friend who builds games about helping people help each other, and who showed up when you needed it.',
-    img: '/mastering-allyship/wendell.jpg',
-    alt: 'Wendell Britt',
-    placeholder: true,
-  },
-  {
     title: 'The book is done',
-    text: 'PLACEHOLDER. He finished Mastering the Game of Allyship. About 300 Kickstarter backers are still waiting for their copies.',
+    paras: [
+      'In August I finished the book, Mastering the Game of Allyship. I wanted my life back on track. I wanted to start shipping copies to the people who backed it, and to spend my days on something I cared about.',
+      'So I took a job at a tea store. Three days later they fired me, and I fell back into the scramble of making ends meet.',
+    ],
     img: '/launch/cover-front.png',
     alt: 'The cover of Mastering the Game of Allyship',
-    placeholder: true,
+    standIn: true,
   },
   {
-    title: 'The fall',
-    text: 'PLACEHOLDER. The bank account is at zero and the bills are due. This is where the real story, in his words, goes.',
-    img: '/images/bb-invite-poster.png',
-    alt: 'An invitation poster from the Bruised Banana residency',
-    placeholder: true,
+    title: 'What I came back to',
+    paras: [
+      'Somewhere in the scramble I came back to something I keep coming back to. The book was done. Now I could build what I really care about: games that help the world be a better place.',
+      'The plan was to turn Mastering the Game of Allyship into a game you can play, then do the same for Friendcraft and Flirtcraft. This time, instead of working alone like I did on the book, I would open the workshop on Patreon so you could watch it being built. All I needed first was a job.',
+    ],
+    img: '/mastering-allyship/wendell.jpg',
+    alt: 'Wendell Britt',
+    standIn: true,
   },
   {
-    title: 'The gate',
-    text: 'PLACEHOLDER. Why you are here: there is a way to help that is a game worth playing, and you are the hero of your part of it.',
+    title: 'Months later',
+    paras: [
+      'That was months ago. The job has not come, so the backers’ books have not shipped.',
+      'But the game has grown. It carries the game of BARs into the digital world, a place to practice these ideas that is more alive than a page.',
+      'The book is live on Amazon now. If you backed it, you are still waiting for your copy, and I want it in your hands as soon as I can. That is what this campaign is for.',
+    ],
     img: '/coaching/meet-your-daemons-poster.jpg',
     alt: 'The daemons who work with the player',
-    placeholder: true,
+    standIn: true,
   },
+  {
+    title: 'A test',
+    paras: [
+      'It is also a test. If what I wrote in the book works, it should work on me. The universe keeps putting me where I have to find out.',
+      'Here is what I have made peace with. I am a game designer. I write, but I write for games. And I cannot do this alone, even though I keep trying, and every time that story looks a lot less glamorous than I would like.',
+    ],
+    img: '/images/bb-invite-poster.png',
+    alt: 'An invitation poster from the Bruised Banana residency',
+    standIn: true,
+  },
+  {
+    title: 'Where you come in',
+    paras: ['So I am not doing it alone. That is where you come in.', 'Come through the gate. Make your own cultivator, and find the shape of the help that is yours to give.'],
+    img: '/launch/allyship-deck-cover-1280x720.png',
+    alt: 'The Allyship deck cover',
+    standIn: true,
+  },
+]
+
+/* ───── The friend's own arc (seed v3): the true shape of their impact, and the dream they plant ─────
+ * PLACEHOLDER copy and options: the interview thread's answers shape these.
+ */
+export const IMPACT_LINE =
+  'Holding space for someone is one shape of help. Yours may be bigger. The places below are different shapes; the one that lights up is a clue.'
+
+export const STUCK_INTRO =
+  'Help that runs in crisis mode burns the helper out. Stuck means something is holding that pattern in place. Befriend it with one step.'
+
+export interface Dream {
+  id: string
+  name: string
+  line: string
+}
+export const DREAMS: Dream[] = [
+  { id: 'make', name: 'Something I will make', line: 'It rests in the grounds until you have the room to build it.' },
+  { id: 'place', name: 'A place I will go', line: 'It waits for you, planted where the sect can keep it.' },
+  { id: 'become', name: 'Someone I will become', line: 'A seed that grows slowly while your attention is elsewhere.' },
+  { id: 'give', name: 'Something I will give', line: 'A gift you are saving for the right season.' },
 ]

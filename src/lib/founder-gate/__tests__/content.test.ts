@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FEELINGS, PLACES, LINKS, placesFor, stuckStep, keepsakeLine, courierLine, ROBES } from '../content'
+import { FEELINGS, PLACES, LINKS, placesFor, stuckStep, keepsakeLine, courierLine, ROBES, STORY, DREAMS } from '../content'
 import parts from '../../../../public/between/cult/parts.json'
 
 describe('founder gate content', () => {
@@ -22,6 +22,11 @@ describe('founder gate content', () => {
   })
   it('offers only robes that exist in the cultivation parts', () => {
     for (const r of ROBES) expect(Object.keys(parts.outfits)).toContain(r.id)
+  })
+  it('carries his backstory in several illustrated beats and four dreams', () => {
+    expect(STORY.length).toBeGreaterThanOrEqual(4)
+    for (const b of STORY) { expect(b.paras.length).toBeGreaterThan(0); expect(b.img.startsWith('/')).toBe(true) }
+    expect(DREAMS.length).toBe(4)
   })
   it('names the step, the keepsake and the count', () => {
     expect(stuckStep('anger').move).toMatch(/Triumph|Breakthrough/)

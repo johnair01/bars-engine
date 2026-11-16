@@ -8,6 +8,9 @@ import {
   FRAMES,
   PAY,
   STORY,
+  IMPACT_LINE,
+  STUCK_INTRO,
+  DREAMS,
   PLACES,
   ROBES,
   SKIN_RAMP,
@@ -113,6 +116,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
   const [name, setName] = useState('')
   const [view, setView] = useState(0)
   const [beat, setBeat] = useState(0)
+  const [dream, setDream] = useState<string | null>(null)
   const [ready, setReady] = useState<'wait' | 'yes' | 'no'>('wait')
   const frame = useRef<HTMLIFrameElement>(null)
 
@@ -164,9 +168,9 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
         {screen === 'story' && (() => { const sb = STORY[beat]; const last = beat === STORY.length - 1; return (
           <section style={{ display: 'grid', gap: 14 }}>
             <img src={sb.img} alt={sb.alt} style={{ width: '100%', maxHeight: 300, objectFit: 'cover', borderRadius: 18, border: `1px solid ${LINE}` }} />
-            <p style={{ margin: 0, color: MUTED, fontSize: '.75rem' }}>{beat + 1} of {STORY.length}{sb.placeholder ? ' · placeholder text, the real story is coming' : ''}</p>
+            <p style={{ margin: 0, color: MUTED, fontSize: '.75rem' }}>{beat + 1} of {STORY.length}{sb.standIn ? ' · stand-in picture, the storyboard replaces it' : ''}</p>
             <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.5rem' }}>{sb.title}</h2>
-            <p style={{ margin: 0, lineHeight: 1.55 }}>{sb.text}</p>
+            {sb.paras.map((t) => <p key={t} style={{ margin: 0, lineHeight: 1.55 }}>{t}</p>)}
             <div style={{ display: 'flex', gap: 8 }}>
               {beat > 0 && <button type="button" style={{ ...btn, flex: '0 0 auto' }} onClick={() => setBeat(beat - 1)}>Back</button>}
               <button type="button" style={{ ...primary, flex: 1 }} onClick={() => (last ? go('make') : setBeat(beat + 1))}>{last ? 'Make your cultivator' : 'Next'}</button>
@@ -230,6 +234,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
           <section style={{ display: 'grid', gap: 12 }}>
             <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>The outer grounds</h2>
             <p style={{ margin: 0, color: MUTED, fontSize: '.92rem' }}>Each lit place is a move toward {feel.name}. Walk to one.</p>
+            <p style={{ margin: 0, color: MUTED, fontSize: '.88rem' }}>{IMPACT_LINE}</p>
             {PLACES.map((p) => {
               const on = lit.includes(p)
               return (
@@ -243,6 +248,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
             <button type="button" style={btn} onClick={() => setStuck((s) => !s)} aria-expanded={stuck}>Stuck?</button>
             {stuck && (() => { const s = stuckStep(feel.id); return (
               <div style={{ ...btn, cursor: 'default', display: 'grid', gap: 6 }}>
+                <span style={{ color: MUTED, fontSize: '.85rem' }}>{STUCK_INTRO}</span>
                 <b style={{ color: GOLD }}>{s.move}</b>
                 <span>{s.action}</span>
               </div>) })()}
@@ -270,6 +276,16 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
           <section style={{ display: 'grid', gap: 12 }}>
             <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.4rem' }}>{name.trim() ? `${name.trim()}, your keepsake` : 'Your keepsake'}</h2>
             <p style={{ margin: 0, lineHeight: 1.5 }}>{keepsakeLine(feel.id, visited)}</p>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <b style={{ color: GOLD, fontSize: '.85rem' }}>Plant your own dream beside your figure</b>
+              <p style={{ margin: 0, color: MUTED, fontSize: '.88rem' }}>The sect keeps it safe while your attention is elsewhere. This is an exchange: you are not only giving.</p>
+              {DREAMS.map((d) => (
+                <button key={d.id} type="button" aria-pressed={dream === d.id} style={{ ...btn, display: 'grid', gap: 2, borderColor: dream === d.id ? GOLD : LINE }} onClick={() => setDream(d.id)}>
+                  <b>{d.name}</b><span style={{ color: MUTED, fontSize: '.85rem' }}>{d.line}</span>
+                </button>
+              ))}
+              {dream && <p style={{ margin: 0, color: GOLD }}>Planted: {DREAMS.find((d) => d.id === dream)?.name}. It stands beside your figure in the grounds.</p>}
+            </div>
             <p style={{ margin: 0, color: MUTED, fontSize: '.9rem' }}>Your cultivator stands in the sect. Take a screenshot to keep this. You are the hero of this story, and the move was yours.</p>
             <label style={{ display: 'grid', gap: 4, color: MUTED, fontSize: '.85rem' }}>
               Name on the keepsake (optional)
