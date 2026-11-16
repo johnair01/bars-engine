@@ -73,3 +73,20 @@ export function makeQiSky(handles) {
   }
   return { rebase, step, get qi() { return k; } };
 }
+
+/* ---------- the room's own light: qi as the embers kept (ember-to-vibeulon FR-007, FR-008) ----------
+   His A on ee-qi-role (2026-10-29): qi is the meter your embers fill. It shows as the room's light (hearth and lamps,
+   council position ee2-qi-is-nook-light), never the sky, which stays lit by the Between's health above. One ember is one
+   ember whatever its glow (ee-glow-sets-nothing), and a kept ember stays kept when it is written into a BAR or lit in a
+   lantern, so the light never falls. The steps double: 1, 2, 4, 8, 16 embers, so the first ember is felt at once and
+   the room keeps warming slowly after. */
+export const ROOM_STEPS = 5;
+/** The room's light step, 0..ROOM_STEPS, from a count of kept embers. */
+export function qiFromEmbers(count) {
+  const n = Math.max(0, Math.floor(Number(count) || 0));
+  return n === 0 ? 0 : Math.min(ROOM_STEPS, 1 + Math.floor(Math.log2(n)));
+}
+/** How much brighter the hearth and lamps burn at a step: a third more for the first ember, near double at the last. */
+export const roomLift = step => { const k = Math.max(0, Math.min(ROOM_STEPS, step)); return k === 0 ? 1 : 1.15 + 0.15 * k; };
+/** A kept ember: held in the pouch, lit in a lantern, or written into a BAR. */
+export const isKept = e => !!e && typeof e === "object" && (e.state === "held" || e.state === "lit" || e.state === "written");
