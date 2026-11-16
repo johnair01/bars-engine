@@ -86,6 +86,13 @@ The project contains distinct narrative **voices** derived from the creator's ar
 
 The Portland community around this project has a strong allergy to AI. Design choices, documentation, and public-facing language should respect this. The non-AI version is not a fallback; it is a first-class delivery mode.
 
+## Character model: cultivation, not Average Dusk
+
+Wendell, 2026-11-16: "We shouldn't be using this model for tests anymore now we have the cultivation model we've
+created. We need to deprecate this figure." Tests, previews, looks and new briefs use the cultivation characters
+(`public/between/cult/`, `player-body.js`, `walker.js`), never `average-dusk.glb`. Deprecated means labeled, not
+deleted: [`docs/DEPRECATED_DUSK_FIGURE.md`](docs/DEPRECATED_DUSK_FIGURE.md) lists what still loads it at runtime.
+
 ## Stack
 
 TypeScript, Next.js 14+, Prisma (PostgreSQL), Tailwind CSS, AI SDK. Source in `src/`, tests in `tests/`.
