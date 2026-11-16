@@ -883,6 +883,9 @@ function realms() {
       col: styleOf(portalTo.style).sky.low, el: "water", lights: [["#ffe2a8", 1], ["#ffe2a8", 0.35]], go: () => walkThrough(portalTo.id, portalTo.invite) });
   for (const r of rooms) out.push({ key: "room:" + r.id, name: r.phase === "spark" ? "A spark for " + roomName(r) : roomName(r) + " and you", line: r.phase === "spark" ? "You tend it alone until " + roomName(r) + " comes." : "The Between you share. Your two lights wait at its hearth.",
     col: styleOf(r.style).sky.low, el: "wood", lights: r.phase === "spark" ? [["#ffe2a8", 1]] : [["#ffe2a8", 1], ["#ffe2a8", 1]], go: () => walkThrough(r.id) });
+  // the moot: the third room of two, a clearing ring where the shared pick is sent (shared-pick-room-look-1, his A); only for a room of two
+  for (const r of rooms) if (r.phase !== "spark") out.push({ key: "clearing:" + r.id, name: "The moot with " + roomName(r), line: "Seven stones ring a small fire in the open. Send a card to it; the fire opens both letters at once.",
+    col: [0.34, 0.2, 0.42], el: "fire", lights: [["#ff8a3d", 1], ["#ffe2a8", 0.5], ["#ffe2a8", 0.5]], go: () => { markSeen(); location.href = "/between/clearing.html?g=" + encodeURIComponent(r.id); } });
   const ks = keepsakes();
   out.push({ key: "chamber", name: "The keeping chamber", line: ks.length ? `${ks.length} ${ks.length === 1 ? "stone keeps its" : "stones keep their"} light, where your blocks cleared.` : "Where a block clears, it leaves a stone that keeps its light.",
     col: [0.42, 0.62, 0.86], el: "water", frost: true, lights: ks.length ? ks.map(([, k]) => [KS_LIGHT[k.element] || "#ffe2a8", 1]) : [["#cfe6ff", 0.3]], go: () => act0("goChamber") });
