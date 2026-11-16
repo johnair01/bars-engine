@@ -97,7 +97,13 @@ function supportBVHs(X, extra) {
   for (let i = 0; i < N; i++) { v.fromBufferAttribute(G.attributes.position, i); F.mesh.applyBoneTransform(i, v); v.applyMatrix4(F.mesh.matrixWorld); P[i * 3] = v.x; P[i * 3 + 1] = v.y; P[i * 3 + 2] = v.z; }
   const legs = new Set(['hipL', 'hipR', 'kneeL', 'kneeR', 'ankleL', 'ankleR', 'ballL', 'ballR'].map(n => F.boneName.indexOf(n))), I = F.idx0.array, keep = [];
   for (let t = 0; t < I.length; t += 3) if (legs.has(F.dom[I[t]]) || legs.has(F.dom[I[t + 1]]) || legs.has(F.dom[I[t + 2]])) keep.push(I[t], I[t + 1], I[t + 2]);
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setIndex(keep);
+  // Reading A (his 2026-11-16: the skirt is its own layer over the trousers): the layers under the skirt are colliders
+  // too. The trousers and the boots are posed triangles in the same support, so the cloth rests on their surface (the
+  // boot is 0.011 thick and the body skin alone let the hem sink between the shin and the sole).
+  const pos = [Array.from(P)], idx = [Array.from(keep)]; let base = N;
+  for (const pt of X.parts) { if (!/^(trousers|boots|shoes|legwraps)/.test(pt.name)) continue;
+    const w = partWorld(pt), I2 = pt.idxSeat0 || pt.geo.index.array; pos.push(Array.from(w)); idx.push(Array.from(I2, i => i + base)); base += w.length / 3; }
+  const PP = new Float32Array(pos.flat()), g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(PP, 3)); g.setIndex(idx.flat());
   const out = [new MeshBVH(g)];
   for (const m of extra) { m.updateMatrixWorld(true); const g2 = m.geometry.clone().applyMatrix4(m.matrixWorld); out.push(new MeshBVH(g2.index ? g2 : g2)); }
   return out;
