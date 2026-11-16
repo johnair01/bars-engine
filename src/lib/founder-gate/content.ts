@@ -433,3 +433,10 @@ export const PLACE_SPOTS: Array<[number, number]> = [[30, 30], [72, 34], [30, 52
 export const GROUND_SPOTS: Record<string, [number, number]> = {
   'training-hall': [30, 30], 'quiet-room': [72, 30], library: [24, 48], 'couriers-post': [76, 48], 'gift-shelf': [26, 66], 'sect-gate': [72, 66],
 }
+
+export function dreamLine(dreamId: string | null): string {
+  const d = DREAMS.find((x) => x.id === dreamId)
+  return d
+    ? `Your cultivator stands in the sect. Beside it you planted: ${d.name.charAt(0).toLowerCase()}${d.name.slice(1)}. It rests here and grows while your attention is elsewhere.`
+    : 'Your cultivator stands in the sect. Plant a dream beside it.'
+}
