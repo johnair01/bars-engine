@@ -15,7 +15,7 @@
   .land-name b { font-family: var(--display); font-size: 1.02rem; display: block; }
   .land-name span { font-size: .78rem; color: var(--glass-muted); }
   .land-top .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-  .land-top button { background: var(--glass); color: var(--glass-ink); border-color: rgba(255,255,255,.18); backdrop-filter: blur(6px); min-height: 40px; }
+  .land-top button { background: var(--glass); color: var(--glass-ink); border-color: rgba(255,255,255,.18); backdrop-filter: blur(6px); min-height: 44px; }
   .land-card { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: min(92vw, 520px); box-sizing: border-box;
     background: var(--glass); color: var(--glass-ink); backdrop-filter: blur(6px); border-radius: 14px; padding: 10px 14px; display: grid; gap: 8px; }
   .land-card b { font-family: var(--display); } .land-card .t { font-size: .88rem; color: var(--glass-muted); }
@@ -29,6 +29,9 @@
   .land-card .mw input:focus-visible { outline: 2px solid #ffc46a; outline-offset: 1px; }
   .land-card button:focus-visible { outline: 2px solid #ffc46a; outline-offset: 2px; }   /* Impeccable critique, ctw-friends-fire T012: keyboard players see which seal or button is chosen */
   .land-card button.alt { background: transparent; }
+  .land-card .row { display: flex; gap: 8px; flex-wrap: wrap; } .land-card .row button { min-height: 44px; }
+  .land-card input, .land-card textarea { min-height: 44px; box-sizing: border-box; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: var(--glass-ink); font: inherit; caret-color: #e2a85c; }
+  .land-card input:focus, .land-card textarea:focus { outline: 3px solid #e2a85c; outline-offset: 1px; }
   .land-card .notes button { min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: #3f6a3a; border-color: rgba(255,255,255,.3); font-family: Marcellus, serif; font-size: 1rem; }
   .land-card .notes button.lit { box-shadow: 0 0 0 2px #f3d27a inset, 0 0 10px rgba(243,210,122,.45); }
   .land-card .blocks button { min-height: 44px; }
@@ -55,9 +58,13 @@
     <div class="btns"><button type="button" id="soundBtn" aria-pressed="true">Sound on</button><button type="button" id="homeBtn">Home</button></div>
   </div>
   <div class="land-cap" id="caption" hidden aria-live="polite"></div>
-  <div class="land-card" id="card" hidden></div>
+  <div class="land-card" id="card" role="status" aria-live="polite" hidden></div>
 </div>
 <div class="land-fade" id="fade" hidden></div>
 <script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="the 3D library did not load";}},20000);</script>
-<script type="module" src="/between/land/land.js"></script>
+<!-- The Infinite Arcade hall (?place=arcade) and the ask cabinet's desk (?place=ask-desk) are their own scene, arcade/arcade.js. -->
+<script type="module">
+  const p = new URLSearchParams(location.search).get("place");
+  import(p === "arcade" || p === "ask-desk" ? "/between/arcade/arcade.js" : "/between/land/land.js");
+</script>
 </body></html>

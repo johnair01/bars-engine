@@ -7,7 +7,7 @@ const cast = (n: number) => ({ kind: 'cast', by: 'a', answer: { b: { card: 'x', 
 
 describe('growth.js isFeed', () => {
   it('feeds on a cast the other friend answered and on a kept turn', () => {
-    expect(isFeed(cast(5))).toEqual({ kind: 'answer', by: ['b'], at: 5 })
+    expect(isFeed(cast(5))).toEqual({ kind: 'answer', by: ['a', 'b'], at: 5 })
     expect(isFeed(kept(9))).toEqual({ kind: 'turn', by: ['a', 'b'], at: 9 })
   })
   it('does not feed on a cast unanswered, its own tosser\'s answer, an unkept turn or a cup', () => {

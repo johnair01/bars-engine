@@ -4,7 +4,34 @@ import { NextRequest } from 'next/server'
 // The route reaches the board's store, which imports 'server-only'; every sibling suite stubs it the same way.
 vi.mock('server-only', () => ({}))
 
+import { createHash } from 'node:crypto'
+// The steer tools write the work queue; the suite gives them a one-ticket store.
+const tix = vi.hoisted(() => ({ rows: [] as Record<string, unknown>[] }))
+vi.mock('@/lib/db', () => ({
+  db: {
+    workTicket: {
+      findUnique: async ({ where }: { where: { id: string } }) => tix.rows.find((t) => t.id === where.id) ?? null,
+      findMany: async () => tix.rows,
+      update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const t = tix.rows.find((x) => x.id === where.id)!
+        Object.assign(t, data)
+        return t
+      },
+    },
+  },
+}))
+
 import { setBackend, type ContentBackend } from '@/lib/board/content-store'
+const docs = new Map<string, Record<string, unknown>>()
+vi.mock('@/lib/board/store', async (orig) => ({
+  ...(await orig<typeof import('@/lib/board/store')>()),
+  latestDoc: async (_b: string, c: string, id: string) => docs.get(`${c}/${id}`) ?? null,
+}))
+vi.mock('@/lib/board/session-write', async (orig) => ({
+  ...(await orig<typeof import('@/lib/board/session-write')>()),
+  sessionWrite: async (_db: unknown, w: unknown[]) => ({ written: w.length }),
+}))
+
 import { POST } from '../route'
 
 const KEY = 'test-council-key'
@@ -61,6 +88,23 @@ describe('the board MCP server', () => {
     expect(names).toContain('read_picture')
     expect(names).toContain('list_pictures')
     expect(names).toContain('post_board_docs')
+    expect(names).toContain('steer_ticket')
+    expect(names).toContain('list_tickets')
+  })
+
+  it('steer_ticket writes the store at once, and refuses a claimed ticket', async () => {
+    tix.rows = [
+      { id: 't1', title: 'x', state: 'ready', lane: 'claude', lanes: ['claude'], basis: {} },
+      { id: 't2', title: 'y', state: 'claimed', lane: 'claude', lanes: ['claude'], basis: {} },
+    ]
+    const moved = await rpc('tools/call', { name: 'steer_ticket', arguments: { id: 't1', lane: 'freebuff' } })
+    expect(moved.result?.isError).toBe(false)
+    expect(tix.rows[0]).toMatchObject({ lane: 'freebuff', state: 'ready' })
+    const refused = await rpc('tools/call', { name: 'steer_ticket', arguments: { id: 't2', lane: 'freebuff' } })
+    expect(refused.result?.isError).toBe(true)
+    expect(tix.rows[1].lane).toBe('claude')
+    const listed = await rpc('tools/call', { name: 'list_tickets', arguments: {} })
+    expect(listed.result?.content?.[0].text).toContain('t1')
   })
 
   it('stores a picture, shows it back as image content, and lists it', async () => {
@@ -82,6 +126,21 @@ describe('the board MCP server', () => {
     const put = await call('put_picture', { data: 'data:image/bmp;base64,AAAA' })
     expect(put.result?.isError).toBe(true)
     expect(put.result?.content?.[0]?.text).toContain('image/png')
+  })
+
+  it('refuses a design look without a sealed pass, and accepts it with one', async () => {
+    docs.clear()
+    const look = { kind: 'look', look: true, faces: ['shaman', 'regent'], pass: 'demo-pass' }
+    const refused = await call('post_rows', { docs: [{ docId: 'look-1', data: look }] })
+    expect(refused.result?.isError).toBe(true)
+    expect(refused.result?.content?.[0]?.text).toContain('pass_check.py')
+
+    const body = 'Ontology: profile game_design\n'
+    docs.set('records/demo-pass', { kind: 'pass', body })
+    docs.set('records/pass-check-demo-pass', { kind: 'ledger', body: JSON.stringify({
+      pass: 'demo-pass', ok: true, sha256: createHash('sha256').update(body, 'utf8').digest('hex') }) })
+    const accepted = await call('post_rows', { docs: [{ docId: 'look-1', data: look }] })
+    expect(accepted.result?.isError).toBe(false)
   })
 
   it('refuses a call without the key', async () => {
