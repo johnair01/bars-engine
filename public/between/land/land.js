@@ -430,16 +430,20 @@ async function makeFriends(ff) {
 async function makeRoadFigure() {
   let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
   const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
-  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2h", underwrap: true });
   scene.add(W.holder);
   const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
+  const { packGroup } = await import("./pack.js"); bag.add(packGroup(THREE));   // a bundle, not the toolbag's box
   const plank = new THREE.Group();
   /* the kneel for the letter (his A on hj-cultivation-look-1): the same seiza the nook hearth uses (cult/kneel.js), fitted to the
      ground (seat top 0). Loaded on the first kneel. Walking on stands her up again. */
   let K = null, kneeling = false;
+  /* the pack rides the back: kneeling lowers the hips, so the pack drops with them (it hung at standing mid-back height and floated by her head) */
+  const hipY = () => { const v = new THREE.Vector3(); W.X.F.bones.hips.getWorldPosition(v); return W.holder.worldToLocal(v).y; }; W.holder.updateMatrixWorld(true); const hip0 = hipY();
+  const dropPack = () => { W.holder.updateMatrixWorld(true); bag.position.y = 0.92 + (kneeling ? hipY() - hip0 : 0); };
   return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, get kneeling() { return kneeling; },
-    async kneel() { if (kneeling) return; const { makeKneel } = await import("../cult/kneel.js"); K = K || makeKneel(W); K.sit(0); kneeling = true; },
-    stand() { if (!kneeling) return; K.stand(); kneeling = false; },
+    async kneel() { if (kneeling) return; const { makeKneel } = await import("../cult/kneel.js"); K = K || makeKneel(W); K.sit(0); kneeling = true; dropPack(); },
+    stand() { if (!kneeling) return; K.stand(); kneeling = false; dropPack(); },
     update(dt, moving) { if (kneeling) { if (moving) this.stand(); else return; } W.update(dt, moving); } };
 }
 async function makeFigure(M) {
