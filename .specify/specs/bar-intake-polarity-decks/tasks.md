@@ -27,7 +27,12 @@ Each phase is one pull request, checked with `scripts/local/check.sh --build`, l
 
 - [ ] Seed the Challenger's polarity deck: 32 cards, 4 Shielding live, 28 sealed; Grow Up cards marked `(book to name)`
 - [ ] Sealed-card hand state with the redirect line (FR-010); a test for one Sparring cast and one line 6 recast
-- [ ] Keep path: the player's capture becomes a BAR through the writer, and a kept BAR moves the needle (FR-011)
+- [x] Standing (`src/lib/polarity/standing.ts`, `challenger-deck.ts`): a player's standing is derived from kept acts; the
+      other pole opens BESIDE the held one after `TURN_AFTER_KEPT` kept acts, one-way, for that player only, with no count
+      shown (bar-decks-unseal-2 = A, 2026-11-16). `TURN_AFTER_KEPT` is a PLACEHOLDER (5) until the three-playtester
+      paper walk sets it; `OTHER_POLE_COUNTS` (false) waits on his answer to the next question
+- [ ] Keep path: the player's capture becomes a BAR through the writer, and a kept BAR moves the needle (FR-011); it
+      calls `keepAct` from standing.ts to learn whether a card turns up
 - [ ] Pictures with `scripts/local/dev.sh shot`, carried into a look row (no PR link on the row)
 
 ## Phase 5: Doors (gate: bar-decks-garden-1 for playtester permissions beyond the floor)
