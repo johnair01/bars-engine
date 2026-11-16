@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-14T01:38:35.215Z",
+  "generatedAt": "2026-11-15T20:48:57.066Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 451,
+      "lineNumber": 502,
       "params": [],
       "query": [],
       "relationships": [],
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 520,
+      "lineNumber": 571,
       "params": [],
       "query": [],
       "relationships": [],
@@ -1706,6 +1706,52 @@
       "id": "page_campaign_bb77d2b7"
     },
     {
+      "sourceFile": "/src/app/admin/chronicler/page.tsx",
+      "lineNumber": 17,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "admin",
+        "WHAT": "STORY",
+        "PERSONAL_THROUGHPUT": "show-up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/chronicler",
+      "entity": "STORY",
+      "description": "The Chronicler: six rungs of story (world to inspiration), the links between cards, and the few\nquestions it asks after an approval. Council callsheet chronicler-ladder; his answers cl-home-1 B, cl-parents-1 B,\ncl-loops-1 A, cl-admin-flags-1 A.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "page_story_22b60f54"
+    },
+    {
+      "sourceFile": "/src/app/admin/chronicler/page.tsx",
+      "lineNumber": 17,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "admin",
+        "WHAT": "STORY",
+        "PERSONAL_THROUGHPUT": "show-up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/chronicler",
+      "entity": "STORY",
+      "description": "The Chronicler: six rungs of story (world to inspiration), the links between cards, and the few\nquestions it asks after an approval. Council callsheet chronicler-ladder; his answers cl-home-1 B, cl-parents-1 B,\ncl-loops-1 A, cl-admin-flags-1 A.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "page_story_22b60f54"
+    },
+    {
       "sourceFile": "/src/app/admin/config/page.tsx",
       "lineNumber": 19,
       "params": [],
@@ -3857,7 +3903,7 @@
     },
     {
       "sourceFile": "/src/app/bars/[id]/page.tsx",
-      "lineNumber": 53,
+      "lineNumber": 54,
       "params": [],
       "query": [],
       "relationships": [],
@@ -3882,7 +3928,7 @@
     },
     {
       "sourceFile": "/src/app/bars/[id]/page.tsx",
-      "lineNumber": 53,
+      "lineNumber": 54,
       "params": [],
       "query": [],
       "relationships": [],
