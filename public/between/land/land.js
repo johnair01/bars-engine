@@ -419,7 +419,7 @@ async function makeFriends(ff) {
 async function makeCultFigure(M) {
   const S = await makeCultSeated({ who: cultPick(), outfit: "B2" }), holder = S.holder, body = S.body;
   scene.add(holder);
-  const bag = toolbagGroup(M); bag.position.set(0, 1.05, -0.26); holder.add(bag);
+  const bag = toolbagGroup(M); bag.position.set(0, 0.88, -0.22); holder.add(bag);
   const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
   let bagOn = true;
   return {
