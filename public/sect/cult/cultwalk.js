@@ -27,6 +27,8 @@ export const ik2 = (F, a, b, c, T, P) => { F.root.updateMatrixWorld(true); const
   const B1 = A.clone().addScaledVector(u, la * ca).addScaledVector(w, la * Math.sqrt(1 - ca * ca)); FG.aim(F, a, b, B1.clone().sub(A)); FG.aim(F, b, c, A.clone().addScaledVector(u, d).sub(B1)); };
 
 export const GAIT = { step: 0.62, duty: 0.6, lift: 0.06, reach: 0.985, bob: 0.025, sway: 0.02, turn: 8 };
+// Round 30: the run (pace 1 at RUN.speed m/s) and the jump's tuck. A lane tunes these against movecheck.js.
+export const RUN = { walk: 1.3, speed: 4.2, stride: 1.75, duty: 0.36, lift: 0.17, bob: 0.045, lean: 0.14, arm: 1.6, elbow: 0.5, tuck: 0.16, land: 0.07 };
 export const MIX = { gender: 'm', build: 'average', skin: 3, height: 1.75, direction: 'B', outfit: 'B2' }; // the gate rounds' mix
 
 // build the figure into `parent` (heaven's scene) and return { update(dt), X }. `body` is the avatar group walk.js
@@ -53,7 +55,7 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
   const mid = wp(F.bones.ankleL).add(wp(F.bones.ankleR)).multiplyScalar(0.5); mid.y = 0; // root xz from the feet's midpoint
 
   const live = MO.live(X);
-  const st = { yaw: null, ph: 0, amp: 0, Y: null, last: null, moving: false, idle: 0 };
+  const st = { yaw: null, ph: 0, amp: 0, Y: null, last: null, moving: false, idle: 0, pace: 0, air: false, land: 1 };
   const feet = Object.fromEntries(legs.map(([s]) => [s, { P: V(), from: V(), to: V(), swing: false, heel: 0 }]));
   const fwOf = yaw => V(-Math.sin(yaw), 0, -Math.cos(yaw)), lsign = Math.sign(V().crossVectors(f, UP).dot(l)) || 1; // which side of f x up the figure's l sits
   const lftOf = fw => V().crossVectors(fw, UP).multiplyScalar(lsign); // the figure's left, for heading fw
@@ -74,40 +76,46 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
     let dy = body.rotation.y - st.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); st.yaw += dy * Math.min(1, dt * GAIT.turn);
     const fw = fwOf(st.yaw), lft = lftOf(fw);
     const walking = dxz > 1e-4; st.idle = walking ? 0 : st.idle + dt;
+    const mv = body.userData.m, air = !!(mv && mv.air), sp = dt > 0 ? dxz / dt : 0;
+    st.pace += (THREE.MathUtils.clamp((sp - RUN.walk) / (RUN.speed - RUN.walk), 0, 1) - st.pace) * Math.min(1, dt * 5);
+    if (st.air && !air) { st.land = 0; for (const [s] of legs) { const ft = feet[s]; ft.P.copy(home(s, p, fw, lft)); ft.swing = false; } }
+    st.air = air; st.land = Math.min(1, st.land + dt * 4);
+    const pc = st.pace, duty = GAIT.duty + (RUN.duty - GAIT.duty) * pc, lift = GAIT.lift + (RUN.lift - GAIT.lift) * pc;
     st.amp += ((walking ? 1 : 0) - st.amp) * Math.min(1, dt * 6);
-    const C = 2 * stepOn(p.x, p.z);
+    const C = 2 * stepOn(p.x, p.z) * (1 + (RUN.stride - 1) * pc);
     if (walking) st.ph += dxz / C;
     else if (Object.values(feet).some(ft => ft.swing)) st.ph += dt * 1.4; // stopping: the swinging foot comes down beside the other
     yawQ(st.yaw);
     // each foot: planted, or swinging from its plant to the next
     const T = {};
     for (const [s, sg, off] of legs) {
-      const ft = feet[s], phi = ((st.ph + off) % 1 + 1) % 1, swing = phi >= GAIT.duty;
-      const ahead = walking ? ((1 - phi) + GAIT.duty / 2) * C : 0, aim = home(s, p, fw, lft, ahead);
+      const ft = feet[s], phi = ((st.ph + off) % 1 + 1) % 1, swing = phi >= duty;
+      const ahead = walking ? ((1 - phi) + duty / 2) * C : 0, aim = home(s, p, fw, lft, ahead);
       if (swing && !ft.swing) { ft.from.copy(ft.P); ft.swing = true; }
       if (!swing && ft.swing) { ft.P.copy(ft.to); ft.swing = false; }
       if (!walking && !ft.swing && st.idle > 0.6 && ft.P.distanceTo(aim) > 0.18) { ft.from.copy(ft.P); ft.to.copy(aim); ft.P.copy(aim); } // a long stop: no foot left trailing
       let at;
-      if (ft.swing) { ft.to.copy(aim); const u = (phi - GAIT.duty) / (1 - GAIT.duty), e = u * u * (3 - 2 * u), y0 = ft.from.y, y1 = ft.to.y;
+      if (ft.swing) { ft.to.copy(aim); const u = (phi - duty) / (1 - duty), e = u * u * (3 - 2 * u), y0 = ft.from.y, y1 = ft.to.y;
         const k = y1 > y0 ? ramp(0.02, 0.62, u) : ramp(0.4, 0.98, u); // up a stair the foot rises ahead of its travel so the toe clears the nosing
-        at = ft.from.clone().lerp(ft.to, e); at.y = y0 + (y1 - y0) * k + Math.sin(Math.PI * u) * GAIT.lift * Math.max(0.3, st.amp); ft.u = u; }
-      else { at = ft.P.clone(); ft.u = 0; ft.heel = 0.1 * ramp(0.3, GAIT.duty, phi) * st.amp; at.y += ft.heel; } // late in stance the heel lifts off (toe-off), so the back leg reaches up a steep stair
+        at = ft.from.clone().lerp(ft.to, e); at.y = y0 + (y1 - y0) * k + Math.sin(Math.PI * u) * lift * Math.max(0.3, st.amp); ft.u = u; }
+      else { at = ft.P.clone(); ft.u = 0; ft.heel = 0.1 * ramp(0.3, duty, phi) * st.amp; at.y += ft.heel; } // late in stance the heel lifts off (toe-off), so the back leg reaches up a steep stair
+      if (air) { at = home(s, p, fw, lft, (s === 'L' ? 0.12 : -0.06) * (0.4 + pc)); at.y = p.y + RUN.tuck; } // in the air the feet tuck under the body
       T[s] = at.add(V(0, soleH, 0));
     }
     // the root: standing height over the feet, no higher than each planted foot can reach
     const rootXZ = p.clone().sub(mid.clone().applyQuaternion(q)); rootXZ.y = 0;
     const sway = GAIT.sway * st.amp * Math.sin(2 * Math.PI * st.ph); rootXZ.addScaledVector(lft, sway);
-    const ground = (T.L.y + T.R.y) / 2 - soleH, bob = GAIT.bob * st.amp * 0.5 * (1 - Math.cos(4 * Math.PI * st.ph));
+    const ground = air ? p.y : (T.L.y + T.R.y) / 2 - soleH, bob = (air ? 0 : (GAIT.bob + (RUN.bob - GAIT.bob) * pc) * st.amp) + RUN.land * Math.sin(Math.PI * st.land) * (st.land < 1 ? 1 : 0) * 0.5 * (1 - Math.cos(4 * Math.PI * st.ph));
     let Yc = 1e9, Ys = 1e9;
     for (const [s] of legs) { const h = K[s].hip.clone().applyQuaternion(q).add(rootXZ), d = Math.hypot(h.x - T[s].x, h.z - T[s].z), r = K[s].leg * GAIT.reach;
-      const y = T[s].y + Math.sqrt(Math.max(0, r * r - d * d)) - K[s].hip.y; if (feet[s].swing) Ys = Math.min(Ys, y + 0.06); else Yc = Math.min(Yc, y); }
+      const y = T[s].y + Math.sqrt(Math.max(0, r * r - d * d)) - K[s].hip.y; if (air) continue; if (feet[s].swing) Ys = Math.min(Ys, y + 0.06); else Yc = Math.min(Yc, y); }
     const want = Math.min(ground + standY - bob, Yc, Ys);
-    st.Y = st.Y == null ? want : st.Y + (want - st.Y) * Math.min(1, dt * 14); const Y = Math.min(st.Y, Yc);
+    st.Y = st.Y == null ? want : st.Y + (want - st.Y) * Math.min(1, dt * 14); if (air) st.Y = want; const Y = Math.min(st.Y, Yc);
     // the pose: arms swing against the legs, then the legs reach for their feet
-    FG.resetPose(F); F.root.quaternion.copy(q); F.root.position.set(rootXZ.x, Y, rootXZ.z); F.root.updateMatrixWorld(true);
+    FG.resetPose(F); F.root.quaternion.copy(q).premultiply(new THREE.Quaternion().setFromAxisAngle(lft, -RUN.lean * pc * st.amp)); F.root.position.set(rootXZ.x, Y, rootXZ.z); F.root.updateMatrixWorld(true);
     const arm = (sg, out, fwd) => V().copy(DN).addScaledVector(lft, sg * out).addScaledVector(fw, fwd);
-    for (const [s, sg, off] of legs) { const phi = ((st.ph + off) % 1 + 1) % 1, sw = Math.cos(2 * Math.PI * (phi - 0.15)) * st.amp;
-      FG.aim(F, 'shoulder' + s, 'elbow' + s, arm(sg, 0.29, 0.03 - 0.3 * sw)); FG.aim(F, 'elbow' + s, 'wrist' + s, arm(sg, 0.16, 0.24 - 0.36 * sw)); }
+    for (const [s, sg, off] of legs) { const phi = ((st.ph + off) % 1 + 1) % 1, sw = Math.cos(2 * Math.PI * (phi - 0.15)) * st.amp * (1 + (RUN.arm - 1) * pc);
+      FG.aim(F, 'shoulder' + s, 'elbow' + s, arm(sg, 0.29, 0.03 - 0.3 * sw)); FG.aim(F, 'elbow' + s, 'wrist' + s, arm(sg, 0.16, 0.24 + RUN.elbow * pc - 0.36 * sw)); }
     for (const [s, sg] of legs) { const ft = feet[s], pole = fw.clone().addScaledVector(lft, sg * 0.12);
       ik2(F, 'hip' + s, 'knee' + s, 'ankle' + s, T[s], pole);
       const toe = K[s].ball.clone().applyQuaternion(q); if (ft.swing) toe.addScaledVector(DN, 0.35 * Math.sin(Math.PI * ft.u) * st.amp).normalize();
