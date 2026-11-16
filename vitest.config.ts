@@ -159,6 +159,7 @@ export default defineConfig({
       'src/lib/between/__tests__/friendcraft-turn-route.test.ts',
       'src/lib/between/__tests__/growth-feed.test.ts',
       'src/lib/between/__tests__/land-place.test.ts',
+      'src/lib/between/__tests__/clearing-room.test.ts',
       'src/lib/between/__tests__/arcade-hall.test.ts',
       'src/lib/between/__tests__/fire-song.test.ts',
       'src/lib/between/__tests__/music.test.ts',

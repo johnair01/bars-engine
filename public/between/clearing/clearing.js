@@ -75,19 +75,19 @@ for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; const s = new THREE
 const flames = [0, 1, 2].map(i => { const m = new THREE.Mesh(new THREE.ConeGeometry(0.28 - i * 0.05, 0.9 + i * 0.25, 8), new THREE.MeshBasicMaterial({ color: [0xff6a1f, 0xffa13a, 0xffe08a][i], transparent: true, opacity: 0.85 })); m.position.y = 0.55 + i * 0.1; fire.add(m); return m; });
 const glow = new THREE.PointLight(0xff9a4a, 3.2, 14, 1.6); glow.position.set(0, 1.1, 0); scene.add(glow);
 // the seven stones: one standing slab each, on the ring; a label on the face turned to the fire
-const RING = 3.4, stones = [];
+const WHITE = new THREE.Color(0xffffff), RING = 3.4, stones = [];
 function label(card) {
   const c = document.createElement("canvas"); c.width = 256; c.height = 384; const g = c.getContext("2d");
-  g.fillStyle = "#55504c"; g.fillRect(0, 0, 256, 384);
+  g.fillStyle = "#7a736c"; g.fillRect(0, 0, 256, 384);
   for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${40 + (i * 7) % 40},${38 + (i * 5) % 30},${36},.18)`; g.fillRect((i * 53) % 256, (i * 91) % 384, 3 + i % 6, 3 + i % 5); }
-  g.fillStyle = "#e9dcc4"; g.textAlign = "center"; g.font = "700 34px Georgia, serif";
-  const words = verbOf(card).split(" "); words.forEach((w, i) => g.fillText(w, 128, 150 + i * 38));
-  g.font = "italic 30px Georgia, serif"; g.fillText(FACE(card), 128, 150 + words.length * 38 + 22);
+  g.fillStyle = "#fff6e0"; g.strokeStyle = "#1c1814"; g.lineWidth = 6; g.lineJoin = "round"; g.textAlign = "center"; g.font = "700 44px Georgia, serif";
+  const words = verbOf(card).split(" "); words.forEach((w, i) => { g.strokeText(w, 128, 140 + i * 48); g.fillText(w, 128, 140 + i * 48); });
+  g.font = "italic 36px Georgia, serif"; const fy = 140 + words.length * 48 + 28; g.strokeText(FACE(card), 128, fy); g.fillText(FACE(card), 128, fy);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 HAND.forEach((card, i) => {
   const a = Math.PI + (i - 3) * (Math.PI * 2 / 7) * 1.0, g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0x5a5550, map: label(card), roughness: 0.95, emissive: new THREE.Color(COL[elementOf(card)]), emissiveIntensity: 0 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: label(card), roughness: 0.95, emissive: new THREE.Color(0xffffff), emissiveMap: null, emissiveIntensity: 0 }); mat.emissiveMap = mat.map; mat.userData.col = new THREE.Color(COL[elementOf(card)]);
   const slab = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.15, 0.22), [new THREE.MeshStandardMaterial({ color: 0x4a4540, roughness: 1 }), new THREE.MeshStandardMaterial({ color: 0x4a4540, roughness: 1 }), new THREE.MeshStandardMaterial({ color: 0x4a4540, roughness: 1 }), new THREE.MeshStandardMaterial({ color: 0x4a4540, roughness: 1 }), mat, new THREE.MeshStandardMaterial({ color: 0x3f3a36, roughness: 1 })]);
   slab.position.y = 0.58; slab.userData.i = i; g.add(slab);
   const lamp = new THREE.PointLight(COL[elementOf(card)], 0, 5, 2); lamp.position.set(0, 1.1, 0.5); g.add(lamp);
@@ -152,7 +152,7 @@ function frame(now) {
   const { st } = L ? state() : { st: null }; openK += ((st && st.both ? 1 : 0) - openK) * 0.03;
   flames.forEach((f, i) => { f.scale.set(1 + 0.12 * Math.sin(t * 9 + i * 2) + openK * 0.5, 1 + 0.2 * Math.sin(t * 7 + i) + openK * 0.9, 1 + 0.12 * Math.sin(t * 8 + i)); });
   glow.intensity = 3 + Math.sin(t * 11) * 0.5 + openK * 4;
-  stones.forEach((s, i) => { lit[i] += ((s.target || 0) - lit[i]) * 0.05; s.mat.emissiveIntensity = lit[i] * 0.55 + (i === selected && !lit[i] ? 0.08 : 0); s.lamp.intensity = lit[i] * 1.8; });
+  stones.forEach((s, i) => { lit[i] += ((s.target || 0) - lit[i]) * 0.05; s.mat.emissive.copy(lit[i] > 0.05 ? s.mat.userData.col : WHITE); s.mat.emissiveIntensity = lit[i] > 0.05 ? 0.35 + lit[i] * 0.4 : 0.4 + (i === selected ? 0.12 : 0); s.lamp.intensity = lit[i] * 1.8; });
   const p = embers.geometry.attributes.position; for (let i = 0; i < 60; i++) { const k = (t * 0.25 + i / 60) % 1; p.setXYZ(i, Math.sin(i * 7.3) * 0.5 * (1 + k), 0.7 + k * 3.2, Math.cos(i * 4.1) * 0.5 * (1 + k)); } p.needsUpdate = true;
   figs.forEach(f => f.update(dt, false));
   const a = yaw + (drag ? 0 : Math.sin(t * 0.08) * 0.0); // the camera stands outside the ring, looking over one stone to the fire
