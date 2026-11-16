@@ -98,7 +98,7 @@ const isHome = g => !!(g && g.kind === "home");
    and ticked. `portalTo` is { id, invite, open, name }. */
 let portalTo = null, entering = null;
 const THROUGH = "between.through";
-const ROOM_URL = id => "/ontology-game/between" + (id ? "?g=" + encodeURIComponent(id) : "");
+const ROOM_URL = id => "/between" + (id ? "?g=" + encodeURIComponent(id) : "");
 /* Chapter 1's creator reads the same look text (br-look-is-sprouts). Sprout has no public address yet: this is the creator
    branch's preview, behind the Vercel sign-in. */
 const CHAPTER1_LOOK = t => "https://sprout-git-claude-project-thr-7fd764-wendells-projects-9c1b16dc.vercel.app/creator.html?look=" + encodeURIComponent(t);
@@ -817,9 +817,9 @@ function portalTick(t) {
     markSeen();
     $("#loadMsg").textContent = "Through the doorway"; $("#loadStep").textContent = ""; $("#loading").hidden = false;
     if (e.kind === "standin") {
-      location.href = "/ontology-game/between?room=standin";
+      location.href = "/between?room=standin";
     } else if (e.kind === "dojo") {
-      location.href = "/dojo/triangle-workshop?returnTo=" + encodeURIComponent("/ontology-game/between");
+      location.href = "/dojo/triangle-workshop?returnTo=" + encodeURIComponent("/between");
     } else {
       try { sessionStorage.setItem(THROUGH, e.id); } catch {}
       location.href = ROOM_URL(e.id) + (e.invite ? "&invite=" + encodeURIComponent(e.invite) : "");
@@ -4041,7 +4041,7 @@ async function sparkUrl(id) {
 /* A spark's invitation link. A Friendcraft steward's carries `&game=friendcraft`, which the friend's page turns into one
    enrolment call (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003). Every other link is unchanged. */
 function inviteLink(id, token) {
-  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token) + (list && list.steward ? "&game=friendcraft" : "");
+  return location.origin + "/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token) + (list && list.steward ? "&game=friendcraft" : "");
 }
 async function sparkLink(to, note) {
   const link = await sparkUrl(to.id);

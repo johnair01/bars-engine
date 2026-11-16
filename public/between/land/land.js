@@ -1046,7 +1046,7 @@ function goPlace(where) {
 }
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
+  let back = "/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
   if (WALK) back = WALK_NOOK;   // the walk's nook is the visitor's, whoever opened the walk
   setTimeout(() => { location.href = back; }, 700);
 }

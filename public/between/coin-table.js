@@ -388,7 +388,7 @@ export function mount(B, opts = {}) {
   /* The invitation: the spark's own link, laid on the table with his words. Only you see it until you send it yourself. */
   async function layLink(sit) {
     const room = sit.move.invite.room;
-    try { sit.link = sit.who.standIn || down() ? location.origin + "/ontology-game/between?g=" + room + "&invite=preview" : await B.sparkUrl(room); }
+    try { sit.link = sit.who.standIn || down() ? location.origin + "/between?g=" + room + "&invite=preview" : await B.sparkUrl(room); }
     catch { sit.link = ""; }
     cardKey = "";
   }
