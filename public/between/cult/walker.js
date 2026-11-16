@@ -18,9 +18,10 @@ export const BODIES = {
   m: { gender: "m", build: "average", skin: 3, height: 1.75 },
 };
 let REG = null;
-export async function makeWalker({ who = "f", outfit = "B2" } = {}) {
+// look: the mirror's pick (hj-comb-look-1): { build, skin, height, hair } over the body's defaults; hair is one of crop, loose, bob, lowbun, tail, twin, braid, topknot (omitted: the robe's own hair)
+export async function makeWalker({ who = "f", outfit = "B2", look = {} } = {}) {
   if (!REG) REG = await fetch(new URL("./make/parts.json", import.meta.url)).then(r => r.json());
-  const X = await M.build({ ...BODIES[who], direction: outfit[0], outfit }, REG);
+  const X = await M.build({ ...BODIES[who], ...look, direction: outfit[0], outfit }, REG);
   const F = X.F;
   // the body under the clothes is not drawn while it walks, so a thigh cannot show through the skirt (mix.js
   // legsInMotion, worked out at the preview's stride); it stays hidden at rest too, where the cloth covers it
