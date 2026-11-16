@@ -153,6 +153,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: linear-gradient(118deg, transparent 22%, rgba(255,255,255,.08) 30%, transparent 38%, transparent 58%, rgba(255,255,255,.05) 62%, transparent 67%); }
 body.mirroring #mirrorFrame { display: block; }
 body.mirroring #stage canvas { transform: scaleX(-1); }
+/* the breath: one fog on the glass between one touch and the changed reflection (touchMirror, garden.js) */
+#mirrorBreath { display: none; position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); width: min(86vw, 46vh); height: 58vh;
+  transform: translateX(-50%); border-radius: 50%; pointer-events: none; z-index: 4; opacity: 0; transition: opacity .5s ease-in;
+  background: radial-gradient(ellipse at 50% 55%, rgba(236,242,246,.78), rgba(220,230,238,.55) 70%, rgba(220,230,238,.3)); backdrop-filter: blur(6px); }
+body.mirroring #mirrorBreath { display: block; }
+#mirrorBreath.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #mirrorBreath { transition-duration: .01s; } }
 body.mirroring #labels, body.mirroring #hud { display: none !important; }
 .sheet.dark { --panel: #1f1711; --ink: #f3ece2; --muted: #bcae9b; --line: #4a3a2c; --soft: #31251b; background: #1f1711; color: var(--ink); }
 .sheet.mirror { max-height: 40vh; padding-top: 8px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 2px solid #6a4a30; }

@@ -36,7 +36,7 @@ import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
 import { makeCultBody, useKneel } from "./cult/player-body.js";
 import { makeKneel } from "./cult/kneel.js";
-import { cultPick } from "./cult/pick.js";
+import { cultPick, cultLook, setCultLook, HAIRS } from "./cult/pick.js";
 useKneel(makeKneel);
 //   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
@@ -738,6 +738,44 @@ function setMirror(on) {
 }
 let mirrorCut = false;
 
+/* The touches beside the glass (hj-mirror-look-1 B, hj-comb-look-1 A): no menu. Mirror mode puts the camera behind the glass
+   looking back at you, so what she touches stands in that view, low at the sides, at the glass's own depth. Each touch
+   writes one key of the shared look (cult/pick.js), fogs the glass with one breath, and the breath clears on the changed
+   reflection. Walking away keeps it: the look is already stored. */
+const mirrorProps = new THREE.Group(); mirrorProps.visible = false; scene.add(mirrorProps);
+const mirrorBreath = document.createElement("div"); mirrorBreath.id = "mirrorBreath"; mirrorBreath.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorBreath);
+const comb = (() => {
+  // the boxwood comb with a red bead, hung on a peg low at the glass's left (the picture is flipped, so it shows on the right); metres
+  const g = new THREE.Group(), bw = new THREE.MeshStandardMaterial({ color: 0xd9b878, roughness: 0.5 }), CW = 0.17, nT = 16;
+  const spine = new THREE.Mesh(new THREE.BoxGeometry(CW, 0.028, 0.012), bw); spine.position.y = 0.07; g.add(spine);
+  for (let i = 0; i < nT; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.0045, 0.062 - 0.006 * Math.abs(i - nT / 2) / nT, 0.008), bw); t.position.set(-CW / 2 + 0.006 + i * (CW - 0.012) / (nT - 1), 0.025, 0); g.add(t); }
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.014, 20), new THREE.MeshStandardMaterial({ color: 0x7a2630, roughness: 0.5 })); cap.rotation.x = Math.PI / 2; cap.position.set(0, 0.07, 0); g.add(cap);
+  const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.09, 8), new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 })); peg.rotation.x = Math.PI / 2; peg.position.set(0, 0.11, -0.03); g.add(peg);
+  g.rotation.z = -0.18; g.position.set(0.36, 0.78, 0);
+  // a wide invisible target so a thumb finds it: the comb is small
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.06; g.add(hit);
+  mirrorProps.add(g); return { g, hit };
+})();
+let breathBusy = false;
+function breathe(then) {
+  if (breathBusy) return; breathBusy = true;
+  mirrorBreath.classList.add("on");
+  setTimeout(async () => {
+    try { await then(); } finally { setTimeout(() => { mirrorBreath.classList.remove("on"); breathBusy = false; }, 250); }
+  }, 520);
+}
+function touchMirror(cx, cy) {
+  if (breathBusy) return;
+  const ndc = new THREE.Vector2(-(cx / innerWidth * 2 - 1), -(cy / innerHeight) * 2 + 1); // the canvas is flipped by CSS
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects([comb.hit], false);
+  if (hits.length) { // the comb: each touch is the next hair, a breath between
+    const cur = cultLook().hair, i = HAIRS.indexOf(cur);
+    setCultLook({ hair: HAIRS[(i + 1) % HAIRS.length] });
+    breathe(() => ensureMyBody());
+  }
+}
+
 /* The doorway beside the mirror is the Nook's one world-threshold. It opens after orientation and lets a player choose
    a shared room or the private Triangle Workshop without making the small Nook sprout a corridor of extra doors. */
 const PORTAL_AT = new THREE.Vector3(1.3, 0, -1.15);
@@ -1248,19 +1286,19 @@ function lookOf(uid) {
 const CULT_ME = KQ.get("cult") !== "0";
 async function ensureMyBody() {
   const g = view().g;
-  const hue = hueOf(me, g), lk = lookOf(me);
+  const hue = hueOf(me, g), lk = lookOf(me) + "|" + JSON.stringify(cultLook());
   if ((meState.body && myBodyHue === hue && myBodyLook === lk) || myBodyBusy) return;
   myBodyBusy = true;
   try {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
        here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
     let b = null;
-    if (CULT_ME) { try { b = await makeCultBody({ who: cultPick(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
-    if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
+    if (CULT_ME) { try { b = await makeCultBody({ who: cultPick(), look: cultLook(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
+    if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lookOf(me)) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
   } finally { myBodyBusy = false; }
-  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me)) ensureMyBody();
+  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me) + "|" + JSON.stringify(cultLook())) ensureMyBody();
 }
 function placeMe() {
   if (meState.placed) return;
@@ -1393,7 +1431,7 @@ function placeAt() {
   moveItem(placing.id, { x: +hit.x.toFixed(2), z: +hit.z.toFixed(2) });
 }
 function tapAt(cx, cy) {
-  if (mirrorOn) return; // in the mirror a tap only chooses; the floor is behind you
+  if (mirrorOn) { touchMirror(cx, cy); return; } // in the mirror a tap only touches what stands by the glass; the floor is behind you
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
@@ -1771,6 +1809,7 @@ function frameBody() {
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
   mirror.visible = mirrorShown() && me3 < 0.35; // the glass is where the camera looks from
+  mirrorProps.visible = mirrorOn && me3 > 0.9; mirrorProps.position.set(MIRROR_STAND.x, groundY(MIRROR_STAND.x, MIRROR_STAND.z), MIRROR_STAND.z - 0.9); // at the glass's own depth
   spotRings(t);
   if (me3 > 0 || rk > 0.001 || camera.fov !== fov || (camera.view && camera.view.enabled)) {
     camera.fov = fov;
