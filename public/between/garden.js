@@ -797,6 +797,30 @@ const palm = (() => {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthWrite: false }));
   m.scale.x = -1; mirrorProps.add(m); return m;
 })();
+// three robes on pegs, one per direction (sect disciple, wandering cultivator, inner-alchemy adept): touch the robe to wear
+// that direction, touch its hem to turn the cut (the robe's 1 and 2). Small, hung high on the glass's right, in the figure's view.
+const DIRS = ["A", "B", "C"], ROBE_COL = ["#3c4658", "#6b5a3f", "#d9d3c3"], HEM_COL = ["#2f3647", "#7a2630"];
+const pegs = (() => {
+  const g = new THREE.Group(), rob = [], hits = [], wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.025, 0.025), wood); rail.position.y = 0.3; g.add(rail);
+  DIRS.forEach((d, i) => {
+    const x = (i - 1) * 0.105, col = new THREE.MeshStandardMaterial({ color: ROBE_COL[i], roughness: 0.85, side: THREE.DoubleSide });
+    const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 6), wood); peg.rotation.x = Math.PI / 2; peg.position.set(x, 0.3, 0.02); g.add(peg);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.058, 0.26, 16, 1, true), col); body.position.set(x, 0.165, 0.02); g.add(body);
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(0.031, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), col); sh.position.set(x, 0.295, 0.02); g.add(sh);
+    const hem = new THREE.Mesh(new THREE.CylinderGeometry(0.0555, 0.0585, 0.04, 16, 1, true), new THREE.MeshStandardMaterial({ color: HEM_COL[0], roughness: 0.8, side: THREE.DoubleSide })); hem.position.set(x, 0.055, 0.02); g.add(hem);
+    const hitB = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.17, 0.12), new THREE.MeshBasicMaterial({ visible: false })); hitB.position.set(x, 0.2, 0.02); hitB.userData.dir = d; g.add(hitB);
+    const hitH = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.09, 0.12), new THREE.MeshBasicMaterial({ visible: false })); hitH.position.set(x, 0.05, 0.02); hitH.userData.hemOf = d; g.add(hitH);
+    rob.push({ d, hem }); hits.push(hitB, hitH);
+  });
+  g.position.set(0.25, 1.0, 0);
+  mirrorProps.add(g); return { g, rob, hits };
+})();
+function syncPegs() { // the hems show the worn cut: indigo for 1, red for 2
+  const o = cultLook().outfit || "B2";
+  pegs.rob.forEach(({ hem }) => hem.material.color.set(HEM_COL[o[1] === "1" ? 0 : 1]));
+}
+syncPegs();
 let palmFade = 0; syncCarved();
 let breathBusy = false;
 function breathe(then) {
@@ -810,10 +834,13 @@ function touchMirror(cx, cy) {
   if (breathBusy) return;
   const ndc = new THREE.Vector2(-(cx / innerWidth * 2 - 1), -(cy / innerHeight) * 2 + 1); // the canvas is flipped by CSS
   ray.setFromCamera(ndc, camera);
-  const hits = ray.intersectObjects([comb.hit, carved.hit, stones.hit, ...stones.meshes], false);
+  const hits = ray.intersectObjects([comb.hit, carved.hit, stones.hit, ...stones.meshes, ...pegs.hits], false);
   if (hits.length) {
     const o = hits[0].object;
-    if (o === comb.hit) { // the comb: each touch is the next hair, a breath between
+    if (o.userData.dir || o.userData.hemOf) { // a robe on its peg: that direction; its hem: the other cut
+      const cur = cultLook().outfit || "B2";
+      setCultLook({ outfit: o.userData.dir ? o.userData.dir + (cur[0] === o.userData.dir ? cur[1] : "2") : cur[0] + (cur[1] === "1" ? "2" : "1") }); syncPegs();
+    } else if (o === comb.hit) { // the comb: each touch is the next hair, a breath between
       const i = HAIRS.indexOf(cultLook().hair);
       setCultLook({ hair: HAIRS[(i + 1) % HAIRS.length] });
     } else if (o === carved.hit) { // the carved figure turns: the next body and build
@@ -1356,7 +1383,7 @@ async function ensureMyBody() {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
        here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
     let b = null;
-    if (CULT_ME) { try { b = await makeCultBody({ who: cultLook().body || cultPick(), look: (({ body, ...r }) => r)(cultLook()), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
+    if (CULT_ME) { try { b = await makeCultBody({ who: cultLook().body || cultPick(), outfit: cultLook().outfit || "B2", look: (({ body, outfit, ...r }) => r)(cultLook()), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
     if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lookOf(me)) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
