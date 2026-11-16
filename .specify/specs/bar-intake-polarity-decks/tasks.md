@@ -14,14 +14,14 @@ Each phase is one pull request, checked with `scripts/local/check.sh --build`, l
 
 ## Phase 2: Merged pair table (no gate)
 
-- [ ] `src/lib/polarity/pair-table.ts` keyed by trigram (FR-005), Challenger row filled (FR-006), Thunder and Water
-      holders as placeholders, Fire keeps both pairs
+- [ ] `src/lib/polarity/pair-table.ts` keyed by trigram (FR-005), Challenger row filled (FR-006), Thunder (lieutenant) and Water
+      (envoy) by role, `betweenName` and `holderName` on each row
 - [ ] Derive or check `two-move.js` `PAIRS` and `TRIGRAM_RELATIONAL_PAIR2` against it; `two-move.test.ts` stays green
 
-## Phase 3: Dealer (gate: bar-decks-pole-1)
+## Phase 3: Dealer (no gate; pole ruled C)
 
-- [ ] `src/lib/polarity/deal.ts`: `dealPolarityCard` and `poleFor` (FR-008), the ruled pole rule only
-- [ ] `deal.test.ts`: the fixed-seed cases and the 4,096-case enumeration of FR-009
+- [ ] `src/lib/polarity/deal.ts`: `dealPolarityCard` (FR-008), and `src/lib/polarity/standing.ts` `standingFor` (the pole follows the player's kept BARs)
+- [ ] `deal.test.ts`: the fixed-seed cases and the weighted 4^6 enumeration of FR-009, asserting the odds table in the spec
 
 ## Phase 4: Challenger deck and hand (gate: bar-decks-shielding-look-1 for the look)
 
@@ -30,8 +30,8 @@ Each phase is one pull request, checked with `scripts/local/check.sh --build`, l
 - [ ] Keep path: the player's capture becomes a BAR through the writer, and a kept BAR moves the needle (FR-011)
 - [ ] Pictures with `scripts/local/dev.sh shot`, carried into a look row (no PR link on the row)
 
-## Phase 5: Doors (gate: bar-decks-garden-1 for playtester permissions beyond the floor)
+## Phase 5: Doors (no gate; garden ruled A)
 
 - [ ] Board door by card-turn (FR-013)
-- [ ] Garden view reading `intakeRecord` (FR-012)
+- [ ] Garden view reading `intakeRecord`, with the playtester `seen` mark (FR-012)
 - [ ] MCP chat tool calling the writer (FR-014)
