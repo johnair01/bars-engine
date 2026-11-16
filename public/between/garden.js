@@ -90,8 +90,8 @@ const names = {};
 let awaySince = null, myPrivate = {}, myPouch = null, readOnly = false;
 let sheetName = null, sheetArg = null, selected = null;
 /* The homeroom (br-home-is-a-room): `list` is GET /api/between (your home and a summary of each room), `myHome` your
-   private home doc (look, goals, check-ins), `lookDraft` the Look sheet's choices before they are kept. */
-let list = null, homeId = null, myHome = {}, lookDraft = null;
+   private home doc (look, goals, check-ins). */
+let list = null, homeId = null, myHome = {};
 const isHome = g => !!(g && g.kind === "home");
 /* Part 3 (his rulings of 2026-10-23, br-home-is-a-room overruled): everyone spawns in their homeroom. A room in the link
    is a doorway beside the mirror, not where you land; an invitation's doorway stays shut until the orientation is read
@@ -101,7 +101,6 @@ const THROUGH = "between.through";
 const ROOM_URL = id => "/ontology-game/between" + (id ? "?g=" + encodeURIComponent(id) : "");
 /* Chapter 1's creator reads the same look text (br-look-is-sprouts). Sprout has no public address yet: this is the creator
    branch's preview, behind the Vercel sign-in. */
-const CHAPTER1_LOOK = t => "https://sprout-git-claude-project-thr-7fd764-wendells-projects-9c1b16dc.vercel.app/creator.html?look=" + encodeURIComponent(t);
 const outbox = [];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -722,8 +721,7 @@ function renderSatchel() {
   el.hidden = !satchelOpen;
   if (el._h !== h) { el.innerHTML = h; el._h = h; }
 }
-const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
-let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+let mirrorOn = false, mirrorK = 0, mirrorTurn = 0;
 const TEA_VIEW = { wide: [[0.69, 0.8, 0.98], [-0.12, 0.45, 0.15]], phone: [[0.8, 0.8, 1.15], [-0.1, 0.45, 0.15]] };   // camera, focus, in the seats frame (x left, z ahead)
 let seatK = 0, seatViewAt = null; // the low view of you sat on the hearth's cushion (or one you set down), eased in
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
@@ -1369,7 +1367,7 @@ let myBodyHue = null, myBodyLook = null, myBodyBusy = false;
 /* Whose look: yours is the Look sheet's draft while it is open, else your homeroom's; the other person's is the one they
    copied into this room (garden.looks, br-look-is-sprouts). */
 function lookOf(uid) {
-  if (uid === me) return (sheetName === "look" && lookDraft ? lookText(lookDraft) : null) || myHome.look || (list && list.home && list.home.look) || null;
+  if (uid === me) return myHome.look || (list && list.home && list.home.look) || null;
   const g = view().g;
   return g && g.looks && typeof g.looks[uid] === "string" ? g.looks[uid] : null;
 }
@@ -2856,11 +2854,10 @@ function openSheet(name, arg) {
   // sat by the fire, the moment is had in the room (no card); only "Something stirs" opens the pickers, in the low strip
   if (name === "hearth" && arg !== "stir") { hmBegin(); return; }
   if (name === "hearth" && sheetName !== "hearth") hd = {};
-  if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
   if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1, intensity: 5, direction: "cant_tell" };
   if (name === "invitations" || name === "rooms" || name === "destinations") refreshList();
   if (name === "spirit" || name === "checkin") fetchHome();
-  if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
+  if (sheetName === "look" && name !== "look") { ensureMyBody().catch(() => {}); }
   if (name === "invite" && g && !isHome(g) && isMember(g) && members(g).length >= 2 && arg !== "list") { openPaper("write", { room: gardenId }); return; } // a scroll, not a form (Still B)
   if (name === "hope") caption(MINUTE_CAPTIONS.hope);
   if (name === "style" && g && isHome(g) && inNook() && hollow && window.__between.voice) { if (sheetName) closeSheet(); windowTurn(); return; }
@@ -2871,7 +2868,7 @@ function closeSheet() {
   const wasLook = sheetName === "look" || sheetName === "hope";
   if (window.__between && window.__between.voice) window.__between.voice.quiet("sheet");
   sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud"); document.body.classList.toggle("seatedmoment", !!hm);
-  if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
+  if (wasLook) { setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
 }
 // Setup is closeable now: there is always the homeroom to stand in (br-home-is-a-room).
@@ -3027,27 +3024,11 @@ function destinationsSheet() {
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
 }
-/* The mirror's strip: the parts as tabs, the chosen part's choices as round swatches; every tap re-dresses you. */
-const keptLook = () => myHome.look || (list && list.home && list.home.look) || null;
-const SHAPE_SVG = { a: "M9 3h6v26H9z", b: "M4 3h16l-4 26H8z", c: "M9 3h6c0 5 5 9 5 13s-4 8-4 13H8c0-5-4-9-4-13s5-8 5-13z" };
-const BUILD_RX = { slender: 3.5, average: 5, broad: 6.5, round: 8 };
-function chipGlyph(k, id) {
-  const svg = d => `<svg viewBox="0 0 24 32" width="24" height="32" aria-hidden="true">${d}</svg>`;
-  if (k === "shape") return svg(`<path d="${SHAPE_SVG[id]}" fill="#e8dccb" opacity=".85"/>`);
-  if (k === "build") return svg(`<ellipse cx="12" cy="16" rx="${BUILD_RX[id]}" ry="13" fill="#e8dccb" opacity=".85"/>`);
-  return "";
-}
+/* The mirror's tray: the touches around the glass do the choosing (comb, stones, shelf figure, palm, pegs, hem). */
 function lookSheet() {
-  if (!lookDraft) lookDraft = parseLook(lookOf(me) || "") || { ...DEFAULT_LOOK };
-  const k = mirrorPart, t = lookText(lookDraft), unsaved = t !== keptLook();
-  const chip = o => { const on = lookDraft[k] === o.id;
-    return `<button type="button" class="mchip${on ? " on" : ""}" aria-pressed="${on}" data-act="lookPick" data-id="${k}:${o.id}"><i${o.swatch ? ` style="background:${o.swatch}"` : ""}>${o.swatch ? "" : chipGlyph(k, o.id)}</i><span>${esc(o.label)}</span></button>`; };
-  return `<div class="mpanel" aria-label="The mirror. Choose how you look; your figure changes as you choose.">
-    <div class="mtabs" role="tablist">${MIRROR_PARTS.map(([id, l]) => `<button type="button" role="tab" aria-selected="${id === k}" class="${id === k ? "on" : ""}" data-act="lookPart" data-id="${id}">${esc(l)}</button>`).join("")}</div>
-    <div class="mchips">${optionsOf(k).map(chip).join("")}</div>
-    ${k === "style" || k === "colour" ? `<p class="mnote">Hair shows in Chapter 1, not on this figure yet: <a href="${CHAPTER1_LOOK(t)}" target="_blank" rel="noopener">take this look to Chapter 1</a>.</p>` : ""}
-    <div class="mbar"><span class="mstate">${unsaved ? "Not saved yet" : "This is how your rooms see you"}</span>
-      <button type="button" data-act="lookKeep" ${unsaved ? "" : "disabled"}>Save this look</button><button class="ghost" type="button" data-act="lookRandom">Choose for me</button><button class="quiet" type="button" data-close>Leave</button></div></div>`;
+  return `<div class="mpanel" aria-label="The mirror. Touch what is around the glass; your figure changes as you touch.">
+    <p class="mnote">Touch the comb, the stones, the carved figure, the robes on their pegs, or the glass above your head. Your figure changes as you touch. It keeps this look.</p>
+    <div class="mbar"><button class="quiet" type="button" data-close>Leave</button></div></div>`;
 }
 const goalsList = () => Object.entries(myHome.goals || {}).filter(([, x]) => x && x.text).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
 function goalsSheet() {
@@ -4004,9 +3985,6 @@ document.addEventListener("click", async ev => {
   if (a === "move") { const it = view().items.get(id); const r = moveRight(it); if (!r) return; placing = { id, ask: r === "shared" }; selected = null; refreshHud(); toast(r === "shared" ? "Tap the floor where you would like it." : "Tap the floor where it should stand, or drag it."); return; }
   if (a.startsWith("pace:")) { setPace(a.slice(5)); if (gardenId && isMember(view().g)) { myPrivate.captions = getPace(); savePriv(); } renderSheet(); return; }
   if (a === "lanternCancel") { placing = null; refreshHud(); return; }
-  if (a === "lookPick") { const [k, v] = id.split(":"); lookDraft = { ...lookDraft, [k]: v }; renderSheet(); ensureMyBody().catch(() => {}); return; }
-  if (a === "lookRandom") { lookDraft = randomLook(); renderSheet(); ensureMyBody().catch(() => {}); return; }
-  if (a === "lookPart") { mirrorPart = id; renderSheet(); return; }
   if (a === "checkFeel") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; walk.feel = walk.feel === id ? null : id; } renderSheet(); return; }
   if (a === "checkDir") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; const r = $("#cInt"); if (r) walk.intensity = +r.value; walk.direction = id; } renderSheet(); return; }
   if (a === "waveBack") { if (walk && walk.step === 0) { walk.step = -1; walk.charge = null; renderSheet(); } return; }
@@ -4122,7 +4100,6 @@ document.addEventListener("click", async ev => {
       try { await navigator.clipboard.writeText(link); toast("The invitation link is on your clipboard."); }
       catch { window.prompt("Copy the invitation link:", link); }
     }
-    else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Saved. Each of your rooms shows you this way now."); }
     else if (a === "emberGive") await giveEmber(id);
     else if (a === "hearthGiveWalk") { const c = hearthCareNow(); if (walk && walk.eid && careOffered(c, caredThisVisit) != null) { const eid = walk.eid; closeSheet(); doCare(c, eid); } }
     else if (a === "hearthGive") { const c = hearthCareNow(); closeSheet(); if (careOffered(c, caredThisVisit) != null) doCare(c, id); }
@@ -4314,13 +4291,6 @@ function refreshList() {
   return listing;
 }
 setInterval(() => { if (!document.hidden) refreshList(); }, 30000);
-async function keepLook() {
-  const t = lookText(lookDraft);
-  await homeOp({ look: t });
-  // and into each room, so the other person sees you as you made yourself (a member writes only their own key)
-  const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
-  await Promise.all(rooms.map(r => r.id === gardenId ? op("garden/main", "update", { looks: { [me]: t } }) : api("/api/between/" + r.id + "/doc", { path: "garden/main", op: "update", data: { looks: { [me]: t } } }).catch(() => {})));
-}
 function goRoom(id) { if (id) { walkThrough(id); return; } markSeen(); location.href = ROOM_URL(null); }
 /* ---------- the check-in's ember, and the spirits it feeds (part 4) ---------- */
 document.addEventListener("input", e => {   // the check-in's two sliders say their value as they move
