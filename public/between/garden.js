@@ -756,6 +756,48 @@ const comb = (() => {
   const hit = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.06; g.add(hit);
   mirrorProps.add(g); return { g, hit };
 })();
+// the bowl of river stones at the glass's foot: eight stones, the skin ramp; touching one sets skin (metres)
+const SKINS = ["#e9c9ae", "#dfb595", "#cf9f7c", "#bb8763", "#a46f4e", "#8a593d", "#6d4430", "#513224"];
+const stones = (() => {
+  const g = new THREE.Group(), meshes = [];
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.07, 28, 1, true), new THREE.MeshStandardMaterial({ color: 0x5c4a3a, roughness: 0.7, side: THREE.DoubleSide })); bowl.position.y = 0.035; g.add(bowl);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(0.165, 28), new THREE.MeshStandardMaterial({ color: 0x2a3b3a, roughness: 0.1, metalness: 0.3 })); water.rotation.x = -Math.PI / 2; water.position.y = 0.06; g.add(water);
+  SKINS.forEach((c, i) => {
+    const a = i / 8 * Math.PI * 2, r = i % 2 ? 0.095 : 0.05 + 0.0;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.03, 14, 10), new THREE.MeshStandardMaterial({ color: c, roughness: 0.35 }));
+    m.scale.set(1.25, 0.55, 1); m.position.set(Math.cos(a) * (0.05 + (i % 2) * 0.05), 0.065, Math.sin(a) * (0.05 + (i % 2) * 0.05)); m.userData.skin = i; g.add(m); meshes.push(m);
+  });
+  g.position.set(-0.3, 0.3, 0.55);
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.2, 12), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.08; g.add(hit);
+  mirrorProps.add(g); return { g, meshes, hit };
+})();
+// the carved figure on the shelf, at the glass's other side; turning it (a touch) steps body and build: six carvings, no words
+// slight and broad need their morph targets (cult/ubc/teenf, ubcf, teenm, ubcm .json), which are not in the repo yet: only the average build of each body is steppable until they are
+const BODY_STEPS = [["f", "average"], ["m", "average"]]; // later: ["f","slight"],["f","broad"],["m","slight"],["m","broad"]
+const carved = (() => {
+  const g = new THREE.Group(), lw = new THREE.MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.55 }), wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.025, 0.14), wood); g.add(shelf);
+  const fig = new THREE.Group(); fig.position.y = 0.0125; g.add(fig);
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.09, 14), lw); cone.position.y = 0.045; fig.add(cone);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.025, 0.09, 6, 10), lw); body.position.y = 0.1; fig.add(body);
+  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.022, 14, 10), lw); hd.position.y = 0.185; fig.add(hd);
+  g.position.set(-0.36, 0.78, 0);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.1; g.add(hit);
+  mirrorProps.add(g); return { g, fig, hit };
+})();
+function syncCarved() { // the carving shows the chosen build and body: wider or slighter, taller for him
+  const L = cultLook(), b = L.build || "average", w = b === "broad" ? 1.25 : b === "slight" ? 0.8 : 1;
+  carved.fig.scale.set(w, (L.body || cultPick()) === "m" ? 1.08 : 1, w);
+}
+// the palm on the glass: a faint hand mark where her crown is; the touch's height on the glass sets her height (no marks, no numbers)
+const palm = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+  x.fillStyle = "rgba(255,255,255,0.8)"; x.beginPath(); x.ellipse(64, 78, 28, 32, 0, 0, 7); x.fill();
+  for (const [dx, dy, r] of [[-30, 30, -0.3], [-14, 20, -0.1], [4, 16, 0], [22, 22, 0.15]]) { x.save(); x.translate(64 + dx, 50 + dy - 22); x.rotate(r); x.beginPath(); x.ellipse(0, -12, 7, 18, 0, 0, 7); x.fill(); x.restore(); }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthWrite: false }));
+  m.scale.x = -1; mirrorProps.add(m); return m;
+})();
+let palmFade = 0; syncCarved();
 let breathBusy = false;
 function breathe(then) {
   if (breathBusy) return; breathBusy = true;
@@ -768,11 +810,32 @@ function touchMirror(cx, cy) {
   if (breathBusy) return;
   const ndc = new THREE.Vector2(-(cx / innerWidth * 2 - 1), -(cy / innerHeight) * 2 + 1); // the canvas is flipped by CSS
   ray.setFromCamera(ndc, camera);
-  const hits = ray.intersectObjects([comb.hit], false);
-  if (hits.length) { // the comb: each touch is the next hair, a breath between
-    const cur = cultLook().hair, i = HAIRS.indexOf(cur);
-    setCultLook({ hair: HAIRS[(i + 1) % HAIRS.length] });
-    breathe(() => ensureMyBody());
+  const hits = ray.intersectObjects([comb.hit, carved.hit, stones.hit, ...stones.meshes], false);
+  if (hits.length) {
+    const o = hits[0].object;
+    if (o === comb.hit) { // the comb: each touch is the next hair, a breath between
+      const i = HAIRS.indexOf(cultLook().hair);
+      setCultLook({ hair: HAIRS[(i + 1) % HAIRS.length] });
+    } else if (o === carved.hit) { // the carved figure turns: the next body and build
+      const L = cultLook(), cur = BODY_STEPS.findIndex(([w, b]) => w === (L.body || cultPick()) && b === (L.build || "average"));
+      const [w, b] = BODY_STEPS[(cur + 1) % BODY_STEPS.length];
+      setCultLook({ body: w, build: b }); syncCarved();
+    } else { // a river stone, or the bowl's nearest stone: that skin
+      let sk = o.userData.skin;
+      if (sk === undefined) { let best = 1e9; hits[0].point && stones.meshes.forEach(m => { const d = m.getWorldPosition(new THREE.Vector3()).distanceTo(hits[0].point); if (d < best) { best = d; sk = m.userData.skin; } }); }
+      setCultLook({ skin: sk });
+    }
+    breathe(() => ensureMyBody()); return;
+  }
+  // the palm on the glass: a touch on the glass above the figure's shoulders, at its depth; the height touched is her height
+  const pz = MIRROR_STAND.z, d = (pz - ray.ray.origin.z) / (ray.ray.direction.z || 1e-6);
+  if (d > 0) {
+    const p = ray.ray.origin.clone().addScaledVector(ray.ray.direction, d), gy = groundY(MIRROR_STAND.x, MIRROR_STAND.z), h = p.y - gy;
+    if (h > 1.35 && Math.abs(p.x - MIRROR_STAND.x) < 0.45) {
+      setCultLook({ height: Math.round(Math.min(1.95, Math.max(1.5, h - 0.04)) * 100) / 100 }); // the crown sits a little under the palm
+      palm.position.set(p.x - mirrorProps.position.x, p.y - mirrorProps.position.y, pz - mirrorProps.position.z); palmFade = 1.5;
+      breathe(() => ensureMyBody());
+    }
   }
 }
 
@@ -1293,7 +1356,7 @@ async function ensureMyBody() {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
        here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
     let b = null;
-    if (CULT_ME) { try { b = await makeCultBody({ who: cultPick(), look: cultLook(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
+    if (CULT_ME) { try { b = await makeCultBody({ who: cultLook().body || cultPick(), look: (({ body, ...r }) => r)(cultLook()), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
     if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lookOf(me)) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
@@ -1809,6 +1872,7 @@ function frameBody() {
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
   mirror.visible = mirrorShown() && me3 < 0.35; // the glass is where the camera looks from
+  if (palmFade > 0) { palmFade -= 0.016; palm.material.opacity = Math.max(0, Math.min(0.7, palmFade)); }
   mirrorProps.visible = mirrorOn && me3 > 0.9; mirrorProps.position.set(MIRROR_STAND.x, groundY(MIRROR_STAND.x, MIRROR_STAND.z), MIRROR_STAND.z - 0.9); // at the glass's own depth
   spotRings(t);
   if (me3 > 0 || rk > 0.001 || camera.fov !== fov || (camera.view && camera.view.enabled)) {
