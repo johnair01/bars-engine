@@ -97,7 +97,13 @@ function supportBVHs(X, extra) {
   for (let i = 0; i < N; i++) { v.fromBufferAttribute(G.attributes.position, i); F.mesh.applyBoneTransform(i, v); v.applyMatrix4(F.mesh.matrixWorld); P[i * 3] = v.x; P[i * 3 + 1] = v.y; P[i * 3 + 2] = v.z; }
   const legs = new Set(['hipL', 'hipR', 'kneeL', 'kneeR', 'ankleL', 'ankleR', 'ballL', 'ballR'].map(n => F.boneName.indexOf(n))), I = F.idx0.array, keep = [];
   for (let t = 0; t < I.length; t += 3) if (legs.has(F.dom[I[t]]) || legs.has(F.dom[I[t + 1]]) || legs.has(F.dom[I[t + 2]])) keep.push(I[t], I[t + 1], I[t + 2]);
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setIndex(keep);
+  // Reading A (his 2026-11-16: the skirt is its own layer over the trousers): the layers under the skirt are colliders
+  // too. The trousers and the boots are posed triangles in the same support, so the cloth rests on their surface (the
+  // boot is 0.011 thick and the body skin alone let the hem sink between the shin and the sole).
+  const pos = [Array.from(P)], idx = [Array.from(keep)]; let base = N;
+  for (const pt of X.parts) { if (!/^(trousers|boots|shoes|legwraps)/.test(pt.name)) continue;
+    const w = partWorld(pt), I2 = pt.idxSeat0 || pt.geo.index.array; pos.push(Array.from(w)); idx.push(Array.from(I2, i => i + base)); base += w.length / 3; }
+  const PP = new Float32Array(pos.flat()), g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(PP, 3)); g.setIndex(idx.flat());
   const out = [new MeshBVH(g)];
   for (const m of extra) { m.updateMatrixWorld(true); const g2 = m.geometry.clone().applyMatrix4(m.matrixWorld); out.push(new MeshBVH(g2.index ? g2 : g2)); }
   return out;
@@ -141,8 +147,17 @@ export function drape(X, seat, o = {}) {
     for (let q = 0; q < K; q++) { const y = Math.max(floorY, row[q]); pts.push([r0[a] + q * dr, y]); if (LEG[a][q] < FLAT[a][q] - 1e-4 && y <= FLAT[a][q] + 1e-4) { landed = q; landY = y; break; } }
     const s = [0]; for (let j = 1; j < pts.length; j++) s.push(s[j - 1] + Math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]));
     return { pts, s, land: s[s.length - 1], landed: landed >= 0, landY }; });
+  // Reading A, hem ring (his 2026-11-16: the skirt is its own layer over the trousers). The skirt hangs from the hip line
+  // and rests on the posed legs, trousers, boots, cushion and floor (the colliders above). Past its landing a spoke no
+  // longer runs out along the floor: the surplus cloth gathers into the hem, which is a ring of one radius per spoke,
+  // smoothed around the ring so it has no scallops and set a hand's width past the landing, never past it by the cloth's length.
+  let Lmax = 0; for (const pt of parts) for (let i = 0; i < pt.world.length; i += 3) if (pt.world[i + 1] < yb0) Lmax = Math.max(Lmax, Math.hypot(yb0 - pt.world[i + 1], 0.12 * k));
+  const gather = (o.gather ?? 0.05) * k, landR = spokes.map(sp => sp.pts[sp.pts.length - 1][0]);
+  let Rh = landR.map(r => r + gather);
+  for (let it = 0; it < 12; it++) Rh = Rh.map((r, a) => Math.max(landR[a], (Rh[(a + NA - 1) % NA] + 2 * r + Rh[(a + 1) % NA]) / 4));
+  spokes.forEach((sp, a) => { sp.Rh = Rh[a]; });
   const along = (sp, t) => { const { pts, s } = sp; if (t >= sp.land) { const [r, y] = pts[pts.length - 1], over = t - sp.land; if (!sp.landed) return [r + over * 0.3, y - over]; // a short skirt ending in the air over the knees
-      const run = floorRun * (1 - Math.exp(-over / floorRun)); return [r + run, sp.landY + 0.0025 * k * Math.min(4, (over - run) / (0.02 * k))]; } // past floorRun the hem piles on itself, a few mm up
+      const u = Math.min(1, over / Math.max(0.05 * k, Lmax - sp.land)); return [r + (sp.Rh - r) * u, sp.landY + 0.0025 * k * Math.min(4, over / (0.02 * k)) * (1 - u * 0.5)]; } // the surplus gathers evenly into the ring; a few mm of pile
     let j = 1; while (j < s.length - 1 && s[j] < t) j++; const u = (t - s[j - 1]) / Math.max(1e-6, s[j] - s[j - 1]); return [pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * u, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * u]; };
   let moved = 0;
   for (const pt of parts) { pt.settled = null; const W = Float32Array.from(partWorld(pt)), S0 = pt.world, LW = new Float32Array(S0.length / 3); pt.live0 = W.slice();
