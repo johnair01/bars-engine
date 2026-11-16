@@ -82,6 +82,7 @@ export function mount(B, opts = {}) {
       x.fillStyle = "#b98a2c"; x.fillRect(372, 70, 46, 40);
       x.fillStyle = "#5b3a24"; x.font = "bold 26px Marcellus, serif"; x.fillText(lit, 120, 46);
     } else { x.fillStyle = "rgba(90,60,40,.6)"; x.font = "italic 24px Marcellus, serif"; x.fillText("a map, still blank", 150, 190); }
+    const mine = opts.visit && walkOwn.own(); if (mine) walkOwn.drawWall(x, mine.wall); // the wall they chose lies across the road (hdw-own-walk-look-1 B)
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   }
 
@@ -264,11 +265,12 @@ export function mount(B, opts = {}) {
     if (mine) return `<div class="row"><button type="button" data-ctw="sample">Unroll their map</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
     return `<div class="row"><button type="button" data-ctw="own">${esc(walkOwn.PROMPT)}</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
   }
+  function redrawMap() { const m = group.userData.map; if (!m) return; m.material.map = mapTexture(g ? g.environment : undefined); m.material.needsUpdate = true; }
   function openOwn() {
-    const d = openDlg(`<h2>${esc(walkOwn.PROMPT)}</h2><label>What do you want?<input type="text" data-ctw-want maxlength="${walkOwn.MAX_WANT}" autocomplete="off"></label><p class="muted">What stands in the way? Tap the one lying across your path.</p><div class="foot">${walkOwn.WALLS.map(w => `<button type="button" data-ctw-wall="${esc(w.key)}">${esc(w.terrain)}</button>`).join("")}<button type="button" class="q" data-ctw="close">Close</button></div>`);
+    const d = openDlg(`<h2>${esc(walkOwn.PROMPT)}</h2><label>Your want, in a line<input type="text" data-ctw-want maxlength="${walkOwn.MAX_WANT}" autocomplete="off"></label><p class="muted">Tap what lies across your path. It is drawn on the map.</p><div class="foot">${walkOwn.WALLS.map(w => `<button type="button" data-ctw-wall="${esc(w.key)}">${esc(w.terrain)}</button>`).join("")}<button type="button" class="q" data-ctw="close">Close</button></div>`);
     const inp = d.querySelector("[data-ctw-want]"); inp.focus();
     d.querySelector('[data-ctw="close"]').onclick = closeDlg;
-    d.querySelectorAll("[data-ctw-wall]").forEach(b => { b.onclick = () => { if (walkOwn.keep(inp.value, b.dataset.ctwWall)) closeDlg(); else inp.focus(); }; });
+    d.querySelectorAll("[data-ctw-wall]").forEach(b => { b.onclick = () => { if (walkOwn.keep(inp.value, b.dataset.ctwWall)) { redrawMap(); closeDlg(); } else inp.focus(); }; });
   }
   function showCard() {
     let key = "", html = "";
