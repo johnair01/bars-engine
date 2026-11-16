@@ -275,3 +275,161 @@ export const DREAMS: Dream[] = [
   { id: 'become', name: 'Someone I will become', line: 'A seed that grows slowly while your attention is elsewhere.' },
   { id: 'give', name: 'Something I will give', line: 'A gift you are saving for the right season.' },
 ]
+
+/* ───── v4: the walk as a point-and-click storyboard ─────
+ * A scene is a real game still, a few caption lines (tap to advance), and hotspots on the picture (tap to choose).
+ * Hotspot x and y are percent of the screen, tuned by eye against the phone captures in looks/founders-gate-2/.
+ * Every still is a real capture from /mnt/project-files/looks/ (the source is in `source`); the stills are a storyboard
+ * of the game that exists, not the live 3D. The campaign framing (Raise Awareness inside Gather Resources, skilled
+ * organizing, direct actions, join or create) is seed.md v4; the exact wording of the `note` lines is PLACEHOLDER.
+ */
+export interface Hotspot {
+  id: string
+  x: number
+  y: number
+  label: string
+  /** a scene id to go to */
+  to?: string
+  /** an outside link (only from LINKS) */
+  href?: string
+  /** a line that opens on the picture when tapped, without leaving the scene */
+  note?: string
+  /** the dream a seed plants */
+  dream?: string
+  /** the feeling a tap picks (a channel id) */
+  feeling?: string
+  /** shown dimmed, and tapping says why it is not open yet */
+  locked?: boolean
+}
+export interface Scene {
+  id: string
+  img: string
+  /** CSS object-position for the cover crop */
+  pos?: string
+  motion: 'in' | 'out' | 'left' | 'right'
+  /** the domain the friend is standing in, shown small at the top */
+  domain?: string
+  lines: string[]
+  hotspots?: Hotspot[]
+  /** where a tap on the last line leads; omitted when hotspots lead on */
+  next?: string
+  nextLabel?: string
+  source: string
+  standIn?: boolean
+}
+
+const S = '/ally-gate/scenes/'
+export const STORY_IMG: Array<{ img: string; pos?: string; motion: Scene['motion']; source: string }> = [
+  { img: S + 'sect-founding.jpg', motion: 'in', source: 'looks/heaven-sect-look-1.jpg, founding era crop' },
+  { img: S + 'farm-1.jpg', motion: 'left', source: 'looks/bars-farm-2/frame-1.jpg' },
+  { img: S + 'farm-3.jpg', motion: 'right', source: 'looks/bars-farm-2/frame-3.jpg' },
+  { img: S + 'sect-peak.jpg', motion: 'out', source: 'looks/heaven-sect-look-1.jpg, peer era crop' },
+  { img: S + 'gate-arrival.jpg', motion: 'in', source: 'looks/heaven-sect-look-1.jpg, arrival crop' },
+]
+
+export const SCENES: Record<string, Scene> = {
+  gate: {
+    id: 'gate',
+    img: S + 'gate-arrival.jpg',
+    pos: '50% 40%',
+    motion: 'in',
+    domain: 'Wendell’s Gate',
+    lines: ['An old friend has fallen on hard times again.', 'Come through the gate, make your own cultivator, and find the kind of help that feels alive for you.'],
+    hotspots: [{ id: 'steps', x: 50, y: 52, label: 'Walk up the steps', to: 'story-0' }],
+    source: 'looks/heaven-sect-look-1.jpg, arrival crop',
+  },
+  shape: {
+    id: 'shape',
+    img: S + 'sect-peak.jpg',
+    pos: '55% 40%',
+    motion: 'out',
+    domain: 'The shape of this walk',
+    lines: ['This walk is a campaign, and it shows you its shape. Tap what you see.'],
+    hotspots: [
+      { id: 'gather', x: 50, y: 30, label: 'Gather Resources', note: 'The larger campaign, gathering what the work needs.' },
+      { id: 'aware', x: 28, y: 52, label: 'Raise Awareness', note: 'You are here. This walk is a subcampaign of the one above.' },
+      { id: 'organize', x: 74, y: 50, label: 'Skilled organizing', note: 'The capacity this campaign grows, in you and in the people around you.' },
+      { id: 'actions', x: 50, y: 66, label: 'Direct actions', note: 'Two: play the game, and donate.' },
+    ],
+    next: 'make',
+    source: 'looks/heaven-sect-look-1.jpg, peer era crop',
+  },
+  dream: {
+    id: 'dream',
+    img: S + 'farm-2.jpg',
+    pos: '50% 50%',
+    motion: 'in',
+    domain: 'Your own dream',
+    lines: ['Plant a dream in the grounds beside your figure.', 'The sect keeps it safe while your attention is elsewhere. This is an exchange: you are not only giving.'],
+    hotspots: [
+      { id: 'd-make', x: 70, y: 38, label: 'Something I will make', dream: 'make' },
+      { id: 'd-place', x: 28, y: 36, label: 'A place I will go', dream: 'place' },
+      { id: 'd-become', x: 62, y: 56, label: 'Someone I will become', dream: 'become' },
+      { id: 'd-give', x: 44, y: 58, label: 'Something I will give', dream: 'give' },
+    ],
+    source: 'looks/bars-farm-2/frame-2.jpg',
+  },
+  feeling: {
+    id: 'feeling',
+    img: S + 'farm-1.jpg',
+    pos: '50% 50%',
+    motion: 'in',
+    domain: 'Your own desire',
+    lines: ['Which feeling did you come for? Pick the one you would most like to feel today. It lights the places that serve it.'],
+    hotspots: FEELINGS.map((f, i) => ({ id: 'f-' + f.id, x: [22, 72, 46, 28, 70][i % 5], y: [30, 32, 46, 56, 58][i % 5], label: f.name, feeling: f.id, to: 'grounds' })),
+    source: 'looks/bars-farm-2/frame-1.jpg',
+  },
+  stuck: {
+    id: 'stuck',
+    img: S + 'farm-3.jpg',
+    pos: '50% 50%',
+    motion: 'right',
+    domain: 'Befriending what blocks your help',
+    lines: [STUCK_INTRO],
+    source: 'looks/bars-farm-2/frame-3.jpg',
+  },
+  'room-intro': {
+    id: 'room-intro',
+    img: S + 'sect-peak.jpg',
+    pos: '55% 40%',
+    motion: 'out',
+    domain: 'The quiet room · direct action',
+    lines: [
+      // PLACEHOLDER: the whole epiphany bridge for this room is unwritten and needs its own design pass. The first line is his, from his note on founders-gate-look-2.
+      'I am a skilled coach in getting people unstuck, metabolizing shame, and getting clear on the life you want to live.',
+      'You told this walk where you are stuck. The quiet room is where we could sit with that and make sense of it together. Pay what feels right.',
+    ],
+    next: 'place-quiet-room',
+    nextLabel: 'Enter the quiet room',
+    source: 'looks/heaven-sect-look-1.jpg, peer era crop (stand-in)',
+    standIn: true,
+  },
+  end: {
+    id: 'end',
+    img: S + 'farm-4.jpg',
+    pos: '50% 40%',
+    motion: 'out',
+    domain: 'Skilled organizing · what next',
+    lines: ['Your dream is planted. There are two ways forward.'],
+    hotspots: [
+      { id: 'join', x: 30, y: 34, label: 'Join a campaign that fits what is alive for you', note: 'This one is open. It gathers what the work needs; the monthly register is Patreon at $5, $25 or $150.' },
+      { id: 'create', x: 74, y: 40, label: 'Create your own campaign', note: 'Bring your own idea. The first session is on your idea, with me.' },
+    ],
+    source: 'looks/bars-farm-2/frame-4.jpg',
+  },
+}
+
+/** Where each place's offers sit on its picture, and which still stands behind it. */
+export const PLACE_IMG: Record<string, { img: string; pos?: string; standIn?: boolean; source: string }> = {
+  'training-hall': { img: S + 'sect-founding.jpg', source: 'looks/heaven-sect-look-1.jpg, founding crop' },
+  'quiet-room': { img: S + 'sect-peak.jpg', pos: '55% 40%', standIn: true, source: 'looks/heaven-sect-look-1.jpg, peer era crop (stand-in)' },
+  library: { img: '/launch/allyship-deck-cover-1280x720.png', standIn: true, source: 'public/launch/allyship-deck-cover-1280x720.png (cover art, not a capture)' },
+  'couriers-post': { img: S + 'farm-4.jpg', source: 'looks/bars-farm-2/frame-4.jpg' },
+  'gift-shelf': { img: S + 'farm-3.jpg', source: 'looks/bars-farm-2/frame-3.jpg' },
+  'sect-gate': { img: S + 'gate-arrival.jpg', source: 'looks/heaven-sect-look-1.jpg, arrival crop' },
+}
+export const PLACE_SPOTS: Array<[number, number]> = [[30, 30], [72, 34], [30, 52], [72, 54]]
+/** Where each place stands on the grounds picture (the farm overview). PLACEHOLDER layout. */
+export const GROUND_SPOTS: Record<string, [number, number]> = {
+  'training-hall': [30, 30], 'quiet-room': [72, 30], library: [24, 48], 'couriers-post': [76, 48], 'gift-shelf': [26, 66], 'sect-gate': [72, 66],
+}
