@@ -13,7 +13,8 @@ import {
   PLACE_IMG,
   keepsakeLine,
   placesFor,
-  stuckStep,
+  moveAction,
+  stuckPath,
   LINKS,
   PAY,
   ROBES,
@@ -85,7 +86,7 @@ function PayRow() {
 
 const ROBE_COLOR: Record<string, string> = { A1: '#3b4a8a', A2: '#b99a6b', B1: '#3f6b52', B2: '#8a7a64', C1: '#efe6c8', C2: '#7d7a86' }
 
-interface Ctx { feeling: string | null; stuckDone: boolean; shipped: number | null }
+interface Ctx { feeling: string | null; stuckFrom: string | null; stuckDone: boolean; shipped: number | null }
 
 /** The scene for an id: a story beat is built from STORY (his text) and STORY_IMG (real stills); grounds and places depend on the feeling picked. */
 function sceneFor(id: string, c: Ctx): Scene | null {
@@ -115,11 +116,16 @@ function sceneFor(id: string, c: Ctx): Scene | null {
       next: 'dream', nextLabel: 'Plant my dream',
     }
   }
-  if (id === 'stuck' && f) {
-    const st = stuckStep(f.id)
-    return { ...SCENES.stuck, lines: [SCENES.stuck.lines[0], `${st.move}. ${st.action}`], hotspots: [
-      { id: 'still', x: 30, y: 40, label: 'I am still stuck on this', to: 'room-intro' },
-      { id: 'free', x: 72, y: 44, label: 'That moved me', to: 'grounds' },
+  const sm = /^stuck-(\d)$/.exec(id)
+  if (sm && f && c.stuckFrom) {
+    const path = stuckPath(c.stuckFrom, f.id)
+    const i = Number(sm[1]); const mv = path[i]
+    if (!mv) return SCENES['work-with']
+    const lastStep = i >= path.length - 1
+    return { ...SCENES.stuck, id, domain: `Befriending what is in the way · step ${i + 1} of ${path.length}`, lines: [`${mv.name}. ${moveAction(mv)}`], hotspots: [
+      { id: 'moved', x: 28, y: 34, label: 'That moved me', to: 'grounds' },
+      { id: 'next', x: 72, y: 40, label: lastStep ? 'I am still stuck on this' : 'Next step', to: lastStep ? 'work-with' : `stuck-${i + 1}` },
+      ...(lastStep ? [] : [{ id: 'still', x: 50, y: 56, label: 'I am still stuck on this', to: 'work-with' }]),
     ] }
   }
   const pm = /^place-(.+)$/.exec(id)
@@ -173,6 +179,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
   const [seen, setSeen] = useState<string[]>([])
   const [feeling, setFeeling] = useState<string | null>(null)
   const [stuckDone, setStuckDone] = useState(false)
+  const [stuckFrom, setStuckFrom] = useState<string | null>(null)
   const [offer, setOffer] = useState(false)
   const [ready, setReady] = useState<'wait' | 'yes' | 'no'>('wait')
   const frame = useRef<HTMLIFrameElement>(null)
@@ -193,7 +200,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
 
   const go = (to: string) => { setId(to); setLine(0); setNote(null); setSeen([]) }
   const isMake = id === 'make'
-  const sc = isMake ? null : sceneFor(id, { feeling, stuckDone, shipped })
+  const sc = isMake ? null : sceneFor(id, { feeling, stuckFrom, stuckDone, shipped })
   const placeOffers = id.startsWith('place-') ? PLACES.find((p) => `place-${p.id}` === id) : undefined
   const lastLine = !sc || line >= sc.lines.length - 1
   const small = id === 'dream' || id === 'end'
@@ -208,7 +215,8 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
   const tapSpot = (h: Hotspot) => {
     if (h.locked) { setNote(h); return }
     if (h.feeling) setFeeling(h.feeling)
-    if (h.to === 'room-intro') setStuckDone(true)
+    if (h.id.startsWith('from-')) setStuckFrom(h.id.slice(5))
+    if (h.to === 'work-with') setStuckDone(true)
     if (h.to) return go(h.to)
     if (h.href) { window.open(h.href, '_blank', 'noopener,noreferrer'); setSeen((v) => [...v, h.id]); return }
     if (h.dream) { setDream(h.dream); return go('end') }

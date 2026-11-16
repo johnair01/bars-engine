@@ -384,9 +384,26 @@ export const SCENES: Record<string, Scene> = {
     img: S + 'farm-3.jpg',
     pos: '50% 50%',
     motion: 'right',
-    domain: 'Befriending what blocks your help',
-    lines: [STUCK_INTRO],
+    domain: 'Befriending what is in the way',
+    lines: [STUCK_INTRO, 'What does the stuck feel like right now? Tap the closest.'],
+    hotspots: FEELINGS.map((f, i) => ({ id: 'from-' + f.id, x: [24, 70, 46, 30, 68][i % 5], y: [30, 32, 44, 56, 58][i % 5], label: f.id.charAt(0).toUpperCase() + f.id.slice(1), feeling: undefined, to: 'stuck-0' })),
     source: 'looks/bars-farm-2/frame-3.jpg',
+  },
+  'work-with': {
+    id: 'work-with',
+    img: S + 'sect-peak.jpg',
+    pos: '55% 40%',
+    motion: 'out',
+    domain: 'Support and be supported',
+    lines: ['If you are still stuck, there are three ways to keep going, and each one also supports this work. Working with me on something in your life is one. The book is another, and so is Patreon.'],
+    hotspots: [
+      { id: 'w-room', x: 28, y: 30, label: 'Work with me on it', to: 'room-intro' },
+      { id: 'w-book', x: 72, y: 34, label: 'Buy the book', href: LINKS.bookshop },
+      { id: 'w-pat', x: 50, y: 52, label: 'Join on Patreon', href: LINKS.patreon },
+    ],
+    next: 'grounds', nextLabel: 'Back to the grounds',
+    source: 'looks/heaven-sect-look-1.jpg, peer era crop (stand-in)',
+    standIn: true,
   },
   'room-intro': {
     id: 'room-intro',
@@ -440,3 +457,28 @@ export function dreamLine(dreamId: string | null): string {
     ? `Your cultivator stands in the sect. Beside it you planted: ${d.name.charAt(0).toLowerCase()}${d.name.slice(1)}. It rests here and grows while your attention is elsewhere.`
     : 'Your cultivator stands in the sect. Plant a dream beside it.'
 }
+
+/* ───── Stuck? as an emotional alchemy path ─────
+ * The friend names the feeling that is in the way, and the walk takes the shortest path of edge moves in the one move
+ * table to the feeling they came for, one move per scene. The last scene is the wanted feeling's own transcend move.
+ */
+export interface PathMove { id: string; name: string; from: string; to: string }
+export function stuckPath(fromId: string, toId: string): PathMove[] {
+  const edges = table.moves.filter((m) => m.family !== 'transcend') as PathMove[]
+  const seen = new Map<string, PathMove[]>([[fromId, []]])
+  const queue = [fromId]
+  while (queue.length) {
+    const at = queue.shift() as string
+    for (const m of edges.filter((e) => e.from === at)) {
+      if (!seen.has(m.to)) { seen.set(m.to, [...(seen.get(at) as PathMove[]), m]); queue.push(m.to) }
+    }
+  }
+  const walk = seen.get(toId) ?? []
+  const last = table.moves.find((m) => m.family === 'transcend' && m.from === toId) as PathMove | undefined
+  return last ? [...walk, last] : walk
+}
+/** One future-pointing action for a move, taken from the feeling it starts in. PLACEHOLDER copy. */
+export function moveAction(m: PathMove): string {
+  return STUCK_ACTIONS[m.from] ?? 'Pick the smallest next thing you could do today and do it before you close this page.'
+}
+
