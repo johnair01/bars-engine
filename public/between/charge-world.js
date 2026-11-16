@@ -16,9 +16,11 @@
 
    The visitor's nook (opts.visit, /between/walk; his B on ctw-walk-demo-look-1): the stand already holds the sample's
    charge, left by someone who wants a garage studio to make music with friends. "Unroll their map" raises the panes, and the
-   doorway leads into the walk through the four lands. A visitor brings no charge of their own, since nothing here is kept. */
+   doorway leads into the walk through the four lands. The visitor does bring one true thing of their own (hdw-oix-4 A): the stand asks for a line of their want and one wall (walk-own.js),
+   kept only in this tab's sessionStorage, and Mara's card in the Hollow answers that wall. */
 import * as THREE from "three";
 import { inFrame } from "./voice.js";
+import * as walkOwn from "./walk-own.js";
 import { densityOf } from "./block-room.js";
 import { withDraft } from "../calrunia/episode-draft.js";
 import { read, sheet, locations, todo, canonical, LINES, LIFE_DOMAINS, QUADRANTS, SATISFACTION, DISTANCE, OBSTACLE, DISSATISFACTION, STRENGTH, VILLAINS } from "../calrunia/episode-sheet.js";
@@ -80,6 +82,7 @@ export function mount(B, opts = {}) {
       x.fillStyle = "#b98a2c"; x.fillRect(372, 70, 46, 40);
       x.fillStyle = "#5b3a24"; x.font = "bold 26px Marcellus, serif"; x.fillText(lit, 120, 46);
     } else { x.fillStyle = "rgba(90,60,40,.6)"; x.font = "italic 24px Marcellus, serif"; x.fillText("a map, still blank", 150, 190); }
+    const mine = opts.visit && walkOwn.own(); if (mine) walkOwn.drawWall(x, mine.wall); // the wall they chose lies across the road (hdw-own-walk-look-1 B)
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   }
 
@@ -250,20 +253,36 @@ export function mount(B, opts = {}) {
   card.addEventListener("click", e => {
     const b = e.target.closest("[data-ctw]"); if (!b) return;
     const k = b.dataset.ctw;
-    if (k === "sample") unroll(JSON.parse(JSON.stringify(sample)), null); else if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
-    else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough();
+    if (k === "own") openOwn(); else if (k === "sample") unroll(JSON.parse(JSON.stringify(sample)), null); else if (k === "charge") openCharge(); else if (k === "sheet") openSheet(); else if (k.startsWith("pane:")) openPane(panes[+k.slice(5)]);
+    else if (k === "door") { const d = doorAt(); if (d) walkTo(d.front); } else if (k === "through") stepThrough(dense() && dense().where === "chamber" ? CHAMBER : undefined);
+    else if (k === "chamber") stepThrough(CHAMBER);
   });
+  // the visitor's own want and wall, before the map unrolls: one line in their words, then the terrain piece in their way.
+  // The line is typed in a sheet (the voice draws only buttons); the walls are the sheet's obstacle terrain, tapped.
+  function ownLine() { const m = walkOwn.own(); return m ? ` You want ${esc(m.want)}, and ${esc(OBSTACLE[m.wall])} lies across your path.` : ""; }
+  function ownCard() {
+    const mine = walkOwn.own();
+    if (mine) return `<div class="row"><button type="button" data-ctw="sample">Unroll their map</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
+    return `<div class="row"><button type="button" data-ctw="own">${esc(walkOwn.PROMPT)}</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
+  }
+  function redrawMap() { const m = group.userData.map; if (!m) return; m.material.map = mapTexture(g ? g.environment : undefined); m.material.needsUpdate = true; }
+  function openOwn() {
+    const d = openDlg(`<h2>${esc(walkOwn.PROMPT)}</h2><label>Your want, in a line<input type="text" data-ctw-want maxlength="${walkOwn.MAX_WANT}" autocomplete="off"></label><p class="muted">Tap what lies across your path. It is drawn on the map.</p><div class="foot">${walkOwn.WALLS.map(w => `<button type="button" data-ctw-wall="${esc(w.key)}">${esc(w.terrain)}</button>`).join("")}<button type="button" class="q" data-ctw="close">Close</button></div>`);
+    const inp = d.querySelector("[data-ctw-want]"); inp.focus();
+    d.querySelector('[data-ctw="close"]').onclick = closeDlg;
+    d.querySelectorAll("[data-ctw-wall]").forEach(b => { b.onclick = () => { if (walkOwn.keep(inp.value, b.dataset.ctwWall)) { redrawMap(); closeDlg(); } else inp.focus(); }; });
+  }
   function showCard() {
     let key = "", html = "";
     if (near === "stand") {
-      key = "stand" + (episode ? "1" : "0");
+      key = "stand" + (episode ? "1" : "0") + (opts.visit && walkOwn.own() ? "o" : "");
       html = opts.visit
         ? (episode
           ? `<div><b>The map stand</b><div class="t">Their charge made the ${esc(g.environment)} under ${esc(g.weather)}, and ${esc(g.villain)} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button></div>`
-          : `<div><b>The map stand</b><div class="t">Someone left their charge here. They want ${esc(sample.q1.words)}. They feel ${esc(sample.q4.weather[0].feeling)}, as strong as ${esc(sample.q4.weather[0].strength)}.</div></div><div class="row"><button type="button" data-ctw="sample">Unroll their map</button></div>`)
+          : `<div><b>The map stand</b><div class="t">Someone left their charge here. They want ${esc(sample.q1.words)}. They feel ${esc(sample.q4.weather[0].feeling)}, as strong as ${esc(sample.q4.weather[0].strength)}.${ownLine()}</div></div>${ownCard()}`)
         : episode
-        ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button></div>`
-        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button></div>`;
+        ? `<div><b>The map stand</b><div class="t">The map shows the ${esc(g.environment)} under ${esc(g.weather)}. ${esc(g.villain[0].toUpperCase() + g.villain.slice(1))} waits on the ${esc(g.line)} line. The doorway leads there now.</div></div><div class="row"><button type="button" data-ctw="door">Walk to the doorway</button><button type="button" class="q" data-ctw="sheet">Read the episode sheet</button><button type="button" class="q" data-ctw="charge">Change the charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`
+        : `<div><b>The map stand</b><div class="t">Bring a charge here and the map unrolls into an episode: the lands it makes and the places in them. The keeping chamber opens from here too.</div></div><div class="row"><button type="button" data-ctw="charge">Bring a charge</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
     } else if (near && near.startsWith("pane:")) {
       const p = panes[+near.slice(5)];
       key = near; html = `<div><b>${esc(p.loc.location)}</b><div class="t">${esc(p.loc.aspects[0])}</div></div><div class="row"><button type="button" data-ctw="${near}">Look into it</button></div>`;
@@ -277,9 +296,11 @@ export function mount(B, opts = {}) {
       key = "door" + (shut ? "0" : "1") + (dense() ? "c" : "");
       html = shut
         ? `<div><b>The doorway, grown over</b><div class="t">It opens at the end of your first minute here. Then it leads to ${esc(first ? first.location : "the episode's first land")}.</div></div>`
+        : dense() && dense().where === "chamber"
+        ? `<div><b>The doorway runs cold</b><div class="t">Past it, the keeping chamber has filled with a season of feeling ${esc(dense().feeling)}, over what you keep there. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`
         : dense()
-        ? `<div><b>The doorway runs cold</b><div class="t">Past it, ${esc(first ? first.location : "the episode's first land")} has filled with the weather of feeling ${esc(dense().feeling)}. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`
-        : `<div><b>The doorway</b><div class="t">Through it, the episode's first land: ${esc(first ? first.location : "the place the map took")}, ${esc(first ? first.land : "")}.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button></div>`;
+        ? `<div><b>The doorway runs cold</b><div class="t">Past it, ${esc(first ? first.location : "the episode's first land")} has filled with the weather of feeling ${esc(dense().feeling)}. There is room in there to meet it.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`
+        : `<div><b>The doorway</b><div class="t">Through it, the episode's first land: ${esc(first ? first.location : "the place the map took")}, ${esc(first ? first.land : "")}.</div></div><div class="row"><button type="button" data-ctw="through">Step through</button><button type="button" class="q" data-ctw="chamber">The keeping chamber</button></div>`;
     }
     if (key === cardKey) return;
     cardKey = key; card.hidden = !key || !!dlg; card.innerHTML = html;
@@ -313,12 +334,15 @@ export function mount(B, opts = {}) {
   const dense = () => { if (!episode || !charge) return null; const d = densityOf(charge); return d.dense ? d : null; };
   const firstLand = () => episode ? locations(charge, g).find(l => l.role === "encounter") : null;
   const grownOver = () => { const m = B.minute && B.minute(); return !!(m && m.started && m.oriented === false); };
+  const CHAMBER = "/between/land.html?place=chamber";
   function doorAt() {
     const a = B.anchors && B.anchors(); if (!a || !a.portal) return null;
     const at = new THREE.Vector3().fromArray(a.portal).setY(0), front = at.clone().multiplyScalar(0.72);   // a step in from it, toward the room's middle
     return { at, front };
   }
-  // href: another place behind the nook (the keeping chamber's arch, chamber-arch.js); it opens with or without an episode
+  /* href: another place behind the nook. The keeping chamber is reached from the doorway and from the map stand, not from a
+     place of its own in the wall: his C on bm-satchel-look-2 (2026-11-04 01:06Z), "No the arch doesn't work at all and needs
+     to be removed. They can access it from the main doorway or the map". It opens with or without an episode. */
   function stepThrough(href) {
     if (grownOver() || (!href && !episode)) return;
     try {
@@ -385,5 +409,5 @@ export function mount(B, opts = {}) {
     if (opts.open === "episode") await unroll(JSON.parse(JSON.stringify(sample)), null);
     else if (opts.open === "sheet") { walkTo(STAND.clone().addScaledVector(FRONT, 0.85)); openCharge(); }
   })().catch(e => console.warn("charge to world:", e));
-  return { stand: STAND, stepThrough, door: () => doorAt(), view: () => ({ near, episode: !!episode, block: dense(), sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
+  return { stand: STAND, stepThrough, chamber: () => stepThrough(CHAMBER), door: () => doorAt(), view: () => ({ near, episode: !!episode, block: dense(), sampleKept, panes: panes.map(p => p.loc.location), todo: charge ? todo(charge) : null, firstLand: (firstLand() || {}).location || null }) };
 }

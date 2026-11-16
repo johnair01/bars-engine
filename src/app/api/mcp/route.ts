@@ -17,11 +17,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
+import { createHash } from 'node:crypto'
 import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
 import { steerTicket } from '@/lib/work/queue'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
+import { closeRead, closeSay } from '@/lib/close/chat'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
 
@@ -35,6 +37,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
 const MAX_IDS = 50
 const MAX_DOCS = 50
+const DESIGN_FACES = ['shaman', 'architect', 'challenger', 'regent', 'diplomat', 'sage']
 const BOARD_DOC_COLLECTIONS = new Set(['lists', 'steps', 'contacts', 'shows', 'records'])
 
 type RpcId = string | number | null
@@ -255,6 +258,19 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
+    name: 'close_read',
+    title: 'Read the evening close',
+    description: 'Show the closing ritual for a date (today in Pacific time unless given), at the move it is on: the same text the board page draws, then what a reply may say. Starts the close from the day\'s work tickets if none exists.',
+    inputSchema: { type: 'object', properties: { date: { type: 'string', description: 'YYYY-MM-DD; today if omitted.' } } },
+    annotations: { readOnlyHint: false },
+  },
+  {
+    name: 'close_say',
+    title: 'Say one thing in the evening close',
+    description: 'Apply one reply to the close: a sentence at the glass move, "p4 t3 w5" ratings, "win <id> <1-5>", three lines at the unpacking move, "keep <n>", "push <n>: <reason>", "lantern <n>", "next", "skip", "send <n>" at the lever. Returns the next screen. The lever sends one ticket to Zo per "send", and only after he says it.',
+    inputSchema: { type: 'object', properties: { say: { type: 'string' }, date: { type: 'string' } }, required: ['say'] },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -278,6 +294,34 @@ function rpcError(id: RpcId, code: number, message: string) {
   return NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } }, { headers: NO_STORE })
 }
 
+/** A look is a design look when it carries `look` (or kind look) and names a face. */
+function isDesignLook(data: Record<string, unknown>): boolean {
+  if (!data.look && data.kind !== 'look') return false
+  const faces = Array.isArray(data.faces) ? data.faces.join(' ') : typeof data.faces === 'string' ? data.faces : ''
+  const named = faces.toLowerCase()
+  return DESIGN_FACES.some((f) => named.includes(f))
+}
+
+/** The sentence that refuses a design look without a sealed pass, or null when the look may be posted. */
+async function unsealedPass(docId: string, data: Record<string, unknown>): Promise<string | null> {
+  if (!isDesignLook(data)) return null
+  const refuse = (why: string) =>
+    `${docId}: this look names design faces, so it needs a pass that ran the design steps. ${why} `
+    + 'Run `python3 council/tools/pass_check.py <pass.md> --seal`, then post the look with `pass: <pass id>`.'
+  const passId = typeof data.pass === 'string' ? data.pass.trim() : ''
+  if (!passId) return refuse('Its `pass` field is empty.')
+  const pass = await latestDoc('council', 'records', passId)
+  if (!pass || pass.kind !== 'pass' || typeof pass.body !== 'string')
+    return refuse(`The records doc "${passId}" is not a stored pass.`)
+  const check = await latestDoc('council', 'records', `pass-check-${passId}`)
+  let sealed: { ok?: unknown; sha256?: unknown } = {}
+  try { sealed = JSON.parse(typeof check?.body === 'string' ? check.body : '{}') } catch { /* unsealed */ }
+  if (sealed.ok !== true) return refuse(`The pass "${passId}" has no passing pass-check record.`)
+  if (sealed.sha256 !== createHash('sha256').update(pass.body, 'utf8').digest('hex'))
+    return refuse(`The pass "${passId}" changed after it was sealed.`)
+  return null
+}
+
 async function postRows(args: Record<string, unknown>): Promise<ToolResult> {
   const raw = args.docs
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_ROWS)
@@ -292,6 +336,8 @@ async function postRows(args: Record<string, unknown>): Promise<ToolResult> {
     const data = doc ? doc.data : null
     if (!data || typeof data !== 'object' || Array.isArray(data))
       return bad(`${docId}: data is the row itself, an object with kind, pass and its list's fields`)
+    const unsealed = await unsealedPass(docId, data as Record<string, unknown>)
+    if (unsealed) return bad(unsealed)
     const lifted = await liftInlinePictures(data, { maker: 'mcp' })
     if (lifted.error) return bad(`${docId}: ${lifted.error}`)
     pictures.push(...lifted.pictures)
@@ -421,6 +467,11 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'list_open') {
     const n = Number(args.limit)
     return ok(await listOpen(Number.isInteger(n) && n >= 1 ? Math.min(n, 200) : 50))
+  }
+  if (name === 'close_read') return ok(await closeRead(db, typeof args.date === 'string' ? args.date : undefined))
+  if (name === 'close_say') {
+    if (typeof args.say !== 'string' || !args.say.trim()) return bad('close_say needs say: what he replies at this step')
+    return ok(await closeSay(db, args.say, typeof args.date === 'string' ? args.date : undefined))
   }
   if (name === 'whoami') {
     return ok({
