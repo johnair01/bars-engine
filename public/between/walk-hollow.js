@@ -3,6 +3,8 @@
    the four lands, across the low table. This guide names the one step in front of a newcomer in the page's hint line (one short
    line per stop, hdw-audience A), and once the lantern has landed in the valley it lays the end card. It reads the coin table's
    turns and the games' Lantern out state; it writes nothing, and nothing here is kept. */
+import * as walkOwn from "./walk-own.js";
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const CSS = `
 .wh-end{box-sizing:border-box;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:60;width:min(92vw,440px);display:grid;gap:12px;padding:18px 18px 16px;border-radius:18px;background:rgba(18,14,24,.9);color:#f6ecdc;box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transition:opacity .6s}
 .wh-end.on{opacity:1}
@@ -26,6 +28,13 @@ export const STEP_WORDS = {
   end: "The lantern has landed, and that place in the valley stays lit.",
 };
 
+/** The step's line, with the newcomer's own want in it where one was left (hdw-oix-4). Pure; a missing want gives the plain line. */
+export function wordsFor(step, want) {
+  const w = String(want || "").trim();
+  if (step === "table" && w) return "Mara sits across the low table. You left this: " + w.slice(0, 70) + ". Sit, and draw her card for it.";
+  return STEP_WORDS[step] || STEP_WORDS.table;
+}
+
 /** Which step the newcomer is on, from what the table and the mouth show. Pure, so the tests read it the same.
  * @param {{ turns?: { status?: string }[], lantern?: { mouth?: boolean, state?: string | null } | null }} [seen] */
 export function walkStep(seen = {}) {
@@ -38,6 +47,7 @@ export function walkStep(seen = {}) {
 }
 
 export function mount(B) {
+  const want = () => { const m = walkOwn.own(); return m ? m.want : ""; };
   const st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
   let step = "", endAt = 0, card = null;
   const read = () => {
@@ -49,8 +59,9 @@ export function mount(B) {
   const inPlay = () => ((B.coins && B.coins.turns && B.coins.turns()) || []).some(t => ["open", "sealed", "asked", "waiting", "opened"].includes(t.status));
   function endCard() {
     if (card) return;
+    const w = want();
     card = document.createElement("div"); card.className = "wh-end"; card.setAttribute("role", "dialog"); card.setAttribute("aria-label", "The end of the walk");
-    card.innerHTML = `<b>The end of the walk</b><p>You woke in a nook, a stranger's charge made four lands, and a friend met you in the Hollow. That is the game: what you feel becomes a place, and you walk its places with friends.</p><p>Up the road, the Heaven sect keeps a gate for anyone who carried a lantern out.</p><div class="wh-row"><button type="button" class="go" data-wh="sect">Walk on to the Heaven sect</button><button type="button" data-wh="again">Walk it again</button><button type="button" data-wh="stay">Stay a while</button></div>`;
+    card.innerHTML = `<b>The end of the walk</b><p>${w ? `You came wanting ${esc(w)}. ` : ""}You woke in a nook, a stranger's charge made four lands, and a friend met you in the Hollow. That is the game: what you feel becomes a place, and you walk its places with friends.</p><p>Up the road, the Heaven sect keeps a gate for anyone who carried a lantern out.</p><div class="wh-row"><button type="button" class="go" data-wh="sect">Walk on to the Heaven sect</button><button type="button" data-wh="again">Walk it again</button><button type="button" data-wh="stay">Stay a while</button></div>`;
     for (const ev of ["pointerdown", "pointerup", "keydown", "wheel"]) card.addEventListener(ev, e => e.stopPropagation());
     card.addEventListener("click", e => {
       const b = e.target.closest("[data-wh]"); if (!b) return;
@@ -68,7 +79,7 @@ export function mount(B) {
     if (endAt && performance.now() > endAt && endAt !== Infinity) endCard();
   }, 500);
   return {
-    hint: () => (step === "table" && inPlay() ? "" : STEP_WORDS[step] || STEP_WORDS.table),
+    hint: () => (step === "table" && inPlay() ? "" : wordsFor(step, want())),
     view: () => ({ step, end: !!card }),
   };
 }
