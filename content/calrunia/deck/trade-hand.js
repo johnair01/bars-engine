@@ -20,7 +20,7 @@
       v: V, goal: +c.goal || 0, vibeulons: +c.vibeulons || 0, fog: FOG_MAX, fogAt: day(now),
       ports: (c.ports || []).slice(0, 6).map((p, i) => ({ id: p.id || "port-" + i, name: String(p.name || "A port"), standing: "stranger" })),
       moves: (c.moves || []).map((m, i) => ({ id: m.id || uid("mv", now, i), port: m.port, action: String(m.action || ""), ask: String(m.ask || "") })),
-      crate: null, boats: [], routes: [], coins: [], sits: [], log: [],
+      crate: null, boats: [], routes: [], coins: [], sits: [], opps: [], log: [],
     };
   }
 
@@ -54,7 +54,7 @@
   function release(s, how, now, note) {
     const c = s.crate; if (!c || c.state !== "waiting") return null;
     if (!["sent", "sat", "crew"].includes(how)) throw new Error("unknown release " + how);
-    const paid = PAY.crate + bounty(s, now);
+    const paid = PAY.crate + bounty(s, now) + (+c.bonus || 0); // a card a returning boat brought pays its extra on top
     c.state = how; c.releasedAt = now; c.paid = paid; if (note) c.note = String(note);
     s.vibeulons += paid;
     if (how === "sat") s.sits.push({ at: now, id: c.id, minted: 1 }); // the sit mints the vibeulon that pays (ReleaseResidue)
@@ -89,15 +89,65 @@
     const b = s.boats.find((x) => x.id === boatId); if (!b || b.back) return null;
     if (back.kind === "coin") {
       const amount = Math.max(0, +back.amount || 0);
-      b.back = { kind: "coin", amount, at: now }; s.coins.push({ at: now, amount, port: b.port, boat: b.id });
-      const p = s.ports.find((q) => q.id === b.port);
-      if (p) { const same = s.coins.filter((x) => x.port === b.port).length; p.standing = same >= 2 ? "route" : STANDING[Math.max(STANDING.indexOf(p.standing), 2)]; }
+      b.back = { kind: "coin", amount, at: now }; addCoin(s, amount, b.port, now, b.id);
     } else if (back.kind === "lesson") {
       b.back = { kind: "lesson", line: String(back.line || ""), at: now }; // the spirit holds it; no meter moves
     } else return null;
     s.log.push({ at: now, kind: "return", boat: b.id, back: b.back.kind });
     return b;
   }
+  // Coin is logged at the tide post, never asked for at the return (his note on mb-return-build-look-1). It raises the
+  // tide and the port's standing as a returning boat's coin did: trusted at the first coin, a route at the second.
+  function addCoin(s, amount, port, now, boat) {
+    const a = Math.max(0, +amount || 0); if (!(a > 0)) return null;
+    const c = { at: now, amount: a, port: port || null }; if (boat) c.boat = boat; s.coins.push(c);
+    const p = s.ports.find((q) => q.id === port);
+    if (p) { const same = s.coins.filter((x) => x.port === port).length; p.standing = same >= 2 ? "route" : STANDING[Math.max(STANDING.indexOf(p.standing), 2)]; }
+    s.log.push({ at: now, kind: "coin", amount: a, port: port || null });
+    return c;
+  }
+
+  // The boat comes home on its own (his note on mb-return-build-look-1: "a surprise and delight engine"). On a visit,
+  // the boat that has been out longest, and at least one whole day, is already sailing in. Nothing is asked.
+  const HOME_AFTER_DAYS = 1;
+  function homeward(s, now) {
+    return s.boats.filter((b) => !b.back && days(b.sentAt, now) >= HOME_AFTER_DAYS).sort((a, b) => Date.parse(a.sentAt) - Date.parse(b.sentAt))[0] || null;
+  }
+
+  // The crate it carries opens on one opportunity card: a way to move the money needle that came back from its port.
+  // The draw is fixed by the boat, so reopening the same boat shows the same card, and a card taken or let drift is
+  // not dealt again while others remain.
+  function opportunity(s, boatId, deck) {
+    const b = s.boats.find((x) => x.id === boatId); if (!b || !deck) return null;
+    const port = s.ports.find((p) => p.id === b.port), name = port ? port.name : "a port";
+    const fill = (t) => String(t || "").replace(/\{port\}/g, name).replace(/\{ask\}/g, b.ask || "what you sent").replace(/\{action\}/g, b.action || "");
+    const own = (deck.ports && (deck.ports[b.port] || deck.ports.any)) || [];
+    const seen = new Set((s.opps || []).map((o) => o.card));
+    const all = (deck.from_boat || []).concat(own);
+    const fresh = all.filter((c) => !seen.has(c.id)); const pool = fresh.length ? fresh : all; if (!pool.length) return null;
+    let h = 0; for (const ch of String(b.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const c = pool[h % pool.length], el = (deck.elements && (deck.elements[b.port] || deck.elements.any)) || { element: "earth" };
+    return { card: c.id, boat: b.id, port: b.port, portName: name, element: el.element, title: fill(c.title), line: fill(c.line), action: fill(c.action), bonus: Math.max(0, +c.bonus || 0), pay: PAY.crate };
+  }
+  // Take it aboard: the card becomes a move in the hand, on the hatch today when the hatch is clear, else tomorrow.
+  // Let it drift: it goes back to sea; nothing is lowered. Either way the boat is home.
+  function takeAboard(s, opp, now) {
+    const b = s.boats.find((x) => x.id === opp.boat); if (!b || b.back) return null;
+    const mv = chalk(s, opp.port, opp.action, "", now); mv.bonus = opp.bonus; mv.from = b.id; mv.title = opp.title;
+    b.back = { kind: "opportunity", card: opp.card, taken: true, at: now };
+    (s.opps = s.opps || []).push({ at: now, boat: b.id, card: opp.card, taken: true });
+    s.log.push({ at: now, kind: "home", boat: b.id, card: opp.card, taken: true });
+    const c = deal(s, now); return { move: mv, today: !!c && c.id === mv.id };
+  }
+  function letDrift(s, opp, now) {
+    const b = s.boats.find((x) => x.id === opp.boat); if (!b || b.back) return null;
+    b.back = { kind: "opportunity", card: opp.card, taken: false, at: now };
+    (s.opps = s.opps || []).push({ at: now, boat: b.id, card: opp.card, taken: false });
+    s.log.push({ at: now, kind: "home", boat: b.id, card: opp.card, taken: false });
+    return b;
+  }
+  // Route-keeping stays where it was: a boat whose return logged coin can be kept as a route. The return no longer asks
+  // for coin, so the route book is written from logReturn's coin only (not reached from the deck page in this build).
   function keepRoute(s, boatId, words, now) {
     const b = s.boats.find((x) => x.id === boatId); if (!b || !b.back || b.back.kind !== "coin") return null;
     const r = { id: uid("route", now, s.routes.length), port: b.port, action: b.action, ask: b.ask, words: String(words || ""), from: b.id, at: now };
@@ -125,7 +175,7 @@
   // The say-back sentence (mbf-say-back), the only words the scene carries at rest.
   const SAY_BACK = ["Each morning one crate sits on the hatch;", "I send it, sit with it, or hand it to the crew,", "and the tide turns so my studio boats sail free;", "a crate pays three vibeulons, studio work pays one, and sailing before the tide turns costs one."];
 
-  const TH = { V, PAY, FOG_MAX, STANDING, KEY, SAY_BACK, blank, deal, sweep, bounty, presence, release, tideTurned, rowAgainst, settleFog, logReturn, keepRoute, routeBook, tideLine, chalk, store };
+  const TH = { V, PAY, FOG_MAX, STANDING, KEY, SAY_BACK, HOME_AFTER_DAYS, blank, deal, sweep, bounty, presence, release, tideTurned, rowAgainst, settleFog, logReturn, addCoin, homeward, opportunity, takeAboard, letDrift, keepRoute, routeBook, tideLine, chalk, store };
   root.__tradeHand = TH;
   if (typeof module !== "undefined" && module.exports) module.exports = TH;
 })(typeof window !== "undefined" ? window : globalThis);

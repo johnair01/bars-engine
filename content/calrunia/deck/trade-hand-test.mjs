@@ -59,6 +59,42 @@ t("coin twice at a port makes it a standing route; kept routes fill the route bo
   s.boats.push({ id: "x", port: "a", sentAt: d2, back: null }); TH.logReturn(s, "x", { kind: "coin", amount: 100 }, d2);
   assert.equal(s.ports[0].standing, "route"); assert.equal(TH.routeBook(s)[0].routes.length, 1);
 });
+const deck = createRequire(import.meta.url)("../../../fixtures/trade-deck/opportunities.json");
+t("a boat comes home on its own after a day out, longest out first", () => {
+  const s = TH.blank(d1, chart); TH.deal(s, d1); TH.release(s, "sent", d1);
+  assert.equal(TH.homeward(s, d1), null, "not the same day");
+  assert.equal(TH.homeward(s, d2).id, s.boats[0].id);
+});
+t("its crate opens on one opportunity card from its port, worth extra vibeulons, the same card each time", () => {
+  const s = TH.blank(d1, { ...chart, ports: [{ id: "jobs", name: "Jobs" }], moves: [{ port: "jobs", action: "Submit the form", ask: "the director role" }] });
+  TH.deal(s, d1); TH.release(s, "sent", d1); const b = s.boats[0];
+  const o = TH.opportunity(s, b.id, deck);
+  assert.ok(o.title && o.action && o.bonus > 0); assert.equal(o.element, "metal"); assert.equal(o.portName, "Jobs");
+  assert.ok(!/[{}]/.test(o.title + o.line + o.action), "every blank is filled");
+  assert.deepEqual(TH.opportunity(s, b.id, deck), o);
+});
+t("taking it aboard puts it on a clear hatch today and pays its extra when sent", () => {
+  const s = TH.blank(d1, { ...chart, moves: [{ port: "a", action: "Send the first offer" }] });
+  TH.deal(s, d1); TH.release(s, "sent", d1); const b = s.boats[0];
+  const o = TH.opportunity(s, b.id, deck); const r = TH.takeAboard(s, o, d2);
+  assert.equal(r.today, true); assert.equal(s.crate.action, o.action); assert.equal(b.back.kind, "opportunity");
+  const before = s.vibeulons; TH.release(s, "sent", d2); assert.equal(s.vibeulons - before, TH.PAY.crate + o.bonus);
+  assert.equal(TH.takeAboard(s, o, d2), null, "a boat comes home once");
+});
+t("taking it aboard while a crate waits chalks it for tomorrow; letting it drift lowers nothing", () => {
+  const s = TH.blank(d1, chart); TH.deal(s, d1); TH.release(s, "sent", d1);
+  s.boats.push({ id: "y", port: "b", action: "Post the page", ask: "", sentAt: d1, back: null });
+  TH.deal(s, d2); assert.equal(s.crate.state, "waiting");
+  const r = TH.takeAboard(s, TH.opportunity(s, s.boats[0].id, deck), d2); assert.equal(r.today, false); assert.equal(s.moves.at(-1).id, r.move.id);
+  const before = JSON.stringify([s.vibeulons, s.fog, s.ports]);
+  TH.letDrift(s, TH.opportunity(s, "y", deck), d2); assert.equal(JSON.stringify([s.vibeulons, s.fog, s.ports]), before);
+  assert.equal(s.boats[1].back.taken, false);
+});
+t("coin logged at the tide post raises the tide and the port", () => {
+  const s = TH.blank(d1, chart); assert.equal(TH.addCoin(s, 0, "a", d1), null);
+  TH.addCoin(s, 600, "a", d1); assert.equal(TH.tideLine(s, d1).coin, 600); assert.equal(s.ports[0].standing, "trusted");
+  TH.addCoin(s, 50, "a", d1); assert.equal(s.ports[0].standing, "route");
+});
 t("the store keeps nothing but this device's copy", () => {
   const mem = new Map(), ls = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
   const s = TH.blank(d1, chart); assert.equal(TH.store.put(s, ls), true); assert.deepEqual(TH.store.get(ls), s);
