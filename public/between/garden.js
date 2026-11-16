@@ -36,6 +36,7 @@ import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
 import { makeCultBody, useKneel } from "./cult/player-body.js";
 import { makeKneel } from "./cult/kneel.js";
+import { cultPick } from "./cult/pick.js";
 useKneel(makeKneel);
 //   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
@@ -1254,7 +1255,7 @@ async function ensureMyBody() {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
        here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
     let b = null;
-    if (CULT_ME) { try { b = await makeCultBody({ who: KQ.get("cult") === "m" ? "m" : "f", ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
+    if (CULT_ME) { try { b = await makeCultBody({ who: cultPick(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
     if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
@@ -1276,7 +1277,11 @@ async function ensurePeerBody(p) {
   /* A load that fails (a dropped fetch on a phone) is tried again at the next poll, never left loading (playtest 1,
      2026-10-28: the partner's figure hung on loading); the model caches let go of a failed fetch for the same reason. */
   let b = null;
-  try { b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) }); }
+  /* one model on the route: a friend in the Hollow is the same cultivation figure the player is (Wendell's C on
+     cd-route-look-1), in the other outfit, so two are told apart by the ring's hue and the cloth, not by a second body */
+  try { if (CULT_ME) b = await makeCultBody({ who: cultPick(), outfit: "B1", ring: hue, ringR: 0.36, ringW: 0.05, ringA: 0.6 }); }
+  catch (e) { noteError(e, "peer cultivation figure"); }
+  try { if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) }); }
   catch (e) { noteError(e, "peer figure"); }
   finally { p.loading = false; }
   if (!b || peers.get(p.peer) !== p) return;
