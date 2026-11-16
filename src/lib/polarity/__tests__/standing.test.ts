@@ -15,7 +15,7 @@ assert.ok(CHALLENGER_DECK.filter((c) => c.move === 'growUp').every((c) => c.note
 
 // Wording: future action, redeemed by a BAR of the act; never a look-back or an assumed opponent.
 const worded = CHALLENGER_DECK.filter((c) => c.prompt)
-assert.strictEqual(worded.length, 5) // four Shielding cards + Sparring Wake Up
+assert.strictEqual(worded.length, 8) // four Shielding cards + four Sparring cards
 assert.ok(worded.every((c) => c.redeem && /BAR/.test(c.redeem)))
 assert.ok(CHALLENGER_DECK.filter((c) => !c.prompt).every((c) => c.redeem === null))
 assert.ok(worded.every((c) => !/\b(did you|today|yesterday|whom did|where did)\b/i.test(c.prompt!)))
