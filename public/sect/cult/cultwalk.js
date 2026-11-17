@@ -28,7 +28,7 @@ export const ik2 = (F, a, b, c, T, P) => { F.root.updateMatrixWorld(true); const
 
 export const GAIT = { step: 0.62, duty: 0.6, lift: 0.06, reach: 0.985, bob: 0.025, sway: 0.02, turn: 8 };
 // Round 30: the run (pace 1 at RUN.speed m/s) and the jump's tuck. A lane tunes these against movecheck.js.
-export const RUN = { walk: 1.3, speed: 4.2, stride: 1.75, duty: 0.36, lift: 0.17, bob: 0.045, lean: 0.14, arm: 1.6, elbow: 0.5, tuck: 0.16, land: 0.07 };
+export const RUN = { walk: 1.3, speed: 4.2, stride: 1.75, duty: 0.36, lift: 0.17, bob: 0.045, lean: 0.14, arm: 1.6, elbow: 0.5, tuck: 0.2, land: 0.14 };
 export const MIX = { gender: 'm', build: 'average', skin: 3, height: 1.75, direction: 'B', outfit: 'B2' }; // the gate rounds' mix
 
 // build the figure into `parent` (heaven's scene) and return { update(dt), X }. `body` is the avatar group walk.js
