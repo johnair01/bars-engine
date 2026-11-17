@@ -97,7 +97,13 @@ function supportBVHs(X, extra) {
   for (let i = 0; i < N; i++) { v.fromBufferAttribute(G.attributes.position, i); F.mesh.applyBoneTransform(i, v); v.applyMatrix4(F.mesh.matrixWorld); P[i * 3] = v.x; P[i * 3 + 1] = v.y; P[i * 3 + 2] = v.z; }
   const legs = new Set(['hipL', 'hipR', 'kneeL', 'kneeR', 'ankleL', 'ankleR', 'ballL', 'ballR'].map(n => F.boneName.indexOf(n))), I = F.idx0.array, keep = [];
   for (let t = 0; t < I.length; t += 3) if (legs.has(F.dom[I[t]]) || legs.has(F.dom[I[t + 1]]) || legs.has(F.dom[I[t + 2]])) keep.push(I[t], I[t + 1], I[t + 2]);
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setIndex(keep);
+  // the boots and the trousers are colliders too (his 2026-11-16 ask: the cloth was tested against bare skin only, so boot
+  // soles and toes showed through the back of the kneel). Their posed triangles join the leg BVH; the part's own index is
+  // read whole, so the trousers' hidden thigh triangles still hold the cloth off the thigh
+  const extraP = [], extraI = []; let base = N;
+  for (const pt of X.parts) { if (!/^(boots|shoes|trousers)/.test(pt.name)) continue; const W = partWorld(pt), ix = pt.geo.index.array; for (let i = 0; i < W.length; i++) extraP.push(W[i]); for (let i = 0; i < ix.length; i++) extraI.push(ix[i] + base); base += W.length / 3; }
+  const P2 = new Float32Array(base * 3); P2.set(P); P2.set(extraP, N * 3); for (const i of extraI) keep.push(i);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P2, 3)); g.setIndex(keep);
   const out = [new MeshBVH(g)];
   for (const m of extra) { m.updateMatrixWorld(true); const g2 = m.geometry.clone().applyMatrix4(m.matrixWorld); out.push(new MeshBVH(g2.index ? g2 : g2)); }
   return out;
