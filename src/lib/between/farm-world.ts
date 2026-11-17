@@ -40,16 +40,27 @@ export type Change = {
   status: 'applied' | 'reverted'
 }
 export type NotYet = { id: string; captureId: string; slot: number | null; ask: string; why: string; lane: string; at: string }
-export type WorldDoc = { changes: Change[]; notYet: NotYet[]; log: { at: string; lane: string; did: string }[] }
+/**
+ * A seed an agent writes arrives as a parcel (farm-world-write-look-2 steer: a container the player opens into their own
+ * satchel, then plants). It is written whole, so it is sealed when written; it has no slot and counts no days.
+ */
+export type Parcel = {
+  id: string; captureId: string; label: string; line: string | null; before: string | null; lane: string; at: string
+  state: 'sealed' | 'opened' | 'composted'
+}
+export const MAX_PARCELS = 40
+export const LINE_MAX = 280
+export type WorldDoc = { changes: Change[]; notYet: NotYet[]; parcels: Parcel[]; log: { at: string; lane: string; did: string }[] }
 
-export const newWorld = (): WorldDoc => ({ changes: [], notYet: [], log: [] })
+export const newWorld = (): WorldDoc => ({ changes: [], notYet: [], parcels: [], log: [] })
 
 export type Input = {
   slot?: unknown; kind?: unknown; text?: unknown; object?: unknown; captureId?: unknown
-  before?: unknown; lane?: unknown; ask?: unknown
+  before?: unknown; lane?: unknown; ask?: unknown; line?: unknown
 }
 export type Outcome =
-  | { ok: true; tier: 'data'; doc: WorldDoc; change: Change }
+  | { ok: true; tier: 'data'; doc: WorldDoc; change: Change; parcel?: undefined }
+  | { ok: true; tier: 'data'; doc: WorldDoc; parcel: Parcel; change?: undefined }
   | { ok: false; tier: 'rule'; doc: WorldDoc; notYet: NotYet; why: string }
   | { ok: false; tier: 'invalid'; why: string }
 
@@ -93,11 +104,23 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
     return { ok: false, tier: 'rule', doc: w, notYet, why }
   }
 
+  if (kind === 'seed') {
+    const label = clean(input.text, SIGN_MAX)
+    if (!label) return { ok: false, tier: 'invalid', why: 'a seed needs its label in text' }
+    const w = clone(doc)
+    if (w.parcels.filter(p => p.state === 'sealed').length >= MAX_PARCELS) return { ok: false, tier: 'invalid', why: 'This farm already holds the most parcels it can show' }
+    const parcel: Parcel = {
+      id: `pcl-${stamp(Date.parse(now))}-${w.parcels.length}`, captureId, label, line: clean(input.line, LINE_MAX) || null,
+      before: link(input.before), lane, at: now, state: 'sealed',
+    }
+    w.parcels.push(parcel)
+    w.log.push({ at: now, lane, did: `parcel: ${label}` })
+    return { ok: true, tier: 'data', doc: w, parcel }
+  }
   if (!inGrid(input.slot)) return { ok: false, tier: 'invalid', why: `slot is a whole number from 0 to ${SLOTS - 1}` }
   const k = kind as DataKind
   let text = ''
   let object: WorldObject | null = null
-  if (k === 'seed') text = clean(input.text, SIGN_MAX)
   if (k === 'note') text = clean(input.text, NOTE_MAX)
   if (k === 'object') {
     if (typeof input.object !== 'string' || !(OBJECTS as readonly string[]).includes(input.object))
@@ -105,13 +128,11 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
     object = input.object as WorldObject
     text = clean(input.text, SIGN_MAX)
   }
-  if ((k === 'seed' || k === 'note') && !text) return { ok: false, tier: 'invalid', why: `a ${k} needs its words in text` }
+  if (k === 'note' && !text) return { ok: false, tier: 'invalid', why: `a ${k} needs its words in text` }
 
   const w = clone(doc)
   const live = w.changes.filter(c => c.status === 'applied')
   if (live.length >= MAX_CHANGES) return { ok: false, tier: 'invalid', why: 'This farm already holds the most changes it can show' }
-  // One seed per slot: a second seed replaces the first, so the place never shows two voices at once.
-  if (k === 'seed') for (const c of w.changes) if (c.slot === input.slot && c.kind === 'seed' && c.status === 'applied') c.status = 'reverted'
   const c: Change = {
     id: `chg-${stamp(Date.parse(now))}-${w.changes.length}`, slot: input.slot, kind: k, text, object, captureId,
     before: link(input.before), after: null, lane, at: now, status: 'applied',
@@ -158,6 +179,7 @@ export function asWorld(raw: unknown): WorldDoc {
   return {
     changes: Array.isArray(r.changes) ? r.changes : [],
     notYet: Array.isArray(r.notYet) ? r.notYet : [],
+    parcels: Array.isArray(r.parcels) ? r.parcels : [],
     log: Array.isArray(r.log) ? r.log.slice(-200) : [],
   }
 }
@@ -167,5 +189,28 @@ export function forPlayer(doc: WorldDoc) {
   return {
     changes: doc.changes.filter(c => c.status === 'applied').map(({ lane: _l, ...c }) => c),
     notYet: doc.notYet.map(({ lane: _l, ...n }) => n),
+    parcels: doc.parcels.filter(p => p.state === 'sealed').map(({ lane: _l, before: _b, ...p }) => p),
   }
+}
+
+export type Seed = { id: string; parcelId: string; captureId: string; label: string; at: string }
+export const asSeeds = (raw: unknown): Seed[] => (Array.isArray(raw) ? raw.filter(s => s && typeof s === 'object' && typeof (s as Seed).id === 'string') : []) as Seed[]
+
+/**
+ * Open a parcel. `take` marks it opened and adds one seed to the satchel; `compost` marks it composted and adds nothing.
+ * A parcel that is no longer sealed changes nothing, so a second take (or a take from a second tab) leaves one seed.
+ */
+export function openParcel(doc: WorldDoc, seeds: Seed[], id: string, act: unknown, now: string):
+  { ok: boolean; changed: boolean; doc: WorldDoc; seeds: Seed[]; why?: string; state?: Parcel['state'] } {
+  if (act !== 'take' && act !== 'compost') return { ok: false, changed: false, doc, seeds, why: 'act is take or compost' }
+  const at = doc.parcels.findIndex(p => p.id === id)
+  if (at < 0) return { ok: false, changed: false, doc, seeds, why: 'No such parcel' }
+  const cur = doc.parcels[at]
+  if (cur.state !== 'sealed') return { ok: true, changed: false, doc, seeds, state: cur.state }
+  const w = clone(doc)
+  const p = w.parcels[at]
+  p.state = act === 'take' ? 'opened' : 'composted'
+  w.log.push({ at: now, lane: 'player', did: `${act} ${id}` })
+  const out = act === 'take' ? [...seeds, { id: `seed-${id}`, parcelId: id, captureId: p.captureId, label: p.label, at: now }] : seeds
+  return { ok: true, changed: true, doc: w, seeds: out, state: p.state }
 }

@@ -182,7 +182,9 @@ const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringif
  * A worked ember keeps the `from` it was lit with.
  */
 export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
-  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
+  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow' && k !== 'seeds') return no(400, 'The pouch holds embers only.')
+  // The satchel's seeds are the server's (farm parcels, farm-world-write): a page write keeps them exactly as they stand.
+  if (!sameJson(pouch.seeds ?? [], cur?.seeds ?? [])) return no(400, 'Seeds come from parcels you open.')
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
   if (h != null && !(isObj(h) && Object.keys(h).every(k => k === 'card' || k === 'at') && h.card === HOLLOW_CARD && isNum(h.at)))
