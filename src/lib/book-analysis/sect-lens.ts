@@ -38,7 +38,7 @@ For each practice you teach:
 - elder: the one Elder whose way the practice trains.
 - sourceSentence: copy ONE sentence from the passage word for word. Do not paraphrase, shorten or fix it. If no sentence supports the practice, drop the practice.
 - restPath: one sentence for a day the exile cannot do it, a smaller act or a rest that still counts.
-Teach only what the passage supports. Return 2 or 3 practices when the passage holds that many different acts, each with its own sourceSentence; return 1 if it holds only one; return none for a passage with no practice in it. Never pad: a practice without its own supporting sentence is dropped. Leave nation, archetype and the other optional fields null unless the passage names them.`
+Teach only what the passage supports. Return 2 or 3 practices when the passage holds that many different acts, each with its own sourceSentence; return 1 if it holds only one; return none for a passage with no practice in it. Never pad: a practice without its own supporting sentence is dropped. Also give each practice a flavorLine: one short line (under 18 words) of Calrunian flavor naming one thing in the world the exile could see or touch, such as the sect's stone steps, an Elder's tea bowl, the lantern harbor or the terraced farm. The Description stays plain and complete; the flavorLine only sets the scene, never a question, never a look back at the past. Leave nation, archetype and the other optional fields null unless the passage names them.`
 
 const norm = (s: string) =>
   s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim()
@@ -61,6 +61,7 @@ export function keepVerifiedSource<T extends LensQuest>(q: T, chunkText: string)
   return sourceSentenceIsInChunk(q.sourceSentence, chunkText) ? q : { ...q, sourceSentence: null }
 }
 
+/** Generic prompt is the default (bh-retune-look-3, answer C); BOOK_ANALYSIS_LENS=sect switches the sect lens on. */
 export function bookAnalysisLens(): 'sect' | 'generic' {
-  return process.env.BOOK_ANALYSIS_LENS === 'generic' ? 'generic' : 'sect'
+  return process.env.BOOK_ANALYSIS_LENS === 'sect' ? 'sect' : 'generic'
 }
