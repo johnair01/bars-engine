@@ -18,6 +18,11 @@ describe('thenText', () => {
     expect(thenText(mapping.then)).toBe('')
     expect(thenText(mapping.then, 'C')).toBe('')
   })
+  it("writes nothing when a multi-pick answer arrives joined as 'A, B'", () => {
+    expect(thenText(mapping.then, 'A, B')).toBe('')
+    const both = ticketFromAnswer('council', 'questions', 'mp-1', { choices: ['A', 'B'] }, mapping)!
+    expect(both.brief).toContain("the gate's claim")
+  })
 })
 
 describe('ticketFromAnswer with a mapping or a list', () => {
