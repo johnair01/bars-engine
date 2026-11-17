@@ -489,7 +489,7 @@ export interface Seed {
 }
 export const SEEDS: Seed[] = [
   { domain: 'Gather Resource', title: 'Gather Resources', front: 'Leave an offering: make a donation.', back: 'Bring something for the shared pantry.', act: 'offering', nextStep: 'Next: pick what you will leave in the pantry.', actLabel: 'Leave an offering' },
-  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Make an introduction, for work or for a podcast guest.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Next: pick the one person you will introduce to him.', actLabel: 'Book a call to make it (placeholder: introductions have no place to land yet)', href: LINKS.coachingFree },
+  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Make an introduction, for work or for a podcast guest.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Next: pick the one person you will introduce to him.', actLabel: 'Make the introduction' },
   { domain: 'Raise Awareness', title: 'Raise Awareness', front: 'Share the book, or buy it.', back: 'Plant a bloom by the path where neighbours will see it.', act: 'share', nextStep: 'Next: pick the one person you will show this to.', actLabel: 'Buy the book', href: LINKS.bookshop },
   { domain: 'Direct Action', title: 'Direct Action', front: 'Work with him, and work out what makes sense to work on.', back: 'Pick a fruit and hand it over today.', act: 'work', nextStep: 'Next: pick the day you will sit down with him.', actLabel: 'Book a session', href: LINKS.coachingFree },
 ]
@@ -525,3 +525,13 @@ export const FRUIT_TO = [
   { id: 'keep', label: 'Keep it', line: 'The fruit stays in your bed for now. It keeps.' },
 ] as const
 export type FruitTo = (typeof FRUIT_TO)[number]['id']
+
+/**
+ * Where an introduction note sends the person, in one place (gate-acts build). Wendell answered board question
+ * gate-acts-links-1 with A on 2026-11-17: his pay-what-feels-right booking page, for both kinds. Swap a value here to
+ * change the destination. A null link shows its key as "Opens once Wendell adds the link". The payment links are
+ * derived from the handles in PAY (acts.ts); both pages were checked on 2026-11-17 to show his name.
+ */
+export const GATE_ACT_LINKS: { intro: { work: string | null; podcast: string | null } } = {
+  intro: { work: LINKS.coachingFree, podcast: LINKS.coachingFree },
+}
