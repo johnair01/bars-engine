@@ -42,7 +42,17 @@ export async function loadCult(THREE, base, who) {
   const scene = THREE.SkeletonUtils.clone(gl.scene), bones = [], meshes = [];
   scene.traverse(function (o) {
     if (o.isBone) bones.push(o);
-    if (o.isMesh) { o.frustumCulled = false; o.material = o.material.clone(); meshes.push(o); }
+    if (o.isMesh) {
+      o.frustumCulled = false; o.material = o.material.clone(); meshes.push(o);
+      // The file keeps the skin weights as normalised bytes. The page's r128 skins on the GPU, which reads them as 0..1, but its
+      // SkinnedMesh.boneTransform (the seat and footfall probes) reads the raw 0..255, so the weights are widened to floats here.
+      const sw = o.geometry.attributes.skinWeight;
+      if (sw && sw.normalized && !(sw.array instanceof Float32Array)) {
+        const f = new Float32Array(sw.array.length), d = sw.array instanceof Uint8Array ? 255 : sw.array instanceof Uint16Array ? 65535 : 1;
+        for (let i = 0; i < f.length; i++) f[i] = sw.array[i] / d;
+        o.geometry.setAttribute('skinWeight', new THREE.BufferAttribute(f, 4));
+      }
+    }
   });
   const clips = {}; gl.animations.forEach(function (a) { clips[a.name] = a; });
   return { scene: scene, bones: bones, meshes: meshes, clips: clips, height: FIG[who].height, cycle: FIG[who].cycle, who: who };

@@ -236,7 +236,8 @@ const stickBox = await page.locator('[data-cave-stick]').boundingBox();
 ok(stickBox && stickBox.x < 60 && stickBox.y + stickBox.height > 844 - 80, `the stick sits under the left thumb (${stickBox && Math.round(stickBox.x)}, ${stickBox && Math.round(stickBox.y)})`);
 await page.keyboard.down('ArrowUp');
 let t0 = Date.now();
-while (Date.now() - t0 < 3000) { await sample(); await page.waitForTimeout(200); }
+// at least three seconds and ten samples: the cultivation figure is heavier than Dusk was, so a software renderer shows fewer frames
+while (Date.now() - t0 < 3000 || (samples.length < 10 && Date.now() - t0 < 15000)) { await sample(); await page.waitForTimeout(200); }
 await page.keyboard.up('ArrowUp');
 await page.screenshot({ path: SHOTS + '/cave-walk.png' });
 await page.waitForTimeout(300);
