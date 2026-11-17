@@ -18,9 +18,13 @@ export const BODIES = {
   m: { gender: "m", build: "average", skin: 3, height: 1.75 },
 };
 let REG = null;
-export async function makeWalker({ who = "f", outfit = "B2" } = {}) {
+/* who/outfit pick the figure. A page that needs its own clothes (the Arcade's street clothes) passes `outfitDef`, an outfit
+   of parts.json's shape, registered under the key `outfit`; `build` (slight|average|broad), `skin` (a ramp index) and
+   `hairColor` (a hex) set the body and hair; every other part is parts.json's. */
+export async function makeWalker({ who = "f", outfit = "B2", outfitDef = null, build = null, skin = null, hairColor = null } = {}) {
   if (!REG) REG = await fetch(new URL("./make/parts.json", import.meta.url)).then(r => r.json());
-  const X = await M.build({ ...BODIES[who], direction: outfit[0], outfit }, REG);
+  const reg = outfitDef || hairColor ? { ...REG, outfits: outfitDef ? { ...REG.outfits, [outfit]: outfitDef } : REG.outfits, hairColor: hairColor || REG.hairColor } : REG;
+  const X = await M.build({ ...BODIES[who], ...(build ? { build } : {}), ...(skin != null ? { skin } : {}), direction: outfit[0], outfit }, reg);
   const F = X.F;
   // the body under the clothes is not drawn while it walks, so a thigh cannot show through the skirt (mix.js
   // legsInMotion, worked out at the preview's stride); it stays hidden at rest too, where the cloth covers it

@@ -1,7 +1,7 @@
 /* The lantern table (bars-engine .specify/specs/lantern-table/spec.md; tasks T006 to T010).
    Ported from six-faces-council's ad2 dir B still (council/callsheets/stills/2026-11-02-lantern-intake-ad2/make/scene.html,
    "Twist and switch", his pick on lh-intake-look-1) into a scene you play: table B in the Between's Dusk hollow
-   (buildHollow, paperLantern, the Average Dusk walker from wardrobe.js), with a brass machine on the table for the
+   (buildHollow, paperLantern, the cultivation figure from between/cult/), with a brass machine on the table for the
    intake and the board itself for the play. Every control is an object on the table: there is no card, chip, tray or
    panel. The rules are engine.js, built from src/lib/lantern/engine.ts by scripts/build-lantern-engine.mjs.
 
@@ -17,10 +17,9 @@
    stone is your BAR, the hourglass turns the watch, and a vibeulon from the stack buys a basic move once the oil is out.
    ?view=seat|top|stand and ?still=1 are for stills (scripts/lantern-table-stills.mjs). */
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, paperLantern, groundY } from "../../between/hollow.js";
-import { loadParts, dressFigure } from "../../between/wardrobe.js";
+import { makeCultSeated } from "../../between/land/cult-seat.js";
+import { cultPick } from "../../between/cult/pick.js";
 import { init, apply, payout, payoutShare, blockLeft, KEEPS, CHANNELS, CHANNEL_NAME, STATE, lvl, CMD, nHeld, cmdNeed } from "./engine.js";
 import { interpret, QUESTIONS, STOCK } from "./interpret.js";
 
@@ -384,28 +383,20 @@ stools.forEach(([x, z]) => mesh(new THREE.CylinderGeometry(0.2, 0.18, STOOL_TOP,
 const stoolGrip = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.9, 10), hitMat); stoolGrip.position.set(stools[0][0], 0.45, stools[0][1]); stoolGrip.userData.act = "sit"; scene.add(stoolGrip); picks.push(stoolGrip);
 STANDIN_AT.forEach(([x, z, a]) => { const [sx, sz] = stoolAt(x, z, a); mesh(new THREE.CylinderGeometry(0.2, 0.18, STOOL_TOP, 10), wood, sx, STOOL_TOP / 2 + groundY(x, z), sz, scene); });
 
-const eu = new THREE.Euler(), qe = new THREE.Quaternion();
-const SIT = [["hipL", -1.45, 0, -0.12], ["hipR", -1.45, 0, 0.12], ["kneeL", 1.4, 0, 0], ["kneeR", 1.4, 0, 0], ["spine", 0.25, 0, 0], ["neck", 0.25, 0, 0], ["shoulderL", -0.35, 0, -0.1], ["elbowL", -0.9, 0, 0], ["shoulderR", -0.35, 0, 0.1], ["elbowR", -0.9, 0, 0]];
-function figure(parts, { dressed }) {
-  const obj = skClone(parts.dusk.scene); obj.updateMatrixWorld(true);
-  const box = new THREE.Box3(); obj.traverse(o => { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
-  const k = 1.7 / box.getSize(new THREE.Vector3()).y; obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
-  let wd = null;
-  if (dressed) { wd = dressFigure(obj, parts); wd.set(null); }
-  else { /* grey unfired clay: a stand-in, never mistaken for a player */ const clay = new THREE.MeshStandardMaterial({ color: 0x7f8794, roughness: 0.95 }); obj.traverse(o => { if (o.isMesh) o.material = clay; }); }
-  const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
-  obj.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = true; } });
-  const mixer = new THREE.AnimationMixer(obj); const idle = parts.dusk.animations.find(a => a.name === "Idle"); if (idle) mixer.clipAction(idle).play();
-  const bone = n => obj.getObjectByName(n), hips = bone("hips"), hips0 = hips.position.clone();
-  function pose(sit, floor = 0) {
-    mixer.setTime(0.5); hips.position.copy(hips0);
-    if (sit) {
-      for (const [n, x, y, z] of SIT) { const b = bone(n); if (b) b.quaternion.multiply(qe.setFromEuler(eu.set(x, y, z, "XYZ"))); }
-      holder.updateMatrixWorld(true);
-      const sv = new THREE.Vector3(), hw = hips.getWorldPosition(sv).y, sy = hips.parent.getWorldScale(sv).y || 1;
-      hips.position.y -= (hw - (STOOL_TOP + 0.1 + floor)) / sy;
-    }
-    if (wd) for (let n = 0; n < 40; n++) wd.dress(1 / 60);
+/* The figure is the cultivation figure, the one model on the route (Average Dusk is deprecated, Wendell 2026-11-17), sat on
+   the stool by land/cult-seat.js. A stand-in is the same body in unfired grey clay. A figure that fails to build logs an
+   error and is not drawn; nothing stands in for it. */
+async function figure({ dressed }) {
+  let C = null;
+  try { C = await makeCultSeated({ who: cultPick(), outfit: "B2" }); }
+  catch (e) { console.error("lantern table figure did not build", e); }
+  const holder = C ? C.holder : new THREE.Group(); scene.add(holder);
+  if (C && !dressed) { /* grey unfired clay: a stand-in, never mistaken for a player */ const clay = new THREE.MeshStandardMaterial({ color: 0x7f8794, roughness: 0.95 }); holder.traverse(o => { if (o.isMesh) o.material = clay; }); }
+  holder.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = true; } });
+  function pose(sit) {
+    if (!C) return;
+    if (sit) C.sit(STOOL_TOP, 0);
+    else { C.stood(); C.body.setWalking(true); C.body.pose(0, 0.016, false, false); C.body.setWalking(false); C.body.pose(0, 0.5, false, false); }   // walker.js holds a rested pose until it moves: wake it, then let it settle standing
     holder.updateMatrixWorld(true);
   }
   return { holder, pose };
@@ -735,11 +726,9 @@ document.getElementById("qLook").addEventListener("click", () => { cardAway = tr
 
 /* ---------- start ---------- */
 step("dressing the walker");
-const loader = new GLTFLoader();
-const parts = await loadParts(u => loader.loadAsync(u));
-const me = figure(parts, { dressed: true });
+const me = await figure({ dressed: true });
 me.holder.rotation.y = Math.PI * 1.1; me.holder.position.set(stools[0][0] + 0.5, 0, stools[0][1] + 0.3); me.pose(false);
-STANDIN_AT.forEach(([x, z, a]) => { const f = figure(parts, { dressed: false }); const [sx, sz] = stoolAt(x, z, a); f.holder.position.set(sx, groundY(x, z), sz); f.holder.rotation.y = Math.atan2(x - sx, z - sz); f.pose(true, groundY(x, z)); });
+for (const [x, z, a] of STANDIN_AT) { const f = await figure({ dressed: false }); const [sx, sz] = stoolAt(x, z, a); f.holder.position.set(sx, groundY(x, z), sz); f.holder.rotation.y = Math.atan2(x - sx, z - sz); f.pose(true); }
 await loadSaved();
 if (tableId) qAt = 7;   /* a saved table was answered already: its pieces stand as they were dealt */
 drawSliders(); drawIntake(); drawSeal();

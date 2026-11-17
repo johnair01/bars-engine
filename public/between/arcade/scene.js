@@ -6,15 +6,15 @@
 
      ../hollow.js     rng, mergeStatic (one draw per material)
      ../paint.js      the Between's painterly shader on every standard material (the page installs it)
-     ../wardrobe.js   the visitors' bodies: Average Dusk, shaped and haired; the robe hidden, street clothes on
+     ../cult/         the visitors' bodies: the cultivation figure (the one model on the route), dressed in street clothes
 
    The page (./arcade.js) owns the renderer, the camera, the walk and the cards. */
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { rng, mergeStatic } from "/between/hollow.js";
 import { installPaint } from "/between/paint.js";
-import { loadParts, dressFigure } from "/between/wardrobe.js";
+import { makeCultSeated } from "/between/land/cult-seat.js";
+import { cultPick } from "/between/cult/pick.js";
+import { SKINS, COLOURS } from "/calrunia/look.js";
 import { TYPES, CH1_TYPE, AISLE, PITCH, BACK_WALL, SCREEN_HUES, BODY, CABINETS } from "./cabinets.js";
 export { AISLE, PITCH, BACK_WALL };
 installPaint();
@@ -381,37 +381,48 @@ export function hangLine(line) {
 /* ---------- the visitors: real people in their own street clothes (his note on round 1, 2026-11-03: "they should look
    like real world people. Like someone walked off the street in normal clothes. They don't get the cultivation robes
    until they create their character") ----------
-   The body is the Between's own (Average Dusk, mocap Walk and Idle, shaped and haired by wardrobe.js), so the player
-   who later makes a character is the same figure. Here the robe and sash are hidden, and the clothes are drawn as
-   colour on the body and the trouser shell by bone: a top on the chest and arms, jeans or trousers on the legs, shoes
-   at the feet, plus a few solids (a hood, a cap, a bag strap, a backpack) that say "came in off the street". */
-const loader = new GLTFLoader();
+   The body is the cultivation figure, the one model on the route (Average Dusk is deprecated, Wendell 2026-11-17), so the
+   player who later makes a character is the same figure. The clothes are an outfit of the cultivation parts registry,
+   defined here: trousers, shoes and a hip-length top with its sleeves, in the visitor's colours. A visitor adds a few
+   solids that say "came in off the street" (a cap, a bag strap, a backpack, a coin purse). A figure that fails to build
+   logs an error and is not drawn; nothing stands in for it. */
 const STREET = {
   // the player: a hoodie, jeans, white trainers, the coin purse at the hip
-  me: { look: { shape: "a", build: "average", skin: "light", style: "afro", colour: "black", outfit: "coat", dye: "violet" },
-        top: "#6f7a5e", cuff: "#5c654d", sleeve: "long", legs: "#3e5a80", legsDark: "#2f4563", shoes: "#ece8df", shell: "hoodie", purse: true },
+  me: { who: null, skin: 0, hair: "crown", hairColour: "black", top: "#6f7a5e", cuff: "#5c654d", legs: "#3e5a80", shoes: "#ece8df", purse: true },
   // a visitor in a denim jacket over a white tee, black trousers, a cross-body bag
-  denim: { look: { shape: "b", build: "slender", skin: "umber", style: "sweep", colour: "black", outfit: "coat", dye: "violet" },
-        top: "#55759c", cuff: "#43607f", inner: "#efece6", sleeve: "long", legs: "#26252b", legsDark: "#1b1a1f", shoes: "#3a2c24", strap: "#2a2420", shell: "denim" },
+  denim: { who: "m", skin: 6, hair: "topknot", hairColour: "black", top: "#55759c", cuff: "#43607f", legs: "#26252b", shoes: "#3a2c24", strap: "#2a2420" },
   // a visitor in a red puffer jacket, grey trousers, a beanie, a backpack
-  puffer: { look: { shape: "c", build: "average", skin: "olive", style: "page", colour: "dark_brown", outfit: "coat", dye: "violet" },
-        top: "#b0443c", cuff: "#8e352f", sleeve: "long", legs: "#8a8790", legsDark: "#6d6a73", shoes: "#d9d4ca", beanie: "#2e3b4a", pack: "#3e4a3a", shell: "puffer" },
+  puffer: { who: "f", skin: 3, hair: "braid", hairColour: "dark_brown", top: "#b0443c", cuff: "#8e352f", legs: "#8a8790", shoes: "#d9d4ca", beanie: "#2e3b4a", pack: "#3e4a3a" },
 };
-let gltfDusk = null;
+const HAIR_STYLE = { sweep: "topknot", afro: "crown", page: "braid", spiked: "topknot" };
+const streetOutfit = S => ({
+  piece: "street", name: "street clothes",
+  pieces: [
+    { p: "trousers", color: S.legs, loose: 0.0 },
+    { p: "shoes", color: S.shoes },
+    { p: "robe", color: S.top, trim: S.cuff, hem: 0.5, ease: 0.03, flare: 0, folds: 0, sleeve: "narrow", hemBand: 0.04 },
+    { p: "hair", style: S.hair },
+  ],
+});
 export async function figure(kind = "me", look = null) {
-  const S = look ? { ...STREET[kind], look: { ...STREET[kind].look, ...look, outfit: "coat", dye: "violet" } } : STREET[kind];
-  const gl = gltfDusk || (gltfDusk = await loader.loadAsync("/between/m/dusk/average-dusk.glb"));
-  const root = gl.scene; root.updateMatrixWorld(true);
-  const bb = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); bb.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else bb.expandByObject(o); } });
-  const obj = skClone(root), k = 1.7 / Math.max(bb.getSize(V(0, 0, 0)).y, 0.01);
-  obj.scale.setScalar(k); obj.position.y = -bb.min.y * k;
-  const wardrobe = dressFigure(obj, await loadParts(u => loader.loadAsync(u)));
-  wardrobe.set(S.look);
-  street(obj, wardrobe, S);
-  obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-  const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
-  const mixer = new THREE.AnimationMixer(obj), acts = {};
-  for (const nm of ["Walk", "Idle"]) { const c = gl.animations.find(a => a.name === nm); if (c) { acts[nm] = mixer.clipAction(c); acts[nm].play(); } }
+  try { return await buildFigure(kind, look); }
+  catch (e) {   // a failed build logs an error and draws nothing; no other figure stands in
+    console.error("arcade figure (" + kind + ") did not build", e);
+    const holder = new THREE.Group(); scene.add(holder);
+    return { holder, obj: holder, purse: null, hang() {}, set() {}, sit() {}, get sitting() { return false; }, pose() {} };
+  }
+}
+async function buildFigure(kind, look) {
+  const base = STREET[kind], S = { ...base };
+  if (look) {   // a look chosen at the creator: its skin, its hair and its hair colour (the body is the route's one model)
+    const si = SKINS.findIndex(k => k.id === look.skin); if (si >= 0) S.skin = si;
+    if (HAIR_STYLE[look.style]) S.hair = HAIR_STYLE[look.style];
+    const hc = COLOURS.find(c => c.id === look.colour); if (hc) S.hairColour = hc.swatch;
+  }
+  const hairHex = S.hairColour && S.hairColour[0] === "#" ? S.hairColour : ({ black: "#1c2222", dark_brown: "#421603" })[S.hairColour];
+  const C = await makeCultSeated({ who: S.who || cultPick(), outfit: "B9", outfitDef: streetOutfit(S), skin: S.skin, hairColor: hairHex });
+  const holder = C.holder; scene.add(holder);
+  const obj = holder;
   if (S.purse) {
     // the purse at the hip (FR-009): drawn as weight, no count; three coins hang it low and round
     const purse = new THREE.Group();
@@ -420,190 +431,34 @@ export async function figure(kind = "me", look = null) {
     purse.position.set(-0.21, 0.88, 0.03); purse.scale.setScalar(1.25); holder.add(purse);
     var purseBag = bag;
   }
-  return { holder, mixer, acts, wardrobe, obj, purse: S.purse ? purseBag : null,
-    hang(w) { if (!this.purse) return; this.purse.scale.set(0.55 + 0.45 * w, 0.5 + 0.75 * w, 0.4 + 0.4 * w); this.purse.position.y = -0.03 * w; },   // fuller hangs lower and rounder
-    set(walk) { if (acts.Walk) acts.Walk.setEffectiveWeight(walk ? 1 : 0); if (acts.Idle) acts.Idle.setEffectiveWeight(walk ? 0 : 1); },
-    pose(dt) { mixer.update(dt); } };
-}
-function street(obj, wardrobe, S) {
-  const L = wardrobe.layers, body = L.body;
-  L.robe.visible = false;
-  obj.traverse(o => { if (o.isSkinnedMesh && o !== body && o !== L.pants && o !== L.robe) o.visible = false; });   // the sash
-  const bones = body.skeleton.bones.map(b => b.name)
-  const g = body.geometry, col = g.attributes.color, P = g.attributes.position;
-  const si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
-  const topOf = j => { let b = 0, w = -1; for (let q = 0; q < 4; q++) if (sw.getComponent(j, q) > w) { w = sw.getComponent(j, q); b = si.getComponent(j, q); } return bones[b]; };
-  const C = h => new THREE.Color(h);
-  const top = C(S.top), cuff = C(S.cuff), legs = C(S.legs), legsDark = C(S.legsDark), shoes = C(S.shoes), inner = S.inner ? C(S.inner) : null;
-  let minY = Infinity, maxY = -Infinity; for (let i = 0; i < P.count; i++) { minY = Math.min(minY, P.getY(i)); maxY = Math.max(maxY, P.getY(i)); }
-  const H = maxY - minY, rel = i => (P.getY(i) - minY) / H;
-  const isDark = i => col.getX(i) + col.getY(i) + col.getZ(i) < 0.06;
-  for (let i = 0; i < col.count; i++) {
-    const b = topOf(i), y = rel(i);
-    if (isDark(i)) { if (y < 0.07) col.setXYZW(i, shoes.r * 0.85, shoes.g * 0.85, shoes.b * 0.85, 1); continue; }   // the feet: shoes
-    let c = null;
-    if (/head|neck/.test(b)) c = null;                                 // skin and hair stay
-    else if (/wrist|hand/.test(b)) c = y > 0.5 && S.sleeve === "long" && /wrist/.test(b) ? null : null;
-    else if (/elbow|forearm/.test(b)) c = S.sleeve === "long" ? (y < 0.5 ? cuff : top) : null;
-    else if (/shoulder|arm|clav/.test(b)) c = top;
-    else if (/spine|chest/.test(b)) c = (inner && Math.abs(P.getX(i)) < 0.05 * H && P.getZ(i) > 0) ? inner : top;
-    else if (/hips/.test(b)) c = y > 0.5 ? top : legs;
-    else if (/ankle|foot|toe/.test(b)) c = y < 0.035 ? shoes.clone().multiplyScalar(0.6) : shoes;
-    else if (/hip|knee|leg/.test(b)) c = legs;
-    if (c) col.setXYZW(i, c.r, c.g, c.b, 1);
-  }
-  col.needsUpdate = true;
-  // the trouser shell: jeans to the ankle, a turned-up hem at the bottom
-  L.pants.geometry.setIndex(Array.from(L.pantsIndex));   // every trouser triangle: no robe covers the legs now
-  const pc = L.pants.geometry.attributes.color;
-  for (let i = 0; i < L.pantsY.length; i++) { const c = L.pantsY[i] < 0.13 ? legsDark : legs; pc.setXYZW(i, c.r, c.g, c.b, 1); }
-  pc.needsUpdate = true;
-  // the solids, on the bones they ride
+  // the solids, on the bones they ride (the cultivation figure's own bones)
   const bone = n => obj.getObjectByName(n), mat = h => { const m = std(h, { roughness: 0.85 }); m.userData.noPaint = true; return m; };
-  const onBone = (b, mesh, wx, wy, wz) => { obj.updateMatrixWorld(true); const s = b.getWorldScale(V(0, 0, 0)).x; mesh.scale.multiplyScalar(1 / s); b.add(mesh);
+  const onBone = (b, mesh, wx, wy, wz) => { holder.updateMatrixWorld(true); const s = b.getWorldScale(V(0, 0, 0)).x; mesh.scale.multiplyScalar(1 / s); b.add(mesh);
     mesh.position.copy(b.worldToLocal(b.getWorldPosition(V(0, 0, 0)).add(V(wx, wy, wz)))); mesh.quaternion.copy(b.getWorldQuaternion(new THREE.Quaternion()).invert()); return mesh; };
-  const spine = bone("spine"), neck = bone("neck"), head = bone("head");
-  if (S.shell) {   // the hoodie or jacket hangs over the trousers: the trouser shell stops under its hem
-    const top = minY + (0.535 + 0.03) * H, ix = L.pantsIndex, o = [];
-    for (let t = 0; t < ix.length; t += 3) if (!(L.pantsY[ix[t]] > top && L.pantsY[ix[t + 1]] > top && L.pantsY[ix[t + 2]] > top)) o.push(ix[t], ix[t + 1], ix[t + 2]);
-    L.pants.geometry.setIndex(o);
-    shell(obj, body, S, H, minY, mat, L);
-  }
+  const spine = bone("spine03") || bone("spine"), head = bone("head");
   if (S.beanie && head) {
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.105, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(S.beanie)); b.scale.set(1.5, 1.45, 1.5); onBone(head, b, 0, 0.07, -0.02);
     const cuffR = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.024, 6, 18), mat(S.beanie)); cuffR.rotation.x = Math.PI / 2; onBone(head, cuffR, 0, 0.065, -0.005);
   }
   if (S.pack && spine) {
-    const p = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.36, 0.13), mat(S.pack)); onBone(spine, p, 0, 0.17, -0.17);
-    for (const x of [-0.08, 0.08]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.32, 0.012), mat("#2a2e28")); onBone(spine, st, x, 0.22, 0.1); }
+    const p = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.36, 0.13), mat(S.pack)); onBone(spine, p, 0, 0.05, -0.17);
+    for (const x of [-0.08, 0.08]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.32, 0.012), mat("#2a2e28")); onBone(spine, st, x, 0.08, 0.1); }
   }
   if (S.strap && spine) {
-    const st = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.6, 0.012), mat(S.strap)); st.rotation.z = 0.75; onBone(spine, st, 0, 0.18, 0.115);
-    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.06), mat(S.strap)); onBone(spine, bag, -0.17, -0.06, 0.08);
+    const st = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.6, 0.012), mat(S.strap)); st.rotation.z = 0.75; onBone(spine, st, 0, 0.05, 0.115);
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.06), mat(S.strap)); onBone(spine, bag, -0.17, -0.2, 0.08);
   }
-}
-
-/* the hoodie as its own garment: a shell grown off the body's torso and arms (as wardrobe.js grows the trousers off the
-   legs), loose at the belly and tight at a ribbed hem and cuffs, with a kangaroo pocket, and the hood down: a deep
-   pouch of cloth lying on the upper back, its opening ringing the neck. */
-const SHELLS = { hoodie: 0, denim: 1, puffer: 2 };
-function shell(obj, body, S, H, minY, mat, L) {
-  const KIND = SHELLS[S.shell] ?? 0, LOFT = KIND === 2 ? 2.4 : KIND === 1 ? 0.8 : 1;   // a puffer stands off the body; denim lies close
-  const g = body.geometry, P = g.attributes.position, N = g.attributes.normal, si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
-  const bones = body.skeleton.bones.map(b => b.name);
-  const topOf = j => { let b = 0, w = -1; for (let q = 0; q < 4; q++) if (sw.getComponent(j, q) > w) { w = sw.getComponent(j, q); b = si.getComponent(j, q); } return bones[b]; };
-  const rel = j => (P.getY(j) - minY) / H;
-  const col = g.attributes.color, dark = j => col.getX(j) + col.getY(j) + col.getZ(j) < 0.06;
-  // which body points the hoodie covers: the chest, shoulders and arms down to the wrist, and the hips to a hem low on them
-  const HEM = 0.535, WRIST = new Map();
-  const ok = j => { if (dark(j)) return false; const b = topOf(j), y = rel(j);
-    if (/spine|shoulder|elbow/.test(b)) return y > HEM; if (/hips/.test(b)) return y > HEM - 0.06; if (/hipL|hipR/.test(b)) return y > HEM - 0.02; return false; };   // the big waist triangles reach below the hem; the shader cuts the hem clean
-  // the candidates: the body's own triangles, and the waist and leg triangles wardrobe.js moved into the trouser shell
-  const bodyIx = Array.from(g.index.array), legIx = Array.from(L.pantsIndex, k => L.pantsSrc[k]);
-  const ix = bodyIx.concat(legIx), keep = [];
-  for (let t = 0; t < ix.length; t += 3) if (ok(ix[t]) && ok(ix[t + 1]) && ok(ix[t + 2])) keep.push(ix[t], ix[t + 1], ix[t + 2]);
-  const map = new Map(); for (const j of keep) if (!map.has(j)) map.set(j, map.size);
-  { const o = []; for (let t = 0; t < bodyIx.length; t += 3) if (!(ok(bodyIx[t]) && ok(bodyIx[t + 1]) && ok(bodyIx[t + 2]))) o.push(bodyIx[t], bodyIx[t + 1], bodyIx[t + 2]); g.setIndex(o); } // && ok(ix[t + 1]) && ok(ix[t + 2]))) o.push(ix[t], ix[t + 1], ix[t + 2]); g.setIndex(o); }   // the body under the hoodie is not drawn
-  // the lowest point of each sleeve (the cuff), by the arm's side
-  let cuffY = { L: Infinity, R: Infinity };
-  for (const j of map.keys()) if (/elbow/.test(topOf(j))) { const side = P.getX(j) > 0 ? "L" : "R"; cuffY[side] = Math.min(cuffY[side], P.getY(j)); }
-  // the welded normal at each position (the body's seams split normals), so the shell grows without cracks
-  const key = j => `${P.getX(j).toFixed(4)},${P.getY(j).toFixed(4)},${P.getZ(j).toFixed(4)}`, wn = new Map();
-  for (const j of map.keys()) { const k = key(j); const o = wn.get(k) || wn.set(k, new THREE.Vector3()).get(k); o.x += N.getX(j); o.y += N.getY(j); o.z += N.getZ(j); }
-  const n = map.size, pos = new Float32Array(n * 3), sI = new Uint16Array(n * 4), sW = new Float32Array(n * 4), paint = new Float32Array(n * 4), restA = new Float32Array(n * 5);
-  const ease = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
-  const top = new THREE.Color(S.top), rib = new THREE.Color(S.top).multiplyScalar(0.74), seam = new THREE.Color(S.top).multiplyScalar(0.5), pocket = new THREE.Color(S.top).multiplyScalar(0.86), hood = new THREE.Color(S.top).multiplyScalar(1.08);
-  let yTop = 0; for (const j of map.keys()) if (!/elbow/.test(topOf(j))) yTop = Math.max(yTop, rel(j));
-  for (const [j, k] of map) {
-    const y = rel(j), b = topOf(j), nv = wn.get(key(j)).clone().normalize();
-    const arm = /elbow|shoulder/.test(b) && Math.abs(P.getX(j)) > 0.11 * H;
-    const cy = arm ? cuffY[P.getX(j) > 0 ? "L" : "R"] : null, dc = arm ? (P.getY(j) - cy) / H : 1;   // height above the cuff
-    // loose: most at the belly and the forearm, gathered in at the ribbed hem and cuffs
-    let off = 0.006 * H * LOFT;
-    if (!arm) off += 0.012 * H * ease(0.75, 0.6, y) - 0.004 * H * ease(HEM + 0.035, HEM, y);
-    else off += 0.006 * H * ease(0.0, 0.05, dc) - 0.004 * H * ease(0.03, 0.0, dc);
-    pos.set([P.getX(j) + nv.x * off, P.getY(j) + nv.y * off * 0.3, P.getZ(j) + nv.z * off], k * 3);
-    for (let q = 0; q < 4; q++) { sI[k * 4 + q] = si.getComponent(j, q); sW[k * 4 + q] = sw.getComponent(j, q); }
-    const c = top;
-    restA.set([P.getX(j) / H, y, P.getZ(j) / H, arm ? dc : -1, nv.z], k * 5);
-    paint.set([c.r, c.g, c.b, 1], k * 4);
-  }
-  const sg = new THREE.BufferGeometry();
-  sg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); sg.setAttribute("skinIndex", new THREE.BufferAttribute(sI, 4));
-  sg.setAttribute("skinWeight", new THREE.BufferAttribute(sW, 4)); sg.setAttribute("color", new THREE.BufferAttribute(paint, 4));
-  sg.setAttribute("rest", new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(restA, 5), 3, 0));
-  sg.setAttribute("restArm", new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(restA, 5), 2, 3));
-  sg.setIndex(keep.map(j => map.get(j))); sg.computeVertexNormals();
-  // the hoodie's details drawn per pixel from each point's rest place, so they stay crisp on a low body mesh:
-  // the ribbed neckline, hem and cuffs (fine ribs), the kangaroo pocket with its stitched edge and openings,
-  // and the hood lying down on the back, a lighter doubled panel with a dark stitched rim and a soft shadow under it
-  const sm = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, side: THREE.DoubleSide }); sm.userData.noPaint = true;
-  const U = { yTop: { value: yTop }, hem: { value: HEM }, kind: { value: KIND }, innerC: { value: new THREE.Color(S.inner || S.top) } };
-  sm.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
-    sh.vertexShader = "attribute vec3 rest;\nattribute vec2 restArm;\nvarying vec3 vRest;\nvarying vec2 vArm;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nvRest = rest; vArm = restArm;");
-    sh.fragmentShader = "uniform float yTop;\nuniform float hem;\nuniform int kind;\nuniform vec3 innerC;\nvarying vec3 vRest;\nvarying vec2 vArm;\n" + sh.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
-      float x = abs(vRest.x), y = vRest.y; bool arm = vArm.x >= 0.0; bool back = vArm.y < -0.15 && vRest.z < 0.0; bool front = vArm.y > 0.2 && vRest.z > 0.0;
-      if (!arm && y < hem) discard;
-      vec3 base = diffuseColor.rgb, k = base;
-      float ribs = 0.86 + 0.1 * step(0.5, fract((arm ? vRest.x * 0.0 + vRest.z : vRest.x) * 260.0));
-      if (!arm && y > yTop - 0.02) k = base * ribs * 0.82;                                   // ribbed neckline
-      if (!arm && y < hem + 0.032) k = base * ribs * 0.8;                                    // ribbed hem
-      if (arm && vArm.x < 0.032) k = base * (0.86 + 0.1 * step(0.5, fract(atan(vRest.z, vRest.x) * 9.0))) * 0.8;   // ribbed cuffs
-      if (kind == 0 && !arm && front) {                                                      // the kangaroo pocket
-        float top = hem + 0.105, bot = hem + 0.035, wTop = 0.06, wBot = 0.085, t = (y - bot) / (top - bot), hw = mix(wBot, wTop, t);
-        if (t > 0.0 && t < 1.0 && x < hw) {
-          k = base * 0.9;
-          if (t > 0.94 || hw - x < 0.004) k = base * 0.55;                                     // stitched edge
-          if (x > hw - 0.028 && t > 0.25 && t < 0.92 && hw - x > 0.004) { float o = (x - (hw - 0.028)) / 0.028; if (abs(o - t * 0.9) < 0.06) k = base * 0.45; }   // the hand openings
-        }
-        if (abs(x - 0.012) < 0.0022 && y > yTop - 0.11 && y < yTop - 0.02) k = vec3(0.92, 0.9, 0.86);   // drawstrings
-      }
-      if (kind == 0 && !arm && back) {                                                       // the hood, down
-        float hy = (yTop - 0.012 - y) / 0.15, hw = 0.085 * sqrt(max(0.0, 1.0 - pow(max(hy, 0.0), 2.2)));
-        if (hy > -0.05 && hy < 1.0 && x < hw) {
-          k = base * mix(1.16, 0.9, smoothstep(0.1, 1.0, hy)) * (1.0 - 0.12 * smoothstep(0.5, 1.0, x / hw));   // the doubled cloth, catching light at the top, rounding away at the sides
-          float m = 0.07 * sqrt(max(0.0, 1.0 - pow(hy / 0.26, 2.0)));                                          // the hood's mouth, open at the neck
-          if (x < m && hy < 0.26) k = base * mix(0.38, 0.6, hy / 0.26);
-          if (hw - x < 0.006 || hy > 0.93) k = base * 0.5; if (abs(x) < 0.0025 && hy > 0.3) k = base * 0.78; }   // panel, rim, centre seam
-        else if (hy > 0.0 && hy < 1.12 && x < hw + 0.012) k = base * 0.68;                      // its shadow on the back
-      }
-      if (kind == 1) {                                                                       // a denim jacket, open over a tee
-        k = base * (0.94 + 0.06 * step(0.5, fract((vRest.x + vRest.y) * 340.0)));           // the twill
-        if (!arm && y < hem + 0.03) k = base * 0.82;                                         // the waistband
-        if (arm && vArm.x < 0.03) k = base * 0.82;                                           // the cuffs
-        if (!arm && front) {
-          float open = mix(0.012, 0.045, smoothstep(yTop - 0.02, yTop - 0.16, y));          // the fronts part toward the collar
-          if (x < open) k = innerC * 0.95;                                                   // the tee under it
-          else if (x < open + 0.004) k = base * 0.55;                                        // the fronts' stitched edge
-          if (y > yTop - 0.11 && y < yTop - 0.065 && x > 0.035 && x < 0.075) k = base * (y > yTop - 0.075 ? 0.6 : 0.88);   // chest pockets and their flaps
-          if (x > open + 0.004 && x < open + 0.012 && fract((y - hem) * 28.0) < 0.18 && y < yTop - 0.03) k = vec3(0.78, 0.68, 0.48);   // the buttons
-        }
-        if (!arm && y > yTop - 0.03) k = base * 0.78;                                         // the collar, turned down
-        if (abs(fract(y * 9.0) - 0.5) < 0.006 && !arm && !front) k = base * 0.7;              // the back's yoke seam
-      }
-      if (kind == 2) {                                                                       // a puffer, quilted in channels
-        float ch = fract((y - hem) * 22.0); k = base * (0.82 + 0.26 * sin(ch * 3.14159));    // each channel full in the middle, stitched at its edges
-        if (arm) { float c = fract(vArm.x * 16.0); k = base * (0.82 + 0.26 * sin(c * 3.14159)); if (vArm.x < 0.025) k = base * 0.6; }
-        if (!arm && y > yTop - 0.04) k = base * 0.9;                                          // the stand collar
-        if (!arm && front && x < 0.004) k = vec3(0.2, 0.2, 0.22);                             // the zip
-        if (!arm && y < hem + 0.018) k = base * 0.62;                                         // the hem's binding
-      }
-      if (DEBUGY) k = vec3(fract(y * 20.0), step(0.6, y), 0.0);
-      diffuseColor.rgb = k;`.replace("DEBUGY", Q.get("dbg") ? "true" : "false")); };
-  sm.customProgramCacheKey = () => "street-shell";
-  const shell = new THREE.SkinnedMesh(sg, sm); shell.frustumCulled = false; body.parent.add(shell); shell.bind(body.skeleton, body.bindMatrix);
-  // the hood down, on the spine bone, placed against the shell's own back at the shoulders (rest pose = bind pose)
-  obj.updateMatrixWorld(true);
-  const spine = obj.getObjectByName("spine"), neck = obj.getObjectByName("neck");
-  let backZ = Infinity, neckR = 0, neckN = 0; const nk = new THREE.Vector3(), w = new THREE.Vector3();
-  neck.getWorldPosition(nk);
-  for (const [j, k] of map) { const y = rel(j); if (y > 0.76 && y < 0.8 && Math.abs(pos[k * 3]) < 0.06 * H) { w.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]).applyMatrix4(body.matrixWorld); backZ = Math.min(backZ, w.z); } }
-  for (let j = 0; j < P.count; j++) if (/neck/.test(topOf(j))) { w.fromBufferAttribute(P, j).applyMatrix4(body.matrixWorld); if (Math.abs(w.y - (nk.y - 0.02)) < 0.03) { neckR += Math.hypot(w.x - nk.x, w.z - nk.z); neckN++; } }
-  neckR = neckN ? neckR / neckN : 0.055;
-  let frontZ = -Infinity, frontY = 0;
-  for (const [j, k] of map) { const y = rel(j); if (y > 0.775 && y < 0.79 && Math.abs(pos[k * 3]) < 0.035 * H) { w.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]).applyMatrix4(body.matrixWorld); if (w.z > frontZ) { frontZ = w.z; frontY = w.y; } } }
-  const put = (m, at) => { const sc = spine.getWorldScale(new THREE.Vector3()); m.scale.divide(sc); spine.add(m); m.position.copy(spine.worldToLocal(at.clone()));
-    m.quaternion.premultiply(spine.getWorldQuaternion(new THREE.Quaternion()).invert()); return m; };
-  // the drawstrings, hanging from the front of the ring
-  return shell;
+  C.holder.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+  let walking = false, sitting = false, T = 0, seatTop = 0.48;
+  return { holder, obj, purse: S.purse ? purseBag : null,
+    hang(w) { if (!this.purse) return; this.purse.scale.set(0.55 + 0.45 * w, 0.5 + 0.75 * w, 0.4 + 0.4 * w); this.purse.position.y = -0.03 * w; },   // fuller hangs lower and rounder
+    set(walk) { walking = !!walk; },
+    /* sat on a seat whose top is `top` metres over the floor (the bench), or standing again */
+    sit(on, top = 0.48) {
+      seatTop = top;
+      if (on) { sitting = true; C.sit(seatTop, T); }
+      else if (sitting) { sitting = false; C.stood(); C.body.setWalking(true); C.body.pose(T, 0.016, false, false); }   // walker.js holds a rested pose until it moves: wake it once
+    },
+    get sitting() { return sitting; },
+    pose(dt) { T += dt; if (sitting) { C.sit(seatTop, T); return; } C.body.setWalking(walking); C.body.pose(T, dt, false, false); } };
 }
