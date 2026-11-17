@@ -212,6 +212,8 @@ export type TtvToday = {
   rawEntry: string
   wordCount: number
   committedTaskCount: number
+  /** When "Pull what's useful" first read the page (a time only, never a sentence). */
+  pulledAt: Date | null
   tasks: TtvTaskDTO[]
   lensGoals: TtvLensGoalOption[]
   brainstormCandidates: TtvBrainstormCandidate[]
@@ -342,6 +344,7 @@ async function loadOrCreateSession(playerId: string, sessionDate: Date): Promise
     rawEntry: session.rawEntry,
     wordCount: session.wordCount,
     committedTaskCount: session.committedTaskCount,
+    pulledAt: session.pulledAt,
     tasks,
     lensGoals,
     brainstormCandidates: parseBrainstormCandidates(session.brainstormCandidates),
@@ -385,6 +388,8 @@ export async function commitTask(input: {
   lensCategory?: string | null
   lensFaceKey?: string | null
   lensGoalId?: string | null
+  /** `pull`: the line was offered by "Pull what's useful" and kept; it counts toward the same daily cap. */
+  source?: 'pull'
 }): Promise<TtvResult<{ task: TtvTaskDTO; questId: string; aligned: boolean; placedIn: 'hand' | 'vault'; overflow?: OverflowContext }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
@@ -428,7 +433,7 @@ export async function commitTask(input: {
           playerId: player.id,
           dailySessionId: session.id,
           originalText: text,
-          source: 'brainstorm',
+          source: input.source === 'pull' ? 'pull' : 'brainstorm',
           lensLevel: lensGoal?.cadence ?? input.lensLevel ?? null,
           lensCategory: lensGoal?.domain ?? input.lensCategory ?? null,
           lensFaceKey: input.lensFaceKey ?? null,
