@@ -319,6 +319,9 @@ export interface Scene {
 }
 
 const S = '/ally-gate/scenes/'
+/** The farm still behind the packet, the bed and the grounds. */
+export const FARM_STILL = { img: S + 'farm-1.jpg', source: 'looks/bars-farm-2/frame-1.jpg' }
+export const STUCK_STILL = { img: S + 'farm-3.jpg', source: 'looks/bars-farm-2/frame-3.jpg' }
 export const STORY_IMG: Array<{ img: string; pos?: string; motion: Scene['motion']; source: string }> = [
   { img: S + 'sect-founding.jpg', motion: 'in', source: 'looks/heaven-sect-look-1.jpg, founding era crop' },
   { img: S + 'farm-1.jpg', motion: 'left', source: 'looks/bars-farm-2/frame-1.jpg' },
@@ -368,26 +371,6 @@ export const SCENES: Record<string, Scene> = {
       { id: 'd-give', x: 44, y: 58, label: 'Something I will give', dream: 'give' },
     ],
     source: 'looks/bars-farm-2/frame-2.jpg',
-  },
-  feeling: {
-    id: 'feeling',
-    img: S + 'farm-1.jpg',
-    pos: '50% 50%',
-    motion: 'in',
-    domain: 'Your own desire',
-    lines: ['Which feeling did you come for? Pick the one you would most like to feel today. It lights the places that serve it.'],
-    hotspots: FEELINGS.map((f, i) => ({ id: 'f-' + f.id, x: [22, 72, 46, 28, 70][i % 5], y: [30, 32, 46, 56, 58][i % 5], label: f.name, feeling: f.id, to: 'grounds' })),
-    source: 'looks/bars-farm-2/frame-1.jpg',
-  },
-  stuck: {
-    id: 'stuck',
-    img: S + 'farm-3.jpg',
-    pos: '50% 50%',
-    motion: 'right',
-    domain: 'Befriending what is in the way',
-    lines: [STUCK_INTRO, 'What does the stuck feel like right now? Tap the closest.'],
-    hotspots: FEELINGS.map((f, i) => ({ id: 'from-' + f.id, x: [24, 70, 46, 30, 68][i % 5], y: [30, 32, 44, 56, 58][i % 5], label: f.id.charAt(0).toUpperCase() + f.id.slice(1), feeling: undefined, to: 'stuck-0' })),
-    source: 'looks/bars-farm-2/frame-3.jpg',
   },
   'work-with': {
     id: 'work-with',
@@ -482,3 +465,63 @@ export function moveAction(m: PathMove): string {
   return STUCK_ACTIONS[m.from] ?? 'Pick the smallest next thing you could do today and do it before you close this page.'
 }
 
+
+/* ───── Satisfaction crops: the seed packet and the bed (design pass satisfaction-crops-2026-11-16) ─────
+ * The six unpacking questions run as a seed packet. The labels come from UNPACKING_QUESTIONS (seed-packet.ts reads
+ * them), never from here. THE SEED WORDING STRANGERS SEE IS HERE AND ONLY HERE: his answer on board look
+ * sc-crops-look-1 is a change to SEEDS below. Option B (his pick, 2026-11-17): the real act on the front, the cosy metaphor on
+ * the back. PLACEHOLDER copy until he answers the look.
+ */
+export type SeedAct = 'offering' | 'intro' | 'share' | 'work' | 'own'
+export interface Seed {
+  domain: 'Gather Resource' | 'Skillful Organizing' | 'Raise Awareness' | 'Direct Action'
+  /** the packet's name, the one sentence on its front */
+  title: string
+  front: string
+  /** the real act, on the back */
+  back: string
+  act: SeedAct
+  /** the last line of every move card, pointing at the next step of this help */
+  nextStep: string
+  /** the harvest button for the act the player takes themselves */
+  actLabel: string
+  href?: string
+}
+export const SEEDS: Seed[] = [
+  { domain: 'Gather Resource', title: 'Gather Resources', front: 'Leave an offering: make a donation.', back: 'Bring something for the shared pantry.', act: 'offering', nextStep: 'Next: pick what you will leave in the pantry.', actLabel: 'Leave an offering' },
+  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Make an introduction, for work or for a podcast guest.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Next: pick the one person you will introduce to him.', actLabel: 'Book a call to make it (placeholder: introductions have no place to land yet)', href: LINKS.coachingFree },
+  { domain: 'Raise Awareness', title: 'Raise Awareness', front: 'Share the book, or buy it.', back: 'Plant a bloom by the path where neighbours will see it.', act: 'share', nextStep: 'Next: pick the one person you will show this to.', actLabel: 'Buy the book', href: LINKS.bookshop },
+  { domain: 'Direct Action', title: 'Direct Action', front: 'Work with him, and work out what makes sense to work on.', back: 'Pick a fruit and hand it over today.', act: 'work', nextStep: 'Next: pick the day you will sit down with him.', actLabel: 'Book a session', href: LINKS.coachingFree },
+]
+export const OWN_SEED = { title: 'Write your own seed', front: 'Write it in your own words, in pencil.', nextStep: 'Next: pick the first small step of your own seed.', actLabel: 'Open the quiet room' }
+
+/** The soil (question 3), read as seasons. Fallow is fine. */
+export const SOIL = [
+  { id: 'Flowing', season: 'Growing season', line: 'The soil is warm and the water moves.' },
+  { id: 'Stalled', season: 'Between seasons', line: 'The soil is cool and the water has paused.' },
+  { id: 'Stuck', season: 'Fallow', line: 'The soil rests. Resting is a fair way to begin.' },
+] as const
+export type SoilId = (typeof SOIL)[number]['id']
+
+/** The helper line under the exact question 4 label. */
+export const WEATHER_HELPER = 'How does it feel when you think about doing this?'
+
+/**
+ * Question 4's channels as objects in the bed's scene (his steer on founders-gate-stuck-look-1, 23:51Z): each hard
+ * feeling is something standing in the scene, and tending it is the move.
+ */
+export const STUCK_OBJECTS: Record<string, { name: string; look: string; verb: string; tended: string }> = {
+  anger: { name: 'A felled fence rail', look: 'A rail has come down across the bed.', verb: 'Mend the rail', tended: 'You stand the rail back up. The bed is fenced again.' },
+  fear: { name: 'A crow’s shadow', look: 'A crow’s shadow hangs over the bed.', verb: 'Shoo the crow', tended: 'The shadow lifts and the light comes back.' },
+  sadness: { name: 'A dry, cracked watering can', look: 'The watering can sits cracked and dry.', verb: 'Fill the can', tended: 'You patch the crack and fill the can.' },
+  joy: { name: 'A neighbour’s taller bed', look: 'Across the path a neighbour’s bed stands taller.', verb: 'Look away from it', tended: 'You turn back to your own bed. It is the one you are tending.' },
+  neutrality: { name: 'Grey frost on the soil', look: 'Grey frost lies on the soil.', verb: 'Warm the soil', tended: 'You press a warm hand to the soil. The frost thins.' },
+}
+
+/** The harvest card's choice: who gets the fruit. The act behind it is the player's to tap. */
+export const FRUIT_TO = [
+  { id: 'him', label: 'Him', line: 'The fruit goes to him.' },
+  { id: 'other', label: 'Someone else', line: 'Pick the person who gets it. The next step is yours.' },
+  { id: 'keep', label: 'Keep it', line: 'The fruit stays in your bed for now. It keeps.' },
+] as const
+export type FruitTo = (typeof FRUIT_TO)[number]['id']

@@ -4,6 +4,8 @@
  * plus what it cost or minted, so a test clock can run the days. The route stores the doc and mints vibeulons.
  */
 
+import { isCrop, type Crop } from './crops'
+
 export const COLS = 14
 export const ROWS = 11
 export const SLOTS = COLS * ROWS
@@ -20,6 +22,8 @@ export type Plant = {
   barId: string; line: string; plantedAt: string; plantedOn: string
   tendedDays: number; lastTendedOn: string | null; untendedSince: string | null
   notes: Note[]; ripe: boolean
+  /** The satisfaction crop (family x form). Absent means the generic pod. */
+  crop?: Crop
 }
 export type Slot = { state: 'tilled' | 'planted' | 'weeded'; clearedAt: string; plant: Plant | null }
 export type Harvest = { fromBarId: string; line: string; notes: Note[]; pickedOn: string; vibeulon: 1; quests: string[] }
@@ -73,7 +77,7 @@ export function till(farm: Farm, i: number, now: string): Result {
 }
 
 /** Plant one BAR with one line (one word is enough) in tilled soil. */
-export function plant(farm: Farm, i: number, barId: string, line: string, now: string, today: string): Result {
+export function plant(farm: Farm, i: number, barId: string, line: string, now: string, today: string, crop?: unknown): Result {
   const s = inGrid(i) ? farm.slots[String(i)] : undefined
   if (!s || s.state !== 'tilled') return fail(farm, 'Till the slot first')
   const l = words(line)
@@ -81,7 +85,7 @@ export function plant(farm: Farm, i: number, barId: string, line: string, now: s
   if (!okDate(today)) return fail(farm, 'No date')
   if (Object.values(farm.slots).some(x => x.plant?.barId === barId)) return fail(farm, 'That BAR is already planted')
   const f = clone(farm)
-  f.slots[String(i)] = { ...s, state: 'planted', plant: { barId, line: l, plantedAt: now, plantedOn: today, tendedDays: 0, lastTendedOn: null, untendedSince: null, notes: [], ripe: false } }
+  f.slots[String(i)] = { ...s, state: 'planted', plant: { barId, line: l, plantedAt: now, plantedOn: today, tendedDays: 0, lastTendedOn: null, untendedSince: null, notes: [], ripe: false, ...(isCrop(crop) ? { crop: { family: crop.family, form: crop.form } } : {}) } }
   return { farm: f, ok: true, mint: 0 }
 }
 
