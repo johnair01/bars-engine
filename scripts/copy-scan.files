@@ -7,3 +7,4 @@ src/app/ally/gate/BedFlow.tsx
 src/app/ally/gate/Bed.tsx
 src/app/ally/gate/GateWalk.tsx
 src/lib/coaching/unpacking-walk.ts
+public/coaching/walk/data.js

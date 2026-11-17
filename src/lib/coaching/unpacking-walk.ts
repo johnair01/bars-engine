@@ -53,11 +53,11 @@ export type ExperienceId = (typeof EXPERIENCES)[number]['id']
 
 /** Question 2: each channel's satisfied state (alchemy-graph `satisfied.label`) and what it means. */
 export const SATISFACTIONS: ReadonlyArray<{ channel: Channel; state: string; means: string }> = [
-  { channel: 'anger', state: 'triumph', means: 'You use your power cleanly. A boundary is honoured. What was stuck moves.' },
-  { channel: 'sadness', state: 'poignance', means: 'You are close to what you care about. It means something.' },
-  { channel: 'fear', state: 'excitement', means: 'You see the risk clearly. You have the nerve to step into it.' },
-  { channel: 'joy', state: 'bliss', means: 'You feel delight. You get to share it. You get to play.' },
-  { channel: 'neutrality', state: 'peace', means: 'You feel settled. You can see the whole. Nothing pulls at you.' },
+  { channel: 'anger', state: 'triumph', means: 'You push on the thing that blocked you until it gives. You can point to what changed because you pushed: the call made, the box shipped, the no said out loud.' },
+  { channel: 'sadness', state: 'poignance', means: 'You remember someone who showed up for you once. Now you do the same for someone else: a call, a meal, an hour of your time.' },
+  { channel: 'fear', state: 'excitement', means: 'You name what could go wrong: they might say no. You ask anyway. Your heart pounds while you wait for the answer.' },
+  { channel: 'joy', state: 'bliss', means: 'You laugh out loud in the middle of the work. You want to tell a friend about it the same day.' },
+  { channel: 'neutrality', state: 'peace', means: 'You cross the last item off the list. No loose end nags at you tonight. You know which part was yours.' },
 ]
 
 /**
@@ -195,7 +195,7 @@ export function recommend(walk: Walk): Offer[] {
   const selfSabotageWhy =
     held > 0
       ? `You named ${held === 1 ? 'a reservation' : `${held} reservations`}. That is the voice we work with: what it protects, and how to get it working for you.`
-      : 'We meet the part of you that keeps stalling, hear what it protects, and put its strength to work on what you want.'
+      : 'We find the part of you that keeps putting this off. We ask what it guards you from. Then we give that guard a job on the experience you named at the start.'
 
   if (exp?.allyship) {
     add('allyship-coaching', 'You want to show up for other people. This is the coaching built on my book, for exactly that.')
@@ -205,7 +205,7 @@ export function recommend(walk: Walk): Offer[] {
     add('coaching', selfSabotageWhy)
   }
   if (walk.toward.includes('joy') || feltChannels(walk).includes('joy')) {
-    add('joy-book', 'You are walking toward delight. This book is about finding it and keeping it.')
+    add('joy-book', 'You picked delight. This book has exercises that put more of it into an ordinary week.')
   }
   return order.map((id) => ({ ...OFFERS[id], why: reasons[id]! }))
 }
