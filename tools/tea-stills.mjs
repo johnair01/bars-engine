@@ -15,8 +15,8 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? proces
 const ROOT = path.join(__dirname, '..', 'public'), OUT = arg('--out', '.'), SIDE = process.argv.includes('--side');
 const [VW, VH] = arg('--vp', '390x844').split('x').map(Number);
 const BEATS = { reach: 2.0, pour: 3.6, lift: 6.2, lap: 7.9, nose: 9.6, sip1: 12.2, sip2: 17.4, sip3: 22.6, savour: 24.6, hold: 27.5 };   // the baked timeline
-const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/ontology-game/between/route.ts'), 'utf8');
-const PAGE = route.slice(route.indexOf('const PAGE = `') + 14, route.indexOf('`', route.indexOf('const PAGE = `') + 14));
+const route = fs.readFileSync(path.join(__dirname, '..', 'src/lib/between/page.ts'), 'utf8');
+const PAGE = route.slice(route.indexOf('BETWEEN_PAGE = `') + 16, route.indexOf('`', route.indexOf('BETWEEN_PAGE = `') + 16));
 const TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
@@ -30,6 +30,13 @@ const server = http.createServer((req, res) => {
   await new Promise(a => server.listen(0, a)); const port = server.address().port;
   const b = await chromium.launch(); fs.mkdirSync(OUT, { recursive: true });
   const ctx = await b.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 }); const p = await ctx.newPage();
+  // offline: serve three from THREE_DIR (npm i --no-save --prefix /tmp/t three@0.160.0 three-mesh-bvh@0.8.3) when set
+  if (process.env.THREE_DIR) await p.route(/cdn\.jsdelivr\.net\/npm\//, r => {
+    const m = r.request().url().match(/npm\/(three-mesh-bvh)@[^/]+\/(.*)$|npm\/three@[^/]+\/(.*)$/);
+    const f = m[1] ? path.join(process.env.THREE_DIR, 'three-mesh-bvh', m[2]) : path.join(process.env.THREE_DIR, 'three', m[3]);
+    fs.existsSync(f) ? r.fulfill({ path: f, contentType: 'text/javascript' }) : r.abort();
+  });
+  p.on('console', m => { if (m.type() === 'error') console.error('console:', m.text().slice(0, 200)); });
   p.on('pageerror', e => console.error('PAGEERR', e.message, (e.stack || '').split('\n').slice(1, 3).join(' ')));
   await p.goto(`http://localhost:${port}/ontology-game/between?nook=1&sit=hearth&tea=pour`);
   await p.waitForFunction(() => window.__between && window.__between.meState.body && document.getElementById('loading').hidden, null, { timeout: 180000 });

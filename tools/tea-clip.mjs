@@ -16,8 +16,8 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? proces
 const ROOT = path.join(__dirname, '..', 'public'), OUT = arg('--out', '.'), CAM = arg('--cam', 'front');
 const [VW, VH] = arg('--vp', '390x844').split('x').map(Number);
 const T0 = +arg('--from', '7.6'), T1 = +arg('--to', '15.4'), DT = +arg('--dt', '0.2');
-const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/ontology-game/between/route.ts'), 'utf8');
-const PAGE = route.slice(route.indexOf('const PAGE = `') + 14, route.indexOf('`', route.indexOf('const PAGE = `') + 14));
+const route = fs.readFileSync(path.join(__dirname, '..', 'src/lib/between/page.ts'), 'utf8');
+const PAGE = route.slice(route.indexOf('BETWEEN_PAGE = `') + 16, route.indexOf('`', route.indexOf('BETWEEN_PAGE = `') + 16));
 const TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
