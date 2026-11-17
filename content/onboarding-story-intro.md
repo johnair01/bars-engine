@@ -14,7 +14,7 @@ A new player who finishes these four cards can answer three questions. What is t
 **Welcome to the Heaven sect.** The sect is a school of cultivation on a mountain above the clouds. It takes in people who have left the frozen settlements below. You left one too. That is why its gate opened for you.
 
 ### Beat 2 — Rising Engagement: why it matters
-**Cultivation here means training your emotional energy.** Every feeling carries a charge. In Calrunia that charge takes shape as spirits. A trained student can turn a stuck feeling into a clear next step. The same skill works on the stuck moments of your own week.
+**Cultivation here means training your emotional energy.** Every feeling carries a charge. In Calrunia that charge takes shape as spirits. A trained student can turn the dread before a hard phone call into the first sentence they say. The same practice works in your own life.
 
 ### Beat 3 — Tension: who teaches
 **Six Elders teach in the sect.** Each Elder teaches one face of the game master. The Shaman reads feeling. The Architect builds structure. The Challenger tests the edge. The Regent keeps the rules. The Diplomat brings people together. The Sage sees the whole pattern.

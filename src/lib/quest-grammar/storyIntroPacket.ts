@@ -14,7 +14,7 @@ const STORY_INTRO_BEATS: { id: string; text: string }[] = [
   },
   {
     id: 'intro_rising',
-    text: '**Cultivation here means training your emotional energy.** Every feeling carries a charge. In Calrunia that charge takes shape as spirits. A trained student can turn a stuck feeling into a clear next step. The same skill works on the stuck moments of your own week.',
+    text: '**Cultivation here means training your emotional energy.** Every feeling carries a charge. In Calrunia that charge takes shape as spirits. A trained student can turn the dread before a hard phone call into the first sentence they say. The same practice works in your own life.',
   },
   {
     id: 'intro_tension',
