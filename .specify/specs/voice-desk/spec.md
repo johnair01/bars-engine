@@ -113,10 +113,10 @@ The export refuses any other combination.
 One JSON object per line, sorted by `at` then `id`:
 
 ```json
-{"id":"vb-2026-11-17-001","old":"Pull the one that fits","new":"...","screen":"tap-the-vein/ribbons","file":"src/lib/tap-the-vein/paths.ts","source":"desk","ring":["pull"],"look_row":null,"marked_by":"wendell","at":"2026-11-17T19:02:11Z","slip":"slip-..."}
+{"id":"vb-2026-11-17-001","old":"Pull the one that fits","new":"...","screen":"tap-the-vein/ribbons","file":"src/lib/tap-the-vein/paths.ts","source":"desk","ring":["pull"],"look_row":null,"marked_by":"wendell","at":"2026-11-17T19:02:11Z","slip":"slip-...","event":"keep--slip-..."}
 ```
 
-`source` is `desk` or `pencil`. `ring` lists the words he chalked on the old line (may be empty). `look_row` is set
+`event` is the docId of the store event that made the line, so a rerun of the export upserts it and never writes it twice (added in step 2). `source` is `desk` or `pencil`. `ring` lists the words he chalked on the old line (may be empty). `look_row` is set
 for a pencil edit. `new` equal to `old` is never written. An agent redraft he did not keep never appears here.
 
 ### `content/voice/chart.yaml`

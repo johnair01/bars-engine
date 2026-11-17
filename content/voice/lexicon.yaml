@@ -1,0 +1,215 @@
+version: 1
+words:
+  - word: architect
+    forms: []
+    plain: Amplify. Every move can be performed through this face.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: bar
+    forms:
+      - bars
+    plain: The unit of creative output a move produces. The deck turns a charge into a BAR; each of the five moves makes a different kind.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: challenger
+    forms: []
+    plain: Challenge. Every move can be performed through this face.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: charge
+    forms:
+      - charges
+      - charged
+    plain: Emotional energy that wants to move. The deck metabolizes charge into BARs; every stuck feeling is a capability gone offline, not a problem to delete.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: clean up
+    forms: []
+    plain: Transform charge. Produces a insight BAR.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: diplomat
+    forms: []
+    plain: Care. Every move can be performed through this face.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: face
+    forms:
+      - faces
+    plain: ""
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:ribbon-screen
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: grow up
+    forms: []
+    plain: Develop capability. Produces a wisdom BAR.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: open up
+    forms: []
+    plain: Receive charge. Produces a experience BAR.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: pull
+    forms:
+      - pulls
+      - pulled
+      - pulling
+    plain: ""
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:ribbon-screen
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: regent
+    forms: []
+    plain: Steward. Every move can be performed through this face.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: ribbon
+    forms:
+      - ribbons
+    plain: ""
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:ribbon-screen
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: sage
+    forms: []
+    plain: Integrate. Every move can be performed through this face.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: shaman
+    forms: []
+    plain: Notice. Every move can be performed through this face.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: show up
+    forms: []
+    plain: Invest capacity. Produces a artifact BAR.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: sitting
+    forms:
+      - sittings
+    plain: ""
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:ribbon-screen
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
+  - word: wake up
+    forms: []
+    plain: Detect charge. Produces a awareness BAR.
+    usage: ""
+    status: proposed
+    shown_on: []
+    struck_for: []
+    drafted_by: seed:glossary
+    marked_by: null
+    at: "2026-11-17"
+    slip: null
+    screen: null
