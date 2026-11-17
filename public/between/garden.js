@@ -4176,7 +4176,9 @@ function minuteTap(key) {
     const c = hearthCareNow();
     if (careOffered(c, caredThisVisit) == null) return false;
     // the first ember is a check-in (hw2-first-ember A): a cold hearth with no ember waiting asks you what you feel first
-    openSheet(!st.done.ember && !embersWaiting().length ? "checkin" : "hearthgive"); return true;
+    if (!st.done.ember && !embersWaiting().length) setTimeout(() => openSheet("checkin"), 350); // after the tap's own click, so it cannot land on a feeling under the finger
+    else openSheet("hearthgive");
+    return true;
   }
   if (key === "portal" && minuteOn()) {
     if (st.step === "vine" && beat === "vine") { standUp(); burst(PORTAL_AT.clone().setY(1.0), 0x8fd08a); minuteAct("vine"); }
