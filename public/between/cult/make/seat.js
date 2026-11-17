@@ -159,6 +159,15 @@ export function drape(X, seat, o = {}) {
   const along = (sp, t) => { const { pts, s } = sp; if (t >= sp.land) { const [r, y] = pts[pts.length - 1], over = t - sp.land; if (!sp.landed) return [r + over * 0.3, y - over]; // a short skirt ending in the air over the knees
       const u = Math.min(1, over / Math.max(0.05 * k, Lmax - sp.land)); return [r + (sp.Rh - r) * u, sp.landY + 0.0025 * k * Math.min(4, over / (0.02 * k)) * (1 - u * 0.5)]; } // the surplus gathers evenly into the ring; a few mm of pile
     let j = 1; while (j < s.length - 1 && s[j] < t) j++; const u = (t - s[j - 1]) / Math.max(1e-6, s[j] - s[j - 1]); return [pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * u, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * u]; };
+  // Seated back (his 2026-11-16 on crucible-script-look-1: "weird bunching in the back of the robe while the character is sitting
+  // down"). The top 6 cm of a long coat's skirt (A1 'outer') is a lip that flares from the 0.18 m hip band out to 0.28 m at the
+  // sides; standing, the bodice and the hanging sleeves cover it. Sat, the pelvis folds under the bodice and the lip stands out
+  // behind the waist as a flat plate. Above lipY the rim is pulled in to the band's own radius at that angle, and it rides the
+  // pelvis with the rest of the lap (followLap), so it no longer sticks out and no longer goes back to the standing flare.
+  const lipY = yb0 + (o.lipLine ?? 0.09) * k, bandR = new Float32Array(NA), hipsIx = F.boneName.indexOf('hips');
+  for (const pt of parts) for (let i = 0; i < pt.world.length; i += 3) { const y = pt.world[i + 1]; if (y < yb0 + 0.04 * k || y > lipY) continue; const x = pt.world[i] - c0.x, z = pt.world[i + 2] - c0.z, b = Math.round(angOf(x, z) / (2 * Math.PI) * NA) % NA; bandR[b] = Math.max(bandR[b], Math.hypot(x, z)); }
+  for (let pass = 0; pass < 8; pass++) for (let b = 0; b < NA; b++) if (!bandR[b]) bandR[b] = Math.max(bandR[(b + 1) % NA], bandR[(b + NA - 1) % NA]);
+  const hipsOnly = (pt, i) => { const SI = pt.geo.attributes.skinIndex, SW = pt.geo.attributes.skinWeight; if (!SI) return false; let w = 0; for (let j = 0; j < 4; j++) if (SI.getComponent(i, j) === hipsIx) w += SW.getComponent(i, j); return w > 0.9; };
   let moved = 0;
   for (const pt of parts) { pt.settled = null; const W = Float32Array.from(partWorld(pt)), S0 = pt.world, LW = new Float32Array(S0.length / 3); pt.live0 = W.slice();
     // near and under the hip line a point rides the pelvis alone: the thighs turned forward 90 degrees, so even the small
@@ -166,6 +175,9 @@ export function drape(X, seat, o = {}) {
     const Mr = F.bones.hips.matrixWorld.clone().multiply(X.hipM0.clone().invert()), q = V();
     for (let i = 0; i < S0.length; i += 3) { const y0 = S0[i + 1], er = THREE.MathUtils.smoothstep(yb0 + 0.06 * k - y0, 0, 0.06 * k);
       LW[i / 3] = er; if (er > 0) { q.set(S0[i], S0[i + 1], S0[i + 2]).applyMatrix4(Mr); W[i] += (q.x - W[i]) * er; W[i + 1] += (q.y - W[i + 1]) * er; W[i + 2] += (q.z - W[i + 2]) * er; }
+      if (y0 >= lipY && hipsOnly(pt, i / 3)) { const x = S0[i] - c0.x, z = S0[i + 2] - c0.z, rr = Math.hypot(x, z), cap = bandR[Math.round(angOf(x, z) / (2 * Math.PI) * NA) % NA] + 0.006 * k;
+        q.set(S0[i], S0[i + 1], S0[i + 2]); if (rr > cap) { q.x = c0.x + x * cap / rr; q.z = c0.z + z * cap / rr; }
+        q.applyMatrix4(Mr); W[i] = q.x; W[i + 1] = q.y; W[i + 2] = q.z; LW[i / 3] = 1; continue; }
       if (y0 >= yb0) continue;
       const x = S0[i] - c0.x, z = S0[i + 2] - c0.z, a = angOf(x, z), fa = a / (2 * Math.PI) * NA, a0 = Math.floor(fa) % NA, a1 = (a0 + 1) % NA, w = fa - Math.floor(fa);
       const rr = Math.hypot(x, z), t = Math.hypot(yb0 - y0, rr - r0[Math.round(fa) % NA]); // the length down the cloth from the hip line
