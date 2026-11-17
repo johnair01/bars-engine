@@ -17,6 +17,9 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
+import { ttvNextDay } from '@/lib/tap-the-vein/day'
+import { todayKey, todayStart } from '@/lib/tap-the-vein/day-server'
+import { TTV_PATH_SOURCES } from '@/lib/tap-the-vein/paths'
 import { normalizeChargeLevel, parseBrainstormCandidates } from '@/lib/tap-the-vein/charge'
 import type { UnchosenLine } from '@/lib/tap-the-vein/unchosen'
 import { loadPile, loadResidueKeys } from '@/lib/tap-the-vein/unchosen-store'
@@ -224,13 +227,6 @@ export type TtvTaskWorkspace = {
 
 export type TtvResult<T> = T | { error: string }
 
-/** Local start-of-day, matching the convention used elsewhere (e.g. /adventures). */
-function startOfDay(d = new Date()): Date {
-  const x = new Date(d)
-  x.setHours(0, 0, 0, 0)
-  return x
-}
-
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
@@ -341,7 +337,7 @@ async function loadOrCreateSession(playerId: string, sessionDate: Date): Promise
 
   return {
     sessionId: session.id,
-    sessionDate: startOfDay(session.sessionDate).toISOString().slice(0, 10),
+    sessionDate: session.sessionDate.toISOString().slice(0, 10),
     status: session.status,
     rawEntry: session.rawEntry,
     wordCount: session.wordCount,
@@ -357,7 +353,7 @@ export async function getToday(): Promise<TtvResult<TtvToday>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
-    return await loadOrCreateSession(player.id, startOfDay())
+    return await loadOrCreateSession(player.id, await todayStart())
   } catch (e) {
     console.error('[ttv:getToday]', e)
     return { error: 'Failed to load today’s ritual' }
@@ -371,7 +367,7 @@ export async function saveBrainstorm(rawEntry: string): Promise<TtvResult<{ word
   try {
     const wordCount = countWords(rawEntry)
     await db.tapTheVeinDailySession.update({
-      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: await todayStart() } },
       data: { rawEntry, wordCount },
     })
     revalidatePath('/tap-the-vein')
@@ -398,7 +394,7 @@ export async function commitTask(input: {
 
   try {
     const session = await db.tapTheVeinDailySession.findUnique({
-      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: await todayStart() } },
       select: { id: true },
     })
     if (!session) return { error: 'No open session — reload the page' }
@@ -418,7 +414,7 @@ export async function commitTask(input: {
     const created = await db.$transaction(async (tx) => {
       const liveCount = await tx.tapTheVeinTask.count({
         // The board's list is everything he can do today, not commitments: board tasks stay outside the cap (ttv-one-store).
-        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] }, source: { not: 'board' } },
+        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] }, source: { notIn: ['board', ...TTV_PATH_SOURCES] } },
       })
       if (!canCommitTtvTask(liveCount, MAX_TASKS_PER_DAY)) {
         throw new Error('TTV_CAP_REACHED')
@@ -611,8 +607,7 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
       return { error: `Cannot carry a ${task.status} task` }
     }
 
-    const tomorrow = startOfDay()
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrow = ttvNextDay(await todayStart())
 
     const result = await db.$transaction(async (tx) => {
       const next = await tx.tapTheVeinDailySession.upsert({
@@ -661,7 +656,7 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
 }
 
 function dayKey(d: Date): string {
-  return startOfDay(d).toISOString().slice(0, 10)
+  return d.toISOString().slice(0, 10)
 }
 
 /**
@@ -688,7 +683,7 @@ export async function restTask(taskId: string): Promise<TtvResult<{ task: TtvTas
         select: TASK_SELECT,
       })
       await tx.tapTheVeinTaskNote.create({
-        data: { taskId: task.id, playerId: player.id, kind: LIBRARY_NOTE_KIND, body: restNote(dayKey(new Date())) },
+        data: { taskId: task.id, playerId: player.id, kind: LIBRARY_NOTE_KIND, body: restNote(await todayKey()) },
       })
       return t
     })
@@ -722,7 +717,7 @@ export async function getUnchosen(): Promise<TtvResult<{ lines: UnchosenLine[] }
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
-    const lines = await loadPile(player.id, startOfDay())
+    const lines = await loadPile(player.id, await todayStart())
     const residue = await loadResidueKeys(player.id).catch((e) => {
       console.error('[ttv:getUnchosen:residue]', e)
       return new Set<string>()
@@ -808,7 +803,7 @@ export async function drawSeed(taskId: string): Promise<TtvResult<{ task: TtvTas
     if (task.playerId !== player.id) return { error: 'Forbidden' }
     if (task.status !== RESTING_STATUS) return { error: 'That task is not in the seed library' }
 
-    const today = startOfDay()
+    const today = await todayStart()
     const updated = await db.$transaction(async (tx) => {
       const session = await tx.tapTheVeinDailySession.upsert({
         where: { playerId_sessionDate: { playerId: player.id, sessionDate: today } },
@@ -817,7 +812,7 @@ export async function drawSeed(taskId: string): Promise<TtvResult<{ task: TtvTas
         select: { id: true },
       })
       const live = await tx.tapTheVeinTask.count({
-        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] }, source: { not: 'board' } },
+        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] }, source: { notIn: ['board', ...TTV_PATH_SOURCES] } },
       })
       if (!canCommitTtvTask(live, MAX_TASKS_PER_DAY)) throw new Error('TTV_CAP_REACHED')
       const maxRank = await tx.tapTheVeinTask.aggregate({
@@ -1022,7 +1017,7 @@ export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>
   if (!player) return { error: 'Not authenticated' }
   try {
     const session = await db.tapTheVeinDailySession.findUnique({
-      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: await todayStart() } },
       select: {
         status: true,
         rawEntry: true,
@@ -1124,7 +1119,7 @@ export async function sealSession(): Promise<TtvResult<{ status: string }>> {
   if (!player) return { error: 'Not authenticated' }
   try {
     await db.tapTheVeinDailySession.update({
-      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: await todayStart() } },
       data: { status: 'sealed', sealedAt: new Date() },
     })
     revalidatePath('/tap-the-vein')
@@ -1370,7 +1365,7 @@ export async function saveBrainstormCandidates(
 
   try {
     await db.tapTheVeinDailySession.update({
-      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: await todayStart() } },
       data: {
         brainstormCandidates: clean,
         brainstormCandidateCount: clean.length,

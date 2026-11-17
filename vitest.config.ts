@@ -98,6 +98,8 @@ export default defineConfig({
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-set-aside.test.ts',
       'src/lib/tap-the-vein/__tests__/council-scroll.test.ts',
+      'src/lib/tap-the-vein/__tests__/day.test.ts',
+      'src/lib/tap-the-vein/__tests__/paths.test.ts',
       'src/app/board/__tests__/shim.test.ts',
       'src/app/board/refs/[...path]/__tests__/route.test.ts',
       'src/app/board/__tests__/serve.test.ts',
