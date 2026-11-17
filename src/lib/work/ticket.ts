@@ -4,6 +4,8 @@ import { cleanLanes, DEFAULT_LANES, type Lane } from './lanes'
 /** A board row as sessions post it (rows collection): a question with options; any option, or the row, may carry
  * `then` (the brief a worker runs on that answer) and the row may carry `lanes`. */
 export interface RowDoc {
+  /** Spec blocker answers resume their held ticket; they do not mint a Board-answer ticket. */
+  specTask?: string
   q?: string
   options?: { v?: string; label?: string; then?: string }[]
   then?: string

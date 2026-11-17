@@ -124,6 +124,7 @@ export default defineConfig({
       'src/lib/marks/__tests__/chalk.test.ts',
       'src/lib/work/__tests__/ticket.test.ts',
       'src/lib/work/__tests__/queue.test.ts',
+      'src/lib/work/__tests__/from-save-spec.test.ts',
       'src/lib/work/__tests__/stats.test.ts',
       'src/lib/work/__tests__/homeport.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',

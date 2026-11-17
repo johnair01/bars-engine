@@ -3,6 +3,12 @@ import { laneStatus, moveTicket, pushTicket, setLaneDry, steerTicket, unholdTick
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
+    $executeRaw: vi.fn(async (_query: TemplateStringsArray, now: Date) => {
+      const hit = tickets.filter(t => t.state === 'claimed'
+        && t.leaseUntil instanceof Date && t.leaseUntil < now)
+      hit.forEach(t => Object.assign(t, { state: 'ready', claimedBy: null, leaseUntil: null }))
+      return hit.length
+    }),
     workLane: {
       findMany: vi.fn(async () => lanes.filter(l => l.dry)),
       upsert: vi.fn(async ({ create }: { create: { lane: string; dry: boolean; dryUntil: Date | null } }) => {
