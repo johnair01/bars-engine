@@ -11,7 +11,7 @@
 
 ## Purpose
 
-Make the existing cultivator pipeline increasingly deterministic about body proportions, contact, cloth movement, and aesthetic review. Keep the Mac light: build and capture the review matrix in cloud CI, and use the local viewer for targeted judgment and notes.
+Make the existing cultivator pipeline increasingly deterministic about body proportions, contact, cloth movement, and aesthetic review. Keep the Mac light: build and capture the review matrix in an active cloud modeling environment, and use the viewer for targeted judgment and notes.
 
 ## Existing structures and known gaps
 
@@ -21,7 +21,7 @@ Make the existing cultivator pipeline increasingly deterministic about body prop
 | `walker.js` and motion lab | Same rig can show walk, captured-limb run, authored jump, body-only and robe views | The viewer had hardcoded `average` and two heights; body-matrix inspection is newly being added |
 | `motion.js`, `mocap-reference.js`, `run-dynamics.js` | Named phases, captured limb directions, authored root trajectories | Absolute metre offsets and contact corrections are not yet calibrated over the height range |
 | `motion-cloth.js`, `make/shells.js` | A bounded preview hem offset over a pelvis/thigh-skinned rigid skirt | No collision, inertia or material-specific drape; preview offset is not a game-ready cloth model |
-| `motion_review_capture.mjs`, GitHub Actions | Cloud screenshots and basic numeric gates | No body-size contact/cloth matrix or visual regression against approved reference frames |
+| `motion_review_capture.mjs`, `robe_stress_capture.mjs` | Reusable browser screenshots and basic numeric gates | No complete body-size contact/cloth matrix or visual regression against approved reference frames; run them in the active modeling environment |
 | `review-notes.jsonl` | Notes carry motion, time, controls and camera | Notes must also carry build and height and link to the capture and change they prompted |
 
 ## User stories and acceptance
@@ -46,13 +46,13 @@ As a model in another environment, I receive the exact body/garment recipe, rig 
 
 - **FR-001** The review viewer MUST build from the current `parts.json` recipe and show the body key, build key, requested height, actual stature and outfit.
 - **FR-002** The viewer MUST support every built build (`slight`, `average`, `broad`) and the accepted 1.50–1.95 m range on both body bases. It MUST identify `round` as unimplemented until an actual recipe passes the same gates.
-- **FR-003** A saved note MUST include the body recipe, motion, time, camera and controls. A cloud report MUST include the source commit and capture identity.
+- **FR-003** A saved note MUST include the body recipe, motion, time, camera and controls. A capture report MUST include the source commit and capture identity.
 - **FR-004** The technical gate MUST measure foot-to-ground distance during contact, bilateral knee clearance, robe/body and hem/ground penetration, and frame-to-frame displacement at fixed phases. Thresholds are chosen from baseline captures and recorded, not guessed in the spec.
 - **FR-005** Motion distances and cloth offsets MUST be specified as either body-relative or world metres. A height change MUST not silently change a contact or cloth ratio; the matrix must reveal any fixed-metre behavior.
 - **FR-006** Cloth candidates MUST preserve the approved B2 silhouette at rest and at walk, keep the cross collar and sash readable, and show a delayed release after run push-off and jump landing without visible oscillation or leg clipping.
 - **FR-007** The first cloth experiment MUST compare current rigid skinning, bounded phase-driven deformation, and a low-cost constrained secondary-motion layer on the same five body/height combinations per base. Choose the smallest method that passes contact and look review; do not introduce a general solver by default.
-- **FR-008** Every approved revision MUST retain reference captures, parameters, checks, user notes and a before/after contact sheet in the repo or cloud artifacts, so another environment can repeat it.
-- **FR-009** The browser and cloud capture MUST not require Blender or heavyweight rendering on Wendell's Mac. A cloud worker may use Chromium and the existing Three.js build.
+- **FR-008** Every approved revision MUST retain reference captures, parameters, checks, user notes and a before/after contact sheet in the repo or a review artifact, so another environment can repeat it.
+- **FR-009** Browser capture MUST not require Blender or heavyweight rendering on Wendell's Mac. A cloud modeling environment may use Chromium and the existing Three.js build; GitHub Actions is not the review runner.
 
 ## Body-size contract
 
@@ -74,7 +74,7 @@ The first cheap matrix is each body base at: slight/1.50, slight/1.95, average/d
 |---|---|---|
 | Style | Soft, believable Taoist cultivation, garment construction legible, muted ink-wash palette | Existing council part cards and accepted look direction |
 | Build and height vocabulary | Four build names; 1.50–1.95 m uniform height | Council positions `cr-first-menu`, `cult-parts-height` |
-| First testing surface | Existing motion lab and cloud capture | Implementation choice from current repo and Mac capacity |
+| First testing surface | Existing motion lab and capture scripts run by the active modeling environment | Implementation choice from current repo and Mac capacity |
 | Cloth choice | Run a small comparison before committing to a solver | This spec's falsifiable proposal; subject to look review |
 
 ## Ontology
@@ -88,7 +88,7 @@ The first cheap matrix is each body base at: slight/1.50, slight/1.95, average/d
 - `evidence_and_unknowns`: Three builds and the height range exist in code; round does not. Current cloth is rigid skinning plus a preview offset. No accepted foot/cloth tolerance or approved run/jump reference reel yet.
 - `provenance_effects`: Store source asset, recipe, code version, capture parameters and user note with each decision so later models know why values changed.
 - `risks_and_tests`: Extreme height/build combinations may break contact or expose cloth intersections; compare them before expanding the cloth method.
-- `implementation_translation`: Extend the motion lab and cloud capture, then prototype cloth on the B2 skirt with the same fixed matrix and no local heavyweight dependency.
+- `implementation_translation`: Extend the motion lab and portable browser capture, then prototype cloth on the B2 skirt with the same fixed matrix and no local heavyweight dependency.
 - `decision_or_open_authority`: Wendell's visual acceptance and the round build's shape remain open; no new preference is inferred here.
 
 ## Reserved items
@@ -103,7 +103,7 @@ Wendell's aesthetic approval of the final body and robe. No money, privacy or re
 ## Definition of done
 
 - [ ] All accepted build choices have an honest 3D status; round is built or visibly pending.
-- [ ] Review matrix, measurements and captures run in cloud CI on the chosen body set.
+- [ ] Review matrix, measurements and captures run in the active modeling environment on the chosen body set.
 - [ ] B2 cloth method passes technical gates and Wendell approves its look on run and jump.
 - [ ] Another environment can rebuild the exact approved frames from recorded inputs.
 
