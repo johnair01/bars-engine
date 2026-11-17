@@ -36,6 +36,12 @@ async function make(mix, reg) {
 let REG = null;
 const registry = async () => (REG ||= await (await fetch(new URL('../cult/parts.json', import.meta.url))).json());
 
+/** A spirit for the altar walk (build 2026-11-17): one cultivation figure, from one of four outfits, that doubt.js makes faint. */
+export async function spirit(i) {
+  const OUT = ['A1', 'B2', 'C1', 'A2'], mix = { direction: OUT[i % 4][0], gender: i % 2 ? 'f' : 'm', build: 'average', skin: [3, 2, 5, 4][i % 4], height: [1.7, 1.62, 1.76, 1.66][i % 4], outfit: OUT[i % 4] };
+  return make(mix, await registry());
+}
+
 /** Six Elders for the trainee walk (build 2026-11-17): one cultivation figure each, six distinct outfits, no names. */
 export async function elder(i) {
   const OUT = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], mix = { direction: OUT[i][0], gender: i % 2 ? 'f' : 'm', build: 'average', skin: [2, 5, 1, 6, 3, 4][i], height: [1.78, 1.64, 1.8, 1.62, 1.74, 1.68][i], outfit: OUT[i] };
