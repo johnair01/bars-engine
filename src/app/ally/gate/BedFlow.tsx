@@ -37,7 +37,7 @@ export function Bed({ packet, onObject, onRest, onStill }: { packet: Packet; onO
     <BedStage family={crop?.family ?? null} grow={0.15} ripe={false} lit={[...CHANNELS]} glow={glow} onObject={onObject} label={crop ? bedLabel(crop) : 'Your bed'}>
       <div style={panel}>
         <span style={small}>{crop ? `${bedLabel(crop)} · ${CROP_FAMILY[crop.family].name}` : 'Your bed'}</span>
-        <p style={say}>Something stands in the bed’s scene. Tap the one that is there for you, and tend it.</p>
+        <p style={say}>Something stands in the bed. Tap the one that is there for you.</p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="button" style={{ ...btn, flex: 1, textAlign: 'center' }} onClick={onRest}>Let the weather be</button>
           <button type="button" style={{ ...btn, flex: 1, textAlign: 'center' }} onClick={onStill}>I am still stuck on this</button>

@@ -1,0 +1,9 @@
+# Player-facing copy files held to scripts/copy-scan.py (whole file, every run). Add a file when it carries words a player reads.
+src/lib/founder-gate/content.ts
+src/lib/founder-gate/seed-packet.ts
+src/lib/between/crops.ts
+src/app/ally/gate/SeedPacket.tsx
+src/app/ally/gate/BedFlow.tsx
+src/app/ally/gate/Bed.tsx
+src/app/ally/gate/GateWalk.tsx
+src/lib/coaching/unpacking-walk.ts

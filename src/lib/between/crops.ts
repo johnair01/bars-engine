@@ -17,9 +17,9 @@ const means = (c: Channel) => SATISFACTIONS.find((s) => s.channel === c)!.means
 /** The five families. `means` is the walk's own line (never copied); `grows` is the one sentence about the crop. */
 export const CROP_FAMILY: Record<Channel, { name: string; state: string; color: string; means: string; grows: string }> = {
   anger: { name: 'Ember pepper', state: 'Triumph', color: CHANNEL_LIGHT.anger, means: means('anger'), grows: 'Hot red peppers that ripen fast in full sun.' },
-  sadness: { name: 'Rain bell', state: 'Poignance', color: CHANNEL_LIGHT.sadness, means: means('sadness'), grows: 'Blue bells that hang heavy with rain and ring slow.' },
+  sadness: { name: 'Rain bell', state: 'Poignance', color: CHANNEL_LIGHT.sadness, means: means('sadness'), grows: 'Blue bells that hang heavy with rain.' },
   fear: { name: 'Moon radish', state: 'Wonder-Excitement', color: CHANNEL_LIGHT.fear, means: means('fear'), grows: 'A pale radish that swells in the dark under spiky leaves.' },
-  joy: { name: 'Sun pea', state: 'Bliss', color: CHANNEL_LIGHT.joy, means: means('joy'), grows: 'A pea vine that climbs, flowers and fills with pods.' },
+  joy: { name: 'Sun pea', state: 'Bliss', color: CHANNEL_LIGHT.joy, means: means('joy'), grows: 'A pea vine that fills with pods as it climbs.' },
   neutrality: { name: 'Hearth squash', state: 'Peace', color: CHANNEL_LIGHT.neutrality, means: means('neutrality'), grows: 'A round golden squash that keeps all winter.' },
 }
 
