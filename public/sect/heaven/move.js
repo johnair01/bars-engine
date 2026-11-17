@@ -11,9 +11,11 @@ export const MOVE = {
 // the follow camera: a spring arm from a pivot at the head. dist is what the player last zoomed to; the arm shortens
 // at once when a wall or roof comes between, and grows back slowly. After `hands` seconds without a drag, a moving
 // figure turns the camera round behind it at `recenter` rad/s.
+// near is how close the arm comes when the way is clear (the zoom's own limit); tight is how close a blocked arm may
+// come, so a wall against the head pulls the camera in front of its face instead of setting it down inside.
 export const CAM = {
   dist: 6, min: 1.2, max: 14, head: 1.55, pitch: 0.32, minPitch: -0.35, maxPitch: 1.25,
-  hands: 1.6, recenter: 1.4, pad: 0.3, grow: 3, yLag: 6, near: 0.45,
+  hands: 1.6, recenter: 1.4, pad: 0.3, grow: 3, yLag: 6, near: 0.45, tight: 0.2,
 };
 
 // ---- vertical motion: gravity, the jump, coyote time, the jump buffer, landing on what is under the feet
@@ -92,8 +94,14 @@ export function cameraRig(cam, orbit, { boxes, groundAt, roofs = () => [] }) {
     // the spring arm: pull in at once to stay clear of walls, roofs and ground; grow back slowly
     const dir = V(Math.sin(rig.yaw) * Math.cos(rig.pitch), Math.sin(rig.pitch), Math.cos(rig.yaw) * Math.cos(rig.pitch));
     const want = rig.pivot.clone().addScaledVector(dir, rig.dist);
-    let t = segBoxes(rig.pivot, want, [...boxes, roofs()], CAM.pad);
-    let arm = Math.max(CAM.near, rig.dist * t - (t < 1 ? CAM.pad : 0));
+    const t = segBoxes(rig.pivot, want, [...boxes, roofs()], CAM.pad);
+    // cl-cam-road: the arm used to stop at CAM.near however near the wall was, so where a court wall stood
+    // 0.37 m behind the head at the stair's foot the near floor set the camera 8 cm inside it (x 94.5, z 34.9, three
+    // frames). A blocked arm now comes as close as CAM.tight, and if the wall is nearer than that the camera sits in
+    // front of the face at 60% of the clear run: it stays out of the wall, and the head fills the frame for those frames.
+    const clear = rig.dist * t;
+    let arm = t < 1 ? Math.max(CAM.tight, clear - CAM.pad) : rig.dist;
+    if (arm > clear) arm = Math.max(0.02, clear * 0.6);
     // the ground under the camera (terrain, stairs, plinths): never below it
     for (let k = 0; k < 6; k++) { const c = rig.pivot.clone().addScaledVector(dir, arm); if (c.y >= groundAt(c.x, c.z) + 0.25 || arm <= CAM.near) break; arm *= 0.8; }
     rig.blocked = t < 1 ? 1 : 0;
