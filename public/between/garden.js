@@ -1484,7 +1484,7 @@ function ownerSeatNow(uid) {
 }
 function standUp() {
   const wasHearth = sheetName === "hearth" && seatedAtHearth();
-  teaStop();
+  teaStop(); seatLook.yaw = 0; seatLook.pitch = 0; seatLook.zoom = 1;
   meState.seatWant = null; meState.onSeated = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); }
   if (wasHearth) closeSheet(); // the hearth moment is had sitting; getting up ends it
   if (hm) hmEnd();
@@ -1585,6 +1585,15 @@ const waves = [];
    Keys: WASD or arrows.
    =================================================================================================== */
 const lastFocus = new THREE.Vector3(0, 1, 0);
+/* Looking round while seated (Wendell, 2026-11-16: "no way to change the camera while sitting down"): the seat's own view is a
+   fixed frame, so a drag there turns the view about what it looks at, and the wheel or a pinch moves it in or out. It resets on standing. */
+const seatLook = { yaw: 0, pitch: 0, zoom: 1 };
+const seatOrbiting = () => !mirrorOn && !hm && ((brushFig && brushWrite && brushWrite.isOpen) || (meState.sitting && seatK > 0.5));
+function seatOrbit(p, f) { // p: the camera spot, f: what it looks at; both are turned about f by seatLook
+  const o = p.clone().sub(f), r = Math.hypot(o.x, o.z);
+  o.applyAxisAngle(new THREE.Vector3(0, 1, 0), seatLook.yaw); o.y += seatLook.pitch * r; o.multiplyScalar(seatLook.zoom);
+  return p.copy(f).add(o);
+}
 let camYaw = 0, camPitch = 0.5, camDist = innerWidth < innerHeight ? 4.4 : 5.2, camTogether = false, togetherK = 0;
 const pointers = new Map(); let dragMoved = 0, pinch0 = null;
 const ray = new THREE.Raycaster(); const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -1605,7 +1614,7 @@ renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointe
 renderer.domElement.addEventListener("pointermove", e => {
   const p = pointers.get(e.pointerId); if (!p) return;
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-  if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
+  if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (seatOrbiting()) { if (pinch0.zoom == null) pinch0.zoom = seatLook.zoom; seatLook.zoom = Math.max(0.6, Math.min(1.8, pinch0.zoom * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; } camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
   if (veil) { if (pointers.size === 1) { veil.dragX += dx; if (Math.abs(veil.dragX) > 48) { turnVeil(veil.dragX < 0 ? 1 : -1); veil.dragX = 0; } } return; } // a sideways drag across the veil turns it
   if (mirrorOn) { if (pointers.size === 1) mirrorTurn -= dx * 0.012; return; } // the screen is flipped: drag right turns your front to the right
@@ -1615,6 +1624,7 @@ renderer.domElement.addEventListener("pointermove", e => {
     if (h) { carry.ok = walkable(h.x, h.z, 0.3); carry.t.group.position.set(h.x, groundY(h.x, h.z), h.z); carry.at = h; }
     return;
   }
+  if (dragMoved > 6 && seatOrbiting()) { seatLook.yaw -= dx * 0.006; seatLook.pitch = Math.max(-0.5, Math.min(0.9, seatLook.pitch + dy * 0.004)); return; }
   if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.05, Math.min(1.1, camPitch + dy * 0.004)); if (directCam && directCam.key !== "gust") directCam = null; }
 });
 function endPointer(e) {
@@ -1631,7 +1641,7 @@ function endPointer(e) {
 }
 renderer.domElement.addEventListener("pointerup", endPointer);
 renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; if (carry) { carry.t.group.position.copy(carry.from); carry = null; } });
-renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
+renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } if (seatOrbiting()) { seatLook.zoom = Math.max(0.6, Math.min(1.8, seatLook.zoom * (1 + Math.sign(e.deltaY) * 0.08))); return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
 // by the fire, left and right turn the crescent; elsewhere the arrows and WASD walk
 addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (veil && (k === "arrowleft" || k === "arrowright")) { turnVeil(k === "arrowleft" ? -1 : 1); e.preventDefault(); return; } if (veil && k === "escape") { closeVeil(); return; } if (hm && (k === "arrowleft" || k === "arrowright")) { hm.turnV += k === "arrowleft" ? 0.9 : -0.9; e.preventDefault(); return; } if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
@@ -1966,6 +1976,7 @@ function frameBody() {
       const lx = fz, lz = -fx, at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
       sp = tall ? at(-1.15, 1.45, 0.35) : at(-1.3, 1.15, 0.4); sf = at(0, 0.1, 0.62);                                           // the table is 0.62 ahead of the cushion
     }
+    if (lowView) seatOrbit(sp, sf);
     clampCamera(sp, sf);
     const k = seatK * seatK * (3 - 2 * seatK); cp.lerp(sp, k); focus.lerp(sf, k);
   }
@@ -2037,7 +2048,7 @@ function frameBody() {
   if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
   camera.lookAt(focus); lastFocus.copy(focus);
   if (brushFig && brushSeat && brushWrite && brushWrite.isOpen) { // the writing: framed on the kneeling writer, beside the strip
-    brushFig.tick(dt); const [bp, bf] = brushFig.view(brushSeat, innerWidth < innerHeight); camera.position.copy(bp); camera.lookAt(bf);
+    brushFig.tick(dt); const [bp, bf] = brushFig.view(brushSeat, innerWidth < innerHeight); seatOrbit(bp, bf); camera.position.copy(bp); camera.lookAt(bf);
   }
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
   figureLightTick(t, dt, me3);
@@ -4898,7 +4909,7 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => r.key) }, brush: () => openBrush(), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => r.key) }, brush: () => openBrush(), seats: () => seatsHere().map(x => ({ id: x.id, x: +x.x.toFixed(2), z: +x.z.toFixed(2), yaw: +x.yaw.toFixed(2), hearth: !!x.hearth, coins: !!x.coins, wake: !!x.wake })), sitOn: id => sitOn(id), standUp: () => standUp(), sit: () => ({ blocked: sitBlocked(), care: hearthCareNow(), seat: hearthSeatId(), go: sitAtHearth() }), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   hearthCare: () => ({ care: hearthCareNow(), stage: hollow && hollow.handles.stage ? hollow.handles.stage.care : null, offer: !!(hollow && hollow.handles.stage && hollow.handles.stage.offer), caredThisVisit, sitBlocked: sitBlocked() }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
