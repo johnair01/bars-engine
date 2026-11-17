@@ -13,6 +13,7 @@ import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia
 import { HOLLOW_CARD, lettersWrite } from './shared-pick'
 import { TEAS, FORM_OF } from '../../../public/between/growth.js'
 import { JAR_KINDS, JAR_SIDE_MAX, LINE_MAX, PLACES, DANCE_MIN_MS, betweenDay, callsFor, doorOfKind, validColour } from '../../../public/between/games/core.js'
+import { PAIRS as TWO_MOVE_PAIRS } from '../../../public/between/iching/two-move.js'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -23,7 +24,7 @@ export type Target =
   | { table: 'shown'; playerId: string }
   | { table: 'privates'; playerId: string; key: PrivateKey }
 
-const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home', 'deck'] as const
+const PRIVATE_KEYS = ['garden', 'spark', 'pouch', 'home', 'deck', 'journey'] as const
 type PrivateKey = (typeof PRIVATE_KEYS)[number]
 
 export type Op = 'set' | 'update' | 'delete'
@@ -123,6 +124,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
       if (data?.kind === 'turn' || cur?.kind === 'turn' || data?.kind === 'spend' || cur?.kind === 'spend') return turnWrite()
       if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
+      if (data?.kind === 'bar' || cur?.kind === 'bar') return home ? no(400, 'A bar is left in a room you share.') : barWrite(me, op, data, cur)
       if (data?.kind === 'cast' || cur?.kind === 'cast') return home ? no(400, 'A cast lies face up only in a room you share.') : castWrite(me, op, data, cur)
       if (data?.kind === 'cup' || cur?.kind === 'cup') return home ? no(400, 'A cup is poured for someone.') : cupWrite(me, op, data, cur, garden, otherHere)
       if (data?.kind === 'jar' || cur?.kind === 'jar') return home ? no(400, 'A jar is left on a shelf you share.') : jarWrite(me, op, data, cur)
@@ -141,8 +143,10 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (target.playerId !== me) return no(403, 'That is the other person\'s own.')
       if (target.key === 'home' && !home) return no(400, 'Your look and hopes are kept in your homeroom.')
       if (target.key === 'deck' && !home) return no(400, 'Your deck is kept in your homeroom.')
+      if (target.key === 'journey' && !home) return no(400, 'Your journey is kept in your homeroom.')
       if (target.key === 'home' && op !== 'delete') return homeWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       if (target.key === 'deck' && op !== 'delete') return deckWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
+      if (target.key === 'journey' && op !== 'delete') return journeyWrite(op === 'set' ? data! : merge(cur ?? {}, data!))
       return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!), cur) : yes
   }
 }
@@ -168,7 +172,7 @@ export const MOVES: Record<string, { name: string; from: Element; to: Element }>
   }),
 )
 
-const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'from', 'in', 'woke', 'did'])
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'risen', 'bar', 'from', 'in', 'woke', 'did'])
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -182,7 +186,9 @@ const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringif
  * A worked ember keeps the `from` it was lit with.
  */
 export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
-  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow') return no(400, 'The pouch holds embers only.')
+  for (const k of Object.keys(pouch)) if (k !== 'embers' && k !== 'hollow' && k !== 'keepsakes') return no(400, 'The pouch holds embers and keepsakes only.')
+  const kept = keepsakesWrite(pouch.keepsakes)
+  if (!kept.ok) return kept
   // The hollow's own card at the shared pick (shared-pick.ts, sp-hollow-card-is-own): its id and when, never shown to the other.
   const h = pouch.hollow
   if (h != null && !(isObj(h) && Object.keys(h).every(k => k === 'card' || k === 'at') && h.card === HOLLOW_CARD && isNum(h.at)))
@@ -202,11 +208,35 @@ export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
     if (!m) return no(400, 'Choose one of the fifteen moves.')
     if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
     if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
-    if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
+    if (e.state !== 'held' && e.state !== 'lit' && e.state !== 'written') return no(400, 'An ember is held, lit or written.')
+    // Written into a BAR with the brush (ember-to-vibeulon FR-005): it names that BAR (the /bar route marks it).
+    if (e.bar != null && !(typeof e.bar === 'string' && e.bar.length <= 40)) return no(400, 'An ember names one BAR.')
     if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
     if (e.woke != null && !(isObj(e.woke) && Object.keys(e.woke).every(k => k === 'spirit' || k === 'at') && typeof e.woke.spirit === 'string' && ID.test(e.woke.spirit) && isNum(e.woke.at) && e.risen === true))
       return no(400, 'An ember wakes once, after it has risen, as one spirit.')
     if (e.did != null && !(typeof e.did === 'string' && e.did.length <= 140)) return no(400, 'What you did is one short line.')
+  }
+  return yes
+}
+
+/* ---------- the keepsake: what the cold left when a block cleared, carried home (block-metabolize, the satchel slice) ----------
+ * Carrying the keepsake from the keeping chamber puts it in the pouch at the satchel (position bm6-keepsake-satchel-next; his B
+ * on bm-build-look-3, 2026-11-03: "These will live in the satchel inventory and be used for crafting and spirit husbandry").
+ * It keeps its element and its shape, which the element fixes (public/between/block-room.js KEEPSAKE), and when it came: never
+ * the feeling, the charge's sentences or the player's lines. It is held until crafting and spirit husbandry give it a use. */
+export const KEEPSAKE_OF: Record<string, string> = { water: 'vessel', metal: 'key', fire: 'ember', earth: 'stone' }
+const KEEPSAKE_KEYS = new Set(['element', 'kind', 'state', 'at'])
+export function keepsakesWrite(ks: Json | undefined): Verdict {
+  if (ks == null) return yes
+  if (!isObj(ks)) return no(400, 'A keepsake is a small thing.')
+  for (const k of Object.values(ks)) {
+    if (k === null) continue
+    if (!isObj(k)) return no(400, 'A keepsake is a small thing.')
+    for (const f of Object.keys(k)) if (!KEEPSAKE_KEYS.has(f)) return no(400, 'A keepsake keeps no words.')
+    if (typeof k.element !== 'string' || !KEEPSAKE_OF[k.element]) return no(400, 'A keepsake is water, metal, fire or earth.')
+    if (k.kind !== KEEPSAKE_OF[k.element]) return no(400, 'Its element gives a keepsake its shape.')
+    if (k.state !== 'held') return no(400, 'A keepsake is held.')
+    if (!isNum(k.at)) return no(400, 'A keepsake keeps when it was carried.')
   }
   return yes
 }
@@ -491,7 +521,13 @@ const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers',
 export const CAST_LANES = ['yourself', 'between', 'partner'] as const
 export const CAST_SUITS = ['WU', 'CU', 'GU', 'SU'] as const
 const hexN = (v: unknown) => isNum(v) && Number.isInteger(v) && v >= 1 && v <= 64
-const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'page', 'line', 'at', 'done'])
+const HOME_CAST_KEYS = new Set(['n', 'becomes', 'lane', 'suit', 'room', 'page', 'line', 'at', 'done', 'lean'])
+/** The taken slip's lean on a kept cast (iching-two-move FR-006): which trigram, which good, inner or outer; no words. */
+function leanOk(l: unknown): boolean {
+  if (!isObj(l) || !Object.keys(l).every(k => k === 'side' || k === 'trigram' || k === 'good')) return false
+  const pair = (TWO_MOVE_PAIRS as Record<string, string[]>)[l.trigram as string]
+  return (l.side === 'inner' || l.side === 'outer') && !!pair && pair.includes(l.good as string)
+}
 /* The record book (Six-faces-council spec .specify/specs/record-book; his A on rb-new-page and on rb-ad-look-1): one page
  * per person you toss for. A name you write on the blank page lives here only, in `pages` (a name, the spark planted for it
  * later or null, when it was written); `bookAt` is the page the book opens to. A kept cast never carries a name: it names
@@ -508,6 +544,7 @@ function homeCastOk(c: Doc, pages: Doc = {}): boolean {
   if (!hexN(c.n) || (c.becomes != null && !hexN(c.becomes))) return false
   if (!(CAST_LANES as readonly string[]).includes(c.lane as string) || !(CAST_SUITS as readonly string[]).includes(c.suit as string)) return false
   if (c.page != null && !isId(c.page)) return false
+  if (c.lean != null && !leanOk(c.lean)) return false
   if (c.lane === 'yourself') { if (c.room != null) return false }
   else if (c.page != null ? c.room != null || !isObj(pages[c.page as string]) : !isId(c.room)) return false
   return typeof c.line === 'string' && c.line.length > 0 && isNote(c.line) && isNum(c.at) && (c.done == null || isNum(c.done))
@@ -538,6 +575,33 @@ function castWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdi
   if (!(typeof next.line === 'string' && next.line.length > 0 && isNote(next.line))) return no(400, 'A move is a short line.')
   if (op === 'set' && isObj(next.answer) && Object.keys(next.answer).length) return no(400, 'Only the other person answers.')
   if (op !== 'set' && data && 'answer' in data) return no(400, 'Only the other person answers.')
+  return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
+}
+/* ---------- a bar left on the low table (council friendship-between, bb-look-1 B, 2026-11-04) ----------
+ * One friend lays a bar (a title and up to four short lines) on the table for the other. Only the leaver writes it or takes
+ * it back, and only before it is found. The other person writes one thing: that they read it (`status: 'found'`, `foundAt`)
+ * and a line in the log in their name. It carries no reply and no count. */
+const BAR_KEYS = new Set(['kind', 'by', 'at', 'status', 'title', 'lines', 'foundAt', 'history'])
+function barWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+  const leaver = cur ? cur.by : data?.by
+  if (op === 'delete') {
+    if (leaver !== me) return no(403, 'Only the one who left a bar takes it back.')
+    return cur && cur.status === 'found' ? no(400, 'It has been read. It stays on the table.') : yes
+  }
+  if (leaver !== me) {
+    const keys = Object.keys(data!)
+    if (!keys.every(k => k === 'status' || k === 'foundAt' || k === 'history')) return no(400, 'A bar stays its leaver\'s; you can read it.')
+    if (data!.status !== 'found' || !isNum(data!.foundAt)) return no(400, 'Reading a bar marks it found.')
+    return logOk(data!.history, me) ? yes : no(400, 'The log names acts, nothing more.')
+  }
+  if (op !== 'set') return no(400, 'A bar is left once. Take it back to write another.')
+  const next = data!
+  for (const k of Object.keys(next)) if (!BAR_KEYS.has(k)) return no(400, 'A bar carries a title and a few lines, nothing more.')
+  if (next.status !== 'left') return no(400, 'Only the other person finds it.')
+  if (!(typeof next.title === 'string' && next.title.trim().length > 0 && next.title.length <= 60)) return no(400, 'Give the bar a short title.')
+  const L = next.lines
+  if (!Array.isArray(L) || L.length > 4 || !L.every(l => typeof l === 'string' && l.length <= 140)) return no(400, 'A bar holds up to four short lines.')
+  if (!isNum(next.at)) return no(400, 'A bar is left at a time.')
   return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
 }
 /* A turn at the table and the tea a card cost are written only by POST /api/between/:gardenId/turn, which reads the other
@@ -676,6 +740,53 @@ export function deckWrite(doc: Doc): Verdict {
     if (!ID.test(id) || id === 'goal') return no(400, 'Your deck keeps your goals and their cards, nothing more.')
     if (g !== null && !(isObj(g) && deckGoalOk(g))) return no(400, 'A goal is a short line of your words, with up to three cards under it.')
   }
+  return yes
+}
+
+/* ---------- the journey (Six-faces-council spec .specify/specs/healing-journey, slice 1; his A on hj-homeroom-look-1) ----------
+ * One private document beside `home` and `deck`: the program, the pack, the pages, the moves, the places. The pure rules
+ * live in public/between/journey.js. Pages are refused until the player agreed to the storage rule (FR-002); a move
+ * record keeps a move, a day and a time and no text (FR-007); nothing here counts or scores the person. */
+export const JOURNEY_KEYS = ['program', 'pack', 'pages', 'moves', 'places', 'learned'] as const
+const JOURNEY_FEELINGS = new Set(['wood', 'fire', 'earth', 'metal', 'water'])
+const JOURNEY_STATES = new Set(['carried', 'held', 'worked', 'left'])
+const JOURNEY_PLACES = new Set(['dark', 'lit', 'ajar', 'befriended'])
+const JOURNEY_FURNISHINGS = new Set(['lamp', 'plant', 'tool'])
+const dayOk = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+const noKeysBeyond = (o: Doc, allowed: string[]) => Object.keys(o).every(k => allowed.includes(k))
+const listOf = (v: Json | undefined): Json[] | null => (v == null ? [] : Array.isArray(v) ? v : null)
+/** May the journey stand? Pages are refused while the program has no agreed-on date; a move record holds no text. */
+export function journeyWrite(doc: Doc): Verdict {
+  const bad = (m: string) => no(400, m)
+  for (const k of Object.keys(doc)) if (!(JOURNEY_KEYS as readonly string[]).includes(k)) return bad('Your journey keeps the program, pack, pages, moves and places, nothing more.')
+  const program = doc.program
+  if (program != null) {
+    if (!isObj(program) || !noKeysBeyond(program, ['id', 'coachId', 'startsOn', 'endsOn', 'agreedOn', 'closedAt'])) return bad('A program is its people and its dates.')
+    if (!dayOk(program.startsOn) || !dayOk(program.endsOn)) return bad('A program has a start date and an end date.')
+    if (program.agreedOn != null && !dayOk(program.agreedOn)) return bad('The day you agreed to the storage rule is a date.')
+  }
+  const pages = listOf(doc.pages), pack = listOf(doc.pack), moves = listOf(doc.moves), places = listOf(doc.places), learned = listOf(doc.learned)
+  if (!pages || !pack || !moves || !places || !learned) return bad('Your journey keeps lists.')
+  const agreed = isObj(program) && dayOk(program.agreedOn)
+  if (pages.length > 0 && !agreed) return no(403, 'No page is kept until you have agreed to how pages are stored.')
+  for (const o of pack) {
+    if (!isObj(o) || !noKeysBeyond(o, ['id', 'feeling', 'setOff', 'body', 'pickedOn', 'state', 'furnishing']) || typeof o.id !== 'string' || !ID.test(o.id)) return bad('A carried object is its tag.')
+    if (typeof o.feeling !== 'string' || !JOURNEY_FEELINGS.has(o.feeling) || typeof o.state !== 'string' || !JOURNEY_STATES.has(o.state)) return bad('A carried object has a feeling and a state.')
+    if (o.pickedOn != null && !dayOk(o.pickedOn)) return bad('An object was picked up on a day.')
+    for (const f of ['setOff', 'body']) if (o[f] != null && !(typeof o[f] === 'string' && (o[f] as string).length <= 140 && isNote(o[f]))) return bad('A tag line is short.')
+    if (o.furnishing != null && !(typeof o.furnishing === 'string' && JOURNEY_FURNISHINGS.has(o.furnishing))) return bad('A furnishing is a lamp, a plant or a tool.')
+  }
+  const MOVES_OK = new Set(['floorboards', 'window', 'chair', 'workbench', 'doorway', 'hearth', 'diary'])
+  for (const m of moves) {
+    if (!isObj(m) || !noKeysBeyond(m, ['move', 'life', 'on', 'at'])) return bad('A move is which one, which day and when, nothing more.')
+    if (typeof m.move !== 'string' || !MOVES_OK.has(m.move) || !dayOk(m.on) || typeof m.at !== 'string') return bad('A move is which one, which day and when, nothing more.')
+    if (m.life != null && typeof m.life !== 'boolean') return bad('A move is which one, which day and when, nothing more.')
+  }
+  for (const pl of places) {
+    if (!isObj(pl) || !noKeysBeyond(pl, ['id', 'state']) || typeof pl.id !== 'string' || !ID.test(pl.id) || typeof pl.state !== 'string' || !JOURNEY_PLACES.has(pl.state)) return bad('A place is lit, dark, ajar or befriended.')
+  }
+  for (const l of learned) if (typeof l !== 'string' || !ID.test(l)) return bad('A learned move is a name.')
+  for (const pg of pages) if (!isObj(pg) || typeof pg.id !== 'string' || !ID.test(pg.id) || typeof pg.objectId !== 'string' || !isObj(pg.pass as Json)) return bad('A page is a 3-2-1 pass on one object.')
   return yes
 }
 

@@ -39,6 +39,8 @@ import { TaskCard } from './TaskCard'
 import { TaskActionSheet, type SheetAction } from './TaskActionSheet'
 import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
 import { MenuPhase } from './MenuPhase'
+import type { MorningSeed } from '@/lib/close/seed'
+import { skippedLine } from '@/lib/close/render'
 import { initialTtvPhase } from '@/lib/tap-the-vein/initial-phase'
 import { isOutOfDay, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
 import { Resurfaced, SeedLibrary } from './SeedLibrary'
@@ -71,6 +73,8 @@ type Props = {
   unchosen?: { lines: UnchosenLine[]; sample?: boolean }
   /** ?view=unchosen opens that section, so a preview link lands on it. */
   openUnchosen?: boolean
+  /** Last night's close, as a short banner on the open screen. */
+  closeSeed?: MorningSeed | null
 }
 
 function countWords(s: string) {
@@ -80,7 +84,7 @@ function isLive(t: TtvTaskDTO) {
   return !isOutOfDay(t.status)
 }
 
-export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [], unchosen = { lines: [] }, openUnchosen = false }: Props) {
+export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [], unchosen = { lines: [] }, openUnchosen = false, closeSeed = null }: Props) {
   const router = useRouter()
   // /tap-the-vein/embed is this same runner inside the Council Board's Morning tab (/board/council), so the board
   // shows Tap the Vein itself, never a copy of it (Wendell, 2026-10-19: "They differ enough as to confuse me an annoy me").
@@ -265,6 +269,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               carriedIn={carriedIn}
               element={element}
               nationName={nationName}
+              closeSeed={closeSeed}
               onBegin={() => setPhase('freewrite')}
             />
           )}
@@ -416,15 +421,34 @@ function PrimaryCta({ children, onClick, disabled }: { children: React.ReactNode
 
 // ─── Phases ───────────────────────────────────────────────────────────────────
 
+function CloseBanner({ seed }: { seed: MorningSeed }) {
+  const lines = seed.kind === 'skipped'
+    ? [skippedLine()]
+    : [
+        ...seed.wins.map((w) => `Lit last night: ${w}`),
+        ...(seed.lantern ? [`Today's lantern: ${seed.lantern.title}`] : []),
+      ]
+  if (lines.length === 0) return null
+  return (
+    <div data-testid="close-seed" style={{ marginTop: 14, padding: '10px 12px', border: '1px solid var(--bars-line)', borderRadius: 10, background: 'var(--bars-surface-inset)' }}>
+      {lines.map((l) => (
+        <p key={l} style={{ fontFamily: body, fontSize: 12.5, lineHeight: 1.5, color: 'var(--bars-text-secondary)', margin: 0 }}>{l}</p>
+      ))}
+    </div>
+  )
+}
+
 function OpenPhase({
   carriedIn,
   element,
   nationName,
+  closeSeed,
   onBegin,
 }: {
   carriedIn: TtvTaskDTO[]
   element: ElementKey
   nationName: string | null
+  closeSeed: MorningSeed | null
   onBegin: () => void
 }) {
   const hasCarried = carriedIn.length > 0
@@ -432,6 +456,7 @@ function OpenPhase({
     <>
       <Eyebrow>Tap the Vein</Eyebrow>
       <H1>{hasCarried ? 'The morning vein' : 'Begin the check-in'}</H1>
+      {closeSeed && <CloseBanner seed={closeSeed} />}
 
       {hasCarried ? (
         <div style={{ marginTop: 18 }}>

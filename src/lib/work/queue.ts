@@ -170,14 +170,42 @@ export async function setLaneDry(db: Db, lane: string, dry: boolean, note: strin
   return { lane, dry, moved, dryUntil }
 }
 
+/** A lane counts as live when it touched a ticket inside this window. */
+export const LIVE_MS = 24 * 60 * 60 * 1000
+
+export type LaneStatus = 'live' | 'quiet' | 'dry'
+
+/**
+ * Pure: whether a lane is accepting work. Dry (lamp out) wins; a lit lane is live when it claimed or finished a ticket
+ * inside the window, and quiet when its lamp is lit but nothing has touched it, which is how a lane looks when its
+ * crew never started.
+ */
+export function laneStatus(lit: boolean, lastClaimAt: Date | null, now = new Date()): LaneStatus {
+  if (!lit) return 'dry'
+  return lastClaimAt && now.getTime() - lastClaimAt.getTime() <= LIVE_MS ? 'live' : 'quiet'
+}
+
 /** Each lane as the board draws it: lamp lit or out, and the height of its deck (ready) and crew's hands (claimed). */
 export async function laneState(db: Db, lanes: readonly string[], now = new Date()) {
   const out = await dryLanes(db, now)
   const counts = await db.workTicket.groupBy({ by: ['lane', 'state'], where: { state: { in: ['ready', 'claimed'] } },
     _count: { _all: true } })
-  return lanes.map(lane => ({
-    lane, lit: !out.has(lane),
-    deck: counts.find(c => c.lane === lane && c.state === 'ready')?._count._all ?? 0,
-    held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
-  }))
+  // A ticket with a claimant has been taken by someone; its updatedAt moves on claim, heartbeat and done.
+  const since = new Date(now.getTime() - LIVE_MS)
+  const touched = await db.workTicket.groupBy({ by: ['lane'], where: { claimedBy: { not: null } },
+    _max: { updatedAt: true } })
+  const recent = await db.workTicket.groupBy({ by: ['lane'], where: { claimedBy: { not: null }, updatedAt: { gte: since } },
+    _count: { _all: true } })
+  return lanes.map(lane => {
+    const lastClaimAt = touched.find(t => t.lane === lane)?._max?.updatedAt ?? null
+    const lit = !out.has(lane)
+    return {
+      lane, lit,
+      deck: counts.find(c => c.lane === lane && c.state === 'ready')?._count._all ?? 0,
+      held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
+      lastClaimAt: lastClaimAt ? lastClaimAt.toISOString() : null,
+      claims24h: recent.find(t => t.lane === lane)?._count._all ?? 0,
+      status: laneStatus(lit, lastClaimAt, now),
+    }
+  })
 }

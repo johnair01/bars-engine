@@ -13,7 +13,7 @@ import { db } from '@/lib/db'
 export const dynamic = 'force-dynamic'
 
 const GAMES = [
-  { href: '/ontology-game/between', title: 'The Between', blurb: 'A garden two people tend together, in a hollow under a great tree.' },
+  { href: '/between', title: 'The Between', blurb: 'A garden two people tend together, in a hollow under a great tree.' },
 ]
 
 export default async function GamesHome() {
