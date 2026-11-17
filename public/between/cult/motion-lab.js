@@ -24,7 +24,8 @@ for(const [key,name] of poseKeys){const label=document.createElement('label'),in
   label.textContent=name;label.append(read);$('poseSliders').append(label,input);
   poseValues[key]=+input.value;read.textContent=poseValues[key].toFixed(2);
   input.oninput=()=>{poseValues[key]=+input.value;read.textContent=poseValues[key].toFixed(2);localStorage.setItem('cult-motion-pose',JSON.stringify(poseValues));renderPose()};}
-let W=null,ref=null,jumpRef=null,ledge=null,maskedIndex=null,who='f',buildKey='average',bodyHeight=1.66,heightEdited=false,buildSerial=0,motion='walk',playing=true,clock=0,previous=0,groundY=0,standingFootY=0;
+let followRoot=false;
+let W=null,ref=null,jumpRef=null,ledge=null,maskedIndex=null,who='f',buildKey='average',bodyHeight=1.66,heightEdited=false,buildSerial=0,soleMeshes=[],refFit=null,motion='walk',playing=true,clock=0,previous=0,groundY=0,standingFootY=0;
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 const camera=new THREE.PerspectiveCamera(25,1,.05,40);
@@ -36,10 +37,44 @@ canvas.onwheel=e=>{e.preventDefault();orbitZoom=THREE.MathUtils.clamp(orbitZoom*
 function size(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 addEventListener('resize',size);size();
 function duration(){return motion==='walk'?1.2:motion==='pose'?motionSpec('run').duration:motionSpec(motion).duration}
+// Ground contact (spec FR-004/FR-005). The lowest vertex of the soles (boots; the body where a build has none) is the
+// contact point. Contact phases solve the root height so that point stands on y = 0; flight phases keep the authored lift.
+// The stance weight is 1 on a planted foot and fades over `ramp` so there is no step when a foot leaves or lands.
+// ?legacy=1 restores the pre-solve behaviour (ball-joint grounding, 25% strike correction, unscaled references) so a
+// 'before' frame can be reproduced from the same code.
+const LEGACY=new URLSearchParams(location.search).has('legacy');
+const sstep=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
+const runContact=h=>Math.min(1,1-sstep(.30,.44,h)+sstep(.84,1,h));                       // h: half-cycle phase, stance 0-.40
+const jumpContact=t=>Math.min(1,1-sstep(.26,.30,t)+sstep(.90,.96,t));                      // grounded, preload; then landing, recovery
+function lowestY(){const F=W.X.F,t=new THREE.Vector3();let m=Infinity;F.mesh.skeleton.update();
+  for(const mesh of (soleMeshes.length?soleMeshes:[F.mesh])){mesh.updateWorldMatrix(true,false);const n=mesh.geometry.attributes.position.count;
+    for(let i=0;i<n;i++){mesh.getVertexPosition(i,t).applyMatrix4(mesh.matrixWorld);if(t.y<m)m=t.y}}
+  return m}
+// The orange references are fixed-size rigs. Scale each to the selected figure by leg length (hip-knee-ankle chain; the
+// body's own proportions, not the requested height alone) and lift it so its lowest toe joint over the cycle sits at the
+// figure's standing ball-joint height. The jump BVH is authored at .05; its factor multiplies that.
+function fitReferences(){
+  const F=W.X.F,P=b=>b.getWorldPosition(new THREE.Vector3()),byName=(g,n)=>{let f=null;g.traverse(o=>{if(o.name===n&&!f)f=o});return f};
+  W.X.scene.updateMatrixWorld(true);
+  const charLeg=P(F.bones.hipL).distanceTo(P(F.bones.kneeL))+P(F.bones.kneeL).distanceTo(P(F.bones.ankleL));
+  ref.group.scale.setScalar(1);ref.group.position.y=0;poseMocap(ref,'run',0);
+  const leg=(g,a,b,c)=>P(byName(g,a)).distanceTo(P(byName(g,b)))+P(byName(g,b)).distanceTo(P(byName(g,c)));
+  const scale=charLeg/leg(ref.group,'thigh.L','shin.L','foot.L'),floor={};
+  ref.group.scale.setScalar(scale);
+  for(const clip of ['walk','run']){let lo=Infinity;const c=ref[clip],n=36;
+    for(let k=0;k<n;k++){poseMocap(ref,clip,k/n*c.length/c.fps);lo=Math.min(lo,P(byName(ref.group,'toe.L')).y,P(byName(ref.group,'toe.R')).y)}
+    floor[clip]=standingFootY-lo}
+  jumpRef.group.scale.setScalar(.05);jumpRef.group.position.y=0;poseJumpReference(jumpRef,0);
+  const jumpScale=charLeg/leg(jumpRef.group,'LeftUpLeg','LeftLeg','LeftFoot');
+  jumpRef.group.scale.setScalar(.05*jumpScale);let lo=Infinity;
+  for(let k=0;k<=40;k++){poseJumpReference(jumpRef,jumpRef.clip.duration*k/40);lo=Math.min(lo,P(byName(jumpRef.group,'LeftToeBase')).y,P(byName(jumpRef.group,'RightToeBase')).y)}
+  refFit={scale,jumpScale,floor,jumpFloor:standingFootY-lo,charLeg};
+}
 function renderPose(){if(!W)return;
   const F=W.X.F;
   canvas.dataset.runBounce='';
   W.holder.position.set(0,0,0);
+  if(refFit){ref.group.scale.setScalar(refFit.scale);ref.group.position.y=refFit.floor[motion==='walk'?'walk':'run'];jumpRef.group.scale.setScalar(.05*refFit.jumpScale);jumpRef.group.position.y=refFit.jumpFloor}
   if(motion==='walk'){
     W.previewWalk(clock/duration()*Math.PI*2,values.stride);
     $('contact').textContent='Existing procedural walk · review cadence and foot travel';
@@ -50,10 +85,10 @@ function renderPose(){if(!W)return;
     canvas.dataset.runBounce=bounce.height.toFixed(4);
     F.root.position.y+=bounce.height;
     F.root.updateMatrixWorld(true);F.mesh.skeleton.update();
-    const strikeDistance=Math.min(bounce.phase,1-bounce.phase),strikeT=Math.max(0,1-strikeDistance/.08),strike=strikeT*strikeT*(3-2*strikeT);
-    const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
-    // Keep the contact correction small so it cannot erase the compression arc.
-    F.root.position.y+=(standingFootY-sole)*strike*.25;
+    // contact: the planted foot's sole stands on y = 0 through stance (the compression is the legs folding under it)
+    if(LEGACY){const strikeDistance=Math.min(bounce.phase,1-bounce.phase),strikeT=Math.max(0,1-strikeDistance/.08),strike=strikeT*strikeT*(3-2*strikeT);
+      const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);F.root.position.y+=(standingFootY-sole)*strike*.25}
+    else{F.root.updateMatrixWorld(true);F.root.position.y-=lowestY()*runContact(bounce.phase);F.root.updateMatrixWorld(true);F.mesh.skeleton.update()}
     $('contact').textContent=`CMU limb directions · ${bounce.stage} · vertical ${bounce.height.toFixed(3)} m · source travel ${source.travel.toFixed(2)} m/cycle`;
     const P=n=>F.bones[n].getWorldPosition(new THREE.Vector3()),mid=P('shoulderL').add(P('shoulderR')).multiplyScalar(.5);
     const eL=P('elbowL').sub(mid).dot(F.fr.l),eR=-P('elbowR').sub(mid).dot(F.fr.l);
@@ -64,10 +99,10 @@ function renderPose(){if(!W)return;
     s.arms=s.arms.map(x=>x*values.arm);s.elbows=s.elbows.map(x=>x*values.arm);
     s.lean*=values.lean;s.rootUp*=motion==='jump'?values.jump:values.lift;
     applyMotion(F,s,groundY);$('contact').textContent=`Contact intent: ${s.contact} · travel ${s.rootForward.toFixed(2)} m`;
-    if(motion==='jump'&&(clock<=.2||clock>=.94)){
-      for(const side of ['L','R'])FG.aim(F,'ankle'+side,'ball'+side,F.fr.f);
-      const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
-      F.root.position.y+=standingFootY-sole;
+    if(motion==='jump'){
+      if(clock<=.2||clock>=.94)for(const side of ['L','R'])FG.aim(F,'ankle'+side,'ball'+side,F.fr.f);
+      if(LEGACY){if(clock<=.2||clock>=.94){const sole=Math.min(F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);F.root.position.y+=standingFootY-sole}}
+      else{F.root.updateMatrixWorld(true);F.root.position.y-=lowestY()*jumpContact(clock);F.root.updateMatrixWorld(true);F.mesh.skeleton.update()}
     }
     if(motion==='jump'||motion==='climb')W.holder.position.copy(F.fr.f).multiplyScalar(s.rootForward);
   }
@@ -79,6 +114,7 @@ function renderPose(){if(!W)return;
   canvas.dataset.rootUp=window.__motionLab.rootUp.toFixed(4);
   F.root.updateMatrixWorld(true);
   const comparing=!!(ref&&['walk','run','pose','jump'].includes(motion)),target=F.fr.f.clone().multiplyScalar(comparing?.62:0).add(new THREE.Vector3(0,.92,0));
+  if(followRoot)target.add(new THREE.Vector3().copy(W.holder.position).projectOnVector(F.fr.f));
   const orbit=F.fr.l.clone().applyAxisAngle(new THREE.Vector3(0,1,0),orbitYaw).multiplyScalar(Math.cos(orbitPitch));
   orbit.y=Math.sin(orbitPitch);
   camera.position.copy(orbit).multiplyScalar((comparing?7.2:4.6)*orbitZoom).add(target);camera.lookAt(target);
@@ -97,11 +133,13 @@ async function build(){const serial=++buildSerial,previous=W;W=null;
   $('mixReadout').textContent=`${who==='f'?'Feminine':'Masculine'} · ${buildKey} · ${W.X.F.stature.toFixed(2)} m`;
   canvas.dataset.body=who;canvas.dataset.build=buildKey;canvas.dataset.height=W.X.F.stature.toFixed(2);
   standingFootY=Math.min(W.X.F.bones.ballL.getWorldPosition(new THREE.Vector3()).y,W.X.F.bones.ballR.getWorldPosition(new THREE.Vector3()).y);
+  soleMeshes=W.X.parts.filter(p=>p.mesh&&/^boots/.test(p.name)&&p.mesh.visible).map(p=>p.mesh);
   maskedIndex=W.X.F.mesh.geometry.index.clone();setBodyVisibility();
   if(!ref)ref=await loadMocapReference();
   ref.group.position.copy(W.X.F.fr.f).multiplyScalar(1.25);W.X.scene.add(ref.group,ref.helper);alignMocapFacing(ref,W.X.F.fr.f);
   if(!jumpRef){jumpRef=await loadJumpReference();jumpRef.group.position.copy(W.X.F.fr.f).multiplyScalar(1.25);W.X.scene.add(jumpRef.group,jumpRef.helper)}
   else W.X.scene.add(jumpRef.group,jumpRef.helper);
+  if(!LEGACY)fitReferences();
   ledge=new THREE.Mesh(new THREE.BoxGeometry(1.15,.72,1.05),new THREE.MeshStandardMaterial({color:0x77746c,roughness:.95}));
   ledge.position.copy(W.X.F.fr.f).multiplyScalar(.92);ledge.position.y=.36;W.X.scene.add(ledge);
   clock=0;renderPose()}
@@ -135,6 +173,16 @@ $('saveNote').onclick=async()=>{
     if(!response.ok)throw Error(`server returned ${response.status}`);
     $('note').value='';$('noteStatus').textContent='Saved to the repo with this frame and settings.';await showNotes();
   }catch(e){$('noteStatus').textContent='Could not save to repo. Open the lab through the local motion lab server. '+e.message}
+};
+// Review hook for scripted measurement (tools/blender-cloud/tests/motion_measure.mjs). Read-only handles plus exact
+// seconds/phase control; the viewer's own renderPose() still does all the posing, so a measurement sees what a reviewer sees.
+window.__motionLabControl={
+  get walker(){return W},get ref(){return ref},get jumpRef(){return jumpRef},get groundY(){return groundY},get refFit(){return refFit},get soleMeshes(){return soleMeshes},get standingFootY(){return standingFootY},
+  get values(){return values},get duration(){return duration()},
+  set(name,seconds){motion=name;playing=false;clock=seconds;for(const b of document.querySelectorAll('[data-motion]'))b.setAttribute('aria-pressed',String(b.dataset.motion===name));renderPose()},
+  follow(on){followRoot=on;renderPose()},
+  bodyOnly(on){$('bodyOnly').checked=on;setBodyVisibility();renderPose()},
+  async rebuild(next){if(next.who)who=next.who;if(next.build)buildKey=next.build;if(next.height)bodyHeight=next.height;heightEdited=true;await build()},
 };
 showNotes();
 build().catch(e=>{$('error').textContent='Could not build character: '+e.message});
