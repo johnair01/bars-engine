@@ -19,10 +19,14 @@ export const metadata: Metadata = { title: 'Lantern Hall' }
 
 /** The scene is a plain ES module page with its own import map (three.js from the CDN, like the Between's land.html),
  *  so it is framed whole rather than bundled; same origin, so the table's saves carry the sign-in cookie. */
-export default function LanternPage() {
+export default async function LanternPage({ searchParams }: { searchParams: Promise<{ goal?: string | string[] }> }) {
+  // ?goal= (a Tap the Vein card taken to the table) rides on to the scene, which fills step 1 with it; the player still confirms.
+  const goal = (await searchParams).goal
+  const one = (Array.isArray(goal) ? goal[0] : goal)?.slice(0, 140)
+  const src = one ? `/lantern/table/index.html?goal=${encodeURIComponent(one)}` : '/lantern/table/index.html'
   return (
     <iframe
-      src="/lantern/table/index.html"
+      src={src}
       title="Lantern Hall, the lantern table"
       allow="fullscreen"
       style={{ position: 'fixed', inset: 0, width: '100vw', height: '100dvh', border: 0, background: '#0a0908', zIndex: 60 }}

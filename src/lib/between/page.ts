@@ -1,5 +1,5 @@
 /**
- * The Between's page, as GET /ontology-game/between hands it out once the sign-in is checked. It lives here rather than in
+ * The Between's page, as GET /between hands it out once the sign-in is checked. It lives here rather than in
  * the route so the two-player invite check (scripts/between-invite-check.ts) serves the same HTML without the route.
  */
 export const BETWEEN_PAGE = `<!doctype html>

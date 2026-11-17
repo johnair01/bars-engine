@@ -1,39 +1,16 @@
 /**
  * @route GET /ontology-game/between
  * @entity PLAYER
- * @description The Between: a 3D garden two people tend together, in a hollow under a great tree's roots
- * @permissions signed-in player (bars_player_id cookie); the garden itself opens only to its two members or an invite link
- * @relationships PLAYER (BetweenGarden)
- * @example GET /ontology-game/between?g=clx...&invite=...
+ * @description Old address of the Between. It moved to /between; this keeps saved links, invitations and notices working.
+ * @permissions public redirect
+ * @relationships /between
+ * @example GET /ontology-game/between?g=clx... redirects to /between?g=clx...
  * @agentDiscoverable false
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { currentPlayer } from '@/lib/between/store'
-import { BETWEEN_PAGE } from '@/lib/between/page'
-import { withChalk } from '@/lib/marks/chalk'
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Six-faces-council bh-move-to-bars-engine (2026-10-17): the page that would not open on his iPhone inside the Claude
- * app now lives beside the caves. This route only checks the sign-in and hands out the page (src/lib/between/page.ts);
- * the scene is public/between/garden.js (the hollow and the creature in hollow.js and creature.js, round 2) and the store
- * is /api/between.
- *
- * Six-faces-council friendship-between build round 1 (2026-11-04): the nook's firebox glows with its fire (hollow.js M.soot)
- * and the coin table's light sits low over the table (coin-table.js), so faces at the table are not lit hot.
- */
-
 export async function GET(req: NextRequest) {
-  const player = await currentPlayer()
-  if (!player) {
-    const back = req.nextUrl.pathname + req.nextUrl.search
-    // A friend who opens a spark's invitation link has no account yet: the first screen is "Create your account", with
-    // "Sign in" one tap away (Six-faces-council spec .specify/specs/friendcraft-deck FR-001). No invite keeps the sign-in.
-    const to = req.nextUrl.searchParams.get('invite') ? '/signup' : '/login'
-    return NextResponse.redirect(new URL(to + '?returnTo=' + encodeURIComponent(back), req.url))
-  }
-  return new NextResponse(withChalk(BETWEEN_PAGE), {
-    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin' },
-  })
+  return NextResponse.redirect(new URL('/between' + req.nextUrl.search, req.url), 308)
 }
