@@ -3,7 +3,7 @@ import { cleanLanes, DEFAULT_LANES, type Lane } from './lanes'
 
 /** The brief an answer runs: text, a list of steps, or a mapping keyed by answer. A mapping used to be stringified, so
  * a lane read `[object Object]` where its brief goes (council position bf-card-brief-lands-object-object, 2026-11-16). */
-export type ThenValue = string | string[] | Record<string, string | string[]>
+type ThenValue = string | string[] | Record<string, string | string[]>
 
 /** A board row as sessions post it (rows collection): a question with options; any option, or the row, may carry
  * `then` (the brief a worker runs on that answer) and the row may carry `lanes`. */
@@ -36,20 +36,13 @@ export interface TicketDraft {
 
 const COUNCIL = 'wendell-britt/six-faces-council'
 
-/** A row's `then` as the text a worker reads: a string as it stands, a list one step per line, a mapping by its answer
- * keys (the chosen answer's brief alone, or every key written out when his answer is not in it). */
+/** A row's `then` as the text a worker reads: a string as it stands, a list one step per line, a mapping by the
+ * chosen answer's key. An answer no key holds gives '' and the caller falls back to the gate line. */
 export function thenText(value: ThenValue | null | undefined, answer = ''): string {
   if (!value) return ''
   if (typeof value === 'string') return value.trim()
-  if (Array.isArray(value)) return value.map(v => thenText(v)).filter(Boolean).join('\n')
-  if (typeof value === 'object') {
-    const chosen = answer && value[answer] !== undefined ? thenText(value[answer]) : ''
-    if (chosen) return chosen
-    return Object.entries(value)
-      .map(([k, v]) => { const t = thenText(v); return t ? `${k}: ${t}` : '' })
-      .filter(Boolean).join('\n\n')
-  }
-  return String(value).trim()
+  if (Array.isArray(value)) return value.map(v => v.trim()).filter(Boolean).join('\n')
+  return thenText(answer ? value[answer] : undefined)
 }
 
 /** What he chose, as board/pull.py reads it: several choices joined by commas, else the one choice, else ''. */
