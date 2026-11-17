@@ -1,5 +1,5 @@
 /* The Between's light, measured on the live page (six-faces-council relationship-creature, mirror light build).
-   Serves public/ (or ROOT) with the page from src/app/ontology-game/between/route.ts, answers /api/* with 503 so the page
+   Serves public/ (or ROOT) with the page from src/app/between/route.ts, answers /api/* with 503 so the page
    opens as "the room only" (storeDown), and for each shot opens it in headless Chromium at a phone viewport:
      node tools/between-live-probe.mjs [--root DIR] [--out DIR] [--vp 390x844] [--frames] [--throttle 4] shot...
      shot = name|query, e.g. "mirror|mirror=1" "walk|"
@@ -18,13 +18,13 @@ const ROOT = path.resolve(arg('--root', path.join(__dirname, '..', 'public'))), 
 const FRAMES = process.argv.includes('--frames'), THROTTLE = +arg('--throttle', 4);
 const [VW, VH] = arg('--vp', '390x844').split('x').map(Number);   // 600x900 matches still2.html's probe; 390x844 is the phone
 const shots = process.argv.slice(2).filter((a, i, all) => a.includes('|') && !['--root', '--out', '--throttle', '--vp'].includes(all[i - 1]));
-const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/ontology-game/between/route.ts'), 'utf8');
+const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/between/route.ts'), 'utf8');
 const PAGE = route.slice(route.indexOf('const PAGE = `') + 14, route.indexOf('`', route.indexOf('const PAGE = `') + 14));
 const TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/api/')) { res.writeHead(503, { 'content-type': 'application/json' }); return res.end('{"error":"probe: no store"}'); }
-  if (u.pathname === '/ontology-game/between') { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(PAGE); }
+  if (u.pathname === '/between') { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(PAGE); }
   const f = path.join(ROOT, path.normalize(u.pathname));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
@@ -54,7 +54,7 @@ const PROBE = async () => {
     const [name, qs] = s.split('|');
     const ctx = await b.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 }); const p = await ctx.newPage();
     p.on('pageerror', e => console.error('PAGEERR', name, e.message, (e.stack || '').split('\n').slice(1, 3).join(' ')));
-    await p.goto(`http://localhost:${port}/ontology-game/between?${qs || ''}`);
+    await p.goto(`http://localhost:${port}/between?${qs || ''}`);
     await p.waitForFunction(() => window.__between && window.__between.meState.body && document.getElementById('loading').hidden, null, { timeout: 180000 });
     // software GL runs a few frames a second, so wait for the walk to the glass to end (dt is capped per frame), then settle
     await p.waitForFunction(() => window.__between.meState.wasWalking === false, null, { timeout: 180000 });

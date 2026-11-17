@@ -5,8 +5,9 @@ import { loadDojoHome } from '@/actions/dojo-practice'
 import { DojoShell } from './dojo-shell'
 import { TrianglePractice } from './triangle-practice'
 
-function safeReturnPath(value: string | undefined): string {
-  return value === '/ontology-game/between' ? value : '/ontology-game/between'
+function safeReturnPath(_value: string | undefined): string {
+  // The Between is the only place this workshop returns to (moved from /ontology-game/between).
+  return '/between'
 }
 
 export default async function TriangleWorkshopPage({
