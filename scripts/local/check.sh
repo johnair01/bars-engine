@@ -4,6 +4,7 @@
 #
 #   scripts/local/check.sh           lint, type-check, build-reliability verifiers, vitest, and the look check when public/between or
 #                                    public/calrunia changed
+#                                    copy-scan (fails the run on any hit; see below)
 #   scripts/local/check.sh --build   the same, then the full production build (`npm run build`) on the local database
 #
 # A step that fails is reported and the rest still run, so one report names every failure. Exit status is non-zero
@@ -57,6 +58,12 @@ step check $DEV run -- npm run check
 # reported as skipped here) and not faults; only a real drift stops the push.
 step --skip-2 look-frame $DEV run -- npm run check:look:frame -- --post
 step vitest $DEV run -- npm run test:vitest
+# The editorial check for player-facing copy (scripts/copy-scan.py): lines with no concrete referent, trailing and,
+# and-joins, and-chains, negation pairs, over every file in scripts/copy-scan.files, whole file. It FAILS the run on any
+# hit (Wendell, 2026-11-17, board row copy-scan-gate-1: "C, Fail it, and rewrite the 19 older lines too"). A hit is
+# rewritten, or, only when the words are his own or a string the reader owns, listed in scripts/copy-scan.allow with why.
+echo; echo "── copy-scan ──"
+python3 scripts/copy-scan.py --strict || { echo "FAILED: rewrite the line (.claude/skills/no-ai-slop/concrete-referent.md)"; failed+=("copy-scan"); }
 if look_touched; then step look node scripts/local/look-check.mjs; else echo; echo "── look ── (skipped: no change under public/between or public/calrunia; LOOK_CHECK=1 forces it)"; fi
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build
