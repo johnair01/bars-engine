@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // mid-stride). Jump: v0 and g give the apex (v0^2 / 2g) and the time in the air (2 v0 / g).
 export const MOVE = {
   walk: 1.3, run: 4.2, stair: 0.55, stairRun: 1.1, accel: 10, decel: 14,
-  jumpV: 4.4, gravity: 13, coyote: 0.12, buffer: 0.14, airControl: 0.35, stepDown: 0.35, landStep: 0.45,
+  jumpV: 5.1, gravity: 16.25, coyote: 0.12, buffer: 0.14, airControl: 0.35, stepDown: 0.35, landStep: 0.45,
 };
 // the follow camera: a spring arm from a pivot at the head. dist is what the player last zoomed to; the arm shortens
 // at once when a wall or roof comes between, and grows back slowly. After `hands` seconds without a drag, a moving
