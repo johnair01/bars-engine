@@ -84,7 +84,7 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 50,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**Each nation channels a different emotional energy.** Argyra: clarity and precision. Pyrakanth: passion and drive. Virelune: hope and growth. Meridia: calm and grounding. Lamenth: flow and wisdom. Which calls to you?',
+      text: '**Each Elder of the Heaven sect teaches one face of the game master.** Which way calls to you?',
       choices: nationChoices,
       anchors: {},
     })
@@ -107,7 +107,7 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 25,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**Nation** — Continue to choose your archetype.',
+      text: '**Elder** — Continue to choose your archetype.',
       choices: [{ text: 'Continue', targetId: 'char_playbook' }],
       anchors: {},
     })

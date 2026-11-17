@@ -10,11 +10,11 @@ import type { SerializableQuestPacket, QuestNode, SegmentVariant } from './types
 const STORY_INTRO_BEATS: { id: string; text: string }[] = [
   {
     id: 'intro_orientation',
-    text: '**The Conclave has convened.** Five nations. A heist at the Robot Oscars. Giant constructs powered by emotional energy. You\'re walking in mid-formation — and your participation matters.',
+    text: '**The Heaven sect has opened its gate.** Six Elders. Thirty lieutenants. Spirits made of emotional energy. You\'re walking in mid-lesson, and your rank starts at Initiate.',
   },
   {
     id: 'intro_rising',
-    text: '**Each nation channels a different emotional current:** Argyra\'s clarity, Pyrakanth\'s fire, Virelune\'s hope, Meridia\'s calm, Lamenth\'s flow. The crew is assembling. The heist needs every kind of pilot.',
+    text: '**Each Elder teaches one face of the game master:** the Shaman\'s feeling, the Architect\'s structure, the Challenger\'s edge, the Regent\'s keeping, the Diplomat\'s table and the Sage\'s pattern.',
   },
   {
     id: 'intro_tension',
@@ -22,7 +22,7 @@ const STORY_INTRO_BEATS: { id: string; text: string }[] = [
   },
   {
     id: 'intro_integration',
-    text: '**You\'re not filling out a form.** You\'re joining the crew. Choose your nation, your approach, your role. The threshold is near.',
+    text: '**You\'re not filling out a form.** You\'re joining the sect. Choose your Elder, your approach, your role. The threshold is near.',
   },
 ]
 
