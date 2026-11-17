@@ -10,7 +10,7 @@
  *
  * @route POST /api/tap-the-vein/sitting
  * @entity PLAYER
- * @description One step of the sitting: write, keep, pull, rest, way (a feeling lights a path), take (a path's move), seal
+ * @description One step of the sitting: write, keep, offer (pull what's useful), plant, pull, rest, way (a feeling lights a path), take (a path's move), seal
  * @permissions signed-in player (bars_player_id cookie)
  * @relationships PLAYER (TapTheVeinDailySession, TapTheVeinTask)
  * @dimensions WHO:the player, WHAT:write, keep, pull, rest, way, take, seal, WHERE:the board's Morning book, ENERGY:daily planning
@@ -21,9 +21,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { commitTask, getToday, restTask, saveBrainstorm, sealSession, updateTaskStatus } from '@/actions/tap-the-vein'
+import { plantBarToGarden } from '@/actions/garden'
+import { DISSATISFACTION_OPTIONS, EXPERIENCE_OPTIONS, SATISFACTION_OPTIONS } from '@/lib/quest-grammar/unpacking-constants'
 import { sealMorningMenu } from '@/actions/tap-the-vein-menu'
 import { parseTzOffset, ttvSessionDate, TTV_TZ_COOKIE } from '@/lib/tap-the-vein/day'
 import { withTzOffset } from '@/lib/tap-the-vein/day-server'
+import { pullAllowedFor, pullOffers, reRankLocal } from '@/lib/tap-the-vein/pull'
 import { writePathTake } from '@/lib/tap-the-vein/path-take'
 import { TTV_FEELINGS, TTV_PATHS, TTV_PATH_SOURCES, pathLitBy } from '@/lib/tap-the-vein/paths'
 
@@ -32,9 +35,9 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 const BOOK_KEEP_MAX = 3
 const MAX_FREE_WRITE = 20_000
 
-type Step = { action?: unknown; text?: unknown; taskId?: unknown; feeling?: unknown; face?: unknown; tz?: unknown }
+type Step = { action?: unknown; text?: unknown; taskId?: unknown; feeling?: unknown; face?: unknown; tz?: unknown; source?: unknown; experienceIntent?: unknown; dissatisfaction?: unknown; satisfaction?: unknown }
 
-async function view() {
+async function view(allowPull = false) {
   const today = await getToday()
   if ('error' in today) return today
   const rows = await db.tapTheVeinTask.findMany({
@@ -44,12 +47,15 @@ async function view() {
   const status = new Map(rows.map((r) => [r.id, r.status]))
   return {
     date: today.sessionDate,
+    pulled: !!today.pulledAt,
+    pullAllowed: allowPull,
     sealed: today.status === 'sealed',
     rawEntry: today.rawEntry,
     kept: today.tasks
       .filter((t) => status.has(t.id) && ['committed', 'in_progress'].includes(t.status))
       .map((t) => ({ id: t.id, text: t.text, pulled: t.status === 'in_progress' })),
     keepMax: BOOK_KEEP_MAX,
+    triad: { experience: EXPERIENCE_OPTIONS, now: DISSATISFACTION_OPTIONS, want: SATISFACTION_OPTIONS },
     feelings: TTV_FEELINGS,
     paths: TTV_PATHS.map((p) => ({ face: p.face, lights: p.lights, move: p.move, prompt: p.prompt })),
   }
@@ -66,7 +72,7 @@ export async function GET(req: NextRequest) {
   const player = await getCurrentPlayer()
   if (!player) return reply({ error: 'Sign in to open your book' }, tz, 401)
   try {
-    const v = await withTzOffset(tz, view)
+    const v = await withTzOffset(tz, () => view(pullAllowedFor(player)))
     return reply(v, tz, 'error' in v ? 500 : 200)
   } catch (e) {
     console.error('[api:ttv-sitting:get]', e)
@@ -93,23 +99,57 @@ export async function POST(req: NextRequest) {
         case 'write': {
           if (text.length > MAX_FREE_WRITE) return reply({ error: 'That is too long for one morning' }, tz, 400)
           const r = await saveBrainstorm(text)
-          return reply('error' in r ? r : await view(), tz, 'error' in r ? 500 : 200)
+          return reply('error' in r ? r : await view(pullAllowedFor(player)), tz, 'error' in r ? 500 : 200)
         }
         case 'keep': {
           const live = await db.tapTheVeinTask.count({
             where: { dailySessionId: opened.sessionId, status: { in: ['committed', 'in_progress'] }, source: { notIn: [...TTV_PATH_SOURCES, 'board'] } },
           })
           if (live >= BOOK_KEEP_MAX) return reply({ error: 'Three lines are kept. Pull one or set one down first.' }, tz, 409)
-          const r = await commitTask({ text })
-          return reply('error' in r ? r : await view(), tz, 'error' in r ? 400 : 200)
+          const r = await commitTask({ text, source: step.source === 'pull' ? 'pull' : undefined })
+          return reply('error' in r ? r : await view(pullAllowedFor(player)), tz, 'error' in r ? 400 : 200)
+        }
+        case 'offer': {
+          if (!pullAllowedFor(player)) return reply({ error: 'The pull is not on for this book' }, tz, 403)
+          // "Pull what's useful": reads today's page here, once offered, and answers with the writer's own sentences.
+          // Only a time and a count are stored; no sentence is logged. A second call recomputes the same offers.
+          const kept = await db.tapTheVeinTask.findMany({
+            where: { dailySessionId: opened.sessionId, source: { notIn: [...TTV_PATH_SOURCES] } },
+            select: { originalText: true },
+          })
+          const offers = await reRankLocal(pullOffers(opened.rawEntry ?? '', kept.map((k) => k.originalText)))
+          if (!opened.pulledAt) {
+            await db.tapTheVeinDailySession.update({
+              where: { id: opened.sessionId },
+              data: { pulledAt: new Date(), pullOfferCount: offers.length },
+            })
+          }
+          return reply({ offers, ...(await view(pullAllowedFor(player))) }, tz)
+        }
+        case 'plant': {
+          // A kept card's BAR goes to the Garden through the usual triad (PlantTriad's three answers).
+          const t = await db.tapTheVeinTask.findFirst({
+            where: { id: taskId, dailySessionId: opened.sessionId, playerId: player.id },
+            select: { questId: true, barId: true },
+          })
+          const barId = t?.questId ?? t?.barId
+          if (!barId) return reply({ error: 'That card has no BAR to plant yet' }, tz, 400)
+          const strs = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
+          const r = await plantBarToGarden({
+            barId,
+            experienceIntent: typeof step.experienceIntent === 'string' ? step.experienceIntent : '',
+            dissatisfaction: strs(step.dissatisfaction),
+            satisfaction: strs(step.satisfaction),
+          })
+          return reply('error' in r ? r : { planted: barId, ...(await view(pullAllowedFor(player))) }, tz, 'error' in r ? 400 : 200)
         }
         case 'pull': {
           const r = await updateTaskStatus({ taskId, status: 'in_progress' })
-          return reply('error' in r ? r : await view(), tz, 'error' in r ? 400 : 200)
+          return reply('error' in r ? r : await view(pullAllowedFor(player)), tz, 'error' in r ? 400 : 200)
         }
         case 'rest': {
           const r = await restTask(taskId)
-          return reply('error' in r ? r : await view(), tz, 'error' in r ? 400 : 200)
+          return reply('error' in r ? r : await view(pullAllowedFor(player)), tz, 'error' in r ? 400 : 200)
         }
         case 'way': {
           const p = pathLitBy(step.feeling)
@@ -118,7 +158,7 @@ export async function POST(req: NextRequest) {
         }
         case 'take': {
           const r = await writePathTake(player.id, String(step.face ?? ''), text, ttvSessionDate(new Date(), tz))
-          return reply('error' in r ? r : { record: r, ...(await view()) }, tz, 'error' in r ? 400 : 200)
+          return reply('error' in r ? r : { record: r, ...(await view(pullAllowedFor(player))) }, tz, 'error' in r ? 400 : 200)
         }
         case 'seal': {
           // A sealed menu is what the council reads; a morning with no kept line closes the day without one.
@@ -127,7 +167,7 @@ export async function POST(req: NextRequest) {
             if ('error' in m) return reply(m, tz, 400)
           }
           const r = await sealSession()
-          return reply('error' in r ? r : await view(), tz, 'error' in r ? 500 : 200)
+          return reply('error' in r ? r : await view(pullAllowedFor(player)), tz, 'error' in r ? 500 : 200)
         }
         default:
           return reply({ error: 'Unknown step' }, tz, 400)
