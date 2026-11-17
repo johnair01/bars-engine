@@ -23,6 +23,10 @@ covers every player-facing surface: the gate walk, the sect intros, the coaching
 4. **Why does it matter to them?** Answer with their own goal in this walk (supporting him, their own dream), never a
    general truth.
 
+Before asking, run `python3 scripts/voice-packet.py <screen>`: it lists the words the screen has shown, so the answer to
+question 1 uses a word the player already met, and it prints the lines Wendell kept. `copy-scan.py --lexicon` fails a
+watched word the screen never showed.
+
 A line that cannot answer question 1 is cut. Padding is the usual source: the last clause of a sentence written to
 round it off.
 

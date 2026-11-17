@@ -64,6 +64,11 @@ step vitest $DEV run -- npm run test:vitest
 # rewritten, or, only when the words are his own or a string the reader owns, listed in scripts/copy-scan.allow with why.
 echo; echo "── copy-scan ──"
 python3 scripts/copy-scan.py --strict || { echo "FAILED: rewrite the line (.claude/skills/no-ai-slop/concrete-referent.md)"; failed+=("copy-scan"); }
+# The lexicon gate (scripts/voice_gate.py, spec voice-desk): a watched word on a screen that never showed it, a banned or
+# struck word, and a line Wendell already rewrote all fail. A new coinage only warns. Known debt: scripts/voice-gate.baseline.
+echo; echo "── copy-scan --lexicon ──"
+python3 scripts/copy-scan.py --lexicon || { echo "FAILED: say what the word names on that screen first, or use a plain word (python3 scripts/voice-packet.py <screen>)"; failed+=("copy-scan-lexicon"); }
+python3 -m unittest tests/test_voice_gate.py || failed+=("voice-gate-tests")
 if look_touched; then step look node scripts/local/look-check.mjs; else echo; echo "── look ── (skipped: no change under public/between or public/calrunia; LOOK_CHECK=1 forces it)"; fi
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build

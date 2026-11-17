@@ -27,6 +27,8 @@ rewritten or cut. The rule and the worked examples: .claude/skills/no-ai-slop/co
     python3 scripts/copy-scan.py FILE...      # these files
     python3 scripts/copy-scan.py --text "A sentence, and another."   # one string, for a look row's copy
     python3 scripts/copy-scan.py --ask FILE...  # the reader pass: every sentence with "what, specifically?"
+    python3 scripts/copy-scan.py --lexicon [FILE...]  # the lexicon gate (scripts/voice_gate.py); exit 1 on a new failure
+    python3 scripts/copy-scan.py --pin-words  # rewrite content/voice/common-words.txt from the files copy-scan holds
 
 A string the reader owns (a quoted option they pick, a book reservation) goes in scripts/copy-scan.allow with a reason.
 check.sh runs --strict and fails on any hit (Wendell, 2026-11-17, copy-scan-gate-1: "C, Fail it, and rewrite the 19
@@ -148,7 +150,74 @@ def load_baseline():
     return {ln.rstrip("\n") for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip() and not ln.startswith("#")}
 
 
+def run_lexicon(files):
+    """The lexicon gate: FR-006 to FR-011 of .specify/specs/voice-desk. Known debt sits in scripts/voice-gate.baseline."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import voice_gate
+    gate = voice_gate.Gate()
+    allow = load_allow()
+    base = set()
+    bp = ROOT / "scripts/voice-gate.baseline"
+    if bp.exists():
+        base = {ln.rstrip("\n") for ln in bp.read_text(encoding="utf-8").splitlines() if ln.strip() and not ln.startswith("#")}
+    if not files:
+        files = sorted({f for s in gate.screens.values() for f in s.get("files") or []})
+        files += [ln.strip() for ln in (ROOT / "scripts/copy-scan.files").read_text(encoding="utf-8").splitlines()
+                  if ln.strip() and not ln.startswith("#") and ln.strip() not in files]
+    fails, known, warns = [], 0, {}
+    for f in files:
+        p = ROOT / f
+        if not p.is_file():
+            print(f"copy-scan --lexicon: {f} is listed but missing"); fails.append((f, 0, "missing file", f, f, f"{f}|missing|{f}")); continue
+        sids = gate.screens_of(f) or [None]
+        for lineno, text in slop.prose_from(p):
+            for sid in sids:
+                for _lvl, rule, msg, word in gate.check_string(text, sid):
+                    key = f"{f}|{rule}|{word}"
+                    if key in base:
+                        known += 1
+                    else:
+                        fails.append((f, lineno, rule, msg, text, key))
+            for w in gate.coinages(text, allow):
+                warns.setdefault(f, {}).setdefault(w, lineno)
+    seen = set()
+    for f, lineno, rule, msg, text, key in fails:
+        if (f, key) in seen:
+            continue
+        seen.add((f, key))
+        print(f"FAIL {f}:{lineno or 'jsx'} [{rule}] {msg}\n       in: {text.strip()[:110]}")
+    for f, ws in warns.items():
+        shown = ", ".join(sorted(ws)[:12]) + (f" (+{len(ws) - 12} more)" if len(ws) > 12 else "")
+        print(f"warn {f}: {len(ws)} word(s) in neither the lexicon nor content/voice/common-words.txt: {shown}")
+    print(f"\ncopy-scan --lexicon: {len(seen)} failing, {known} known debt in scripts/voice-gate.baseline, "
+          f"{sum(len(w) for w in warns.values())} coinage warning(s).")
+    return 1 if seen else 0
+
+
+def pin_words():
+    """Common = a word of 4+ letters that shipped player copy uses in at least two files under src/."""
+    import collections
+    seen_in = collections.defaultdict(set)
+    for p in sorted((ROOT / "src").rglob("*")):
+        if p.suffix not in {".ts", ".tsx"} or "__tests__" in p.parts or ".test." in p.name:
+            continue
+        for _, text in slop.prose_from(p):
+            for w in re.findall(r"[A-Za-z][A-Za-z’']*", text):
+                seen_in[w.strip("’'").lower()].add(p)
+    out = sorted(w for w, fs in seen_in.items() if len(w) >= 4 and len(fs) >= 2 and w.isalpha())
+    (ROOT / "content/voice/common-words.txt").write_text(
+        "# Pinned common words (voice-desk FR-011): every word of 4+ letters that player copy under src/ uses in at least two\n"
+        "# files. A word outside this list, the lexicon and scripts/copy-scan.allow warns as a coinage (never fails).\n"
+        "# Regenerate with: python3 scripts/copy-scan.py --pin-words\n" + "\n".join(out) + "\n", encoding="utf-8")
+    print(f"pinned {len(out)} words")
+    return 0
+
+
 def main(argv):
+    if argv[:1] == ["--lexicon"]:
+        return run_lexicon(argv[1:])
+    if argv[:1] == ["--pin-words"]:
+        return pin_words()
     strict = "--strict" in argv
     make_baseline = "--baseline" in argv
     argv = [a for a in argv if a != "--baseline"]

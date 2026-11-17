@@ -21,6 +21,14 @@ line keeps it vague. The rule, his words and worked examples: `concrete-referent
 `python3 scripts/copy-scan.py --ask <file>`; `scripts/copy-scan.py` fails `scripts/local/check.sh` on the gestures it can
 catch.
 
+## Before drafting: run the voice packet
+
+`python3 scripts/voice-packet.py <screen>` (screen ids: `--list`, from `content/voice/screens.yaml`) prints the words that
+screen has shown and what each means, the words it may not use yet, the voice chart, and the lines Wendell kept for
+that screen. Read it first and write from it. A word that never appeared on the screen, or on one the player passed
+before it, fails `python3 scripts/copy-scan.py --lexicon` in `check.sh`. Say what the word names first, or use a plain
+word. Only a line he kept or wrote is law; the packet's lines are his.
+
 ## The rule that keeps breaking
 
 > Pairing clauses where one half already carries the meaning ("It's not X, it's
