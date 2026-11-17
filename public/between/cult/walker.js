@@ -63,7 +63,7 @@ export async function makeWalker({ who = "f", outfit = "B2", outfitDef = null, b
   const STRIDE = 2 * 2 * hipL * 0.32; // metres per full cycle (two steps)
 
   return {
-    holder, X, who, outfit,
+    holder, X, who, outfit, stride: STRIDE,
     // dt: seconds; moving: whether the traveller is walking this frame. The stride advances by the ground covered,
     // so the feet do not skate.
     update(dt, moving) {

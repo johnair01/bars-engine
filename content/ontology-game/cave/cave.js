@@ -1537,104 +1537,73 @@
     if (!rig || !rig.integrate) return 0;
     rig.playing = 0; return rig.integrate.length / rig.integrate.fps;
   }
-  // ---- the player's figure: Average Dusk walking a mocap clip ----------------------------------------------------------
-  // Wendell, 18 October 2026: "I want to pull the average dusk walker into the game". The figure is character.py's
-  // Average Dusk, rigged with Rigify by script and walking CMU mocap subject 35, trial 1 (bars-engine #378,
-  // tools/blender-cloud/rig_mocap), baked for the phone by bake_daemons.py --walker into player/walker.glb. "The data
-  // used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217."
-  // It is worn over the jointed stand-in once it loads: the stand-in's parts hide but its joints keep moving, so the gait
-  // checks, the footfalls and anything hung on the avatar still work, and with no network the stand-in simply stays.
-  // Wendell, 18 October 2026: "the figure should move to a standing position when they stop running and we need a running
-  // animation". The run is CMU subject 35, trial 18 (a jog), retargeted the same way as action MocapRun. Walk and run are
-  // blended by how fast the figure really goes, and the clips turn at the rate that keeps the feet on the ground (each
-  // clip's travel a loop, in the figure's metres, rides in the baked file). Stopped, the figure eases to its rest pose,
-  // standing upright with its arms at its sides, and breathes.
-  var walkerBody = null;
-  function walkerOf(THREE) {
-    if (!walkerBody) {
-      walkerBody = (typeof fetch === "function" ? fetch(BASE + "player/walker.glb") : Promise.reject(new Error("no fetch")))
-        .then(function (r) { if (!r.ok) throw new Error("walker.glb " + r.status); return r.arrayBuffer(); })
-        .then(function (b) { return parseBody(THREE, b); });
-      walkerBody.catch(function () {});
+  // ---- the player's figure: the cultivation figure ---------------------------------------------------------------------
+  // Wendell, 17 November 2026: the Arcade is the only surface that keeps Average Dusk; every other surface wears the cultivation
+  // figure, the one character model the player picks (her or him in the light travel robe, built by public/between/cult/ and
+  // baked into player/cult-f.glb and cult-m.glb by bake_cult.mjs). cult-figure.js reads the GLB through r128: a dozen skinned
+  // meshes on one 67-bone rig, and two clips, Walk (one stride cycle a second) and Idle. It is worn over the jointed stand-in
+  // once it loads: the stand-in's parts hide but its joints keep moving, so the gait checks, the footfalls and anything hung
+  // on the avatar still work, and with no network the stand-in simply stays. Nothing else stands in for the cultivation figure.
+  // The rows below name the bones as the seat pose (seatTargets) knows them, the thigh and shin and foot of a Rigify rig.
+  var CULT_ROWS = { hipL: "thigh.L", kneeL: "shin.L", ankleL: "foot.L", ballL: "toe.L", shoulderL: "upper_arm.L", elbowL: "forearm.L",
+    hipR: "thigh.R", kneeR: "shin.R", ankleR: "foot.R", ballR: "toe.R", shoulderR: "upper_arm.R", elbowR: "forearm.R", spine03: "spine.003" };
+  var cultModule = null;
+  function cultOf() {
+    if (!cultModule) {
+      cultModule = import(BASE + "cult-figure.js"); // an ES module beside the page; a failed load leaves the stand-in
+      cultModule.catch(function () {});
     }
-    return walkerBody;
-  }
-  // the clip's value for one channel at frame f
-  var walkQ = null;
-  function keyAt(ch, f, out) {
-    var F = ch.frames, V = ch.values, k = 0;
-    while (k < F.length - 1 && F[k + 1] <= f) k++;
-    var a = V[k], b = V[Math.min(k + 1, F.length - 1)], u = k + 1 < F.length && F[k + 1] > F[k] ? Math.min(1, Math.max(0, (f - F[k]) / (F[k + 1] - F[k]))) : 0;
-    if (ch.path === "r") { out.set(a[0], a[1], a[2], a[3]); out.slerp((walkQ = walkQ || new out.constructor()).set(b[0], b[1], b[2], b[3]), u).normalize(); }
-    else out.set(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u);
-    return out;
+    return cultModule;
   }
   function wearWalker(THREE, av) {
-    return walkerOf(THREE).then(function (body) {
+    return cultOf().then(function (m) { return m.loadCult(THREE, BASE); }).then(function (c) {
       var d = av.userData;
-      if (d.walker || !body.walk) return;
-      var J = body.joints, bones = J.map(function (r) { var b = new THREE.Bone(); b.name = r[0]; b.position.fromArray(r[2]); b.quaternion.fromArray(r[3]); return b; });
-      J.forEach(function (r, i) { if (r[1] >= 0) bones[r[1]].add(bones[i]); });
-      // the chain alone, before the skeleton is made, so its inverses are the rest pose (as bodyRig does); left at the
-      // identity, every vertex is carried off by its bones' whole rest turn and the figure blows up into shards
-      J.forEach(function (r, i) { if (r[1] < 0) bones[i].updateMatrixWorld(true); });
-      var geo = body.geo.clone(); geo.setAttribute("color", new THREE.BufferAttribute(bodyColors(THREE, [0, 0, 0, d.look.color], body), 3));
-      var mat = new THREE.MeshStandardMaterial({ vertexColors: true, skinning: true, roughness: 0.75, transparent: true, emissive: d.look.color, emissiveIntensity: 0.1 });
-      var m = new THREE.SkinnedMesh(geo, mat);
-      J.forEach(function (r, i) { if (r[1] < 0) m.add(bones[i]); });
-      m.bind(new THREE.Skeleton(bones), new THREE.Matrix4()); // the rig sits in the mesh's own space, so the bind is the identity
-      m.frustumCulled = false; m.scale.setScalar(DESIGN_H / BODY_FRAME_H); m.userData.walker = true;
-      d.body.traverse(function (o) { if (o.isMesh) o.visible = false; });
-      d.body.add(m);
-      // standing is the rest pose: upright, legs together, arms at the sides
-      var W = body.walk, Rn = body.run, chans = W.channels.map(function (ch) {
-        var r = J[ch.joint], run = Rn && Rn.channels.filter(function (k) { return k.joint === ch.joint && k.path === ch.path; })[0];
-        return { ch: ch, run: run || null, bone: bones[ch.joint], idle: ch.path === "r" ? new THREE.Quaternion().fromArray(r[3]) : new THREE.Vector3().fromArray(r[2]) };
+      if (d.walker || !c.clips.Walk) return;
+      var scale = DESIGN_H / c.height, holder = c.scene;
+      holder.scale.setScalar(scale);
+      // the cave's own glow rides on the figure as it did on the worn body before it: the look's colour as a faint emissive wash,
+      // not on the outline hulls (the back-faced shells)
+      c.meshes.forEach(function (o) { o.userData.walker = true; o.material.transparent = true; if (o.material.side !== THREE.BackSide) o.material.emissive = new THREE.Color(d.look.color); });
+      d.body.traverse(function (o) { if (o.isMesh && !o.userData.walker) o.visible = false; });
+      d.body.add(holder);
+      // The rig's own root bone turns the Blender-style rig upright and carries nothing else, so the rows start at the hips,
+      // which take the root's turn: the seat pose below works in the body's upright space, from the hips down.
+      var rootBone = c.bones.filter(function (b) { return b.name === "root"; })[0] || null, rootQ = rootBone ? rootBone.quaternion.clone() : new THREE.Quaternion();
+      var bones = c.bones.filter(function (b) { return b !== rootBone; }), rows = bones.map(function (b) {
+        var top = !b.parent || b.parent === rootBone, p = b.position.clone(), q = b.quaternion.clone();
+        if (top) { p.applyQuaternion(rootQ); if (rootBone) p.add(rootBone.position); q.premultiply(rootQ); }
+        return [CULT_ROWS[b.name] || b.name, top ? -1 : bones.indexOf(b.parent), p.toArray(), q.toArray()];
       });
-      // the run starts its loop at another point of the stride: the run frame whose legs match the walk's first frame, so
-      // the two blend in step
-      var legs = chans.filter(function (c) { return c.run && c.ch.path === "r" && /^(thigh|shin)\.[LR]$/.test(J[c.ch.joint][0]); });
-      var off = 0, bestD = Infinity, qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
-      for (var f = 0; Rn && f < Rn.length; f++) {
-        var dd = 0; legs.forEach(function (c) { dd += keyAt(c.run, f, qa).angleTo(keyAt(c.ch, 0, qb)); });
-        if (dd < bestD) { bestD = dd; off = f; }
-      }
-      var ci = J.findIndex(function (r) { return r[0] === "spine.003"; }), chest = chans.some(function (c) { return c.ch.joint === ci && c.ch.path === "r"; }) ? bones[ci] : null;
-      d.walker = { T3: THREE, mesh: m, mat: mat, bones: bones, rows: J, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
-        tq: new THREE.Quaternion(), tq2: new THREE.Quaternion(), tv: new THREE.Vector3(), tv2: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion(), ws: new THREE.Vector3() };
+      var mixer = new THREE.AnimationMixer(holder), walk = mixer.clipAction(c.clips.Walk), idle = mixer.clipAction(c.clips.Idle);
+      walk.play(); idle.play(); walk.setEffectiveWeight(0); idle.setEffectiveWeight(1);
+      // every bone is set each frame by the mixer, the root's place and each bone's turn, so the seat pose (seatWalker) always
+      // starts from the clip's pose
+      var chans = []; bones.forEach(function (b, i) { chans.push({ ch: { path: "r", joint: i } }); chans.push({ ch: { path: "p", joint: i } }); });
+      var ci = bones.map(function (b) { return b.name; }).indexOf("spine03"), rootInv = rootQ.clone().conjugate();
+      d.walker = { T3: THREE, meshes: c.meshes, mesh: c.meshes.slice().sort(function (a, b) { return b.geometry.attributes.position.count - a.geometry.attributes.position.count; })[0],
+        mat: c.meshes[0].material, bones: bones, rows: rows, walk: { length: 24 }, run: null, chans: chans, idleFrame: 0, chest: ci >= 0 ? bones[ci] : null,
+        rootInv: rootInv, mixer: mixer, clipWalk: walk, clipIdle: idle, cycle: c.cycle * scale, ph: 0, r: 0, v: 0, at: null, f: 0, who: c.who, root: holder,
+        q1: new THREE.Quaternion(), ax: new THREE.Vector3(1, 0, 0), tv2: new THREE.Vector3(), ws: new THREE.Vector3() };
     });
   }
-  // One frame of the walker. Its speed over the ground (measured from where the figure was) picks the blend of walk and run
-  // and the rate the shared stride phase turns at; the stride is blended from the rest pose by the walk's weight g, with
-  // the stand-in's opacity and glow, and its breath when standing.
+  // One frame of the figure. Its speed over the ground (measured from where it was) sets how fast the Walk clip turns, so the
+  // feet keep to the ground, and the walk's weight g blends it in from the Idle; standing, it breathes. The look's opacity and
+  // glow ride on its materials.
   function poseWalker(d, dt, g, b) {
-    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null, py = p ? p.y : 0;
-    var v = 0;
+    var w = d.walker, p = w.root.parent ? w.root.getWorldPosition(w.tv2) : null, v = 0;
     if (p && w.at && dt > 0) v = Math.min(30, Math.hypot(p.x - w.at.x, p.z - w.at.z) / dt);
     if (p) w.at = (w.at || p.clone()).copy(p);
     w.v += (v - w.v) * Math.min(1, dt * 8);
-    var ws = w.mesh.getWorldScale(w.ws).x || 1, tW = (W.travel || 1.45) * ws, tR = Rn ? (Rn.travel || 2.46) * ws : tW;
-    // natural speeds, world units a second: the walk about 2.7 in the cave, the run about 6.4
-    var vW = tW / (W.length / 24), vR = Rn ? tR / (Rn.length / 24) : vW;
-    var rt = Rn ? Math.max(0, Math.min(1, (w.v - 1.2 * vW) / Math.max(0.1, 0.8 * vR - 1.2 * vW))) : 0;
-    w.r += (rt - w.r) * Math.min(1, dt * 4);
-    var r = w.r;
-    if (g > 0.01) w.ph = (w.ph + dt * Math.max(w.v, 0.6 * vW) / (tW + (tR - tW) * r)) % 1;
-    var f = w.ph * W.length, fr = Rn ? ((w.ph * Rn.length + w.runOff) % Rn.length) : 0;
-    w.f = f;
-    for (var i = 0; i < w.chans.length; i++) {
-      var c = w.chans[i];
-      if (c.ch.path === "r") {
-        keyAt(c.ch, f, w.tq); if (c.run && r > 0) w.tq.slerp(keyAt(c.run, fr, w.tq2), r);
-        c.bone.quaternion.copy(c.idle).slerp(w.tq, g);
-      } else {
-        keyAt(c.ch, f, w.tv); if (c.run && r > 0) w.tv.lerp(keyAt(c.run, fr, w.tv2), r);
-        c.bone.position.copy(c.idle).lerp(w.tv, g);
-      }
-    }
+    var ws = w.root.getWorldScale(w.ws).x || 1, travel = w.cycle * ws / (w.root.scale.x || 1), vNat = travel / 0.95; // a cycle in about 0.95 s at its natural pace
+    w.clipWalk.setEffectiveWeight(g); w.clipIdle.setEffectiveWeight(1 - g);
+    w.clipWalk.timeScale = g > 0.01 ? Math.max(w.v, 0.6 * vNat) / travel : 1;
+    w.mixer.update(dt);
+    w.f = w.clipWalk.time * 24 % 24; // the Walk clip's frame now, at 24 a second
     if (w.chest) w.chest.quaternion.multiply(w.q1.setFromAxisAngle(w.ax, -0.04 * (b - 0.5) * (1 - g)));
-    w.mat.opacity = d.mat.opacity; w.mat.emissiveIntensity = d.mat.emissiveIntensity * 0.6;
+    var op = d.mat.opacity;
+    w.meshes.forEach(function (o) { o.material.opacity = op; o.material.transparent = op < 0.999; if (o.material.side !== w.T3.BackSide) o.material.emissiveIntensity = d.mat.emissiveIntensity * 0.6; });
   }
+
   // Sitting down (Wendell, 24 October 2026: "Instead of sitting the characters legs are just going through the ground"): the
   // figure used to be lowered whole, so its legs went down through the floor. This poses it seated instead, k from 0 (as the
   // walk or the idle left it) to 1 (seated), its hips lowered to the seat and its feet kept on the floor. On the floor (the
@@ -1663,8 +1632,10 @@
     var T = w.seatAt && w.seatAt.on === on ? w.seatAt : (w.seatAt = seatTargets(w, on));
     // a bone the walk's keys do not set this frame starts from its rest turn, so the pose never builds up frame on frame
     for (var i = 0; i < T.q.length; i++) if (T.q[i]) { if (!T.driven[i]) w.bones[i].quaternion.copy(T.lq[i]); w.bones[i].quaternion.slerp(T.q[i], k); }
-    if (!T.drivenAt) w.bones[T.root].position.copy(T.lp[T.root]);
-    w.bones[T.root].position.lerp(T.rootAt, k);
+    // the hips' place is kept in the rig's own frame, under its root's turn when it has one (the cultivation figure)
+    var rb = w.bones[T.root], up = function (v) { return w.rootInv ? v.clone().applyQuaternion(w.rootInv) : v; };
+    if (!T.drivenAt) rb.position.copy(up(T.lp[T.root]));
+    rb.position.lerp(up(T.rootAt), k);
   }
   // The seated pose's bone turns, worked out once per height of what it sits on, from the body's rest pose.
   function seatTargets(w, on) {
@@ -2421,7 +2392,7 @@
     }).catch(function (e) { notice("The cave could not open: " + e.message, true); });
   }
   // The title's scene: the kit's portal arch as the cave mouth, a tunnel going back into blue dark, spires and glowing caps,
-  // and the player's figure (Average Dusk, worn as in the cave) standing in the mouth, breathing, its light at the chest.
+  // and the player's figure (the cultivation figure, worn as in the cave) standing in the mouth, breathing, its light at the chest.
   // It draws only while the title is showing; leaving it for the cave or the room lets its renderer go, and coming back makes
   // a new one.
   function titleScene(stage, home, onShow) {
@@ -2457,7 +2428,7 @@
       var deep = new THREE.PointLight(0x6f9cff, 2.2, 30, 2); deep.position.set(0, 2.2, -10); scene.add(deep);
       var rim = new THREE.PointLight(0x9fd8ff, 0.8, 14, 2); rim.position.set(-3, 1.2, 1.6); scene.add(rim);
       // the figure, the light at its chest and the warm pool that light makes on the floor
-      // hidden until Average Dusk is worn, so the stand-in never flashes; if the walker cannot load, the stand-in shows
+      // hidden until the cultivation figure is worn, so the stand-in never flashes; if the walker cannot load, the stand-in shows
       var av = buildAvatar(THREE, "other", true), d = av.userData; av.position.set(0.15, 0, 0.6); av.rotation.y = -0.3; av.scale.setScalar(0.72); scene.add(av);
       av.visible = false; Promise.resolve(d.wearing).then(function () { av.visible = true; }, function () { av.visible = true; });
       var lantern = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff1d0 }));
@@ -4941,7 +4912,7 @@
       Object.keys(J).forEach(function (k) { r[k] = J[k].rotation.x; });
       return { names: Object.keys(J), x: r, g: avatar.userData.g, hipsY: J.hips.position.y, spineScale: J.spine.scale.y, shoulderY: J.shoulderL.position.y };
     };
-    // The worn walker (Average Dusk on its mocap clip): whether it is on, the clip frame now, and the stand-in parts still shown.
+    // The worn walker (the cultivation figure on its Walk clip): whether it is on, the clip frame now, and the stand-in parts still shown.
     api.walker = function () {
       var w = avatar && avatar.userData.walker, shown = 0;
       if (!w) return { worn: false };
@@ -5301,13 +5272,13 @@
       function seatFit() {
         var w = avatar.userData.walker; if (!w) return null;
         var m = w.mesh, geo = m.geometry, pos = geo.attributes.position, si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight, v = new THREE.Vector3();
-        var legs = {}; w.bones.forEach(function (b, i) { if (/^(thigh|shin|foot|toe)\./.test(b.name)) legs[i] = true; });
+        var legs = {}; w.rows.forEach(function (r, i) { if (/^(thigh|shin|foot|toe)\./.test(r[0])) legs[i] = true; });
         avatar.updateMatrixWorld(true);
-        var hipY = Math.min.apply(null, ["thigh.L", "thigh.R"].map(function (n) { var b = w.bones.filter(function (x) { return x.name === n; })[0]; return b.getWorldPosition(v).y; }));
+        var hipY = Math.min.apply(null, ["thigh.L", "thigh.R"].map(function (n) { var b = w.bones[w.rows.map(function (r) { return r[0]; }).indexOf(n)]; return b.getWorldPosition(v).y; }));
         var low = Infinity, reach = 0, inside = 0, n = 0, zr = [Infinity, -Infinity];
         for (var i = 0; i < pos.count; i++) {
           var top = -1, tw = 0; for (var j = 0; j < 4; j++) if (sw.array[i * 4 + j] > tw) { tw = sw.array[i * 4 + j]; top = si.array[i * 4 + j]; }
-          if (!legs[top]) continue;
+          if (!legs[w.bones.indexOf(m.skeleton.bones[top])]) continue;
           v.fromBufferAttribute(pos, i); m.boneTransform(i, v); v.applyMatrix4(m.matrixWorld); n++;
           var y = v.y, dx = v.x - SEAT.x, dz = (v.z - SEAT.z - 0.15) / 1.15, rr = Math.hypot(dx, dz), rAt = 0.7 - 0.08 * Math.max(0, Math.min(1, y / SEAT_TOP));
           zr[0] = Math.min(zr[0], v.z); zr[1] = Math.max(zr[1], v.z); low = Math.min(low, y); reach = Math.max(reach, rr / 0.62);
