@@ -272,7 +272,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
 
         {isMake && (
           <p style={{ position: 'absolute', zIndex: 4, left: 0, right: 0, bottom: 86, margin: 0, textAlign: 'center', color: MUTED, fontSize: '.78rem' }}>
-            Tap the pegs, the bowl and the lanterns. Tap the figure to turn it.{ready === 'no' ? ' The figure did not load on this device; the walk works without it.' : ''}
+            Tap the pegs, the bowl and the lanterns. Tap the figure to turn it.{ready === 'no' ? ' The figure failed to load on this device. You can walk on without it.' : ''}
           </p>
         )}
         <div style={{ position: 'absolute', zIndex: 5, left: 0, right: 0, bottom: 4, display: 'flex', justifyContent: 'center', gap: 6 }} aria-hidden>

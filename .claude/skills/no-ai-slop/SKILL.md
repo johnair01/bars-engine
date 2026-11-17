@@ -14,6 +14,13 @@ project. This is the bars-engine mirror so a fresh clone carries the rule too â€
 edit the user-level one first, then mirror here. The rule was first written for
 the book in `The Library/.claude/skills/llm-writing/SKILL.md`.
 
+## First: every line names its thing
+
+Ask each line **what, specifically?** If the answer is not a word in the line, rewrite it or cut it. Shortening a vague
+line keeps it vague. The rule, his words and worked examples: `concrete-referent.md` beside this file. The reader pass is
+`python3 scripts/copy-scan.py --ask <file>`; `scripts/copy-scan.py` fails `scripts/local/check.sh` on the gestures it can
+catch.
+
 ## The rule that keeps breaking
 
 > Pairing clauses where one half already carries the meaning ("It's not X, it's
