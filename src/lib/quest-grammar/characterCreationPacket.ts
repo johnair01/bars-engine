@@ -50,7 +50,7 @@ export function compileCharacterCreationPacket(
     beatType: 'orientation',
     wordCountEstimate: 25,
     emotional: { channel: 'Neutrality', movement: 'translate' },
-    text: '**What draws you most right now?** — A quick signal to personalize your journey into the Conclave.',
+    text: '**What draws you most right now?** Your answer shapes how the sect teaches you.',
     choices: lensChoices,
     anchors: { goal: 'orientation' },
   })
@@ -128,7 +128,7 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 40,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**How do you approach the heist?** Each archetype brings a different lens — a different way of moving through the world.',
+      text: '**How do you help the people around you?** Each archetype is one way of showing up for others.',
       choices: archetypeChoices,
       anchors: {},
     })
