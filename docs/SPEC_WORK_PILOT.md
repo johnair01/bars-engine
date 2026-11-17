@@ -10,7 +10,7 @@ Publication locks the task key, creates one immutable ticket per revision, updat
 
 ## Claim, stop and return
 
-The existing lane claim API checks the current ticket, open gate and verified dependencies in its SQL claim. Lease expiry and release hold stale or blocked tickets. A worker holding a spec ticket can call `POST /api/work/spec-tasks/<ticket-id>/block` with the concrete question, checked record, missing decision, person, why, next step, options and recommendation. The task is held and a deterministic card ID is reserved before the question row is posted. A retry uses the same ID; a failed post leaves the ticket held.
+The existing lane claim API checks the current ticket, open gate and verified dependencies in its SQL claim. Lease expiry and release hold stale or blocked tickets. Work reopened after a wait passes to the next lit allowed lane when its resting lane is dry. A worker holding a spec ticket can call `POST /api/work/spec-tasks/<ticket-id>/block` with the concrete question, checked record, missing decision, person, why, next step, options and recommendation. The task is held and a deterministic card ID is reserved before the question row is posted. A retry uses the same ID; a failed post leaves the ticket held.
 
 The Council calls `.../resume` only after an owner-saved `resume` answer on that Board card. The Board answer does not mint a second generic ticket for this spec blocker. A worker's ordinary `done` records submitted evidence but does not open dependents. The Council calls `.../verify` with reviewer and checked evidence; only then does a dependent ticket become ready.
 

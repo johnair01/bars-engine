@@ -23,6 +23,12 @@ export function validateSpecTask(t: SpecTaskDraft): string | null {
   return null
 }
 
+async function laneAfterWait(db: Parameters<typeof dryLanes>[0], ticket: { lane: string; lanes: string[] }) {
+  const dry = await dryLanes(db)
+  if (!dry.has(ticket.lane)) return ticket.lane
+  return ticket.lanes.slice(ticket.lanes.indexOf(ticket.lane) + 1).find(lane => !dry.has(lane)) ?? ticket.lane
+}
+
 /** One task revision becomes one immutable ticket; publication and predecessor retirement share a transaction. */
 export async function publishSpecTask(db: PrismaClient, t: SpecTaskDraft) {
   const invalid = validateSpecTask(t)
@@ -91,7 +97,8 @@ export async function resumeSpecTicket(db: PrismaClient, ticketId: string) {
     const deps = await tx.specWorkTask.findMany({ where: { key: { in: task.dependencies } } })
     const ready = task.dependencies.every(key => deps.some(d => d.key === key && d.verifiedAt))
     await tx.specWorkTask.update({ where: { key: task.key }, data: { gate: 'open' } })
-    await tx.workTicket.updateMany({ where: { id: ticketId, state: 'held' }, data: { state: ready ? 'ready' : 'held' } })
+    await tx.workTicket.updateMany({ where: { id: ticketId, state: 'held' },
+      data: { state: ready ? 'ready' : 'held', lane: ready ? await laneAfterWait(tx, ticket) : ticket.lane } })
     return { taskKey: task.key, ticketId, cardId: task.blockerCardId, answer, ready }
   })
 }
@@ -109,7 +116,9 @@ export async function verifySpecTicket(db: PrismaClient, ticketId: string, revie
     for (const next of waiting) {
       const deps = await tx.specWorkTask.findMany({ where: { key: { in: next.dependencies } } })
       if (next.dependencies.every(key => deps.some(d => d.key === key && d.verifiedAt))) {
-        await tx.workTicket.updateMany({ where: { id: next.ticketId, state: 'held' }, data: { state: 'ready' } })
+        const waitingTicket = await tx.workTicket.findUniqueOrThrow({ where: { id: next.ticketId } })
+        await tx.workTicket.updateMany({ where: { id: next.ticketId, state: 'held' },
+          data: { state: 'ready', lane: await laneAfterWait(tx, waitingTicket) } })
       }
     }
     return { taskKey: task.key, ticketId, verified: true }

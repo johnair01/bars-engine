@@ -33,7 +33,7 @@ const NOTHING = 'window.__BOARD_DATA__ = null;\n'
 
 /** The board's data as the script body. The page reads it before its own tag, so a board that grows past the page's
  * size arrives here whole; U+2028 and U+2029 are legal JSON and were once illegal inside a JS object literal. */
-export function script(json: string): string {
+function script(json: string): string {
   const body = json.trim().replace(/;\s*$/, '').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
   return `window.__BOARD_DATA__ = ${body};\n`
 }

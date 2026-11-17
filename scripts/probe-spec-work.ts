@@ -3,19 +3,21 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { PrismaClient } from '@prisma/client'
 import { blockSpecTicket, publishSpecTask, resumeSpecTicket, verifySpecTicket } from '../src/lib/work/spec-task'
-import { claimTicket, moveTicket, returnLapsed } from '../src/lib/work/queue'
+import { claimTicket, moveTicket, returnLapsed, setLaneDry } from '../src/lib/work/queue'
 
 if (process.env.BARS_LOCAL !== '1') throw new Error('Local database only')
 const db = new PrismaClient()
 const run = randomUUID().slice(0, 8)
 const a = `spec:pilot/${run}/T001`, b = `spec:pilot/${run}/T002`
 const c = `spec:pilot/${run}/T003`
+const d = `spec:pilot/${run}/T004`
 const task = (key: string, revision: string, dependencies: string[] = []) => ({
   key, revision, title: key, brief: `Complete ${key} and return evidence.`,
   basis: { spec: 'pilot', task: key }, lanes: ['deepai'], dependencies,
 })
 
 async function main() {
+  await setLaneDry(db, 'deepai', false, null)
   const [first, repeat] = await Promise.all([
     publishSpecTask(db, task(a, 'a'.repeat(12))), publishSpecTask(db, task(a, 'a'.repeat(12))),
   ])
@@ -53,8 +55,18 @@ async function main() {
   await moveTicket(db, oldClaim.ticket.id, 'deepai', 'release', 'Superseded during claim')
   assert.equal((await db.workTicket.findUniqueOrThrow({ where: { id: oldClaim.ticket.id } })).state, 'held')
   assert.equal(await claimTicket(db, 'deepai', 'stale release', new Date(), oldClaim.ticket.id), null)
+  const beforeDry = await publishSpecTask(db, { ...task(d, '1'.repeat(12)), lanes: ['deepai', 'freebuff'] })
+  assert.equal((await claimTicket(db, 'deepai', 'dry-lane worker', new Date(), beforeDry.ticket.id))?.id, beforeDry.ticket.id)
+  const dryBlock = await blockSpecTicket(db, beforeDry.ticket.id)
+  await db.boardSave.create({ data: { board: 'council', collection: 'questions', docId: dryBlock.cardId,
+    source: 'board-owner', data: { choice: 'resume' } } })
+  await setLaneDry(db, 'deepai', true, 'Local pilot')
+  await resumeSpecTicket(db, beforeDry.ticket.id)
+  assert.equal((await db.workTicket.findUniqueOrThrow({ where: { id: beforeDry.ticket.id } })).lane, 'freebuff')
+  await setLaneDry(db, 'deepai', false, null)
   console.log(JSON.stringify({ duplicate: 'one ticket', dependent: 'held', stale: 'refused',
-    blocked: 'refused after lease expiry', staleRelease: 'held', ownerRuling: 'required', evidence: 'verified before dependent claim',
+    blocked: 'refused after lease expiry', staleRelease: 'held', ownerRuling: 'required',
+    dryLane: 'passed to freebuff', evidence: 'verified before dependent claim',
     blockerCardId: block.cardId, run }))
 }
 
