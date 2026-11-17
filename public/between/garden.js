@@ -583,7 +583,7 @@ const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOS
 const EMBER_RISEN = PREVIEW_HOST && KQ.get("ember") === "risen";   // previews: ?ember=risen puts a risen ember in the satchel (a finished sit wakes it)
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 // previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
-// E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
+// E.g. ?nook=1&sit=hearth&tea=sip.
 const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;

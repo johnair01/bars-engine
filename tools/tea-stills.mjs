@@ -1,9 +1,9 @@
 /* Stills of the tea at the hearth, on the page itself (public/ served with the Between's page, the store down, headless Chromium
    at a phone viewport, as tools/between-live-probe.mjs does): sits you at the hearth with ?tea=pour, holds the pour at each beat
    (tea.freeze) and shoots the view the page gives you, and with --side a second camera from your right, close, to see the cup
-   in the hand and the table clear of the robe. Writes <out>/<beat>.jpg (and <beat>-side.jpg). --drink r4 shoots round 4's drink
-   (?drink=r4) at its beats; the default is round 5's baked drink (tea-drink.js) at its own.
-     node tools/tea-stills.mjs [--out DIR] [--vp 390x844] [--side] [--drink r4] */
+   in the hand and the table clear of the robe. Writes <out>/<beat>.jpg (and <beat>-side.jpg).
+   The drink is the cultivation figure's baked clips (tea-drink.js) at their own beats.
+     node tools/tea-stills.mjs [--out DIR] [--vp 390x844] [--side] */
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,11 +14,9 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const ROOT = path.join(__dirname, '..', 'public'), OUT = arg('--out', '.'), SIDE = process.argv.includes('--side');
 const [VW, VH] = arg('--vp', '390x844').split('x').map(Number);
-const R4 = arg('--drink', 'r5') === 'r4';
-const BEATS = R4 ? { pour: 3.6, lift: 5.9, lap: 7.6, sip: 9.3, savour: 11.6 }   // seconds into the pour (tea-pose.js TEA)
-  : { reach: 2.0, pour: 3.6, lift: 6.2, lap: 7.9, nose: 9.6, sip1: 12.2, sip2: 17.4, sip3: 22.6, savour: 24.6, hold: 27.5 };   // tea-drink.glb's timeline
-const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/ontology-game/between/route.ts'), 'utf8');
-const PAGE = route.slice(route.indexOf('const PAGE = `') + 14, route.indexOf('`', route.indexOf('const PAGE = `') + 14));
+const BEATS = { reach: 2.0, pour: 3.6, lift: 6.2, lap: 7.9, nose: 9.6, sip1: 12.2, sip2: 17.4, sip3: 22.6, savour: 24.6, hold: 27.5 };   // the baked timeline
+const route = fs.readFileSync(path.join(__dirname, '..', 'src/lib/between/page.ts'), 'utf8');
+const PAGE = route.slice(route.indexOf('BETWEEN_PAGE = `') + 16, route.indexOf('`', route.indexOf('BETWEEN_PAGE = `') + 16));
 const TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
@@ -32,8 +30,15 @@ const server = http.createServer((req, res) => {
   await new Promise(a => server.listen(0, a)); const port = server.address().port;
   const b = await chromium.launch(); fs.mkdirSync(OUT, { recursive: true });
   const ctx = await b.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 }); const p = await ctx.newPage();
+  // offline: serve three from THREE_DIR (npm i --no-save --prefix /tmp/t three@0.160.0 three-mesh-bvh@0.8.3) when set
+  if (process.env.THREE_DIR) await p.route(/cdn\.jsdelivr\.net\/npm\//, r => {
+    const m = r.request().url().match(/npm\/(three-mesh-bvh)@[^/]+\/(.*)$|npm\/three@[^/]+\/(.*)$/);
+    const f = m[1] ? path.join(process.env.THREE_DIR, 'three-mesh-bvh', m[2]) : path.join(process.env.THREE_DIR, 'three', m[3]);
+    fs.existsSync(f) ? r.fulfill({ path: f, contentType: 'text/javascript' }) : r.abort();
+  });
+  p.on('console', m => { if (m.type() === 'error') console.error('console:', m.text().slice(0, 200)); });
   p.on('pageerror', e => console.error('PAGEERR', e.message, (e.stack || '').split('\n').slice(1, 3).join(' ')));
-  await p.goto(`http://localhost:${port}/ontology-game/between?nook=1&sit=hearth&tea=pour${R4 ? '&drink=r4' : ''}`);
+  await p.goto(`http://localhost:${port}/ontology-game/between?nook=1&sit=hearth&tea=pour`);
   await p.waitForFunction(() => window.__between && window.__between.meState.body && document.getElementById('loading').hidden, null, { timeout: 180000 });
   await p.waitForFunction(() => { const t = window.__between.tea(); return t && t.holding() && t.state(); }, null, { timeout: 240000 });
   for (const [beat, sec] of Object.entries(BEATS)) {
@@ -41,7 +46,7 @@ const server = http.createServer((req, res) => {
     await p.waitForTimeout(9000);   // software GL draws a few frames a second: let the view ease in
     await p.screenshot({ path: path.join(OUT, beat + '.jpg'), quality: 85 });
     const st = await p.evaluate(() => window.__between.tea().state());
-    console.log(beat, JSON.stringify({ phase: st && st.phase, clip: st && st.clip, full: st && st.full, drink: st && st.drink || 'r4' }));
+    console.log(beat, JSON.stringify({ phase: st && st.phase, clip: st && st.clip, full: st && st.full, drink: st && st.drink }));
     if (SIDE) {   // from the figure's right, close, level with the cup
       await p.evaluate(() => { const B = window.__between, h = B.meState.body.holder, y = h.rotation.y, c = B.tea().cup.getWorldPosition(h.position.clone());
         const fx = Math.sin(y), fz = Math.cos(y), rx = -fz, rz = fx;   // the figure's right

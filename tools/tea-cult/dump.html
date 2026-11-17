@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>tea cult dump</title>
+<script type="importmap">{ "imports": {
+  "three": "/__t/three/build/three.module.js",
+  "three/addons/": "/__t/three/examples/jsm/",
+  "three-mesh-bvh": "/__t/three-mesh-bvh/build/index.module.js" } }</script>
+<script type="module">
+/* The kneeling cultivation figure at a cushion, as data for art/between/tea-drink/build.py (the rebake of the Between tea off
+   Average Dusk): every bone's parent, local turn and place, rest turn and place, and world matrix, in the holder's frame (the
+   figure's own metres, y up from the cushion's floor, +z the way it faces). Driven by tools/tea-cult/dump.mjs through a browser. */
+import * as THREE from "three";
+import { makeCultBody, useKneel } from "/public/between/cult/player-body.js";
+import { makeKneel } from "/public/between/cult/kneel.js";
+import * as FG from "/public/between/cult/make/figure.js";
+useKneel(makeKneel);
+window.dump = async (who, outfit, top) => {
+  const b = await makeCultBody({ who, outfit });
+  b.pose(0, 0.016, true, false, top);
+  const F = b.cult.X.F; F.root.updateMatrixWorld(true); b.holder.updateMatrixWorld(true);
+  const out = { who, outfit, top, stature: F.stature, bones: {} };
+  for (const [n, bone] of Object.entries(F.bones)) {
+    out.bones[n] = { parent: bone.parent && bone.parent.isBone ? bone.parent.name : null, q: bone.quaternion.toArray(), p: bone.position.toArray(),
+      q0: F.rest[n].toArray(), w: b.holder.matrixWorld.clone().invert().multiply(bone.matrixWorld).toArray() };
+  }
+  /* the head's front at the lips' height, to put the mouth: the skinned head points' reach forward of the head bone */
+  const head = F.bones.head, hw = head.getWorldPosition(new THREE.Vector3());
+  const pts = []; const m = F.mesh; const P = m.geometry.attributes.position, v = new THREE.Vector3(); m.updateMatrixWorld(true);
+  for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); pts.push([v.x, v.y, v.z]); }
+  out.skin = pts.filter((_, i) => i % 3 === 0).filter(p => p[1] > hw.y - 0.25 && p[1] < hw.y + 0.25);
+  /* the bind pose's world matrices too: the palm faces down there (r0g8/ubc.js PALM_Y), which gives each hand its palm in the kneel */
+  FG.resetPose(F); F.root.updateMatrixWorld(true);
+  for (const [n, bone] of Object.entries(F.bones)) out.bones[n].w0 = b.holder.matrixWorld.clone().invert().multiply(bone.matrixWorld).toArray();
+  out.f = F.fr.f.toArray(); out.l = F.fr.l.toArray(); out.k = F.stature / 1.75;
+  window.__b = b; window.__THREE = THREE;
+  return out;
+};
+window.ready = true;
+</script>
