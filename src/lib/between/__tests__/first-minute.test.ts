@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 // The first minute (public/calrunia/first-minute.js, Still C): the rules learned by doing them, three vines on the doorway.
-import { ACTS, BEATS, beatAt, CAPTIONS, inviteDoorway, minuteState, minuteWrite, STEPS } from '../../../../public/calrunia/first-minute.js'
+import { ACTS, BEATS, beatAt, CAPTIONS, PROMPTS, inviteDoorway, minuteState, minuteWrite, STEPS } from '../../../../public/calrunia/first-minute.js'
 import { homeWrite, merge, type Doc } from '@/lib/between/rules'
 
 describe('first minute: where it stands', () => {
@@ -96,5 +96,11 @@ describe('first minute: the invitation doorway (br-orient-each-invite, 2026-10-2
     expect(inviteDoorway({}, false)).toBe('minute')
     expect(inviteDoorway(null, false)).toBe('minute')
     expect(inviteDoorway({ minute: { ember: 1, mirror: 2 } }, false)).toBe('minute')
+  })
+
+  it('the ember beat asks for the first check-in at the cold hearth, not a bare tap', () => {
+    expect(PROMPTS.ember).toMatch(/name what you feel/)
+    expect(PROMPTS.ember).toMatch(/ash/)
+    expect(PROMPTS.ember).not.toBe('The hearth is cold and thick with old ash. Tap it.')
   })
 })
