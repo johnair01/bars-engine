@@ -18,7 +18,10 @@ const files = {
   '/ontology-game/cave/textures/dry_stone.jpg': ['cave/textures/dry_stone.jpg', 'image/jpeg'],
   '/ontology-game/cave/textures/crystal_vein.jpg': ['cave/textures/crystal_vein.jpg', 'image/jpeg'],
   '/ontology-game/figure.glb': ['figure.glb', 'model/gltf-binary'],
-  '/ontology-game/cave/player/walker.glb': ['cave/player/walker.glb', 'model/gltf-binary'], // the player's own figure (bake_daemons.py --walker)
+  '/ontology-game/cave/cult-figure.js': ['cave/cult-figure.js', 'text/javascript'], // the player's own figure, the cultivation figure (bake_cult/)
+  '/ontology-game/cave/vendor/GLTFLoader.js': ['cave/vendor/GLTFLoader.js', 'text/javascript'],
+  '/ontology-game/cave/vendor/SkeletonUtils.js': ['cave/vendor/SkeletonUtils.js', 'text/javascript'],
+  '/ontology-game/cave/player/cult-f.glb': ['cave/player/cult-f.glb', 'model/gltf-binary'],
 };
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];

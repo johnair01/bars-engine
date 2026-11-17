@@ -85,9 +85,9 @@ ok(/holds the whole of the stone/.test(w.live), 'at the crown, the answered pool
 s = await basinState();
 ok(s.view === 'near', 'the basin opens on the close follow camera: ' + s.view);
 ok(await page.evaluate(() => document.querySelector('[data-basin-view]') && document.querySelector('button[data-basin-view]').getAttribute('aria-pressed') === 'false'), 'the view button is there, not pressed');
-// the figure: the standard character of the nook and the Between (dusk-figure.js), not the stand-in; dressed, in the default coat
-ok(await page.waitForFunction(() => document.querySelector('[data-basin]').getAttribute('data-basin-figure') === 'dusk', null, { timeout: 20000 }).then(() => true, () => false), 'the figure is the standard character (Average Dusk, dressed by the Between\'s wardrobe), not the stand-in');
-ok(await page.evaluate(() => { const d = window.__oagDusk; return !!(d && d.dressed && d.layers.robe && d.layers.pants && d.holder.parent); }), 'it wears the robe and the trousers, and stands in the scene');
+// the figure: the standard character of the nook and the Between (cult-figure.js), not the stand-in; the cultivation figure in the light travel robe
+ok(await page.waitForFunction(() => document.querySelector('[data-basin]').getAttribute('data-basin-figure') === 'cult', null, { timeout: 20000 }).then(() => true, () => false), 'the figure is the standard character (the cultivation figure), not the stand-in');
+ok(await page.evaluate(() => { const d = window.__oagCult; return !!(d && d.dressed && d.stride > 0 && d.holder.parent); }), 'it is dressed, has a stride, and stands in the scene');
 await page.click('button[data-basin-view]');
 s = await basinState(); ok(s.view === 'far', 'pressing it gives the wide view');
 await page.waitForTimeout(1500);

@@ -15,9 +15,9 @@ const server = http.createServer((req, res) => {
   const tile = /^\/ontology-game\/cave\/textures\/(wet_stone|dry_stone|crystal_vein)\.jpg$/.exec(u); // the Cave of Lessons' stone
   const body = /^\/ontology-game\/cave\/daemons\/([a-z-]+)\.glb$/.exec(u); // the daemon bodies (cave/bake_daemons.py)
   const sp = /^\/ontology-game\/cave\/spirits\/([a-z]+-(core|hologram))\.glb$/.exec(u); // the spirits' forms (cave/bake_spirits.py)
-  const f = u === '/ontology-game/big-mind' ? 'big-mind/index.html' : u === '/ontology-game/cave' ? 'cave/index.html' : tile ? 'cave/textures/' + tile[1] + '.jpg' : body ? 'cave/daemons/' + body[1] + '.glb' : u === '/ontology-game/cave/cave-kit.glb' ? 'cave/cave-kit.glb' : u === '/ontology-game/cave/player/walker.glb' ? 'cave/player/walker.glb' : sp ? 'cave/spirits/' + sp[1] + '.glb' : null;
+  const f = u === '/ontology-game/big-mind' ? 'big-mind/index.html' : u === '/ontology-game/cave' ? 'cave/index.html' : tile ? 'cave/textures/' + tile[1] + '.jpg' : body ? 'cave/daemons/' + body[1] + '.glb' : u === '/ontology-game/cave/cave-kit.glb' ? 'cave/cave-kit.glb' : /^\/ontology-game\/cave\/(cult-figure\.js|vendor\/(GLTFLoader|SkeletonUtils)\.js|player\/cult-f\.glb)$/.test(u) ? u.replace('/ontology-game/', '') : sp ? 'cave/spirits/' + sp[1] + '.glb' : null;
   if (!f) { res.writeHead(404); res.end(); return; }
-  res.writeHead(200, { 'content-type': tile ? 'image/jpeg' : body || f.endsWith('.glb') ? 'model/gltf-binary' : 'text/html' }); res.end(readFileSync(PUB + '/ontology-game/' + f));
+  res.writeHead(200, { 'content-type': tile ? 'image/jpeg' : body || f.endsWith('.glb') ? 'model/gltf-binary' : f.endsWith('.js') ? 'text/javascript' : 'text/html' }); res.end(readFileSync(PUB + '/ontology-game/' + f));
 }).listen(4571);
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }).catch(() => chromium.launch());
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
