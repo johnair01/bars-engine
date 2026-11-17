@@ -22,11 +22,11 @@ export const EXPERIENCES = [
 export const CHANNEL_LIGHT = { anger: "#ff9a6b", sadness: "#8fb8ff", fear: "#e6edf5", joy: "#b6f08a", neutrality: "#f3d79a" };
 
 export const SATISFACTIONS = [
-  { channel: "anger", state: "triumph", means: "You use your power cleanly, a boundary is honoured, and what was stuck moves." },
-  { channel: "sadness", state: "poignance", means: "You are close to what you care about, and it means something." },
-  { channel: "fear", state: "excitement", means: "You see the risk clearly and have the nerve to step into it." },
-  { channel: "joy", state: "bliss", means: "You feel delight, and you get to share it and play." },
-  { channel: "neutrality", state: "peace", means: "You feel settled and present. You can see the whole, and nothing pulls at you." },
+  { channel: "anger", state: "triumph", means: "You use your power cleanly. A boundary is honoured. What was stuck moves." },
+  { channel: "sadness", state: "poignance", means: "You are close to what you care about. It means something." },
+  { channel: "fear", state: "excitement", means: "You see the risk clearly. You have the nerve to step into it." },
+  { channel: "joy", state: "bliss", means: "You feel delight. You get to share it. You get to play." },
+  { channel: "neutrality", state: "peace", means: "You feel settled. You can see the whole. Nothing pulls at you." },
 ];
 
 export const DISSATISFACTIONS = [

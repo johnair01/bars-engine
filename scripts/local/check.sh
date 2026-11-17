@@ -4,6 +4,7 @@
 #
 #   scripts/local/check.sh           lint, type-check, build-reliability verifiers, vitest, and the look check when public/between or
 #                                    public/calrunia changed
+#                                    copy-scan (report only; see below)
 #   scripts/local/check.sh --build   the same, then the full production build (`npm run build`) on the local database
 #
 # A step that fails is reported and the rest still run, so one report names every failure. Exit status is non-zero
@@ -57,6 +58,16 @@ step check $DEV run -- npm run check
 # reported as skipped here) and not faults; only a real drift stops the push.
 step --skip-2 look-frame $DEV run -- npm run check:look:frame -- --post
 step vitest $DEV run -- npm run test:vitest
+# The editorial check for player-facing copy (scripts/copy-scan.py): trailing and, and-joins, and-chains, negation pairs,
+# over every file in scripts/copy-scan.files, whole file. REPORT ONLY until Wendell rules (board row copy-scan-gate-1):
+# it prints what it finds and does not fail the run. COPY_SCAN=strict fails on any hit not in scripts/copy-scan.baseline.
+echo; echo "── copy-scan ──"
+if [ "${COPY_SCAN:-report}" = "strict" ]; then
+  python3 scripts/copy-scan.py --strict || { echo "FAILED (strict)"; failed+=("copy-scan"); }
+else
+  python3 scripts/copy-scan.py | tail -25
+  echo "report only: nothing here fails the run (COPY_SCAN=strict makes new hits fail)"
+fi
 if look_touched; then step look node scripts/local/look-check.mjs; else echo; echo "── look ── (skipped: no change under public/between or public/calrunia; LOOK_CHECK=1 forces it)"; fi
 if [ "${1:-}" = "--build" ]; then
   step build $DEV run -- npm run build

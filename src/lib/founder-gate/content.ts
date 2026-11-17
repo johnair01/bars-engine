@@ -169,7 +169,7 @@ export function stuckStep(feelingId: string): { move: string; action: string } {
   }
 }
 const STUCK_ACTIONS: Record<string, string> = {
-  fear: 'Name the one thing you would try if it could not go wrong, then do the first minute of it today.',
+  fear: 'Name the one thing you would try if you knew it would work, then do the first minute of it today.',
   sadness: 'Pick one thing you have been carrying and decide where it goes: a message you will send, or a place you will put it down.',
   joy: 'Choose one small thing that delighted you this week and do it again tomorrow.',
   anger: 'Pick the one wall that has held you and take one action against it before tonight.',
@@ -489,16 +489,16 @@ export interface Seed {
 }
 export const SEEDS: Seed[] = [
   { domain: 'Gather Resource', title: 'Gather Resources', front: 'Leave an offering: make a donation.', back: 'Bring something for the shared pantry.', act: 'offering', nextStep: 'Next: pick what you will leave in the pantry.', actLabel: 'Leave an offering' },
-  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Make an introduction, for work or for a podcast guest.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Next: pick the one person you will introduce to him.', actLabel: 'Book a call to make it (placeholder: introductions have no place to land yet)', href: LINKS.coachingFree },
-  { domain: 'Raise Awareness', title: 'Raise Awareness', front: 'Share the book, or buy it.', back: 'Plant a bloom by the path where neighbours will see it.', act: 'share', nextStep: 'Next: pick the one person you will show this to.', actLabel: 'Buy the book', href: LINKS.bookshop },
-  { domain: 'Direct Action', title: 'Direct Action', front: 'Work with him, and work out what makes sense to work on.', back: 'Pick a fruit and hand it over today.', act: 'work', nextStep: 'Next: pick the day you will sit down with him.', actLabel: 'Book a session', href: LINKS.coachingFree },
+  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Make an introduction for work or for a podcast guest.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Next: pick the one person you will introduce to him.', actLabel: 'Book a call to make the introduction', href: LINKS.coachingFree },
+  { domain: 'Raise Awareness', title: 'Raise Awareness', front: 'Share the book or buy a copy.', back: 'Plant a bloom by the path where neighbours will see it.', act: 'share', nextStep: 'Next: pick the one person you will show this to.', actLabel: 'Buy the book', href: LINKS.bookshop },
+  { domain: 'Direct Action', title: 'Direct Action', front: 'Work with him on the thing that fits you best.', back: 'Pick a fruit and hand it over today.', act: 'work', nextStep: 'Next: pick the day you will sit down with him.', actLabel: 'Book a session', href: LINKS.coachingFree },
 ]
 export const OWN_SEED = { title: 'Write your own seed', front: 'Write it in your own words, in pencil.', nextStep: 'Next: pick the first small step of your own seed.', actLabel: 'Open the quiet room' }
 
 /** The soil (question 3), read as seasons. Fallow is fine. */
 export const SOIL = [
-  { id: 'Flowing', season: 'Growing season', line: 'The soil is warm and the water moves.' },
-  { id: 'Stalled', season: 'Between seasons', line: 'The soil is cool and the water has paused.' },
+  { id: 'Flowing', season: 'Growing season', line: 'The soil is warm. Water moves through it.' },
+  { id: 'Stalled', season: 'Between seasons', line: 'The soil is cool. The water has paused.' },
   { id: 'Stuck', season: 'Fallow', line: 'The soil rests. Resting is a fair way to begin.' },
 ] as const
 export type SoilId = (typeof SOIL)[number]['id']
@@ -512,8 +512,8 @@ export const WEATHER_HELPER = 'How does it feel when you think about doing this?
  */
 export const STUCK_OBJECTS: Record<string, { name: string; look: string; verb: string; tended: string }> = {
   anger: { name: 'A felled fence rail', look: 'A rail has come down across the bed.', verb: 'Mend the rail', tended: 'You stand the rail back up. The bed is fenced again.' },
-  fear: { name: 'A crow’s shadow', look: 'A crow’s shadow hangs over the bed.', verb: 'Shoo the crow', tended: 'The shadow lifts and the light comes back.' },
-  sadness: { name: 'A dry, cracked watering can', look: 'The watering can sits cracked and dry.', verb: 'Fill the can', tended: 'You patch the crack and fill the can.' },
+  fear: { name: 'A crow’s shadow', look: 'A crow’s shadow hangs over the bed.', verb: 'Shoo the crow', tended: 'The shadow lifts. The light comes back.' },
+  sadness: { name: 'A dry, cracked watering can', look: 'The watering can sits cracked and dry.', verb: 'Fill the can', tended: 'You patch the crack. The can holds water again.' },
   joy: { name: 'A neighbour’s taller bed', look: 'Across the path a neighbour’s bed stands taller.', verb: 'Look away from it', tended: 'You turn back to your own bed. It is the one you are tending.' },
   neutrality: { name: 'Grey frost on the soil', look: 'Grey frost lies on the soil.', verb: 'Warm the soil', tended: 'You press a warm hand to the soil. The frost thins.' },
 }
