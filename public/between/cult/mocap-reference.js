@@ -74,7 +74,9 @@ export function retargetRunDirections(F,ref,{stride=1,arm=1,lean=1,groundY=0,cle
     return up.clone().multiplyScalar(d.y).addScaledVector(F.fr.l,lat).addScaledVector(F.fr.f,fw).normalize();
   };
   const torso=targetDir('spine','spine.003',lean);
-  FG.aim(F,'hips','spine01',torso);
+  // Aim the whole hips-to-spine03 span, the span the source direction was read from. Aiming only hips-to-spine01 left the
+  // figure's own spine curve on top of it and the torso stood 7-8 degrees more upright than the CMU run (2026-11-17 measurement).
+  FG.aim(F,'hips','spine03',torso);
   for(const side of ['L','R']){
     const s=side,[[thigh,knee,hipTarget,kneeTarget],[shin,ankle,shinTarget,ankleTarget],[upperArm,forearm,shoulderTarget,elbowTarget],[lowerArm,hand,forearmTarget,wristTarget]]=RUN_RIG_MAP[s];
     const sg=s==='L'?1:-1;
