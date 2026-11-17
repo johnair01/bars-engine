@@ -89,6 +89,7 @@ const analysisSchema = z.object({
       archetype: z.string().nullable().describe('Thematic archetype (Bold Heart, Danger Walker, Truth Seer, etc.). Null if unclear.'),
       kotterStage: z.number().min(1).max(8).nullable().describe('Kotter change stage 1-8. Null if unclear (downstream defaults to 1).'),
       lockType: z.enum(LOCK_TYPES).nullable().describe('Transformation lock: identity_lock, emotional_lock, action, possibility. Null if unclear.'),
+      flavorLine: z.string().nullable().describe('One short Calrunian flavor line (under 18 words) naming one thing in the world the player could see or touch. Not a question. Null if none fits.'),
       ...sectLensFields,
     })
   ),
@@ -106,6 +107,7 @@ type QuestResult = {
   elder?: string | null
   sourceSentence?: string | null
   restPath?: string | null
+  flavorLine?: string | null
 }
 
 async function requireAdmin(): Promise<string> {
@@ -148,6 +150,8 @@ Optional metadata (use when context supports it):
 - archetype: Bold Heart, Danger Walker, Truth Seer, Still Point, Subtle Influence, Devoted Guardian, Decisive Storm, Joyful Connector
 - kotterStage: 1-8 (urgency→coalition→vision→communicate→obstacles→wins→scale→anchor)
 - lockType: identity_lock, emotional_lock, action, possibility
+
+- flavorLine: one short line (under 18 words) of Calrunian flavor that points to the world, in the manner of an oracle card: the instruction above stays plain and complete, and the flavor line only sets the scene. Name a thing in Calrunia the player could see or touch, such as the Heaven sect's stone steps, an Elder's tea bowl, the lantern harbor, the terraced farm or the lowland ferry. Use sect, Elder and rank words only. Never write a question, never ask the player to look back, never repeat the instruction.
 
 Focus on quests that help players Grow Up (skill-building) when the content supports it.
 Return 1-5 quests per chunk. Skip chunks with no actionable content.`
@@ -325,6 +329,7 @@ async function createQuestsFromAnalysis(
           ...(q.rank ? { rank: q.rank } : {}),
           ...(q.sourceSentence ? { sourceSentence: q.sourceSentence } : {}),
           ...(q.restPath ? { restPath: q.restPath } : {}),
+          ...(q.flavorLine ? { flavorLine: q.flavorLine } : {}),
         }),
         inputs: JSON.stringify([
           { key: 'reflection', label: 'Response', type: 'textarea', placeholder: 'Share what you did or learned' },

@@ -21,10 +21,10 @@ describe('sect lens source check', () => {
 describe('bookAnalysisLens', () => {
   const was = process.env.BOOK_ANALYSIS_LENS
   afterEach(() => { if (was === undefined) delete process.env.BOOK_ANALYSIS_LENS; else process.env.BOOK_ANALYSIS_LENS = was })
-  it('defaults to sect and can be switched back', () => {
+  it('defaults to generic and can be switched to sect', () => {
     delete process.env.BOOK_ANALYSIS_LENS
-    expect(bookAnalysisLens()).toBe('sect')
-    process.env.BOOK_ANALYSIS_LENS = 'generic'
     expect(bookAnalysisLens()).toBe('generic')
+    process.env.BOOK_ANALYSIS_LENS = 'sect'
+    expect(bookAnalysisLens()).toBe('sect')
   })
 })
