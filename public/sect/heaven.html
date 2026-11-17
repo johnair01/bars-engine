@@ -50,13 +50,11 @@ import { CREST_STAIR, stairTread, TREAD } from './heaven/crag.js';
 import { cultWalker, GAIT } from './cult/cultwalk.js';
 import { cameraRig, MOVE } from './heaven/move.js';
 import { wayColliders } from './heaven/crag.js';
+import { traineeWalk } from './heaven/trainee.js';
 
-// The join leg from the Hollow (chapter1-demo plan step 3, cd-merge-look-1 C): a player who carried the lantern out arrives on the road.
-if (new URLSearchParams(location.search).get('from') === 'hollow') {
-  document.getElementById('where').textContent = 'The road up from the Hollow';
-  document.getElementById('what').textContent = 'You carried a lantern out of the Hollow. The Heaven gate is at the top of this road.';
-}
-
+// The join leg from the Hollow (chapter1-demo plan step 3): a player who walked on from the Hollow's last card starts the
+// trainee walk (heaven/trainee.js). ?tour=1 keeps the builder's tour with its stop buttons.
+const Q = new URLSearchParams(location.search), TRAINEE = Q.get('from') === 'hollow' && Q.get('tour') !== '1';
 const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight);
 R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -196,6 +194,7 @@ R.domElement.addEventListener('pointerup', e => {
 });
 addEventListener('resize', () => { R.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); fitTop(); });
 
+const frameHooks = [];
 let last = performance.now();
 const prev = new THREE.Vector3();
 function frame(now) {
@@ -213,11 +212,12 @@ function simulate(dt) {
   if (!topView) { if (rig.free && (input.keys.size || input.target)) rig.free = false; rig.update(A, dt, Math.hypot(d.x, d.z) / Math.max(dt, 1e-3)); }
   if (topView || rig.free) orbit.update();
   if (dressAll) dressAll(dt);
+  for (const h of frameHooks) h(dt);
   if (walker) walker.update(dt);
   placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
 }
-jump(1, { face: P.gate });
+if (!TRAINEE) jump(1, { face: P.gate });
 function enter(key, { up = 3.2, back = 1.6 } = {}) {
   const r = interiors.find(i => i.key === key), Rm = r.R, rt = Rm.route;
   const W = ([x, y]) => { const lx = x - Rm.Wd / 2, lz = y - Rm.D / 2; return [r.x + r.c * lx + r.s * lz, r.z - r.s * lx + r.c * lz]; };
@@ -258,5 +258,6 @@ function shot(name) {
 }
 window.heaven = { rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
+if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
 </script>
 </body></html>
