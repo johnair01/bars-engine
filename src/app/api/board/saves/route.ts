@@ -80,7 +80,8 @@ export async function POST(req: NextRequest) {
   const latest = v.save.mode === 'update' || linked ? await latestDoc(board, collection, docId) : null
   if (linked) v.save.data = restorePictures(v.save.data, { board, collection, docId }, latest)
   const doc = applyWrite(v.save.mode === 'update' ? latest : null, v.save)
-  const data = { board, collection, docId, recordedAt: RECORD_KINDS.has(collection) ? null : new Date(),
+  const data = { board, collection, docId, source: ownerSession ? 'board-owner' : 'council-menu',
+                 recordedAt: RECORD_KINDS.has(collection) ? null : new Date(),
                  record: RECORD_KINDS.has(collection) ? null : 'board state; not recorded on main' }
   // The Council Board's seal: each sealed item becomes a Tap the Vein task and the menu carries its id (ttv-one-store).
   const owner = boardOwnerId()

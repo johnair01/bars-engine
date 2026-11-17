@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isBoardOwner } from '@/lib/board/owner'
-import { cleanLanes, councilCaller } from '@/lib/work/lanes'
+import { cleanLanes, councilCaller, isLane } from '@/lib/work/lanes'
 import { pushTicket } from '@/lib/work/queue'
 
 export const dynamic = 'force-dynamic'
@@ -30,6 +30,10 @@ export async function POST(req: NextRequest) {
   const str = (k: string, max: number) => (typeof b?.[k] === 'string' ? (b[k] as string).trim().slice(0, max) : '')
   const sourceKey = str('sourceKey', 300), title = str('title', 200), brief = str('brief', 20000)
   if (!sourceKey || !title || !brief) return NextResponse.json({ error: 'Expected {sourceKey, title, brief, basis?, lanes?}' }, { status: 400 })
+  if (sourceKey.startsWith('spec:')) return NextResponse.json({ error: 'Use the guarded spec-task publisher' }, { status: 400 })
+  if (b?.lanes !== undefined && (!Array.isArray(b.lanes) || !b.lanes.length || b.lanes.some(l => !isLane(l)))) {
+    return NextResponse.json({ error: 'Unsupported lane' }, { status: 400 })
+  }
   const basis = b?.basis && typeof b.basis === 'object' ? b.basis : {}
   const r = await pushTicket(db, { sourceKey, title, brief, basis: basis as never, lanes: cleanLanes(b?.lanes) })
   return NextResponse.json({ created: r.created, ticket: { id: r.ticket.id, lane: r.ticket.lane, state: r.ticket.state } },

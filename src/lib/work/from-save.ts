@@ -14,6 +14,7 @@ export async function ticketFromSave(db: PrismaClient, board: string, collection
   try {
     // A card he sent to a face (Grow Up, Take it to the Shaman) is read by Claude as an answer is: same lane, same wake.
     const row = collection === 'steps' ? null : (await latestDoc(board, 'rows', docId)) as RowDoc | null
+    if (collection === 'questions' && row?.specTask) return null
     const draft = collection === 'steps'
       ? ticketFromStep(board, collection, docId, doc as StepDoc)
       : collection === 'positions'

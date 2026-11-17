@@ -5493,6 +5493,7 @@ model WorkTicket {
   id         String    @id @default(cuid())
   /// The save that sent it, as board/collection/docId@answer; one ticket per answer, so a re-save sends nothing new.
   sourceKey  String    @unique @map("source_key")
+  specTaskKey String?  @map("spec_task_key")
   title      String
   brief      String
   /// The board row ids and his answer text it rests on: {rows: string[], answer: string, steer: string, savedAt: string}
@@ -5511,7 +5512,24 @@ model WorkTicket {
   doneAt     DateTime? @map("done_at")
 
   @@index([lane, state, createdAt])
+  @@index([specTaskKey])
   @@map("work_tickets")
+}
+
+/// Current authorized revision and gates for a task published from a committed spec.
+model SpecWorkTask {
+  key           String    @id
+  revision      String
+  ticketId      String    @map("ticket_id")
+  dependencies  String[]
+  gate          String    @default("open") // open | blocked
+  blockerCardId String?   @map("blocker_card_id")
+  verifiedAt    DateTime? @map("verified_at")
+  verifiedBy    String?   @map("verified_by")
+  evidence      String?
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("spec_work_tasks")
 }
 
 /// A lane's lamp: dry while its environment has no usage left (a worker calls dry, or he taps the lamp).

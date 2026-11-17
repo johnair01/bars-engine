@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
 import { DRY_MS, firstLitLane, isLane, LANES, LEASE_MS, MAX_DRY_MS } from './lanes'
 import type { TicketDraft } from './ticket'
+import { Prisma as PrismaErrors } from '@prisma/client'
 
 type Db = PrismaClient | Prisma.TransactionClient
 
@@ -20,20 +21,44 @@ export async function pushTicket(db: Db, t: TicketDraft) {
   const lane = firstLitLane(t.lanes, await dryLanes(db))
   const existing = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
   if (existing) return { ticket: existing, created: false }
-  const ticket = await db.workTicket.create({
-    data: { sourceKey: t.sourceKey, title: t.title, brief: t.brief, basis: t.basis as object, lanes: t.lanes, lane,
-      ...(t.state === 'held' ? { state: 'held' } : {}) },
-  })
-  return { ticket, created: true }
+  try {
+    const ticket = await db.workTicket.create({
+      data: { sourceKey: t.sourceKey, title: t.title, brief: t.brief, basis: t.basis as object, lanes: t.lanes, lane,
+        ...(t.state === 'held' ? { state: 'held' } : {}) },
+    })
+    return { ticket, created: true }
+  } catch (error) {
+    if (error instanceof PrismaErrors.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const winner = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
+      if (winner) return { ticket: winner, created: false }
+    }
+    throw error
+  }
 }
 
 /** Lapsed leases go back to ready, so a worker that died mid-ticket never strands it. */
 export async function returnLapsed(db: Db, now = new Date()): Promise<number> {
-  const r = await db.workTicket.updateMany({
-    where: { state: 'claimed', leaseUntil: { lt: now } },
-    data: { state: 'ready', claimedBy: null, leaseUntil: null },
-  })
-  return r.count
+  return db.$executeRaw`
+    UPDATE "work_tickets" wt SET "state" = CASE
+      WHEN wt."spec_task_key" IS NULL OR EXISTS (
+        SELECT 1 FROM "spec_work_tasks" st WHERE st."key" = wt."spec_task_key"
+          AND st."ticket_id" = wt."id" AND st."gate" = 'open'
+          AND NOT EXISTS (
+            SELECT 1 FROM unnest(st."dependencies") dep_key
+            LEFT JOIN "spec_work_tasks" dep ON dep."key" = dep_key
+            WHERE dep."verified_at" IS NULL
+          )
+      ) THEN 'ready' ELSE 'held' END,
+      "claimed_by" = NULL, "lease_until" = NULL
+    WHERE wt."state" = 'claimed' AND wt."lease_until" < ${now}`
+}
+
+async function specReady(db: Db, ticket: { id: string; specTaskKey: string | null }) {
+  if (!ticket.specTaskKey) return true
+  const task = await db.specWorkTask.findUnique({ where: { key: ticket.specTaskKey } })
+  if (!task || task.ticketId !== ticket.id || task.gate !== 'open') return false
+  const deps = await db.specWorkTask.findMany({ where: { key: { in: task.dependencies } } })
+  return task.dependencies.every(key => deps.some(d => d.key === key && d.verifiedAt))
 }
 
 /**
@@ -48,9 +73,18 @@ export async function claimTicket(db: Db, lane: string, by: string, now = new Da
     UPDATE "work_tickets" SET "state" = 'claimed', "claimed_by" = ${by}, "lease_until" = ${until},
       "attempts" = "attempts" + 1, "updated_at" = ${now}
     WHERE "id" = (
-      SELECT "id" FROM "work_tickets" WHERE "lane" = ${lane} AND "state" = 'ready'
-        AND (${id ?? null}::text IS NULL OR "id" = ${id ?? null}::text)
-      ORDER BY "created_at" ASC LIMIT 1 FOR UPDATE SKIP LOCKED)
+      SELECT wt."id" FROM "work_tickets" wt WHERE wt."lane" = ${lane} AND wt."state" = 'ready'
+        AND (${id ?? null}::text IS NULL OR wt."id" = ${id ?? null}::text)
+        AND (wt."spec_task_key" IS NULL OR EXISTS (
+          SELECT 1 FROM "spec_work_tasks" st
+          WHERE st."key" = wt."spec_task_key" AND st."ticket_id" = wt."id" AND st."gate" = 'open'
+            AND NOT EXISTS (
+              SELECT 1 FROM unnest(st."dependencies") dep_key
+              LEFT JOIN "spec_work_tasks" dep ON dep."key" = dep_key
+              WHERE dep."verified_at" IS NULL
+            )
+        ))
+      ORDER BY wt."created_at" ASC LIMIT 1 FOR UPDATE OF wt SKIP LOCKED)
     RETURNING "id", "title", "brief", "basis", "lanes", "lane", "claimed_by" AS "claimedBy",
       "lease_until" AS "leaseUntil", "attempts"`
   return rows[0] ?? null
@@ -63,6 +97,7 @@ export async function unholdTicket(db: Db, id: string) {
   const t = await db.workTicket.findUnique({ where: { id } })
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not held` }
+  if (!(await specReady(db, t))) return { ok: false as const, status: 409, error: 'Spec task is blocked, stale or waiting on dependencies' }
   const ticket = await db.workTicket.update({ where: { id }, data: { state: 'ready' } })
   return { ok: true as const, ticket }
 }
@@ -78,6 +113,7 @@ export async function steerTicket(db: Db, id: string, to: string, by: string, no
   const t = await db.workTicket.findUnique({ where: { id } })
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (t.state !== 'ready' && t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}; only a ready or held ticket can be steered` }
+  if (t.specTaskKey && !(await specReady(db, t))) return { ok: false as const, status: 409, error: 'Spec task is blocked, stale or waiting on dependencies' }
   const basis = { ...((t.basis ?? {}) as object), steered: { to, by, at: now.toISOString(), from: t.lane } }
   const data: Prisma.WorkTicketUpdateInput = to === 'hold'
     ? { state: 'held', claimedBy: null, leaseUntil: null, basis }
@@ -95,11 +131,12 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
   if (t.state !== 'claimed') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not claimed` }
   // `look` is the board row of the look this voyage brought home (homeport FR-006); the ring reads it from the basis.
   const basis = look && move === 'done' ? { ...((t.basis ?? {}) as object), look } : undefined
+  const releasedReady = move !== 'release' || await specReady(db, t)
   const data: Prisma.WorkTicketUpdateInput =
     move === 'heartbeat' ? { leaseUntil: new Date(now.getTime() + LEASE_MS) }
     : move === 'done' ? { state: 'done', result, doneAt: now, leaseUntil: null, ...(basis ? { basis } : {}) }
     : move === 'failed' ? { state: 'failed', result, leaseUntil: null }
-    : { state: 'ready', claimedBy: null, leaseUntil: null, result }
+    : { state: releasedReady ? 'ready' : 'held', claimedBy: null, leaseUntil: null, result }
   const ticket = await db.workTicket.update({ where: { id }, data })
   return { ok: true as const, ticket }
 }
