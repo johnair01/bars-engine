@@ -144,7 +144,7 @@ def armature(name, frames, tails):
         eb = a.edit_bones.new(n)
         eb.head = HEAD[n]
         eb.tail = HEAD[n] + Vector((0, 0, 0.05))
-        eb.parent = a.edit_bones[B[n]["parent"]] if B[n]["parent"] in a.edit_bones else None
+        eb.parent = a.edit_bones[B[n]["parent"]] if B[n]["parent"] in a.edit_bones.keys() else None
         R = frames[n]
         t = tails.get(n)
         length = (t - HEAD[n]).length if isinstance(t, Vector) else (t or 0.05)
@@ -330,9 +330,9 @@ TIP = {"sip1": 0.30, "sip2": 0.55, "sip3": 0.85, "sip": 0.85}   # each sip tips 
 BREATH = {"period": 4.0, "spine": 0.022, "neck": -0.5}       # one breath every four seconds, the neck half against it
 
 UPV = Sd(0, 1, 0)
-LAP = (-0.02, 0.40, 0.09)        # the cup's middle held in front of the belly, in both hands, the back a little forward
+LAP = (-0.02, 0.40 - float(os.environ.get('TEA_LAPY', -0.04)), 0.09 + float(os.environ.get('TEA_LAPZ', 0)))        # the cup's middle held in front of the belly, in both hands, the back a little forward
 REST = (-0.02, 0.385, 0.07)      # and settled a little lower and nearer once the sips are done
-BOW = 0.70                       # how far she bows from the hips to the cup on the stone (rad)
+BOW = 1.0                       # how far she bows from the hips to the cup on the stone (rad)
 
 
 def tipU(th):
@@ -548,7 +548,7 @@ up1 = (cs["x"] + toward.x * 0.05, cs["y"] + 0.07, cs["z"] + toward.y * 0.05)
 key_hand("R", 5.9, S(*up1), UPV, "pass")
 key_hand("R", 6.75, S(LAP[0] - 0.12, LAP[1] + 0.02, LAP[2] + 0.06), UPV, "pass")
 key_rest("L", 5.8)
-key_hand("L", 6.8, S(LAP[0] + 0.05, LAP[1] - 0.04, LAP[2] + 0.06), UPV, "pass")      # the left hand rises from the thigh to meet the cup at the lap
+key_hand("L", 6.8, S(LAP[0] + 0.03, LAP[1] - 0.02, LAP[2] + 0.03), UPV, "pass")      # the left hand rises from the thigh to meet the cup at the lap
 both(7.5, LAP, 0.0, "land")
 
 # from here the left hand rides the cup: its IK target copies an empty parented to the cup, so it stays under the cup's foot
@@ -749,7 +749,10 @@ for s, hand in (("R", handR), ("L", handL)):
     for f, _ in KEYS[s]:
         sc.frame_set(f)
         bpy.context.view_layer.update()
-        miss = max(miss, (bone_world("wrist" + s).translation - hand.matrix_world.translation).length)
+        d = (bone_world("wrist" + s).translation - hand.matrix_world.translation).length
+        miss = max(miss, d)
+        if d > 0.01 and os.environ.get("TEA_DEBUG"):
+            print("  miss", s, "frame", f, round(f / FPS, 2), "s", round(d * 1000, 1), "mm")
 print("IK reach: the worst miss at a key is", round(miss * 1000, 1), "mm")
 
 
