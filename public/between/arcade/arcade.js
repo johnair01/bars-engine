@@ -16,6 +16,7 @@
    is a code sent with the Patreon invite, built before the invite links point here). &fresh=1 starts a new record. */
 import * as THREE from "three";
 import { parseLook } from "../../calrunia/look.js";
+import { CRATE_SIT, SEAT_PAD } from "../stance.js";
 import { scene, build, figure, hangLine, GATE_Z, AISLE, SLOT_Z, LAST } from "./scene.js";
 import { CABINETS, byId, todaysCabinet } from "./cabinets.js";
 import * as H from "./hall.js";
@@ -256,9 +257,16 @@ async function runHall() {
     const id = meS.face; meS.face = null; if (!id) return; const s = built[id].screenAt;
     meS.yaw = Math.atan2(s.x - meS.pos.x, s.z - meS.pos.z); camTurn = meS.yaw + Math.PI + 0.75;
   }
-  /* sitting on the bench: the cultivation figure's crate sit (land/cult-seat.js), its hips SEAT_TOP over the floor */
-  const SEAT_TOP = 0.48;
-  const seatPose = () => me.sit(meS.sat, SEAT_TOP);
+  /* sitting on the bench: stance.js's crate sit, as the Friends' Fire seats a player */
+  const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "spine", "neck"]) { const b = me.obj.getObjectByName(n); if (b) bones[n] = b; }
+  const hipsY = bones.hips ? bones.hips.position.y : 0, qe = new THREE.Quaternion(), eu = new THREE.Euler(), sv = V(0, 0, 0);
+  function seatPose(dt) {
+    meS.seat += ((meS.sat ? 1 : 0) - meS.seat) * Math.min(1, dt * 5); if (meS.seat < 0.01 || !bones.hipL) return;
+    for (const [n, x, y, z] of CRATE_SIT) { const b = bones[n]; if (b) b.quaternion.slerp(b.quaternion.clone().multiply(qe.setFromEuler(eu.set(x, y, z, "XYZ"))), meS.seat); }
+    const hb = bones.hips, cur = hb.position.y; hb.position.y = hipsY; me.holder.updateMatrixWorld(true);
+    const hw = hb.getWorldPosition(sv).y - me.holder.position.y, sy = hb.parent.getWorldScale(sv).y || 1;
+    hb.position.y = cur + (hipsY - (hw - (0.48 + SEAT_PAD)) / sy - cur) * meS.seat;
+  }
 
   /* the push through a screen (cabinet-coin): the coin lands, the marquee lights, the camera goes in */
   let push = null;
@@ -350,7 +358,7 @@ async function runHall() {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, clock.getDelta()); T += dt;
     const moving = move(dt);
-    me.holder.position.copy(meS.pos); me.holder.rotation.y = meS.yaw; me.set(moving); me.pose(dt); seatPose();
+    me.holder.position.copy(meS.pos); me.holder.rotation.y = meS.yaw; me.set(moving); me.pose(dt); seatPose(dt);
     if (meS.sat) { const before = hall.coins; hall = H.sit(hall, dt); if (hall.coins !== before) { commit(hall); SOUND.sat(); cardKey = ""; } me.hang(H.weight(hall)); }
     denim.pose(dt);
     // the visitor in the red jacket strolls deeper in and back
