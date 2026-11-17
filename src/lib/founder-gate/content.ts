@@ -89,7 +89,7 @@ export const PLACES: Place[] = [
     blurb: 'Every week the Allyship Dojo meets here.',
     serves: ['anger', 'fear', 'joy'],
     offers: [
-      { label: 'Join on Patreon at $25', detail: 'the weekly Dojo, the monthly group call, every past session', href: LINKS.patreon },
+      { label: 'Join on Patreon at $25', detail: 'You get a weekly Dojo call, a monthly group call and recordings of every past session.', href: LINKS.patreon },
     ],
     window: { label: 'Walk the Heaven sect’s gate hall', href: '/sect/heaven.html' },
   },
@@ -251,10 +251,10 @@ export const STORY: StoryBeat[] = [
  * PLACEHOLDER copy and options: the interview thread's answers shape these.
  */
 export const IMPACT_LINE =
-  'Holding space for someone is one shape of help. Yours may be bigger. The places below are different shapes; the one that lights up is a clue.'
+  'Listening to a friend is one way to help them. You may have more to give than that. Each place below stands for a different way to help. If one place lights up for you, start there.'
 
 export const STUCK_INTRO =
-  'Help given in a panic burns the helper out. If you are stuck, a fear or an old belief is pressing the brake. The bed shows you which one.'
+  'People who help in a panic wear themselves out. If you keep putting off your help, a fear or an old belief is usually holding you back. Your garden bed will show you which one it is.'
 
 export interface Dream {
   id: string
@@ -329,7 +329,7 @@ export const SCENES: Record<string, Scene> = {
     pos: '50% 40%',
     motion: 'in',
     domain: 'Wendell’s Gate',
-    lines: ['An old friend has fallen on hard times again.', 'Come through the gate. Make your own cultivator. Then pick one way to help him: money, an introduction, his book or a session.'],
+    lines: ['An old friend has fallen on hard times again.', 'Come through the gate. Make your own cultivator. Then choose one way to help him. You can give money, introduce him to someone, buy his book or book a coaching session with him.'],
     hotspots: [{ id: 'steps', x: 50, y: 52, label: 'Walk up the steps', to: 'story-0' }],
     source: 'looks/heaven-sect-look-1.jpg, arrival crop',
   },
@@ -339,12 +339,12 @@ export const SCENES: Record<string, Scene> = {
     pos: '55% 40%',
     motion: 'out',
     domain: 'Where this walk fits',
-    lines: ['This walk is one part of his campaign to ship the backers’ books. Tap each part to see where you stand in it.'],
+    lines: ['Wendell is running a campaign to mail his book to about 300 people who paid for it on Kickstarter. This walk is one part of that campaign. Tap each part of the map to see what it asks of you.'],
     hotspots: [
-      { id: 'gather', x: 50, y: 30, label: 'Gather Resources', note: 'The larger campaign, gathering what the work needs.' },
-      { id: 'aware', x: 28, y: 52, label: 'Raise Awareness', note: 'This walk sits here, inside the larger campaign above.' },
-      { id: 'organize', x: 74, y: 50, label: 'Skilled organizing', note: 'The capacity this campaign grows, in you and in the people around you.' },
-      { id: 'actions', x: 50, y: 66, label: 'Direct actions', note: 'Two acts: play this walk, then give money if you can.' },
+      { id: 'gather', x: 50, y: 30, label: 'Gather Resources', note: 'This part of the campaign raises the money that prints and mails each backer’s copy.' },
+      { id: 'aware', x: 28, y: 52, label: 'Raise Awareness', note: 'This walk belongs to this part of the campaign. It tells new people why about 300 backers are still waiting for Wendell’s book.' },
+      { id: 'organize', x: 74, y: 50, label: 'Skilled organizing', note: 'This part teaches you to bring people together. You practise it each time you introduce two people who should meet.' },
+      { id: 'actions', x: 50, y: 66, label: 'Direct actions', note: 'This part asks you to do two things. First you play through this walk. Then, if you can afford it, you give money toward mailing a backer’s copy.' },
     ],
     next: 'make',
     source: 'looks/heaven-sect-look-1.jpg, peer era crop',
@@ -355,7 +355,7 @@ export const SCENES: Record<string, Scene> = {
     pos: '50% 50%',
     motion: 'in',
     domain: 'Your own dream',
-    lines: ['Plant a dream in the grounds beside your figure.', 'The sect keeps it while you are away. You came to help him. You leave with your own dream in the ground: the thing you will make, the place you will go, the person you will become.'],
+    lines: ['Plant a dream in the soil beside your figure.', 'Your dream stays planted here while you are away. You came to help Wendell, but you also leave with a dream of your own: something you will make, a place you will go or a person you will become.'],
     hotspots: [
       { id: 'd-make', x: 70, y: 38, label: 'Something I will make', dream: 'make' },
       { id: 'd-place', x: 28, y: 36, label: 'A place I will go', dream: 'place' },
@@ -370,7 +370,7 @@ export const SCENES: Record<string, Scene> = {
     pos: '55% 40%',
     motion: 'out',
     domain: 'Support and be supported',
-    lines: ['Still stuck? Each of these three keeps you moving and pays me for my work. Book a session with me on the thing you are stuck on. Read the book. Join the weekly Dojo on Patreon.'],
+    lines: ['If you are still stuck, three things can help you move again. Each one also pays me for my work. You can book a coaching session with me about a problem you have been stuck on. You can read my book. You can join my weekly Dojo, a group coaching call on Patreon.'],
     hotspots: [
       { id: 'w-room', x: 28, y: 30, label: 'Work with me on it', to: 'room-intro' },
       { id: 'w-book', x: 72, y: 34, label: 'Buy the book', href: LINKS.bookshop },
@@ -480,18 +480,18 @@ export interface Seed {
   href?: string
 }
 export const SEEDS: Seed[] = [
-  { domain: 'Gather Resource', title: 'Gather Resources', front: 'Give money toward shipping the backers’ books.', back: 'Bring something for the shared pantry.', act: 'offering', nextStep: 'Next: pick what you will leave in the pantry.', actLabel: 'Leave an offering' },
-  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Introduce him to one person who could hire him or have him on their podcast.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Next: pick the one person you will introduce to him.', actLabel: 'Book a call to make the introduction', href: LINKS.coachingFree },
-  { domain: 'Raise Awareness', title: 'Raise Awareness', front: 'Buy his book, or send the link to one friend who would read it.', back: 'Plant a bloom by the path where neighbours will see it.', act: 'share', nextStep: 'Next: pick the one person you will show this to.', actLabel: 'Buy the book', href: LINKS.bookshop },
-  { domain: 'Direct Action', title: 'Direct Action', front: 'Book a coaching session with him on the thing you are stuck on. Pay what feels right.', back: 'Pick a fruit and hand it over today.', act: 'work', nextStep: 'Next: pick the day you will sit down with him.', actLabel: 'Book a session', href: LINKS.coachingFree },
+  { domain: 'Gather Resource', title: 'Gather Resources', front: 'Give money so Wendell can mail his book to the people who paid for it on Kickstarter. Eleven dollars prints and ships one copy.', back: 'Bring food for a pantry your neighbours share.', act: 'offering', nextStep: 'Your next step is to choose how much money you will give.', actLabel: 'Leave an offering' },
+  { domain: 'Skillful Organizing', title: 'Skillful Organizing', front: 'Introduce Wendell to one person who could hire him or invite him onto their podcast.', back: 'String lights between two people who should meet.', act: 'intro', nextStep: 'Your next step is to choose one person you will introduce to Wendell.', actLabel: 'Book a call to make the introduction', href: LINKS.coachingFree },
+  { domain: 'Raise Awareness', title: 'Raise Awareness', front: 'Buy a copy of his book, Mastering the Game of Allyship. Or tell one friend who would read it where to find it.', back: 'Plant a bloom beside a path where your neighbours will see it.', act: 'share', nextStep: 'Your next step is to choose one friend you will tell about his book.', actLabel: 'Buy the book', href: LINKS.bookshop },
+  { domain: 'Direct Action', title: 'Direct Action', front: 'Book an hour of coaching with Wendell about a problem you have been stuck on. You pay what feels right to you.', back: 'Pick a fruit and hand it over today.', act: 'work', nextStep: 'Your next step is to choose a day for your session with Wendell.', actLabel: 'Book a session', href: LINKS.coachingFree },
 ]
-export const OWN_SEED = { title: 'Write your own seed', front: 'Write it in your own words, in pencil.', nextStep: 'Next: pick the first small step of your own seed.', actLabel: 'Open the quiet room' }
+export const OWN_SEED = { title: 'Write your own seed', front: 'Write your own way to help, in pencil, in your own words.', nextStep: 'Your next step is to choose one small thing you will do for your own seed.', actLabel: 'Open the quiet room' }
 
 /** The soil (question 3), read as seasons. Fallow is fine. */
 export const SOIL = [
-  { id: 'Flowing', season: 'Growing season', line: 'Warm soil, running water. You have time for this right now.' },
-  { id: 'Stalled', season: 'Between seasons', line: 'Cool soil, still water. You meant to start. Then the week got away from you.' },
-  { id: 'Stuck', season: 'Fallow', line: 'Fallow ground. You have nothing spare this week. You can plant now and tend it when you do.' },
+  { id: 'Flowing', season: 'Growing season', line: 'You have a few free hours this week. You already know how you would like to spend them helping.' },
+  { id: 'Stalled', season: 'Between seasons', line: 'You meant to help weeks ago. Your job, your bills or your family took every free evening, so your first step is still waiting. A step small enough for ten minutes can fit into a week like that.' },
+  { id: 'Stuck', season: 'Fallow', line: 'You have no spare money or free hours this month. You can still plant a seed today. You can come back to tend it when you have some time.' },
 ] as const
 export type SoilId = (typeof SOIL)[number]['id']
 
@@ -503,17 +503,17 @@ export const WEATHER_HELPER = 'How does it feel when you think about doing this?
  * feeling is something standing in the scene, and tending it is the move.
  */
 export const STUCK_OBJECTS: Record<string, { name: string; look: string; verb: string; tended: string }> = {
-  anger: { name: 'A felled fence rail', look: 'A rail has come down across the bed.', verb: 'Mend the rail', tended: 'You stand the rail back up. Nothing tramples the seedling now.' },
-  fear: { name: 'A crow’s shadow', look: 'A crow’s shadow hangs over the bed.', verb: 'Shoo the crow', tended: 'The crow flies off. Sun reaches the seedling again.' },
-  sadness: { name: 'A dry, cracked watering can', look: 'The watering can sits cracked and dry.', verb: 'Fill the can', tended: 'You patch the crack. The can holds enough to water the whole bed.' },
-  joy: { name: 'A neighbour’s taller bed', look: 'Across the path a neighbour’s bed stands taller.', verb: 'Look away from it', tended: 'You turn back to your own bed. The seedling has two new leaves you had not seen.' },
-  neutrality: { name: 'Grey frost on the soil', look: 'Grey frost lies on the soil.', verb: 'Warm the soil', tended: 'You press a warm hand to the soil. The frost melts off the seedling’s leaves.' },
+  anger: { name: 'A felled fence rail', look: 'A fence rail has fallen across your bed.', verb: 'Mend the rail', tended: 'You stand the fence rail back up. Now no deer can walk in and trample your seedling.' },
+  fear: { name: 'A crow’s shadow', look: 'A crow’s shadow hangs over your bed.', verb: 'Shoo the crow', tended: 'The crow flies off. Sun reaches your seedling again.' },
+  sadness: { name: 'A dry, cracked watering can', look: 'Your watering can sits cracked and dry.', verb: 'Fill the can', tended: 'You patch the crack in your watering can. It now holds enough water for your whole bed.' },
+  joy: { name: 'A neighbour’s taller bed', look: 'Across the path a neighbour’s bed stands taller.', verb: 'Look away from it', tended: 'You stop comparing and turn back to your own bed. Your seedling has two new leaves you had not noticed.' },
+  neutrality: { name: 'Grey frost on the soil', look: 'Grey frost lies on your soil.', verb: 'Warm the soil', tended: 'You press a warm hand to the soil. The frost melts off your seedling’s leaves.' },
 }
 
 /** The harvest card's choice: who gets the fruit. The act behind it is the player's to tap. */
 export const FRUIT_TO = [
-  { id: 'him', label: 'Him', line: 'The fruit goes to him. You take the step on this card today.' },
-  { id: 'other', label: 'Someone else', line: 'Pick the person who gets it instead. You hand it over yourself.' },
-  { id: 'keep', label: 'Keep it', line: 'The fruit keeps in your bed. Come back and give it when you are ready.' },
+  { id: 'him', label: 'Him', line: 'You give this fruit to Wendell. Your part is to take the step written on this card today.' },
+  { id: 'other', label: 'Someone else', line: 'You give this fruit to someone else you know. Choose who gets it, then hand it to them yourself.' },
+  { id: 'keep', label: 'Keep it', line: 'You keep this fruit in your bed for now. It will still be here when you come back to give it away.' },
 ] as const
 export type FruitTo = (typeof FRUIT_TO)[number]['id']

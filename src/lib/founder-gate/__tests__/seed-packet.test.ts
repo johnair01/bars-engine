@@ -13,7 +13,7 @@ describe('the seed packet', () => {
   it('offers four seeds, one per kind of help, and three soils', () => {
     expect(SEEDS.map((s) => s.domain)).toEqual(['Gather Resource', 'Skillful Organizing', 'Raise Awareness', 'Direct Action'])
     expect(SOIL.map((s) => s.id)).toEqual(['Flowing', 'Stalled', 'Stuck'])
-    for (const s of SEEDS) expect(s.nextStep).toMatch(/^Next: /)
+    for (const s of SEEDS) expect(s.nextStep).toMatch(/^Your next step is to choose /)
   })
   it('gives a crop only once a family is set', () => {
     expect(cropOf({ ...EMPTY_PACKET, seed: 'own' })).toBeUndefined()
