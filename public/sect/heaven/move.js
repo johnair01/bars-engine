@@ -102,3 +102,25 @@ export function cameraRig(cam, orbit, { boxes, groundAt, roofs = () => [] }) {
   };
   return rig;
 }
+
+// ---- input: the on-screen stick for touch (round 31). It writes input.stick = {x, y} (x right, y forward, each -1..1, null
+// when let go); walk.js's step() reads it beside the keys. One finger on the stick walks; a second finger can drag the view.
+export function touchStick(input, base, knob) {
+  const R = 46; let id = null, cx = 0, cy = 0;
+  const set = (e) => { let dx = e.clientX - cx, dy = e.clientY - cy; const L = Math.hypot(dx, dy);
+    if (L > R) { dx *= R / L; dy *= R / L; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    const k = Math.min(1, Math.hypot(dx, dy) / R), dead = k < 0.18 ? 0 : k;
+    input.stick = dead ? { x: dx / R, y: -dy / R } : { x: 0, y: 0 }; };
+  base.addEventListener('pointerdown', e => { if (id !== null) return; e.preventDefault(); e.stopPropagation(); id = e.pointerId; try { base.setPointerCapture(id); } catch (_) { /* a synthetic pointer has no capture */ }
+    const b = base.getBoundingClientRect(); cx = b.left + b.width / 2; cy = b.top + b.height / 2; set(e); });
+  base.addEventListener('pointermove', e => { if (e.pointerId === id) set(e); });
+  const end = e => { if (e.pointerId !== id) return; id = null; input.stick = null; knob.style.transform = ''; };
+  base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end);
+}
+
+// keys held down are forgotten when the page loses focus, or the figure would walk on with no hand on the keyboard
+export function forgetKeysOnBlur(input) {
+  const clear = () => { input.keys.clear(); input.stick = null; };
+  addEventListener('blur', clear); document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
+}
