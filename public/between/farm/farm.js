@@ -270,7 +270,7 @@ function drawWorld(world) {
 }
 // ---------- the shelf: each sealed parcel is a wrapped bundle under a lit wax seal (farm-world-write-look-3) ----------
 const shelfGroup = new THREE.Group(); shelfGroup.name = 'shelf'; scene.add(shelfGroup);
-const SHELF = V(GATE_W / 2 + 2.3, 0, FZ + 1.0); let PARCELS = [], SATCHEL = [], PSEL = null; const seals = [];
+const SHELF = V(GATE_W / 2 - 0.25, 0, FZ + 1.7); let PARCELS = [], SATCHEL = [], PSEL = null; const seals = [];
 function drawShelf() {
   shelfGroup.clear(); seals.length = 0; if (!PARCELS.length) return;
   const w = 0.34 + PARCELS.length * 0.52, board = mesh(new THREE.BoxGeometry(w, 0.07, 0.42), toon(PAL.wood)); board.position.set(SHELF.x + w / 2 - 0.2, 0.62, SHELF.z); shelfGroup.add(board);
