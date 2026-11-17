@@ -13,10 +13,10 @@ describe('thenText', () => {
     expect(thenText(null)).toBe('')
     expect(thenText(undefined, 'A')).toBe('')
   })
-  it("writes the chosen answer's brief, and every key when his answer is not in the mapping", () => {
+  it("writes the chosen answer's brief and nothing when no key holds his answer", () => {
     expect(thenText(mapping.then, 'B')).toBe('Tasks first, then the voices.')
-    expect(thenText(mapping.then)).toBe('A: Voices first.\n\nB: Tasks first, then the voices.')
-    expect(thenText(mapping.then, 'C')).toBe('A: Voices first.\n\nB: Tasks first, then the voices.')
+    expect(thenText(mapping.then)).toBe('')
+    expect(thenText(mapping.then, 'C')).toBe('')
   })
 })
 
@@ -27,8 +27,7 @@ describe('ticketFromAnswer with a mapping or a list', () => {
     expect(chosen.brief).not.toContain('Tasks first')
     expect(chosen.brief).not.toContain('[object Object]')
     const other = ticketFromAnswer('council', 'questions', 'lr-day-look-3', { choice: 'C' }, mapping)!
-    expect(other.brief).toContain('A: Voices first.')
-    expect(other.brief).toContain('B: Tasks first, then the voices.')
+    expect(other.brief).toContain("the gate's claim")
     expect(other.brief).not.toContain('[object Object]')
   })
   it("writes the chosen option's list one step per line", () => {
