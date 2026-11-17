@@ -1,6 +1,6 @@
 /**
  * Section → dimension mapping for book TOC.
- * Scores each section by heuristic keywords to suggest move, nation, archetype, Kotter stage.
+ * Scores each section by heuristic keywords to suggest move, Elder, archetype, Kotter stage.
  * Spec: .specify/specs/book-quest-targeted-extraction/spec.md
  */
 import type { BookToc } from './book-toc'
@@ -12,12 +12,13 @@ const MOVE_KEYWORDS: Record<string, string[]> = {
   showUp: ['action', 'do', 'experiment', 'step', 'try', 'commit'],
 }
 
-const NATION_KEYWORDS: Record<string, string[]> = {
-  Argyra: ['clarity', 'precision', 'structure', 'analysis', 'mirror', 'craft'],
-  Pyrakanth: ['passion', 'fire', 'intensity', 'commitment', 'garden', 'burn'],
-  Lamenth: ['emotion', 'flow', 'meaning', 'beauty', 'depth', 'feeling'],
-  Meridia: ['balance', 'exchange', 'fair', 'midday', 'center'],
-  Virelune: ['growth', 'connection', 'network', 'organic', 'create'],
+const ELDER_KEYWORDS: Record<string, string[]> = {
+  shaman: ['feeling', 'belonging', 'ritual', 'invitation', 'presence', 'welcome'],
+  architect: ['structure', 'system', 'plan', 'framework', 'process', 'design'],
+  challenger: ['truth', 'test', 'boundary', 'challenge', 'edge', 'confront'],
+  regent: ['duty', 'promise', 'ownership', 'commitment', 'agreement', 'follow through'],
+  diplomat: ['listen', 'bridge', 'include', 'table', 'relationship', 'mediate'],
+  sage: ['pattern', 'whole', 'step back', 'perspective', 'reflect', 'wisdom'],
 }
 
 const KOTTER_KEYWORDS: Record<number, string[]> = {
@@ -47,7 +48,7 @@ const CONFIDENCE_THRESHOLD = 0.5
 export interface SectionDimensionHint {
   sectionIndex: number
   moveType?: string
-  nation?: string
+  elder?: string
   archetype?: string
   kotterStage?: number
   confidence: number
@@ -110,7 +111,7 @@ function scoreKotter(text: string): { value: number; confidence: number } | null
 
 /**
  * Map TOC sections to game dimensions via heuristic keyword scoring.
- * Uses section titles (chapter/section names often signal move, nation, Kotter stage).
+ * Uses section titles (chapter/section names often signal move, Elder, Kotter stage).
  * Optional fullText: when provided, samples content after TOC region for each section (best-effort).
  */
 export function mapSectionsToDimensions(toc: BookToc, fullText?: string): SectionDimensionHint[] {
@@ -138,10 +139,10 @@ export function mapSectionsToDimensions(toc: BookToc, fullText?: string): Sectio
       hints.confidence = Math.max(hints.confidence, moveResult.confidence)
     }
 
-    const nationResult = scoreKeywords(text, NATION_KEYWORDS)
-    if (nationResult) {
-      hints.nation = nationResult.value
-      hints.confidence = Math.max(hints.confidence, nationResult.confidence)
+    const elderResult = scoreKeywords(text, ELDER_KEYWORDS)
+    if (elderResult) {
+      hints.elder = elderResult.value
+      hints.confidence = Math.max(hints.confidence, elderResult.confidence)
     }
 
     const archetypeResult = scoreKeywords(text, ARCHETYPE_KEYWORDS)
@@ -156,7 +157,7 @@ export function mapSectionsToDimensions(toc: BookToc, fullText?: string): Sectio
       hints.confidence = Math.max(hints.confidence, kotterResult.confidence)
     }
 
-    if (hints.confidence === 0 && (moveResult || nationResult || archetypeResult || kotterResult)) {
+    if (hints.confidence === 0 && (moveResult || elderResult || archetypeResult || kotterResult)) {
       hints.confidence = 0.5
     }
 
@@ -170,9 +171,9 @@ export function suggestMove(text: string): { value: string | null; confidence: n
   return r ? { value: r.value, confidence: r.confidence } : { value: null, confidence: 0 }
 }
 
-/** Chunk-level heuristic: suggest nation from text. */
-export function suggestNation(text: string): { value: string | null; confidence: number } {
-  const r = scoreKeywords(text, NATION_KEYWORDS)
+/** Chunk-level heuristic: suggest the Elder whose way the text teaches. */
+export function suggestElder(text: string): { value: string | null; confidence: number } {
+  const r = scoreKeywords(text, ELDER_KEYWORDS)
   return r ? { value: r.value, confidence: r.confidence } : { value: null, confidence: 0 }
 }
 

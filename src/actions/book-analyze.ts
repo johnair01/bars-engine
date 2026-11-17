@@ -7,9 +7,9 @@ import { getOpenAI } from '@/lib/openai'
 import { z } from 'zod'
 import { chunkBookText, chunkBookTextWithToc, type TextChunk } from '@/lib/book-chunker'
 import { chunkIsActionable } from '@/lib/chunk-filter'
-import { SECT_LENS_PROMPT, sectLensFields, keepVerifiedSource, bookAnalysisLens } from '@/lib/book-analysis/sect-lens'
+import { SECT_LENS_PROMPT, SECT_ELDERS, sectLensFields, keepVerifiedSource, bookAnalysisLens } from '@/lib/book-analysis/sect-lens'
 import { suggestDomain, CONFIDENCE_THRESHOLD } from '@/lib/quest-classifier'
-import { suggestMove, suggestNation, suggestKotterStage, suggestArchetype } from '@/lib/book-section-mapper'
+import { suggestMove, suggestElder, suggestKotterStage, suggestArchetype } from '@/lib/book-section-mapper'
 import { ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT } from '@/lib/allyship-domains-parser-context'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
 import { isBackendAvailable, analyzeChunkViaAgent } from '@/lib/agent-client'
@@ -17,12 +17,12 @@ import { ensureMetalNationMoves } from '@/actions/nation-moves'
 
 const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
 const ALLYSHIP_DOMAINS = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'] as const
-const NATIONS = ['Argyra', 'Pyrakanth', 'Lamenth', 'Meridia', 'Virelune'] as const
+const RANKS = ['Initiate', 'Practitioner', 'Adept', 'Steward', 'Integrator', 'Keeper'] as const
 const LOCK_TYPES = ['identity_lock', 'emotional_lock', 'action', 'possibility'] as const
 
 export type AnalysisFilters = {
   moveType?: (typeof MOVE_TYPES)[number][]
-  nation?: string[]
+  elder?: string[]
   archetype?: string[]
   kotterStage?: number[]
 }
@@ -56,7 +56,7 @@ const moveExtractionSchema = z.object({
       // No .optional() — OpenAI structured outputs require every `properties` key in `required`; use null instead.
       barKind: z.enum(['clarity', 'prestige', 'framework']).nullable().describe('What kind of BAR this produces. clarity=reduce ambiguity; prestige=spotlight craft; framework=reusable template. Null if unclear.'),
       requirementsHint: z.string().nullable().describe('What inputs the move might need (e.g. "objective rewrite, collaborator"). Null if none.'),
-      nation: z.enum(NATIONS).nullable().describe('Thematic nation alignment. Null if unclear.'),
+      elder: z.enum(SECT_ELDERS).nullable().describe('The Elder whose way this move teaches. Null if unclear.'),
     })
   ),
 })
@@ -74,7 +74,7 @@ For each move extract:
 - moveType: wakeUp (see more), cleanUp (emotional energy), growUp (skill capacity), showUp (do the work)
 - barKind: clarity | prestige | framework — what kind of BAR it produces. Null if unclear.
 - requirementsHint: Optional inputs (e.g. "objective rewrite"). Null if none.
-- nation: Argyra | Pyrakanth | Lamenth | Meridia | Virelune — thematic fit. Null if unclear.
+- elder: shaman | architect | challenger | regent | diplomat | sage — the Elder whose way it teaches. Null if unclear.
 
 Return 0-3 moves per chunk. Skip chunks with no move-like patterns.`
 
@@ -85,7 +85,7 @@ const analysisSchema = z.object({
       description: z.string().describe('Quest instructions or narrative'),
       moveType: z.enum(MOVE_TYPES).describe('Which of the 4 moves: Wake Up, Clean Up, Grow Up, Show Up'),
       allyshipDomain: z.enum(ALLYSHIP_DOMAINS).nullable().describe('Essential domain (WHERE). When multiple apply, choose the primary one. Null if purely individual with no clear collective context.'),
-      nation: z.enum(NATIONS).nullable().describe('Thematic nation alignment (Argyra=clarity, Pyrakanth=passion, Lamenth=emotion, Meridia=balance, Virelune=growth). Null if unclear.'),
+      rank: z.enum(RANKS).nullable().describe('Sect rank the practice suits: Initiate, Practitioner, Adept, Steward, Integrator or Keeper. Null if unclear.'),
       archetype: z.string().nullable().describe('Thematic archetype (Bold Heart, Danger Walker, Truth Seer, etc.). Null if unclear.'),
       kotterStage: z.number().min(1).max(8).nullable().describe('Kotter change stage 1-8. Null if unclear (downstream defaults to 1).'),
       lockType: z.enum(LOCK_TYPES).nullable().describe('Transformation lock: identity_lock, emotional_lock, action, possibility. Null if unclear.'),
@@ -99,7 +99,7 @@ type QuestResult = {
   description: string
   moveType: string
   allyshipDomain?: string | null
-  nation?: string | null
+  rank?: string | null
   archetype?: string | null
   kotterStage?: number | null
   lockType?: string | null
@@ -143,7 +143,8 @@ Extract potential quests (actionable tasks) from this text chunk. Each quest sho
 ${ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT}
 
 Optional metadata (use when context supports it):
-- nation: Argyra (clarity/precision), Pyrakanth (passion/intensity), Lamenth (emotion/flow), Meridia (balance), Virelune (growth/connection)
+- elder: shaman (feeling, belonging) | architect (structure) | challenger (the hard truth) | regent (keeping promises) | diplomat (the table, listening) | sage (the whole pattern). Null if unclear.
+- rank: Initiate | Practitioner | Adept | Steward | Integrator | Keeper. Null if unclear.
 - archetype: Bold Heart, Danger Walker, Truth Seer, Still Point, Subtle Influence, Devoted Guardian, Decisive Storm, Joyful Connector
 - kotterStage: 1-8 (urgency→coalition→vision→communicate→obstacles→wins→scale→anchor)
 - lockType: identity_lock, emotional_lock, action, possibility
@@ -154,7 +155,7 @@ Return 1-5 quests per chunk. Skip chunks with no actionable content.`
 function buildTargetPromptLine(filters: AnalysisFilters): string {
   const parts: string[] = []
   if (filters.moveType?.length) parts.push(`move: ${filters.moveType.join(', ')}`)
-  if (filters.nation?.length) parts.push(`nation: ${filters.nation.join(', ')}`)
+  if (filters.elder?.length) parts.push(`elder: ${filters.elder.join(', ')}`)
   if (filters.archetype?.length) parts.push(`archetype: ${filters.archetype.join(', ')}`)
   if (filters.kotterStage?.length) parts.push(`Kotter stage: ${filters.kotterStage.join(', ')}`)
   if (parts.length === 0) return ''
@@ -163,12 +164,12 @@ function buildTargetPromptLine(filters: AnalysisFilters): string {
 
 /** Section contradicts filters when it has a hint that explicitly doesn't match. Skip such chunks without running heuristics. */
 function sectionContradictsFilters(
-  hint: { moveType?: string; nation?: string; archetype?: string; kotterStage?: number } | null,
+  hint: { moveType?: string; elder?: string; archetype?: string; kotterStage?: number } | null,
   filters: AnalysisFilters
 ): boolean {
   if (!hint) return false
   if (filters.moveType?.length && hint.moveType && !filters.moveType.includes(hint.moveType as (typeof MOVE_TYPES)[number])) return true
-  if (filters.nation?.length && hint.nation && !filters.nation.includes(hint.nation)) return true
+  if (filters.elder?.length && hint.elder && !filters.elder.includes(hint.elder)) return true
   if (filters.archetype?.length && hint.archetype && !filters.archetype.includes(hint.archetype)) return true
   if (filters.kotterStage?.length && hint.kotterStage != null && !filters.kotterStage.includes(hint.kotterStage)) return true
   return false
@@ -177,7 +178,7 @@ function sectionContradictsFilters(
 function chunkMatchesFilters(
   chunk: TextChunk,
   filters: AnalysisFilters,
-  sectionHints?: Array<{ moveType?: string; nation?: string; archetype?: string; kotterStage?: number }>
+  sectionHints?: Array<{ moveType?: string; elder?: string; archetype?: string; kotterStage?: number }>
 ): boolean {
   const hint = chunk.sectionIndex != null && sectionHints?.[chunk.sectionIndex] ? sectionHints[chunk.sectionIndex] : null
 
@@ -189,10 +190,10 @@ function chunkMatchesFilters(
     const chunkMatch = m.value && m.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.moveType.includes(m.value as (typeof MOVE_TYPES)[number])
     if (!sectionMatch && !chunkMatch) return false
   }
-  if (filters.nation?.length) {
-    const n = suggestNation(chunk.text)
-    const sectionMatch = hint?.nation && filters.nation.includes(hint.nation)
-    const chunkMatch = n.value && n.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.nation.includes(n.value)
+  if (filters.elder?.length) {
+    const n = suggestElder(chunk.text)
+    const sectionMatch = hint?.elder && filters.elder.includes(hint.elder)
+    const chunkMatch = n.value && n.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.elder.includes(n.value)
     if (!sectionMatch && !chunkMatch) return false
   }
   if (filters.archetype?.length) {
@@ -313,7 +314,7 @@ async function createQuestsFromAnalysis(
         isSystem: true,
         moveType: q.moveType,
         allyshipDomain: q.allyshipDomain ?? null,
-        nation: q.nation ?? null,
+        gameMasterFace: q.elder ?? null,
         archetype: q.archetype ?? null,
         kotterStage: q.kotterStage != null ? q.kotterStage : 1,
         lockType: q.lockType ?? null,
@@ -321,6 +322,7 @@ async function createQuestsFromAnalysis(
           source: 'library',
           bookId,
           ...(q.elder ? { elder: q.elder } : {}),
+          ...(q.rank ? { rank: q.rank } : {}),
           ...(q.sourceSentence ? { sourceSentence: q.sourceSentence } : {}),
           ...(q.restPath ? { restPath: q.restPath } : {}),
         }),
@@ -598,7 +600,7 @@ export async function analyzeBook(bookId: string, options?: { filters?: Analysis
     const hasFilters = Boolean(
       filters &&
         (filters.moveType?.length ||
-          filters.nation?.length ||
+          filters.elder?.length ||
           filters.archetype?.length ||
           filters.kotterStage?.length)
     )

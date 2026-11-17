@@ -18,7 +18,7 @@ const MOVE_OPTIONS = [
   { value: 'showUp', label: 'Show Up' },
 ] as const
 
-const NATION_OPTIONS = ['Argyra', 'Pyrakanth', 'Lamenth', 'Meridia', 'Virelune'] as const
+const ELDER_OPTIONS = ['shaman', 'architect', 'challenger', 'regent', 'diplomat', 'sage'] as const
 
 const ARCHETYPE_OPTIONS = [
   'Bold Heart',
@@ -40,7 +40,7 @@ export function BookHubClient({ book }: { book: AdminBookRow }) {
 
   const hasActiveFilters =
     (filters.moveType?.length ?? 0) > 0 ||
-    (filters.nation?.length ?? 0) > 0 ||
+    (filters.elder?.length ?? 0) > 0 ||
     (filters.archetype?.length ?? 0) > 0 ||
     (filters.kotterStage?.length ?? 0) > 0
 
@@ -92,17 +92,17 @@ export function BookHubClient({ book }: { book: AdminBookRow }) {
                 </div>
               </div>
               <div>
-                <p className="mb-1 text-xs text-zinc-500">Nation</p>
+                <p className="mb-1 text-xs text-zinc-500">Elder</p>
                 <div className="flex flex-wrap gap-1">
-                  {NATION_OPTIONS.map((n) => (
+                  {ELDER_OPTIONS.map((n) => (
                     <label key={n} className="flex cursor-pointer items-center gap-1">
                       <input
                         type="checkbox"
-                        checked={filters.nation?.includes(n) ?? false}
-                        onChange={() => toggleFilter('nation', n)}
+                        checked={filters.elder?.includes(n) ?? false}
+                        onChange={() => toggleFilter('elder', n)}
                         className="rounded border-zinc-600 bg-zinc-800"
                       />
-                      <span className="text-xs text-zinc-300">{n}</span>
+                      <span className="text-xs capitalize text-zinc-300">{n}</span>
                     </label>
                   ))}
                 </div>
