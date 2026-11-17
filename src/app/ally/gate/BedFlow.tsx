@@ -5,6 +5,7 @@ import type { Channel } from '@/lib/coaching/unpacking-walk'
 import { CHANNELS, CROP_FAMILY, bedLabel } from '@/lib/between/crops'
 import { FRUIT_TO, OWN_SEED, STUCK_OBJECTS, moveAction, type FruitTo } from '@/lib/founder-gate/content'
 import { cropOf, pathFor, seedOf, stuckStart, type Packet } from '@/lib/founder-gate/seed-packet'
+import { ActCard } from './ActCard'
 import { BedStage } from './Bed'
 import { GOLD, INK, LINE, MUTED, btn, primary } from './ui'
 
@@ -83,22 +84,13 @@ export function Move({ packet, from, i, onNext, onStill }: { packet: Packet; fro
   )
 }
 
-/** The ripe crop: the real act behind the seed, a choice of who gets the fruit, and the act itself is theirs to tap. */
-export function Harvest({ packet, onOffering, onGrounds, onQuietRoom }: { packet: Packet; onOffering: () => void; onGrounds: () => void; onQuietRoom: () => void }) {
+/** The ripe crop: the real act behind the seed, a choice of who gets the fruit, and the act itself on the card's back, theirs to seal. */
+export function Harvest({ packet, onGrounds, onQuietRoom }: { packet: Packet; onGrounds: () => void; onQuietRoom: () => void }) {
   const crop = cropOf(packet)
   const seed = seedOf(packet)
   const [to, setTo] = useState<FruitTo | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [card, setCard] = useState(false)
   const act = seed?.act ?? 'own'
-  const tapAct = async () => {
-    if (act === 'offering') return onOffering()
-    if (act === 'share' && !seed?.href) {
-      try { await navigator.clipboard.writeText(`${window.location.origin}/ally/gate`) } catch { /* the link is the page you are on */ }
-      setCopied(true); return
-    }
-    if (act === 'own') return onQuietRoom()
-    if (seed?.href) window.open(seed.href, '_blank', 'noopener,noreferrer')
-  }
   const family = crop ? CROP_FAMILY[crop.family] : null
   return (
     <BedStage family={crop?.family ?? null} grow={1} ripe lit={[]} glow={null} label="The ripe crop">
@@ -114,11 +106,11 @@ export function Harvest({ packet, onOffering, onGrounds, onQuietRoom }: { packet
         </div>
         {to && <p style={{ ...say, fontSize: '1rem', color: GOLD }}>{FRUIT_TO.find((f) => f.id === to)!.line}</p>}
         {to && to !== 'keep' && (
-          <button type="button" style={primary} onClick={tapAct}>{act === 'own' ? OWN_SEED.actLabel : seed!.actLabel}</button>
+          <button type="button" style={primary} onClick={() => (act === 'own' ? onQuietRoom() : setCard(true))}>{act === 'own' ? OWN_SEED.actLabel : seed!.actLabel}</button>
         )}
-        {copied && <span style={{ color: GOLD, fontSize: '.85rem' }} aria-live="polite">Copied. Paste it to one person yourself.</span>}
         <button type="button" style={{ ...btn, textAlign: 'center' }} onClick={onGrounds}>On to the grounds</button>
       </div>
+      {card && seed && act !== 'own' && <ActCard act={act} front={seed.front} title={seed.title} packet={packet} onClose={() => setCard(false)} />}
     </BedStage>
   )
 }

@@ -26,7 +26,7 @@ import {
   type Hotspot,
   type Scene,
 } from '@/lib/founder-gate/content'
-import { setShippedCount } from '@/actions/founder-gate'
+import { setFounderPlayerId, setShippedCount } from '@/actions/founder-gate'
 import { EMPTY_PACKET, feelingFor, type Packet } from '@/lib/founder-gate/seed-packet'
 import type { Channel } from '@/lib/coaching/unpacking-walk'
 import { SeedPacket } from './SeedPacket'
@@ -230,7 +230,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
         {id === 'planting' && <Planting packet={packet} onDone={() => go('bed')} />}
         {id === 'bed' && <Bed packet={packet} onObject={(c) => { setStuckFrom(c); go('stuck-0') }} onRest={() => go('grounds')} onStill={() => { setStuckDone(true); go('work-with') }} />}
         {moveM && stuckFrom && <Move key={id} packet={packet} from={stuckFrom} i={Number(moveM[1])} onNext={(n) => go(n === 'harvest' ? 'harvest' : `stuck-${n}`)} onStill={() => { setStuckDone(true); go('work-with') }} />}
-        {id === 'harvest' && <Harvest packet={packet} onOffering={() => setOffer(true)} onGrounds={() => go('grounds')} onQuietRoom={() => { setStuckDone(true); go('room-intro') }} />}
+        {id === 'harvest' && <Harvest packet={packet} onGrounds={() => go('grounds')} onQuietRoom={() => { setStuckDone(true); go('room-intro') }} />}
         {isMake && <Nook me={me} setMe={setMe} turn={() => setView((v) => (v + 1) % 4)} done={() => go('packet')} />}
 
         {/* the one live figure: large in the nook, small beside the planted dream */}
@@ -334,6 +334,7 @@ function Nook({ me, setMe, turn, done }: { me: Cultivator; setMe: (c: Cultivator
 function AdminCount({ shipped }: { shipped: number | null }) {
   const [v, setV] = useState(shipped === null ? '' : String(shipped))
   const [msg, setMsg] = useState('')
+  const [fid, setFid] = useState('')
   const [pending, start] = useTransition()
   return (
     <div style={{ ...btn, cursor: 'default', display: 'grid', gap: 8 }}>
@@ -342,6 +343,12 @@ function AdminCount({ shipped }: { shipped: number | null }) {
         <input inputMode="numeric" value={v} onChange={(e) => setV(e.target.value.replace(/\D/g, ''))} style={{ ...btn, flex: 1, minHeight: 40 }} aria-label="Shipped copies" />
         <button type="button" disabled={pending || v === ''} style={{ ...btn, minHeight: 40 }}
           onClick={() => start(async () => { const r = await setShippedCount(Number(v)); setMsg(r.ok ? 'Saved' : r.error) })}>Save</button>
+      </div>
+      <b style={{ color: GOLD, fontSize: '.85rem' }}>Admin: founder’s player id (where sealed acts are filed)</b>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input value={fid} onChange={(e) => setFid(e.target.value.replace(/\s/g, ''))} style={{ ...btn, flex: 1, minHeight: 40 }} aria-label="Founder player id" placeholder="Player id, blank to clear" />
+        <button type="button" disabled={pending} style={{ ...btn, minHeight: 40 }}
+          onClick={() => start(async () => { const r = await setFounderPlayerId(fid); setMsg(r.ok ? 'Saved' : r.error) })}>Save</button>
       </div>
       <span aria-live="polite" style={{ color: MUTED, fontSize: '.8rem' }}>{msg}</span>
     </div>
