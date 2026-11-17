@@ -19,9 +19,9 @@ export const KETTLE = {
   /* On a low table stone beside the seat, to the right and a little ahead, clear of the crossed knees, the robe and the arms
      (tea-cup-look-3: the table at 47 cm, straight over the right knee, cut through the robe and the arms). bt-tea-needs-a-spot:
      both shells' placements are full, so the kettle is drawn by the scene at the fire and never goes through roomWrite. */
-  turn: 1.25,        // its middle, this far round from straight ahead toward the right hand (rad)
-  out: 0.80,         // and this far from the seat's middle (m)
-  top: 0.08,         // the table stone's top over the seat's top
+  turn: 0.80,        // its middle, this far round from straight ahead toward the right hand (rad)  [kneeling figure: WIP, Dusk's was 1.25]
+  out: 0.48,         // and this far from the seat's middle (m)  [WIP, Dusk's was 0.80]
+  top: 0.12,         // the table stone's top over the seat's top  [WIP, Dusk's was 0.08]
   stone: [0.22, 0.25],   // the stone's radius at its top and at its foot
   body: 0.11, height: 0.16,
   spout: 0.165, lipH: 0.19,   // the spout's tip, out from the pot's middle toward the seat and up from the stone's top
