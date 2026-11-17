@@ -37,7 +37,7 @@ export function Bed({ packet, onObject, onRest, onStill }: { packet: Packet; onO
     <BedStage family={crop?.family ?? null} grow={0.15} ripe={false} lit={[...CHANNELS]} glow={glow} onObject={onObject} label={crop ? bedLabel(crop) : 'Your bed'}>
       <div style={panel}>
         <span style={small}>{crop ? `${bedLabel(crop)} · ${CROP_FAMILY[crop.family].name}` : 'Your bed'}</span>
-        <p style={say}>Five things trouble this bed. Tap the one most like what stops you from doing this.</p>
+        <p style={say}>Five problems threaten your seedling. Tap the one most like your own reason for not helping yet.</p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="button" style={{ ...btn, flex: 1, textAlign: 'center' }} onClick={onRest}>Let the weather be</button>
           <button type="button" style={{ ...btn, flex: 1, textAlign: 'center' }} onClick={onStill}>I am still stuck on this</button>
@@ -105,7 +105,7 @@ export function Harvest({ packet, onOffering, onGrounds, onQuietRoom }: { packet
       <div style={panel}>
         <span style={small}>{family ? `${family.name} · ripe` : 'Ripe'}</span>
         {seed && <p style={say}>{seed.front}</p>}
-        {!seed && <p style={say}>Your own seed ripens. Pick the first thing you will do about it this week.</p>}
+        {!seed && <p style={say}>Your own seed is ripe. Write on this card one thing you will do for it this week.</p>}
         <p style={{ ...say, fontSize: '1rem', color: MUTED }}>Who gets the fruit?</p>
         <div style={{ display: 'flex', gap: 8 }}>
           {FRUIT_TO.map((f) => (
