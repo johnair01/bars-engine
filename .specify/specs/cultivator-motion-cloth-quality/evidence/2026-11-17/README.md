@@ -88,3 +88,13 @@ MOTION_QUERY='?legacy=1' ...                                                # th
 - `compare-body-vs-robe-boundaries.jpg`: four boundary cells (f slight 1.50, f broad 1.95, m slight 1.95, m broad 1.50),
   body then robe, same frames: run strike, compression, flight, jump preload, apex, landing.
 - `before-after-m-broad-1.95.jpg`, `before-after-f-slight-1.50.jpg`: legacy code against the fix, robe then body.
+
+## Wendell's note, 2026-11-17 11:15 PT (not yet worked)
+
+> "in general the running needs to have the models leaning forward more. This is how the mocap goes and the models don't match it"
+
+Applies to every body and build, not one frame. Not measured yet. First step for the next session: compare the torso's
+forward angle (hips to spine03, from vertical) in the orange CMU run against the figure at the eight run phases on every cell, in
+degrees. The lab drives it through `retargetRunDirections` (`torso = targetDir('spine','spine.003', lean)`, control `lean`,
+default 1.0; earlier saved notes used 1.6) and `motion.js` run keys carry a separate `lean` (.12 to .16 rad) for the authored clip.
+Check which path the run view uses and whether the figure's torso bones follow the aim before raising the control.
