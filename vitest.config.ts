@@ -83,6 +83,7 @@ export default defineConfig({
       'src/lib/__tests__/npc-face-resolver.test.ts',
       'src/lib/cyoa-composer/__tests__/merge-overrides.test.ts',
       'src/lib/cyoa-composer/__tests__/step-registry.test.ts',
+      'src/lib/voice/__tests__/export.test.ts',
       'src/lib/__tests__/vitest-include-registration.test.ts',
       'src/lib/__tests__/local-db-guard.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
