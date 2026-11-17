@@ -33,6 +33,8 @@ Each phase is one pull request, checked with `scripts/local/check.sh --build`, l
       paper walk sets it; `OTHER_POLE_COUNTS` (false) waits on his answer to the next question
 - [ ] Keep path: the player's capture becomes a BAR through the writer, and a kept BAR moves the needle (FR-011); it
       calls `keepAct` from standing.ts to learn whether a card turns up
+- [ ] Crossing (FR-015), only on his answer to bar-decks-cross-1: `mayCross(window)` in standing.ts, one crossing
+      per window from a Wake Up to the next kept Show Up; tests that a crossing opens nothing and stays in its own tally
 - [ ] Pictures with `scripts/local/dev.sh shot`, carried into a look row (no PR link on the row)
 
 ## Phase 5: Doors (gate: bar-decks-garden-1 for playtester permissions beyond the floor)
