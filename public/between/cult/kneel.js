@@ -82,7 +82,7 @@ export function makeKneel(W) {
       if (!fit || Math.abs(fit.top - top) > 0.005) fit = { top, hipY: fitKneel(top) };
       kneelPose(0);
       ST.hideLegs(X, floorLen);
-      ST.drape(X, { supports: [supportAt(top)] });
+      ST.drape(X, { supports: [supportAt(top)] }, { floorRun: 0.03, slope: 5, ...(window.__drapeOpts || {}) });
       for (const m of statics()) if (m.parent !== holder) holder.add(m);   // drape adds the laid cloth to the preview scene
     });
     kneeling = true;
