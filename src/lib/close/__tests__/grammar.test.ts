@@ -34,7 +34,7 @@ describe('grammar', () => {
     expect(r.plan.tickets[0].hull).toBe('zo')
     r.move = 'lever'
     const s = step(r, { do: 'send', n: 1 }); expect(s.send).toBe('1')
-    const db = { workLane: { findMany: vi.fn(async () => []) }, workTicket: { findUnique: vi.fn(async () => null), create: vi.fn(async (a: unknown) => a) } }
+    const db = { workLane: { findMany: vi.fn(async () => []) }, workTicket: { findUnique: vi.fn(async () => null), create: vi.fn(async (a: unknown) => a), groupBy: vi.fn(async () => []) } }
     const out = await pullLever(db as never, r, '1')
     expect(out.error).toBeUndefined(); expect(db.workTicket.create).toHaveBeenCalledTimes(1)
     expect(out.record.sent).toEqual(['1'])

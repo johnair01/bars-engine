@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { laneStatus, moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { routeLane } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -14,6 +15,14 @@ function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: 
         tickets.find(t => (where.id && t.id === where.id) || (where.sourceKey && t.sourceKey === where.sourceKey)) ?? null),
       findMany: vi.fn(async ({ where }: { where: { lane: string; state: string } }) =>
         tickets.filter(t => t.lane === where.lane && t.state === where.state)),
+      groupBy: vi.fn(async ({ where }: { where: { state: { in: string[] } } }) => {
+        const tally = new Map<string, number>()
+        for (const t of tickets) {
+          const st = t.state as string
+          if (where.state.in.includes(st)) tally.set(t.lane as string, (tally.get(t.lane as string) ?? 0) + 1)
+        }
+        return [...tally].map(([lane, n]) => ({ lane, state: 'ready', _count: { _all: n } }))
+      }),
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => { const t = { id: 't' + tickets.length, state: 'ready', ...data }; tickets.push(t); return t }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const t = tickets.find(x => x.id === where.id)!; Object.assign(t, data); return t }),
@@ -120,6 +129,54 @@ describe('the queue', () => {
       expect(await steerTicket(fakeDb(tickets), 'c', 'nowhere', 'owner')).toMatchObject({ ok: false, status: 400 })
       expect(await steerTicket(fakeDb(tickets), 'zz', 'claude', 'owner')).toMatchObject({ ok: false, status: 404 })
     })
+  })
+})
+
+describe('the ceiling', () => {
+  const full = (lane: string, n: number, state = 'ready') =>
+    Array.from({ length: n }, (_, i) => ({ id: `${lane}-${i}`, lane, state, sourceKey: `${lane}-${i}` }))
+  it('sends the answer past a lane that is at the ceiling into the next lit lane in his order', async () => {
+    const tickets = full('claude', 20)
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'freebuff' })
+  })
+  it('counts a lane\'s claimed tickets against the ceiling, so 3 ready and 17 claimed is full', async () => {
+    const tickets = [...full('claude', 3), ...full('claude', 17, 'claimed')]
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'freebuff' })
+  })
+  it('keeps the first lane while it has room', async () => {
+    const db = fakeDb(full('claude', 19))
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'claude' })
+  })
+  it('takes the lit lane with the shortest deck when every lane in his order is at the ceiling', async () => {
+    const tickets = [...full('claude', 30), ...full('freebuff', 25)]
+    const db = fakeDb(tickets, [{ lane: 'freebuff', dry: false, dryUntil: null }])
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+  })
+  it('gives DeepAI work once the lanes he named are full, without naming it in DEFAULT_LANES', async () => {
+    // The shape the live board was in on 2026-11-18: claude 3 ready + 40 claimed, freebuff 75, deepai 0.
+    const tickets = [...full('claude', 3), ...full('claude', 40, 'claimed'), ...full('freebuff', 75)]
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+  })
+  it('never routes to zo, so the closing lever keeps its monopoly', () => {
+    expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), {})).toMatchObject({ lane: 'claude' })
+    expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), { claude: 40 })).toMatchObject({ lane: 'claude' })
+    expect(routeLane(['zo'], new Set(['zo']), {})).toMatchObject({ lane: 'zo' })
+  })
+  it('reports no lane when every lane in the order has its lamp out', () => {
+    expect(routeLane(['claude', 'freebuff'], new Set(), {})).toBeNull()
+  })
+  it('names why it routed: his order while the lane has room, the ceiling otherwise', () => {
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 19 }))
+      .toEqual({ lane: 'claude', reason: 'order' })
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 20 }))
+      .toEqual({ lane: 'freebuff', reason: 'order' })
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 20, freebuff: 24 }))
+      .toEqual({ lane: 'claude', reason: 'ceiling' })
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 41, freebuff: 25 }))
+      .toEqual({ lane: 'freebuff', reason: 'ceiling' })
   })
 })
 

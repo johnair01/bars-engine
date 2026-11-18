@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, isLane, LANES, LEASE_MS, MAX_DRY_MS } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -15,9 +15,20 @@ export async function dryLanes(db: Db, now = new Date()): Promise<Set<string>> {
   return new Set(rows.filter(r => !r.dryUntil || r.dryUntil > now).map(r => r.lane))
 }
 
-/** Put a ticket in the queue: into the first lit lane of its order. A second push of the same answer is a no-op. */
+/** Ready plus claimed, per lane: the number a ceiling is measured against, so a lane holding a crew's hands counts as full. */
+export async function laneDepth(db: Db): Promise<Record<string, number>> {
+  const rows = await db.workTicket.groupBy({ by: ['lane'], where: { state: { in: ['ready', 'claimed'] } }, _count: { _all: true } })
+  return Object.fromEntries(rows.map(r => [r.lane, r._count._all]))
+}
+
+/**
+ * Put a ticket in the queue: into the first lane of its order that is lit and under the ceiling, else the
+ * lit lane with the shortest deck. A second push of the same answer is a no-op.
+ */
 export async function pushTicket(db: Db, t: TicketDraft) {
-  const lane = firstLitLane(t.lanes, await dryLanes(db))
+  const dry = await dryLanes(db)
+  const lit = new Set(LANES.filter(l => !dry.has(l)))
+  const lane = routeLane(t.lanes, lit, await laneDepth(db))?.lane ?? firstLitLane(t.lanes, dry)
   const existing = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
   if (existing) return { ticket: existing, created: false }
   const ticket = await db.workTicket.create({
