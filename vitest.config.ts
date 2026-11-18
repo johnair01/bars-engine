@@ -123,6 +123,7 @@ export default defineConfig({
       'src/app/api/council/preview-shots/__tests__/route.test.ts',
       'src/lib/marks/__tests__/chalk.test.ts',
       'src/lib/work/__tests__/ticket.test.ts',
+      'src/lib/work/__tests__/then-text.test.ts',
       'src/lib/work/__tests__/queue.test.ts',
       'src/lib/work/__tests__/stats.test.ts',
       'src/lib/work/__tests__/homeport.test.ts',
