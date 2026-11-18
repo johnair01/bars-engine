@@ -98,3 +98,45 @@ forward angle (hips to spine03, from vertical) in the orange CMU run against the
 degrees. The lab drives it through `retargetRunDirections` (`torso = targetDir('spine','spine.003', lean)`, control `lean`,
 default 1.0; earlier saved notes used 1.6) and `motion.js` run keys carry a separate `lean` (.12 to .16 rad) for the authored clip.
 Check which path the run view uses and whether the figure's torso bones follow the aim before raising the control.
+
+## Run forward lean, worked 2026-11-17 (Wendell's note above)
+
+Measured with `motion_measure.mjs` (new `lean` and `refLean` fields, `figureLean`/`refLean` in `motion-measure.js`): the
+forward angle from vertical, in degrees, of hips to spine03 on the figure against the orange CMU rig's pelvis to
+`spine.003`, at the eight run phases (strike, compression, toe-off, flight, then the same on the other foot) on all 14 cells.
+
+| | CMU reference | Figure before | Figure after |
+|---|---|---|---|
+| Mean over 8 phases, base f (all 7 cells) | 10.2 deg | 3.2 deg | 10.2 deg |
+| Mean over 8 phases, base m (all 7 cells) | 10.2 deg | 1.7 deg | 10.2 deg |
+| Largest per-phase gap | | 7 to 9 deg (reference 9 to 13, figure 0 to 6) | 0.0 deg |
+
+Per phase (reference, identical after): 10.3, 9.7, 9.1, 12.0, 10.1, 9.3, 8.6, 12.7 deg. Height and build do not change the
+numbers: the aim reads bones, so every cell of a base is identical.
+
+Cause: `retargetRunDirections` read the source direction from the CMU `spine` to `spine.003` (a pelvis-to-upper-back span)
+but aimed only `hips` to `spine01`. The figure's own spine curve then sat on top and its upper back stood 7 to 8 deg more
+upright than the capture. The `lean` control was already 1.0, so raising it would only have exaggerated the lower back.
+The authored-clip `lean` keys in `motion.js` are not used by the run view (the run view is the CMU retarget).
+
+Change: `retargetRunDirections` aims `hips` to `spine03`. One line, in `mocap-reference.js`. Run sweep, step sizes and
+contact are unchanged (hips step max .0135 H, median .0036 H, sole on y = 0 as before).
+
+Not checked: the head. The neck now reads -8 deg (base f) and -11 deg (base m) from vertical where the CMU neck reads about
++3 deg, so the head sits tilted back relative to the capture; it was -15 deg before, so it moved toward the capture, but I
+did not aim the neck. Whether Wendell reads the new lean as right is a visual call and is not given here; the walk, jump
+and cloth are untouched.
+
+Sheets (before row over after row; strike, compression, flight, flight-2, orange reference left of the figure, robe on):
+`lean-before-after-f-slight-1.50.jpg`, `lean-before-after-f-broad-1.95.jpg`, `lean-before-after-m-slight-1.95.jpg`,
+`lean-before-after-m-broad-1.50.jpg`. Raw numbers: `lean-before-motion-measure.json`, `lean-after-motion-measure.json`.
+Frames: `tools/blender-cloud/tests/motion_lean_shots.mjs`.
+
+### Run lean gain, 2026-11-17 evening (Wendell: "it does look better, ... lean forward even more")
+
+`RUN_LEAN_GAIN = 1.6` in `mocap-reference.js` multiplies the forward part of the run torso direction. It touches the run only
+(the lab's `lean` control still scales walk/jump keys). Result on all 14 cells: torso 16.1 deg on average (capture 10.2 deg),
+phases 13.5 to 19.8 deg; neck reads -2 to -5 deg (was -8 to -11), so the head sits closer to level. Sweep, step sizes and
+contact unchanged. `?runLean=1` in the lab URL gives the capture exactly, `?runLean=2` about 20 deg.
+Sheets `lean-gain-*.jpg` (rows: capture 1.0x, 1.6x, 2.0x; four cells). Raw: `lean-gain1.6-motion-measure.json`.
+The 1.6 value is a guess from the earlier saved note; 2.0 is the next step up if it still reads upright.

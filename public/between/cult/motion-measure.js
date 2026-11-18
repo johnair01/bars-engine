@@ -65,6 +65,20 @@ export function referenceSize(c) {
   return { refLegWorld: r4(refLeg), charLeg: r4(charLeg), stature: r4(F.stature), refScale: r4(ref.group.scale.x), jumpScale: r4(c.jumpRef.group.scale.x) };
 }
 
+// forward angle of a segment from vertical, in degrees; positive leans toward `fwd`
+const leanDeg = (a, b, fwd) => { const d = wp(b).sub(wp(a)); return r4(Math.atan2(d.dot(fwd), d.y) * 180 / Math.PI); };
+// torso forward lean of the figure (hips to spine03, the README's definition; also the lower and upper halves)
+export function figureLean(F) {
+  const B = F.bones, f = F.fr.f.clone().setY(0).normalize();
+  return { hipsSpine03Deg: leanDeg(B.hips, B.spine03, f), hipsSpine01Deg: leanDeg(B.hips, B.spine01, f), spine01Spine03Deg: leanDeg(B.spine01, B.spine03, f), spine03NeckDeg: leanDeg(B.spine03, B.neck, f) };
+}
+// the same on the orange CMU rig (spine = its pelvis root), forward taken from its own feet
+export function refLean(ref) {
+  const byName = n => ref.bones.find(b => b.name === n); ref.group.updateMatrixWorld(true);
+  const fwd = wp(byName('toe.L')).sub(wp(byName('foot.L'))).add(wp(byName('toe.R')).sub(wp(byName('foot.R')))).setY(0).normalize();
+  return { hipsSpine03Deg: leanDeg(byName('spine'), byName('spine.003'), fwd), hipsSpine01Deg: leanDeg(byName('spine'), byName('spine.001'), fwd), spine01Spine03Deg: leanDeg(byName('spine.001'), byName('spine.003'), fwd), spine03NeckDeg: leanDeg(byName('spine.003'), byName('spine.006'), fwd) };
+}
+
 // one frame: pose the lab at (motion, t) and read everything. t is seconds for walk/jump, normalised phase for run/pose.
 export function measureFrame(c, motion, t) {
   const W = c.walker, F = W.X.F, H = F.stature, dur = c.duration;
@@ -75,6 +89,7 @@ export function measureFrame(c, motion, t) {
   const clothed = document.getElementById('bodyOnly').checked ? [] : W.X.parts.filter(p => p.mesh && p.mesh.visible);
   const out = { motion, t, seconds: r4(seconds), stature: r4(H) };
   const rec = (k, v) => { out[k + 'M'] = r4(v); out[k + 'H'] = r4(v / H); };
+  out.lean = figureLean(F); out.refLean = refLean(c.ref);
   rec('rootForward', W.holder.position.dot(f)); rec('rootUp', F.root.position.y - c.groundY);
   rec('hipsHeight', wp(B.hips).y);
   rec('bodyLowest', minY(bodyPos));
