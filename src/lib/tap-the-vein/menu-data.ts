@@ -15,6 +15,7 @@ import {
   type MorningMenuExport,
   type StoredMorningMenu,
 } from '@/lib/tap-the-vein/menu'
+import { TTV_PATH_SOURCES } from '@/lib/tap-the-vein/paths'
 import type { TtvLensGoalOption } from '@/lib/tap-the-vein/types'
 
 export async function loadActiveLensGoals(playerId: string): Promise<TtvLensGoalOption[]> {
@@ -45,6 +46,8 @@ export async function loadMenuForSession(playerId: string, sessionDate: Date): P
       morningMenu: true,
       // rawEntry is deliberately not selected: the free write never feeds the menu (mm-raw).
       tasks: {
+        // A path's line is a move for today, not a kept line: it never rides the menu the council reads.
+        where: { source: { notIn: [...TTV_PATH_SOURCES] } },
         select: { id: true, originalText: true, status: true, lensGoalId: true, barId: true },
         orderBy: [{ priorityRank: 'asc' }, { createdAt: 'asc' }],
       },

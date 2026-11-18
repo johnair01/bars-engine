@@ -12,7 +12,7 @@ type Passage = { name: string; pid: string; text: string; links: { label: string
 
 const SLUG = 'cert-ch1-shared-pick-v1'
 const SPEC = '.specify/specs/ch1-shared-pick/spec.md'
-const PAGE = '/ontology-game/between'
+const PAGE = '/between'
 const next = (target: string) => [{ label: 'Next', target }, { label: 'Report Issue', target: 'FEEDBACK' }]
 
 const PASSAGES: Passage[] = [
