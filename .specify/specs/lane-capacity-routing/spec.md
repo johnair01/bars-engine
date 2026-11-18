@@ -54,6 +54,13 @@ ticket. Six hours is `STALL_HOURS`, overridable.
 **FR-6 — The assignment is explainable.** The ticket records why it landed where it did — `by order`,
 `by ceiling`, `smallest deck`, or `no lit lane` — so the board can show the reason without re-deriving it.
 
+**FR-7 — A failure returns only through a review.** A `failed` ticket has no move back to the deck by the lane that
+failed it. `POST /api/work/:id/retry {"aar": "<path or link>"}` puts it back to `ready`, and only the council token can
+sign it. The move appends the failure it replaces to `basis.attempts` (`at`, `by`, `aar`, `failed`) and clears `result`,
+so a second run never erases the first one's evidence. Anything not in `failed` is refused with 409; a missing or
+malformed `aar` is refused with 400. Built 2026-11-18 after two DeepAI tickets timed out at the old 25-minute budget
+and sat failed with no way back.
+
 ## Decision D-1 — answered 2026-11-18: A, ceiling 20
 
 Does capacity get to override the order, or only reorder within it?
