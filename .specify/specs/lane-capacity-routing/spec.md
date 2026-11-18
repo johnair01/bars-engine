@@ -52,7 +52,7 @@ ticket. Six hours is `STALL_HOURS`, overridable.
 **FR-6 — The assignment is explainable.** The ticket records why it landed where it did — `by order`,
 `by ceiling`, `smallest deck`, or `no lit lane` — so the board can show the reason without re-deriving it.
 
-## Decision D-1 — open (Wendell)
+## Decision D-1 — answered 2026-11-18: A, ceiling 20
 
 Does capacity get to override the order, or only reorder within it?
 
@@ -61,7 +61,15 @@ Does capacity get to override the order, or only reorder within it?
 - **B (strict): the order is absolute.** Capacity reorders only inside `DEFAULT_LANES`; DeepAI stays at
   zero until the list is amended. The dry-spell row (FR-5) still fires, so the stall is at least visible.
 
-FR-2 above describes A. Under B, FR-2's fallback branch is removed and only FR-5 survives.
+**His ruling, 2026-11-18:** A — capacity gets to override the order, at a ceiling of **20** open tickets
+(ready + claimed). `DEFAULT_LANES` keeps its authority as preference; when every lane ahead of a maker is
+at 20, the next lit lane takes the work. Under B the fallback branch would have been removed; it stays.
+
+**Built in this change:** FR-1 through FR-4 — `routeLane` and `laneDepth` in `src/lib/work/lanes.ts` and
+`src/lib/work/queue.ts`, the `pushTicket` call site, and the tests that pin the order, the claim-counting,
+the shortest-deck fallback, and Zo's exclusion.
+**Not built:** FR-5, the row per dry spell. It needs a routing-pass trigger and a board writer, which is a
+second change; the queue still falls back to the last lane when every lamp is out, exactly as before.
 
 ## Checks
 
