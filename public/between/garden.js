@@ -39,7 +39,7 @@ import { makeCultBody, useKneel } from "./cult/player-body.js";
 import { makeKneel } from "./cult/kneel.js";
 import { cultPick } from "./cult/pick.js";
 useKneel(makeKneel);
-//   // hc-checkin-look-1 B: your figure is the cultivation figure (?cult=0 keeps Average Dusk)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
+//   // hc-checkin-look-1 B: your figure is the cultivation figure (Average Dusk is deprecated)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
 installPaint();
 
@@ -1498,7 +1498,6 @@ function lookOf(uid) {
   const g = view().g;
   return g && g.looks && typeof g.looks[uid] === "string" ? g.looks[uid] : null;
 }
-const CULT_ME = KQ.get("cult") !== "0";
 async function ensureMyBody() {
   const g = view().g;
   const hue = hueOf(me, g), lk = lookOf(me);
@@ -1506,10 +1505,10 @@ async function ensureMyBody() {
   myBodyBusy = true;
   try {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
-       here"); ?cult=0, or a figure that fails to build, keeps Average Dusk dressed in your Look. */
+       here"). Average Dusk is deprecated (Wendell, 2026-11-17), so there is no fallback figure. */
     let b = null;
-    if (CULT_ME) { try { b = await makeCultBody({ who: cultPick(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); } }
-    if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
+    try { b = await makeCultBody({ who: cultPick(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); }
+    if (!b) return;
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
   } finally { myBodyBusy = false; }
@@ -1532,10 +1531,8 @@ async function ensurePeerBody(p) {
   let b = null;
   /* one model on the route: a friend in the Hollow is the same cultivation figure the player is (Wendell's C on
      cd-route-look-1), in the other outfit, so two are told apart by the ring's hue and the cloth, not by a second body */
-  try { if (CULT_ME) b = await makeCultBody({ who: cultPick(), outfit: "B1", ring: hue, ringR: 0.36, ringW: 0.05, ringA: 0.6 }); }
+  try { b = await makeCultBody({ who: cultPick(), outfit: "B1", ring: hue, ringR: 0.36, ringW: 0.05, ringA: 0.6 }); }
   catch (e) { noteError(e, "peer cultivation figure"); }
-  try { if (!b) b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) }); }
-  catch (e) { noteError(e, "peer figure"); }
   finally { p.loading = false; }
   if (!b || peers.get(p.peer) !== p) return;
   if (p.body) scene.remove(p.body.holder);
@@ -3327,7 +3324,7 @@ let breathTimer = 0;
 let ckK = 0, ckYaw = null;   // the check-in's view of you (ckOn in the frame loop)
 /* The breath on your figure: the in-breath lifts the forearms to chest height, palms up, and the out-breath lowers them,
    in time with the ring (CE.breathOf); the ember, once made, rests between your hands until it goes to a spirit. A figure
-   without breathe (Average Dusk, ?cult=0) is left as it was. */
+   without breathe (a figure with no breathe) is left as it was. */
 function checkinBody(b) {
   if (!b.breathe) return;
   const on = sheetName === "checkin" && walk && walk.step >= 0;
