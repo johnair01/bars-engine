@@ -196,6 +196,7 @@ export default defineConfig({
       'src/lib/close/__tests__/rail.test.ts',
       'src/lib/close/__tests__/store-chat.test.ts',
       'src/lib/coaching/__tests__/walk-data.test.ts',
+      'src/lib/founder-gate/__tests__/content.test.ts',
       'scripts/__tests__/look-row.test.mjs',
     ],
   },
