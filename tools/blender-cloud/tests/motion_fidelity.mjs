@@ -39,7 +39,9 @@ try {
       for (const motion of motions) {
         const both = F.measureBoth(c, motion, { steps: 48 });
         const kind = motion === 'walk' ? 'walk' : 'run';
-        o.motions[motion] = { figure: both.figure, capture: both.capture, verdict: F.compare(kind, both.figure, both.capture) };
+        o.motions[motion] = { figure: both.figure, capture: both.capture, captureAngleDeg: both.captureAngleDeg,
+          figureLeg: both.figureLeg, captureLeg: both.captureLeg,
+          verdict: F.compare(kind, both.figure, both.capture) };
       }
       return o;
     }, motions);
@@ -71,6 +73,9 @@ const first = report.cells[0];
 if (first) {
   for (const [motion, m] of Object.entries(first.motions)) {
     console.log(`\n${motion}: the figure against the capture (${first.who}/${first.build}/${first.height} m)`);
+    console.log(`  the capture was ${m.captureAngleDeg} degrees off the figure's heading; the turn is applied before measuring`);
+    console.log(`  legs: the figure's thigh/shin/foot as a fraction of its leg: ${JSON.stringify(m.figureLeg.legFraction)}`);
+    console.log(`        the capture's:                                                          ${JSON.stringify(m.captureLeg.legFraction)}`);
     console.log('  check                      figure   capture   limit      pass');
     for (const c of m.verdict.checks) console.log(`  ${c.label.padEnd(26)}${String(c.figure).padStart(7)}${String(c.capture).padStart(9)}   ${JSON.stringify(c.limit).padEnd(10)} ${c.pass ? 'yes' : 'NO'}`);
   }

@@ -1,5 +1,6 @@
 // The fidelity rules, tested without a browser: a capture judged against itself passes; a figure that locks its knee,
-// drops its hips or holds its lean still fails; a figure that matches the capture passes.
+// drops its hips or holds its lean still fails; a figure that matches the capture passes; the length checks compare
+// the two rigs as fractions of their own legs, so a capture with a longer foot is not punished for it.
 //   node --test tools/blender-cloud/tests/motion_fidelity.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,29 +10,29 @@ const src = readFileSync(new URL('../../../public/between/cult/motion-fidelity-r
 const rules = await import('data:text/javascript;base64,' + Buffer.from(src).toString('base64'));
 const { summarise, compare } = rules;
 
-// the capture: the CMU walk clip as measured in the lab on 2026-11-17
+// the capture: the CMU walk clip as measured in the lab on 2026-11-17, on a rig whose leg is 0.90 m
 const capture = summarise([
-  { pelvisHeight: 0.86, lean: 2.1, kneeFold: 104.4, toeY: [0.04, 0.13], reach: [0.37, -0.29] },
-  { pelvisHeight: 0.87, lean: 4.9, kneeFold: 150.8, toeY: [0.05, 0.10], reach: [0.05, 0.42] },
-  { pelvisHeight: 0.85, lean: 0.6, kneeFold: 109.4, toeY: [0.13, 0.04], reach: [-0.31, 0.39] },
-  { pelvisHeight: 0.87, lean: 3.9, kneeFold: 165.6, toeY: [0.08, 0.12], reach: [0.10, 0.20] },
-]);
+  { pelvisHeight: 0.86, lean: 2.1, kneeFold: 104.4, ballY: [0.04, 0.13], reach: [0.37, -0.29] },
+  { pelvisHeight: 0.87, lean: 4.9, kneeFold: 150.8, ballY: [0.05, 0.10], reach: [0.05, 0.42] },
+  { pelvisHeight: 0.85, lean: 0.6, kneeFold: 109.4, ballY: [0.13, 0.04], reach: [-0.31, 0.39] },
+  { pelvisHeight: 0.87, lean: 3.9, kneeFold: 165.6, ballY: [0.08, 0.12], reach: [0.10, 0.20] },
+], 0.90);
 
 // the figure the game walks with: the knee locked, the hips dropping, the lean held still
 const shipped = summarise([
-  { pelvisHeight: 0.88, lean: 7.0, kneeFold: 145.5, toeY: [0.078, 0.009], reach: [0.375, -0.233] },
-  { pelvisHeight: 0.85, lean: 7.0, kneeFold: 176.9, toeY: [0.009, 0.047], reach: [0.10, -0.16] },
-  { pelvisHeight: 0.86, lean: 7.0, kneeFold: 154.8, toeY: [0.056, 0.047], reach: [-0.05, 0.27] },
-  { pelvisHeight: 0.89, lean: 7.0, kneeFold: 145.8, toeY: [0.047, 0.033], reach: [-0.16, 0.10] },
-]);
+  { pelvisHeight: 0.88, lean: 7.0, kneeFold: 145.5, ballY: [0.078, 0.009], reach: [0.375, -0.233] },
+  { pelvisHeight: 0.85, lean: 7.0, kneeFold: 176.9, ballY: [0.009, 0.047], reach: [0.10, -0.16] },
+  { pelvisHeight: 0.86, lean: 7.0, kneeFold: 154.8, ballY: [0.056, 0.047], reach: [-0.05, 0.27] },
+  { pelvisHeight: 0.89, lean: 7.0, kneeFold: 145.8, ballY: [0.047, 0.033], reach: [-0.16, 0.10] },
+], 0.95);
 
 // the same figure with the capture's knee, lean and hips
 const retargeted = summarise([
-  { pelvisHeight: 0.86, lean: 2.1, kneeFold: 104.4, toeY: [0.04, 0.13], reach: [0.37, -0.29] },
-  { pelvisHeight: 0.87, lean: 4.9, kneeFold: 110.2, toeY: [0.05, 0.10], reach: [0.05, 0.42] },
-  { pelvisHeight: 0.85, lean: 0.6, kneeFold: 109.4, toeY: [0.13, 0.04], reach: [-0.31, 0.39] },
-  { pelvisHeight: 0.87, lean: 3.9, kneeFold: 120.6, toeY: [0.08, 0.12], reach: [0.10, 0.20] },
-]);
+  { pelvisHeight: 0.86, lean: 2.1, kneeFold: 104.4, ballY: [0.04, 0.13], reach: [0.37, -0.29] },
+  { pelvisHeight: 0.87, lean: 4.9, kneeFold: 110.2, ballY: [0.05, 0.10], reach: [0.05, 0.42] },
+  { pelvisHeight: 0.85, lean: 0.6, kneeFold: 109.4, ballY: [0.13, 0.04], reach: [-0.31, 0.39] },
+  { pelvisHeight: 0.87, lean: 3.9, kneeFold: 120.6, ballY: [0.08, 0.12], reach: [0.10, 0.20] },
+], 0.90);
 
 test('the capture passes against itself', () => {
   const v = compare('walk', capture, capture);
@@ -56,10 +57,20 @@ test('a figure retargeted from the capture passes', () => {
 
 test('a figure whose hips drop like the sect gait fails the pelvis check', () => {
   const dropping = summarise([
-    { pelvisHeight: 0.88, lean: 7.0, kneeFold: 120, toeY: [0.05, 0.05], reach: [0.3, -0.2] },
-    { pelvisHeight: 0.79, lean: 7.0, kneeFold: 120, toeY: [0.05, 0.05], reach: [0.3, -0.2] },
-  ]);
+    { pelvisHeight: 0.88, lean: 7.0, kneeFold: 120, ballY: [0.05, 0.05], reach: [0.3, -0.2] },
+    { pelvisHeight: 0.79, lean: 7.0, kneeFold: 120, ballY: [0.05, 0.05], reach: [0.3, -0.2] },
+  ], 0.95);
   const v = compare('walk', dropping, capture);
   assert.equal(v.pass, false);
-  assert.ok(v.checks.find(c => c.name === 'pelvisTravel').pass === false);
+  assert.equal(v.checks.find(c => c.name === 'pelvisTravelLeg').pass, false);
+});
+
+test('the length checks read each rig as a fraction of its own leg', () => {
+  // the same lift in metres, on a rig with a longer leg, is a smaller lift of that leg
+  const shortLeg = summarise([{ pelvisHeight: 0.86, lean: 2, kneeFold: 110, ballY: [0.09, 0.09], reach: [0.3, -0.3] }], 0.80);
+  const longLeg = summarise([{ pelvisHeight: 0.86, lean: 2, kneeFold: 110, ballY: [0.09, 0.09], reach: [0.3, -0.3] }], 1.20);
+  assert.equal(shortLeg.footLift, longLeg.footLift);
+  assert.ok(shortLeg.footLiftLeg > longLeg.footLiftLeg);
+  assert.equal(shortLeg.footLiftLeg, 0.1125);
+  assert.equal(longLeg.footLiftLeg, 0.075);
 });
