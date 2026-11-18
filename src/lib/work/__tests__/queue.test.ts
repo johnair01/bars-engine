@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { laneStatus, moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -120,5 +120,20 @@ describe('the queue', () => {
       expect(await steerTicket(fakeDb(tickets), 'c', 'nowhere', 'owner')).toMatchObject({ ok: false, status: 400 })
       expect(await steerTicket(fakeDb(tickets), 'zz', 'claude', 'owner')).toMatchObject({ ok: false, status: 404 })
     })
+  })
+})
+
+describe('lane status', () => {
+  const now = new Date('2026-11-16T12:00:00Z')
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000)
+  it('is dry when the lamp is out, whatever it claimed', () => {
+    expect(laneStatus(false, hoursAgo(1), now)).toBe('dry')
+  })
+  it('is live when a lit lane touched a ticket in the last 24 hours', () => {
+    expect(laneStatus(true, hoursAgo(23), now)).toBe('live')
+  })
+  it('is quiet when a lit lane has gone a day or more without a claim, or never claimed', () => {
+    expect(laneStatus(true, hoursAgo(49), now)).toBe('quiet')
+    expect(laneStatus(true, null, now)).toBe('quiet')
   })
 })

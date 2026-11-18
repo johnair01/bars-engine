@@ -29,7 +29,7 @@ const passages = [
   {
     "name": "STEP_1",
     "pid": "2",
-    "text": "### Step 1: Open the book at the table\n\n[Open your nook](/ontology-game/between?nook=1). In your nook, walk to the low table by the hearth and sit. Confirm the book opens beside the coins at the page you last tossed for (Yourself on a first sitting), with a tab for every page on its edge.",
+    "text": "### Step 1: Open the book at the table\n\n[Open your nook](/between?nook=1). In your nook, walk to the low table by the hearth and sit. Confirm the book opens beside the coins at the page you last tossed for (Yourself on a first sitting), with a tab for every page on its edge.",
     "cleanText": "Step 1: Open the book at the table. In your nook, walk to the low table by the hearth and sit. Confirm the book opens beside the coins at the page you last tossed for (Yourself on a first sitting), with a tab for every page on its edge.",
     "links": [
       {

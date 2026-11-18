@@ -31,6 +31,12 @@ NEGATION = [
     (re.compile(r"^\s*Not\s+(?:a|an|the)?\s*\w", re.I), "Not X. Y."),
     (re.compile(r"\brather than\b", re.I), "X rather than Y"),
     (re.compile(r"\bnot\s+\w+[^.?!]{0,40},\s*(?:but|just)\b", re.I), "not X, but Y"),
+    # Contracted and second-person shapes ("You're not filling out a form. You're joining the sect."), which the
+    # patterns above miss. Wendell, 2026-11-17 on cd-words-swap-look-1: "Everything is being defined as you're not
+    # doing X you're doing Y".
+    (re.compile(r"\b(?:you're|you are|we're|we are|they're|it's|this is|that's|i'm)\s+not\b", re.I), "you're not X, you're Y"),
+    (re.compile(r"\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|won't|can't|cannot)\b", re.I), "contracted negation"),
+    (re.compile(r"\b(?:instead of|more than just|isn't just|not just|not only)\b", re.I), "X instead of Y"),
     # Lower-confidence: any plain negation in prose. The house policy is to write
     # the affirmative and let Wendell add a negation back where one reads better,
     # so these are worth a look even with no paired clause.
@@ -62,10 +68,24 @@ def prose_from(path: pathlib.Path):
     # eyebrow="A small opening, not a test" hid through a whole review.
     single = re.compile(r"'([^'\\\n]*(?:\\.[^'\\\n]*)*)'")
     double = re.compile(r'"([^"\\\n]*(?:\\.[^"\\\n]*)*)"')
+    # Template literals hold player copy too (movesGMPacket.ts VIBEULON_INTRO hid there until 2026-11-17).
+    backtick = re.compile(r"`([^`$\\\n]*(?:\\.[^`$\\\n]*)*)`")
+    if path.suffix in {".md", ".mdx"}:
+        # Markdown is prose: every line outside code fences, tables and headings is checked.
+        fence = False
+        for i, line in enumerate(src.splitlines(), 1):
+            if line.lstrip().startswith("```"):
+                fence = not fence; continue
+            t = line.strip()
+            if fence or not t or t.startswith(("#", "|", "---", "<!--")):
+                continue
+            out.append((i, t))
+        return out
     for i, line in enumerate(src.splitlines(), 1):
-        for pat in (single, double):
+        for pat in (single, double, backtick):
             for m in pat.finditer(line):
-                text = m.group(1)
+                # Unescape quotes so "You\\'re not" reads as "You're not" to the patterns.
+                text = m.group(1).replace("\\'", "'").replace('\\"', '"').replace("\\`", "`")
                 if len(text) >= 10:
                     out.append((i, text))
 

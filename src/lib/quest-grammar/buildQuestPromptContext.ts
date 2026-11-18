@@ -261,10 +261,10 @@ Generate a concrete, actionable quest title and description. Use the hexagram fo
   // Onboarding flow reference (Bruised Banana draft — corpus/template)
   if (input.includeOnboardingFlowReference) {
     sections.push(`## Onboarding Flow Reference (Bruised Banana draft)
-Structure: introduction → emotional-alchemy choice (aligned/curious/skeptical) → identity (nation → archetype → developmental lens → intended impact) → BAR_capture → completion → handoff.
+Structure: introduction → emotional-alchemy choice (aligned/curious/skeptical) → identity (Elder → archetype → developmental lens → intended impact) → BAR_capture → completion → handoff.
 - Emotional-alchemy branches affect downstream copy and quest conditioning.
 - Developmental lens maps to Game Master face (practical→architect, collaborate→diplomat, system→sage, protect→regent, emergence→shaman, capacity→challenger).
-- Nations: Argyra, Pyrakanth, Lamenth, Meridia, Virelune. Archetypes (allyship superpowers): connector, storyteller, strategist, alchemist, escape_artist, disruptor.
+- Elders: shaman, architect, challenger, regent, diplomat, sage; rank starts at Initiate. Archetypes (allyship superpowers): connector, storyteller, strategist, alchemist, escape_artist, disruptor.
 - Intended impact: gather_resources, skillful_organizing, raise_awareness, direct_action.
 Use this structure to inform onboarding quest generation when applicable.`)
   }
