@@ -131,3 +131,12 @@ Sheets (before row over after row; strike, compression, flight, flight-2, orange
 `lean-before-after-f-slight-1.50.jpg`, `lean-before-after-f-broad-1.95.jpg`, `lean-before-after-m-slight-1.95.jpg`,
 `lean-before-after-m-broad-1.50.jpg`. Raw numbers: `lean-before-motion-measure.json`, `lean-after-motion-measure.json`.
 Frames: `tools/blender-cloud/tests/motion_lean_shots.mjs`.
+
+### Run lean gain, 2026-11-17 evening (Wendell: "it does look better, ... lean forward even more")
+
+`RUN_LEAN_GAIN = 1.6` in `mocap-reference.js` multiplies the forward part of the run torso direction. It touches the run only
+(the lab's `lean` control still scales walk/jump keys). Result on all 14 cells: torso 16.1 deg on average (capture 10.2 deg),
+phases 13.5 to 19.8 deg; neck reads -2 to -5 deg (was -8 to -11), so the head sits closer to level. Sweep, step sizes and
+contact unchanged. `?runLean=1` in the lab URL gives the capture exactly, `?runLean=2` about 20 deg.
+Sheets `lean-gain-*.jpg` (rows: capture 1.0x, 1.6x, 2.0x; four cells). Raw: `lean-gain1.6-motion-measure.json`.
+The 1.6 value is a guess from the earlier saved note; 2.0 is the next step up if it still reads upright.

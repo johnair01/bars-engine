@@ -9,6 +9,7 @@ export const RUN_RIG_MAP={
   L:[['thigh.L','shin.L','hipL','kneeL'],['shin.L','foot.L','kneeL','ankleL'],['upper_arm.L','forearm.L','shoulderL','elbowL'],['forearm.L','hand.L','elbowL','wristL']],
   R:[['thigh.R','shin.R','hipR','kneeR'],['shin.R','foot.R','kneeR','ankleR'],['upper_arm.R','forearm.R','shoulderR','elbowR'],['forearm.R','hand.R','elbowR','wristR']],
 };
+export const RUN_LEAN_GAIN=1.6;
 export async function loadMocapReference(){
   const buf=await (await fetch('./reference-cmu-walk-run.glb')).arrayBuffer(),dv=new DataView(buf),jl=dv.getUint32(12,true);
   const j=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bin=20+jl+8,rig=j.nodes[0].extras;
@@ -73,7 +74,10 @@ export function retargetRunDirections(F,ref,{stride=1,arm=1,lean=1,groundY=0,cle
     const d=P(b).sub(P(a)).normalize(),lat=d.dot(srcLeft),fw=d.dot(srcForward)*scale;
     return up.clone().multiplyScalar(d.y).addScaledVector(F.fr.l,lat).addScaledVector(F.fr.f,fw).normalize();
   };
-  const torso=targetDir('spine','spine.003',lean);
+  // Wendell, 2026-11-17: matching the capture reads better, and the run can lean further still. The gain multiplies the
+  // forward part of the torso direction (tan of the lean angle) and applies to the run only; ?runLean=1 gives the capture exactly.
+  const gain=typeof location!=='undefined'&&new URLSearchParams(location.search).has('runLean')?+new URLSearchParams(location.search).get('runLean'):RUN_LEAN_GAIN;
+  const torso=targetDir('spine','spine.003',lean*gain);
   // Aim the whole hips-to-spine03 span, the span the source direction was read from. Aiming only hips-to-spine01 left the
   // figure's own spine curve on top of it and the torso stood 7-8 degrees more upright than the CMU run (2026-11-17 measurement).
   FG.aim(F,'hips','spine03',torso);
