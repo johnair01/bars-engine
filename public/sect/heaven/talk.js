@@ -48,7 +48,7 @@ export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, bus
     card.setAttribute('aria-label', 'The Elder speaks'); card.hidden = false;
     const b = card.querySelector('button'); b && b.focus({ preventScroll: true });
   };
-  const openCard = p => { open = p; open_p = p; node = state() === 'none' ? 'open' : state() === 'held' ? 'held' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
+  const openCard = p => { open = p; open_p = p; node = state() === 'none' ? 'open' : state() === 'held' ? 'held' : state() === 'met' ? 'met' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
   const closeCard = () => { open = null; card.hidden = true; };
   seal.addEventListener('click', () => near && openCard(near));
   hit.addEventListener('click', () => near && openCard(near));

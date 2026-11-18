@@ -12,6 +12,7 @@ export const SHAMAN = {
     text: 'A spirit speaks only to someone who comes alone. First, tell me what that doubting voice says to you.',
     reply: 'Why alone?',
   },
+  met: 'The voice you faced has become a person and stands outside the founder\'s hall. Go and see it.',
   held: 'You hold the slip. A spirit waits on the altar walk for each line you wrote.',
   go: { reply: "I'll tell you", close: 'Take your time. The altar walk waits for the words of that voice.' },
 };
@@ -25,4 +26,4 @@ export function replies(node) {
   return [];
 }
 /** What she says at a node. Pure. */
-export const lineAt = node => (node === 'what' ? SHAMAN.what.text : node === 'why' ? SHAMAN.why.text : node === 'again' ? SHAMAN.again : node === 'held' ? SHAMAN.held : node === 'close' ? SHAMAN.go.close : SHAMAN.open);
+export const lineAt = node => (node === 'what' ? SHAMAN.what.text : node === 'why' ? SHAMAN.why.text : node === 'again' ? SHAMAN.again : node === 'held' ? SHAMAN.held : node === 'met' ? SHAMAN.met : node === 'close' ? SHAMAN.go.close : SHAMAN.open);
