@@ -34,8 +34,10 @@ with `lanes` the ticket's ordered lane list, `lit` the set of lanes whose lamp i
 map of lane → ready + held count. No I/O inside; the caller supplies the numbers.
 
 **FR-2 — Preference, then ceiling.** Walk `lanes` in order and take the first lane that is lit and under
-the ceiling. If none is, take the lit lane with the smallest depth. If no lane is lit, return `null` and
-the ticket is written as `waiting`, not `ready`.
+the ceiling. If none is, take the lit lane with the smallest depth, **chosen from every lane, not only the
+ones the order names** — that clause is what gives DeepAI work while `DEFAULT_LANES` still reads
+`['claude', 'freebuff']`. If no lane is lit, return `null` (see FR-5; the queue keeps its old fallback
+until the dry-spell row has a trigger).
 
 **FR-3 — The ceiling counts held work.** Depth = ready + held for that lane. Claude's 3-ready-40-held
 must not read as idle. Default ceiling 20, overridable by `LANE_DECK_CEILING`.

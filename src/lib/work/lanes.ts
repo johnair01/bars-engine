@@ -85,11 +85,15 @@ export interface Route {
 export function routeLane(
   lanes: string[], lit: Set<string>, depth: Record<string, number>, ceiling = DECK_CEILING,
 ): Route | null {
-  const order = lanes.length === 1 && lanes[0] === 'zo' ? lanes : lanes.filter(l => l !== 'zo')
+  const zoOnly = lanes.length === 1 && lanes[0] === 'zo'
+  const order = zoOnly ? lanes : lanes.filter(l => l !== 'zo')
   const room = order.find(l => lit.has(l) && (depth[l] ?? 0) < ceiling)
   if (room) return { lane: room, reason: 'order' }
-  const open = order.filter(l => lit.has(l))
+  // His words: when no lane in the order is under the ceiling, the lit lane with the smallest deck takes it.
+  // That pool is every lane, not the order, which is how a maker outside DEFAULT_LANES receives work at all.
+  const pool = zoOnly ? order : [...new Set([...order, ...LANES])].filter(l => l !== 'zo')
+  const open = pool.filter(l => lit.has(l))
   if (!open.length) return null
-  const byDepth = [...open].sort((a, b) => (depth[a] ?? 0) - (depth[b] ?? 0) || order.indexOf(a) - order.indexOf(b))
+  const byDepth = [...open].sort((a, b) => (depth[a] ?? 0) - (depth[b] ?? 0) || pool.indexOf(a) - pool.indexOf(b))
   return { lane: byDepth[0], reason: 'ceiling' }
 }

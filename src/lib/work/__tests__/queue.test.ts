@@ -149,10 +149,16 @@ describe('the ceiling', () => {
     const db = fakeDb(full('claude', 19))
     expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'claude' })
   })
-  it('takes the lit lane with the shortest deck when every lane in the order is at the ceiling', async () => {
+  it('takes the lit lane with the shortest deck when every lane in his order is at the ceiling', async () => {
     const tickets = [...full('claude', 30), ...full('freebuff', 25)]
     const db = fakeDb(tickets, [{ lane: 'freebuff', dry: false, dryUntil: null }])
-    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'freebuff' })
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+  })
+  it('gives DeepAI work once the lanes he named are full, without naming it in DEFAULT_LANES', async () => {
+    // The shape the live board was in on 2026-11-18: claude 3 ready + 40 claimed, freebuff 75, deepai 0.
+    const tickets = [...full('claude', 3), ...full('claude', 40, 'claimed'), ...full('freebuff', 75)]
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
   })
   it('never routes to zo, so the closing lever keeps its monopoly', () => {
     expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), {})).toMatchObject({ lane: 'claude' })
