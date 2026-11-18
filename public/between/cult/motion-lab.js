@@ -36,7 +36,7 @@ canvas.onpointerup=()=>{drag=null};
 canvas.onwheel=e=>{e.preventDefault();orbitZoom=THREE.MathUtils.clamp(orbitZoom*Math.exp(e.deltaY*.001),.65,1.8);renderPose()};
 function size(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 addEventListener('resize',size);size();
-function duration(){return motion==='walk'?1.2:motion==='pose'?motionSpec('run').duration:motionSpec(motion).duration}
+function duration(){return motion==='walk'?1.2:motion==='walk-capture'?(ref?ref.walk.length/ref.walk.fps:1.167):motion==='pose'?motionSpec('run').duration:motionSpec(motion).duration}
 // Ground contact (spec FR-004/FR-005). The lowest vertex of the soles (boots; the body where a build has none) is the
 // contact point. Contact phases solve the root height so that point stands on y = 0; flight phases keep the authored lift.
 // The stance weight is 1 on a planted foot and fades over `ramp` so there is no step when a foot leaves or lands.
@@ -74,10 +74,22 @@ function renderPose(){if(!W)return;
   const F=W.X.F;
   canvas.dataset.runBounce='';
   W.holder.position.set(0,0,0);
-  if(refFit){ref.group.scale.setScalar(refFit.scale);ref.group.position.y=refFit.floor[motion==='walk'?'walk':'run'];jumpRef.group.scale.setScalar(.05*refFit.jumpScale);jumpRef.group.position.y=refFit.jumpFloor}
+  if(refFit){ref.group.scale.setScalar(refFit.scale);ref.group.position.y=refFit.floor[(motion==='walk'||motion==='walk-capture')?'walk':'run'];jumpRef.group.scale.setScalar(.05*refFit.jumpScale);jumpRef.group.position.y=refFit.jumpFloor}
   if(motion==='walk'){
     W.previewWalk(clock/duration()*Math.PI*2,values.stride);
     $('contact').textContent='Existing procedural walk · review cadence and foot travel';
+  }else if(motion==='walk-capture'&&ref){
+    // The CMU walk clip's limb directions on the cultivator, the way the run already borrows the run clip's.
+    // The phase runs on the clip's own length; the figure stands where it is and its feet are solved onto the ground.
+    const source=ref.walk;poseMocap(ref,'walk',clock/duration()*source.length/source.fps);
+    retargetRunDirections(F,ref,{stride:values.stride,arm:values.arm,lean:values.lean,clearance:values.clearance,pose:poseValues,groundY});
+    // contact: the lowest sole stands on y = 0. The pelvis bob follows from the legs extending and folding, the
+    // way it does in the capture.
+    F.root.updateMatrixWorld(true);F.root.position.y-=lowestY();F.root.updateMatrixWorld(true);F.mesh.skeleton.update();
+    const P=n=>F.bones[n].getWorldPosition(new THREE.Vector3()),mid=P('shoulderL').add(P('shoulderR')).multiplyScalar(.5);
+    const eL=P('elbowL').sub(mid).dot(F.fr.l),eR=-P('elbowR').sub(mid).dot(F.fr.l);
+    $('alignment').textContent=`Elbow lateral position from torso center: left ${eL.toFixed(2)} m · right ${eR.toFixed(2)} m`;
+    $('contact').textContent=`CMU walk limb directions · source travel ${source.travel.toFixed(2)} m/cycle · ${(source.length/source.fps).toFixed(2)} s`;
   }else if((motion==='run'||motion==='pose')&&ref){
     const source=ref.run;poseMocap(ref,'run',clock/duration()*source.length/source.fps);
     retargetRunDirections(F,ref,{stride:values.stride,arm:values.arm,lean:values.lean,clearance:values.clearance,pose:poseValues,groundY});
@@ -113,13 +125,13 @@ function renderPose(){if(!W)return;
   canvas.dataset.rootForward=window.__motionLab.rootForward.toFixed(3);
   canvas.dataset.rootUp=window.__motionLab.rootUp.toFixed(4);
   F.root.updateMatrixWorld(true);
-  const comparing=!!(ref&&['walk','run','pose','jump'].includes(motion)),target=F.fr.f.clone().multiplyScalar(comparing?.62:0).add(new THREE.Vector3(0,.92,0));
+  const comparing=!!(ref&&['walk','walk-capture','run','pose','jump'].includes(motion)),target=F.fr.f.clone().multiplyScalar(comparing?.62:0).add(new THREE.Vector3(0,.92,0));
   if(followRoot)target.add(new THREE.Vector3().copy(W.holder.position).projectOnVector(F.fr.f));
   const orbit=F.fr.l.clone().applyAxisAngle(new THREE.Vector3(0,1,0),orbitYaw).multiplyScalar(Math.cos(orbitPitch));
   orbit.y=Math.sin(orbitPitch);
   camera.position.copy(orbit).multiplyScalar((comparing?7.2:4.6)*orbitZoom).add(target);camera.lookAt(target);
-  if(ref){ref.group.visible=ref.helper.visible=['walk','run','pose'].includes(motion);
-    if(ref.group.visible){const source=motion==='walk'?ref.walk:ref.run;poseMocap(ref,motion==='walk'?'walk':'run',clock/duration()*source.length/source.fps)}}
+  if(ref){ref.group.visible=ref.helper.visible=['walk','walk-capture','run','pose'].includes(motion);
+    if(ref.group.visible){const source=(motion==='walk'||motion==='walk-capture')?ref.walk:ref.run;poseMocap(ref,(motion==='walk'||motion==='walk-capture')?'walk':'run',clock/duration()*source.length/source.fps)}}
   if(jumpRef){jumpRef.group.visible=jumpRef.helper.visible=motion==='jump';if(jumpRef.group.visible)poseJumpReference(jumpRef,clock/duration()*jumpRef.clip.duration)}
   renderer.render(W.X.scene,camera);$('clock').textContent=`${motion} · ${clock.toFixed(2)} / ${duration().toFixed(2)} seconds`;
   $('posePanel').hidden=!['run','pose'].includes(motion);
