@@ -46,4 +46,16 @@ describe('openFrom', () => {
     ], 50)
     expect(r.questions.map((x) => x.id)).toEqual(['a'])
   })
+
+  it('survives a head whose timestamp and question arrived as strings', () => {
+    // The live server answered list_open with a blank 500 while this file's own reads returned rows fine, so the
+    // one thing that must never happen is odd data taking the whole list down with it.
+    const base = { q: null, name: null, choice: null, choices: null, steer: null, deferred: null, rounds: null, body: null, decision: null, saved_at: null }
+    const r = openFrom([
+      { ...base, collection: 'rows', doc_id: 'stringy', kind: 'questions', q: 'What now?', received_at: '2026-11-17T20:00:00.000Z' as never },
+      { ...base, collection: 'rows', doc_id: 'nullish', kind: 'questions', received_at: null as never },
+    ], 50)
+    expect(r.questions.find((x) => x.id === 'stringy')).toMatchObject({ q: 'What now?', postedAt: '2026-11-17T20:00:00.000Z' })
+    expect(r.questions.map((x) => x.id)).toContain('nullish')
+  })
 })
