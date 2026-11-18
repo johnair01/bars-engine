@@ -38,7 +38,7 @@ try {
       const F = await import('/between/cult/motion-fidelity.js'), c = window.__motionLabControl, o = { motions: {} };
       for (const motion of motions) {
         const both = F.measureBoth(c, motion, { steps: 48 });
-        const kind = motion === 'walk' ? 'walk' : 'run';
+        const kind = (motion === 'walk' || motion === 'walk-capture') ? 'walk' : 'run';
         o.motions[motion] = { figure: both.figure, capture: both.capture, captureAngleDeg: both.captureAngleDeg,
           figureLeg: both.figureLeg, captureLeg: both.captureLeg,
           verdict: F.compare(kind, both.figure, both.capture) };
@@ -50,7 +50,7 @@ try {
       const tag = `${cell.who}-${cell.build}-${cell.height.toFixed(2)}`;
       for (const motion of motions) {
         // the walk's forward phase, the run's flight: the frames the checks turn on
-        const at = motion === 'walk' ? 0.25 : 0.35;
+        const at = (motion === 'walk' || motion === 'walk-capture') ? 0.25 : 0.35;
         await page.evaluate(([m, a]) => window.__motionLabControl.set(m, window.__motionLabControl.duration * a), [motion, at]);
         await page.locator('#stage').screenshot({ path: join(out, `${tag}-${motion}.png`) });
       }
