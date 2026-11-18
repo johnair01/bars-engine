@@ -36,6 +36,34 @@ vec2 collarField(vec3 r) {
   return vec2(band, (!over && t < 0.0) ? dO : -1.0);
 }
 `;
+// round 2: the weave and the band motif. weave(p, m) returns (figure, grain): p in pattern repeats, m in metres.
+// The figure is a half-drop grid of roundels: a ring, and inside it Heaven's stepped brick stacked as a small stair, so
+// the body cloth carries the same mark as the bands. The grain is a 2/2 twill, diagonal, fading out where it would alias.
+// brick(q) paints the band: q.x 0..1 across the band (0 at its outer edge), q.y along it in band widths. Two rows of
+// brick, the second offset by half a brick, in metal thread with dark mortar lines; a fine border line at each side.
+const GLSL_WEAVE = `
+float boxD(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+vec2 weave(vec2 p, vec2 m) {
+  vec2 cell = vec2(1.0, 1.0); float col = floor(p.x / cell.x); vec2 q = p; q.y += 0.5 * mod(col, 2.0);
+  vec2 f = fract(q / cell) - 0.5; float r = length(f), fw = max(fwidth(r), 1e-4);
+  float ring = 1.0 - smoothstep(0.018, 0.018 + fw * 1.5, abs(r - 0.36));
+  // the stair: three bricks stepping up, centred in the roundel
+  float st = 9.0; for (int i = 0; i < 3; i++) { float fi = float(i); st = min(st, boxD(f - vec2(-0.14 + 0.14 * fi, -0.12 + 0.12 * fi), vec2(0.11, 0.045))); }
+  float stair = 1.0 - smoothstep(0.0, fw * 1.5, st);
+  float fig = max(ring, stair);
+  float tp = 0.0025, t = (m.x + m.y) / tp, tw = fwidth(t); float grain = (0.5 + 0.5 * sin(t * 6.2832)) * (1.0 - smoothstep(0.25, 0.6, tw));
+  return vec2(fig, grain - 0.5);
+}
+float brick(vec2 q) {
+  if (q.x < 0.0 || q.x > 1.0) return 0.0;
+  float aw = max(fwidth(q.x), 1e-4);
+  float border = max(1.0 - smoothstep(0.0, aw * 1.5, abs(q.x - 0.12)), 1.0 - smoothstep(0.0, aw * 1.5, abs(q.x - 0.88)));
+  if (q.x < 0.2 || q.x > 0.8) return border;
+  float row = q.x < 0.5 ? 0.0 : 1.0, y = q.y / 0.9 + 0.5 * row, fy = fract(y), fx = fract((q.x - 0.2) / 0.3);
+  float mort = min(min(fy, 1.0 - fy) * 0.9 / 0.3, min(fx, 1.0 - fx)); float mw = max(fwidth(y) * 0.9 / 0.3, aw / 0.3) * 1.5;
+  return smoothstep(0.06, 0.06 + mw, mort) * (0.85 + 0.15 * fx);
+}
+`;
 export function paint(pt, rp, sh, kind, C) {
   const k = C.k, col = h => new THREE.Color(h || '#000');
   const U = {
@@ -47,6 +75,11 @@ export function paint(pt, rp, sh, kind, C) {
     uFoldA: { value: sh.paintFold ?? 0.16 }, uFoldN: { value: rp.foldN || 14 }, uTop: { value: C.yWaist }, uHem: { value: Math.max(0.034 * k, rp.hem * C.S) },
     uApex: { value: C.yApex }, uElbow: { value: sh.elbowAt ?? 0.25 * k },
     // round 6: a painted bracer on the forearm (A2), its length from the shell, with an edge band at each end
+    // elder robes round 2 (his steer 2026-11-18): a woven pattern on the body cloth and a motif in metal thread in the
+    // collar, hem and cuff bands. rp.weave = { a: strength, s: repeat in metres, c: thread colour }; rp.motif = 'brick'
+    // (Heaven's stepped brick, Calrunia's own) with rp.motifC its metal thread. Off unless a piece names them.
+    uWeave: { value: rp.weave ? rp.weave.a ?? 0.5 : 0 }, uWeaveS: { value: (rp.weave ? rp.weave.s ?? 0.11 : 0.11) }, uWeaveC: { value: col(rp.weave ? rp.weave.c || rp.color : rp.color) },
+    uMotif: { value: rp.motif === 'brick' ? 1 : 0 }, uMotifC: { value: col(rp.motifC || '#b8995a') },
     uBrW: { value: (kind === 'shell' && rp.bracer && pt.mesh.geometry.userData.bracerW) || 0 }, uBrC: { value: col(rp.bracer) }, uBrE: { value: col(rp.bracerBand || '#e6d9bd') }, uBrB: { value: (rp.bracerBandW ?? 0.011) * k },
   };
   // shells round 4: the cross collar's lines as uniforms, so the V band, the lapped edge and its shadow are measured per
@@ -59,8 +92,8 @@ export function paint(pt, rp, sh, kind, C) {
   mat.onBeforeCompile = s => {
     Object.assign(s.uniforms, U);
     s.vertexShader = 'attribute float aEdgeC; attribute float aEdgeH; attribute float aLap; attribute float aSeam; attribute vec3 aRest;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdgeC = aEdgeC; vEdgeH = aEdgeH; vLap = aLap; vSeam = aSeam; vRest = aRest;');
-    s.fragmentShader = 'varying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\n' + GLSL_COLLAR
-      + 'float gBand = 0.0;\n' + s.fragmentShader.replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_SHEEN\nmaterial.sheenColor *= 1.0 - gBand;\n#endif\nmaterial.specularColor *= 1.0 - 0.85 * gBand; material.specularF90 *= 1.0 - 0.85 * gBand; material.roughness = mix(material.roughness, 1.0, gBand);') // round 4 fix 3: nor a grazing highlight (from the side, the band's edge-on glint read as a grey line along her V) // round 4: no satin sheen on the collar band (at a grazing angle it greyed the black band into smoke)
+    s.fragmentShader = 'varying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\nuniform float uWeave; uniform float uWeaveS; uniform vec3 uWeaveC; uniform float uMotif; uniform vec3 uMotifC;\n' + GLSL_COLLAR + GLSL_WEAVE
+      + 'float gBand = 0.0; float gWeave = 0.0; float gMetal = 0.0;\n' + s.fragmentShader.replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_SHEEN\nmaterial.sheenColor *= 1.0 - gBand;\n#endif\nmaterial.specularColor *= 1.0 - 0.85 * gBand; material.specularF90 *= 1.0 - 0.85 * gBand; material.roughness = mix(material.roughness, 1.0, gBand);\nmaterial.roughness = mix(material.roughness, 0.5, gWeave); material.specularColor = mix(material.specularColor, vec3(0.09), gWeave);\nmaterial.roughness = mix(material.roughness, 0.32, gMetal); material.specularColor = mix(material.specularColor, uMotifC, gMetal); material.specularF90 = mix(material.specularF90, 1.0, gMetal);') // round 4 fix 3: nor a grazing highlight (from the side, the band's edge-on glint read as a grey line along her V) // round 4: no satin sheen on the collar band (at a grazing angle it greyed the black band into smoke)
       .replace('#include <color_fragment>', `#include <color_fragment>
 {
   vec3 c = diffuseColor.rgb; float th = atan(vRest.x, vRest.z); float aa = 0.0012;
@@ -73,6 +106,10 @@ export function paint(pt, rp, sh, kind, C) {
     float d = sin((abs(vRest.x) * 1.4 + vRest.y) * 70.0 / uK); c *= 1.0 - 0.045 * below * smoothstep(0.02, 0.12, abs(vRest.x)) * (0.5 + 0.5 * d) * step(0.0, vRest.z);
     if (vSeam > 0.0) { float e = vSeam - uElbow; float w = 1.0 - smoothstep(0.02 * uK, 0.06 * uK, abs(e)); c *= 1.0 - 0.10 * w * (0.5 + 0.5 * sin(e * 260.0 / uK)); } }
   if (uKind == 2) { float s = sin(vRest.x * 95.0 / uK + vRest.z * 60.0 / uK + vEdgeH * 9.0); c *= 1.0 + uFoldA * 0.8 * (0.5 * s - 0.1); }
+  // the woven pattern (round 2): tone-on-tone roundels in the weave, catching the light where the thread floats, and a
+  // fine twill grain under it. The cloth's own coordinates: arc round the body and height; on a bell, arc and length
+  if (uWeave > 0.0) { vec2 wq = uKind == 2 ? vec2(vSeam, vEdgeH) : vec2(th * length(vRest.xz), vRest.y);
+    vec2 wv = weave(wq / (uWeaveS * uK), wq / uK); c = mix(c, mix(c, uWeaveC, 0.3) * (1.0 + 0.12 * uWeave), wv.x * uWeave); c *= 1.0 + 0.05 * uWeave * wv.y; gWeave = wv.x * uWeave; }
   // seams: shoulder (a line round the arm just past the joint) and the side seams of torso and skirt
   if (uKind == 0) c *= 1.0 - 0.22 * (1.0 - smoothstep(0.0008, 0.0024, abs(vSeam)));
   if (uKind != 2) { float sd = min(abs(th - 1.5708), abs(th + 1.5708)) * length(vRest.xz); c *= 1.0 - 0.14 * (1.0 - smoothstep(0.0008, 0.0025, sd)); }
@@ -88,6 +125,7 @@ export function paint(pt, rp, sh, kind, C) {
   else if (vLap < 0.0) c *= 1.0 - 0.32 * (1.0 - smoothstep(0.0, 0.01 * uK, -vLap));
   // collar band with a stitch line
   float aC = max(0.0006, min(aa, fwidth(eC))); float bc = 1.0 - smoothstep(uCollarW - aC, uCollarW, eC); c = mix(c, uCollarC, bc); gBand = bc;
+  if (uMotif > 0.0) { float m = brick(vec2(eC / uCollarW, (vRest.y + abs(th) * length(vRest.xz)) / uCollarW)); c = mix(c, uMotifC * (0.75 + 0.25 * m), bc * m * uMotif); gMetal = bc * m * uMotif; }
   c *= 1.0 - 0.28 * bc * (1.0 - smoothstep(0.0005, 0.0016, abs(eC - (uCollarW - 0.005 * uK))));
   c *= 1.0 - 0.18 * (1.0 - bc) * (1.0 - smoothstep(0.0, 0.005 * uK, eC - uCollarW)); // its shadow on the robe
   // the bracer (round 6): brown from the cuff up the forearm, a light edge band with a stitch line at each end, its shadow on the sleeve
@@ -100,12 +138,14 @@ export function paint(pt, rp, sh, kind, C) {
   float w = uHemW * (1.0 + uCloud * pow(max(0.0, sin(uCloudN * th * 0.5)), 2.0));
   if (uKind == 2) w = uHemW * (1.0 + uCloud * pow(max(0.0, sin(uCloudN * (vRest.x + vRest.z) * 9.0 / uK)), 2.0));
   float bh = 1.0 - smoothstep(w - aa, w, vEdgeH); c = mix(c, uHemC, bh);
+  if (uMotif > 0.0) { float al = uKind == 2 ? vSeam : th * length(vRest.xz); float m = brick(vec2(vEdgeH / w, al / w)); c = mix(c, uMotifC * (0.75 + 0.25 * m), bh * m * uMotif); gMetal = max(gMetal, bh * m * uMotif); }
   c *= 1.0 - 0.25 * bh * (1.0 - smoothstep(0.0005, 0.0016, abs(vEdgeH - (w - 0.004 * uK))));
   c *= 1.0 - 0.14 * (1.0 - bh) * (1.0 - smoothstep(0.0, 0.006 * uK, vEdgeH - w));
   diffuseColor.rgb = c;
 }`);
   };
   mat.customProgramCacheKey = () => 'shell-paint-' + kind + '-' + (surface || '');
+  mat.userData.U = U; mat.userData.weave = !!rp.weave; // round 2: a preview's sliders set the weave live
   pt.mesh.material = mat;
   // round 4 fix 3: the inside is painted too, so the collar band runs on round the cut edge as a facing (from the side her
   // V showed a thin grey line of lining along its edge); the lining keeps its colour everywhere else

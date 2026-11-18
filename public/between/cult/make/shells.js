@@ -272,23 +272,31 @@ function bell(C, pc, sh, s) {
     let S = R; for (let pass = 0; pass < 6; pass++) S = S.map((_, b) => (S[(b + nT - 1) % nT] + 2 * S[b] + S[(b + 1) % nT]) / 4);
     return S.map(x => x - pe - 0.003 * k); }
   const armR = sv => { let m = 0.03 * k; for (const i of C.uniq) { const n = C.name(i); if (!ARM(s).includes(n)) continue; const p = C.pos(i), d = p.clone().sub(e), t = d.dot(ax); if (Math.abs(t - sv) > 0.02 * k) continue; m = Math.max(m, d.addScaledVector(ax, -t).length()); } return m; };
-  const s0 = -(sh.bellUp ?? 0.06) * k, s1 = len + (sh.bellPast ?? 0.12) * k, nR = 22, nT = 48, r0 = armR(s0) + (sh.armEase0 ?? 0.01) * k - 0.009 * k, // fix 4: tucked 9 mm inside the sleeve shell (was 4), so no ledge shows at the elbow
+  // elder robes round 2 (his steer 2026-11-18, "the textured patterns and drape geometry"): a drape test. drapeN folds
+  // hang round the bell, drapeA deep, growing toward the mouth (u^1.5) and deeper on the lower side where the cloth's
+  // weight gathers; drapeLen lets the lower edge hang on below the mouth in a long curve, as the reference sleeves do.
+  // With none of the three keys set the bell is the rigid cone it was (nR 22, nT 48).
+  const dN = sh.drapeN ?? 0, dA = sh.drapeA ?? 0, dL = sh.drapeLen ?? 0, drape = dA > 0 || dL > 0;
+  const s0 = -(sh.bellUp ?? 0.06) * k, s1 = len + (sh.bellPast ?? 0.12) * k, nR = drape ? 34 : 22, nT = drape ? 72 : 48, r0 = armR(s0) + (sh.armEase0 ?? 0.01) * k - 0.009 * k, // fix 4: tucked 9 mm inside the sleeve shell (was 4), so no ledge shows at the elbow
     // the top ring tucks just inside the sleeve shell, so no rim shows
     rM = (sh.bellR ?? 0.15) * k;
-  const P = [], E = [], rest = [], hc = wp(F.bones.hips), I = [];
+  const P = [], E = [], A = [], rest = [], hc = wp(F.bones.hips), I = []; // A: arc length round the ring, for the woven pattern and the cuff motif
   const pe = (sh.armEase0 ?? 0.01) * k - 0.003 * k, prof = sh.sleeveOf ? shellProf(sh.sleeveOf, s0, nT) : armProf(s0, nT);
   for (let ri = 0; ri <= nR; ri++) { const u = ri / nR, sv = s0 + (s1 - s0) * u, grow = Math.pow(u, 2.0), r = r0 + (rM - r0) * grow, drop = (r - r0) * (sh.hang ?? 0.8);
     // the mouth is cut on a slant: its lower edge hangs further than its upper edge (the sleeve's weight), rigid
     for (let t = 0; t < nT; t++) { const th = t / nT * Math.PI * 2, cdn = Math.cos(th); const svx = sv + (ri === nR ? 0 : 0) + u * u * (sh.slant ?? 0.06) * k * (0.5 + 0.5 * cdn);
-      const o = e.clone().addScaledVector(ax, svx).addScaledVector(dn, drop); let rr = r + (prof[t] + pe - r0) * (1 - sstep(0, 0.4, u)); if (sh.sleeveOf) rr = Math.max(rr, prof[t] + pe + 0.015 * k * sstep(0, 0.08, u)); // round 7: out over the sleeve's shell within 2 cm, so the sleeve's own end stays inside the bell // near the top the ring is the arm's own section, then it rounds out
-      const p = o.addScaledVector(dn, rr * cdn).addScaledVector(sd, rr * Math.sin(th) * (1 - 0.12 * grow));
-      P.push(p.x, p.y, p.z); E.push((s1 - sv) * 1.0); const q = frontXY(C, p, hc); rest.push(q.x, q.y, q.z); } }
+      let svxD = 0; const o = e.clone().addScaledVector(ax, svx).addScaledVector(dn, drop); let rr = r + (prof[t] + pe - r0) * (1 - sstep(0, 0.4, u)); if (sh.sleeveOf) rr = Math.max(rr, prof[t] + pe + 0.015 * k * sstep(0, 0.08, u)); // round 7: out over the sleeve's shell within 2 cm, so the sleeve's own end stays inside the bell // near the top the ring is the arm's own section, then it rounds out
+      if (drape) { const fu = Math.pow(u, 1.5) * sstep(0.12, 0.5, u), fs = Math.sin(dN * th + 0.7 * Math.sin(3 * th)); rr *= 1 + dA * fu * (0.75 + 0.25 * cdn) * (fs - 0.3 * fs * fs + 0.15); // rounded crests, tighter valleys
+        svxD = dA * rM * 0.6 * u * u * u * fs; } else svxD = 0; // the mouth's edge rises and falls with the folds
+      o.addScaledVector(ax, svxD); const p = o.addScaledVector(dn, rr * cdn).addScaledVector(sd, rr * Math.sin(th) * (1 - 0.12 * grow));
+      if (dL > 0) p.addScaledVector(V(0, -1, 0), dL * k * u * u * (0.3 + 0.7 * Math.pow(0.5 + 0.5 * cdn, 1.5))); // the cloth falls world down, the lower edge furthest, in a long curve
+      P.push(p.x, p.y, p.z); E.push((s1 - sv) * 1.0); A.push((th > Math.PI ? th - 2 * Math.PI : th) * r); const q = frontXY(C, p, hc); rest.push(q.x, q.y, q.z); } }
   for (let ri = 0; ri < nR; ri++) for (let t = 0; t < nT; t++) { const a = ri * nT + t, b = ri * nT + (t + 1) % nT, c = a + nT, d = b + nT; I.push(a, b, c, b, d, c); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
   { const N = g.attributes.normal, p = V(), n = V(), j = nT * 3; p.fromBufferAttribute(g.attributes.position, j); n.fromBufferAttribute(N, j); const o = e.clone().addScaledVector(ax, p.clone().sub(e).dot(ax)); if (n.dot(p.clone().sub(o)) < 0) { const ix = g.index.array; for (let i = 0; i < ix.length; i += 3) { const q = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = q; } g.computeVertexNormals(); } }
   const c0 = new THREE.Color(pc.color), Cc = []; for (let i = 0; i < P.length / 3; i++) Cc.push(c0.r, c0.g, c0.b); g.setAttribute('color', new THREE.Float32BufferAttribute(Cc, 3));
   g.setAttribute('aEdgeH', new THREE.Float32BufferAttribute(E, 1)); g.setAttribute('aEdgeC', new THREE.Float32BufferAttribute(new Float32Array(E.length).fill(BIG), 1)); g.setAttribute('aLap', new THREE.Float32BufferAttribute(new Float32Array(E.length).fill(BIG), 1));
-  g.setAttribute('aRest', new THREE.Float32BufferAttribute(rest, 3)); g.setAttribute('aSeam', new THREE.Float32BufferAttribute(new Float32Array(E.length).fill(-1), 1)); g.userData.edge = Float32Array.from(E);
+  g.setAttribute('aRest', new THREE.Float32BufferAttribute(rest, 3)); g.setAttribute('aSeam', new THREE.Float32BufferAttribute(A, 1)); g.userData.edge = Float32Array.from(E); // on a bell aSeam carries the arc (no seam is painted on a bell)
   // weights: the top ring takes the skin's own weights (it stretches with the elbow); below, the forearm alone (rigid)
   const okA = i => ARM(s).includes(C.name(i)), Wn = GC.weightsNearest(C, g, okA), fb = C.bn.indexOf('elbow' + s), n = P.length / 3, si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
   for (let i = 0; i < n; i++) { const ri = Math.floor(i / nT), t = sstep(0, 0.35, ri / nR); const acc = new Map(); for (let j = 0; j < 4; j++) { const ww = Wn.sw[i * 4 + j] * (1 - t); if (ww > 0) acc.set(Wn.si[i * 4 + j], (acc.get(Wn.si[i * 4 + j]) || 0) + ww); } acc.set(fb, (acc.get(fb) || 0) + t);
@@ -392,7 +400,7 @@ function openShell(C, reg, rp, pc, sh0, G, kind) {
   const k = C.k, outer = kind === 'outer', ease = outer ? (pc.ease ?? 0.034) : (pc.shellEase ?? 0.028), gap = ((pc.open ?? (outer ? 11 : 9)) / 100) / 2;
   const sh = { ...sh0, ...(pc.shell || {}), ease, armEase0: ease * 0.9, armEase1: ease * (outer ? 1.2 : 0.9), sag: outer ? 0.006 : 0,
     waistDrop: outer ? -0.067 : 0, smooth: outer ? 320 : 60, taubin: outer, minEase: ease * (outer ? 0.6 : 0.7), neckW: gap / k + 0.012, vTop: 0.03, cross: 3, crossBelowApex: 3, crossX: 0, collarR: (sh0.collarR ?? (C.male ? 0.068 : 0.075)) + 0.012 };
-  if (outer) { sh.bell = pc.sleeve === 'wide' || pc.sleeve === 'widest'; sh.cuff = sh.bell ? 0.15 : 0.96; sh.bellR = pc.bellR ?? 0.16; sh.bellPast = 0.1; sh.hang = 0.8; sh.slant = 0.06; sh.bellUp = 0.05; }
+  if (outer) { sh.bell = pc.sleeve === 'wide' || pc.sleeve === 'widest'; sh.cuff = sh.bell ? 0.15 : 0.96; sh.bellR = pc.bellR ?? 0.16; sh.bellPast = pc.bellPast ?? 0.1; sh.hang = 0.8; sh.slant = 0.06; sh.bellUp = 0.05; sh.drapeN = pc.drapeN; sh.drapeA = pc.drapeA; sh.drapeLen = pc.drapeLen; }
   else { sh.yCut = C.ySh - (pc.drop ?? 0.24) * k; sh.capArm = pc.capArm ?? 0.45; sh.cuff = 2; sh.capeBack = pc.capeBack ?? 0.14; sh.capeFront = pc.capeFront ?? 0.05; sh.capeHalfW = pc.capeHalfW ?? 0.2; sh.capSlant = pc.capSlant ?? 0.2; } // round 6: capSlant drops the cape further down the outside of the arm than the inside, so it curves over the shoulder
   const wrap = C.wrap, Lc0 = C.Lc, vSym = C.vSym; C.wrap = null; // the V measure stays the robe's
   const p2 = { ...pc, lining: pc.lining || (outer ? pc.color : undefined), collarColor: pc.band || pc.trim || pc.color, collarW: pc.collarW ?? 0.03, trim: pc.band || pc.trim || pc.color, hemBand: pc.hemBand ?? 0.03 };
