@@ -10,6 +10,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { loadLatestSealedMenu } from '@/lib/tap-the-vein/menu-data'
+import { parseTzOffset, ttvDayKey } from '@/lib/tap-the-vein/day'
 
 /**
  * The Council Board opens on Tap the Vein until today's is done (six-faces-council `ttv-first-gate`). Wendell
@@ -21,12 +22,14 @@ import { loadLatestSealedMenu } from '@/lib/tap-the-vein/menu-data'
  * was sealed on that day and when: no lines, no goals, no free write. The menu itself stays behind the token at
  * /api/tap-the-vein/menu.
  *
- * Required env var: COUNCIL_MENU_PLAYER_ID. Query: ?date=YYYY-MM-DD, required (the board sends its own local date).
+ * Required env var: COUNCIL_MENU_PLAYER_ID. Query: ?date=YYYY-MM-DD (the board sends the sitting's day, which turns at 4 AM his time), or ?tz=<minutes, Date#getTimezoneOffset> to ask about today's.
  */
 export async function GET(req: NextRequest) {
   const playerId = process.env.COUNCIL_MENU_PLAYER_ID
   if (!playerId) return NextResponse.json({ error: 'Not configured' }, { status: 503 })
-  const date = req.nextUrl.searchParams.get('date')
+  // The sitting's day turns at 4 AM in his own zone (ttv-day-dawn): `?tz=<minutes>` alone asks about today's.
+  const tz = req.nextUrl.searchParams.get('tz')
+  const date = req.nextUrl.searchParams.get('date') ?? (tz !== null ? ttvDayKey(new Date(), parseTzOffset(tz)) : null)
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: 'date must be YYYY-MM-DD' }, { status: 400 })
   }

@@ -10,19 +10,19 @@ import type { SerializableQuestPacket, QuestNode, SegmentVariant } from './types
 const STORY_INTRO_BEATS: { id: string; text: string }[] = [
   {
     id: 'intro_orientation',
-    text: '**The Conclave has convened.** Five nations. A heist at the Robot Oscars. Giant constructs powered by emotional energy. You\'re walking in mid-formation — and your participation matters.',
+    text: '**Welcome to the Heaven sect.** The sect is a school of cultivation on a mountain above the clouds. It takes in people who have left the frozen settlements below. You left one too. That is why its gate opened for you.',
   },
   {
     id: 'intro_rising',
-    text: '**Each nation channels a different emotional current:** Argyra\'s clarity, Pyrakanth\'s fire, Virelune\'s hope, Meridia\'s calm, Lamenth\'s flow. The crew is assembling. The heist needs every kind of pilot.',
+    text: '**Cultivation here means training your emotional energy.** Every feeling carries a charge. In Calrunia that charge takes shape as spirits. A trained student can turn the dread before a hard phone call into the first sentence they say. The same practice works in your own life.',
   },
   {
     id: 'intro_tension',
-    text: '**The stakes are real.** A corrupt force threatens construct technology. The Oscars bring the elite out of hiding — and something valuable is there for the taking. The gap between where we are and where we\'re going? That\'s the heist.',
+    text: '**Six Elders teach in the sect.** Each Elder teaches one face of the game master. The Shaman reads feeling. The Architect builds structure. The Challenger tests the edge. The Regent keeps the rules. The Diplomat brings people together. The Sage sees the whole pattern.',
   },
   {
     id: 'intro_integration',
-    text: '**You\'re not filling out a form.** You\'re joining the crew. Choose your nation, your approach, your role. The threshold is near.',
+    text: '**You start as an Initiate, the first of six ranks.** First you shape your character. Then you learn the basic moves, each one a short practice you can use today. Last, you choose the Elder whose way fits you. You leave with a starter share of vibeulons, the sect\'s coin of emotional energy.',
   },
 ]
 

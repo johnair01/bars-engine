@@ -441,11 +441,21 @@ async function makeCultFigure(M) {
 async function makeRoadFigure() {
   let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
   const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
-  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2h", underwrap: true });
   scene.add(W.holder);
   const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
+  const { packGroup } = await import("./pack.js"); bag.add(packGroup(THREE));   // a bundle, not the toolbag's box
   const plank = new THREE.Group();
-  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, update(dt, moving) { W.update(dt, moving); } };
+  /* the kneel for the letter (his A on hj-cultivation-look-1): the same seiza the nook hearth uses (cult/kneel.js), fitted to the
+     ground (seat top 0). Loaded on the first kneel. Walking on stands her up again. */
+  let K = null, kneeling = false;
+  /* the pack rides the back: kneeling lowers the hips, so the pack drops with them (it hung at standing mid-back height and floated by her head) */
+  const hipY = () => { const v = new THREE.Vector3(); W.X.F.bones.hips.getWorldPosition(v); return W.holder.worldToLocal(v).y; }; W.holder.updateMatrixWorld(true); const hip0 = hipY();
+  const dropPack = () => { W.holder.updateMatrixWorld(true); bag.position.y = 0.92 + (kneeling ? hipY() - hip0 : 0); };
+  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, get kneeling() { return kneeling; },
+    async kneel() { if (kneeling) return; const { makeKneel } = await import("../cult/kneel.js"); K = K || makeKneel(W); K.sit(0); kneeling = true; dropPack(); },
+    stand() { if (!kneeling) return; K.stand(); kneeling = false; dropPack(); },
+    update(dt, moving) { if (kneeling) { if (moving) this.stand(); else return; } W.update(dt, moving); } };
 }
 async function makeFigure(M) {
   if (ROAD) return makeRoadFigure();
@@ -681,7 +691,7 @@ async function build() {
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
-  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show(); }
+  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag, onLeave: () => state.me.stand(), onPick: () => state.me.stand() }); state.road.show(); }
 }
 
 /* ===================================================================================================
@@ -856,13 +866,21 @@ $("#card").addEventListener("submit", e => { const f = e.target.closest("form[da
 $("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
 $("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
 $("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
+/* kneel at the letter, face it, then open its tag; leaving it or taking it stands her up (road.js onLeave / onPick) */
+async function kneelToLetter() {
+  const L = state.road.LETTER, dx = L.x - me.pos.x, dz = L.z - me.pos.z, d = Math.hypot(dx, dz) || 1;
+  me.target = null; me.yaw = Math.atan2(dx, dz);
+  if (d > 0.6) { me.pos.x = L.x - dx / d * 0.6; me.pos.z = L.z - dz / d * 0.6; }
+  try { await state.me.kneel(); } catch (e) { console.warn("kneel failed; the card opens standing", e); }
+  state.road.card();
+}
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
   else if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
-  else if (b.dataset.act === "letter" && state.road) state.road.card();
+  else if (b.dataset.act === "letter" && state.road) kneelToLetter();
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act === "again") walkAgain();
   else if (b.dataset.act === "walkhome") { const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on")); setTimeout(() => { location.href = WALK_NOOK + "?home=1"; }, 700); }
@@ -1059,7 +1077,7 @@ function goPlace(where) {
 }
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
+  let back = "/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
   if (WALK) back = WALK_NOOK;   // the walk's nook is the visitor's, whoever opened the walk
   setTimeout(() => { location.href = back; }, 700);
 }

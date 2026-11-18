@@ -100,7 +100,7 @@ const plateMat = tex => new THREE.MeshStandardMaterial({ map: tex, metalness: 0.
 /* lh-first-block: the first table is dealt from the TDT director application block (council money-block.md, mb-first-coin). */
 const DIRECTOR_GOAL = "Send the TDT director application";
 /* ?goal= carries another goal (an invitation can): it waits on the plate as the answer to the first question */
-const GOAL_IN = (q.get("goal") || "").replace(/\s+/g, " ").trim().slice(0, 80);
+const GOAL_IN = (q.get("goal") || "").replace(/\s+/g, " ").trim().slice(0, 140);
 const intake = { goal: "", want: [], now: {}, truth: {}, truthCtx: {}, res: [false, false, false, false, false, false], tags: KEEPS.map(() => ({})) };
 const sliders = { size: 2, charge: 2, deadline: 2 };
 let state = null, firstMove = false, tableId = null;

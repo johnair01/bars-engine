@@ -50,7 +50,7 @@ export function compileCharacterCreationPacket(
     beatType: 'orientation',
     wordCountEstimate: 25,
     emotional: { channel: 'Neutrality', movement: 'translate' },
-    text: '**What draws you most right now?** — A quick signal to personalize your journey into the Conclave.',
+    text: '**What draws you most right now?** Your answer shapes how the sect teaches you.',
     choices: lensChoices,
     anchors: { goal: 'orientation' },
   })
@@ -84,7 +84,7 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 50,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**Each nation channels a different emotional energy.** Argyra: clarity and precision. Pyrakanth: passion and drive. Virelune: hope and growth. Meridia: calm and grounding. Lamenth: flow and wisdom. Which calls to you?',
+      text: '**Each Elder of the Heaven sect teaches one face of the game master.** Which way calls to you?',
       choices: nationChoices,
       anchors: {},
     })
@@ -107,7 +107,7 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 25,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**Nation** — Continue to choose your archetype.',
+      text: '**Elder** — Continue to choose your archetype.',
       choices: [{ text: 'Continue', targetId: 'char_playbook' }],
       anchors: {},
     })
@@ -128,7 +128,7 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 40,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**How do you approach the heist?** Each archetype brings a different lens — a different way of moving through the world.',
+      text: '**How do you help the people around you?** Each archetype is one way of showing up for others.',
       choices: archetypeChoices,
       anchors: {},
     })

@@ -42,7 +42,7 @@ export default async function AdminDashboard() {
                     <ActionCard href="/board" title="Nonprofit Board" description="The nonprofit's rows" accent="amber" external />
                     <ActionCard href="/admin/games" title="Games" description="Every game: play links, source, tests, open work" accent="violet" />
                     <ActionCard href="/ontology-game/cave" title="Cave of Lessons" description="Daemons, spirits and W.A.V.E." accent="emerald" external />
-                    <ActionCard href="/ontology-game/between" title="The Between" description="The garden two people tend" accent="emerald" external />
+                    <ActionCard href="/between" title="The Between" description="The garden two people tend" accent="emerald" external />
                     <ActionCard href="/tap-the-vein" title="Tap the Vein" description="The morning ritual" accent="emerald" external />
                     <ActionCard href="/admin/campaigns/review" title="Campaigns" description="Approve drafts, then open a campaign page" accent="sky" />
                     <ActionCard href="/admin/players" title="Players" description="Accounts and roles" accent="sky" />
