@@ -430,15 +430,32 @@ function rpcError(id: RpcId, code: number, message: string) {
 }
 
 /** A look is a design look when it carries `look` (or kind look) and names a face. */
-function isDesignLook(data: Record<string, unknown>): boolean {
-  if (!data.look && data.kind !== 'look') return false
+function namesDesignFace(data: Record<string, unknown>): boolean {
   const faces = Array.isArray(data.faces) ? data.faces.join(' ') : typeof data.faces === 'string' ? data.faces : ''
   const named = faces.toLowerCase()
   return DESIGN_FACES.some((f) => named.includes(f))
 }
 
+function isDesignLook(data: Record<string, unknown>): boolean {
+  if (!data.look && data.kind !== 'look') return false
+  return namesDesignFace(data)
+}
+
+/** A lane's work receipt: a branch's own check and still, shown so he can see what moved. Not a design pass. */
+function isLaneReceipt(data: Record<string, unknown>): boolean {
+  return data.receipt === true
+    && typeof data.lane === 'string' && data.lane.trim() !== ''
+    && typeof data.pr === 'string' && data.pr.trim() !== ''
+}
+
 /** The sentence that refuses a design look without a sealed pass, or null when the look may be posted. */
 async function unsealedPass(docId: string, data: Record<string, unknown>): Promise<string | null> {
+  if (isLaneReceipt(data)) {
+    if (namesDesignFace(data))
+      return `${docId}: a lane receipt may not name design faces; it shows what a branch did, not what the design says. `
+        + 'Drop `faces`, or post a design pass first (`python3 council/tools/pass_check.py <pass.md> --seal`).'
+    return null
+  }
   if (!isDesignLook(data)) return null
   const refuse = (why: string) =>
     `${docId}: this look names design faces, so it needs a pass that ran the design steps. ${why} `

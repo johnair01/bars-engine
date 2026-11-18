@@ -145,6 +145,23 @@ describe('the board MCP server', () => {
     expect(accepted.result?.isError).toBe(false)
   })
 
+  it('lets a lane receipt carry a still without a pass, and keeps design faces out of it', async () => {
+    docs.clear()
+    const receipt = {
+      kind: 'questions', receipt: true, lane: 'freebuff', look: true,
+      pr: 'https://github.com/johnair01/bars-engine/pull/836',
+      still: 'https://bars-engine.vercel.app/board/stills/sha/aa.png',
+      q: 'PR #836: the stair run, checked', options: [{ v: 'A', label: 'Take it' }, { v: 'B', label: 'Send it back' }],
+    }
+    const accepted = await call('post_rows', { docs: [{ docId: 'waker-result-1', data: receipt }] })
+    expect(accepted.result?.isError).toBe(false)
+
+    const sneaky = { ...receipt, faces: ['regent'] }
+    const refused = await call('post_rows', { docs: [{ docId: 'waker-result-2', data: sneaky }] })
+    expect(refused.result?.isError).toBe(true)
+    expect(refused.result?.content?.[0]?.text).toContain('lane receipt may not name design faces')
+  })
+
   it('refuses a call without the key', async () => {
     const req = new NextRequest('http://localhost/api/mcp', {
       method: 'POST',
