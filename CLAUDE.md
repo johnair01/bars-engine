@@ -53,6 +53,12 @@ Wendell, 2026-10-04: *"If you need rulings from me this should've gone to the co
 
 ## UI Work — Read First
 
+For cultivator walking, running, jumping, body sizes, and robe movement, load
+`.claude/skills/cultivator-motion-review/SKILL.md` before changing code. Its
+source of truth is `.specify/specs/cultivator-motion-cloth-quality/`. Capture
+and review work runs in the active Claude environment; do not use GitHub
+Actions for this asset loop.
+
 **Before any UI work:** Read [`UI_COVENANT.md`](UI_COVENANT.md) at the start of every session.
 
 Session-start prompt for AI UI work:

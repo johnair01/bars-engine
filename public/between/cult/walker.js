@@ -18,9 +18,13 @@ export const BODIES = {
   m: { gender: "m", build: "average", skin: 3, height: 1.75 },
 };
 let REG = null;
-export async function makeWalker({ who = "f", outfit = "B2", underwrap = false } = {}) {
+// main's `underwrap` (the under-wrap layer) and the motion stack's body/build/height recipe together
+export async function makeWalker({ who = "f", build = "average", height = BODIES[who]?.height, outfit = "B2", underwrap = false } = {}) {
   if (!REG) REG = await fetch(new URL("./make/parts.json", import.meta.url)).then(r => r.json());
-  const X = await M.build({ ...BODIES[who], direction: outfit[0], outfit, underwrap }, REG);
+  if(!BODIES[who])throw new Error('body '+who);
+  if(!REG.builds[build])throw new Error('build '+build);
+  if(!Number.isFinite(height)||height<REG.height.min||height>REG.height.max)throw new Error('height '+height);
+  const X = await M.build({ ...BODIES[who], build, height, direction: outfit[0], outfit, underwrap }, REG);
   const F = X.F;
   // the body under the clothes is not drawn while it walks, so a thigh cannot show through the skirt (mix.js
   // legsInMotion, worked out at the preview's stride); it stays hidden at rest too, where the cloth covers it
@@ -59,7 +63,9 @@ export async function makeWalker({ who = "f", outfit = "B2", underwrap = false }
   const STRIDE = 2 * 2 * hipL * 0.32; // metres per full cycle (two steps)
 
   return {
-    holder, X, who, outfit,
+    holder, X, who, build, height, outfit,
+    // Deterministic review of the shipped gait, without requiring player movement.
+    previewWalk(phase, amount = 1) { gait(phase, amount); },
     // dt: seconds; moving: whether the traveller is walking this frame. The stride advances by the ground covered,
     // so the feet do not skate.
     update(dt, moving) {

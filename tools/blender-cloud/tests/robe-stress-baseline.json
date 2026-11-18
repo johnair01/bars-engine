@@ -1,0 +1,2090 @@
+{
+  "result": {
+    "status": "complete",
+    "frames": [
+      {
+        "body": "f",
+        "scenario": "stand",
+        "phase": "rest",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 0,
+        "bare": 0,
+        "where": {}
+      },
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "phase": "long stride",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 74,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 52,
+          "trousersL>sash-tail": 2,
+          "trousersR>robe": 17,
+          "bootsL>robe": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "phase": "passing step",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 79,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 21,
+          "trousersR>robe": 26,
+          "bootsL>robe": 3,
+          "bootsR>robe": 29
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "phase": "hard stop",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 4,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 4
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "crouch",
+        "synthetic": true,
+        "bodyPoke": 2,
+        "layerPoke": 21,
+        "bare": 0,
+        "where": {
+          "hips": 2,
+          "trousersL>robe": 7,
+          "trousersR>robe": 11,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "takeoff",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 0,
+        "bare": 0,
+        "where": {}
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "apex tuck",
+        "synthetic": true,
+        "bodyPoke": 2,
+        "layerPoke": 39,
+        "bare": 0,
+        "where": {
+          "hips": 2,
+          "trousersL>robe": 14,
+          "trousersL>sash-tail": 2,
+          "trousersR>robe": 19,
+          "robe>sash-tail": 1,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "phase": "landing compression",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 21,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 10,
+          "trousersR>robe": 8,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "phase": "high left step",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 30,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 22,
+          "trousersL>sash-tail": 3,
+          "robe>sash-tail": 5
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "phase": "pull over ledge",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 29,
+        "bare": 0,
+        "where": {
+          "trousersL>robe": 17,
+          "trousersL>sash-tail": 3,
+          "trousersR>robe": 2,
+          "robe>sash-tail": 5,
+          "robe>sash-pendant": 2
+        }
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "phase": "high right step",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 26,
+        "bare": 0,
+        "where": {
+          "hips": 1,
+          "trousersR>robe": 23,
+          "trousersR>sash-pendant": 1,
+          "robe>sash-pendant": 2
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "stand",
+        "phase": "rest",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 4,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>bootsL": 2,
+          "trousersR>bootsR": 2
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "phase": "long stride",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 96,
+        "bare": 3,
+        "where": {
+          "bare:shoulderL": 1,
+          "bare:shoulderR": 2,
+          "trousersL>robe": 63,
+          "trousersL>sash-tail": 1,
+          "trousersL>bootsL": 1,
+          "trousersR>robe": 15,
+          "trousersR>bootsR": 2,
+          "bootsL>robe": 13,
+          "robe>sash-belt": 1
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "phase": "passing step",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 87,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 28,
+          "trousersL>bootsL": 2,
+          "trousersR>robe": 18,
+          "trousersR>bootsR": 2,
+          "bootsR>robe": 36,
+          "robe>sash-pendant": 1
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "phase": "hard stop",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 15,
+        "bare": 3,
+        "where": {
+          "bare:shoulderL": 2,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 11,
+          "trousersL>bootsL": 2,
+          "trousersR>bootsR": 2
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "crouch",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 77,
+        "bare": 3,
+        "where": {
+          "bare:shoulderL": 2,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 22,
+          "trousersR>robe": 27,
+          "bootsL>robe": 12,
+          "bootsR>robe": 12,
+          "robe>sash-pendant": 4
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "takeoff",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 0,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "apex tuck",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 89,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 29,
+          "trousersL>sash-tail": 1,
+          "trousersL>bootsL": 2,
+          "trousersR>robe": 32,
+          "trousersR>bootsR": 2,
+          "bootsL>robe": 9,
+          "bootsR>robe": 9,
+          "robe>sash-belt": 2,
+          "robe>sash-pendant": 3
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "phase": "landing compression",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 97,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 30,
+          "trousersR>robe": 31,
+          "bootsL>robe": 15,
+          "bootsR>robe": 16,
+          "robe>sash-pendant": 5
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "phase": "high left step",
+        "synthetic": true,
+        "bodyPoke": 0,
+        "layerPoke": 51,
+        "bare": 1,
+        "where": {
+          "bare:shoulderR": 1,
+          "trousersL>robe": 37,
+          "trousersL>sash-tail": 6,
+          "trousersL>bootsL": 2,
+          "robe>sash-belt": 1,
+          "robe>sash-tail": 5
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "phase": "pull over ledge",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 83,
+        "bare": 1,
+        "where": {
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersL>robe": 27,
+          "trousersL>sash-tail": 6,
+          "trousersL>bootsL": 2,
+          "trousersR>robe": 20,
+          "bootsR>robe": 19,
+          "robe>sash-belt": 2,
+          "robe>sash-tail": 3,
+          "robe>sash-pendant": 4
+        }
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "phase": "high right step",
+        "synthetic": true,
+        "bodyPoke": 1,
+        "layerPoke": 55,
+        "bare": 2,
+        "where": {
+          "bare:shoulderL": 1,
+          "shoulderR": 1,
+          "bare:shoulderR": 1,
+          "trousersR>robe": 45,
+          "trousersR>sash-pendant": 2,
+          "trousersR>bootsR": 2,
+          "robe>sash-belt": 2,
+          "robe>sash": 1,
+          "robe>sash-pendant": 3
+        }
+      }
+    ],
+    "motions": [
+      {
+        "body": "f",
+        "scenario": "sprint",
+        "synthetic": true,
+        "sampleHz": 30,
+        "durationSeconds": 1.5,
+        "maxHemStepM": 0.0196,
+        "maxHemSecondDifferenceM": 0.0211,
+        "samples": [
+          {
+            "t": 0,
+            "hemMeanY": 0.504,
+            "hemMinY": 0.1804,
+            "rootY": -0.0107
+          },
+          {
+            "t": 0.033,
+            "hemMeanY": 0.5068,
+            "hemMinY": 0.1707,
+            "rootY": -0.0087
+          },
+          {
+            "t": 0.067,
+            "hemMeanY": 0.5087,
+            "hemMinY": 0.1623,
+            "rootY": -0.0091
+          },
+          {
+            "t": 0.1,
+            "hemMeanY": 0.5097,
+            "hemMinY": 0.1552,
+            "rootY": -0.0117
+          },
+          {
+            "t": 0.133,
+            "hemMeanY": 0.5101,
+            "hemMinY": 0.1495,
+            "rootY": -0.0164
+          },
+          {
+            "t": 0.167,
+            "hemMeanY": 0.5098,
+            "hemMinY": 0.1452,
+            "rootY": -0.0228
+          },
+          {
+            "t": 0.2,
+            "hemMeanY": 0.509,
+            "hemMinY": 0.1421,
+            "rootY": -0.0306
+          },
+          {
+            "t": 0.233,
+            "hemMeanY": 0.5078,
+            "hemMinY": 0.1366,
+            "rootY": -0.0395
+          },
+          {
+            "t": 0.267,
+            "hemMeanY": 0.5064,
+            "hemMinY": 0.1309,
+            "rootY": -0.0492
+          },
+          {
+            "t": 0.3,
+            "hemMeanY": 0.5047,
+            "hemMinY": 0.1257,
+            "rootY": -0.0595
+          },
+          {
+            "t": 0.333,
+            "hemMeanY": 0.5013,
+            "hemMinY": 0.1263,
+            "rootY": -0.0521
+          },
+          {
+            "t": 0.367,
+            "hemMeanY": 0.4924,
+            "hemMinY": 0.123,
+            "rootY": -0.0509
+          },
+          {
+            "t": 0.4,
+            "hemMeanY": 0.4782,
+            "hemMinY": 0.1137,
+            "rootY": -0.0561
+          },
+          {
+            "t": 0.433,
+            "hemMeanY": 0.4767,
+            "hemMinY": 0.1163,
+            "rootY": -0.0499
+          },
+          {
+            "t": 0.467,
+            "hemMeanY": 0.4963,
+            "hemMinY": 0.1424,
+            "rootY": -0.0242
+          },
+          {
+            "t": 0.5,
+            "hemMeanY": 0.5106,
+            "hemMinY": 0.1656,
+            "rootY": -0.0061
+          },
+          {
+            "t": 0.533,
+            "hemMeanY": 0.5188,
+            "hemMinY": 0.1857,
+            "rootY": 0.0038
+          },
+          {
+            "t": 0.567,
+            "hemMeanY": 0.5212,
+            "hemMinY": 0.1811,
+            "rootY": 0.0055
+          },
+          {
+            "t": 0.6,
+            "hemMeanY": 0.5185,
+            "hemMinY": 0.1689,
+            "rootY": -0.0003
+          },
+          {
+            "t": 0.633,
+            "hemMeanY": 0.5212,
+            "hemMinY": 0.1811,
+            "rootY": 0.0055
+          },
+          {
+            "t": 0.667,
+            "hemMeanY": 0.5188,
+            "hemMinY": 0.1857,
+            "rootY": 0.0038
+          },
+          {
+            "t": 0.7,
+            "hemMeanY": 0.5106,
+            "hemMinY": 0.1656,
+            "rootY": -0.0061
+          },
+          {
+            "t": 0.733,
+            "hemMeanY": 0.4963,
+            "hemMinY": 0.1424,
+            "rootY": -0.0242
+          },
+          {
+            "t": 0.767,
+            "hemMeanY": 0.4767,
+            "hemMinY": 0.1163,
+            "rootY": -0.0499
+          },
+          {
+            "t": 0.8,
+            "hemMeanY": 0.4782,
+            "hemMinY": 0.1137,
+            "rootY": -0.0561
+          },
+          {
+            "t": 0.833,
+            "hemMeanY": 0.4924,
+            "hemMinY": 0.123,
+            "rootY": -0.0509
+          },
+          {
+            "t": 0.867,
+            "hemMeanY": 0.5013,
+            "hemMinY": 0.1263,
+            "rootY": -0.0521
+          },
+          {
+            "t": 0.9,
+            "hemMeanY": 0.5047,
+            "hemMinY": 0.1257,
+            "rootY": -0.0595
+          },
+          {
+            "t": 0.933,
+            "hemMeanY": 0.502,
+            "hemMinY": 0.1239,
+            "rootY": -0.0588
+          },
+          {
+            "t": 0.967,
+            "hemMeanY": 0.4969,
+            "hemMinY": 0.1198,
+            "rootY": -0.0606
+          },
+          {
+            "t": 1,
+            "hemMeanY": 0.4893,
+            "hemMinY": 0.1134,
+            "rootY": -0.065
+          },
+          {
+            "t": 1.033,
+            "hemMeanY": 0.4793,
+            "hemMinY": 0.1049,
+            "rootY": -0.0718
+          },
+          {
+            "t": 1.067,
+            "hemMeanY": 0.4827,
+            "hemMinY": 0.1098,
+            "rootY": -0.0653
+          },
+          {
+            "t": 1.1,
+            "hemMeanY": 0.5001,
+            "hemMinY": 0.129,
+            "rootY": -0.0449
+          },
+          {
+            "t": 1.133,
+            "hemMeanY": 0.5139,
+            "hemMinY": 0.1449,
+            "rootY": -0.0281
+          },
+          {
+            "t": 1.167,
+            "hemMeanY": 0.5238,
+            "hemMinY": 0.157,
+            "rootY": -0.0154
+          },
+          {
+            "t": 1.2,
+            "hemMeanY": 0.5296,
+            "hemMinY": 0.1652,
+            "rootY": -0.0069
+          },
+          {
+            "t": 1.233,
+            "hemMeanY": 0.5269,
+            "hemMinY": 0.1637,
+            "rootY": -0.0054
+          },
+          {
+            "t": 1.267,
+            "hemMeanY": 0.524,
+            "hemMinY": 0.1625,
+            "rootY": -0.0044
+          },
+          {
+            "t": 1.3,
+            "hemMeanY": 0.5211,
+            "hemMinY": 0.1621,
+            "rootY": -0.0038
+          },
+          {
+            "t": 1.333,
+            "hemMeanY": 0.5182,
+            "hemMinY": 0.1625,
+            "rootY": -0.0037
+          },
+          {
+            "t": 1.367,
+            "hemMeanY": 0.5152,
+            "hemMinY": 0.164,
+            "rootY": -0.0041
+          },
+          {
+            "t": 1.4,
+            "hemMeanY": 0.5123,
+            "hemMinY": 0.1664,
+            "rootY": -0.005
+          },
+          {
+            "t": 1.433,
+            "hemMeanY": 0.5095,
+            "hemMinY": 0.17,
+            "rootY": -0.0064
+          },
+          {
+            "t": 1.467,
+            "hemMeanY": 0.5067,
+            "hemMinY": 0.1747,
+            "rootY": -0.0083
+          },
+          {
+            "t": 1.5,
+            "hemMeanY": 0.504,
+            "hemMinY": 0.1804,
+            "rootY": -0.0107
+          }
+        ]
+      },
+      {
+        "body": "f",
+        "scenario": "jump",
+        "synthetic": true,
+        "sampleHz": 30,
+        "durationSeconds": 1.5,
+        "maxHemStepM": 0.0525,
+        "maxHemSecondDifferenceM": 0.0752,
+        "samples": [
+          {
+            "t": 0,
+            "hemMeanY": 0.504,
+            "hemMinY": 0.1804,
+            "rootY": -0.0107
+          },
+          {
+            "t": 0.033,
+            "hemMeanY": 0.4877,
+            "hemMinY": 0.1536,
+            "rootY": -0.0275
+          },
+          {
+            "t": 0.067,
+            "hemMeanY": 0.467,
+            "hemMinY": 0.1235,
+            "rootY": -0.05
+          },
+          {
+            "t": 0.1,
+            "hemMeanY": 0.444,
+            "hemMinY": 0.0924,
+            "rootY": -0.076
+          },
+          {
+            "t": 0.133,
+            "hemMeanY": 0.4303,
+            "hemMinY": 0.0716,
+            "rootY": -0.094
+          },
+          {
+            "t": 0.167,
+            "hemMeanY": 0.4145,
+            "hemMinY": 0.0498,
+            "rootY": -0.1151
+          },
+          {
+            "t": 0.2,
+            "hemMeanY": 0.3975,
+            "hemMinY": 0.0279,
+            "rootY": -0.1384
+          },
+          {
+            "t": 0.233,
+            "hemMeanY": 0.3798,
+            "hemMinY": 0.0065,
+            "rootY": -0.163
+          },
+          {
+            "t": 0.267,
+            "hemMeanY": 0.3622,
+            "hemMinY": -0.0139,
+            "rootY": -0.1881
+          },
+          {
+            "t": 0.3,
+            "hemMeanY": 0.345,
+            "hemMinY": -0.0331,
+            "rootY": -0.2133
+          },
+          {
+            "t": 0.333,
+            "hemMeanY": 0.3759,
+            "hemMinY": -0.0008,
+            "rootY": -0.1762
+          },
+          {
+            "t": 0.367,
+            "hemMeanY": 0.407,
+            "hemMinY": 0.0323,
+            "rootY": -0.1391
+          },
+          {
+            "t": 0.4,
+            "hemMeanY": 0.4382,
+            "hemMinY": 0.0661,
+            "rootY": -0.1021
+          },
+          {
+            "t": 0.433,
+            "hemMeanY": 0.4694,
+            "hemMinY": 0.1004,
+            "rootY": -0.0656
+          },
+          {
+            "t": 0.467,
+            "hemMeanY": 0.5002,
+            "hemMinY": 0.135,
+            "rootY": -0.03
+          },
+          {
+            "t": 0.5,
+            "hemMeanY": 0.5304,
+            "hemMinY": 0.1697,
+            "rootY": 0.0045
+          },
+          {
+            "t": 0.533,
+            "hemMeanY": 0.5596,
+            "hemMinY": 0.204,
+            "rootY": 0.0374
+          },
+          {
+            "t": 0.567,
+            "hemMeanY": 0.5874,
+            "hemMinY": 0.2377,
+            "rootY": 0.0682
+          },
+          {
+            "t": 0.6,
+            "hemMeanY": 0.6235,
+            "hemMinY": 0.2805,
+            "rootY": 0.1066
+          },
+          {
+            "t": 0.633,
+            "hemMeanY": 0.6407,
+            "hemMinY": 0.2887,
+            "rootY": 0.1205
+          },
+          {
+            "t": 0.667,
+            "hemMeanY": 0.6655,
+            "hemMinY": 0.3058,
+            "rootY": 0.1405
+          },
+          {
+            "t": 0.7,
+            "hemMeanY": 0.6884,
+            "hemMinY": 0.3225,
+            "rootY": 0.1574
+          },
+          {
+            "t": 0.733,
+            "hemMeanY": 0.7102,
+            "hemMinY": 0.3393,
+            "rootY": 0.1722
+          },
+          {
+            "t": 0.767,
+            "hemMeanY": 0.7315,
+            "hemMinY": 0.3569,
+            "rootY": 0.1856
+          },
+          {
+            "t": 0.8,
+            "hemMeanY": 0.7527,
+            "hemMinY": 0.3754,
+            "rootY": 0.1984
+          },
+          {
+            "t": 0.833,
+            "hemMeanY": 0.7742,
+            "hemMinY": 0.3952,
+            "rootY": 0.2109
+          },
+          {
+            "t": 0.867,
+            "hemMeanY": 0.7962,
+            "hemMinY": 0.4164,
+            "rootY": 0.2238
+          },
+          {
+            "t": 0.9,
+            "hemMeanY": 0.8189,
+            "hemMinY": 0.439,
+            "rootY": 0.2373
+          },
+          {
+            "t": 0.933,
+            "hemMeanY": 0.7664,
+            "hemMinY": 0.3865,
+            "rootY": 0.1876
+          },
+          {
+            "t": 0.967,
+            "hemMeanY": 0.714,
+            "hemMinY": 0.3338,
+            "rootY": 0.138
+          },
+          {
+            "t": 1,
+            "hemMeanY": 0.6617,
+            "hemMinY": 0.2812,
+            "rootY": 0.0884
+          },
+          {
+            "t": 1.033,
+            "hemMeanY": 0.6093,
+            "hemMinY": 0.2286,
+            "rootY": 0.0388
+          },
+          {
+            "t": 1.067,
+            "hemMeanY": 0.5569,
+            "hemMinY": 0.176,
+            "rootY": -0.0108
+          },
+          {
+            "t": 1.1,
+            "hemMeanY": 0.5046,
+            "hemMinY": 0.1236,
+            "rootY": -0.0604
+          },
+          {
+            "t": 1.133,
+            "hemMeanY": 0.4523,
+            "hemMinY": 0.0713,
+            "rootY": -0.1101
+          },
+          {
+            "t": 1.167,
+            "hemMeanY": 0.3999,
+            "hemMinY": 0.0191,
+            "rootY": -0.1598
+          },
+          {
+            "t": 1.2,
+            "hemMeanY": 0.3476,
+            "hemMinY": -0.033,
+            "rootY": -0.2095
+          },
+          {
+            "t": 1.233,
+            "hemMeanY": 0.3642,
+            "hemMinY": -0.0134,
+            "rootY": -0.1851
+          },
+          {
+            "t": 1.267,
+            "hemMeanY": 0.3812,
+            "hemMinY": 0.0074,
+            "rootY": -0.1607
+          },
+          {
+            "t": 1.3,
+            "hemMeanY": 0.3984,
+            "hemMinY": 0.0291,
+            "rootY": -0.1368
+          },
+          {
+            "t": 1.333,
+            "hemMeanY": 0.4151,
+            "hemMinY": 0.0509,
+            "rootY": -0.1141
+          },
+          {
+            "t": 1.367,
+            "hemMeanY": 0.4306,
+            "hemMinY": 0.0722,
+            "rootY": -0.0934
+          },
+          {
+            "t": 1.4,
+            "hemMeanY": 0.4442,
+            "hemMinY": 0.0925,
+            "rootY": -0.0758
+          },
+          {
+            "t": 1.433,
+            "hemMeanY": 0.4664,
+            "hemMinY": 0.1227,
+            "rootY": -0.0505
+          },
+          {
+            "t": 1.467,
+            "hemMeanY": 0.4874,
+            "hemMinY": 0.1531,
+            "rootY": -0.0278
+          },
+          {
+            "t": 1.5,
+            "hemMeanY": 0.504,
+            "hemMinY": 0.1804,
+            "rootY": -0.0107
+          }
+        ]
+      },
+      {
+        "body": "f",
+        "scenario": "climb",
+        "synthetic": true,
+        "sampleHz": 30,
+        "durationSeconds": 1.5,
+        "maxHemStepM": 0.0506,
+        "maxHemSecondDifferenceM": 0.0338,
+        "samples": [
+          {
+            "t": 0,
+            "hemMeanY": 0.504,
+            "hemMinY": 0.1804,
+            "rootY": -0.0107
+          },
+          {
+            "t": 0.033,
+            "hemMeanY": 0.5033,
+            "hemMinY": 0.1639,
+            "rootY": -0.0122
+          },
+          {
+            "t": 0.067,
+            "hemMeanY": 0.5044,
+            "hemMinY": 0.154,
+            "rootY": -0.0138
+          },
+          {
+            "t": 0.1,
+            "hemMeanY": 0.5069,
+            "hemMinY": 0.1505,
+            "rootY": -0.0155
+          },
+          {
+            "t": 0.133,
+            "hemMeanY": 0.5107,
+            "hemMinY": 0.1523,
+            "rootY": -0.0172
+          },
+          {
+            "t": 0.167,
+            "hemMeanY": 0.5152,
+            "hemMinY": 0.1586,
+            "rootY": -0.0191
+          },
+          {
+            "t": 0.2,
+            "hemMeanY": 0.5202,
+            "hemMinY": 0.1614,
+            "rootY": -0.021
+          },
+          {
+            "t": 0.233,
+            "hemMeanY": 0.5254,
+            "hemMinY": 0.1582,
+            "rootY": -0.0231
+          },
+          {
+            "t": 0.267,
+            "hemMeanY": 0.5305,
+            "hemMinY": 0.1549,
+            "rootY": -0.0252
+          },
+          {
+            "t": 0.3,
+            "hemMeanY": 0.5354,
+            "hemMinY": 0.1517,
+            "rootY": -0.0275
+          },
+          {
+            "t": 0.333,
+            "hemMeanY": 0.5399,
+            "hemMinY": 0.1484,
+            "rootY": -0.0298
+          },
+          {
+            "t": 0.367,
+            "hemMeanY": 0.5441,
+            "hemMinY": 0.1451,
+            "rootY": -0.0322
+          },
+          {
+            "t": 0.4,
+            "hemMeanY": 0.5592,
+            "hemMinY": 0.1627,
+            "rootY": -0.0171
+          },
+          {
+            "t": 0.433,
+            "hemMeanY": 0.5769,
+            "hemMinY": 0.1868,
+            "rootY": 0.0023
+          },
+          {
+            "t": 0.467,
+            "hemMeanY": 0.5932,
+            "hemMinY": 0.2104,
+            "rootY": 0.0201
+          },
+          {
+            "t": 0.5,
+            "hemMeanY": 0.6125,
+            "hemMinY": 0.2255,
+            "rootY": 0.0405
+          },
+          {
+            "t": 0.533,
+            "hemMeanY": 0.6336,
+            "hemMinY": 0.2416,
+            "rootY": 0.0625
+          },
+          {
+            "t": 0.567,
+            "hemMeanY": 0.6538,
+            "hemMinY": 0.2574,
+            "rootY": 0.0832
+          },
+          {
+            "t": 0.6,
+            "hemMeanY": 0.673,
+            "hemMinY": 0.2732,
+            "rootY": 0.1027
+          },
+          {
+            "t": 0.633,
+            "hemMeanY": 0.6916,
+            "hemMinY": 0.2891,
+            "rootY": 0.1213
+          },
+          {
+            "t": 0.667,
+            "hemMeanY": 0.7095,
+            "hemMinY": 0.3053,
+            "rootY": 0.139
+          },
+          {
+            "t": 0.7,
+            "hemMeanY": 0.7271,
+            "hemMinY": 0.3218,
+            "rootY": 0.156
+          },
+          {
+            "t": 0.733,
+            "hemMeanY": 0.7443,
+            "hemMinY": 0.3388,
+            "rootY": 0.1725
+          },
+          {
+            "t": 0.767,
+            "hemMeanY": 0.7279,
+            "hemMinY": 0.3252,
+            "rootY": 0.1569
+          },
+          {
+            "t": 0.8,
+            "hemMeanY": 0.6777,
+            "hemMinY": 0.2817,
+            "rootY": 0.1089
+          },
+          {
+            "t": 0.833,
+            "hemMeanY": 0.6271,
+            "hemMinY": 0.2396,
+            "rootY": 0.0602
+          },
+          {
+            "t": 0.867,
+            "hemMeanY": 0.6081,
+            "hemMinY": 0.229,
+            "rootY": 0.0429
+          },
+          {
+            "t": 0.9,
+            "hemMeanY": 0.6033,
+            "hemMinY": 0.217,
+            "rootY": 0.0394
+          },
+          {
+            "t": 0.933,
+            "hemMeanY": 0.5978,
+            "hemMinY": 0.2049,
+            "rootY": 0.0348
+          },
+          {
+            "t": 0.967,
+            "hemMeanY": 0.5912,
+            "hemMinY": 0.1945,
+            "rootY": 0.0283
+          },
+          {
+            "t": 1,
+            "hemMeanY": 0.5826,
+            "hemMinY": 0.1857,
+            "rootY": 0.019
+          },
+          {
+            "t": 1.033,
+            "hemMeanY": 0.5713,
+            "hemMinY": 0.1784,
+            "rootY": 0.0058
+          },
+          {
+            "t": 1.067,
+            "hemMeanY": 0.5616,
+            "hemMinY": 0.1767,
+            "rootY": -0.0072
+          },
+          {
+            "t": 1.1,
+            "hemMeanY": 0.5536,
+            "hemMinY": 0.1644,
+            "rootY": -0.0198
+          },
+          {
+            "t": 1.133,
+            "hemMeanY": 0.5441,
+            "hemMinY": 0.1451,
+            "rootY": -0.0322
+          },
+          {
+            "t": 1.167,
+            "hemMeanY": 0.5399,
+            "hemMinY": 0.1484,
+            "rootY": -0.0298
+          },
+          {
+            "t": 1.2,
+            "hemMeanY": 0.5354,
+            "hemMinY": 0.1517,
+            "rootY": -0.0275
+          },
+          {
+            "t": 1.233,
+            "hemMeanY": 0.5305,
+            "hemMinY": 0.1549,
+            "rootY": -0.0252
+          },
+          {
+            "t": 1.267,
+            "hemMeanY": 0.5254,
+            "hemMinY": 0.1582,
+            "rootY": -0.0231
+          },
+          {
+            "t": 1.3,
+            "hemMeanY": 0.5202,
+            "hemMinY": 0.1614,
+            "rootY": -0.021
+          },
+          {
+            "t": 1.333,
+            "hemMeanY": 0.5152,
+            "hemMinY": 0.1586,
+            "rootY": -0.0191
+          },
+          {
+            "t": 1.367,
+            "hemMeanY": 0.5107,
+            "hemMinY": 0.1523,
+            "rootY": -0.0172
+          },
+          {
+            "t": 1.4,
+            "hemMeanY": 0.5069,
+            "hemMinY": 0.1505,
+            "rootY": -0.0155
+          },
+          {
+            "t": 1.433,
+            "hemMeanY": 0.5044,
+            "hemMinY": 0.154,
+            "rootY": -0.0138
+          },
+          {
+            "t": 1.467,
+            "hemMeanY": 0.5033,
+            "hemMinY": 0.1639,
+            "rootY": -0.0122
+          },
+          {
+            "t": 1.5,
+            "hemMeanY": 0.504,
+            "hemMinY": 0.1804,
+            "rootY": -0.0107
+          }
+        ]
+      },
+      {
+        "body": "m",
+        "scenario": "sprint",
+        "synthetic": true,
+        "sampleHz": 30,
+        "durationSeconds": 1.5,
+        "maxHemStepM": 0.0206,
+        "maxHemSecondDifferenceM": 0.0224,
+        "samples": [
+          {
+            "t": 0,
+            "hemMeanY": 0.4845,
+            "hemMinY": 0.1849,
+            "rootY": -0.0136
+          },
+          {
+            "t": 0.033,
+            "hemMeanY": 0.4875,
+            "hemMinY": 0.1757,
+            "rootY": -0.0115
+          },
+          {
+            "t": 0.067,
+            "hemMeanY": 0.4896,
+            "hemMinY": 0.1679,
+            "rootY": -0.0119
+          },
+          {
+            "t": 0.1,
+            "hemMeanY": 0.491,
+            "hemMinY": 0.1614,
+            "rootY": -0.0147
+          },
+          {
+            "t": 0.133,
+            "hemMeanY": 0.4916,
+            "hemMinY": 0.1563,
+            "rootY": -0.0196
+          },
+          {
+            "t": 0.167,
+            "hemMeanY": 0.4917,
+            "hemMinY": 0.1526,
+            "rootY": -0.0265
+          },
+          {
+            "t": 0.2,
+            "hemMeanY": 0.4913,
+            "hemMinY": 0.1502,
+            "rootY": -0.0348
+          },
+          {
+            "t": 0.233,
+            "hemMeanY": 0.4905,
+            "hemMinY": 0.1476,
+            "rootY": -0.0443
+          },
+          {
+            "t": 0.267,
+            "hemMeanY": 0.4895,
+            "hemMinY": 0.1426,
+            "rootY": -0.0547
+          },
+          {
+            "t": 0.3,
+            "hemMeanY": 0.4882,
+            "hemMinY": 0.1382,
+            "rootY": -0.0657
+          },
+          {
+            "t": 0.333,
+            "hemMeanY": 0.4837,
+            "hemMinY": 0.1371,
+            "rootY": -0.0581
+          },
+          {
+            "t": 0.367,
+            "hemMeanY": 0.4735,
+            "hemMinY": 0.1319,
+            "rootY": -0.0569
+          },
+          {
+            "t": 0.4,
+            "hemMeanY": 0.4578,
+            "hemMinY": 0.1192,
+            "rootY": -0.0623
+          },
+          {
+            "t": 0.433,
+            "hemMeanY": 0.456,
+            "hemMinY": 0.1211,
+            "rootY": -0.0554
+          },
+          {
+            "t": 0.467,
+            "hemMeanY": 0.4766,
+            "hemMinY": 0.1477,
+            "rootY": -0.0281
+          },
+          {
+            "t": 0.5,
+            "hemMeanY": 0.4916,
+            "hemMinY": 0.1714,
+            "rootY": -0.0086
+          },
+          {
+            "t": 0.533,
+            "hemMeanY": 0.5006,
+            "hemMinY": 0.1917,
+            "rootY": 0.0022
+          },
+          {
+            "t": 0.567,
+            "hemMeanY": 0.5036,
+            "hemMinY": 0.188,
+            "rootY": 0.0044
+          },
+          {
+            "t": 0.6,
+            "hemMeanY": 0.5014,
+            "hemMinY": 0.1765,
+            "rootY": -0.0014
+          },
+          {
+            "t": 0.633,
+            "hemMeanY": 0.5036,
+            "hemMinY": 0.188,
+            "rootY": 0.0044
+          },
+          {
+            "t": 0.667,
+            "hemMeanY": 0.5006,
+            "hemMinY": 0.1917,
+            "rootY": 0.0022
+          },
+          {
+            "t": 0.7,
+            "hemMeanY": 0.4916,
+            "hemMinY": 0.1714,
+            "rootY": -0.0086
+          },
+          {
+            "t": 0.733,
+            "hemMeanY": 0.4766,
+            "hemMinY": 0.1477,
+            "rootY": -0.0281
+          },
+          {
+            "t": 0.767,
+            "hemMeanY": 0.456,
+            "hemMinY": 0.1211,
+            "rootY": -0.0554
+          },
+          {
+            "t": 0.8,
+            "hemMeanY": 0.4578,
+            "hemMinY": 0.1192,
+            "rootY": -0.0623
+          },
+          {
+            "t": 0.833,
+            "hemMeanY": 0.4735,
+            "hemMinY": 0.1319,
+            "rootY": -0.0569
+          },
+          {
+            "t": 0.867,
+            "hemMeanY": 0.4837,
+            "hemMinY": 0.1371,
+            "rootY": -0.0581
+          },
+          {
+            "t": 0.9,
+            "hemMeanY": 0.4882,
+            "hemMinY": 0.1382,
+            "rootY": -0.0657
+          },
+          {
+            "t": 0.933,
+            "hemMeanY": 0.4849,
+            "hemMinY": 0.1355,
+            "rootY": -0.0652
+          },
+          {
+            "t": 0.967,
+            "hemMeanY": 0.4791,
+            "hemMinY": 0.1306,
+            "rootY": -0.0673
+          },
+          {
+            "t": 1,
+            "hemMeanY": 0.4707,
+            "hemMinY": 0.1232,
+            "rootY": -0.072
+          },
+          {
+            "t": 1.033,
+            "hemMeanY": 0.4599,
+            "hemMinY": 0.1135,
+            "rootY": -0.0792
+          },
+          {
+            "t": 1.067,
+            "hemMeanY": 0.4636,
+            "hemMinY": 0.1186,
+            "rootY": -0.072
+          },
+          {
+            "t": 1.1,
+            "hemMeanY": 0.4819,
+            "hemMinY": 0.1385,
+            "rootY": -0.0503
+          },
+          {
+            "t": 1.133,
+            "hemMeanY": 0.4966,
+            "hemMinY": 0.1549,
+            "rootY": -0.0323
+          },
+          {
+            "t": 1.167,
+            "hemMeanY": 0.5071,
+            "hemMinY": 0.1674,
+            "rootY": -0.0186
+          },
+          {
+            "t": 1.2,
+            "hemMeanY": 0.5133,
+            "hemMinY": 0.1754,
+            "rootY": -0.0092
+          },
+          {
+            "t": 1.233,
+            "hemMeanY": 0.5101,
+            "hemMinY": 0.1728,
+            "rootY": -0.0077
+          },
+          {
+            "t": 1.267,
+            "hemMeanY": 0.5068,
+            "hemMinY": 0.1709,
+            "rootY": -0.0067
+          },
+          {
+            "t": 1.3,
+            "hemMeanY": 0.5035,
+            "hemMinY": 0.1698,
+            "rootY": -0.0061
+          },
+          {
+            "t": 1.333,
+            "hemMeanY": 0.5001,
+            "hemMinY": 0.1696,
+            "rootY": -0.006
+          },
+          {
+            "t": 1.367,
+            "hemMeanY": 0.4968,
+            "hemMinY": 0.1704,
+            "rootY": -0.0065
+          },
+          {
+            "t": 1.4,
+            "hemMeanY": 0.4936,
+            "hemMinY": 0.1723,
+            "rootY": -0.0075
+          },
+          {
+            "t": 1.433,
+            "hemMeanY": 0.4904,
+            "hemMinY": 0.1754,
+            "rootY": -0.009
+          },
+          {
+            "t": 1.467,
+            "hemMeanY": 0.4874,
+            "hemMinY": 0.1796,
+            "rootY": -0.011
+          },
+          {
+            "t": 1.5,
+            "hemMeanY": 0.4845,
+            "hemMinY": 0.1849,
+            "rootY": -0.0136
+          }
+        ]
+      },
+      {
+        "body": "m",
+        "scenario": "jump",
+        "synthetic": true,
+        "sampleHz": 30,
+        "durationSeconds": 1.5,
+        "maxHemStepM": 0.0525,
+        "maxHemSecondDifferenceM": 0.0753,
+        "samples": [
+          {
+            "t": 0,
+            "hemMeanY": 0.4845,
+            "hemMinY": 0.1849,
+            "rootY": -0.0136
+          },
+          {
+            "t": 0.033,
+            "hemMeanY": 0.467,
+            "hemMinY": 0.1572,
+            "rootY": -0.0316
+          },
+          {
+            "t": 0.067,
+            "hemMeanY": 0.4451,
+            "hemMinY": 0.1261,
+            "rootY": -0.0555
+          },
+          {
+            "t": 0.1,
+            "hemMeanY": 0.4198,
+            "hemMinY": 0.0926,
+            "rootY": -0.0843
+          },
+          {
+            "t": 0.133,
+            "hemMeanY": 0.3977,
+            "hemMinY": 0.0635,
+            "rootY": -0.1112
+          },
+          {
+            "t": 0.167,
+            "hemMeanY": 0.382,
+            "hemMinY": 0.0418,
+            "rootY": -0.1329
+          },
+          {
+            "t": 0.2,
+            "hemMeanY": 0.365,
+            "hemMinY": 0.02,
+            "rootY": -0.1569
+          },
+          {
+            "t": 0.233,
+            "hemMeanY": 0.3475,
+            "hemMinY": -0.0013,
+            "rootY": -0.1822
+          },
+          {
+            "t": 0.267,
+            "hemMeanY": 0.3301,
+            "hemMinY": -0.0216,
+            "rootY": -0.2082
+          },
+          {
+            "t": 0.3,
+            "hemMeanY": 0.313,
+            "hemMinY": -0.0406,
+            "rootY": -0.2342
+          },
+          {
+            "t": 0.333,
+            "hemMeanY": 0.3437,
+            "hemMinY": -0.0084,
+            "rootY": -0.1965
+          },
+          {
+            "t": 0.367,
+            "hemMeanY": 0.3747,
+            "hemMinY": 0.0246,
+            "rootY": -0.1587
+          },
+          {
+            "t": 0.4,
+            "hemMeanY": 0.4058,
+            "hemMinY": 0.0582,
+            "rootY": -0.1211
+          },
+          {
+            "t": 0.433,
+            "hemMeanY": 0.4369,
+            "hemMinY": 0.0925,
+            "rootY": -0.0841
+          },
+          {
+            "t": 0.467,
+            "hemMeanY": 0.4676,
+            "hemMinY": 0.127,
+            "rootY": -0.0479
+          },
+          {
+            "t": 0.5,
+            "hemMeanY": 0.4978,
+            "hemMinY": 0.1616,
+            "rootY": -0.0129
+          },
+          {
+            "t": 0.533,
+            "hemMeanY": 0.5269,
+            "hemMinY": 0.1959,
+            "rootY": 0.0205
+          },
+          {
+            "t": 0.567,
+            "hemMeanY": 0.5644,
+            "hemMinY": 0.2391,
+            "rootY": 0.0613
+          },
+          {
+            "t": 0.6,
+            "hemMeanY": 0.6015,
+            "hemMinY": 0.2828,
+            "rootY": 0.101
+          },
+          {
+            "t": 0.633,
+            "hemMeanY": 0.6153,
+            "hemMinY": 0.2877,
+            "rootY": 0.111
+          },
+          {
+            "t": 0.667,
+            "hemMeanY": 0.6329,
+            "hemMinY": 0.2978,
+            "rootY": 0.1232
+          },
+          {
+            "t": 0.7,
+            "hemMeanY": 0.656,
+            "hemMinY": 0.3146,
+            "rootY": 0.1395
+          },
+          {
+            "t": 0.733,
+            "hemMeanY": 0.6779,
+            "hemMinY": 0.3316,
+            "rootY": 0.1535
+          },
+          {
+            "t": 0.767,
+            "hemMeanY": 0.6993,
+            "hemMinY": 0.3493,
+            "rootY": 0.1661
+          },
+          {
+            "t": 0.8,
+            "hemMeanY": 0.7208,
+            "hemMinY": 0.368,
+            "rootY": 0.178
+          },
+          {
+            "t": 0.833,
+            "hemMeanY": 0.7425,
+            "hemMinY": 0.388,
+            "rootY": 0.1897
+          },
+          {
+            "t": 0.867,
+            "hemMeanY": 0.7648,
+            "hemMinY": 0.4094,
+            "rootY": 0.2016
+          },
+          {
+            "t": 0.9,
+            "hemMeanY": 0.7877,
+            "hemMinY": 0.4322,
+            "rootY": 0.2142
+          },
+          {
+            "t": 0.933,
+            "hemMeanY": 0.7353,
+            "hemMinY": 0.3796,
+            "rootY": 0.1648
+          },
+          {
+            "t": 0.967,
+            "hemMeanY": 0.6828,
+            "hemMinY": 0.3269,
+            "rootY": 0.1155
+          },
+          {
+            "t": 1,
+            "hemMeanY": 0.6304,
+            "hemMinY": 0.2742,
+            "rootY": 0.0662
+          },
+          {
+            "t": 1.033,
+            "hemMeanY": 0.5779,
+            "hemMinY": 0.2214,
+            "rootY": 0.0169
+          },
+          {
+            "t": 1.067,
+            "hemMeanY": 0.5255,
+            "hemMinY": 0.1688,
+            "rootY": -0.0324
+          },
+          {
+            "t": 1.1,
+            "hemMeanY": 0.4731,
+            "hemMinY": 0.1163,
+            "rootY": -0.0818
+          },
+          {
+            "t": 1.133,
+            "hemMeanY": 0.4207,
+            "hemMinY": 0.0639,
+            "rootY": -0.1311
+          },
+          {
+            "t": 1.167,
+            "hemMeanY": 0.3683,
+            "hemMinY": 0.0116,
+            "rootY": -0.1805
+          },
+          {
+            "t": 1.2,
+            "hemMeanY": 0.3159,
+            "hemMinY": -0.0406,
+            "rootY": -0.2299
+          },
+          {
+            "t": 1.233,
+            "hemMeanY": 0.3323,
+            "hemMinY": -0.0211,
+            "rootY": -0.2048
+          },
+          {
+            "t": 1.267,
+            "hemMeanY": 0.3491,
+            "hemMinY": -0.0005,
+            "rootY": -0.1797
+          },
+          {
+            "t": 1.3,
+            "hemMeanY": 0.3661,
+            "hemMinY": 0.0211,
+            "rootY": -0.1551
+          },
+          {
+            "t": 1.333,
+            "hemMeanY": 0.3826,
+            "hemMinY": 0.043,
+            "rootY": -0.1317
+          },
+          {
+            "t": 1.367,
+            "hemMeanY": 0.3981,
+            "hemMinY": 0.0643,
+            "rootY": -0.1105
+          },
+          {
+            "t": 1.4,
+            "hemMeanY": 0.4191,
+            "hemMinY": 0.0919,
+            "rootY": -0.0849
+          },
+          {
+            "t": 1.433,
+            "hemMeanY": 0.4445,
+            "hemMinY": 0.1253,
+            "rootY": -0.056
+          },
+          {
+            "t": 1.467,
+            "hemMeanY": 0.4667,
+            "hemMinY": 0.1567,
+            "rootY": -0.0319
+          },
+          {
+            "t": 1.5,
+            "hemMeanY": 0.4845,
+            "hemMinY": 0.1849,
+            "rootY": -0.0136
+          }
+        ]
+      },
+      {
+        "body": "m",
+        "scenario": "climb",
+        "synthetic": true,
+        "sampleHz": 30,
+        "durationSeconds": 1.5,
+        "maxHemStepM": 0.0517,
+        "maxHemSecondDifferenceM": 0.0343,
+        "samples": [
+          {
+            "t": 0,
+            "hemMeanY": 0.4845,
+            "hemMinY": 0.1849,
+            "rootY": -0.0136
+          },
+          {
+            "t": 0.033,
+            "hemMeanY": 0.4838,
+            "hemMinY": 0.1688,
+            "rootY": -0.0152
+          },
+          {
+            "t": 0.067,
+            "hemMeanY": 0.485,
+            "hemMinY": 0.1597,
+            "rootY": -0.0169
+          },
+          {
+            "t": 0.1,
+            "hemMeanY": 0.488,
+            "hemMinY": 0.1572,
+            "rootY": -0.0187
+          },
+          {
+            "t": 0.133,
+            "hemMeanY": 0.4923,
+            "hemMinY": 0.1603,
+            "rootY": -0.0206
+          },
+          {
+            "t": 0.167,
+            "hemMeanY": 0.4976,
+            "hemMinY": 0.1681,
+            "rootY": -0.0226
+          },
+          {
+            "t": 0.2,
+            "hemMeanY": 0.5034,
+            "hemMinY": 0.1664,
+            "rootY": -0.0247
+          },
+          {
+            "t": 0.233,
+            "hemMeanY": 0.5094,
+            "hemMinY": 0.1632,
+            "rootY": -0.0269
+          },
+          {
+            "t": 0.267,
+            "hemMeanY": 0.5153,
+            "hemMinY": 0.16,
+            "rootY": -0.0291
+          },
+          {
+            "t": 0.3,
+            "hemMeanY": 0.521,
+            "hemMinY": 0.1568,
+            "rootY": -0.0315
+          },
+          {
+            "t": 0.333,
+            "hemMeanY": 0.5263,
+            "hemMinY": 0.1536,
+            "rootY": -0.034
+          },
+          {
+            "t": 0.367,
+            "hemMeanY": 0.5311,
+            "hemMinY": 0.1504,
+            "rootY": -0.0366
+          },
+          {
+            "t": 0.4,
+            "hemMeanY": 0.5458,
+            "hemMinY": 0.167,
+            "rootY": -0.0219
+          },
+          {
+            "t": 0.433,
+            "hemMeanY": 0.5626,
+            "hemMinY": 0.1896,
+            "rootY": -0.0032
+          },
+          {
+            "t": 0.467,
+            "hemMeanY": 0.578,
+            "hemMinY": 0.2118,
+            "rootY": 0.0139
+          },
+          {
+            "t": 0.5,
+            "hemMeanY": 0.5923,
+            "hemMinY": 0.2221,
+            "rootY": 0.0295
+          },
+          {
+            "t": 0.533,
+            "hemMeanY": 0.608,
+            "hemMinY": 0.2331,
+            "rootY": 0.0461
+          },
+          {
+            "t": 0.567,
+            "hemMeanY": 0.6278,
+            "hemMinY": 0.2491,
+            "rootY": 0.0666
+          },
+          {
+            "t": 0.6,
+            "hemMeanY": 0.6468,
+            "hemMinY": 0.265,
+            "rootY": 0.0858
+          },
+          {
+            "t": 0.633,
+            "hemMeanY": 0.665,
+            "hemMinY": 0.281,
+            "rootY": 0.1041
+          },
+          {
+            "t": 0.667,
+            "hemMeanY": 0.6826,
+            "hemMinY": 0.2972,
+            "rootY": 0.1214
+          },
+          {
+            "t": 0.7,
+            "hemMeanY": 0.6998,
+            "hemMinY": 0.3138,
+            "rootY": 0.138
+          },
+          {
+            "t": 0.733,
+            "hemMeanY": 0.7167,
+            "hemMinY": 0.3309,
+            "rootY": 0.1541
+          },
+          {
+            "t": 0.767,
+            "hemMeanY": 0.6996,
+            "hemMinY": 0.3174,
+            "rootY": 0.1379
+          },
+          {
+            "t": 0.8,
+            "hemMeanY": 0.6482,
+            "hemMinY": 0.2741,
+            "rootY": 0.0891
+          },
+          {
+            "t": 0.833,
+            "hemMeanY": 0.5965,
+            "hemMinY": 0.2322,
+            "rootY": 0.0396
+          },
+          {
+            "t": 0.867,
+            "hemMeanY": 0.5768,
+            "hemMinY": 0.2221,
+            "rootY": 0.0218
+          },
+          {
+            "t": 0.9,
+            "hemMeanY": 0.5729,
+            "hemMinY": 0.21,
+            "rootY": 0.0194
+          },
+          {
+            "t": 0.933,
+            "hemMeanY": 0.5685,
+            "hemMinY": 0.1975,
+            "rootY": 0.0159
+          },
+          {
+            "t": 0.967,
+            "hemMeanY": 0.5628,
+            "hemMinY": 0.1869,
+            "rootY": 0.0104
+          },
+          {
+            "t": 1,
+            "hemMeanY": 0.5551,
+            "hemMinY": 0.1779,
+            "rootY": 0.0018
+          },
+          {
+            "t": 1.033,
+            "hemMeanY": 0.5485,
+            "hemMinY": 0.1741,
+            "rootY": -0.0069
+          },
+          {
+            "t": 1.067,
+            "hemMeanY": 0.5459,
+            "hemMinY": 0.1784,
+            "rootY": -0.0132
+          },
+          {
+            "t": 1.1,
+            "hemMeanY": 0.5396,
+            "hemMinY": 0.1677,
+            "rootY": -0.0248
+          },
+          {
+            "t": 1.133,
+            "hemMeanY": 0.531,
+            "hemMinY": 0.1504,
+            "rootY": -0.0366
+          },
+          {
+            "t": 1.167,
+            "hemMeanY": 0.5262,
+            "hemMinY": 0.1536,
+            "rootY": -0.034
+          },
+          {
+            "t": 1.2,
+            "hemMeanY": 0.5209,
+            "hemMinY": 0.1568,
+            "rootY": -0.0315
+          },
+          {
+            "t": 1.233,
+            "hemMeanY": 0.5153,
+            "hemMinY": 0.16,
+            "rootY": -0.0291
+          },
+          {
+            "t": 1.267,
+            "hemMeanY": 0.5094,
+            "hemMinY": 0.1632,
+            "rootY": -0.0269
+          },
+          {
+            "t": 1.3,
+            "hemMeanY": 0.5034,
+            "hemMinY": 0.1664,
+            "rootY": -0.0247
+          },
+          {
+            "t": 1.333,
+            "hemMeanY": 0.4976,
+            "hemMinY": 0.1681,
+            "rootY": -0.0226
+          },
+          {
+            "t": 1.367,
+            "hemMeanY": 0.4924,
+            "hemMinY": 0.1603,
+            "rootY": -0.0206
+          },
+          {
+            "t": 1.4,
+            "hemMeanY": 0.4881,
+            "hemMinY": 0.1572,
+            "rootY": -0.0187
+          },
+          {
+            "t": 1.433,
+            "hemMeanY": 0.4851,
+            "hemMinY": 0.1597,
+            "rootY": -0.0169
+          },
+          {
+            "t": 1.467,
+            "hemMeanY": 0.4838,
+            "hemMinY": 0.1688,
+            "rootY": -0.0152
+          },
+          {
+            "t": 1.5,
+            "hemMeanY": 0.4845,
+            "hemMinY": 0.1849,
+            "rootY": -0.0136
+          }
+        ]
+      }
+    ]
+  },
+  "errors": []
+}
