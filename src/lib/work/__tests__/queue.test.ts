@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { laneStatus, moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
 import { routeLane } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
@@ -26,9 +26,10 @@ function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: 
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => { const t = { id: 't' + tickets.length, state: 'ready', ...data }; tickets.push(t); return t }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const t = tickets.find(x => x.id === where.id)!; Object.assign(t, data); return t }),
-      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date } }; data: Record<string, unknown> }) => {
+      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date }; attempts?: { gte: number } }; data: Record<string, unknown> }) => {
         const hit = tickets.filter(t => t.state === where.state
-          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt)
+          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt
+          && (!where.attempts || (t.attempts as number) >= where.attempts.gte))
         hit.forEach(t => Object.assign(t, data))
         return { count: hit.length } }),
     },
@@ -192,5 +193,26 @@ describe('lane status', () => {
   it('is quiet when a lit lane has gone a day or more without a claim, or never claimed', () => {
     expect(laneStatus(true, hoursAgo(49), now)).toBe('quiet')
     expect(laneStatus(true, null, now)).toBe('quiet')
+  })
+})
+
+describe('the claim loop guard', () => {
+  const now = new Date('2026-11-18T18:00:00Z')
+  const lapsed = new Date('2026-11-18T17:00:00Z')
+  it('returns a lapsed ticket to ready while it has attempts left', async () => {
+    const tickets = [{ id: 'a', state: 'claimed', leaseUntil: lapsed, attempts: MAX_ATTEMPTS - 1 }]
+    await returnLapsed(fakeDb(tickets), now)
+    expect(tickets[0]).toMatchObject({ state: 'ready', leaseUntil: null })
+  })
+  it('holds a ticket whose lease lapsed MAX_ATTEMPTS times, with the reason, and does not return it', async () => {
+    const tickets = [{ id: 'a', state: 'claimed', leaseUntil: lapsed, attempts: MAX_ATTEMPTS }]
+    await returnLapsed(fakeDb(tickets), now)
+    expect(tickets[0]).toMatchObject({ state: 'held', leaseUntil: null })
+    expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times/)
+  })
+  it('lifting the hold starts the count again', async () => {
+    const tickets = [{ id: 'a', state: 'held', attempts: MAX_ATTEMPTS, result: 'auto-held: x' }]
+    await unholdTicket(fakeDb(tickets), 'a')
+    expect(tickets[0]).toMatchObject({ state: 'ready', attempts: 0, result: null })
   })
 })
