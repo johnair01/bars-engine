@@ -7,7 +7,7 @@ try{
   const page=await browser.newPage({viewport:{width:1600,height:1000}}),errors=[];
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto('http://127.0.0.1:8767/between/cult/motion-review.html',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>window.__motionReview?.status,{timeout:600000});
+  await page.waitForFunction(()=>window.__motionReview?.status,null,{timeout:600000});
   const result=await page.evaluate(()=>window.__motionReview);
   writeFileSync(join(out,'motion-report.json'),JSON.stringify({result,errors},null,2)+'\n');
   if(result.status!=='complete'||errors.length||result.frames.length!==36)throw Error(JSON.stringify({status:result.status,frames:result.frames?.length,errors}));
