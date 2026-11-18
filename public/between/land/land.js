@@ -42,9 +42,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, mergeStatic, mergeByParent, rng, hash } from "../hollow.js";
 import { installPaint } from "../paint.js";
-import { loadParts, dressFigure } from "../wardrobe.js";
 import { stance, clipWeights, FADE, CRATE_SIT, SEAT_PAD } from "../stance.js";
-import { parseLook } from "../../calrunia/look.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
 import { withDraft, people } from "../../calrunia/episode-draft.js";
@@ -459,59 +457,7 @@ async function makeRoadFigure() {
 }
 async function makeFigure(M) {
   if (ROAD) return makeRoadFigure();
-  if (Q.get("cult") !== "0") return makeCultFigure(M);   // the one model: the cultivation figure the player picks; ?cult=0 keeps Average Dusk
-  const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
-  const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
-  const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
-  const obj = skClone(root), k = 1.7 / Math.max(box.getSize(V(0, 0, 0)).y, 0.01);
-  obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
-  const wardrobe = dressFigure(obj, await loadParts(u => loader.loadAsync(u)));
-  let look = null; try { look = parseLook(sessionStorage.getItem("ctw-look") || ""); } catch (e) { /* the default traveller */ }
-  wardrobe.set(look);
-  obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-  const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
-  const mixer = new THREE.AnimationMixer(obj), acts = {};
-  for (const n of ["Walk", "Idle"]) { const c = gl.animations.find(a => a.name === n); if (c) { acts[n] = mixer.clipAction(c); acts[n].play(); } }
-  const w = { Walk: 0, Idle: 1 }; if (acts.Walk) acts.Walk.setEffectiveWeight(0);
-  let cur = "idle";
-  const spine = obj.getObjectByName("spine"), neck = obj.getObjectByName("neck");
-  const bag = toolbagGroup(M); scene.add(bag);
-  const sv = V(0, 0, 0), nv = V(0, 0, 0), m4 = new THREE.Matrix4(), up = V(0, 0, 0), back = V(0, 0, 0), side = V(0, 0, 0);
-  /* the bag's place on the back is kept in the holder's own frame and eased there, so the walk's mocap noise in the
-     spine (the jitter he saw on ctw-walk-look-1) never reaches it; the stride's slow sway still does */
-  const lp = V(0, 0, 0), lq = new THREE.Quaternion(), tp = V(0, 0, 0), tq = new THREE.Quaternion(), inv = new THREE.Quaternion(); let settled = false;
-  // a plank carried on the shoulder, once taken out of the bag (the Scale-House)
-  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
-  let bagOn = true;
-  const poser = seatPoser(obj, holder);
-  return {
-    holder, bag, plank,
-    setBag(on) { bagOn = on; bag.visible = on; },
-    get bagOn() { return bagOn; },
-    update(dt, moving, sitting = false, seatTop = 0, T = 0) {
-      const s = stance({ moving, sitting }); if (s !== cur) { if (s === "walk" && w.Walk < 0.05 && acts.Walk) acts.Walk.time = 0; cur = s; }
-      const want = clipWeights(cur), kk = 1 - Math.exp(-3 * dt / FADE[cur]);
-      for (const n of ["Walk", "Idle"]) if (acts[n]) { w[n] += (want[n] - w[n]) * kk; acts[n].setEffectiveWeight(w[n]); }
-      if (acts.Walk) acts.Walk.timeScale = bagOn ? 0.85 : 1.0;   // the bag is heavy: a slower stride; without it, lighter
-      mixer.update(dt);
-      poser.apply(dt, sitting, seatTop, T);
-      wardrobe.dress(dt);
-      holder.updateMatrixWorld(true);
-      if (spine && neck) {   // the bag rides the back, set from the spine each frame
-        spine.getWorldPosition(sv); neck.getWorldPosition(nv); up.copy(nv).sub(sv).normalize();
-        back.set(0, 0, -1).applyQuaternion(holder.quaternion); back.addScaledVector(up, -back.dot(up)).normalize();
-        side.crossVectors(up, back).normalize();
-        tq.setFromRotationMatrix(m4.makeBasis(side, up, back));
-        tp.copy(sv).addScaledVector(up, 0.08).addScaledVector(back, 0.2);
-        inv.copy(holder.quaternion).invert();
-        tp.sub(holder.position).applyQuaternion(inv); tq.premultiply(inv);        // into the holder's frame
-        const e = settled ? 1 - Math.exp(-dt * 9) : 1; settled = true;
-        lp.lerp(tp, e); lq.slerp(tq, e);
-        bag.position.copy(lp).applyQuaternion(holder.quaternion).add(holder.position);
-        bag.quaternion.copy(holder.quaternion).multiply(lq);
-      }
-    },
-  };
+  return makeCultFigure(M);   // the one model: the cultivation figure the player picks (Average Dusk is deprecated, Wendell 2026-11-17)
 }
 
 /* ===================================================================================================
