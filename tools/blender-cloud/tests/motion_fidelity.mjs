@@ -47,7 +47,9 @@ try {
     if (shots) {
       const tag = `${cell.who}-${cell.build}-${cell.height.toFixed(2)}`;
       for (const motion of motions) {
-        await page.evaluate(m => window.__motionLabControl.set(m, window.__motionLabControl.duration * 0.25), motion);
+        // the walk's forward phase, the run's flight: the frames the checks turn on
+        const at = motion === 'walk' ? 0.25 : 0.35;
+        await page.evaluate(([m, a]) => window.__motionLabControl.set(m, window.__motionLabControl.duration * a), [motion, at]);
         await page.locator('#stage').screenshot({ path: join(out, `${tag}-${motion}.png`) });
       }
     }
