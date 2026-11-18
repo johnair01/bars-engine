@@ -82,10 +82,13 @@ export interface ReadFail { read: string; detail: string }
 
 /** Why a read failed, short enough to ride in a payload: the class and the first line of its message. */
 export function why(e: unknown): string {
-  const err = e as { name?: string; message?: string } | null
+  const err = e as { name?: string; message?: string; code?: string; meta?: unknown } | null
   const name = typeof err?.name === 'string' ? err.name : 'Error'
-  const msg = typeof err?.message === 'string' ? err.message.split('\n')[0] : String(e)
-  return `${name}: ${msg}`.slice(0, 300)
+  const code = typeof err?.code === 'string' && err.code ? ` [${err.code}]` : ''
+  const raw = typeof err?.message === 'string' ? err.message : String(e)
+  const msg = raw.split('\n').map((l) => l.trim()).filter(Boolean).join(' · ')
+  const meta = err?.meta ? ' · ' + JSON.stringify(err.meta) : ''
+  return `${name}${code}: ${msg || '(no message)'}${meta}`.slice(0, 500)
 }
 
 /** Postgres hands back a Date; a pooled proxy or replica may hand back text. Either is a moment. */
@@ -144,20 +147,57 @@ export function openFrom(heads: Head[], limit: number) {
 
 export async function listOpen(limit: number) {
   const failed: ReadFail[] = []
-  const heads = await db.$queryRaw<Head[]>`
+  // The rows and battles the page draws. Small per row, many rows.
+  //
+  // Two attempts, because a blank answer hides the pile. The wide read carries every row's choices and
+  // rounds; if the pooler refuses it (a statement timeout, a payload past memory), the narrow read below
+  // still names the open questions and battles, and `failed` says which shapes were dropped.
+  const wide = async () => db.$queryRaw<Head[]>`
     SELECT DISTINCT ON (collection, doc_id) collection, doc_id,
       data->>'kind' AS kind, data->>'q' AS q, data->>'name' AS name,
       data->>'decision' AS decision,
-      CASE WHEN collection = 'records' THEN data->>'body' END AS body,
       data->>'choice' AS choice, data->'choices' AS choices, data->>'steer' AS steer, data->>'deferred' AS deferred,
       CASE WHEN data->>'kind' = 'battles' OR collection = 'battles' THEN data->'rounds' END AS rounds,
       data->>'savedAt' AS saved_at, received_at
     FROM board_saves
-    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved', 'records')
-    ORDER BY collection, doc_id, received_at DESC, id DESC`.catch((e: unknown) => {
-    failed.push({ read: 'board_saves', detail: why(e) })
+    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved')
+    ORDER BY collection, doc_id, received_at DESC, id DESC`
+  const narrow = async () => db.$queryRaw<Head[]>`
+    SELECT DISTINCT ON (collection, doc_id) collection, doc_id,
+      data->>'kind' AS kind, data->>'q' AS q, data->>'name' AS name,
+      data->>'decision' AS decision,
+      data->>'choice' AS choice, data->>'steer' AS steer, data->>'deferred' AS deferred,
+      data->>'savedAt' AS saved_at, received_at
+    FROM board_saves
+    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved')
+    ORDER BY collection, doc_id, received_at DESC, id DESC`
+  let heads: Head[] = []
+  const first = await wide().catch((e: unknown) => { failed.push({ read: 'board_saves', detail: why(e) }); return null })
+  if (first) heads = first
+  else {
+    const second = await narrow().catch((e: unknown) => { failed.push({ read: 'board_saves_narrow', detail: why(e) }); return null })
+    if (second) {
+      heads = second
+      failed.push({ read: 'board_saves_narrow', detail: 'the wide read failed, so questions and battles list without their choices and rounds' })
+    }
+  }
+  // The records that settle a question, and only those. The wide read above used to drag every
+  // record body along with it (the whole pass corpus); that is what timed out and hid the pile.
+  const settledRecords = await db.$queryRaw<Head[]>`
+    SELECT DISTINCT ON (doc_id) 'records' AS collection, doc_id,
+      data->>'kind' AS kind, data->>'name' AS name, data->>'body' AS body,
+      data->>'savedAt' AS saved_at, received_at
+    FROM board_saves
+    WHERE board = 'council' AND collection = 'records'
+      AND data->>'kind' = 'resolved' AND data->>'name' LIKE 'questions/%'
+    ORDER BY doc_id, received_at DESC, id DESC`.catch((e: unknown) => {
+    failed.push({ read: 'board_records', detail: why(e) })
     return [] as Head[]
   })
+  // Only what this read asked for: a settled question's record. openFrom applies the same test, so a
+  // row that arrived from anywhere else is dropped rather than counted twice.
+  heads.push(...settledRecords.filter((h) =>
+    h.collection === 'records' && h.kind === 'resolved' && (h.name ?? '').startsWith('questions/')))
   const ready = await db.workTicket.findMany({
     where: { state: 'ready' }, orderBy: { createdAt: 'asc' },
     select: { sourceKey: true, title: true, brief: true, lane: true, lanes: true, createdAt: true },
@@ -178,7 +218,7 @@ export async function listOpen(limit: number) {
     }
   }
   let open: ReturnType<typeof openFrom> = { totalQuestions: 0, questions: [], battleTurns: [] }
-  if (heads.length) {
+  if (heads.length || settledRecords.length) {
     try { open = openFrom(heads, limit) } catch (e) { failed.push({ read: 'open_from', detail: why(e) }) }
   }
   return { board: 'council', asOf: new Date().toISOString(), ...open, readyTickets: lanes, ...(failed.length ? { failed } : {}) }
