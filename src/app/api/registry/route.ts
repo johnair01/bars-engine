@@ -35,7 +35,6 @@ interface RegistryRoute {
   example?: string;
   agentDiscoverable?: boolean;
   sourceFile: string;
-  lineNumber: number;
 }
 
 interface Registry {
