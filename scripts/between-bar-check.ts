@@ -129,7 +129,7 @@ async function handle(q: IncomingMessage, r: ServerResponse) {
   const [u] = (q.url ?? '').split('?')
   const me = cookieOf(q), player = me && players[me] ? me : null
   if (process.env.BETWEEN_CHECK_LOG) console.log('  ' + (me ?? '-') + ' ' + q.method + ' ' + (q.url ?? '').slice(0, 90))
-  if (u === '/ontology-game/between') { if (!player) { r.writeHead(302, { Location: '/login' }); r.end(); return } r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(PAGE); return }
+  if (u === '/between') { if (!player) { r.writeHead(302, { Location: '/login' }); r.end(); return } r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(PAGE); return }
   if (u.startsWith('/api/between')) {
     if (!player) return send(r, 401, { error: 'Sign in', code: 'unauthenticated' })
     const raw = q.method === 'POST' ? await bodyOf(q) : ''
@@ -296,7 +296,7 @@ async function main() {
   const lookAtTable = (p: Page) => p.evaluate(() => (window as unknown as { __between: B }).__between.setCam([0, 1.55, -0.55, 0, 0.3, 1.3]))
   try {
     for (const [p, who] of [[A, 'pl-planter'], [Bp, 'pl-partner']] as [Page, string][]) {
-      await p.goto(`${base}/ontology-game/between?g=${ROOM}&skipHome=1`, { waitUntil: 'commit' }); await ready(p)
+      await p.goto(`${base}/between?g=${ROOM}&skipHome=1`, { waitUntil: 'commit' }); await ready(p)
       void who
     }
     await step('the leaver lays a bar on the table', async () => {

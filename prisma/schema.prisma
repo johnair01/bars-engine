@@ -834,6 +834,10 @@ model TapTheVeinDailySession {
   /// Shape: { lines: { [key]: { lensGoalId } }, sealedAt, sealed: [...] }
   morningMenu               Json?            @map("morning_menu")
   committedTaskCount        Int              @default(0)
+  /// TTV-PULL (pass ttv-book2): when "Pull what's useful" first read today's page, and how many lines it offered.
+  /// A time and a count only: never a sentence (`mm-raw`).
+  pulledAt                  DateTime?        @map("pulled_at")
+  pullOfferCount            Int              @default(0) @map("pull_offer_count")
   // Session lifecycle
   status                    String           @default("open") // open|sealed|abandoned
   sealedAt                  DateTime?

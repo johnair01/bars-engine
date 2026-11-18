@@ -17,6 +17,7 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { buildLensGoalSnapshot } from '@/lib/lenses/lineage'
 import { ensureCadenceLens } from '@/lib/lenses/onboarding-data'
+import { todayStart } from '@/lib/tap-the-vein/day-server'
 import { loadMenuForSession } from '@/lib/tap-the-vein/menu-data'
 import { suggestBridge, toMenuExport, type MenuItem, type StoredMorningMenu } from '@/lib/tap-the-vein/menu'
 import type { TtvLensGoalOption } from '@/lib/tap-the-vein/types'
@@ -35,13 +36,6 @@ export type MorningMenuView = {
 
 const MAX_GOAL_TITLE = 200
 
-/** Local start-of-day, matching src/actions/tap-the-vein.ts. */
-function startOfDay(d = new Date()): Date {
-  const x = new Date(d)
-  x.setHours(0, 0, 0, 0)
-  return x
-}
-
 function toView(playerId: string, loaded: NonNullable<Awaited<ReturnType<typeof loadMenuForSession>>>): MorningMenuView {
   return { sessionDate: loaded.sessionDate, items: loaded.items, goals: loaded.goals, sealedAt: loaded.stored.sealedAt, playerId }
 }
@@ -58,7 +52,7 @@ export async function getMorningMenu(): Promise<Result<MorningMenuView>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
-    const loaded = await loadMenuForSession(player.id, startOfDay())
+    const loaded = await loadMenuForSession(player.id, await todayStart())
     if (!loaded) return { error: 'No session today. Open Tap the Vein first.' }
     return toView(player.id, loaded)
   } catch (e) {
@@ -106,7 +100,7 @@ async function bridgeTask(playerId: string, taskId: string, goalId: string): Pro
 
 /** Record a bridge (or "left unaligned", goalId null) for one menu item. */
 async function applyBridge(playerId: string, key: string, goalId: string | null): Promise<Result<MorningMenuView>> {
-  const loaded = await loadMenuForSession(playerId, startOfDay())
+  const loaded = await loadMenuForSession(playerId, await todayStart())
   if (!loaded) return { error: 'No session today. Open Tap the Vein first.' }
   const item = loaded.items.find((i) => i.key === key)
   if (!item) return { error: 'That line is no longer on the menu.' }
@@ -125,7 +119,7 @@ async function applyBridge(playerId: string, key: string, goalId: string | null)
   }
   await saveStored(loaded.sessionId, stored)
 
-  const reloaded = await loadMenuForSession(playerId, startOfDay())
+  const reloaded = await loadMenuForSession(playerId, await todayStart())
   revalidatePath('/tap-the-vein')
   return reloaded ? toView(playerId, reloaded) : { error: 'Failed to reload the menu' }
 }
@@ -152,7 +146,7 @@ export async function acceptMenuSuggestion(input: { key: string; title?: string 
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
-    const loaded = await loadMenuForSession(player.id, startOfDay())
+    const loaded = await loadMenuForSession(player.id, await todayStart())
     if (!loaded) return { error: 'No session today. Open Tap the Vein first.' }
     const item = loaded.items.find((i) => i.key === input.key)
     if (!item) return { error: 'That line is no longer on the menu.' }
@@ -209,7 +203,7 @@ export async function sealMorningMenu(): Promise<Result<MorningMenuView>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
-    const loaded = await loadMenuForSession(player.id, startOfDay())
+    const loaded = await loadMenuForSession(player.id, await todayStart())
     if (!loaded) return { error: 'No session today. Open Tap the Vein first.' }
     if (loaded.items.length === 0) return { error: 'Keep at least one line before sealing the menu.' }
     const sealedAt = new Date().toISOString()

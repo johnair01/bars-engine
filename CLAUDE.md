@@ -43,10 +43,10 @@ shipping session a day merges every `ship-next` pull request in one batch (`docs
 Only an urgent fix (production down, payment or sign-in broken) merges straight to `main` by hand, and its description
 says why. Council pull requests are unchanged.
 
-## Hand off before the context passes 150,000 tokens
+## Hand off before the context passes 250,000 tokens
 
 A PostToolUse hook (`.claude/settings.json`, `council/tools/context_size.py --hook`, a copy of the council's) adds the
-handoff order to every tool result once the session rereads 150,000 tokens a call. Finish the step, record the work in
+handoff order to every tool result once the session rereads 250,000 tokens a call (raised from 150,000 on 2026-11-14 for a week's test; the hook also keeps a per-call log, `usage-audit/calls/`). Finish the step, record the work in
 the repo and on the board, send the coordinator the handoff, drop PR watches and resolve. Why: council #272.
 
 Wendell, 2026-10-04: *"If you need rulings from me this should've gone to the council?"*
@@ -85,6 +85,13 @@ The project contains distinct narrative **voices** derived from the creator's ar
 ### Community Context
 
 The Portland community around this project has a strong allergy to AI. Design choices, documentation, and public-facing language should respect this. The non-AI version is not a fallback; it is a first-class delivery mode.
+
+## Character model: cultivation, not Average Dusk
+
+Wendell, 2026-11-16: "We shouldn't be using this model for tests anymore now we have the cultivation model we've
+created. We need to deprecate this figure." Tests, previews, looks and new briefs use the cultivation characters
+(`public/between/cult/`, `player-body.js`, `walker.js`), never `average-dusk.glb`. Deprecated means labeled, not
+deleted: [`docs/DEPRECATED_DUSK_FIGURE.md`](docs/DEPRECATED_DUSK_FIGURE.md) lists what still loads it at runtime.
 
 ## Stack
 
