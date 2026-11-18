@@ -74,6 +74,16 @@ const call = (name: string, args: Record<string, unknown>) => rpc('tools/call', 
 const payload = (r: Rpc) => JSON.parse(r.result?.content?.[0]?.text ?? '{}') as Record<string, unknown>
 
 describe('the board MCP server', () => {
+  it('names why list_open could not read, instead of a blank 500', async () => {
+    // The live server answered list_open with a blank 500 for weeks; every caller fell back to other tools and the
+    // pile stayed invisible. The tool now says which read failed and still returns the parts it could reach.
+    const body = payload(await call('list_open', {}))
+    expect(body.failed).toEqual([expect.objectContaining({ read: 'list_open' })])
+    expect(String((body.failed as { detail: string }[])[0].detail)).toMatch(/queryRaw/i)
+    expect(body.questions).toEqual([])
+    expect(body.readyTickets).toEqual({})
+  })
+
   beforeEach(() => {
     process.env.COUNCIL_MENU_TOKEN = KEY
     mem = memory()

@@ -708,7 +708,14 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   }
   if (name === 'list_open') {
     const n = Number(args.limit)
-    return ok(await listOpen(Number.isInteger(n) && n >= 1 ? Math.min(n, 200) : 50))
+    const lim = Number.isInteger(n) && n >= 1 ? Math.min(n, 200) : 50
+    // A blank 500 here hides the whole pile: what waits on him, and what waits on a lane. Name the failure instead.
+    try {
+      return ok(await listOpen(lim))
+    } catch (e) {
+      const detail = (e instanceof Error ? e.message : String(e)).slice(0, 300)
+      return ok({ board: 'council', asOf: new Date().toISOString(), totalQuestions: 0, questions: [], battleTurns: [], readyTickets: {}, failed: [{ read: 'list_open', detail }] })
+    }
   }
   if (name === 'close_read') return ok(await closeRead(db, typeof args.date === 'string' ? args.date : undefined))
   if (name === 'close_say') {
