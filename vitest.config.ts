@@ -187,6 +187,7 @@ export default defineConfig({
       'src/app/api/work/send/__tests__/route.test.ts',
       'src/lib/between/__tests__/coin-table-camera.test.ts',
       'src/lib/board/__tests__/card.test.ts',
+      'src/lib/board/__tests__/cites.test.ts',
       'src/lib/emotional-alchemy/__tests__/dbt-skills.test.ts',
       'src/lib/studio/__tests__/stores.test.ts',
       'src/lib/work/__tests__/seals.test.ts',

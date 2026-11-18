@@ -6,6 +6,8 @@
  * board/post_rows.py runs before it posts and the board page runs before it draws, so a row this refuses would also
  * have stopped land_rows.py or broken the page.
  */
+import { citeErrors } from './cites'
+
 export const ROW_LISTS = ['positions', 'questions', 'terms', 'causes', 'battles'] as const
 
 const text = (v: unknown) => typeof v === 'string' && /\S/.test(v)
@@ -31,6 +33,7 @@ export function rowErrors(data: Record<string, unknown>): string[] {
     if (!(Array.isArray(o) && o.length > 0 && o.every(x => x && typeof x === 'object' && !Array.isArray(x)
         && text((x as Record<string, unknown>).v) && typeof (x as Record<string, unknown>).label === 'string')))
       errors.push('a question needs options, each with v and label')
+    else errors.push(...citeErrors(data).map(e => `a card that cites work must show it: ${e}`))
   }
   if (list === 'terms' && !(text(data.term) && typeof data.plain === 'string')) errors.push('a term needs term and plain')
   if (list === 'causes' && !text(data.desc)) errors.push('a cause needs desc')

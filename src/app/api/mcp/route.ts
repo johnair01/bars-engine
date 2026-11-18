@@ -23,6 +23,7 @@ import { steerTicket } from '@/lib/work/queue'
 import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
+import { isReviewLook } from '@/lib/board/cites'
 import { closeRead, closeSay } from '@/lib/close/chat'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
@@ -90,7 +91,10 @@ const TOOLS = [
     title: 'Post Council Board rows',
     description: 'Post rows to the Council Board, one document per row, lifting any inline picture to a stored link. '
       + 'The board shows them at its next load, and no pull request carries them. A row that fails the row rule or the '
-      + 'picture gate is refused with its reason.',
+      + 'picture gate is refused with its reason. A card that cites a repo file, a draft or a GitHub page must show it: put the '
+      + 'text you read in `cites` [{title, path, text}] (or a stored picture as `src`), a draft in `drafts` or an option\'s `then`. '
+      + 'A look that asks him to read cited material, not judge a picture, carries `review: true` and those cites; it is not '
+      + 'game design work and needs no sealed pass or picture.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -432,6 +436,7 @@ function rpcError(id: RpcId, code: number, message: string) {
 /** A look is a design look when it carries `look` (or kind look) and names a face. */
 function isDesignLook(data: Record<string, unknown>): boolean {
   if (!data.look && data.kind !== 'look') return false
+  if (isReviewLook(data)) return false  // reading cited material is not game design work (src/lib/board/cites.ts)
   const faces = Array.isArray(data.faces) ? data.faces.join(' ') : typeof data.faces === 'string' ? data.faces : ''
   const named = faces.toLowerCase()
   return DESIGN_FACES.some((f) => named.includes(f))
