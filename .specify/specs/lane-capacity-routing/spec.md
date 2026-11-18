@@ -1,6 +1,6 @@
 # Lane capacity routing — assignment by ceiling, and a row when nothing is lit
 
-Status: DRAFT — one decision open (D-1). Written 2026-11-18 from the six-face consult in
+Status: D-1 answered 2026-11-18 (A, ceiling 20); FR-1 to FR-4 built, FR-5 open. Written 2026-11-18 from the six-face consult in
 `COUNCIL/lane-results/2026-11-18-routing-consult.md`.
 
 ## Why
@@ -104,10 +104,11 @@ new store for the dry-spell row; it goes through the existing needs-work-done / 
 
 ## Rollout
 
-1. `routeLane` + tests, no call site change — inert, provable.
-2. Call site in ticket creation, behind `LANE_ROUTING=ceiling|strict` with `strict` the default for one
-   day so the change is observable before it is felt.
-3. Flip the default to `ceiling` when D-1 is answered.
+1. `routeLane` + tests — inert and provable on its own.
+2. Call site in `pushTicket` — landed in the same change, because D-1 was answered before review, so
+   there is no ambiguous day to observe. No `LANE_ROUTING` flag: the ceiling is a ruling, not an
+   experiment. To watch it before it is felt, raise `DECK_CEILING` for a day and lower it back.
+3. FR-5 (the row per dry spell) — its own change, with its own trigger.
 
 ## Evidence and provenance
 
