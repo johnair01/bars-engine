@@ -29,7 +29,7 @@ function lantern() {
 }
 
 /** talk({ S, A, cam, hooks, people }): people = [{ key, m (a figure from people.js), height, lines }]. Returns the controller. */
-export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo }) {
+export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, busy }) {
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const card = document.createElement('div'); card.className = 'tw-card'; card.setAttribute('role', 'dialog'); card.hidden = true;
   const seal = document.createElement('button'); seal.type = 'button'; seal.className = 'tk-seal'; seal.hidden = true; seal.textContent = 'Speak'; seal.setAttribute('aria-label', 'Speak to the Elder');
@@ -48,7 +48,7 @@ export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo }) {
     card.setAttribute('aria-label', 'The Elder speaks'); card.hidden = false;
     const b = card.querySelector('button'); b && b.focus({ preventScroll: true });
   };
-  const openCard = p => { open = p; open_p = p; node = state() === 'none' ? 'open' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
+  const openCard = p => { open = p; open_p = p; node = state() === 'none' ? 'open' : state() === 'held' ? 'held' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
   const closeCard = () => { open = null; card.hidden = true; };
   seal.addEventListener('click', () => near && openCard(near));
   hit.addEventListener('click', () => near && openCard(near));
@@ -74,7 +74,7 @@ export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo }) {
     }
     near = best;
     if (open && Math.hypot(open.m.h.position.x - px, open.m.h.position.z - pz) > far) closeCard();   // walked away from her mid-card
-    if (best && !open) {
+    if (best && !open && !(busy && busy())) {
       v3.set(best.m.h.position.x, best.m.h.position.y + (best.height || 1.8) * 0.62, best.m.h.position.z).project(cam);
       const x = Math.min(innerWidth - 44, Math.max(44, (v3.x * 0.5 + 0.5) * innerWidth)), y = Math.min(innerHeight - 40, Math.max(40, (-v3.y * 0.5 + 0.5) * innerHeight));
       seal.hidden = v3.z > 1; seal.style.left = x + 'px'; seal.style.top = y + 'px';
