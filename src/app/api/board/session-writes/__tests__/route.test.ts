@@ -26,7 +26,7 @@ describe('/api/board/session-writes', () => {
 
   it('takes a council row, born unrecorded, and stores it for the next board read (worklist-api)', async () => {
     const row = { collection: 'rows', docId: 'wl-probe', mode: 'set',
-                  data: { kind: 'positions', pass: 'p', faces: ['sage'], pos: 'A probe.' } }
+                  data: { kind: 'terms', pass: 'p', term: 'probe', plain: 'A probe.' } }
     const body = await (await POST(req({ docs: [row] }))).json()
     expect(body).toMatchObject({ written: ['rows/wl-probe'], refused: [] })
     expect(dbm.boardSave.create.mock.calls[0][0].data).toMatchObject({ collection: 'rows', recordedAt: null })

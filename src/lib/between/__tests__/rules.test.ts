@@ -115,6 +115,8 @@ function testEmberTakesTheMovesElement() { // T1
   assert.equal(w(ember({ state: 'spent' })), false, 'an ember is never used up')
   assert.equal(w(ember({ risen: true })), true, 'a focus sit run its length raises it one state')
   assert.equal(w(ember({ risen: 2 })), false, 'it rises once, or not yet')
+  assert.equal(w(ember({ state: 'written', bar: 'clbar123' })), true, 'written into a BAR with the brush, it stays kept')
+  assert.equal(w(ember({ state: 'written', bar: 7 })), false, 'it names one BAR')
   assert.equal(mayWrite(member(B), g, pouch(A), 'update', { embers: { e1: ember() } }, null).ok, false, 'the other person\'s pouch')
 }
 
@@ -249,6 +251,9 @@ function testHomePrivateDoc() {
   assert.equal(homeWrite({ hearth: { sits: 3, at: 5, told: { earth: 1, wood: 2 } } }).ok, true, 'a hearth record')
   assert.equal(homeWrite({ hearth: { care: 4, careAt: 9 } }).ok, true, 'the cares done')
   assert.equal(homeWrite({ hearth: { care: 0 } }).ok, true, 'no care yet')
+  assert.equal(homeWrite({ hearth: { stage: 2, stageAt: 9, spirit: { sat: 8, vit: 100, at: 9 } } }).ok, true, 'the stage and the hearth spirit')
+  for (const hearth of [{ stage: 5 }, { stage: 1.5 }, { spirit: { sat: 0, vit: 100, at: 1 } }, { spirit: { sat: 5, vit: 101, at: 1 } }, { spirit: { sat: 5, vit: 5, at: 1, x: 1 } }, { spirit: 'fed' }])
+    assert.equal(homeWrite({ hearth } as unknown as Doc).ok, false, 'hearth ' + JSON.stringify(hearth))
   for (const hearth of [{ sits: -1 }, { sits: 1.5 }, { score: 2 }, { told: { joy: 1 } }, { told: { earth: 'now' } }, { at: 'x' }, { care: 5 }, { care: -1 }, { care: 1.5 }, { care: '2' }, { careAt: 'x' }, 'lit'])
     assert.equal(homeWrite({ hearth } as Doc).ok, false, 'hearth ' + JSON.stringify(hearth))
   assert.equal(homeWrite({ checkins: { c1: { feel: 'joy', at: 1 } } }).ok, false, 'one of the five feelings')
@@ -316,6 +321,25 @@ function testFirstMinuteAndKeepsakes() { // room kit part 2: Still C's minute in
   assert.equal(roomSummary(B, 'gX', g, []).personStarted, true, 'for B, the person (A) started it')
 }
 
+function testBarOnTheTable() { // bb-look-1 B: a bar lies on the low table for the other to read
+  const g = between(), bar = (extra: Doc = {}): Doc => ({ kind: 'bar', by: A, at: 7, status: 'left', title: 'What I saw today', lines: ['a heron', 'at the river'], history: { h1: { act: 'left a bar', by: A, at: 7 } }, ...extra })
+  const it = { table: 'items', id: 'b1' } as const
+  const w = (who: Who, op: 'set' | 'update' | 'delete', d: Doc | null, cur: Doc | null) => mayWrite(who, g, it, op, d, cur).ok
+  assert.equal(w(member(A), 'set', bar(), null), true, 'the leaver lays it down')
+  assert.equal(w(member(B), 'set', bar(), null), false, 'a bar is left in your own name')
+  for (const bad of [{ title: '' }, { title: 'x'.repeat(61) }, { lines: ['1', '2', '3', '4', '5'] }, { lines: ['x'.repeat(141)] }, { status: 'found' }, { reply: 'thanks' }, { yes: {} }] as Doc[])
+    assert.equal(w(member(A), 'set', bar(bad), null), false, 'refused: ' + Object.keys(bad)[0])
+  assert.equal(w(member(B), 'update', { status: 'found', foundAt: 8, history: { h2: { act: 'read a bar', by: B, at: 8 } } }, bar()), true, 'the finder marks it read')
+  assert.equal(w(member(B), 'update', { title: 'mine now' }, bar()), false, 'the finder writes nothing else')
+  assert.equal(w(member(B), 'update', { status: 'left', foundAt: 8 }, bar()), false)
+  assert.equal(w(member(B), 'delete', null, bar()), false, 'only the leaver takes it back')
+  assert.equal(w(member(A), 'delete', null, bar()), true, 'the leaver takes it back before it is found')
+  assert.equal(w(member(A), 'delete', null, bar({ status: 'found', foundAt: 8 })), false, 'a read bar stays')
+  assert.equal(w(member(A), 'update', { title: 'rewritten' }, bar()), false, 'a bar is left once')
+  const home = { ...plantedHome(A, 1) } as Doc
+  assert.equal(mayWrite(member(A), home, it, 'set', bar(), null).ok, false, 'not in a homeroom')
+}
+
 testPaths()
 testSealedWordsStayOnTheServer()
 testMergeMatchesThePage()
@@ -323,6 +347,22 @@ testStrangersAndInvitees()
 testWelcome()
 testOwnership()
 testInvitedViewHidesHopes()
+function testKeepsakeInThePouch() { // the satchel slice: the chamber's keepsake held in the pouch, no words
+  const g = between(), w = (k: Doc) => mayWrite(member(A), g, pouch(A), 'update', { keepsakes: { k1: k } }, null).ok
+  const ks = (extra: Doc = {}): Doc => ({ element: 'fire', kind: 'ember', state: 'held', at: 7, ...extra })
+  assert.equal(w(ks()), true)
+  assert.equal(w(ks({ element: 'water', kind: 'vessel' })), true)
+  assert.equal(w(ks({ kind: 'key' })), false, 'its element gives it its shape')
+  assert.equal(w(ks({ element: 'wood', kind: 'vessel' })), false, 'the chamber leaves water, metal, fire or earth')
+  assert.equal(w(ks({ feeling: 'stuck' })), false, 'a keepsake keeps no feeling word')
+  assert.equal(w(ks({ lines: 3 })), false, 'nor the lines written for it')
+  assert.equal(w(ks({ state: 'spent' })), false, 'held until crafting gives it a use')
+  assert.equal(w(ks({ at: 'now' })), false)
+  assert.equal(mayWrite(member(A), g, pouch(A), 'update', { keepsakes: { k1: null } }, null).ok, true, 'it can leave the pouch')
+  assert.equal(mayWrite(member(B), g, pouch(A), 'update', { keepsakes: { k1: ks() } }, null).ok, false, 'the other person\'s pouch')
+  assert.equal(mayWrite(member(A), g, pouch(A), 'update', { embers: { e1: ember() }, keepsakes: { k1: ks() } }, null).ok, true, 'embers and keepsakes side by side')
+}
+
 testCarry()
 testEmberTakesTheMovesElement()
 testNoWordsOrGlowInShare()
@@ -337,4 +377,6 @@ testInvitations()
 testHomePrivateDoc()
 testRoomSummary()
 testFirstMinuteAndKeepsakes()
+testBarOnTheTable()
+testKeepsakeInThePouch()
 console.log('between rules: all passed')

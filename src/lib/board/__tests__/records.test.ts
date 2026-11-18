@@ -64,6 +64,17 @@ describe('sessionWrite records (store-only)', () => {
     expect(db.rows.map(x => x.data)).toEqual([rowsDoc, resolvedDoc])
   })
 
+  it('accepts a research study record (the council research kind)', async () => {
+    const db = fakeDb()
+    const doc = { kind: 'research', path: 'council/research/2026-11-10-calrunia-gm-guide/answers.md',
+                  body: '# The five answers\n' }
+    const r = await sessionWrite(db as never, [
+      { collection: 'records', docId: 'research-2026-11-10-calrunia-gm-guide-answers', data: doc },
+    ])
+    expect(r).toEqual({ written: ['records/research-2026-11-10-calrunia-gm-guide-answers'], same: 0, refused: [] })
+    expect(db.rows[0].data).toEqual(doc)
+  })
+
   it('accepts a record whose path names board/, refuses one naming neither prefix', async () => {
     expect(recordErrors({ kind: 'resolved', path: 'board/board_data.json', body: 'x' })).toEqual([])
     expect(recordErrors({ kind: 'callsheet', path: 'docs/x.md', body: 'x' }))

@@ -16,13 +16,13 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? proces
 const ROOT = path.join(__dirname, '..', 'public'), OUT = arg('--out', '.'), R4 = arg('--drink', 'r5') === 'r4', CAM = arg('--cam', 'front');
 const [VW, VH] = arg('--vp', '390x844').split('x').map(Number);
 const T0 = +arg('--from', '7.6'), T1 = +arg('--to', '15.4'), DT = +arg('--dt', '0.2');
-const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/ontology-game/between/route.ts'), 'utf8');
+const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/between/route.ts'), 'utf8');
 const PAGE = route.slice(route.indexOf('const PAGE = `') + 14, route.indexOf('`', route.indexOf('const PAGE = `') + 14));
 const TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/api/')) { res.writeHead(503, { 'content-type': 'application/json' }); return res.end('{"error":"clip: no store"}'); }
-  if (u.pathname === '/ontology-game/between') { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(PAGE); }
+  if (u.pathname === '/between') { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(PAGE); }
   const f = path.join(ROOT, path.normalize(u.pathname));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
   const b = await chromium.launch(); fs.mkdirSync(OUT, { recursive: true });
   const ctx = await b.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 }); const p = await ctx.newPage();
   p.on('pageerror', e => console.error('PAGEERR', e.message));
-  await p.goto(`http://localhost:${port}/ontology-game/between?nook=1&sit=hearth&tea=pour${R4 ? '&drink=r4' : ''}`);
+  await p.goto(`http://localhost:${port}/between?nook=1&sit=hearth&tea=pour${R4 ? '&drink=r4' : ''}`);
   await p.waitForFunction(() => window.__between && window.__between.meState.body && document.getElementById('loading').hidden, null, { timeout: 180000 });
   await p.waitForFunction(() => { const t = window.__between.tea(); return t && t.holding() && t.state(); }, null, { timeout: 240000 });
   let n = 0;

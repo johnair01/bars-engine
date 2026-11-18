@@ -1,5 +1,7 @@
 import 'server-only'
 import { latestDocs, type Docs } from './store'
+import { leanDocs } from './pictures'
+import { SINGULAR, listOf } from './settled'
 
 /**
  * The board's cards and the answers on them, all from bars-engine's own store. `rows` holds one document per card, its
@@ -61,8 +63,8 @@ export function overlay(cards: Doc[], answers: Held): Doc[] {
 /** The store's one-document-per-entry resolved rows, back in the shape the page reads: `{ kind: { id: entry } }`. */
 export function foldResolved(docs: Held): Resolved {
   const out: Resolved = {}
-  for (const doc of Object.values(docs)) {
-    const kind = typeof doc.kind === 'string' ? doc.kind : ''
+  for (const [key, doc] of Object.entries(docs)) {
+    const kind = listOf(key, doc)
     const id = typeof doc.id === 'string' ? doc.id : ''
     if (!kind || !id) continue
     out[kind] = { ...(out[kind] ?? {}), [id]: without(doc, 'kind', 'id', 'savedAt') }
@@ -85,7 +87,8 @@ export function foldRecords(held: Held): Resolved {
     try { entry = JSON.parse(doc.body) } catch { continue }
     if (!entry || typeof entry !== 'object') continue
     const kind = doc.name.slice(0, at), id = doc.name.slice(at + 1)
-    out[kind] = { ...(out[kind] ?? {}), [id]: entry as Record<string, unknown> }
+    const list = SINGULAR[kind] ?? kind
+    out[list] = { ...(out[list] ?? {}), [id]: entry as Record<string, unknown> }
   }
   return out
 }
@@ -112,6 +115,64 @@ export function foldBattles(held: Held): Doc[] {
     .map(({ doc }) => without(doc, 'order', 'savedAt'))
 }
 
+function hostOf(url: unknown): string {
+  try { return new URL(String(url)).host.toLowerCase() } catch { return '' }
+}
+
+/** When the record settled an entry, as the page reads it (`recordedAt` in board/template.html). */
+export function recordedAt(entry: Doc): number {
+  const history = Array.isArray(entry.history) ? (entry.history as Doc[]) : []
+  const last = history[history.length - 1]
+  const at = entry.saved_at ?? last?.saved_at
+  if (typeof at === 'string') return Date.parse(at) + 999
+  return Date.parse(`${String(entry.recorded)}T23:59:59Z`)
+}
+
+/**
+ * A card the record settled is not a decision to make, so the page does not draw it (Wendell, 2026-11-13: "If its
+ * resolved I don't need to see it on the page, so long as it's still in the store"). Its card and its resolved entry
+ * both stay in the store; they just do not go out in the page's script. A deferred entry stays (it comes back), a card
+ * he answered after the record settled stays, and the ids a battle names keep their resolved entry, since the battle
+ * draws its outcome from it.
+ */
+export function trimSettled(out: Doc): void {
+  const resolved = out.resolved as Resolved
+  const inBattle = new Set<string>()
+  for (const b of (out.battles as Doc[] | undefined) ?? [])
+    for (const r of (b.rounds as Doc[] | undefined) ?? [])
+      for (const id of [...((r.questions as string[]) ?? []), ...((r.positions as string[]) ?? [])]) inBattle.add(id)
+  // A mark with no look named finds its look by time (a question saved within two minutes after it) or by the host of
+  // the question's link (pmLookOf in board/template.html). Trimming that question would leave the mark on no look, and
+  // the page would list it as a cause to name, so the questions a mark can still find stay.
+  const marks = ((out.causes as Doc[] | undefined) ?? []).filter(
+    (c) => (c.pass === 'preview-marks' || /^mark-/.test(String(c.id ?? ''))) && !(c.look || (c.mark as Doc | undefined)?.look),
+  )
+  const markHosts = new Set(marks.map((c) => hostOf((c.mark as Doc | undefined)?.page)).filter(Boolean))
+  const markTimes = marks.map((c) => Date.parse(String((c.mark as Doc | undefined)?.at ?? c.at ?? ''))).filter((t) => !Number.isNaN(t))
+  const markCanFind = (card: Doc | undefined, entry: Doc): boolean => {
+    if (card && markHosts.has(hostOf(card.href))) return true
+    const saved = typeof entry.saved_at === 'string' ? Date.parse(entry.saved_at) : NaN
+    return markTimes.some((t) => (saved - t) / 1000 >= 0 && (saved - t) / 1000 <= 120)
+  }
+  for (const kind of LISTS) {
+    const entries = resolved[kind]
+    const cards = out[kind] as Doc[] | undefined
+    if (!entries || !cards) continue
+    const settled = new Set<string>()
+    for (const [id, entry] of Object.entries(entries)) {
+      if (entry.decision === 'deferred') continue
+      if (kind === 'questions' && markCanFind(cards.find((c) => c.id === id), entry)) continue
+      const card = cards.find((c) => c.id === id)
+      if (card && typeof card.savedAt === 'string' && Date.parse(card.savedAt) > recordedAt(entry)) continue
+      settled.add(id)
+    }
+    out[kind] = cards.filter((c) => !settled.has(String(c.id)))
+    for (const id of settled) if (!inBattle.has(id)) delete entries[id]
+  }
+  // The page reads the resolved map by the four plural kinds only; the singular ones hold battle turns it never looks up.
+  for (const k of ['position', 'question', 'term', 'cause']) delete resolved[k]
+}
+
 /** The board's data in the shape the page reads, from the store alone. */
 export function merge(docs: Docs): Doc {
   const out: Doc = {}
@@ -131,6 +192,7 @@ export function merge(docs: Docs): Doc {
   if (picks && Object.keys(picks).length) out.picks = Object.entries(picks).map(([id, d]) => ({ id, ...d }))
   const battles = docs.battles
   if (battles && Object.keys(battles).length) out.battles = foldBattles(battles)
+  trimSettled(out)
   return out
 }
 
@@ -138,7 +200,11 @@ export function merge(docs: Docs): Doc {
  * The board data the page draws, from the store alone. Null when the store answers nothing, so the page draws no board
  * at all and the fault is named, rather than a copy that hides it.
  */
-export async function boardData(board = 'council'): Promise<Doc | null> {
+export async function boardData(board = 'council', origin?: string): Promise<Doc | null> {
   const docs = await latestDocs(board).catch(() => ({}) as Docs)
-  return Object.keys(docs).length ? merge(docs) : null
+  if (!Object.keys(docs).length) return null
+  // Pictures go out as links to /api/board/picture, fetched when the page draws them: the question rows held about 7 MB
+  // of base64, which kept /board/data.js from loading. Links name the collection each picture lives in, so the overlay
+  // of an answer over a card keeps working.
+  return merge(origin ? (leanDocs(docs, origin, board) as Docs) : docs)
 }

@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, LEASE_MS } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -15,9 +15,20 @@ export async function dryLanes(db: Db, now = new Date()): Promise<Set<string>> {
   return new Set(rows.filter(r => !r.dryUntil || r.dryUntil > now).map(r => r.lane))
 }
 
-/** Put a ticket in the queue: into the first lit lane of its order. A second push of the same answer is a no-op. */
+/** Ready plus claimed, per lane: the number a ceiling is measured against, so a lane holding a crew's hands counts as full. */
+export async function laneDepth(db: Db): Promise<Record<string, number>> {
+  const rows = await db.workTicket.groupBy({ by: ['lane'], where: { state: { in: ['ready', 'claimed'] } }, _count: { _all: true } })
+  return Object.fromEntries(rows.map(r => [r.lane, r._count._all]))
+}
+
+/**
+ * Put a ticket in the queue: into the first lane of its order that is lit and under the ceiling, else the
+ * lit lane with the shortest deck. A second push of the same answer is a no-op.
+ */
 export async function pushTicket(db: Db, t: TicketDraft) {
-  const lane = firstLitLane(t.lanes, await dryLanes(db))
+  const dry = await dryLanes(db)
+  const lit = new Set(LANES.filter(l => !dry.has(l)))
+  const lane = routeLane(t.lanes, lit, await laneDepth(db))?.lane ?? firstLitLane(t.lanes, dry)
   const existing = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
   if (existing) return { ticket: existing, created: false }
   const ticket = await db.workTicket.create({
@@ -67,6 +78,25 @@ export async function unholdTicket(db: Db, id: string) {
   return { ok: true as const, ticket }
 }
 
+/**
+ * Steer a ticket he has not started: a ready or held ticket goes to another lane (`to` a lane name) or is held back
+ * (`to` 'hold'). The ticket keeps its other lanes after the one it is steered to, so a dry lane still hands it on. A
+ * claimed, done or failed ticket is left alone: its crew holds it, and the crew's own `release` gives it back. Fleet
+ * by altitude, his A + C on fleet-altitude-look-1 (2026-11-13). Both the harbour page and the MCP tool come here.
+ */
+export async function steerTicket(db: Db, id: string, to: string, by: string, now = new Date()) {
+  if (to !== 'hold' && !isLane(to)) return { ok: false as const, status: 400, error: `to must be hold or one of ${LANES.join(', ')}` }
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state !== 'ready' && t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}; only a ready or held ticket can be steered` }
+  const basis = { ...((t.basis ?? {}) as object), steered: { to, by, at: now.toISOString(), from: t.lane } }
+  const data: Prisma.WorkTicketUpdateInput = to === 'hold'
+    ? { state: 'held', claimedBy: null, leaseUntil: null, basis }
+    : { state: 'ready', lane: to, lanes: [to, ...t.lanes.filter(l => l !== to)], claimedBy: null, leaseUntil: null, basis }
+  const ticket = await db.workTicket.update({ where: { id }, data })
+  return { ok: true as const, ticket }
+}
+
 /** A worker's move on the ticket it holds. Only the lane that holds the claim may move it. */
 export async function moveTicket(db: Db, id: string, lane: string | null, move: Move,
                                  result: string | null, now = new Date(), look: string | null = null) {
@@ -88,11 +118,20 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
 /**
  * Mark a lane dry (its lamp out) or lit. Going dry passes its ready tickets to the next lit lane in each ticket's own
  * order; a ticket with no lit lane after it stays where it is and waits for the lamp.
+ *
+ * Going dry returns lapsed leases first. A lane whose usage ran out holds the tickets its last worker abandoned, and
+ * the only other sweep runs inside claimTicket — which a dry lane never gets, so those tickets were unreachable for
+ * good: not in its deck, not in the next lane's, and no claim would ever return them (found 2026-11-11: 35 stranded).
  */
-export async function setLaneDry(db: Db, lane: string, dry: boolean, note: string | null, now = new Date()) {
-  const dryUntil = dry ? new Date(now.getTime() + DRY_MS) : null
+export async function setLaneDry(db: Db, lane: string, dry: boolean, note: string | null, now = new Date(),
+                                 until: Date | null = null) {
+  // The renewal gate: when the lamp comes back on. Default five hours; he can name the hour instead, so a lane whose
+  // usage is out overnight stays out until the morning rather than relighting at 3 a.m. and filling again.
+  const dryUntil = !dry ? null
+    : until && until > now ? new Date(Math.min(until.getTime(), now.getTime() + MAX_DRY_MS)) : new Date(now.getTime() + DRY_MS)
   await db.workLane.upsert({ where: { lane }, create: { lane, dry, dryUntil, note }, update: { dry, dryUntil, note } })
   if (!dry) return { lane, dry, moved: 0 }
+  await returnLapsed(db, now)
   const out = await dryLanes(db, now)
   const ready = await db.workTicket.findMany({ where: { lane, state: 'ready' }, select: { id: true, lanes: true } })
   let moved = 0
@@ -105,14 +144,42 @@ export async function setLaneDry(db: Db, lane: string, dry: boolean, note: strin
   return { lane, dry, moved, dryUntil }
 }
 
+/** A lane counts as live when it touched a ticket inside this window. */
+export const LIVE_MS = 24 * 60 * 60 * 1000
+
+export type LaneStatus = 'live' | 'quiet' | 'dry'
+
+/**
+ * Pure: whether a lane is accepting work. Dry (lamp out) wins; a lit lane is live when it claimed or finished a ticket
+ * inside the window, and quiet when its lamp is lit but nothing has touched it, which is how a lane looks when its
+ * crew never started.
+ */
+export function laneStatus(lit: boolean, lastClaimAt: Date | null, now = new Date()): LaneStatus {
+  if (!lit) return 'dry'
+  return lastClaimAt && now.getTime() - lastClaimAt.getTime() <= LIVE_MS ? 'live' : 'quiet'
+}
+
 /** Each lane as the board draws it: lamp lit or out, and the height of its deck (ready) and crew's hands (claimed). */
 export async function laneState(db: Db, lanes: readonly string[], now = new Date()) {
   const out = await dryLanes(db, now)
   const counts = await db.workTicket.groupBy({ by: ['lane', 'state'], where: { state: { in: ['ready', 'claimed'] } },
     _count: { _all: true } })
-  return lanes.map(lane => ({
-    lane, lit: !out.has(lane),
-    deck: counts.find(c => c.lane === lane && c.state === 'ready')?._count._all ?? 0,
-    held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
-  }))
+  // A ticket with a claimant has been taken by someone; its updatedAt moves on claim, heartbeat and done.
+  const since = new Date(now.getTime() - LIVE_MS)
+  const touched = await db.workTicket.groupBy({ by: ['lane'], where: { claimedBy: { not: null } },
+    _max: { updatedAt: true } })
+  const recent = await db.workTicket.groupBy({ by: ['lane'], where: { claimedBy: { not: null }, updatedAt: { gte: since } },
+    _count: { _all: true } })
+  return lanes.map(lane => {
+    const lastClaimAt = touched.find(t => t.lane === lane)?._max?.updatedAt ?? null
+    const lit = !out.has(lane)
+    return {
+      lane, lit,
+      deck: counts.find(c => c.lane === lane && c.state === 'ready')?._count._all ?? 0,
+      held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
+      lastClaimAt: lastClaimAt ? lastClaimAt.toISOString() : null,
+      claims24h: recent.find(t => t.lane === lane)?._count._all ?? 0,
+      status: laneStatus(lit, lastClaimAt, now),
+    }
+  })
 }

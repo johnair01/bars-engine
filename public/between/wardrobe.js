@@ -201,7 +201,9 @@ export function dressFigure(root, P) {
       const L = look || DEFAULT_LOOK;
       shapeBody(L.shape, L.build);
       if (L.outfit !== outfit) { const C = CUT[L.outfit] ?? CUT.coat; robe.hem.value = C.hem || -1; sash.m.visible = C.sash; mask(L.outfit); outfit = L.outfit; }
-      paint(L, colorsOf(L));
+      const colors = colorsOf(L);
+      if (L.tint) Object.assign(colors, L.tint); // heaven round 12: a trainee's robe in a colour of the sect's own, outside the creator's two dyes
+      paint(L, colors);
     },
     hasIdle: !!idleClip,
     /* the skirt panels from the legs as posed now (call it after the mixer and the code poses; dt in seconds, none to snap) */

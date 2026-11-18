@@ -18,9 +18,19 @@ export function rowErrors(data: Record<string, unknown>): string[] {
   if (data.pass !== undefined && !text(data.pass)) errors.push('a row names the pass that posted it')
   if ('id' in data) errors.push('a row\'s id is its docId, not a field')
   if (data.lane !== undefined && typeof data.lane !== 'string') errors.push('lane is a string')
-  if (list === 'positions' && !(faces(data.faces) && text(data.pos))) errors.push('a position needs faces and pos')
+  if (list === 'positions') {
+    // Wendell, 2026-11-11: no more positions on the board. A position goes to the council's position log
+    // (six-faces-council council/position-log.jsonl, council/tools/position_log.py), where it records what it changed and
+    // how to undo it. A backfill of an old row may still say so with `backfill: true`.
+    if (data.backfill !== true) errors.push('positions no longer go on the board: log them with council/tools/position_log.py in six-faces-council')
+    if (!(faces(data.faces) && text(data.pos))) errors.push('a position needs faces and pos')
+  }
   if (list === 'questions') {
-    if (!(faces(data.faces) && text(data.q))) errors.push('a question needs faces and q')
+    // A lane receipt (receipt: true) carries its still and its lane instead of faces: it reports what a branch did,
+    // so asking him to judge it does not need a face named. Every other question still names its faces.
+    if (data.receipt === true) {
+      if (!text(data.q)) errors.push('a receipt needs q, the line he reads first')
+    } else if (!(faces(data.faces) && text(data.q))) errors.push('a question needs faces and q')
     const o = data.options
     if (!(Array.isArray(o) && o.length > 0 && o.every(x => x && typeof x === 'object' && !Array.isArray(x)
         && text((x as Record<string, unknown>).v) && typeof (x as Record<string, unknown>).label === 'string')))

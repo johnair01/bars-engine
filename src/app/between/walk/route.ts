@@ -12,7 +12,7 @@ import { BETWEEN_PAGE } from '@/lib/between/page'
 
 /**
  * Six-faces-council charge-to-world, his B on ctw-walk-demo-look-1 (2026-11-04): the walk opens in a nook anyone can stand
- * in, with no store, instead of in the clearing. It is the same page as /ontology-game/between; garden.js reads the path,
+ * in, with no store, instead of in the clearing. It is the same page as /between; garden.js reads the path,
  * skips the store, builds the nook and lets the map stand hold the sample's charge. Its doorway leads to
  * /between/land.html?walk=1, and the walk's last card leads back here.
  */

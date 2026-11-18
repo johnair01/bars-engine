@@ -22,6 +22,20 @@ export const COPY = {
   hope: "You told the mirror: ",
   hopeOnly: ". Only you see this line.",
   open: "The doorway is open. Your book waits on the low table: sit, and write what you want from a friend.",
+  // the table (slice 2, .specify/specs/friendcraft-deck-2): {name} is the other friend's, filled in by the page and never edited
+  draw: "Draw from {name}'s deck",
+  askRoad: "Ask {name} to offer it",
+  earn: "Earn it together",
+  back: "Put it back",
+  openTea: "Open it with tea",
+  asked: "{name} asked for a card you wrote.",
+  offer: "Offer it",
+  notToday: "Not today",
+  lineDrawer: "Write what you want {name} to hear.",
+  lineOwner: "Write what you hear in it.",
+  kept: "Kept in both your books.",
+  sees: "{name} sees it when they next sit.",
+  sealed: "A card is sealed until it is offered or opened with tea.",
 };
 export const HINTS = {
   light: "Write a small ask a friend could make of you, or an easy hour you could spend together.",
@@ -32,7 +46,8 @@ export const HINTS = {
 /* The default text an admin or steward may change. Each field is a line of the deck pages' words; the built-in text above
    stays the fallback, so an empty field returns to it. `hopeOnly` and `hope` are joined to the player's own words and stay
    fixed. Every edit keeps the keep list: no digit, no markup, one short line (keep list 5). */
-export const COPY_FIELDS = ["ask", "anyone", "add", "another", "takeOut", "open", "hint.light", "hint.middle", "hint.deep"];
+export const COPY_FIELDS = ["ask", "anyone", "add", "another", "takeOut", "open", "hint.light", "hint.middle", "hint.deep",
+  "draw", "askRoad", "earn", "back", "openTea", "asked", "offer", "notToday", "lineDrawer", "lineOwner", "kept", "sees", "sealed"];
 export const COPY_MAX = 200;
 export const DEFAULT_COPY = { ...COPY, ...Object.fromEntries(DEPTHS.map(d => ["hint." + d, HINTS[d]])) };
 /** An edit as the server keeps it: only known fields, trimmed single lines under COPY_MAX, no digit, no angle bracket. */
@@ -111,3 +126,6 @@ export function pageWords(goal, o = {}) {
   out.push(COPY.anyone, o.saved ? COPY.another : COPY.add);
   return out;
 }
+
+/** A line of table copy with the other friend's name put in. The page fills `{name}`; an admin's edit never carries one in. */
+export const say = (key, name) => String(COPY[key] || "").replace(/\{name\}/g, name || "your friend");
