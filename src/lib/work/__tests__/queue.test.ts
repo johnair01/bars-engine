@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { laneStatus, moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { laneStatus, moveTicket, pushTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
 import { routeLane } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
@@ -129,6 +129,33 @@ describe('the queue', () => {
       expect(await steerTicket(fakeDb(tickets), 'c', 'nowhere', 'owner')).toMatchObject({ ok: false, status: 400 })
       expect(await steerTicket(fakeDb(tickets), 'zz', 'claude', 'owner')).toMatchObject({ ok: false, status: 404 })
     })
+  })
+})
+
+describe('retry after a review', () => {
+  const failed = (extra = {}) => [{ id: 'f', state: 'failed', lane: 'deepai', lanes: ['deepai'], basis: {}, result: 'timed out after 25 min', claimedBy: 'deepai', leaseUntil: null, ...extra }]
+  it('returns a failed ticket to the deck and keeps the failure it replaces', async () => {
+    const tickets = failed()
+    const r = await retryTicket(fakeDb(tickets), 'f', 'COUNCIL/logs/AAR_2026-11-18_deepai-timeouts.md', 'council',
+      new Date('2026-11-18T20:30:00Z'))
+    expect(r).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'ready', claimedBy: null, leaseUntil: null, result: null })
+    const attempts = (tickets[0].basis as { attempts: { aar: string; failed: string; by: string }[] }).attempts
+    expect(attempts).toHaveLength(1)
+    expect(attempts[0]).toMatchObject({ aar: 'COUNCIL/logs/AAR_2026-11-18_deepai-timeouts.md', failed: 'timed out after 25 min', by: 'council' })
+  })
+  it('adds to the record, so a second failure does not overwrite the first', async () => {
+    const tickets = failed({ basis: { attempts: [{ at: '2026-11-18T19:00:00Z', by: 'council', aar: 'first.md', failed: 'a' }] } })
+    await retryTicket(fakeDb(tickets), 'f', 'second.md', 'council', new Date('2026-11-18T20:30:00Z'))
+    expect((tickets[0].basis as { attempts: unknown[] }).attempts).toHaveLength(2)
+  })
+  it('leaves a ticket that did not fail alone', async () => {
+    const tickets = [{ id: 'r', state: 'ready', lane: 'deepai', lanes: ['deepai'], basis: {}, result: null }]
+    expect(await retryTicket(fakeDb(tickets), 'r', 'x.md', 'council')).toMatchObject({ ok: false, status: 409 })
+    expect(tickets[0].state).toBe('ready')
+  })
+  it('refuses a ticket that does not exist', async () => {
+    expect(await retryTicket(fakeDb([]), 'zz', 'x.md', 'council')).toMatchObject({ ok: false, status: 404 })
   })
 })
 

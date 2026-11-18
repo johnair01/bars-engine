@@ -79,6 +79,26 @@ export async function unholdTicket(db: Db, id: string) {
 }
 
 /**
+ * Return a failed ticket to the deck, but only through a review. The move carries the name of the after-action
+ * review that explains the failure (`aar`, a path or a link), and the failure it replaces is appended to the
+ * basis so the retry does not erase what went wrong. A ticket that was not failed is left alone: `release`
+ * already gives a held one back, and nothing else needs a second run.
+ */
+export async function retryTicket(db: Db, id: string, aar: string, by: string, now = new Date()) {
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state !== 'failed') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not failed` }
+  const basis = (t.basis ?? {}) as Record<string, unknown>
+  const attempts = Array.isArray(basis.attempts) ? (basis.attempts as unknown[]) : []
+  const past = [...attempts, { at: now.toISOString(), by, aar, failed: t.result ?? null }]
+  const ticket = await db.workTicket.update({ where: { id }, data: {
+    state: 'ready', claimedBy: null, leaseUntil: null, result: null,
+    basis: { ...basis, attempts: past } as Prisma.InputJsonValue,
+  } })
+  return { ok: true as const, ticket }
+}
+
+/**
  * Steer a ticket he has not started: a ready or held ticket goes to another lane (`to` a lane name) or is held back
  * (`to` 'hold'). The ticket keeps its other lanes after the one it is steered to, so a dry lane still hands it on. A
  * claimed, done or failed ticket is left alone: its crew holds it, and the crew's own `release` gives it back. Fleet
