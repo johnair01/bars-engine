@@ -205,7 +205,7 @@ describe('the claim loop guard', () => {
     expect(tickets[0]).toMatchObject({ state: 'ready', leaseUntil: null })
   })
   it('holds a ticket whose lease lapsed MAX_ATTEMPTS times, with the reason, and does not return it', async () => {
-    const tickets = [{ id: 'a', state: 'claimed', leaseUntil: lapsed, attempts: MAX_ATTEMPTS }]
+    const tickets: Record<string, unknown>[] = [{ id: 'a', state: 'claimed', leaseUntil: lapsed, attempts: MAX_ATTEMPTS }]
     await returnLapsed(fakeDb(tickets), now)
     expect(tickets[0]).toMatchObject({ state: 'held', leaseUntil: null })
     expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times/)
