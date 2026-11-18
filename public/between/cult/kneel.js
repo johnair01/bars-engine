@@ -24,11 +24,13 @@ export function makeKneel(W) {
 
   // run fn with the holder in its own frame (at the world origin, unturned); everything posed in it stays in place after
   function inPlace(fn) {
-    const par = holder.parent, p = holder.position.clone(), q = holder.quaternion.clone(), s = holder.scale.clone();
+    const par = holder.parent, p = holder.position.clone(), e = holder.rotation.clone(), s = holder.scale.clone();
     if (par) par.remove(holder);
     holder.position.set(0, 0, 0); holder.quaternion.identity(); holder.scale.set(1, 1, 1); holder.updateMatrixWorld(true);
     try { return fn(); }
-    finally { holder.position.copy(p); holder.quaternion.copy(q); holder.scale.copy(s); if (par) par.add(holder); holder.updateMatrixWorld(true); }
+    /* the turn goes back as the Euler it was: a quaternion read back into Euler angles turns a yaw past 90 degrees into x = z = pi,
+       and garden.js sets only rotation.y each frame, so the kneeling figure sat mirrored, 90 degrees off the seat's facing */
+    finally { holder.position.copy(p); holder.rotation.copy(e); holder.scale.copy(s); if (par) par.add(holder); holder.updateMatrixWorld(true); }
   }
   function standPose() { FG.resetPose(F); F.root.position.y = rootY; F.root.updateMatrixWorld(true); }
 
@@ -82,7 +84,7 @@ export function makeKneel(W) {
       if (!fit || Math.abs(fit.top - top) > 0.005) fit = { top, hipY: fitKneel(top) };
       kneelPose(0);
       ST.hideLegs(X, floorLen);
-      ST.drape(X, { supports: [supportAt(top)] });
+      ST.drape(X, { supports: [supportAt(top)] }, { floorRun: 0.03, slope: 5, ...(window.__drapeOpts || {}) });
       for (const m of statics()) if (m.parent !== holder) holder.add(m);   // drape adds the laid cloth to the preview scene
     });
     kneeling = true;
