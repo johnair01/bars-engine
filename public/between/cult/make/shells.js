@@ -157,10 +157,9 @@ function bodyShell(C, pc, sh) {
   // the underarm to the hip, so a body of any build reads as a man. (2) every upper layer is the SAME shell lifted off the
   // robe's own surface by a few millimetres (sh.lift), with its lip eased down to 1.5 mm at an open edge: a sculpted step,
   // never a second shell 2 cm out with a void between.
-  const DBG = globalThis.__dbg || '';
-  if (sh.manCut && !DBG.includes('noman')) manShape(C, M, Lc, arm, sideOf, sh);
+  if (sh.manCut) manShape(C, M, Lc, arm, sideOf, sh);
   const baseP = new Map(); for (const v of M.verts) baseP.set(v.src, v.p.clone());
-  if (sh.base && sh.lift && !DBG.includes('nobase')) { // held at least lift off the robe's surface: the push each vertex needs is spread over its neighbours (a dilation and a blur), so the step is a smooth swell, not a spike where the robe's own shell has a bump the smoother shell lacks
+  if (sh.base && sh.lift) { // held at least lift off the robe's surface: the push each vertex needs is spread over its neighbours (a dilation and a blur), so the step is a smooth swell, not a spike where the robe's own shell has a bump the smoother shell lacks
     const lf = sh.lift * k, nb = M.verts.map(() => new Set()); for (let t = 0; t < M.tris.length; t += 3) { const a = M.tris[t], b = M.tris[t + 1], c = M.tris[t + 2]; nb[a].add(b).add(c); nb[b].add(a).add(c); nb[c].add(a).add(b); }
     const need = M.verts.map(v => { const b = sh.base.get(v.src); return b ? Math.max(0, lf - v.p.clone().sub(b).dot(v.n)) : 0; }); let push = Float32Array.from(need);
     for (let pass = 0; pass < 16; pass++) { const nx = Float32Array.from(push); push.forEach((x, i) => { if (!nb[i].size) return; let a = 0; for (const j of nb[i]) a += push[j]; nx[i] = Math.max(need[i], 0.5 * x + 0.5 * a / nb[i].size); }); push = nx; }
@@ -240,14 +239,15 @@ function bodyShell(C, pc, sh) {
 // and ride the skin's weights, so the cut holds in every pose, and every build wears it.
 function manShape(C, M, Lc, arm, sideOf, sh) {
   const k = C.k, hc = Lc.hc, F = C.F, J = { L: wp(F.bones.shoulderL), R: wp(F.bones.shoulderR) }, up = V(0, 1, 0), t = V();
-  if (!(globalThis.__dbg || '').includes('noyoke')) for (const v of M.verts) { const s = sideOf(v.p), j = J[s], dist = v.p.distanceTo(j.clone().add(V(0, 0.02 * k, 0))), w = (1 - sstep(0.05 * k, 0.14 * k, dist)) * sstep(j.y - 0.06 * k, j.y - 0.01 * k, v.p.y) * (v.arm && arm[v.arm] ? 1 - sstep(0.1, 0.35, v.p.clone().sub(arm[v.arm].a).dot(arm[v.arm].up) / arm[v.arm].up.lengthSq()) : 1);
+  for (const v of M.verts) { const s = sideOf(v.p), j = J[s], dist = v.p.distanceTo(j.clone().add(V(0, 0.02 * k, 0))), w = (1 - sstep(0.05 * k, 0.14 * k, dist)) * sstep(j.y - 0.06 * k, j.y - 0.01 * k, v.p.y) * (v.arm && arm[v.arm] ? 1 - sstep(0.1, 0.35, v.p.clone().sub(arm[v.arm].a).dot(arm[v.arm].up) / arm[v.arm].up.lengthSq()) : 1);
     if (!(w > 0)) continue; t.copy(v.n).multiplyScalar(0.5).addScaledVector(C.l, 0.5 * (s === 'L' ? 1 : -1)).addScaledVector(up, 0.3).normalize(); v.p.addScaledVector(t, (sh.yoke ?? 0.018) * k * w); }
   const bins = new Map(), bin = y => Math.round(y / (0.01 * k)); let nTop = 0;
   for (const v of M.verts) { if (v.arm) continue; const y = v.p.y; if (y > J.L.y || y < C.yHip) continue; const x = Math.abs(v.p.clone().sub(hc).dot(C.l)), b = bin(y); bins.set(b, Math.max(bins.get(b) || 0, x)); nTop++; }
   const hw = y => { let m = 0; for (let d = -3; d <= 3; d++) m = Math.max(m, bins.get(bin(y) + d) || 0); return m; }, // a flank row is the widest within 3 cm (a mesh row at one height can miss the side)
     yU = J.L.y - 0.09 * k, yB = C.yHip + 0.02 * k, wU = hw(yU), wB = hw(yB);
-  if (wU > 0 && wB > 0 && !(globalThis.__dbg || '').includes('nosides')) for (const v of M.verts) { if (v.arm || v.p.y > yU || v.p.y < C.yHip) continue; const d = v.p.clone().sub(hc), x = d.dot(C.l), ax = Math.abs(x), row = hw(v.p.y); if (!(row > 0)) continue;
+  if (wU > 0 && wB > 0) for (const v of M.verts) { if (v.arm || v.p.y > yU || v.p.y < C.yHip) continue; const d = v.p.clone().sub(hc), x = d.dot(C.l), ax = Math.abs(x), row = hw(v.p.y); if (!(row > 0)) continue;
     const line = wB + (wU - wB) * (v.p.y - yB) / (yU - yB), dW = Math.max(0, line - row) * sstep(0.5, 0.9, ax / row); if (dW > 0) { v.p.addScaledVector(C.l, Math.sign(x) * dW); } // every vertex of a row's flank moves by the same amount (no spikes)
+  }
 }
 
 function flatFront(C, M, Lc) {
@@ -315,11 +315,13 @@ function bell(C, pc, sh, s) {
   const pe = (sh.armEase0 ?? 0.01) * k - 0.003 * k, prof = sh.sleeveOf ? shellProf(sh.sleeveOf, s0, nT) : armProf(s0, nT);
   for (let ri = 0; ri <= nR; ri++) { const u = ri / nR, sv = s0 + (s1 - s0) * u, grow = Math.pow(u, 2.0), r = r0 + (rM - r0) * grow, drop = (r - r0) * (sh.hang ?? 0.8);
     // the mouth is cut on a slant: its lower edge hangs further than its upper edge (the sleeve's weight), rigid
-    for (let t = 0; t < nT; t++) { const th = t / nT * Math.PI * 2, cdn = Math.cos(th); const svx = sv + (ri === nR ? 0 : 0) + u * u * (sh.slant ?? 0.06) * k * (0.5 + 0.5 * cdn);
+    for (let t = 0; t < nT; t++) { const th = t / nT * Math.PI * 2, cdn = Math.cos(th); const svx = sv + (ri === nR ? 0 : 0) + u * u * (sh.square ? 0 : (sh.slant ?? 0.06)) * k * (0.5 + 0.5 * cdn); // the square mouth is cut flat, not slanted
       let svxD = 0; const o = e.clone().addScaledVector(ax, svx).addScaledVector(dn, drop); let rr = r + (prof[t] + pe - r0) * (1 - sstep(0, 0.4, u)); if (sh.sleeveOf) rr = Math.max(rr, prof[t] + pe + 0.015 * k * sstep(0, 0.08, u)); // round 7: out over the sleeve's shell within 2 cm, so the sleeve's own end stays inside the bell // near the top the ring is the arm's own section, then it rounds out
       if (drape) { const fu = Math.pow(u, 1.5) * sstep(0.12, 0.5, u), fs = Math.sin(dN * th + 0.7 * Math.sin(3 * th)); rr *= 1 + dA * fu * (0.75 + 0.25 * cdn) * (fs - 0.3 * fs * fs + 0.15); // rounded crests, tighter valleys
         svxD = dA * rM * 0.6 * u * u * u * fs; } else svxD = 0; // the mouth's edge rises and falls with the folds
-      o.addScaledVector(ax, svxD); const p = o.addScaledVector(dn, rr * cdn).addScaledVector(sd, rr * Math.sin(th) * (1 - 0.12 * grow));
+      o.addScaledVector(ax, svxD); let cs = cdn, sn = Math.sin(th), rq = rr; // round 2, the man's cut: the mouth is a squared section (a superellipse, 4th power) opening from the round cuff, so the sleeve ends in a straight lower edge (a Ming square sleeve), not a trumpet
+      if (sh.square) { const q = sstep(0.08, 0.7, u), ac = Math.abs(cdn), as = Math.abs(sn), nrm = Math.pow(ac ** 4 + as ** 4, -0.25); rq = rr * (1 + (nrm - 1) * q * 0.85); }
+      const p = o.addScaledVector(dn, rq * cs).addScaledVector(sd, rq * sn * (1 - 0.12 * grow));
       if (dL > 0) p.addScaledVector(V(0, -1, 0), dL * k * u * u * (0.3 + 0.7 * Math.pow(0.5 + 0.5 * cdn, 1.5))); // the cloth falls world down, the lower edge furthest, in a long curve
       P.push(p.x, p.y, p.z); E.push((s1 - sv) * 1.0); A.push((th > Math.PI ? th - 2 * Math.PI : th) * r); const q = frontXY(C, p, hc); rest.push(q.x, q.y, q.z); } }
   for (let ri = 0; ri < nR; ri++) for (let t = 0; t < nT; t++) { const a = ri * nT + t, b = ri * nT + (t + 1) % nT, c = a + nT, d = b + nT; I.push(a, b, c, b, d, c); }
@@ -381,7 +383,7 @@ export function dress(C, reg, outfitKey) {
     if (pc.p === 'trousers') parts.push(...G.trousers(C, pc));
     else if (pc.p === 'regalia') { // round 2: the girdle and the stole seat on the measured envelope of the shells and skirts under them (not on the loft), so none floats
       const env = buildEnv(C, L, G, parts), AHr = { ...AH, loftAt: (L2, th, y) => { const s0 = G.loftAt(L2, th, y), e = env(th, y); return e > s0.r ? { ...s0, r: e } : s0; } };
-      parts.push(...(C.male ? ACC.girdle(C, pc, L, AHr) : ACC.stole(C, { ...pc, over: 0 }, L, AHr))); C.env = env; }
+      parts.push(...(C.male ? ACC.girdle(C, pc, L, AHr) : ACC.stole(C, { ...pc, over: 0, under: pieces.some(q => q.p === 'outer') }, L, AHr))); C.env = env; }
     else if (pc.p === 'shoes') parts.push(...G.feet(C, pc, 'shoes', 0.007, 0.03));
     else if (pc.p === 'boots') { parts.push(...G.feet(C, pc, 'boots', 0.011, 0.06)); parts.push(...G.shin(C, pc, 'boots', yHem < 0.15 * C.S ? 0.72 : (pc.shaft ?? 0.42), 0.02, null)); }
     else if (pc.p === 'robe') parts.push(...robeParts);
@@ -397,7 +399,8 @@ export function dress(C, reg, outfitKey) {
   if (hairPc) { const fem = !C.male, styles = (fem || hairPc.long) && hairPc.style !== 'braid' ? [hairPc.style, 'long'] : [hairPc.style], backAt = hairBack(C, parts);
     C.hairW = hairWeights(C); hairPc = { ...hairPc, envAt: C.env || null }; // round 2: the man's beard lies on the envelope of the robe
     for (const st of styles) parts.push(...G.hair(C, st, reg.hairColor, backAt, hairPc));
-    C.hairW = null; hairPaint(C, parts); } // round 4 fix 3: strands and sheen painted on the hair
+    C.hairW = null; hairPaint(C, parts);
+    if (C.male && C.reg && hairPc.crown === 'elder' && hairPc.beard !== false) parts.push(...elderBeard(C, parts, G, reg.hairColor)); } // round 4 fix 3: strands and sheen painted on the hair
   return parts;
 }
 
@@ -409,6 +412,25 @@ export function dress(C, reg, outfitKey) {
 // it lies 4 mm off that envelope. Below the neck it is skinned with the body's own weights there, as the shell is, so it
 // moves with the back it lies on at every pose (round 1: the whole strand on one spine bone).
 const HAIR_HALF_W = 0.07, HAIR_DEPTH = 0.017, HAIR_CLEAR = 0.004;
+// ---------- elder regalia round 2: the Elder's beard (design default, he can drop it with hair.beard = false). Nothing in the record or
+// the Quaternius pack draws one, so it is a closed loft of elliptical rows: from the upper lip, round the jaw and down to a point
+// 20 cm under the chin, lying 1.2 cm proud of the robe or the chest wherever they stand forward of the chin, skinned to the head.
+function elderBeard(C, parts, G, hairColor) {
+  const k = C.k, f = C.f, l = C.l, H = wp(C.F.bones.head), hf = H.dot(f), hl = H.dot(l), rows = [], p = V();
+  let chinY = 1e9; for (const i of C.uniq) { if (C.name(i) !== 'head') continue; const q = C.pos(i); if (q.dot(f) - hf > 0.02 * k && q.y < chinY) chinY = q.y; }
+  const headFront = y => { let m = -1e9; for (const i of C.uniq) { if (C.name(i) !== 'head') continue; const q = C.pos(i); if (Math.abs(q.y - y) < 0.01 * k && Math.abs(q.dot(l) - hl) < 0.02 * k) m = Math.max(m, q.dot(f)); } return m; };
+  const bodyFront = y => { let m = -1e9; for (const pt of parts) { if (!/^(robe|outer|cape|underwrap|sash)/.test(pt.name)) continue; const W = pt.world; for (let i = 0; i < W.length; i += 3) { if (Math.abs(W[i + 1] - y) > 0.012 * k) continue; p.set(W[i], W[i + 1], W[i + 2]); if (Math.abs(p.dot(l) - hl) < 0.05 * k) m = Math.max(m, p.dot(f)); } } for (const i of C.uniq) { const n = C.name(i); if (n !== 'neck' && !TORSO.includes(n)) continue; const q = C.pos(i); if (Math.abs(q.y - y) < 0.012 * k && Math.abs(q.dot(l) - hl) < 0.05 * k) m = Math.max(m, q.dot(f)); } return m; };
+  const yLip = chinY + 0.028 * k, yEnd = chinY - 0.2 * k, n = 64, nT = 20; let prev = -1e9;
+  for (let i = 0; i <= n; i++) { const u = i / n, y = yLip + (yEnd - yLip) * u, below = y < chinY + 0.02 * k;
+    const hF = headFront(Math.max(y, chinY + 0.01 * k)), bF = below ? bodyFront(y) : -1e9, front0 = Math.max(hF > -1e8 ? hF : H.dot(f) + 0.09 * k, bF) + 0.004 * k;
+    const front = Math.max(front0, prev - 0.004 * k); prev = front; // never steps back more than 4 mm a row, so the beard hangs smooth over the collar
+    let w, dep; if (u < 0.15) { w = (0.046 + 0.016 * (u / 0.15)) * k; dep = (0.012 + 0.012 * (u / 0.15)) * k; } else { const t = (u - 0.15) / 0.85; w = (0.062 * (1 - Math.pow(t, 1.15)) + 0.008) * k; dep = (0.024 * (1 - Math.pow(t, 1.3)) + 0.006) * k; } // the moustache band, then the beard narrowing to a point
+    rows.push({ y, front, w, dep }); }
+  const P = [], I = []; rows.forEach(r => { for (let t = 0; t < nT; t++) { const th = t / nT * Math.PI * 2, a = r.front - r.dep / 2 + (r.dep / 2) * Math.sin(th), b = hl + r.w * Math.cos(th); P.push(...V().addScaledVector(f, a).addScaledVector(l, b).add(V(0, r.y, 0)).toArray()); } });
+  for (let i = 0; i < n; i++) for (let t = 0; t < nT; t++) { const a = i * nT + t, b = i * nT + (t + 1) % nT, c = a + nT, d = b + nT; I.push(a, c, b, b, c, d); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I);
+  const gg = G.solid(C, g, new THREE.Matrix4(), '#b9b6ae'); return [G.skinned(C, gg, G.weightsBone(C, gg, 'head'), '#b9b6ae', 'beard', 7)];
+}
 function hairBack(C, parts) {
   const k = C.k, H = wp(C.F.bones.head), bmid = C.ab(H)[1], aAxis = C.ab(wp(C.F.bones.spine03))[0], hw = HAIR_HALF_W * k, dy = 0.005 * k;
   const y0 = C.yWaist - 0.04 * k, y1 = C.crown + 0.01 * k, nb = Math.ceil((y1 - y0) / dy), amin = new Float32Array(nb + 1).fill(9), p = V();
@@ -481,7 +503,7 @@ function openShell(C, reg, rp, pc, sh0, G, kind) {
   const sh = { ...sh0, ...(pc.shell || {}), ease: ease1, armEase0: one ? (sh0.armEase0 ?? 0.01) + lift : ease * 0.9, armEase1: one ? (sh0.armEase1 ?? 0.02) + 0.004 : ease * (outer ? 1.2 : 0.9), sag: one ? (sh0.sag ?? 0.012) : outer ? 0.006 : 0,
     base: one ? C.robeBase : null, lift: one ? lift : 0,
     waistDrop: outer ? -0.067 : 0, smooth: outer ? 320 : 60, taubin: outer, minEase: one ? (sh0.minEase ?? 0.009) + lift : ease * (outer ? 0.6 : 0.7), neckW: gap / k + 0.012, vTop: 0.03, cross: 3, crossBelowApex: 3, crossX: 0, collarR: (sh0.collarR ?? (C.male ? 0.068 : 0.075)) + 0.012 };
-  if (outer) { sh.bell = pc.sleeve === 'wide' || pc.sleeve === 'widest'; sh.cuff = sh.bell ? 0.15 : 0.96; sh.bellR = pc.bellR ?? 0.16; sh.bellPast = pc.bellPast ?? 0.1; sh.hang = 0.8; sh.slant = 0.06; sh.bellUp = 0.05; sh.drapeN = pc.drapeN; sh.drapeA = pc.drapeA; sh.drapeLen = pc.drapeLen; }
+  if (outer) { sh.bell = pc.sleeve === 'wide' || pc.sleeve === 'widest'; if (C.reg && C.cut === 'm') sh.square = sh.bell; sh.cuff = sh.bell ? 0.15 : 0.96; sh.bellR = pc.bellR ?? 0.16; sh.bellPast = pc.bellPast ?? 0.1; sh.hang = sh.square ? 0.3 : 0.8; sh.slant = 0.06; sh.bellUp = 0.05; if (sh.square) { sh.bellR = pc.bellR ?? 0.135; sh.bellPast = pc.bellPast ?? 0.07; } sh.drapeN = pc.drapeN; sh.drapeA = pc.drapeA; sh.drapeLen = pc.drapeLen; }
   else { sh.yCut = C.ySh - (pc.drop ?? 0.24) * k; sh.capArm = pc.capArm ?? 0.45; sh.cuff = 2; sh.capeBack = pc.capeBack ?? 0.14; sh.capeFront = pc.capeFront ?? 0.05; sh.capeHalfW = pc.capeHalfW ?? 0.2; sh.capSlant = pc.capSlant ?? 0.2; } // round 6: capSlant drops the cape further down the outside of the arm than the inside, so it curves over the shoulder
   const wrap = C.wrap, Lc0 = C.Lc, vSym = C.vSym; C.wrap = null; // the V measure stays the robe's
   const p2 = { ...pc, lining: pc.lining || (outer ? pc.color : undefined), collarColor: pc.band || pc.trim || pc.color, collarW: pc.collarW ?? 0.03, trim: pc.band || pc.trim || pc.color, hemBand: pc.hemBand ?? 0.03 };
