@@ -90,6 +90,12 @@ describe('the queue', () => {
     expect(tickets[0]).toMatchObject({ state: 'done', result: 'pr' })
     expect(await moveTicket(fakeDb(tickets), 'a', null, 'release', null)).toMatchObject({ ok: false, status: 409 })
   })
+  it('refuses a done with no result, and keeps a pull request link as the ticket draft', async () => {
+    const tickets: Record<string, unknown>[] = [{ id: 'a', lane: 'claude', state: 'claimed', basis: { rows: ['r1'] } }]
+    expect(await moveTicket(fakeDb(tickets), 'a', 'claude', 'done', '  ')).toMatchObject({ ok: false, status: 400 })
+    expect(await moveTicket(fakeDb(tickets), 'a', 'claude', 'done', 'Opened https://github.com/johnair01/bars-engine/pull/900')).toMatchObject({ ok: true })
+    expect(tickets[0].basis).toMatchObject({ rows: ['r1'], draft: { url: 'https://github.com/johnair01/bars-engine/pull/900', label: 'bars-engine #900' } })
+  })
   it('creates a held ticket that no claim takes, and unhold readies it', async () => {
     const tickets: Record<string, unknown>[] = []
     const db = fakeDb(tickets)
