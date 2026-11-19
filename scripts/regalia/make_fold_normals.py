@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Elder regalia round 3: the baked normal map of the upper-body folds (his 2026-11-19 ruling: the upper body's cloth is
+"""FALLBACK since round 4: the shipped map is now baked from a high-poly sculpt by scripts/regalia/bake_fold_sculpt.py.
+This height-field generator stays for when Blender is not at hand.
+
+Elder regalia round 3: the baked normal map of the upper-body folds (his 2026-11-19 ruling: the upper body's cloth is
 sculpted and baked on, not simulated). One 2048x1024 tangent-space map in the shell's own cylindrical coordinates:
 u = atan2(rest.x, rest.z) / 2pi + 0.5 (0.5 at the front, 0 and 1 at the centre back, the map wraps), v = 0 at the sash,
 1 at the shoulder line. painted.js samples it per fragment where the shell's torso weight (aFold) is on, so the folds

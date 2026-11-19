@@ -107,7 +107,7 @@ export function paint(pt, rp, sh, kind, C) {
   };
   // elder regalia round 3: the baked fold normal map (scripts/regalia/make_fold_normals.py) on the torso, where aFold (the
   // shell's torso skin weight, written below) is on
-  const fm = foldMap(); Object.assign(U, { uFoldMap: { value: fm }, uFoldS: { value: sh.foldS ?? 3.0 }, uFy0: { value: C.yWaist }, uFy1: { value: (C.ySh ?? C.yNeck) + 0.03 * k }, uFoldOn: { value: kind === 'shell' && rp.folds !== false ? 1 : 0 } });
+  const fm = foldMap(); Object.assign(U, { uFoldMap: { value: fm }, uFoldS: { value: sh.foldS ?? 1.6 }, uFy0: { value: C.yWaist }, uFy1: { value: (C.ySh ?? C.yNeck) + 0.03 * k }, uFoldOn: { value: kind === 'shell' && rp.folds !== false ? 1 : 0 } });
   if (kind === 'shell') FOLD_USERS.push(U.uFoldMap);
   if (kind === 'shell') pt.mesh.geometry.setAttribute('aFold', new THREE.Float32BufferAttribute(torsoWeight(pt.mesh.geometry, C), 1));
   // shells round 4: the cross collar's lines as uniforms, so the V band, the lapped edge and its shadow are measured per
