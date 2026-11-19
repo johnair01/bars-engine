@@ -84,7 +84,7 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
     const walking = dxz > 1e-4; st.idle = walking ? 0 : st.idle + dt;
     const mv = body.userData.m, air = !!(mv && mv.air), sp = dt > 0 ? dxz / dt : 0;
     st.pace += (THREE.MathUtils.clamp((sp - RUN.walk) / (RUN.speed - RUN.walk), 0, 1) - st.pace) * Math.min(1, dt * 5);
-    if (st.air && !air) { st.land = 0; for (const [s] of legs) { const ft = feet[s]; ft.P.copy(home(s, p, fw, lft)); ft.swing = false; } }
+    if (st.air && !air) { st.land = 0; st.wasWalking = false; /* clothing-bones-look-4: a landing at speed starts the stance like a first step, feet where steady running holds them */ for (const [s] of legs) { const ft = feet[s]; ft.P.copy(home(s, p, fw, lft)); ft.swing = false; } }
     st.air = air; st.land = Math.min(1, st.land + dt * 4);
     const pc = st.pace, duty = GAIT.duty + (RUN.duty - GAIT.duty) * pc, lift = GAIT.lift + (RUN.lift - GAIT.lift) * pc;
     st.amp += ((walking ? 1 : 0) - st.amp) * Math.min(1, dt * 6);
