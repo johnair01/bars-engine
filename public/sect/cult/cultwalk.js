@@ -133,6 +133,7 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
       FG.aim(F, 'ankle' + s, 'ball' + s, toe); }
     F.mesh.skeleton.update(); F.poseName = 'walk';
     const moving = st.amp > 0.05; if (moving !== st.moving) { st.moving = moving; M.legsInMotion(X, moving); }
+    MO.skirtMood(air, st.land);
     live.step(dt);
   }
   // the capsule and its nose stay as the collision body, unseen

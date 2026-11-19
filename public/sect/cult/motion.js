@@ -144,7 +144,11 @@ function skirtOf(X, pt) {
   const cfg = { n: K.n, hz: K.hz, zeta: K.zeta, max: K.max };
   return { skirt: true, cfg, N: K.n, j0, wj, c0, wc, r, cols: Array.from({ length: K.cols }, () => ({ cfg, N: K.n, x: null, v: null, T0: null, len: null })) };
 }
+// clothing-bones-look-5: in the air the hem may swing wider (it lags the body's fall and opens, as the gate figure's try 3 did);
+// for a quarter second after a landing it is damped harder so it settles instead of ringing. cultwalk.js calls skirtMood each frame.
+export const MOOD = { air: false, land: 1 }; export function skirtMood(air, land) { MOOD.air = !!air; MOOD.land = land; }
 function skirtOut(ch, W, fps, dt) {
+  ch.cfg.max = SKIRT.max * (MOOD.air ? 1.6 : 1); ch.cfg.zeta = SKIRT.zeta + 0.4 * (1 - MOOD.land);
   const { N, cols } = ch, C = cols.length, n = W.length / 3, T = cols.map(() => new Float32Array(N * 3)), cnt = cols.map(() => new Float32Array(N));
   for (let i = 0; i < n; i++) for (const [c, wc] of [[ch.c0[i], 1 - ch.wc[i]], [(ch.c0[i] + 1) % C, ch.wc[i]]]) for (const [j, wj] of [[ch.j0[i], 1 - ch.wj[i]], [ch.j0[i] + 1, ch.wj[i]]]) {
     const w = wc * wj; if (w <= 0) continue; cnt[c][j] += w; for (let k = 0; k < 3; k++) T[c][j * 3 + k] += w * W[i * 3 + k]; }
