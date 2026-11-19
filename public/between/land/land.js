@@ -42,9 +42,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, mergeStatic, mergeByParent, rng, hash } from "../hollow.js";
 import { installPaint } from "../paint.js";
-import { loadParts, dressFigure } from "../wardrobe.js";
 import { stance, clipWeights, FADE, CRATE_SIT, SEAT_PAD } from "../stance.js";
-import { parseLook } from "../../calrunia/look.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
 import { withDraft, people } from "../../calrunia/episode-draft.js";
@@ -441,67 +439,25 @@ async function makeCultFigure(M) {
 async function makeRoadFigure() {
   let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
   const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
-  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2h", underwrap: true });
   scene.add(W.holder);
   const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
+  const { packGroup } = await import("./pack.js"); bag.add(packGroup(THREE));   // a bundle, not the toolbag's box
   const plank = new THREE.Group();
-  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, update(dt, moving) { W.update(dt, moving); } };
+  /* the kneel for the letter (his A on hj-cultivation-look-1): the same seiza the nook hearth uses (cult/kneel.js), fitted to the
+     ground (seat top 0). Loaded on the first kneel. Walking on stands her up again. */
+  let K = null, kneeling = false;
+  /* the pack rides the back: kneeling lowers the hips, so the pack drops with them (it hung at standing mid-back height and floated by her head) */
+  const hipY = () => { const v = new THREE.Vector3(); W.X.F.bones.hips.getWorldPosition(v); return W.holder.worldToLocal(v).y; }; W.holder.updateMatrixWorld(true); const hip0 = hipY();
+  const dropPack = () => { W.holder.updateMatrixWorld(true); bag.position.y = 0.92 + (kneeling ? hipY() - hip0 : 0); };
+  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, get kneeling() { return kneeling; },
+    async kneel() { if (kneeling) return; const { makeKneel } = await import("../cult/kneel.js"); K = K || makeKneel(W); K.sit(0); kneeling = true; dropPack(); },
+    stand() { if (!kneeling) return; K.stand(); kneeling = false; dropPack(); },
+    update(dt, moving) { if (kneeling) { if (moving) this.stand(); else return; } W.update(dt, moving); } };
 }
 async function makeFigure(M) {
   if (ROAD) return makeRoadFigure();
-  if (Q.get("cult") !== "0") return makeCultFigure(M);   // the one model: the cultivation figure the player picks; ?cult=0 keeps Average Dusk
-  const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
-  const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
-  const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
-  const obj = skClone(root), k = 1.7 / Math.max(box.getSize(V(0, 0, 0)).y, 0.01);
-  obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
-  const wardrobe = dressFigure(obj, await loadParts(u => loader.loadAsync(u)));
-  let look = null; try { look = parseLook(sessionStorage.getItem("ctw-look") || ""); } catch (e) { /* the default traveller */ }
-  wardrobe.set(look);
-  obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-  const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
-  const mixer = new THREE.AnimationMixer(obj), acts = {};
-  for (const n of ["Walk", "Idle"]) { const c = gl.animations.find(a => a.name === n); if (c) { acts[n] = mixer.clipAction(c); acts[n].play(); } }
-  const w = { Walk: 0, Idle: 1 }; if (acts.Walk) acts.Walk.setEffectiveWeight(0);
-  let cur = "idle";
-  const spine = obj.getObjectByName("spine"), neck = obj.getObjectByName("neck");
-  const bag = toolbagGroup(M); scene.add(bag);
-  const sv = V(0, 0, 0), nv = V(0, 0, 0), m4 = new THREE.Matrix4(), up = V(0, 0, 0), back = V(0, 0, 0), side = V(0, 0, 0);
-  /* the bag's place on the back is kept in the holder's own frame and eased there, so the walk's mocap noise in the
-     spine (the jitter he saw on ctw-walk-look-1) never reaches it; the stride's slow sway still does */
-  const lp = V(0, 0, 0), lq = new THREE.Quaternion(), tp = V(0, 0, 0), tq = new THREE.Quaternion(), inv = new THREE.Quaternion(); let settled = false;
-  // a plank carried on the shoulder, once taken out of the bag (the Scale-House)
-  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 1.7), M.plank || M.wood); plank.position.set(0.22, 1.5, 0.05); plank.rotation.set(0.25, 0, 0.35); plank.visible = false; holder.add(plank);
-  let bagOn = true;
-  const poser = seatPoser(obj, holder);
-  return {
-    holder, bag, plank,
-    setBag(on) { bagOn = on; bag.visible = on; },
-    get bagOn() { return bagOn; },
-    update(dt, moving, sitting = false, seatTop = 0, T = 0) {
-      const s = stance({ moving, sitting }); if (s !== cur) { if (s === "walk" && w.Walk < 0.05 && acts.Walk) acts.Walk.time = 0; cur = s; }
-      const want = clipWeights(cur), kk = 1 - Math.exp(-3 * dt / FADE[cur]);
-      for (const n of ["Walk", "Idle"]) if (acts[n]) { w[n] += (want[n] - w[n]) * kk; acts[n].setEffectiveWeight(w[n]); }
-      if (acts.Walk) acts.Walk.timeScale = bagOn ? 0.85 : 1.0;   // the bag is heavy: a slower stride; without it, lighter
-      mixer.update(dt);
-      poser.apply(dt, sitting, seatTop, T);
-      wardrobe.dress(dt);
-      holder.updateMatrixWorld(true);
-      if (spine && neck) {   // the bag rides the back, set from the spine each frame
-        spine.getWorldPosition(sv); neck.getWorldPosition(nv); up.copy(nv).sub(sv).normalize();
-        back.set(0, 0, -1).applyQuaternion(holder.quaternion); back.addScaledVector(up, -back.dot(up)).normalize();
-        side.crossVectors(up, back).normalize();
-        tq.setFromRotationMatrix(m4.makeBasis(side, up, back));
-        tp.copy(sv).addScaledVector(up, 0.08).addScaledVector(back, 0.2);
-        inv.copy(holder.quaternion).invert();
-        tp.sub(holder.position).applyQuaternion(inv); tq.premultiply(inv);        // into the holder's frame
-        const e = settled ? 1 - Math.exp(-dt * 9) : 1; settled = true;
-        lp.lerp(tp, e); lq.slerp(tq, e);
-        bag.position.copy(lp).applyQuaternion(holder.quaternion).add(holder.position);
-        bag.quaternion.copy(holder.quaternion).multiply(lq);
-      }
-    },
-  };
+  return makeCultFigure(M);   // the one model: the cultivation figure the player picks (Average Dusk is deprecated, Wendell 2026-11-17)
 }
 
 /* ===================================================================================================
@@ -681,7 +637,7 @@ async function build() {
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
-  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show(); }
+  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag, onLeave: () => state.me.stand(), onPick: () => state.me.stand() }); state.road.show(); }
 }
 
 /* ===================================================================================================
@@ -856,13 +812,21 @@ $("#card").addEventListener("submit", e => { const f = e.target.closest("form[da
 $("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
 $("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
 $("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
+/* kneel at the letter, face it, then open its tag; leaving it or taking it stands her up (road.js onLeave / onPick) */
+async function kneelToLetter() {
+  const L = state.road.LETTER, dx = L.x - me.pos.x, dz = L.z - me.pos.z, d = Math.hypot(dx, dz) || 1;
+  me.target = null; me.yaw = Math.atan2(dx, dz);
+  if (d > 0.6) { me.pos.x = L.x - dx / d * 0.6; me.pos.z = L.z - dz / d * 0.6; }
+  try { await state.me.kneel(); } catch (e) { console.warn("kneel failed; the card opens standing", e); }
+  state.road.card();
+}
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
   else if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
-  else if (b.dataset.act === "letter" && state.road) state.road.card();
+  else if (b.dataset.act === "letter" && state.road) kneelToLetter();
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act === "again") walkAgain();
   else if (b.dataset.act === "walkhome") { const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on")); setTimeout(() => { location.href = WALK_NOOK + "?home=1"; }, 700); }
@@ -1059,7 +1023,7 @@ function goPlace(where) {
 }
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
+  let back = "/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
   if (WALK) back = WALK_NOOK;   // the walk's nook is the visitor's, whoever opened the walk
   setTimeout(() => { location.href = back; }, 700);
 }

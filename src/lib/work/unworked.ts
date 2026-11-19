@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
+import { AUTO_HELD } from './queue'
 import { recentAnswers, type SavedAnswer } from './saves'
 
 /**
@@ -7,7 +8,7 @@ import { recentAnswers, type SavedAnswer } from './saves'
  */
 export type Why = 'no ticket' | 'not picked' | 'lane dry' | 'worker gave up'
 
-export interface UnworkedTicket { sourceKey: string; state: string; lane: string; lanes: string[] }
+export interface UnworkedTicket { sourceKey: string; state: string; lane: string; lanes: string[]; result?: string | null }
 export interface Unworked { row: string; answer: string; savedAt: string; why: Why }
 
 export function unworkedFrom(answers: SavedAnswer[], tickets: UnworkedTicket[], dry: Set<string>,
@@ -21,7 +22,8 @@ export function unworkedFrom(answers: SavedAnswer[], tickets: UnworkedTicket[], 
     let why: Why | null = null
     if (!t) why = 'no ticket'
     else if (t.state === 'failed') why = 'worker gave up'
-    else if (t.state === 'held') why = 'not picked'
+    // a loop-guard hold (queue.ts returnLapsed) already names its reason on the ticket; announcing it again is the loop
+    else if (t.state === 'held') why = t.result?.startsWith(AUTO_HELD) ? null : 'not picked'
     else if (t.state === 'ready') {
       const order = t.lanes.slice(Math.max(0, t.lanes.indexOf(t.lane)))
       why = order.length && order.every(l => dry.has(l)) ? 'lane dry' : 'not picked'
@@ -34,7 +36,7 @@ export function unworkedFrom(answers: SavedAnswer[], tickets: UnworkedTicket[], 
 export async function unworkedRead(db: PrismaClient, minutes: number, now = new Date()) {
   const answers = await recentAnswers(db, now)
   const tickets = await db.workTicket.findMany({ where: { sourceKey: { in: answers.map(a => a.draft.sourceKey) } },
-    select: { sourceKey: true, state: true, lane: true, lanes: true } })
+    select: { sourceKey: true, state: true, lane: true, lanes: true, result: true } })
   const lanes = await db.workLane.findMany({ where: { dry: true }, select: { lane: true, dryUntil: true } })
   const dry = new Set(lanes.filter(l => !l.dryUntil || l.dryUntil > now).map(l => l.lane))
   return { asOf: now.toISOString(), unworked: unworkedFrom(answers, tickets, dry, now, minutes) }

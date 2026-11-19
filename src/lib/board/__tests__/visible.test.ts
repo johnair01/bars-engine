@@ -4,7 +4,7 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/db', () => ({ db: {} }))
 vi.mock('@/lib/board/store', () => ({ latestDoc: vi.fn(), latestDocs: vi.fn() }))
 
-import { visibleFrom, openFrom } from '../mcp-reads'
+import { visibleFrom, openFrom, why } from '../mcp-reads'
 
 const q = (extra: Record<string, unknown> = {}) => ({ kind: 'questions', q: 'Which?', options: [{ v: 'A', label: 'A' }], ...extra })
 
@@ -45,5 +45,31 @@ describe('openFrom', () => {
       { ...base, collection: 'resolved', doc_id: 'questions--b', kind: 'questions', decision: 'adopt' },
     ], 50)
     expect(r.questions.map((x) => x.id)).toEqual(['a'])
+  })
+
+  it('survives a head whose timestamp and question arrived as strings', () => {
+    // The live server answered list_open with a blank 500 while this file's own reads returned rows fine, so the
+    // one thing that must never happen is odd data taking the whole list down with it.
+    const base = { q: null, name: null, choice: null, choices: null, steer: null, deferred: null, rounds: null, body: null, decision: null, saved_at: null }
+    const r = openFrom([
+      { ...base, collection: 'rows', doc_id: 'stringy', kind: 'questions', q: 'What now?', received_at: '2026-11-17T20:00:00.000Z' as never },
+      { ...base, collection: 'rows', doc_id: 'nullish', kind: 'questions', received_at: null as never },
+    ], 50)
+    expect(r.questions.find((x) => x.id === 'stringy')).toMatchObject({ q: 'What now?', postedAt: '2026-11-17T20:00:00.000Z' })
+    expect(r.questions.map((x) => x.id)).toContain('nullish')
+  })
+})
+
+describe('why', () => {
+  it('says the class, the code, every line of the message, and the meta — never a blank label', () => {
+    const e = Object.assign(new Error('\n  Raw query failed. Code: `42P01`. Message: `relation "board_saves" does not exist`\n'), {
+      name: 'PrismaClientKnownRequestError', code: 'P2010', meta: { code: '42P01' },
+    })
+    const said = why(e)
+    expect(said).toContain('PrismaClientKnownRequestError [P2010]')
+    expect(said).toContain('Raw query failed')
+    expect(said).toContain('relation \"board_saves\" does not exist')
+    expect(said).toContain('42P01')
+    expect(said).not.toMatch(/:\s*$/)
   })
 })

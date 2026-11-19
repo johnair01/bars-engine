@@ -74,6 +74,16 @@ const call = (name: string, args: Record<string, unknown>) => rpc('tools/call', 
 const payload = (r: Rpc) => JSON.parse(r.result?.content?.[0]?.text ?? '{}') as Record<string, unknown>
 
 describe('the board MCP server', () => {
+  it('names why list_open could not read, instead of a blank 500', async () => {
+    // The live server answered list_open with a blank 500 for weeks; every caller fell back to other tools and the
+    // pile stayed invisible. The tool now says which read failed and still returns the parts it could reach.
+    const body = payload(await call('list_open', {}))
+    expect(body.failed).toEqual([expect.objectContaining({ read: 'list_open' })])
+    expect(String((body.failed as { detail: string }[])[0].detail)).toMatch(/queryRaw/i)
+    expect(body.questions).toEqual([])
+    expect(body.readyTickets).toEqual({})
+  })
+
   beforeEach(() => {
     process.env.COUNCIL_MENU_TOKEN = KEY
     mem = memory()
@@ -143,6 +153,23 @@ describe('the board MCP server', () => {
       pass: 'demo-pass', ok: true, sha256: createHash('sha256').update(body, 'utf8').digest('hex') }) })
     const accepted = await call('post_rows', { docs: [{ docId: 'look-1', data: look }] })
     expect(accepted.result?.isError).toBe(false)
+  })
+
+  it('lets a lane receipt carry a still without a pass, and keeps design faces out of it', async () => {
+    docs.clear()
+    const receipt = {
+      kind: 'questions', receipt: true, lane: 'freebuff', look: true,
+      pr: 'https://github.com/johnair01/bars-engine/pull/836',
+      still: 'https://bars-engine.vercel.app/board/stills/sha/aa.png',
+      q: 'PR #836: the stair run, checked', options: [{ v: 'A', label: 'Take it' }, { v: 'B', label: 'Send it back' }],
+    }
+    const accepted = await call('post_rows', { docs: [{ docId: 'waker-result-1', data: receipt }] })
+    expect(accepted.result?.isError).toBe(false)
+
+    const sneaky = { ...receipt, faces: ['regent'] }
+    const refused = await call('post_rows', { docs: [{ docId: 'waker-result-2', data: sneaky }] })
+    expect(refused.result?.isError).toBe(true)
+    expect(refused.result?.content?.[0]?.text).toContain('lane receipt may not name design faces')
   })
 
   it('refuses a call without the key', async () => {

@@ -17,8 +17,14 @@ export type Lane = (typeof LANES)[number]
  * quality can be measured before it carries work he did not route to it himself.
  */
 export const DEFAULT_LANES: Lane[] = ['claude', 'freebuff']
-/** A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. */
-export const LEASE_MS = 2 * 60 * 60 * 1000
+/**
+ * A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. Six hours
+ * is the time a worker really takes on a ticket: at two hours a ticket under work lapsed and was claimed and announced
+ * again (2026-11-18: 37 tickets went round 18 to 30 times).
+ */
+export const LEASE_MS = 6 * 60 * 60 * 1000
+/** Most live claims one lane holds at once. A fifth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"). */
+export const LANE_WORKERS = 4
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */
 export const DRY_MS = 5 * 60 * 60 * 1000
 /** The furthest out he can set the renewal gate by hand. Beyond this the gate is a guess, not a signal. */
@@ -57,4 +63,43 @@ export function cleanLanes(v: unknown): Lane[] {
 /** The first lane in the ticket's order whose lamp is lit, or the last one when every lamp is out. */
 export function firstLitLane(lanes: string[], dry: Set<string>): string {
   return lanes.find(l => !dry.has(l)) ?? lanes[lanes.length - 1]
+}
+
+/**
+ * A lane holding this many open tickets (ready plus claimed) takes no new work while a lane behind it
+ * has room. Counting both states is the point: a lane with 3 ready and 40 claimed is full, not idle.
+ * Set by his ruling of 2026-11-18 (option A: the ceiling yields his order, and the ceiling is 20).
+ */
+export const DECK_CEILING = 20
+
+export type RouteReason = 'order' | 'ceiling'
+
+/** Why a lane got the ticket: the next one in his order with room, or the ceiling picked the shortest deck. */
+export interface Route {
+  lane: string
+  reason: RouteReason
+}
+
+/**
+ * Where a new ticket goes. `DEFAULT_LANES` keeps its authority as the preference order; the ceiling decides
+ * whether the next lane in that order gets a turn. A lane that is not named first still receives work once the
+ * lanes ahead of it are full, so a maker no longer waits on a name being added to a constant.
+ *
+ * Zo stays out (spec FR-4): the closing lever keeps its monopoly, so zo can only receive a ticket whose order is
+ * zo alone.
+ */
+export function routeLane(
+  lanes: string[], lit: Set<string>, depth: Record<string, number>, ceiling = DECK_CEILING,
+): Route | null {
+  const zoOnly = lanes.length === 1 && lanes[0] === 'zo'
+  const order = zoOnly ? lanes : lanes.filter(l => l !== 'zo')
+  const room = order.find(l => lit.has(l) && (depth[l] ?? 0) < ceiling)
+  if (room) return { lane: room, reason: 'order' }
+  // His words: when no lane in the order is under the ceiling, the lit lane with the smallest deck takes it.
+  // That pool is every lane, not the order, which is how a maker outside DEFAULT_LANES receives work at all.
+  const pool = zoOnly ? order : [...new Set([...order, ...LANES])].filter(l => l !== 'zo')
+  const open = pool.filter(l => lit.has(l))
+  if (!open.length) return null
+  const byDepth = [...open].sort((a, b) => (depth[a] ?? 0) - (depth[b] ?? 0) || pool.indexOf(a) - pool.indexOf(b))
+  return { lane: byDepth[0], reason: 'ceiling' }
 }
