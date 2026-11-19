@@ -415,7 +415,7 @@ function skinned(C, g, W, color, name, layer, { lining = 0.55, surface = null } 
   const back = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, color: new THREE.Color(lining, lining, lining), side: THREE.BackSide });
   if (surface === 'gauze') { back.color.setRGB(0.92, 0.92, 0.92); for (const x of [mat, back]) { x.transparent = true; x.opacity = 0.55; x.depthWrite = false; } }
   const m = new THREE.SkinnedMesh(g, mat), mb = new THREE.SkinnedMesh(g, back);
-  for (const x of [m, mb]) { x.frustumCulled = false; F.mesh.parent.add(x); x.bind(sk, BM); }
+  for (const x of [m, mb]) { x.frustumCulled = false; x.name = name; F.mesh.parent.add(x); x.bind(sk, BM); }
   return { name, layer, mesh: m, back: mb, geo: g, world, edge: g.userData.edge };
 }
 
