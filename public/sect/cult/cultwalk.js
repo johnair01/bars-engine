@@ -75,6 +75,9 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
     const p = body.position;
     if (!st.last || st.last.distanceTo(p) > 2) { st.last = p.clone(); reset(); }
     const dxz = Math.hypot(p.x - st.last.x, p.z - st.last.z); st.last.copy(p);
+    // clothing-bones-look-3: leaving a stand, the figure faces the way it is going at once (the ease below would walk her sideways
+    // for a third of a second, feet spread across her path)
+    if (dxz > 1e-4 && !st.wasWalking && !(body.userData.m && body.userData.m.air)) { st.yaw = body.rotation.y; for (const [s] of legs) feet[s].swing = false; }
     // heading eases round to the body's
     let dy = body.rotation.y - st.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); st.yaw += dy * Math.min(1, dt * GAIT.turn);
     const fw = fwOf(st.yaw), lft = lftOf(fw);
@@ -89,6 +92,10 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
     if (walking) st.ph += dxz / C;
     else if (Object.values(feet).some(ft => ft.swing)) st.ph += dt * 1.4; // stopping: the swinging foot comes down beside the other
     yawQ(st.yaw);
+    // clothing-bones-look-3: the first step from a stand. A foot that starts its stance at the hip would be left 0.6 stride behind
+    // the body, so the root sank to keep it reaching (a lunge). Each planted foot starts where steady walking holds it at its phase.
+    if (walking && !st.wasWalking && !air) for (const [s, , off] of legs) { const phi0 = ((st.ph + off) % 1 + 1) % 1; if (phi0 < duty) feet[s].P.copy(home(s, p, fw, lft, (duty / 2 - phi0) * C)); }
+    st.wasWalking = walking;
     // each foot: planted, or swinging from its plant to the next
     const T = {};
     for (const [s, sg, off] of legs) {
