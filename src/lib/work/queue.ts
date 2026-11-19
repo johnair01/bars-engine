@@ -145,7 +145,15 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
   if (lane && t.lane !== lane) return { ok: false as const, status: 403, error: `This ticket is in the ${t.lane} lane` }
   if (t.state !== 'claimed') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not claimed` }
   // `look` is the board row of the look this voyage brought home (homeport FR-006); the ring reads it from the basis.
-  const basis = look && move === 'done' ? { ...((t.basis ?? {}) as object), look } : undefined
+  // A ticket does not finish silently: `done` carries its result, a pull request link or a note. A pull request link
+  // is also kept as `basis.draft`, which the harbour's steer card shows.
+  if (move === 'done' && !(result ?? '').trim()) {
+    return { ok: false as const, status: 400, error: 'done needs a result: the pull request link, or one line saying no code was needed' }
+  }
+  const pr = move === 'done' ? (result ?? '').match(/https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/) : null
+  const draft = pr ? { url: pr[0], label: `${pr[2]} #${pr[3]}` } : null
+  const basis = (look || draft) && move === 'done'
+    ? { ...((t.basis ?? {}) as object), ...(look ? { look } : {}), ...(draft ? { draft } : {}) } : undefined
   const data: Prisma.WorkTicketUpdateInput =
     move === 'heartbeat' ? { leaseUntil: new Date(now.getTime() + LEASE_MS) }
     : move === 'done' ? { state: 'done', result, doneAt: now, leaseUntil: null, ...(basis ? { basis } : {}) }
