@@ -697,9 +697,9 @@ function elderCrown(C, opt, kp, H, hi, add) {
     for (const i of C.uniq) { if (C.dom[i] !== hi) continue; const p = C.pos(i); if (Math.abs(p.y - cy) < 0.008 * k) rB = Math.max(rB, Math.hypot(p.x - H0.x, p.z - H0.z)); } rB += 0.012 * k;
     const tq = new THREE.Quaternion().setFromUnitVectors(V(0, 0, 1), up);
     add(new THREE.TorusGeometry(rB, 0.006 * k, 8, 40), new THREE.Matrix4().compose(H0, tq, V(1, 1, 1.15)), gold, 'head', 'hair-crown');
-    for (let j = 0; j < 9; j++) { const a = (j - 4) / 4 * 1.05, out = V().addScaledVector(f, Math.cos(a)).addScaledVector(l, Math.sin(a)), hgt = (0.095 - 0.045 * Math.abs(j - 4) / 4) * k;
+    for (let j = 0; j < 9; j++) { const a = (j - 4) / 4 * 1.05, out = V().addScaledVector(f, Math.cos(a)).addScaledVector(l, Math.sin(a)), hgt = (0.16 - 0.07 * Math.abs(j - 4) / 4) * k; // round 1b: the fan stands 16 cm at the centre, so it reads in silhouette across a courtyard as the man's winged crown does
       const b0 = H0.clone().addScaledVector(out, rB * 1.02), dir = out.clone().multiplyScalar(0.18).add(up).normalize(), side = up.clone().cross(out).normalize();
-      add(new THREE.BoxGeometry(0.02 * k, hgt, 0.003 * k), Mb(side, dir, side.clone().cross(dir), b0.clone().addScaledVector(dir, hgt / 2)), gold, 'head', 'hair-crown');
+      add(new THREE.BoxGeometry(0.036 * k, hgt, 0.003 * k), Mb(side, dir, side.clone().cross(dir), b0.clone().addScaledVector(dir, hgt / 2)), gold, 'head', 'hair-crown');
       add(new THREE.SphereGeometry(0.0075 * k, 10, 8), new THREE.Matrix4().makeTranslation(...b0.clone().addScaledVector(dir, hgt + 0.004 * k).toArray()), face, 'head', 'hair-crown'); }
     for (const s of [1, -1]) { const out = l.clone().multiplyScalar(s), pinEnd = H0.clone().addScaledVector(out, rB + 0.03 * k).add(V(0, 0.01 * k, 0));
       add(new THREE.CylinderGeometry(0.003 * k, 0.003 * k, 0.07 * k, 8), new THREE.Matrix4().compose(H0.clone().addScaledVector(out, rB + 0.005 * k).add(V(0, 0.01 * k, 0)), new THREE.Quaternion().setFromUnitVectors(up, out), V(1, 1, 1)), gold, 'head', 'hair-pin');
