@@ -38,13 +38,28 @@ export async function pushTicket(db: Db, t: TicketDraft) {
   return { ticket, created: true }
 }
 
-/** Lapsed leases go back to ready, so a worker that died mid-ticket never strands it. */
+/** A ticket claimed this many times without ever being closed stops coming back: it is held with a reason instead. */
+export const MAX_ATTEMPTS = 3
+export const AUTO_HELD = 'auto-held'
+
+/**
+ * Lapsed leases go back to ready, so a worker that died mid-ticket never strands it. A ticket whose lease has lapsed
+ * MAX_ATTEMPTS times is held instead, with a result naming why (2026-11-18: the hourly pickup claimed the same twenty
+ * tickets every two hours because nothing closed them; a lapse is the proof nobody did). A held ticket waits for an
+ * unhold or a steer from the board; it is not announced again.
+ */
 export async function returnLapsed(db: Db, now = new Date()): Promise<number> {
+  const lapsed = { state: 'claimed', leaseUntil: { lt: now } }
+  const stalled = await db.workTicket.updateMany({
+    where: { ...lapsed, attempts: { gte: MAX_ATTEMPTS } },
+    data: { state: 'held', claimedBy: null, leaseUntil: null,
+      result: `${AUTO_HELD}: claimed ${MAX_ATTEMPTS} times and never closed. Lift the hold or steer it from the board.` },
+  })
   const r = await db.workTicket.updateMany({
-    where: { state: 'claimed', leaseUntil: { lt: now } },
+    where: lapsed,
     data: { state: 'ready', claimedBy: null, leaseUntil: null },
   })
-  return r.count
+  return r.count + stalled.count
 }
 
 /**
@@ -74,7 +89,7 @@ export async function unholdTicket(db: Db, id: string) {
   const t = await db.workTicket.findUnique({ where: { id } })
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (t.state !== 'held') return { ok: false as const, status: 409, error: `The ticket is ${t.state}, not held` }
-  const ticket = await db.workTicket.update({ where: { id }, data: { state: 'ready' } })
+  const ticket = await db.workTicket.update({ where: { id }, data: { state: 'ready', attempts: 0, result: null } })
   return { ok: true as const, ticket }
 }
 
