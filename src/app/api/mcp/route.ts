@@ -406,6 +406,18 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: 'shaman_intake',
+    title: 'The Shaman reads a doubt',
+    description: 'Give the doubt in the player\'s own words. The Shaman answers what is moving underneath it and one '
+      + 'small step to take today. Deterministic, no model call.',
+    inputSchema: {
+      type: 'object',
+      properties: { doubt: { type: 'string', description: 'The doubt in his or her own words, e.g. `I do not think I am capable of building the thing that I want`.' } },
+      required: ['doubt'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -683,6 +695,46 @@ async function facesLens(args: Record<string, unknown>): Promise<ToolResult> {
   return ok(l)
 }
 
+type DoubtTheme = 'capable' | 'worthy' | 'enough' | 'belong' | 'other'
+const DOUBT_THEMES: { theme: DoubtTheme; test: RegExp; moving: string; step: string }[] = [
+  {
+    theme: 'capable',
+    test: /\b(capable|capability|can'?t build|cannot build|able to build|ability|skill|know how|figure (it )?out)\b/i,
+    moving: 'Under this doubt sits a wish the size of a whole world, held next to a part of you that has not yet seen one finished piece of it. The wish is real. The doubt is a guard standing in front of it.',
+    step: 'Pick the smallest piece of the thing you want that one afternoon could finish, and make only that piece today. Then put it where you can see it.',
+  },
+  {
+    theme: 'worthy',
+    test: /\b(worthy|deserve|allowed|right to|who am i)\b/i,
+    moving: 'Under this doubt sits a question of permission: some part of you is waiting for a signature before it will begin. Nobody has been holding that pen but you.',
+    step: 'Write one sentence that begins "I am giving myself leave to" and ends with a task small enough to finish today. Do that task before you sleep.',
+  },
+  {
+    theme: 'enough',
+    test: /\b(good enough|not enough|talent|measure up|mediocre|bad at|not good)\b/i,
+    moving: 'Under this doubt sits a standard set by finished work you have only seen from the outside. Every maker you admire went through a stretch of work they were ashamed of.',
+    step: 'Make one rough version of the thing in twenty minutes and call it a first draft. Keep it, and do not fix it today.',
+  },
+  {
+    theme: 'belong',
+    test: /\b(belong|fit in|outsider|accepted|welcome|alone|nobody|no one)\b/i,
+    moving: 'Under this doubt sits a wish for company at the table where this work gets made. The ache is a sign you want to be among people, which is a different matter from lacking the ability.',
+    step: 'Tell one person you trust the single thing you are trying to build, in one sentence, and ask for nothing back.',
+  },
+]
+const DOUBT_OTHER = {
+  moving: 'Under this doubt sits something you care about enough to be afraid for. The fear is loudest around the things that matter to you.',
+  step: 'Name the thing you care about in one plain sentence, write it somewhere you will see it tomorrow, and do the first five minutes of it today.',
+}
+
+function shamanIntake(args: Record<string, unknown>): ToolResult {
+  const doubt = typeof args.doubt === 'string' ? args.doubt.trim().slice(0, 2000) : ''
+  if (!doubt) return bad('shaman_intake needs doubt: the doubt in his or her own words')
+  const hit = DOUBT_THEMES.find((t) => t.test.test(doubt))
+  const r = hit ?? { theme: 'other' as DoubtTheme, ...DOUBT_OTHER }
+  return ok({ board: 'council', face: 'shaman', theme: r.theme, doubt, underneath: r.moving, next_step: r.step })
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
@@ -731,6 +783,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
   if (name === 'ontology.profile') return ontologyProfileTool(args)
   if (name === 'mechanic.eval') return mechanicEval(args)
   if (name === 'faces.lens') return facesLens(args)
+  if (name === 'shaman_intake') return shamanIntake(args)
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -751,7 +804,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
  *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
  *   close_read, close_say, whoami, and the pipeline door's nine (pipeline.status, pipeline.next, loop.checks,
- *   asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)
+ *   asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens) and shaman_intake
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
