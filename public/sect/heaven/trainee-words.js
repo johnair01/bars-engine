@@ -7,6 +7,23 @@ export const LINES = {
   diplomat: 'The circle meets after supper. Bring one true thing.',
   sage: 'The library opens to anyone who brings one question.',
 };
+// The guided climb (Wendell's note on tw-build-look-1, 2026-11-19): the walk starts at the great court and a series of
+// small quests, one waymark each, leads the player up the mountain like a tour. `hint` shows while the player walks to
+// the stop, `said` is what is said on arrival. `key` is also the `?stop=` value that lands a player there (the hook a
+// farm quest notice uses). The last stop hands over to the Elders' walk at the crown court.
+export const CLIMB = [
+  { key: 'bell', hint: 'Walk to the bronze bell.', said: 'Every student starts at the bronze bell. Now take the stone stair at the back of the court.' },
+  { key: 'stair', hint: "Take the stone stair at the court's back edge.", said: 'The stair climbs the ridge in flights. Climb to the first landing.' },
+  { key: 'landing', hint: 'Climb to the first landing of the stair.', said: 'Students carry water up this stair every dawn. Climb on to the gate at the top.' },
+  { key: 'gate', hint: 'Climb to the gate at the top of the stair.', said: 'Past this gate a bridge crosses the saddle to the winding road.' },
+  { key: 'bridge', hint: 'Cross the bridge.', said: 'The winding road circles the crag. Follow it up to the crown.' },
+  { key: 'road', hint: 'Follow the winding road up the crag.', said: 'The crown gate is ahead. The founder\'s hall stands behind it.' },
+  { key: 'crown', hint: 'Walk through the crown gate.', said: '' },
+];
+/** The card before the climb. Pure. */
+export const climbIntro = want => (String(want || '').trim() ? `You came wanting ${String(want).trim()}. ` : '') + "The Elders wait in the founder's hall, at the top of the mountain. A student by the bronze bell will start you on the way up.";
+export const CLIMB_KEYS = CLIMB.map(c => c.key);
+
 export const SENSATIONS = ['Tension', 'Constriction', 'Strength', 'Numbness'];
 
 /** The Shaman Elder's read-back (his C on tw-readback-look-1, 2026-11-17). Pure. */
