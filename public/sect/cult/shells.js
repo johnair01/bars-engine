@@ -230,6 +230,7 @@ function flatFront(C, M, Lc) {
 
 // ---------- the skirt: rings from under the sash to the hem, hung rigid from the pelvis
 function skirt(C, pc, sh, L, Lc, G) {
+  const SLIT = sh.slits !== false && !pc.open;
   const k = C.k, nT = L.nT, top = C.yWaist + (sh.skirtTop ?? 0.02) * k, // round 6: the open outer's skirt rises over its shell's cut, above the sash
     R = L.rings.filter(r => r.y <= top + 1e-6), rows = R.length;
   const P = [], I = [], E = [], rest = [], lapA = [], hc = Lc.hc;
@@ -237,7 +238,11 @@ function skirt(C, pc, sh, L, Lc, G) {
   for (let ri = 0; ri < rows; ri++) for (let t = 0; t < nT; t++) { const th = t / nT * Math.PI * 2, r = R[ri]; const rr = r.r[t]; const p = C.fromAB(r.c[0] + rr * Math.cos(th), r.c[1] + rr * Math.sin(th), r.y);
     if (sh.hug) sh.hug(p);
     P.push(p.x, p.y, p.z); E.push(r.y - L.yHem); const q = frontXY(C, p, hc); rest.push(q.x, q.y, q.z); lapA.push(q.z > 0.02 ? q.x - xLap : BIG); }
-  for (let ri = 0; ri < rows - 1; ri++) for (let t = 0; t < nT; t++) { const a = ri * nT + t, b = ri * nT + (t + 1) % nT, c = a + nT, d = b + nT; I.push(a, c, b, b, c, d); }
+  for (let ri = 0; ri < rows - 1; ri++) for (let t = 0; t < nT; t++) { const a = ri * nT + t, b = ri * nT + (t + 1) % nT, c = a + nT, d = b + nT;
+    // anim-robe-look-4 (his A, "Keep the mid-thigh slits"): the skirt is cut for real, one quad column dropped between ring columns 71-0 (front) and 18-19, 53-54 (sides),
+    // below 0.62 m (front) and 0.70 m (sides) on a 1.66 m figure, scaled by stature. The skirt chains (motion.js SKIRT.slits 15, 3, 7) keep each edge on its own column.
+    if (SLIT && nT === 72) { const y = (P[a * 3 + 1] + P[c * 3 + 1]) / 2; if ((t === 71 && y < C.S * (0.62 / 1.66)) || ((t === 18 || t === 53) && y < C.S * (0.70 / 1.66))) continue; }
+    I.push(a, c, b, b, c, d); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
   // winding: normals out from the axis
   { const N = g.attributes.normal, p = V(), n = V(); p.fromBufferAttribute(g.attributes.position, nT * 2); n.fromBufferAttribute(N, nT * 2); const c = C.fromAB(R[2].c[0], R[2].c[1], p.y); if (n.dot(p.clone().sub(c)) < 0) { const ix = g.index.array; for (let i = 0; i < ix.length; i += 3) { const s = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = s; } g.computeVertexNormals(); } }
