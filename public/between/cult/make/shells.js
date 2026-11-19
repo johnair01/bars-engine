@@ -399,8 +399,9 @@ export function dress(C, reg, outfitKey) {
   if (hairPc) { const fem = !C.male, styles = (fem || hairPc.long) && hairPc.style !== 'braid' ? [hairPc.style, 'long'] : [hairPc.style], backAt = hairBack(C, parts);
     C.hairW = hairWeights(C); hairPc = { ...hairPc, envAt: C.env || null }; // round 2: the man's beard lies on the envelope of the robe
     for (const st of styles) parts.push(...G.hair(C, st, reg.hairColor, backAt, hairPc));
-    C.hairW = null; hairPaint(C, parts);
-    if (C.male && C.reg && hairPc.crown === 'elder' && hairPc.beard !== false) parts.push(...elderBeard(C, parts, G, reg.hairColor)); } // round 4 fix 3: strands and sheen painted on the hair
+    C.hairW = null;
+    if (C.male && C.reg && hairPc.crown === 'elder' && hairPc.beard !== false) parts.push(...elderBeard(C, parts, G, reg.hairColor));
+    hairPaint(C, parts); } // round 4 fix 3: strands and sheen painted on the hair
   return parts;
 }
 
@@ -412,24 +413,49 @@ export function dress(C, reg, outfitKey) {
 // it lies 4 mm off that envelope. Below the neck it is skinned with the body's own weights there, as the shell is, so it
 // moves with the back it lies on at every pose (round 1: the whole strand on one spine bone).
 const HAIR_HALF_W = 0.07, HAIR_DEPTH = 0.017, HAIR_CLEAR = 0.004;
-// ---------- elder regalia round 2: the Elder's beard (design default, he can drop it with hair.beard = false). Nothing in the record or
-// the Quaternius pack draws one, so it is a closed loft of elliptical rows: from the upper lip, round the jaw and down to a point
-// 20 cm under the chin, lying 1.2 cm proud of the robe or the chest wherever they stand forward of the chin, skinned to the head.
+// ---------- elder regalia round 3: the Elder's beard, a separate hair pass (his B on er-regalia-look-2: "the beard looks horrible. That
+// needs to have a separate hair pass and needs to be on bones so that it flows"). Round 2 drew it as one grey slab. Now it is locks:
+// a fan of tapered flat strands (a ribbon each) that start along the jaw, converge and hang 14 to 22 cm onto the chest, their ends
+// making a soft point, with a moustache of two swept locks. Each lock lies 8 mm off whatever it hangs on (the face, then the robe's
+// measured envelope), its top skinned to the head and its end to the body's own weights (neck and chest), so it lies on the chest
+// when the head bows. The part is named `beard`: sect/cult/motion.js's chain tool (CHAINS.beard, make/chains.js) hangs it on
+// bone nodes down its length, so it swings from the jaw and lags the head. Design default; hair.beard = false drops it.
 function elderBeard(C, parts, G, hairColor) {
-  const k = C.k, f = C.f, l = C.l, H = wp(C.F.bones.head), hf = H.dot(f), hl = H.dot(l), rows = [], p = V();
+  const k = C.k, f = C.f, l = C.l, H = wp(C.F.bones.head), hf = H.dot(f), hl = H.dot(l), p = V(), hash = x => { const s = Math.sin(x * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
   let chinY = 1e9; for (const i of C.uniq) { if (C.name(i) !== 'head') continue; const q = C.pos(i); if (q.dot(f) - hf > 0.02 * k && q.y < chinY) chinY = q.y; }
-  const headFront = y => { let m = -1e9; for (const i of C.uniq) { if (C.name(i) !== 'head') continue; const q = C.pos(i); if (Math.abs(q.y - y) < 0.01 * k && Math.abs(q.dot(l) - hl) < 0.02 * k) m = Math.max(m, q.dot(f)); } return m; };
+  const cells = new Map(), cell = (y, la) => Math.round(y / (0.006 * k)) + ',' + Math.round((la - hl) / (0.006 * k));
+  for (const i of C.uniq) { if (C.name(i) !== 'head') continue; const q = C.pos(i), key = cell(q.y, q.dot(l)), v = q.dot(f); if (!(cells.get(key) > v)) cells.set(key, v); }
+  const headFront = (y, la) => { let m = -1e9; for (let dy = -1; dy <= 1; dy++) for (let dl = -1; dl <= 1; dl++) { const v = cells.get(Math.round(y / (0.006 * k)) + dy + ',' + (Math.round((la - hl) / (0.006 * k)) + dl)); if (v !== undefined && v > m) m = v; } return m; };
   const bodyFront = y => { let m = -1e9; for (const pt of parts) { if (!/^(robe|outer|cape|underwrap|sash)/.test(pt.name)) continue; const W = pt.world; for (let i = 0; i < W.length; i += 3) { if (Math.abs(W[i + 1] - y) > 0.012 * k) continue; p.set(W[i], W[i + 1], W[i + 2]); if (Math.abs(p.dot(l) - hl) < 0.05 * k) m = Math.max(m, p.dot(f)); } } for (const i of C.uniq) { const n = C.name(i); if (n !== 'neck' && !TORSO.includes(n)) continue; const q = C.pos(i); if (Math.abs(q.y - y) < 0.012 * k && Math.abs(q.dot(l) - hl) < 0.05 * k) m = Math.max(m, q.dot(f)); } return m; };
-  const yLip = chinY + 0.028 * k, yEnd = chinY - 0.2 * k, n = 64, nT = 20; let prev = -1e9;
-  for (let i = 0; i <= n; i++) { const u = i / n, y = yLip + (yEnd - yLip) * u, below = y < chinY + 0.02 * k;
-    const hF = headFront(Math.max(y, chinY + 0.01 * k)), bF = below ? bodyFront(y) : -1e9, front0 = Math.max(hF > -1e8 ? hF : H.dot(f) + 0.09 * k, bF) + 0.004 * k;
-    const front = Math.max(front0, prev - 0.004 * k); prev = front; // never steps back more than 4 mm a row, so the beard hangs smooth over the collar
-    let w, dep; if (u < 0.15) { w = (0.046 + 0.016 * (u / 0.15)) * k; dep = (0.012 + 0.012 * (u / 0.15)) * k; } else { const t = (u - 0.15) / 0.85; w = (0.062 * (1 - Math.pow(t, 1.15)) + 0.008) * k; dep = (0.024 * (1 - Math.pow(t, 1.3)) + 0.006) * k; } // the moustache band, then the beard narrowing to a point
-    rows.push({ y, front, w, dep }); }
-  const P = [], I = []; rows.forEach(r => { for (let t = 0; t < nT; t++) { const th = t / nT * Math.PI * 2, a = r.front - r.dep / 2 + (r.dep / 2) * Math.sin(th), b = hl + r.w * Math.cos(th); P.push(...V().addScaledVector(f, a).addScaledVector(l, b).add(V(0, r.y, 0)).toArray()); } });
-  for (let i = 0; i < n; i++) for (let t = 0; t < nT; t++) { const a = i * nT + t, b = i * nT + (t + 1) % nT, c = a + nT, d = b + nT; I.push(a, c, b, b, c, d); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I);
-  const gg = G.solid(C, g, new THREE.Matrix4(), '#b9b6ae'); return [G.skinned(C, gg, G.weightsBone(C, gg, 'head'), '#b9b6ae', 'beard', 7)];
+  const bf = new Map(); const bodyAt = y => { const kk = Math.round(y / (0.004 * k)); if (!bf.has(kk)) bf.set(kk, bodyFront(kk * 0.004 * k)); return bf.get(kk); };
+  // a lock: centreline from (lat0, yA) down length L; lat(u) and the lie on the surface are worked per row
+  const locks = [], nI = 15;
+  for (let i = 0; i < nI; i++) { const s = (i / (nI - 1)) * 2 - 1, a = Math.abs(s), r = hash(i + 1);
+    locks.push({ lat0: s * 0.066 * k, conv: 0.68 + 0.1 * r, yA: chinY + (0.034 + 0.045 * Math.pow(a, 1.6)) * k, L: (0.205 * (1 - 0.5 * Math.pow(a, 1.4)) + 0.02 * (r - 0.5)) * k, w: 0.0125 * k, ph: r * 6.28, off: (i % 2) * 0.0025 * k, bend: (r - 0.5) * 0.012 * k }); }
+  const yM = chinY + 0.062 * k;
+  for (const sg of [-1, 1]) locks.push({ mous: true, sg, lat0: sg * 0.006 * k, yA: yM, L: 0.07 * k, w: 0.015 * k, ph: sg, off: 0.004 * k });
+  const nR = 18, nT = 6, P = [], I = [], lockOf = [], uOf = [];
+  for (const L of locks) { const base = P.length / 3, row = [];
+    for (let r = 0; r <= nR; r++) { const u = r / nR; let y, lat, w, th;
+      if (L.mous) { lat = hl + L.sg * (0.004 + 0.034 * Math.pow(u, 0.9)) * k; y = L.yA - 0.022 * k * Math.pow(u, 1.4); w = L.w * (1 - 0.45 * Math.pow(u, 1.5)); th = 0.0065 * k; }
+      else { y = L.yA - u * L.L; lat = hl + L.lat0 * (1 - L.conv * Math.pow(u, 0.8)) + L.bend * Math.sin(Math.PI * u + L.ph); w = L.w * (1 - Math.pow(u, 2.2)) * (0.35 + 0.65 * sstep(0, 0.18, u)) + 0.0008 * k; th = 0.0055 * k * (1 - 0.5 * u) * (0.5 + 0.5 * sstep(0, 0.18, u)); }
+      const hF = headFront(Math.max(y, chinY + 0.004 * k), lat), bF = y < chinY + 0.02 * k ? bodyAt(y) : -1e9;
+      row.push({ y, lat, w, th, b0: Math.max(hF > -1e8 ? hF : hf + 0.07 * k, bF) + (L.mous ? 0.006 : 0.009) * k + L.off * (L.mous ? 1 : sstep(0.1, 0.4, u)) + 0.004 * k * Math.sin(L.ph + 5 * u) * sstep(0, 0.3, u) }); }
+    // the surface under a lock is read in 6 mm cells; a lock is a smooth curve, so its distance out is blurred along its length
+    // and then held to no more than 1.5 mm inside the surface (a hair never sinks into the face)
+    let sm = row.map(q => q.b0); for (let it = 0; it < 3; it++) sm = sm.map((v, i) => (sm[Math.max(0, i - 1)] + v * 2 + sm[Math.min(nR, i + 1)]) / 4);
+    let prev = -1e9; row.forEach((q, r) => { const front = Math.max(sm[r], q.b0 - 0.0015 * k, prev - 0.0035 * k); prev = front; q.front = front; });
+    for (const q of row) for (let t = 0; t < nT; t++) { const a = t / nT * Math.PI * 2; P.push(...V().addScaledVector(f, q.front - q.th + q.th * Math.sin(a)).addScaledVector(l, q.lat + q.w * Math.cos(a) * 0.5).add(V(0, q.y, 0)).toArray()); lockOf.push(L); uOf.push(q.y === row[0].y ? 0 : (row.indexOf(q) / nR)); }
+    for (let r = 0; r < nR; r++) for (let t = 0; t < nT; t++) { const a = base + r * nT + t, b = base + r * nT + (t + 1) % nT, c = a + nT, d = b + nT; I.push(a, c, b, b, c, d); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
+  const n = P.length / 3, c0 = new THREE.Color('#b9b6ae'), Cc = []; for (let i = 0; i < n; i++) { const sh = 0.9 + 0.12 * hash(Math.floor(i / nT / (nR + 1)) * 7.3); Cc.push(c0.r * sh, c0.g * sh, c0.b * sh); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(Cc, 3)); g.userData.edge = new Float32Array(n).fill(1);
+  // weights: the top on the head, the end on the body's own weights (the neck and the chest it lies on); the moustache all head
+  const SI = C.F.mesh.geometry.attributes.skinIndex, SW = C.F.mesh.geometry.attributes.skinWeight, okB = i => { const nm = C.name(i); return nm === 'neck' || TORSO.includes(nm); }, hb = C.bn.indexOf('head');
+  const si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) { const L = lockOf[i], s = L.mous ? 0 : sstep(0.3, 0.85, uOf[i]); si[i * 4] = hb; sw[i * 4] = 1 - s; if (s <= 0) continue;
+    const bi = C.nearest(p.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]), okB); let tot = 0; for (let j = 0; j < 3; j++) { const q = SW.getComponent(bi, j); si[i * 4 + 1 + j] = SI.getComponent(bi, j); sw[i * 4 + 1 + j] = q; tot += q; } for (let j = 1; j < 4; j++) sw[i * 4 + j] = tot > 0 ? sw[i * 4 + j] / tot * s : 0; if (!(tot > 0)) sw[i * 4] = 1; }
+  const part = G.skinned(C, g, { si, sw }, '#b9b6ae', 'beard', 7); part.noDrag = false; return [part];
 }
 function hairBack(C, parts) {
   const k = C.k, H = wp(C.F.bones.head), bmid = C.ab(H)[1], aAxis = C.ab(wp(C.F.bones.spine03))[0], hw = HAIR_HALF_W * k, dy = 0.005 * k;
