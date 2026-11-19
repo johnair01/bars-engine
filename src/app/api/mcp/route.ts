@@ -30,6 +30,7 @@ import {
   assetBrief, canonBlock, evaluateMechanic, faceLens, nextLines, ontologyProfile, pipelineNext, pipelineStatus,
   readLoop, refusalLines, statusLines, verifyRound,
 } from '@/lib/board/pipeline'
+import { heldFor, match, problems, readTools, toolLine } from '@/lib/board/scout'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -406,6 +407,32 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: 'scout.lookup',
+    title: 'Tools we hold for a job',
+    description: 'Before building anything, name the job in a few words. Answers the tools in council/toolbox.yaml '
+      + 'that fit it, held ones first (in use, proven, vendored), each with when to reach for it, where it lives and '
+      + 'its proof. A held tool this lists is one a build must use or pass over in writing.',
+    inputSchema: {
+      type: 'object',
+      properties: { job: { type: 'string', description: 'The build in a few words, e.g. `run and jump for the cultivation figure`.' } },
+      required: ['job'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'scout.check',
+    title: 'Does a brief pass the scout rule',
+    description: 'Run the scout check on a brief, pass or recipe that builds: its `job:` and `scout:` lines must name '
+      + 'an inventory tool, and use or pass over in writing each tool we hold for that job. Answers pass or the '
+      + 'sentences that fail it; the same rule as council/tools/scout.py --check.',
+    inputSchema: {
+      type: 'object',
+      properties: { text: { type: 'string', description: 'The brief\'s full text, with its `job:` and `scout:` lines.' } },
+      required: ['text'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -683,8 +710,35 @@ async function facesLens(args: Record<string, unknown>): Promise<ToolResult> {
   return ok(l)
 }
 
+async function scoutLookup(args: Record<string, unknown>): Promise<ToolResult> {
+  const job = typeof args.job === 'string' ? args.job.trim() : ''
+  if (!job) return bad('scout.lookup needs job: the build in a few words')
+  const r = await readTools()
+  if (r.error) return bad(r.error)
+  const found = match(r.tools, job)
+  const must = heldFor(r.tools, job).map((t) => t.id)
+  return ok({
+    job,
+    tools: found.map(toolLine),
+    must_use_or_pass_over: must,
+    note: found.length ? null : 'no known tool: rung 4, one Sonnet worker searches the web (docs/tool-scout.md)',
+    source: 'council/toolbox.yaml',
+  })
+}
+
+async function scoutCheck(args: Record<string, unknown>): Promise<ToolResult> {
+  const text = typeof args.text === 'string' ? args.text : ''
+  if (!text.trim()) return bad('scout.check needs text: the brief to check')
+  const r = await readTools()
+  if (r.error) return bad(r.error)
+  const found = problems(r.tools, text)
+  return ok({ pass: found.length === 0, problems: found, source: 'council/toolbox.yaml' })
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (name === 'post_rows') return postRows(args)
+  if (name === 'scout.lookup') return scoutLookup(args)
+  if (name === 'scout.check') return scoutCheck(args)
   if (name === 'read_rows') return readRows(args)
   if (name === 'put_picture') return putPicture(args)
   if (name === 'read_picture') return readPicture(args)
@@ -751,7 +805,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
  *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
  *   close_read, close_say, whoami, and the pipeline door's nine (pipeline.status, pipeline.next, loop.checks,
- *   asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)
+ *   asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens) and the scout door's two (scout.lookup, scout.check)
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
