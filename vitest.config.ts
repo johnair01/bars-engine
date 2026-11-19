@@ -153,7 +153,7 @@ export default defineConfig({
       'src/lib/between/__tests__/episode-draft.test.ts',
     'src/lib/between/__tests__/pick.test.ts',
       'src/lib/between/__tests__/iching-cast.test.ts',
-      'src/lib/between/__tests__/farm.test.ts',
+      'src/lib/between/__tests__/farm.test.ts', 'src/lib/between/__tests__/farm-world.test.ts',
       'src/lib/between/__tests__/coin-connection.test.ts',
       'src/lib/__tests__/iching-struct.test.ts',
       'src/lib/between/__tests__/two-move.test.ts',

@@ -111,7 +111,7 @@ function plantMesh(p) { const d = p.tendedDays; const G = new THREE.Group();
   else if (d === 0) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), glow(PAL.seed)); s.scale.set(.8, 1.2, .8); s.position.y = 0.14; G.add(s); const h = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), glow('#fff2c0', { transparent: true, opacity: 0.35, depthWrite: false })); h.position.y = 0.14; G.add(h); }
   else G.add(leafy(0.14 + d * 0.08, 2 + d));
   return G; }
-let FARM = null, SEL = null, selRing = null, first = false;
+let WORLD = null, FARM = null, SEL = null, selRing = null, first = false;
 const slotObjs = {};
 const weedSlots = (() => { const s = new Set(); while (s.size < 32) s.add(Math.floor(rnd() * SLOTS)); return s; })();   // wild tufts on untilled earth, so every slot reads as land to be tilled
 // untilled earth: loose clods and the odd pebble, scattered without order; each slot keeps its own scatter between redraws
@@ -301,10 +301,27 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
   if (selRing.visible) selRing.scale.setScalar(1 + Math.sin(performance.now() / 300) * 0.06);
   frame(dt); renderer.render(scene, camera); requestAnimationFrame(tick); }
 
+// ---------- what agents changed (farm-world-write): applied signs and objects stand on their slots; notes show on the slot card ----------
+const worldGroup = new THREE.Group(); worldGroup.name = 'world'; scene.add(worldGroup);
+function worldObject(kind) { const G = new THREE.Group();
+  if (kind === 'lantern') { const po = mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.9, 6), toon(PAL.woodDark)); po.position.y = 0.45; G.add(po); const gl = mesh(new THREE.BoxGeometry(0.16, 0.2, 0.16), toon('#ffd98a', { emissive: new THREE.Color('#a86a00') }), false); gl.position.y = 0.98; G.add(gl); }
+  else if (kind === 'bench') { const top = mesh(new THREE.BoxGeometry(0.7, 0.06, 0.24), toon(PAL.wood)); top.position.y = 0.3; G.add(top); for (const k of [-1, 1]) { const lg = mesh(new THREE.BoxGeometry(0.06, 0.3, 0.2), toon(PAL.woodDark)); lg.position.set(k * 0.28, 0.15, 0); G.add(lg); } }
+  else if (kind === 'stone') { const st = mesh(new THREE.IcosahedronGeometry(0.28, 0), toon('#9aa3a8')); st.position.y = 0.2; st.scale.set(1.2, 0.8, 1); G.add(st); }
+  else if (kind === 'flowers') { for (let i = 0; i < 7; i++) { const a = i * 2.4, r = 0.1 + (i % 3) * 0.07; const stem = mesh(new THREE.CylinderGeometry(0.01, 0.012, 0.3, 4), toon(PAL.leafA), false); stem.position.set(Math.cos(a) * r, 0.15, Math.sin(a) * r); G.add(stem); const fl = mesh(new THREE.SphereGeometry(0.05, 8, 6), toon(['#e87aa0', '#f2d15c', '#b48be8'][i % 3]), false); fl.position.set(Math.cos(a) * r, 0.32, Math.sin(a) * r); G.add(fl); } }
+  else if (kind === 'scarecrow') { const po = mesh(new THREE.CylinderGeometry(0.03, 0.04, 1.3, 6), toon(PAL.wood)); po.position.y = 0.65; G.add(po); const arms = mesh(new THREE.BoxGeometry(0.8, 0.05, 0.05), toon(PAL.wood)); arms.position.y = 1.0; G.add(arms); const hd = mesh(new THREE.SphereGeometry(0.12, 10, 8), toon('#d8b86a')); hd.position.y = 1.4; G.add(hd); }
+  return G; }
+function worldSign(text) { const G = new THREE.Group(); const po = mesh(new THREE.BoxGeometry(0.06, 0.7, 0.06), toon(PAL.wood)); po.position.y = 0.35; G.add(po);
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const cx = cv.getContext('2d'); cx.fillStyle = '#e8d3a0'; cx.fillRect(0, 0, 256, 128); cx.strokeStyle = '#5a3d1f'; cx.lineWidth = 6; cx.strokeRect(3, 3, 250, 122);
+  cx.fillStyle = '#3a2812'; cx.font = 'bold 22px sans-serif'; cx.textAlign = 'center'; const words = String(text).split(' '); const lines = []; let ln = ''; for (const w of words) { if ((ln + ' ' + w).trim().length > 16) { lines.push(ln); ln = w; } else ln = (ln + ' ' + w).trim(); } lines.push(ln);
+  lines.slice(0, 3).forEach((l, i) => cx.fillText(l, 128, 44 + i * 28));
+  const tex = new THREE.CanvasTexture(cv); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace; const bd = mesh(new THREE.BoxGeometry(0.62, 0.31, 0.04), new THREE.MeshBasicMaterial({ map: tex }), false); bd.position.y = 0.82; G.add(bd); return G; }
+function drawWorld(world) { worldGroup.clear(); for (const c of (world && world.changes) || []) { if (c.status !== 'applied') continue; const [x, z] = slotXZ(c.slot);
+    const g = c.kind === 'sign' ? worldSign(c.text) : c.kind === 'object' ? worldObject(c.object) : null; if (!g) continue; g.position.set(x + STEP * 0.32, 0.02, z + STEP * 0.32); g.rotation.y = -0.3; worldGroup.add(g); } }
+
 // ---------- first entry: the whole field from above; later, a short walk-in ----------
 (async () => {
   const r = await fetch('/api/between/farm?today=' + localDay()); if (!r.ok) { $('loading').textContent = r.status === 401 ? 'Sign in to bars-engine to open your farm' : 'The farm could not open'; return; }
-  const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); fieldSpirits();
+  const j = await r.json(); FARM = j.farm; first = j.first; WORLD = j.world || { changes: [], notYet: [] }; drawSlots(); fieldSpirits(); drawWorld(WORLD);
   await Promise.all([api({ act: 'enter' }), loadCultivator()]);
   const IN = V(0, 0, FZ - 1.3);   // inside the gate, in front of the first row
   if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land, fenced and waiting. Every slot is bare earth until you till it.', 7000); avatar.position.set(0, 0, FZ + 2.2); setTimeout(() => { faceTo = V(0, 0, 0); routeTo(IN); }, 3500); }
@@ -312,4 +329,4 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
   $('loading').classList.add('gone'); tick();
   if (Q.get('deepen') != null) openDeepen(+Q.get('deepen'));
 })();
-window.__farm = { act, api, get farm() { return FARM; }, select: i => { SEL = i; selRing.visible = true; const [x, z] = slotXZ(i); selRing.position.set(x, 0.13, z); walkTo(i); renderCard(); }, openDeepen };
+window.__farm = { act, api, drawWorld, get world() { return WORLD; }, get farm() { return FARM; }, select: i => { SEL = i; selRing.visible = true; const [x, z] = slotXZ(i); selRing.position.set(x, 0.13, z); walkTo(i); renderCard(); }, openDeepen };
