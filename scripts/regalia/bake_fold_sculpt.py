@@ -446,32 +446,42 @@ def stage_sheet():
 
 # ---------------------------------------------------------------- stage: qa (blender-asset-qa checks on the high mesh)
 def stage_qa():
+    # round 4b: the test is restricted to the torso body of the cloth, v < VMAX (the ragged neck and armhole rim above it is
+    # never baked: the map's v runs to the shoulder line and the shell is cut open there), and the intersection test drops
+    # pairs whose faces lie within 2 mm of each other (touching folds), keeping only deep crossings
     low, high = open_sculpt()
     high.modifiers.clear()
+    y0, y1 = float(opt['y0']), float(opt['y1']); VMAX = float(opt.get('vmax', 0.86))
     me = high.data; bm = bmesh.new(); bm.from_mesh(me); bm.normal_update(); bm.verts.ensure_lookup_table()
-    n_in = 0; n_deg = 0; n_flip = 0
-    # inverted: a face whose normal points against the shell's own outward direction (the low's nearest face), torso part only
+    n_in = 0; n_deg = 0; n_flip = 0; n_all = 0; keep = []
     lb = bmesh.new(); lb.from_mesh(low.data); lt = BVHTree.FromBMesh(lb)
     for f in bm.faces:
         c = f.calc_center_median()
+        if (c.z - y0) / (y1 - y0) > VMAX: continue
+        n_all += 1; keep.append(f)
         if f.calc_area() < 1e-10: n_deg += 1
         loc, nrm, fi, d = lt.find_nearest(c, 0.03)
         if loc is None: continue
         n_in += 1
         if f.normal.dot(nrm) < 0: n_flip += 1
-    print(f'QA faces {len(bm.faces)}, degenerate {n_deg}, compared to the shell {n_in}, normals against the shell {n_flip} ({100*n_flip/max(n_in,1):.2f}%)')
-    # non-manifold edges that are not on the open border (the grid has an open top and bottom row only)
+    print(f'QA v<{VMAX}: faces {n_all} of {len(bm.faces)}, degenerate {n_deg}, compared to the shell {n_in}, normals against the shell {n_flip} ({100*n_flip/max(n_in,1):.2f}%)')
     nm = sum(1 for e in bm.edges if len(e.link_faces) > 2); print('QA edges shared by more than two faces', nm)
-    # self-intersection: triangle pairs that overlap and do not share a vertex
-    tm = bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    tree = BVHTree.FromBMesh(bm); pairs = tree.overlap(tree)
-    bm.faces.ensure_lookup_table(); bad = 0
+    # self-intersection on the kept part: triangles that overlap, share no vertex and whose centres are more than 2 mm apart
+    kb = bmesh.new()
+    vm = {}
+    for f in keep: kb.faces.new([vm.setdefault(v.index, kb.verts.new(v.co)) for v in f.verts])
+    kb.verts.ensure_lookup_table()
+    bmesh.ops.triangulate(kb, faces=kb.faces[:]); kb.faces.ensure_lookup_table()
+    tree = BVHTree.FromBMesh(kb); pairs = tree.overlap(tree)
+    bad = 0; touch = 0
     for a, b in pairs:
         if a >= b: continue
-        va = {v.index for v in bm.faces[a].verts}; vb = {v.index for v in bm.faces[b].verts}
-        if va & vb: continue
+        fa, fb = kb.faces[a], kb.faces[b]
+        if {v.index for v in fa.verts} & {v.index for v in fb.verts}: continue
+        if (fa.calc_center_median() - fb.calc_center_median()).length < 0.002: touch += 1; continue
         bad += 1
-    print(f'QA triangle pairs that intersect without sharing a vertex: {bad}  (folds that go over each other are meant to touch; deep crossings would show here)')
+    print(f'QA triangle pairs that cross within the torso: {bad} deep, {touch} touching (of {len(kb.faces)} triangles)')
+
 
 
 if __name__ == '__main__':
