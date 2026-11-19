@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- a node script run by hand, not bundled */
 const {chromium}=require('playwright');const fs=require('fs');
 (async()=>{const [,,qs,tag]=process.argv;const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});const p=await b.newPage();
 p.on('pageerror',e=>console.log('E:',e.message.slice(0,400)));

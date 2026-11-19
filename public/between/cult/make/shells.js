@@ -367,7 +367,7 @@ export function dress(C, reg, outfitKey) {
   { const { g, W, Lc, base } = bodyShell(C, rp, sh); C.Lc = Lc; if (C.reg) C.robeBase = base;
     // the rank square's place: under the collar's crossing, over the sash, at most 17 cm square
     { const top = Lc.yc - 0.02 * k, bot = C.yWaist + 0.06 * k; C.rankS = Math.max(0.03 * k, Math.min(0.085 * k, (top - bot) / 2)); C.rankY = (top + bot) / 2; }
-    const pt = G.skinned(C, g, W, rp.color, 'robe-shell', 4); paint(pt, rp, sh.bell ? { ...sh, cuffW: 0 } : sh, 'shell', C); /* fix 4: under a bell the sleeve's own cuff band is hidden, so no gold sliver shows at the elbow */ armpitFix(C, pt); robeParts.push(pt);
+    const pt = G.skinned(C, g, W, rp.color, 'robe-shell', 4); paint(pt, rp, sh.bell ? { ...sh, cuffW: 0 } : sh, 'shell', C); /* fix 4: under a bell the sleeve's own cuff band is hidden, so no gold sliver shows at the elbow */ armpitFix(C, pt, 0.009); robeParts.push(pt);
     // fix 4 (his B on cult-shells-look-5: "an option to have an underwrap to protect modesty"): mix.underwrap puts a second, thinner shell
     // under the robe's, cut with a high round neckline, so the robe's V shows the cloth and not the chest
     if (!C.male && C.F.mix.underwrap) { const uw = rp.underwrap || {}, ush = { ...sh, ease: (sh.ease ?? 0.012) * 0.45, armEase0: (sh.armEase0 ?? 0.01) * 0.45, armEase1: (sh.armEase1 ?? 0.02) * 0.6, minEase: 0.0035, crossBelowApex: uw.crossBelowApex ?? -0.07, vTop: uw.vTop ?? 0.01, neckW: uw.neckW ?? 0.07 }, urp = { ...rp, color: uw.color || '#e8dfcf', collarColor: uw.color || '#e8dfcf', collarW: 0.0, band: uw.color || '#e8dfcf', trim: uw.color || '#e8dfcf', hemBand: 0 };
@@ -534,7 +534,7 @@ function openShell(C, reg, rp, pc, sh0, G, kind) {
   const wrap = C.wrap, Lc0 = C.Lc, vSym = C.vSym; C.wrap = null; // the V measure stays the robe's
   const p2 = { ...pc, lining: pc.lining || (outer ? pc.color : undefined), collarColor: pc.band || pc.trim || pc.color, collarW: pc.collarW ?? 0.03, trim: pc.band || pc.trim || pc.color, hemBand: pc.hemBand ?? 0.03 };
   const { g, W, Lc } = bodyShell(C, p2, sh); C.Lc = Lc; const out = [];
-  const pt = G.skinned(C, g, W, pc.color, kind + '-shell', outer ? 5.5 : 6); paint(pt, p2, sh.bell ? { ...sh, cuffW: 0 } : { ...sh, cuffW: outer ? undefined : (pc.trimW ?? 0.03) }, 'shell', C); armpitFix(C, pt, 0.034); out.push(pt);
+  const pt = G.skinned(C, g, W, pc.color, kind + '-shell', outer ? 5.5 : 6); paint(pt, p2, sh.bell ? { ...sh, cuffW: 0 } : { ...sh, cuffW: outer ? undefined : (pc.trimW ?? 0.03) }, 'shell', C); /* round 4: the upper layers pass 50 mm (was 34), so the navy robe shell beneath cannot come through the raised armpit */ armpitFix(C, pt, 0.05); out.push(pt);
   if (outer) {
     const yHem = Math.max(0.034 * k, (pc.hem ?? 0.035) * C.S), sk = sh0.skirtEase ?? 0.028;
     const L = G.loft(C, { yTop: C.yNeck + 0.02 * k, yHem, regionAt: G.torsoOK(C, true), ease: Math.max(sk + 0.012, easeUp + 0.004), flare: pc.flare || 0, folds: 0, cinch: null, topEase: 0.012, yoke: 0.03, tcut: true });
