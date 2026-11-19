@@ -3,6 +3,7 @@
  * @entity SYSTEM
  * @description Each lane as the board draws it (a world with its lamp and the deck on its quay): lit or dry, and how
  *   many tickets wait (deck) and are held (held). No ticket's content leaves; counts only.
+ *   beatAt and beatNote are the lane row's last write and its note (a worker heartbeat, POST /api/work/lanes/:lane/beat).
  * @permissions none
  * @example GET /api/work/lanes
  * @agentDiscoverable false

@@ -184,6 +184,12 @@ export async function setLaneDry(db: Db, lane: string, dry: boolean, note: strin
   return { lane, dry, moved, dryUntil }
 }
 
+/** A heartbeat: the note and the time on the lane's row. The lamp (dry, dryUntil) is left exactly as it is. */
+export async function beatLane(db: Db, lane: string, note: string, now = new Date()) {
+  await db.workLane.upsert({ where: { lane }, create: { lane, note, updatedAt: now }, update: { note, updatedAt: now } })
+  return { lane, note, beatAt: now.toISOString() }
+}
+
 /** A lane counts as live when it touched a ticket inside this window. */
 export const LIVE_MS = 24 * 60 * 60 * 1000
 
@@ -210,7 +216,9 @@ export async function laneState(db: Db, lanes: readonly string[], now = new Date
     _max: { updatedAt: true } })
   const recent = await db.workTicket.groupBy({ by: ['lane'], where: { claimedBy: { not: null }, updatedAt: { gte: since } },
     _count: { _all: true } })
+  const rows = await db.workLane.findMany({ select: { lane: true, note: true, updatedAt: true } })
   return lanes.map(lane => {
+    const beat = rows.find(r => r.lane === lane)
     const lastClaimAt = touched.find(t => t.lane === lane)?._max?.updatedAt ?? null
     const lit = !out.has(lane)
     return {
@@ -219,6 +227,9 @@ export async function laneState(db: Db, lanes: readonly string[], now = new Date
       held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
       lastClaimAt: lastClaimAt ? lastClaimAt.toISOString() : null,
       claims24h: recent.find(t => t.lane === lane)?._count._all ?? 0,
+      // The lane row's last write (a heartbeat or a lamp change) and its note: how the watchdog sees a silent worker.
+      beatAt: beat?.note != null ? beat.updatedAt.toISOString() : null,
+      beatNote: beat?.note ?? null,
       status: laneStatus(lit, lastClaimAt, now),
     }
   })

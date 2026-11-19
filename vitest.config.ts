@@ -189,6 +189,7 @@ export default defineConfig({
       'src/app/api/lantern/table/__tests__/route.test.ts',
       'src/lib/ember-economy/harvest/**/__tests__/*.test.ts',
       'src/app/api/work/send/__tests__/route.test.ts',
+      'src/app/api/work/lanes/[lane]/beat/__tests__/route.test.ts',
       'src/lib/between/__tests__/coin-table-camera.test.ts',
       'src/lib/board/__tests__/card.test.ts',
       'src/lib/emotional-alchemy/__tests__/dbt-skills.test.ts',
