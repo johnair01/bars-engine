@@ -337,13 +337,14 @@ export function girdle(C, pc, L, H) {
 // rank square, to below the knee, each ending in a point with a metal drop and a tassel. pc.over lifts it over an outer.
 export function stole(C, pc, L, H) {
   const k = C.k, Fm = frame(C, L, H), metal = C.metal || '#c9a55a', color = pc.c || '#7a2630', parts = [];
-  const W = (pc.w ?? 0.07) * k, x0 = (C.rankS ? C.rankS + 0.012 * k : 0.08 * k) + W / 2, yTop = C.ySh + 0.012 * k, yFront = (C.yApex ?? C.ySh - 0.15 * k) + 0.05 * k;
-  const yEnd = Math.max(C.yKnee - (pc.below ?? 0.12) * k, Fm.yLow + 0.1 * k), over = (pc.over ?? 0) * k, sashH = (C.sashH || 0.07) * k;
+  const W = (pc.w ?? 0.07) * k, x0 = (C.rankS ? C.rankS + 0.012 * k : 0.08 * k) + W / 2, yTop0 = C.ySh + 0.012 * k, yFront = (C.yApex ?? C.ySh - 0.15 * k) + 0.05 * k;
+  const yEnd = Math.max(C.yKnee - (pc.below ?? 0.12) * k, Fm.yLow + 0.1 * k), over = (pc.over ?? 0) * k, yTop = over ? yFront : yTop0, sashH = (C.sashH || 0.07) * k;
   const bump = y => 0.016 * k * Math.exp(-(((y - C.yWaist) / (sashH * 0.75)) ** 2));
   for (const s of [1, -1]) {
     const yAt = u => yTop + (yEnd - yTop) * u, thFront = y => s * Math.atan2(x0, H.loftAt(L, 0, y).r);
-    const thAt = u => { const y = yAt(u), f = Math.min(1, Math.max(0, (yTop - y) / (yTop - yFront))), e = f * f * (3 - 2 * f); return s * 1.15 * (1 - e) + thFront(y) * e; };
-    const off = u => (0.007 + 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront)))) * k + over + bump(yAt(u));
+    // under an over-robe the stole comes out from beneath its collar at the V's foot, so it never crosses the collar band
+    const thAt = u => { const y = yAt(u); if (over) return thFront(y); const f = Math.min(1, Math.max(0, (yTop - y) / (yTop - yFront))), e = f * f * (3 - 2 * f); return s * 1.15 * (1 - e) + thFront(y) * e; };
+    const off = u => (0.007 + (over ? 0 : 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront))))) * k + over + bump(yAt(u));
     const c = u => Fm.on(thAt(u), yAt(u), off(u)), across = u => Fm.along(thAt(u));
     const w = u => W * (u > 0.95 ? 0.15 + 0.85 * (1 - u) / 0.05 : 1);
     const g = ribbon({ c, across, w, t: 0.003 * k, nu: 90, nv: 4, color, shade: (u, v) => 0.9 + 0.12 * Math.cos(u * 30 + v), hem: 0.006 * k, end: 0 });
