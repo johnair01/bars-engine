@@ -243,8 +243,22 @@ describe('the pipeline door', () => {
   it('lists the nine pipeline tools beside the six board ones', async () => {
     const names = ((await rpc('tools/list')).result?.tools ?? []).map((t) => t.name)
     for (const n of ['pipeline.status', 'pipeline.next', 'loop.checks', 'asset.brief', 'asset.verify', 'canon.lookup',
-      'ontology.profile', 'mechanic.eval', 'faces.lens'])
+      'ontology.profile', 'mechanic.eval', 'faces.lens', 'scout.lookup', 'scout.check'])
       expect(names).toContain(n)
+  })
+
+  it('answers the scout door from the pushed toolbox, and says when it is not pushed', async () => {
+    const none = await call('scout.lookup', { job: 'run and jump' })
+    expect(none.result?.isError).toBe(true)
+    expect(none.result?.content?.[0]?.text).toContain('council/toolbox.yaml is not in the store')
+    setBackend(memoryBackend({
+      'council/toolbox.yaml': 'tools:\n  - {id: ual-clips, does: motion clips, tags: [run, jump], where: w, licence: CC0, status: proven, when: any run, proof: p}\n',
+    }).backend)
+    const l = await call('scout.lookup', { job: 'run and jump' })
+    expect(l.result?.isError).toBe(false)
+    expect(l.result?.content?.[0]?.text).toContain('ual-clips')
+    const c = await call('scout.check', { text: 'job: run and jump\nscout: 5, none\n' })
+    expect(c.result?.content?.[0]?.text).toContain('"pass": false')
   })
 
   it('answers a standing and the next gate in text, naming the files', async () => {

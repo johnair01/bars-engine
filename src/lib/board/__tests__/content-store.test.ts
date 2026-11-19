@@ -12,7 +12,7 @@ describe('allowedPath', () => {
       'council/callsheets/INDEX.md', 'council/loops/spirit-generator.json',
       'council/ledger/2026-10-25-pull-014112.json', 'council/needs-work-done.json', 'council/faces.yaml',
       'council/pipeline.yaml', 'ontology/manifest.yaml', 'ontology/v0.1/QUICKSTART.md', 'canon/mechanics/pier-walk.yaml',
-      'council/callsheets/hand-grip.md', 'council/look/floors.json'])
+      'council/callsheets/hand-grip.md', 'council/look/floors.json', 'council/toolbox.yaml'])
       expect(allowedPath(p), p).toBe(true)
     for (const p of ['board/stills/x.jpg', 'council/callsheets/stills/../../faces.png',
       'council/callsheets/stills/a.glb', 'council/callsheets/stills/r 1/notes.md', 'council/faces.yaml.bak',

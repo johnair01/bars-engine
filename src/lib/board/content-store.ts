@@ -56,6 +56,8 @@ const ALLOWED = [
   /^council\/needs-work-done\.json$/,
   /** The asset gallery's finished crates and planned holes, built by six-faces-council council/tools/gallery_index.py. */
   /^council\/gallery\/(crates|holes)\.json$/,
+  /** The tool inventory the scout door reads (2026-11-19): one copy, so no agent keeps its own list. */
+  /^council\/toolbox\.yaml$/,
 ]
 export function allowedPath(p: string): boolean {
   return !p.includes('..') && !p.includes('//') && ALLOWED.some(r => r.test(p))
