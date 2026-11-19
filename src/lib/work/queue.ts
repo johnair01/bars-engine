@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, isLane, LANES, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -53,6 +53,11 @@ export async function returnLapsed(db: Db, now = new Date()): Promise<number> {
  */
 export async function claimTicket(db: Db, lane: string, by: string, now = new Date(), id?: string): Promise<ClaimedTicket | null> {
   await returnLapsed(db, now)
+  // A lane holds at most LANE_WORKERS live claims; the settle pass claims only to close, so it is not counted out.
+  if (by !== 'settle') {
+    const live = await db.workTicket.count({ where: { lane, state: 'claimed', leaseUntil: { gte: now } } })
+    if (live >= LANE_WORKERS) return null
+  }
   const until = new Date(now.getTime() + LEASE_MS)
   // With an id, only that ticket may be taken (still ready, still in this lane); otherwise the lane's oldest.
   const rows = await db.$queryRaw<ClaimedTicket[]>`
