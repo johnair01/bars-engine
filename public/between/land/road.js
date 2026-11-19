@@ -120,12 +120,13 @@ export function mountRoad(THREE, L, { hang = null, onPick = null, onLeave = null
     paper.rotation.set(-Math.PI / 2 + 0.32, 0, 0.5); paper.position.y = 0.07; letter.add(paper);
     const glow = canvasTex(128, 128, (c, w, h) => { const g = c.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, "rgba(255,252,240,.95)"); g.addColorStop(0.25, "rgba(255,248,230,.45)"); g.addColorStop(1, "rgba(255,248,230,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h);
       c.strokeStyle = "rgba(255,255,250,.7)"; c.lineWidth = 2; c.beginPath(); c.moveTo(64, 14); c.lineTo(64, 114); c.moveTo(14, 64); c.lineTo(114, 64); c.stroke(); });
-    const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); glint.scale.setScalar(0.7); glint.position.set(0.04, 0.2, 0); letter.add(glint);
-    const pl = new THREE.PointLight(0xfff6e6, 1.4, 1.8, 1.5); pl.position.set(0, 0.3, 0); letter.add(pl);
+    const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); glint.scale.setScalar(0.85); glint.position.set(0.04, 0.2, 0); letter.add(glint);
+    const pl = new THREE.PointLight(0xfff6e6, 2.6, 2.4, 1.5); pl.position.set(0, 0.3, 0); letter.add(pl);
     const blade = new THREE.MeshStandardMaterial({ color: 0x4f6a30, roughness: 0.9, side: THREE.DoubleSide });
     let s = 5; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
     for (let i = 0; i < 26; i++) { const b = new THREE.Mesh(new THREE.PlaneGeometry(0.018, 0.16 + r() * 0.14), blade); const a = r() * 6.28, d = 0.08 + r() * 0.18; b.position.set(Math.cos(a) * d, 0.09, Math.sin(a) * d); b.rotation.set(r() * 0.5 - 0.25, r() * 3, r() * 0.6 - 0.3); letter.add(b); }
     letter.position.set(LETTER.x, groundAt(LETTER.x, LETTER.z), LETTER.z);
+    letter.scale.setScalar(2.2);   // lying small in the verge it read as a smudge from the camera; at 2.2 times the fold and its glint show
   }
 
   /* ---------- the bundle on the pack, shown once the letter is picked up ---------- */
