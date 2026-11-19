@@ -158,7 +158,7 @@ export async function steerTicket(db: Db, id: string, to: string, by: string, no
 
 /** A worker's move on the ticket it holds. Only the lane that holds the claim may move it. */
 export async function moveTicket(db: Db, id: string, lane: string | null, move: Move,
-                                 result: string | null, now = new Date(), look: string | null = null) {
+                                 result: string | null, now = new Date(), look: string | null = null, hold = false) {
   const t = await db.workTicket.findUnique({ where: { id } })
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (lane && t.lane !== lane) return { ok: false as const, status: 403, error: `This ticket is in the ${t.lane} lane` }
@@ -177,6 +177,10 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
     move === 'heartbeat' ? { leaseUntil: new Date(now.getTime() + LEASE_MS) }
     : move === 'done' ? { state: 'done', result, doneAt: now, leaseUntil: null, ...(basis ? { basis } : {}) }
     : move === 'failed' ? { state: 'failed', result, leaseUntil: null }
+    : move === 'release' && hold && (result ?? '').trim()
+      // A hold with a reason sticks: the ticket rests (not re-claimed, not re-announced) until an unhold move.
+      ? { state: 'held', claimedBy: null, leaseUntil: null, result,
+          basis: { ...((t.basis ?? {}) as object), hold: { reason: (result ?? '').trim(), by: t.claimedBy, at: now.toISOString() } } as Prisma.InputJsonValue }
     : { state: 'ready', claimedBy: null, leaseUntil: null, result }
   const ticket = await db.workTicket.update({ where: { id }, data })
   return { ok: true as const, ticket }

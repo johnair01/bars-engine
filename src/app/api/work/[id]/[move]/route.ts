@@ -9,6 +9,8 @@
  * @example POST /api/work/ckx123/retry {"aar":"COUNCIL/logs/AAR_2026-11-18_deepai-timeouts.md"}
  * @example POST /api/work/ckx123/close {"result":"https://github.com/johnair01/bars-engine/pull/872"}
  *   (close: council only; shuts a held, failed, ready or claimed ticket whose work is already done, which `done` refuses)
+ * @example POST /api/work/ckx123/release {"result":"needs his Mac","hold":true}
+ *   (`hold` with a reason: the ticket rests held with the reason kept as basis.hold, instead of going back to the deck)
  * @example POST /api/work/ckx123/done {"result":"https://github.com/wendell-britt/six-faces-council/pull/700","look":"lh-brass-look-3"}
  *   (`look` is optional: the board row of the look the voyage brought home; GET /api/work/rings reads it)
  * @agentDiscoverable false
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!t) return NextResponse.json({ error: 'No such ticket' }, { status: 404 })
   const who = isLane(t.lane) ? laneCaller(req, t.lane) : null
   if (!who) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const b = (await req.json().catch(() => ({}))) as { result?: unknown; look?: unknown; aar?: unknown }
+  const b = (await req.json().catch(() => ({}))) as { result?: unknown; look?: unknown; aar?: unknown; hold?: unknown }
   const result = typeof b.result === 'string' ? b.result.slice(0, 2000) : null
   if (move === 'unhold') {
     const u = await unholdTicket(db, id)
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane } }, { headers: NO_STORE })
   }
   const look = typeof b.look === 'string' && /^[A-Za-z0-9._:-]{1,120}$/.test(b.look) ? b.look : null
-  const r = await moveTicket(db, id, who === 'lane' ? t.lane : null, move as 'done', result, new Date(), look)
+  const r = await moveTicket(db, id, who === 'lane' ? t.lane : null, move as 'done', result, new Date(), look, b.hold === true)
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status })
   return NextResponse.json({ ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane,
     leaseUntil: r.ticket.leaseUntil, result: r.ticket.result } }, { headers: NO_STORE })
