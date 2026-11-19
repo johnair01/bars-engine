@@ -11,6 +11,7 @@ export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
   'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds', 'rows', 'stores', 'draws', 'records',
+  'proofs',   // Claude's proof for a kept Unpack reservation at proofs/<question>--<n>, read by the card (unpack-bud-proof-home-1)
   'battles',  // one battle's record at battles/<id>, written by board/copy_write.py
   'intake',   // the intake's one run at intake/latest, written by board/copy_write.py
   'constraint',  // the council's dated constraint read, one document a day
