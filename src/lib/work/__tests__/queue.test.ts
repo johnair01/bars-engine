@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, closeTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
 import { routeLane } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
@@ -241,5 +241,25 @@ describe('the claim loop guard', () => {
     const tickets = [{ id: 'a', state: 'held', attempts: MAX_ATTEMPTS, result: 'auto-held: x' }]
     await unholdTicket(fakeDb(tickets), 'a')
     expect(tickets[0]).toMatchObject({ state: 'ready', attempts: 0, result: null })
+  })
+})
+
+describe('closeTicket', () => {
+  it('closes a held or failed ticket with a draft link, which done refuses', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'held', basis: {} }, { id: 'f', lane: 'claude', state: 'failed', basis: {} }]
+    const db = fakeDb(tickets)
+    expect(await moveTicket(db, 'h', null, 'done', 'x')).toMatchObject({ ok: false, status: 409 })
+    const r = await closeTicket(db, 'h', 'built: https://github.com/johnair01/bars-engine/pull/872', 'council')
+    expect(r).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'done' })
+    expect((tickets[0].basis as { draft: { label: string } }).draft.label).toBe('bars-engine #872')
+    expect(await closeTicket(db, 'f', 'no code needed', 'council')).toMatchObject({ ok: true })
+  })
+
+  it('needs a result, leaves a done ticket alone and answers 404 for a missing one', async () => {
+    const db = fakeDb([{ id: 'd', lane: 'claude', state: 'done', basis: {} }, { id: 'h', lane: 'claude', state: 'held', basis: {} }])
+    expect(await closeTicket(db, 'h', ' ', 'council')).toMatchObject({ ok: false, status: 400 })
+    expect(await closeTicket(db, 'd', 'x', 'council')).toMatchObject({ ok: false, status: 409 })
+    expect(await closeTicket(db, 'nope', 'x', 'council')).toMatchObject({ ok: false, status: 404 })
   })
 })

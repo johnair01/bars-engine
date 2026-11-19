@@ -99,6 +99,25 @@ export async function unholdTicket(db: Db, id: string) {
 }
 
 /**
+ * Close a ticket the work behind it is already done for, whatever state it rests in (held, failed, ready or claimed).
+ * Found 2026-11-19: a held or failed ticket answers `release` and `done` with 409, so a ticket built by hand stayed in
+ * the queue for good. Council only. Needs a result (a pull request link, or one line saying no code was needed); a
+ * pull request link is kept as `basis.draft`, as `done` does. A ticket already done is left alone.
+ */
+export async function closeTicket(db: Db, id: string, result: string, by: string, now = new Date()) {
+  if (!result.trim()) return { ok: false as const, status: 400, error: 'close needs a result: the pull request link, or one line saying no code was needed' }
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state === 'done') return { ok: false as const, status: 409, error: 'The ticket is already done' }
+  const pr = result.match(/https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/)
+  const basis = { ...((t.basis ?? {}) as object), closed: { by, at: now.toISOString(), from: t.state },
+    ...(pr ? { draft: { url: pr[0], label: `${pr[2]} #${pr[3]}` } } : {}) }
+  const ticket = await db.workTicket.update({ where: { id }, data: {
+    state: 'done', result, doneAt: now, leaseUntil: null, basis: basis as Prisma.InputJsonValue } })
+  return { ok: true as const, ticket }
+}
+
+/**
  * Return a failed ticket to the deck, but only through a review. The move carries the name of the after-action
  * review that explains the failure (`aar`, a path or a link), and the failure it replaces is appended to the
  * basis so the retry does not erase what went wrong. A ticket that was not failed is left alone: `release`
