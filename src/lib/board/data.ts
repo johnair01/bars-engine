@@ -1,6 +1,7 @@
 import 'server-only'
 import { latestDocs, type Docs } from './store'
 import { leanDocs } from './pictures'
+import { SINGULAR, listOf } from './settled'
 
 /**
  * The board's cards and the answers on them, all from bars-engine's own store. `rows` holds one document per card, its
@@ -62,8 +63,8 @@ export function overlay(cards: Doc[], answers: Held): Doc[] {
 /** The store's one-document-per-entry resolved rows, back in the shape the page reads: `{ kind: { id: entry } }`. */
 export function foldResolved(docs: Held): Resolved {
   const out: Resolved = {}
-  for (const doc of Object.values(docs)) {
-    const kind = typeof doc.kind === 'string' ? doc.kind : ''
+  for (const [key, doc] of Object.entries(docs)) {
+    const kind = listOf(key, doc)
     const id = typeof doc.id === 'string' ? doc.id : ''
     if (!kind || !id) continue
     out[kind] = { ...(out[kind] ?? {}), [id]: without(doc, 'kind', 'id', 'savedAt') }
@@ -86,7 +87,8 @@ export function foldRecords(held: Held): Resolved {
     try { entry = JSON.parse(doc.body) } catch { continue }
     if (!entry || typeof entry !== 'object') continue
     const kind = doc.name.slice(0, at), id = doc.name.slice(at + 1)
-    out[kind] = { ...(out[kind] ?? {}), [id]: entry as Record<string, unknown> }
+    const list = SINGULAR[kind] ?? kind
+    out[list] = { ...(out[list] ?? {}), [id]: entry as Record<string, unknown> }
   }
   return out
 }

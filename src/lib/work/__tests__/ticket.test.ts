@@ -30,7 +30,7 @@ describe('ticketFromAnswer', () => {
     expect(ticketFromAnswer('council', 'questions', 'x', { steer: 'hold this' }, null)!.title).toBe('His answer on x')
   })
   it("honours a row's own lanes, known lanes only", () => {
-    expect(ticketFromAnswer('council', 'questions', 'x', { choice: 'A' }, { lanes: ['freebuff', 'zo'] })!.lanes).toEqual(['freebuff'])
+    expect(ticketFromAnswer('council', 'questions', 'x', { choice: 'A' }, { lanes: ['freebuff', 'nonesuch'] })!.lanes).toEqual(['freebuff'])
   })
 })
 

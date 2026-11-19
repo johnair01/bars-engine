@@ -7,11 +7,17 @@ afterEach(() => { setBackend(undefined); vi.unstubAllEnvs(); vi.unstubAllGlobals
 describe('allowedPath', () => {
   it('takes the board pages, pictures and studio files, and nothing else in the repo', () => {
     for (const p of ['board/council-board.html', 'board/nonprofit/nonprofit-board.html', 'board/board_data.json',
-      'board/stills/94a1067981bd2ba3.jpg', 'council/callsheets/stills/r 1/frames/a.PNG', 'council/callsheets/INDEX.md',
-      'council/loops/spirit-generator.json', 'council/ledger/2026-10-25-pull-014112.json', 'council/needs-work-done.json'])
+      'board/stills/94a1067981bd2ba3.jpg', 'council/callsheets/stills/r 1/frames/a.PNG',
+      'council/callsheets/stills/r 1/numbers.json', 'council/callsheets/stills/r 1/judge.json',
+      'council/callsheets/INDEX.md', 'council/loops/spirit-generator.json',
+      'council/ledger/2026-10-25-pull-014112.json', 'council/needs-work-done.json', 'council/faces.yaml',
+      'council/pipeline.yaml', 'ontology/manifest.yaml', 'ontology/v0.1/QUICKSTART.md', 'canon/mechanics/pier-walk.yaml',
+      'council/callsheets/hand-grip.md', 'council/look/floors.json'])
       expect(allowedPath(p), p).toBe(true)
-    for (const p of ['council/faces.yaml', 'board/stills/x.jpg', 'council/callsheets/stills/../../faces.png',
-      'council/callsheets/stills/a.glb', 'council/ledger/sub/x.json', '.env', 'board//council-board.html'])
+    for (const p of ['board/stills/x.jpg', 'council/callsheets/stills/../../faces.png',
+      'council/callsheets/stills/a.glb', 'council/callsheets/stills/r 1/notes.md', 'council/faces.yaml.bak',
+      'council/callsheets/stills/r 1/MANIFEST.md', 'council/callsheets/history/harbour.md',
+      'canon/mechanics/x.txt', 'council/ledger/sub/x.json', '.env', 'board//council-board.html'])
       expect(allowedPath(p), p).toBe(false)
   })
 })

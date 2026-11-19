@@ -5,6 +5,7 @@ import { heightAt } from './layout.js';
 import { colliders, interiors } from './world.js';
 import { roadGround } from './far.js';
 import { wayGround, wayColliders, stairTread } from './crag.js';
+import { MOVE, motion, vertical } from './move.js';
 
 // Round 19: a walking pace for the cultivation figure's stride (was 4 m/s, a run). Round 20: on the gentle stair one step
 // per 0.28 m tread at about two steps a second
@@ -54,27 +55,39 @@ export function collide(p) {
   }
 }
 
+// Round 30: walk, run (Shift, or input.run from the touch button) and jump (Space, or input.jump). The speed eases
+// toward its target (MOVE.accel, MOVE.decel); in the air the heading turns only by MOVE.airControl.
 export function step(A, input, dt, camYaw) {
-  const p = A.position;
+  const p = A.position, m = motion(A);
   let mx = 0, mz = 0;
   if (input.keys.size) {
     const f = (input.keys.has('w') || input.keys.has('arrowup') ? 1 : 0) - (input.keys.has('s') || input.keys.has('arrowdown') ? 1 : 0);
     const r = (input.keys.has('d') || input.keys.has('arrowright') ? 1 : 0) - (input.keys.has('a') || input.keys.has('arrowleft') ? 1 : 0);
     const sx = Math.sin(camYaw), cz = Math.cos(camYaw);
     mx = -sx * f + cz * r; mz = -cz * f - sx * r;
-    input.target = null;
-  } else if (input.target) {
+    if (f || r) input.target = null;
+  }
+  if (!mx && !mz && input.target) {
     mx = input.target.x - p.x; mz = input.target.z - p.z;
     if (Math.hypot(mx, mz) < 0.3) { input.target = null; mx = mz = 0; }
   }
-  const L = Math.hypot(mx, mz);
-  if (L > 0) {
-    mx /= L; mz /= L;
-    const v = stairTread(p.x, p.z) ? STAIR_SPEED : SPEED, sub = Math.ceil(v * dt / 0.2);
-    for (let i = 0; i < sub; i++) { p.x += mx * v * dt / sub; p.z += mz * v * dt / sub; p.y = groundAt(p.x, p.z); collide(p); }
-    A.rotation.y = Math.atan2(-mx, -mz);
+  const L = Math.hypot(mx, mz), running = !!(input.run || input.keys.has('shift')), stair = stairTread(p.x, p.z);
+  const want = L > 0 ? (stair ? (running ? MOVE.stairRun : MOVE.stair) : (running ? MOVE.run : MOVE.walk)) : 0;
+  m.v += Math.sign(want - m.v) * Math.min(Math.abs(want - m.v), (want > m.v ? MOVE.accel : MOVE.decel) * dt);
+  if (L > 0) { mx /= L; mz /= L;
+    const head = Math.atan2(-mx, -mz); let d = head - A.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+    A.rotation.y += m.air ? d * Math.min(1, dt * 12 * MOVE.airControl) : d; }
+  const v = m.v;
+  if (v > 1e-3) {
+    const hx = -Math.sin(A.rotation.y), hz = -Math.cos(A.rotation.y), sub = Math.ceil(v * dt / 0.2);
+    for (let i = 0; i < sub; i++) { const ox = p.x, oz = p.z;
+      p.x += hx * v * dt / sub; p.z += hz * v * dt / sub;
+      const g = groundAt(p.x, p.z);
+      if (m.air) { if (g > p.y + MOVE.landStep) { p.x = ox; p.z = oz; } } // in the air a wall face stops the figure
+      else if (g < p.y - MOVE.stepDown) { /* an edge: vertical() starts the fall */ } else p.y = g;
+      collide(p); }
   }
-  p.y = groundAt(p.x, p.z);
+  vertical(A, input, dt, groundAt(p.x, p.z));
   const r = inside(p);
   for (const it of interiors) it.roof.visible = it !== r;
   return r;

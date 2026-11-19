@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1420">
+<title>The moot</title>
+<!-- The clearing ring: the third room of two, reached by the veil from the Between (shared-pick-room-look-1, his A). clearing/clearing.js -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Marcellus&display=swap">
+<link rel="stylesheet" href="/between/garden.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #1b1420; overflow: hidden; }
+  #stage { position: fixed; inset: 0; touch-action: none; }
+  .top { position: fixed; z-index: 20; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+  .name { background: var(--glass); color: var(--glass-ink); backdrop-filter: blur(6px); border-radius: 14px; padding: 8px 12px; max-width: 62vw; }
+  .name b { font-family: var(--display); font-size: 1.02rem; display: block; } .name span { font-size: .78rem; color: var(--glass-muted); }
+  .top button { background: var(--glass); color: var(--glass-ink); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); min-height: 44px; border-radius: 12px; padding: 0 14px; font: inherit; }
+  .card { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(94vw, 560px); box-sizing: border-box;
+    background: var(--glass); color: var(--glass-ink); backdrop-filter: blur(6px); border-radius: 14px; padding: 10px 14px; display: grid; gap: 8px; }
+  .card b { font-family: var(--display); } .card .t { font-size: .9rem; color: var(--glass-muted); }
+  .card .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .card button { min-height: 44px; border-radius: 12px; padding: 0 14px; font: inherit; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.08); color: var(--glass-ink); }
+  .card button.go { background: #ffd08a; color: #2a1a08; border-color: #ffd08a; font-weight: 700; }
+  .card button.lit { border-color: #ffd08a; box-shadow: 0 0 0 1px #ffd08a inset; } .card button:disabled { opacity: .45; }
+  .loading { position: fixed; inset: 0; z-index: 60; background: #1b1420; color: #f3ece2; display: grid; place-items: center; text-align: center; font-family: Marcellus, serif; transition: opacity .8s; } .loading.gone { opacity: 0; pointer-events: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/", "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js" } }</script>
+</head><body>
+<div id="stage" aria-label="A clearing at dusk. Seven stones ring a small fire; two people stand inside. Drag to look around."></div>
+<div class="loading" id="loading"><div><h1>Through the veil</h1><p id="loadStep">the roots part…</p></div></div>
+<div class="top"><div class="name"><b>The moot</b><span id="sub"></span></div><button type="button" id="back">Back to the Between</button></div>
+<div class="card" id="card" role="status" aria-live="polite"></div>
+<script type="module" src="/between/clearing/clearing.js"></script>
+</body></html>

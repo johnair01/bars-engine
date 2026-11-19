@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { moveTicket, pushTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { routeLane } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -14,12 +15,21 @@ function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: 
         tickets.find(t => (where.id && t.id === where.id) || (where.sourceKey && t.sourceKey === where.sourceKey)) ?? null),
       findMany: vi.fn(async ({ where }: { where: { lane: string; state: string } }) =>
         tickets.filter(t => t.lane === where.lane && t.state === where.state)),
+      groupBy: vi.fn(async ({ where }: { where: { state: { in: string[] } } }) => {
+        const tally = new Map<string, number>()
+        for (const t of tickets) {
+          const st = t.state as string
+          if (where.state.in.includes(st)) tally.set(t.lane as string, (tally.get(t.lane as string) ?? 0) + 1)
+        }
+        return [...tally].map(([lane, n]) => ({ lane, state: 'ready', _count: { _all: n } }))
+      }),
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => { const t = { id: 't' + tickets.length, state: 'ready', ...data }; tickets.push(t); return t }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const t = tickets.find(x => x.id === where.id)!; Object.assign(t, data); return t }),
-      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date } }; data: Record<string, unknown> }) => {
+      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date }; attempts?: { gte: number } }; data: Record<string, unknown> }) => {
         const hit = tickets.filter(t => t.state === where.state
-          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt)
+          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt
+          && (!where.attempts || (t.attempts as number) >= where.attempts.gte))
         hit.forEach(t => Object.assign(t, data))
         return { count: hit.length } }),
     },
@@ -120,5 +130,116 @@ describe('the queue', () => {
       expect(await steerTicket(fakeDb(tickets), 'c', 'nowhere', 'owner')).toMatchObject({ ok: false, status: 400 })
       expect(await steerTicket(fakeDb(tickets), 'zz', 'claude', 'owner')).toMatchObject({ ok: false, status: 404 })
     })
+  })
+})
+
+describe('retry after a review', () => {
+  const failed = (extra = {}) => [{ id: 'f', state: 'failed', lane: 'deepai', lanes: ['deepai'], basis: {}, result: 'timed out after 25 min', claimedBy: 'deepai', leaseUntil: null, ...extra }]
+  it('returns a failed ticket to the deck and keeps the failure it replaces', async () => {
+    const tickets = failed()
+    const r = await retryTicket(fakeDb(tickets), 'f', 'COUNCIL/logs/AAR_2026-11-18_deepai-timeouts.md', 'council',
+      new Date('2026-11-18T20:30:00Z'))
+    expect(r).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'ready', claimedBy: null, leaseUntil: null, result: null })
+    const attempts = (tickets[0].basis as { attempts: { aar: string; failed: string; by: string }[] }).attempts
+    expect(attempts).toHaveLength(1)
+    expect(attempts[0]).toMatchObject({ aar: 'COUNCIL/logs/AAR_2026-11-18_deepai-timeouts.md', failed: 'timed out after 25 min', by: 'council' })
+  })
+  it('adds to the record, so a second failure does not overwrite the first', async () => {
+    const tickets = failed({ basis: { attempts: [{ at: '2026-11-18T19:00:00Z', by: 'council', aar: 'first.md', failed: 'a' }] } })
+    await retryTicket(fakeDb(tickets), 'f', 'second.md', 'council', new Date('2026-11-18T20:30:00Z'))
+    expect((tickets[0].basis as { attempts: unknown[] }).attempts).toHaveLength(2)
+  })
+  it('leaves a ticket that did not fail alone', async () => {
+    const tickets = [{ id: 'r', state: 'ready', lane: 'deepai', lanes: ['deepai'], basis: {}, result: null }]
+    expect(await retryTicket(fakeDb(tickets), 'r', 'x.md', 'council')).toMatchObject({ ok: false, status: 409 })
+    expect(tickets[0].state).toBe('ready')
+  })
+  it('refuses a ticket that does not exist', async () => {
+    expect(await retryTicket(fakeDb([]), 'zz', 'x.md', 'council')).toMatchObject({ ok: false, status: 404 })
+  })
+})
+
+describe('the ceiling', () => {
+  const full = (lane: string, n: number, state = 'ready') =>
+    Array.from({ length: n }, (_, i) => ({ id: `${lane}-${i}`, lane, state, sourceKey: `${lane}-${i}` }))
+  it('sends the answer past a lane that is at the ceiling into the next lit lane in his order', async () => {
+    const tickets = full('claude', 20)
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'freebuff' })
+  })
+  it('counts a lane\'s claimed tickets against the ceiling, so 3 ready and 17 claimed is full', async () => {
+    const tickets = [...full('claude', 3), ...full('claude', 17, 'claimed')]
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'freebuff' })
+  })
+  it('keeps the first lane while it has room', async () => {
+    const db = fakeDb(full('claude', 19))
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'claude' })
+  })
+  it('takes the lit lane with the shortest deck when every lane in his order is at the ceiling', async () => {
+    const tickets = [...full('claude', 30), ...full('freebuff', 25)]
+    const db = fakeDb(tickets, [{ lane: 'freebuff', dry: false, dryUntil: null }])
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+  })
+  it('gives DeepAI work once the lanes he named are full, without naming it in DEFAULT_LANES', async () => {
+    // The shape the live board was in on 2026-11-18: claude 3 ready + 40 claimed, freebuff 75, deepai 0.
+    const tickets = [...full('claude', 3), ...full('claude', 40, 'claimed'), ...full('freebuff', 75)]
+    const db = fakeDb(tickets)
+    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+  })
+  it('never routes to zo, so the closing lever keeps its monopoly', () => {
+    expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), {})).toMatchObject({ lane: 'claude' })
+    expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), { claude: 40 })).toMatchObject({ lane: 'claude' })
+    expect(routeLane(['zo'], new Set(['zo']), {})).toMatchObject({ lane: 'zo' })
+  })
+  it('reports no lane when every lane in the order has its lamp out', () => {
+    expect(routeLane(['claude', 'freebuff'], new Set(), {})).toBeNull()
+  })
+  it('names why it routed: his order while the lane has room, the ceiling otherwise', () => {
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 19 }))
+      .toEqual({ lane: 'claude', reason: 'order' })
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 20 }))
+      .toEqual({ lane: 'freebuff', reason: 'order' })
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 20, freebuff: 24 }))
+      .toEqual({ lane: 'claude', reason: 'ceiling' })
+    expect(routeLane(['claude', 'freebuff'], new Set(['claude', 'freebuff']), { claude: 41, freebuff: 25 }))
+      .toEqual({ lane: 'freebuff', reason: 'ceiling' })
+  })
+})
+
+describe('lane status', () => {
+  const now = new Date('2026-11-16T12:00:00Z')
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000)
+  it('is dry when the lamp is out, whatever it claimed', () => {
+    expect(laneStatus(false, hoursAgo(1), now)).toBe('dry')
+  })
+  it('is live when a lit lane touched a ticket in the last 24 hours', () => {
+    expect(laneStatus(true, hoursAgo(23), now)).toBe('live')
+  })
+  it('is quiet when a lit lane has gone a day or more without a claim, or never claimed', () => {
+    expect(laneStatus(true, hoursAgo(49), now)).toBe('quiet')
+    expect(laneStatus(true, null, now)).toBe('quiet')
+  })
+})
+
+describe('the claim loop guard', () => {
+  const now = new Date('2026-11-18T18:00:00Z')
+  const lapsed = new Date('2026-11-18T17:00:00Z')
+  it('returns a lapsed ticket to ready while it has attempts left', async () => {
+    const tickets = [{ id: 'a', state: 'claimed', leaseUntil: lapsed, attempts: MAX_ATTEMPTS - 1 }]
+    await returnLapsed(fakeDb(tickets), now)
+    expect(tickets[0]).toMatchObject({ state: 'ready', leaseUntil: null })
+  })
+  it('holds a ticket whose lease lapsed MAX_ATTEMPTS times, with the reason, and does not return it', async () => {
+    const tickets: Record<string, unknown>[] = [{ id: 'a', state: 'claimed', leaseUntil: lapsed, attempts: MAX_ATTEMPTS }]
+    await returnLapsed(fakeDb(tickets), now)
+    expect(tickets[0]).toMatchObject({ state: 'held', leaseUntil: null })
+    expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times/)
+  })
+  it('lifting the hold starts the count again', async () => {
+    const tickets = [{ id: 'a', state: 'held', attempts: MAX_ATTEMPTS, result: 'auto-held: x' }]
+    await unholdTicket(fakeDb(tickets), 'a')
+    expect(tickets[0]).toMatchObject({ state: 'ready', attempts: 0, result: null })
   })
 })

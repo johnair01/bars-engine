@@ -149,9 +149,9 @@ describe('the picture gate (a look he cannot see is refused)', () => {
   })
   it('refuses a bars-engine app page or a /board/look page with no picture as Open it', () => {
     const still = 'https://bars-engine.vercel.app/board/stills/0123456789abcdef.jpg'
-    expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/ontology-game/between' })[0]).toMatch(/app page/)
+    expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/between' })[0]).toMatch(/app page/)
     expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/board/look?t=x' })[0]).toMatch(/names no picture/)
     expect(lookErrors('x-look-1', { look: true, still, href: 'https://bars-engine.vercel.app/board/look?t=x&i=a.jpg',
-      href2: 'https://bars-engine.vercel.app/ontology-game/between' })).toEqual([])
+      href2: 'https://bars-engine.vercel.app/between' })).toEqual([])
   })
 })

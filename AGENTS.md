@@ -40,6 +40,9 @@ environment").
 - If `npm run smoke` output disagrees with `npm run diagnose:db`, prefer `diagnose:db` for factual DB source and connectivity.
 - Keep migration discipline: use Prisma migrations (`migrate dev`/`migrate deploy`), never `db push` for shared/prod flows.
 - The Council Board's MCP server is `POST /api/mcp` (`src/app/api/mcp/route.ts`): `post_rows`, `read_rows`, `put_picture`,
-  `read_picture`, `list_pictures`, `post_board_docs` and `whoami` for agents with no shell, gated by `COUNCIL_MENU_TOKEN`.
-  It writes through `sessionWrite`, and `src/lib/board/picture-store.ts` stores each picture once under its sha256, so the
-  row rule and the picture gate stay the board's own (the council's `docs/mcp-board.md`).
+  `read_picture`, `list_pictures`, `post_board_docs`, `whoami`, and the pipeline door's `pipeline.status`, `pipeline.next`,
+  `loop.checks`, `asset.brief`, `asset.verify`, `canon.lookup`, `ontology.profile`, `mechanic.eval` and `faces.lens` for
+  agents with no shell, gated by `COUNCIL_MENU_TOKEN`. It writes through `sessionWrite`, and
+  `src/lib/board/picture-store.ts` stores each picture once under its sha256, so the row rule and the picture gate stay the
+  board's own (the council's `docs/mcp-board.md`). The door reads, it does not judge: `src/lib/board/pipeline.ts` reads
+  the loop, the callsheet, the canon and a round's `judge.json` receipt, which `council/judge/run_loop.py` writes.
