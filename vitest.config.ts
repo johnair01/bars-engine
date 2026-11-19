@@ -127,6 +127,7 @@ export default defineConfig({
       'src/lib/work/__tests__/ticket.test.ts',
       'src/lib/work/__tests__/then-text.test.ts',
       'src/lib/work/__tests__/queue.test.ts',
+      'src/lib/work/__tests__/claim-cap.test.ts',
       'src/lib/work/__tests__/stats.test.ts',
       'src/lib/work/__tests__/homeport.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',

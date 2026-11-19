@@ -17,8 +17,14 @@ export type Lane = (typeof LANES)[number]
  * quality can be measured before it carries work he did not route to it himself.
  */
 export const DEFAULT_LANES: Lane[] = ['claude', 'freebuff']
-/** A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. */
-export const LEASE_MS = 2 * 60 * 60 * 1000
+/**
+ * A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. Six hours
+ * is the time a worker really takes on a ticket: at two hours a ticket under work lapsed and was claimed and announced
+ * again (2026-11-18: 37 tickets went round 18 to 30 times).
+ */
+export const LEASE_MS = 6 * 60 * 60 * 1000
+/** Most live claims one lane holds at once. A fifth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"). */
+export const LANE_WORKERS = 4
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */
 export const DRY_MS = 5 * 60 * 60 * 1000
 /** The furthest out he can set the renewal gate by hand. Beyond this the gate is a guess, not a signal. */
