@@ -129,7 +129,11 @@ function chainSkin(ch, W) { // the points follow their nodes, each node turned f
 // of the `robe` part below the knee hangs on SKIRT.cols chains of SKIRT.n bones, a ring of columns round the legs. A point
 // follows the two columns on either side of it (by its angle about the hips) and, in each, the two nodes either side of it
 // (by its height); the trousers stay their own layer, so legPush after the chains keeps the cloth off the leg capsules.
-export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.13, from: 0.04, soft: 0.25 };
+export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.085, from: 0.04, soft: 0.25,
+  // clothing-bones-look-5: his note, "the skirt chains are getting closer. A slit down the side and the front should solve for a lot of the issues".
+  // The chains hang closer (max 0.13 -> 0.085) and the skirt is cut open at the front and both sides: a point either side of a cut follows
+  // only its own column, so the two edges swing apart instead of dragging one another through the legs. slits are the column gaps (k = between column k and k+1).
+  slits: [0, 4, 12], slitHalf: 0.12 };
 function skirtOf(X, pt) {
   // pt.world is in the figure's fit frame, the bones are in heaven's: take the knee and the hips' centre from the fit frame itself
   const F = X.F, n = pt.world.length / 3, K = SKIRT, hip = wp(F.bones.hipL), leg = hip.distanceTo(wp(F.bones.kneeL));
@@ -139,7 +143,8 @@ function skirtOf(X, pt) {
   const j0 = new Uint16Array(n), wj = new Float32Array(n), c0 = new Uint16Array(n), wc = new Float32Array(n), r = new Float32Array(n);
   for (let i = 0; i < n; i++) { const x = pt.world[i * 3], y = pt.world[i * 3 + 1], z = pt.world[i * 3 + 2];
     const u = THREE.MathUtils.clamp((yTop - y) / (yTop - yLow || 1), 0, 1), f = u * (K.n - 1); j0[i] = Math.min(K.n - 2, Math.floor(f)); wj[i] = f - j0[i];
-    const a = (Math.atan2(z - hips.z, x - hips.x) / (2 * Math.PI) + 1) % 1 * K.cols; c0[i] = Math.floor(a) % K.cols; wc[i] = a - Math.floor(a);
+    const a = ((Math.atan2(z - hips.z, x - hips.x) / (2 * Math.PI) + 1) % 1 * K.cols + 0.5) % K.cols; c0[i] = Math.floor(a) % K.cols; wc[i] = a - Math.floor(a);
+    if (K.slits.includes(c0[i])) wc[i] = ramp(0.5 - K.slitHalf, 0.5 + K.slitHalf, wc[i]); // the cut: a point beside it follows one column only; a narrow band blends so no long sliver spans the gap
     r[i] = ramp(0, K.soft, u); } // the first quarter of the drop stays skinned
   const cfg = { n: K.n, hz: K.hz, zeta: K.zeta, max: K.max };
   return { skirt: true, cfg, N: K.n, j0, wj, c0, wc, r, cols: Array.from({ length: K.cols }, () => ({ cfg, N: K.n, x: null, v: null, T0: null, len: null })) };
