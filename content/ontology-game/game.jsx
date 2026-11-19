@@ -742,6 +742,10 @@
             { name: "Neutrality", element: "Earth", color: "earth" }
         ];
 
+        // The channel's satisfied name (records/emotional-state-engine section 2). A modifier on the
+        // channel, never a separate vocabulary.
+        const SATISFIED_NAMES = { anger: "Triumph", fear: "Wonder", sadness: "Poignance", joy: "Bliss", neutrality: "Peace" };
+
         const faces = [
             { name: "Magenta", description: "Knows through presence and relational field" },
             { name: "Red", description: "Knows through power, force, capacity" },
@@ -902,6 +906,31 @@
             let bin = "";
             bytes.forEach(b => { bin += String.fromCharCode(b); });
             return PORTABLE_CODE_PREFIX + btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        };
+        // OAG2: the claim code (spec ontology-game-bar-claim). Carried only when the player presses
+        // "Carry this to the engine"; the fragment never reaches a server log. The checksum is the
+        // first 8 hex chars of SHA-256 over the base64url body: it catches a copy error, nothing more.
+        const CLAIM_CODE_PREFIX = "OAG2.";
+        const GAME_BUILD_ID = "oag-claim-1";
+        const encodeClaimCode = async (summary, claims) => {
+            const lower = (o) => Object.fromEntries(Object.entries(o || {}).map(([k, v]) => [k.toLowerCase(), v]));
+            const payload = {
+                v: 2,
+                build: GAME_BUILD_ID,
+                s: {
+                    totalCycles: (summary && summary.totalCycles) || 0,
+                    channelCounts: lower(summary && summary.channelCounts),
+                    channelsSatisfied: lower(summary && summary.channelsSatisfied),
+                },
+                k: claims.map(c => [c.at, c.channel, c.lens, c.named, c.words || ""]),
+            };
+            const bytes = new TextEncoder().encode(JSON.stringify(payload));
+            let bin = "";
+            bytes.forEach(b => { bin += String.fromCharCode(b); });
+            const body = btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+            const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(body));
+            const sum = Array.from(new Uint8Array(digest)).slice(0, 4).map(b => b.toString(16).padStart(2, "0")).join("");
+            return CLAIM_CODE_PREFIX + body + "." + sum;
         };
         const decodePortableCoachCode = (code) => {
             if (!code || !code.startsWith(PORTABLE_CODE_PREFIX)) return null;
@@ -1675,6 +1704,11 @@
             const [primaryChannel, setPrimaryChannel] = useState(null);
             const [primaryFace, setPrimaryFace] = useState(null);
             const [resolvedThreads, setResolvedThreads] = useState([]); // {channel, face, belief, passive, endState}
+            // Claims the player named on the naming card: {at, channel, lens, named, words}.
+            // Reset by handleNewCycle like resolvedThreads; only a press on a sentence adds one.
+            const [namedClaims, setNamedClaims] = useState([]);
+            const [claimPick, setClaimPick] = useState(null); // altitude key pressed on the open card
+            const [claimWords, setClaimWords] = useState("");
             const [deferredThreads, setDeferredThreads] = useState([]); // {channel, face} named but not yet worked
             const [recheckTarget, setRecheckTarget] = useState(null); // {channel, face} currently being checked back on
             // The satisfaction state ("dissatisfied" | "neutral" | "satisfied") the channel
@@ -2316,6 +2350,32 @@
                 }
                 logRoute({ kind: "stop", channel: selectedChannel, face: selectedFace, endState: state, job: jobTextFor(selectedChannel) });
                 setResolvedThreads(prev => [...prev, { channel: selectedChannel, face: selectedFace, belief: userBelief, passive: false, endState: state }]);
+                // The naming card (FR-001, FR-010): only after satisfied, never in Demo Mode.
+                if (state === "satisfied" && !demoMode) {
+                    setClaimPick(null);
+                    setClaimWords("");
+                    setPhase("phase5-name-claim");
+                    return;
+                }
+                afterThreadResolved();
+            };
+
+            // Pressing a sentence names the claim (FR-004). The thread is already recorded.
+            const handleClaimPick = (altitude) => {
+                if (claimPick) return;
+                setClaimPick(altitude);
+                setNamedClaims(prev => [...prev, {
+                    at: Date.now(), channel: selectedChannel.toLowerCase(),
+                    lens: selectedFace.toLowerCase(), named: altitude, words: "",
+                }]);
+            };
+            const handleClaimDone = () => {
+                const words = claimWords.trim().slice(0, 280);
+                if (claimPick && words) {
+                    setNamedClaims(prev => prev.map((c, i) => i === prev.length - 1 ? { ...c, words } : c));
+                }
+                setClaimPick(null);
+                setClaimWords("");
                 afterThreadResolved();
             };
 
@@ -2844,6 +2904,9 @@
             };
 
             const handleNewCycle = () => {
+                setNamedClaims([]);
+                setClaimPick(null);
+                setClaimWords("");
                 beginBodyScan();
                 setPhase("phase1");
                 setSelectedChannel(null);
@@ -4674,6 +4737,47 @@
                 );
             }
 
+            if (phase === "phase5-name-claim") {
+                const ckey = selectedChannel.toLowerCase();
+                const cname = SATISFIED_NAMES[ckey];
+                return (
+                    <div className="container">
+                        <div className="card claim-card" data-claim-card>
+                            <h2>{cname}</h2>
+                            <div className="claim-sentences">
+                                {faces.map(f => {
+                                    const alt = f.name.toLowerCase();
+                                    if (claimPick && claimPick !== alt) return null;
+                                    return (
+                                        <button
+                                            key={alt}
+                                            type="button"
+                                            className={"claim-sentence claim-" + alt + (claimPick === alt ? " picked" : "")}
+                                            data-claim-sentence={alt}
+                                            aria-pressed={claimPick === alt}
+                                            onClick={() => handleClaimPick(alt)}
+                                        >
+                                            {stems[ckey][alt].satisfied}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {claimPick ? (
+                                <div className="claim-words">
+                                    <label htmlFor="claim-words-input">In your words (optional)</label>
+                                    <input id="claim-words-input" type="text" maxLength={280} value={claimWords}
+                                        onChange={(e) => setClaimWords(e.target.value)} />
+                                    <button className="secondary" data-claim-done onClick={handleClaimDone}>Continue</button>
+                                </div>
+                            ) : (
+                                <button className="quiet" data-claim-notnow onClick={handleClaimDone}>Not now</button>
+                            )}
+                        </div>
+                        {debugPanel}
+                    </div>
+                );
+            }
+
             if (phase === "phase-multiplicity-check") {
                 const hasRoom = remainingChannelsForBranch().length > 0;
                 // UX polish bundle (Simulated Playtesting doc, Speed/Blockers section, Sept 23,
@@ -5366,6 +5470,24 @@
                                 </div>
                             ) : (
                                 <p className="prompt">You've completed one full cycle.</p>
+                            )}
+                            {ON_SITE && namedClaims.length > 0 && (
+                                <div className="mini-section">
+                                    <button className="secondary" data-claim-carry onClick={async () => {
+                                        // This cycle's own counts are added to the loaded summary so the
+                                        // denominator includes the cycle that was just named.
+                                        const prior = patternSummary || {};
+                                        const channelCounts = { ...(prior.channelCounts || {}) };
+                                        resolvedThreads.forEach(t => { channelCounts[t.channel] = (channelCounts[t.channel] || 0) + 1; });
+                                        const summary = {
+                                            totalCycles: (prior.totalCycles || 0) + 1,
+                                            channelCounts,
+                                            channelsSatisfied: mergeChannelsSatisfied(prior.channelsSatisfied, resolvedThreads),
+                                        };
+                                        const code = await encodeClaimCode(summary, namedClaims);
+                                        window.open("/claim#" + code, "_blank", "noopener");
+                                    }}>Carry this to the engine</button>
+                                </div>
                             )}
                             {coachShareCode && (
                                 <div className="mini-section">

@@ -609,3 +609,14 @@
         .daemon-interview { border-left: 3px solid #ffd166; }
         .record-entry p { margin: 0.15rem 0; font-size: 0.9rem; }
         .record-switch input { vertical-align: middle; }
+
+        /* Naming card (ontology-game-bar-claim): one title, six sentences, altitude colour as a left rule. */
+        .claim-card h2 { font-size: 1.8rem; margin-bottom: 1rem; }
+        .claim-sentences { display: flex; flex-direction: column; gap: 0.6rem; }
+        .claim-sentence { width: 100%; text-align: left; border-left: 4px solid var(--claim-rule, #888); padding: 0.8rem 1rem; line-height: 1.4; transition: opacity 0.3s; }
+        .claim-sentence.picked { background: rgba(255,255,255,0.08); }
+        .claim-magenta { --claim-rule: #d946ef; } .claim-red { --claim-rule: #ef4444; } .claim-amber { --claim-rule: #f59e0b; }
+        .claim-orange { --claim-rule: #fb923c; } .claim-green { --claim-rule: #4ade80; } .claim-teal { --claim-rule: #2dd4bf; }
+        .claim-words { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .claim-words input { width: 100%; padding: 0.6rem; }
+        .claim-card .quiet { margin-top: 1rem; }
