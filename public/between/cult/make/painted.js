@@ -64,6 +64,22 @@ float brick(vec2 q) {
   return smoothstep(0.06, 0.06 + mw, mort) * (0.85 + 0.15 * fx);
 }
 `;
+// round 3: the fold map, loaded once; until it arrives a flat normal stands in
+let FOLD = null;
+function foldMap() {
+  if (FOLD) return FOLD;
+  const flat = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1); flat.needsUpdate = true; FOLD = flat;
+  new THREE.TextureLoader().load(new URL('./folds-normal.png', import.meta.url).href, t => { t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.colorSpace = THREE.NoColorSpace; t.needsUpdate = true; FOLD = t; for (const m of FOLD_USERS) m.value = t; });
+  return flat;
+}
+const FOLD_USERS = [];
+// the torso weight of a shell: the share of each vertex's skin weight on the trunk bones, so the arms stay flat
+function torsoWeight(g, C) {
+  const SI = g.attributes.skinIndex, SW = g.attributes.skinWeight, n = g.attributes.position.count, T = new Set(['spine01', 'spine', 'spine03', 'hips'].map(b => C.bn.indexOf(b)).filter(i => i >= 0)), out = new Float32Array(n);
+  if (!SI) return out.fill(1);
+  for (let i = 0; i < n; i++) { let w = 0; for (let j = 0; j < 4; j++) if (T.has(SI.getComponent(i, j))) w += SW.getComponent(i, j); out[i] = Math.min(1, Math.max(0, (w - 0.35) / 0.4)); }
+  return out;
+}
 export function paint(pt, rp, sh, kind, C) {
   const k = C.k, col = h => new THREE.Color(h || '#000');
   const U = {
@@ -89,6 +105,11 @@ export function paint(pt, rp, sh, kind, C) {
     uRankT: { value: new THREE.Vector3(...((rp.rank && rp.rank.tri) || [1, 1, 1])) },
     uBrW: { value: (kind === 'shell' && rp.bracer && pt.mesh.geometry.userData.bracerW) || 0 }, uBrC: { value: col(rp.bracer) }, uBrE: { value: col(rp.bracerBand || '#e6d9bd') }, uBrB: { value: (rp.bracerBandW ?? 0.011) * k },
   };
+  // elder regalia round 3: the baked fold normal map (scripts/regalia/make_fold_normals.py) on the torso, where aFold (the
+  // shell's torso skin weight, written below) is on
+  const fm = foldMap(); Object.assign(U, { uFoldMap: { value: fm }, uFoldS: { value: sh.foldS ?? 3.0 }, uFy0: { value: C.yWaist }, uFy1: { value: (C.ySh ?? C.yNeck) + 0.03 * k }, uFoldOn: { value: kind === 'shell' && rp.folds !== false ? 1 : 0 } });
+  if (kind === 'shell') FOLD_USERS.push(U.uFoldMap);
+  if (kind === 'shell') pt.mesh.geometry.setAttribute('aFold', new THREE.Float32BufferAttribute(torsoWeight(pt.mesh.geometry, C), 1));
   // shells round 4: the cross collar's lines as uniforms, so the V band, the lapped edge and its shadow are measured per
   // fragment, perpendicular to each line (round 3 wrote them per vertex on big triangles: a notch, a ragged band)
   const Lc = C.Lc || { yN: 1, wN: 0, yc: 0, xc: 0, p: 1, e: 0.05, B: 0.03, s0: 0, s1: 0 };
@@ -98,9 +119,23 @@ export function paint(pt, rp, sh, kind, C) {
     : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
   mat.onBeforeCompile = s => {
     Object.assign(s.uniforms, U);
-    s.vertexShader = 'attribute float aEdgeC; attribute float aEdgeH; attribute float aLap; attribute float aSeam; attribute vec3 aRest;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdgeC = aEdgeC; vEdgeH = aEdgeH; vLap = aLap; vSeam = aSeam; vRest = aRest;');
-    s.fragmentShader = 'varying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\nuniform float uWeave; uniform float uWeaveS; uniform vec3 uWeaveC; uniform float uMotif; uniform vec3 uMotifC;\nuniform float uRank; uniform vec3 uRankC; uniform float uRankY; uniform float uRankS; uniform vec3 uRankT;\n' + GLSL_COLLAR + GLSL_WEAVE
+    s.vertexShader = 'attribute float aEdgeC; attribute float aEdgeH; attribute float aLap; attribute float aSeam; attribute vec3 aRest; attribute float aFold;\nvarying float vFold;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdgeC = aEdgeC; vEdgeH = aEdgeH; vLap = aLap; vSeam = aSeam; vRest = aRest; vFold = aFold;');
+    s.fragmentShader = 'varying float vFold; uniform sampler2D uFoldMap; uniform float uFoldS; uniform float uFy0; uniform float uFy1; uniform float uFoldOn;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\nuniform float uWeave; uniform float uWeaveS; uniform vec3 uWeaveC; uniform float uMotif; uniform vec3 uMotifC;\nuniform float uRank; uniform vec3 uRankC; uniform float uRankY; uniform float uRankS; uniform vec3 uRankT;\n' + GLSL_COLLAR + GLSL_WEAVE
       + 'float gBand = 0.0; float gWeave = 0.0; float gMetal = 0.0;\n' + s.fragmentShader.replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_SHEEN\nmaterial.sheenColor *= 1.0 - gBand;\n#endif\nmaterial.specularColor *= 1.0 - 0.85 * gBand; material.specularF90 *= 1.0 - 0.85 * gBand; material.roughness = mix(material.roughness, 1.0, gBand);\nmaterial.roughness = mix(material.roughness, 0.5, gWeave); material.specularColor = mix(material.specularColor, vec3(0.09), gWeave);\nmaterial.roughness = mix(material.roughness, 0.32, gMetal); material.specularColor = mix(material.specularColor, uMotifC, gMetal); material.specularF90 = mix(material.specularF90, 1.0, gMetal);') // round 4 fix 3: nor a grazing highlight (from the side, the band's edge-on glint read as a grey line along her V) // round 4: no satin sheen on the collar band (at a grazing angle it greyed the black band into smoke)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+if (uFoldOn > 0.5 && vFold > 0.02) {
+  // the baked folds: cylindrical coordinates of the rest position; the wrap at the back seam would break the screen-space
+  // derivatives, so they are taken from whichever of two phases is continuous there
+  float ph = atan(vRest.x, vRest.z) / 6.2831853; float u1 = ph + 0.5, u2 = fract(ph + 1.0);
+  float vv = clamp((vRest.y - uFy0) / max(uFy1 - uFy0, 1e-3), 0.0, 1.0);
+  vec2 d1x = vec2(dFdx(u1), dFdx(vv)), d1y = vec2(dFdy(u1), dFdy(vv)), d2x = vec2(dFdx(u2), dFdx(vv)), d2y = vec2(dFdy(u2), dFdy(vv));
+  bool use2 = abs(d2x.x) + abs(d2y.x) < abs(d1x.x) + abs(d1y.x);
+  vec2 st0 = use2 ? d2x : d1x, st1 = use2 ? d2y : d1y;
+  vec3 mapN = texture2D(uFoldMap, vec2(u1, vv)).xyz * 2.0 - 1.0; mapN.xy *= uFoldS * vFold * faceDirection;
+  vec3 q0 = dFdx(-vViewPosition), q1 = dFdy(-vViewPosition), N0 = normalize(normal), q1p = cross(q1, N0), q0p = cross(N0, q0);
+  vec3 Tt = q1p * st0.x + q0p * st1.x, Bb = q1p * st0.y + q0p * st1.y; float det = max(dot(Tt, Tt), dot(Bb, Bb)), sc = det == 0.0 ? 0.0 : inversesqrt(det);
+  normal = normalize(Tt * (mapN.x * sc) + Bb * (mapN.y * sc) + N0 * mapN.z);
+}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 {
   vec3 c = diffuseColor.rgb; float th = atan(vRest.x, vRest.z); float aa = 0.0012;
@@ -117,6 +152,8 @@ export function paint(pt, rp, sh, kind, C) {
   // fine twill grain under it. The cloth's own coordinates: arc round the body and height; on a bell, arc and length
   if (uWeave > 0.0) { vec2 wq = uKind == 2 ? vec2(vSeam, vEdgeH) : vec2(th * length(vRest.xz), vRest.y);
     vec2 wv = weave(wq / (uWeaveS * uK), wq / uK); c = mix(c, mix(c, uWeaveC, 0.3) * (1.0 + 0.12 * uWeave), wv.x * uWeave); c *= 1.0 + 0.05 * uWeave * wv.y; gWeave = wv.x * uWeave; }
+  // the baked folds' cavity (alpha of the fold map): the valleys take less light, so the folds read on a dark cloth too
+  if (uFoldOn > 0.5 && vFold > 0.02) { float fv = clamp((vRest.y - uFy0) / max(uFy1 - uFy0, 1e-3), 0.0, 1.0); c *= mix(1.0, texture2D(uFoldMap, vec2(th / 6.2831853 + 0.5, fv)).a, vFold); }
   // seams: shoulder (a line round the arm just past the joint) and the side seams of torso and skirt
   if (uKind == 0) c *= 1.0 - 0.22 * (1.0 - smoothstep(0.0008, 0.0024, abs(vSeam)));
   if (uKind != 2) { float sd = min(abs(th - 1.5708), abs(th + 1.5708)) * length(vRest.xz); c *= 1.0 - 0.14 * (1.0 - smoothstep(0.0008, 0.0025, sd)); }

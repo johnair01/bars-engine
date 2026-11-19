@@ -534,7 +534,7 @@ function openShell(C, reg, rp, pc, sh0, G, kind) {
   const wrap = C.wrap, Lc0 = C.Lc, vSym = C.vSym; C.wrap = null; // the V measure stays the robe's
   const p2 = { ...pc, lining: pc.lining || (outer ? pc.color : undefined), collarColor: pc.band || pc.trim || pc.color, collarW: pc.collarW ?? 0.03, trim: pc.band || pc.trim || pc.color, hemBand: pc.hemBand ?? 0.03 };
   const { g, W, Lc } = bodyShell(C, p2, sh); C.Lc = Lc; const out = [];
-  const pt = G.skinned(C, g, W, pc.color, kind + '-shell', outer ? 5.5 : 6); paint(pt, p2, sh.bell ? { ...sh, cuffW: 0 } : { ...sh, cuffW: outer ? undefined : (pc.trimW ?? 0.03) }, 'shell', C); armpitFix(C, pt); out.push(pt);
+  const pt = G.skinned(C, g, W, pc.color, kind + '-shell', outer ? 5.5 : 6); paint(pt, p2, sh.bell ? { ...sh, cuffW: 0 } : { ...sh, cuffW: outer ? undefined : (pc.trimW ?? 0.03) }, 'shell', C); armpitFix(C, pt, 0.034); out.push(pt);
   if (outer) {
     const yHem = Math.max(0.034 * k, (pc.hem ?? 0.035) * C.S), sk = sh0.skirtEase ?? 0.028;
     const L = G.loft(C, { yTop: C.yNeck + 0.02 * k, yHem, regionAt: G.torsoOK(C, true), ease: Math.max(sk + 0.012, easeUp + 0.004), flare: pc.flare || 0, folds: 0, cinch: null, topEase: 0.012, yoke: 0.03, tcut: true });
