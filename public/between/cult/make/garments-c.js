@@ -415,7 +415,7 @@ function skinned(C, g, W, color, name, layer, { lining = 0.55, surface = null } 
   const back = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, color: new THREE.Color(lining, lining, lining), side: THREE.BackSide });
   if (surface === 'gauze') { back.color.setRGB(0.92, 0.92, 0.92); for (const x of [mat, back]) { x.transparent = true; x.opacity = 0.55; x.depthWrite = false; } }
   const m = new THREE.SkinnedMesh(g, mat), mb = new THREE.SkinnedMesh(g, back);
-  for (const x of [m, mb]) { x.frustumCulled = false; F.mesh.parent.add(x); x.bind(sk, BM); }
+  for (const x of [m, mb]) { x.frustumCulled = false; x.name = name; F.mesh.parent.add(x); x.bind(sk, BM); }
   return { name, layer, mesh: m, back: mb, geo: g, world, edge: g.userData.edge };
 }
 
@@ -697,10 +697,15 @@ function elderCrown(C, opt, kp, H, hi, add) {
     for (const i of C.uniq) { if (C.dom[i] !== hi) continue; const p = C.pos(i); if (Math.abs(p.y - cy) < 0.008 * k) rB = Math.max(rB, Math.hypot(p.x - H0.x, p.z - H0.z)); } rB += 0.012 * k;
     const tq = new THREE.Quaternion().setFromUnitVectors(V(0, 0, 1), up);
     add(new THREE.TorusGeometry(rB, 0.006 * k, 8, 40), new THREE.Matrix4().compose(H0, tq, V(1, 1, 1.15)), gold, 'head', 'hair-crown');
-    for (let j = 0; j < 9; j++) { const a = (j - 4) / 4 * 1.05, out = V().addScaledVector(f, Math.cos(a)).addScaledVector(l, Math.sin(a)), hgt = (0.16 - 0.07 * Math.abs(j - 4) / 4) * k; // round 1b: the fan stands 16 cm at the centre, so it reads in silhouette across a courtyard as the man's winged crown does
-      const b0 = H0.clone().addScaledVector(out, rB * 1.02), dir = out.clone().multiplyScalar(0.18).add(up).normalize(), side = up.clone().cross(out).normalize();
-      add(new THREE.BoxGeometry(0.036 * k, hgt, 0.003 * k), Mb(side, dir, side.clone().cross(dir), b0.clone().addScaledVector(dir, hgt / 2)), gold, 'head', 'hair-crown');
-      add(new THREE.SphereGeometry(0.0075 * k, 10, 8), new THREE.Matrix4().makeTranslation(...b0.clone().addScaledVector(dir, hgt + 0.004 * k).toArray()), face, 'head', 'hair-crown'); }
+    // round 2 (design 2026-11-19, the Sage's order: widen the outline, not the height): the fan is 26 cm across at its top and 14 cm tall,
+    // a cone of black lacquer (the back plate) opening from the head ring, with the gold plates laid on its face, so in a black silhouette
+    // it reads as one wide shape. The plates lean out along the cone (0.46 out per 1 up) and stand 1 cm short of its rim
+    const hF = 0.14 * k, rT = 0.15 * k, A = 1.05, lean = (rT - rB * 0.96) / hF;
+    add(new THREE.CylinderGeometry(rT, rB * 0.96, hF, 28, 1, true, -A, 2 * A), new THREE.Matrix4().makeBasis(l, up, f).setPosition(H0.x, H0.y + hF / 2, H0.z), '#17151a', 'head', 'hair-crown');
+    for (let j = 0; j < 11; j++) { const a = (j - 5) / 5 * A, out = V().addScaledVector(f, Math.cos(a)).addScaledVector(l, Math.sin(a)), hgt = (0.128 - 0.012 * Math.abs(j - 5) / 5) * k,
+        b0 = H0.clone().addScaledVector(out, rB * 1.0), dir = out.clone().multiplyScalar(lean * 0.95).add(up).normalize(), side = up.clone().cross(out).normalize();
+      add(new THREE.BoxGeometry(0.03 * k, hgt, 0.003 * k), Mb(side, dir, side.clone().cross(dir), b0.clone().addScaledVector(dir, hgt / 2).addScaledVector(out, 0.003 * k)), gold, 'head', 'hair-crown');
+      add(new THREE.SphereGeometry(0.0075 * k, 10, 8), new THREE.Matrix4().makeTranslation(...b0.clone().addScaledVector(dir, hgt + 0.006 * k).addScaledVector(out, 0.003 * k).toArray()), face, 'head', 'hair-crown'); }
     for (const s of [1, -1]) { const out = l.clone().multiplyScalar(s), pinEnd = H0.clone().addScaledVector(out, rB + 0.03 * k).add(V(0, 0.01 * k, 0));
       add(new THREE.CylinderGeometry(0.003 * k, 0.003 * k, 0.07 * k, 8), new THREE.Matrix4().compose(H0.clone().addScaledVector(out, rB + 0.005 * k).add(V(0, 0.01 * k, 0)), new THREE.Quaternion().setFromUnitVectors(up, out), V(1, 1, 1)), gold, 'head', 'hair-pin');
       for (let st = 0; st < 3; st++) { const top = pinEnd.clone().addScaledVector(f, (st - 1) * 0.014 * k);
