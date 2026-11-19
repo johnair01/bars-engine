@@ -105,6 +105,12 @@ await page.locator('[data-demo-key="open-choice-wave"]').click();
 await waveFrom(page, 'welcome', 'stay');
 await clickText('Yes, something shifted');
 await page.locator('[data-demo-key="state-confirm-satisfied"]').click();
+// Naming card (spec ontology-game-bar-claim): FR-001, FR-002, FR-003.
+ok(await page.locator('[data-claim-card]').count() === 1, 'naming card appears after satisfied');
+ok(await page.locator('[data-claim-sentence]').count() === 6 && await page.locator('[data-claim-sentence][aria-pressed="true"]').count() === 0, 'six sentences, none pre-selected');
+ok(!/claim|measure|score|BAR/.test(await page.locator('[data-claim-card]').innerText()), 'card never says claim, measure, score or BAR');
+await page.locator('[data-claim-notnow]').click();
+ok(await page.locator('[data-claim-card]').count() === 0, 'Not now closes the card');
 await clickText("No, that's all of it");
 ok(await page.getByText('Where next?').count() === 1, 'reached phase 6');
 // Flow forward keeps WAVE as opener
@@ -251,8 +257,26 @@ ok(st.openWaveLevel === 'allow' && (await p5.locator('[data-wave-step="validate"
 await waveFrom(p5, 'validate', 'stay');
 await p5.getByText('Yes, something shifted', { exact: true }).click();
 await p5.locator('[data-demo-key="state-confirm-satisfied"]').click();
+await p5.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/naming-card.png' });
+await p5.locator('[data-claim-sentence="orange"]').click();
+await p5.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/naming-card-pressed.png' });
+ok(await p5.locator('[data-claim-sentence]').count() === 1, 'pressed sentence stays, others fade');
+await p5.locator('#claim-words-input').fill('it worked');
+await p5.locator('[data-claim-done]').click();
 await p5.getByText("No, that's all of it", { exact: true }).click();
 await p5.getByText('Complete This Cycle', { exact: true }).click();
+ok(await p5.locator('[data-claim-carry]').count() === 1, 'carry button on the done screen when a sentence was named');
+await p5.evaluate(() => { window.__opened = null; window.open = (u) => { window.__opened = u; return null; }; });
+await p5.locator('[data-claim-carry]').click();
+await p5.waitForFunction(() => !!window.__opened);
+const carryUrl = await p5.evaluate(() => window.__opened);
+const frag = carryUrl.split('#')[1] || '';
+const m = frag.match(/^OAG2\.([A-Za-z0-9_-]+)\.([0-9a-f]{8})$/);
+ok(!!m, 'carry opens /claim with an OAG2 fragment');
+if (m) {
+  const payload = JSON.parse(Buffer.from(m[1], 'base64url').toString('utf8'));
+  ok(payload.v === 2 && payload.k.length === 1 && payload.k[0][3] === 'orange' && payload.k[0][4] === 'it worked' && payload.k[0].length === 5, 'code holds one claim with the pressed altitude and words');
+}
 ok(await p5.locator('[data-map-block]').count() === 2, 'map draws a loop for each block (' + await p5.locator('[data-map-block]').count() + ')');
 await p5.locator('[data-trailhead-answer="shifted"]').click();
 ok(await p5.locator('[data-map-trailhead="shifted"]').count() === 1, 'trailhead flag shows the answer');
