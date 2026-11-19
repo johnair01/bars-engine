@@ -25,6 +25,15 @@ describe('farm world: data at once, rules to Wendell', () => {
     expect(r.tier).toBe('rule')
     if (r.tier === 'rule') { expect(r.why).toMatch(/cost/); expect(r.doc.notYet).toHaveLength(1); expect(r.doc.changes).toHaveLength(1) }
   })
+  it('a capture becomes a barseed in the inventory: no slot, not drawn on the land', () => {
+    const o = live(change(newWorld(), { kind: 'barseed', text: 'Call Dana about the van', captureId: 'bar-9', lane: 'claude-code' }, t0))
+    const p = forPlayer(o.doc)
+    expect(p.changes).toHaveLength(0)
+    expect(p.seeds).toHaveLength(1)
+    expect(p.seeds[0]).toMatchObject({ kind: 'barseed', text: 'Call Dana about the van', captureId: 'bar-9' })
+    expect(JSON.stringify(p)).not.toContain('claude-code')
+    expect(change(newWorld(), { kind: 'barseed', captureId: 'bar-9' }, t0).tier).toBe('invalid')
+  })
   it('an unknown object is a rule request, never drawn', () => {
     const r = change(newWorld(), { slot: 1, kind: 'object', object: 'windmill', captureId: 'a' }, t0)
     expect(r.tier).toBe('rule')

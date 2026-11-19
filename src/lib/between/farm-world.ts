@@ -10,14 +10,19 @@
  * draws: a sign on a slot, a note on a slot, a small object from the list below. An agent applies it at once and
  * logs it. A RULE is anything that changes how the farm plays or needs code: mana, costs, days to grow, the grid, a
  * new act, a new kind of object. A rule request is refused here, kept on the capture as "not yet" with its reason,
- * and goes to Wendell as one board row. Pure: no database, so a test clock and a test farm run it as it is.
+ * and goes to Wendell as one board row.
+ *
+ * The answer to a capture is a barseed (Wendell, ntw-first-look-2, C: "A capture creates a barseed in inventory that players can
+ * plant and tend"). A `barseed` change carries no slot: it waits in the player's inventory (`seeds` in `forPlayer`) with
+ * the capture's words, and the player plants and tends it. A sign, note or object is the smaller answer beside it. The
+ * page's inventory and planting from it are not built here. Pure: no database, so a test clock and a test farm run it as it is.
  */
 import { SLOTS } from './farm'
 
 /** What the page draws today. Adding a name here needs the matching mesh in public/between/farm/farm.js, so it is code. */
 export const OBJECTS = ['lantern', 'bench', 'stone', 'flowers', 'scarecrow'] as const
 export type WorldObject = (typeof OBJECTS)[number]
-export const DATA_KINDS = ['sign', 'note', 'object'] as const
+export const DATA_KINDS = ['sign', 'note', 'object', 'barseed'] as const
 export type DataKind = (typeof DATA_KINDS)[number]
 
 export const SIGN_MAX = 60
@@ -26,7 +31,8 @@ export const MAX_CHANGES = 40
 
 export type Change = {
   id: string
-  slot: number
+  /** Null for a barseed, which waits in the inventory until the player plants it. */
+  slot: number | null
   kind: DataKind
   text: string
   object: WorldObject | null
@@ -92,19 +98,19 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
     return { ok: false, tier: 'rule', doc: w, notYet, why }
   }
 
-  if (!inGrid(input.slot)) return { ok: false, tier: 'invalid', why: `slot is a whole number from 0 to ${SLOTS - 1}` }
   const k = kind as DataKind
+  if (k !== 'barseed' && !inGrid(input.slot)) return { ok: false, tier: 'invalid', why: `slot is a whole number from 0 to ${SLOTS - 1}` }
   let text = ''
   let object: WorldObject | null = null
   if (k === 'sign') text = clean(input.text, SIGN_MAX)
-  if (k === 'note') text = clean(input.text, NOTE_MAX)
+  if (k === 'note' || k === 'barseed') text = clean(input.text, NOTE_MAX)
   if (k === 'object') {
     if (typeof input.object !== 'string' || !(OBJECTS as readonly string[]).includes(input.object))
       return { ok: false as const, tier: 'rule' as const, ...ruleFor(doc, input, now, lane, captureId, `an object called "${clean(input.object, 40)}"`, 'the farm has no such object yet; a new one needs a new drawing') }
     object = input.object as WorldObject
     text = clean(input.text, SIGN_MAX)
   }
-  if ((k === 'sign' || k === 'note') && !text) return { ok: false, tier: 'invalid', why: `a ${k} needs its words in text` }
+  if ((k === 'sign' || k === 'note' || k === 'barseed') && !text) return { ok: false, tier: 'invalid', why: `a ${k} needs its words in text` }
 
   const w = clone(doc)
   const live = w.changes.filter(c => c.status === 'applied')
@@ -112,11 +118,11 @@ export function change(doc: WorldDoc, input: Input, now: string): Outcome {
   // One sign per slot: a second sign replaces the first, so the place never shows two voices at once.
   if (k === 'sign') for (const c of w.changes) if (c.slot === input.slot && c.kind === 'sign' && c.status === 'applied') c.status = 'reverted'
   const c: Change = {
-    id: `chg-${stamp(Date.parse(now))}-${w.changes.length}`, slot: input.slot, kind: k, text, object, captureId,
+    id: `chg-${stamp(Date.parse(now))}-${w.changes.length}`, slot: k === 'barseed' ? null : (input.slot as number), kind: k, text, object, captureId,
     before: link(input.before), after: null, lane, at: now, status: 'applied',
   }
   w.changes.push(c)
-  w.log.push({ at: now, lane, did: `${k} on slot ${input.slot}${object ? ` (${object})` : ''}${text ? `: ${text}` : ''}` })
+  w.log.push({ at: now, lane, did: `${k === 'barseed' ? 'barseed in the inventory' : `${k} on slot ${input.slot}`}${object ? ` (${object})` : ''}${text ? `: ${text}` : ''}` })
   return { ok: true, tier: 'data', doc: w, change: c }
 }
 
@@ -164,7 +170,9 @@ export function asWorld(raw: unknown): WorldDoc {
 /** What the player's page gets: applied changes and the not-yets, never the agent's lane or the log. */
 export function forPlayer(doc: WorldDoc) {
   return {
-    changes: doc.changes.filter(c => c.status === 'applied').map(({ lane: _l, ...c }) => c),
+    changes: doc.changes.filter(c => c.status === 'applied' && c.kind !== 'barseed').map(({ lane: _l, ...c }) => c),
+    /** Barseeds waiting in the inventory, to plant and tend. */
+    seeds: doc.changes.filter(c => c.status === 'applied' && c.kind === 'barseed').map(({ lane: _l, slot: _s, object: _o, ...c }) => c),
     notYet: doc.notYet.map(({ lane: _l, ...n }) => n),
   }
 }

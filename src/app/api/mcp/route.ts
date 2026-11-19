@@ -357,7 +357,8 @@ const TOOLS = [
     name: 'farm_world_change',
     title: 'Change a player\'s farm',
     description: 'Answer a player\'s capture by changing their farm. DATA changes apply at once and show on the next load: '
-      + 'kind sign (text, 60 characters, one per slot), note (text, 280) or object (object: lantern, bench, stone, flowers '
+      + 'kind barseed (text, 280: a capture becomes a seed in the player\'s inventory to plant and tend; no slot), '
+      + 'sign (text, 60 characters, one per slot), note (text, 280) or object (object: lantern, bench, stone, flowers '
       + 'or scarecrow, with optional text) on a slot 0 to 153. Anything that changes how the farm plays (mana, costs, '
       + 'growing days, the land\'s shape, a new act, a new object) is a RULE: it is refused, kept on the player\'s farm '
       + 'as a not-yet with its reason, and you bring it to Wendell as one board row. Send `ask` instead of `kind` to '
@@ -368,7 +369,7 @@ const TOOLS = [
         playerId: { type: 'string', description: 'The player whose farm it is.' },
         captureId: { type: 'string', description: 'The capture (BAR or backlog item) this answers.' },
         slot: { type: 'integer', minimum: 0, maximum: 153 },
-        kind: { type: 'string', description: 'sign, note or object.' },
+        kind: { type: 'string', description: 'barseed, sign, note or object.' },
         text: { type: 'string' },
         object: { type: 'string', description: 'lantern, bench, stone, flowers or scarecrow.' },
         before: { type: 'string', description: 'https link to the before picture.' },
