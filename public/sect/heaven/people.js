@@ -22,23 +22,41 @@ const MIXES = [
   { gender: 'f', build: 'average', skin: 1, height: 1.68, outfit: 'B1', kneel: true },
 ];
 
+// One cultivation figure from a mix: its group, its figure (F) and a turn() that faces it along a world direction.
+// The group stands at the origin of its own holder; the caller places the holder.
+async function make(mix, reg) {
+  const X = await M.build(mix, reg), F = X.F, h = new THREE.Group(), g = new THREE.Group();
+  for (const o of [...X.scene.children]) { if (o.isLight) continue; g.add(o); }
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+  h.add(g);
+  // the figure's front (F.fr.f) turns to face the world direction (dx, dz) once the holder itself is not turned
+  const turn = (dx, dz) => { g.rotation.y = Math.atan2(dx, dz) - Math.atan2(F.fr.f.x, F.fr.f.z); };
+  return { h, g, F, turn };
+}
+let REG = null;
+const registry = async () => (REG ||= await (await fetch(new URL('../cult/parts.json', import.meta.url))).json());
+
+/** Six Elders for the trainee walk (build 2026-11-17): one cultivation figure each, six distinct outfits, no names. */
+export async function elder(i) {
+  const OUT = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], mix = { direction: OUT[i][0], gender: i % 2 ? 'f' : 'm', build: 'average', skin: [2, 5, 1, 6, 3, 4][i], height: [1.78, 1.64, 1.8, 1.62, 1.74, 1.68][i], outfit: OUT[i] };
+  return make(mix, await registry());
+}
+
 export async function people(S, gl, { court, avatar }) {
-  const reg = await (await fetch(new URL('../cult/parts.json', import.meta.url))).json();
+  const reg = await registry(), students = [];
   // one figure at a time, so the page stays live while nine are cut
   for (let i = 0; i < STUDENTS.length; i++) {
     const [x, z, deg] = STUDENTS[i], mix = { direction: MIXES[i].outfit[0], ...MIXES[i] };
     try {
-      const X = await M.build(mix, reg), F = X.F, h = new THREE.Group(), g = new THREE.Group(); g.name = 'student' + i;
-      for (const o of [...X.scene.children]) { if (o.isLight) continue; g.add(o); }
-      g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+      const m = await make(mix, reg), { h, g, F } = m; g.name = 'student' + i;
       if (mix.kneel) kneel(F);
       F.mesh.skeleton.update();
       // the figure's front (F.fr.f) turns to the heading the old figure had: it faced +z at rotation 0, heading deg is anchor.js's
       const a = Math.PI - deg * Math.PI / 180; g.rotation.y = a - Math.atan2(F.fr.f.x, F.fr.f.z);
-      h.add(g); h.position.set(x, 0.04, z); court.add(h);
+      h.position.set(x, 0.04, z); court.add(h); students[i] = m;
     } catch (e) { console.warn('student', i, e); }
   }
-  return () => {};
+  const done = () => {}; done.students = students; return done;
 }
 
 // Round 13b: the painting's student kneels on the paving to chalk the sigil. Aimed the way the lands' seat is: thighs
