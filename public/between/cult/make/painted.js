@@ -80,6 +80,13 @@ export function paint(pt, rp, sh, kind, C) {
     // (Heaven's stepped brick, Calrunia's own) with rp.motifC its metal thread. Off unless a piece names them.
     uWeave: { value: rp.weave ? rp.weave.a ?? 0.5 : 0 }, uWeaveS: { value: (rp.weave ? rp.weave.s ?? 0.11 : 0.11) }, uWeaveC: { value: col(rp.weave ? rp.weave.c || rp.color : rp.color) },
     uMotif: { value: rp.motif === 'brick' ? 1 : 0 }, uMotifC: { value: col(rp.motifC || '#b8995a') },
+    // elder regalia (his B on er-grammar-look-1, 2026-11-19: "marks of rank and station that can be observed from a
+    // distance"): the rank square, painted on the chest and the back of the outermost garment. rp.rank = { c: the face's
+    // colour, tri: the trigram's three lines bottom to top (1 whole, 0 broken), back: true on an open over-robe (its front
+    // is split by the opening, so only the back carries it) }. Its place comes from the body (C.rankY, C.rankS), so it
+    // sits between the collar's crossing and the waist on every body.
+    uRank: { value: kind === 'shell' && rp.rank && C.rankS ? (rp.rank.back ? 2 : 1) : 0 }, uRankC: { value: col(rp.rank ? rp.rank.c : '#000') }, uRankY: { value: C.rankY || 0 }, uRankS: { value: C.rankS || 1 },
+    uRankT: { value: new THREE.Vector3(...((rp.rank && rp.rank.tri) || [1, 1, 1])) },
     uBrW: { value: (kind === 'shell' && rp.bracer && pt.mesh.geometry.userData.bracerW) || 0 }, uBrC: { value: col(rp.bracer) }, uBrE: { value: col(rp.bracerBand || '#e6d9bd') }, uBrB: { value: (rp.bracerBandW ?? 0.011) * k },
   };
   // shells round 4: the cross collar's lines as uniforms, so the V band, the lapped edge and its shadow are measured per
@@ -92,7 +99,7 @@ export function paint(pt, rp, sh, kind, C) {
   mat.onBeforeCompile = s => {
     Object.assign(s.uniforms, U);
     s.vertexShader = 'attribute float aEdgeC; attribute float aEdgeH; attribute float aLap; attribute float aSeam; attribute vec3 aRest;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdgeC = aEdgeC; vEdgeH = aEdgeH; vLap = aLap; vSeam = aSeam; vRest = aRest;');
-    s.fragmentShader = 'varying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\nuniform float uWeave; uniform float uWeaveS; uniform vec3 uWeaveC; uniform float uMotif; uniform vec3 uMotifC;\n' + GLSL_COLLAR + GLSL_WEAVE
+    s.fragmentShader = 'varying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\nuniform float uWeave; uniform float uWeaveS; uniform vec3 uWeaveC; uniform float uMotif; uniform vec3 uMotifC;\nuniform float uRank; uniform vec3 uRankC; uniform float uRankY; uniform float uRankS; uniform vec3 uRankT;\n' + GLSL_COLLAR + GLSL_WEAVE
       + 'float gBand = 0.0; float gWeave = 0.0; float gMetal = 0.0;\n' + s.fragmentShader.replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_SHEEN\nmaterial.sheenColor *= 1.0 - gBand;\n#endif\nmaterial.specularColor *= 1.0 - 0.85 * gBand; material.specularF90 *= 1.0 - 0.85 * gBand; material.roughness = mix(material.roughness, 1.0, gBand);\nmaterial.roughness = mix(material.roughness, 0.5, gWeave); material.specularColor = mix(material.specularColor, vec3(0.09), gWeave);\nmaterial.roughness = mix(material.roughness, 0.32, gMetal); material.specularColor = mix(material.specularColor, uMotifC, gMetal); material.specularF90 = mix(material.specularF90, 1.0, gMetal);') // round 4 fix 3: nor a grazing highlight (from the side, the band's edge-on glint read as a grey line along her V) // round 4: no satin sheen on the collar band (at a grazing angle it greyed the black band into smoke)
       .replace('#include <color_fragment>', `#include <color_fragment>
 {
@@ -134,6 +141,13 @@ export function paint(pt, rp, sh, kind, C) {
     c *= 1.0 - 0.2 * (1.0 - inB) * (1.0 - smoothstep(0.0, 0.006 * uK, vEdgeH - uBrW));
     c = mix(c, uBrC, inB); c = mix(c, uBrE, eB); gBand = max(gBand, inB);
     c *= 1.0 - 0.3 * eB * (1.0 - smoothstep(0.0004, 0.0013, min(abs(vEdgeH - 0.55 * uBrB), abs(vEdgeH - (uBrW - 0.55 * uBrB))))); }
+  // the rank square: a field of the face's colour with a metal border and the trigram's three bars in metal thread
+  if (uRank > 0.5 && (uRank < 1.5 || vRest.z < 0.0) && vSeam < 0.0) { vec2 q = vec2(vRest.x, vRest.y - uRankY) / uRankS; float d = boxD(q, vec2(1.0)), ad = max(fwidth(d), 1e-4);
+    if (d < ad) { float inS = 1.0 - smoothstep(-ad, ad, d); vec3 sc = uRankC * 0.92; float bord = 1.0 - smoothstep(0.1 - ad, 0.1 + ad, -d);
+      float bars = 0.0; for (int i = 0; i < 3; i++) { float fi = float(i), yb = -0.48 + 0.48 * fi, whole = i == 0 ? uRankT.x : (i == 1 ? uRankT.y : uRankT.z);
+        float b = boxD(q - vec2(0.0, yb), vec2(0.6, 0.12)); if (whole < 0.5) b = max(b, 0.13 - abs(q.x)); bars = max(bars, 1.0 - smoothstep(-ad, ad, b)); }
+      vec3 m = uMotifC * (0.8 + 0.2 * sin(q.x * 40.0) * sin(q.y * 40.0));
+      c = mix(c, sc, inS); c = mix(c, m, inS * max(bord, bars)); c *= 1.0 - 0.3 * inS * (1.0 - smoothstep(0.0, 2.0 * ad, abs(d + 0.1))); gBand = max(gBand, inS); gMetal = max(gMetal, inS * max(bord, bars)); } }
   // hem and cuff band; a cloud edge rises in lobes
   float w = uHemW * (1.0 + uCloud * pow(max(0.0, sin(uCloudN * th * 0.5)), 2.0));
   if (uKind == 2) w = uHemW * (1.0 + uCloud * pow(max(0.0, sin(uCloudN * (vRest.x + vRest.z) * 9.0 / uK)), 2.0));

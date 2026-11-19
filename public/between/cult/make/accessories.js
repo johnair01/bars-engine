@@ -309,3 +309,50 @@ export function whisk(C, pc, L, H) {
     put(C, H, merge([fer]), 'whisk-metal', H.LAYER.sash, { mat: { roughness: 0.35, metalness: 0.7 } }),
     put(C, H, merge(hair), 'whisk-hair', H.LAYER.sash, { skirt: true, mat: { roughness: 0.6 } })];
 }
+
+// ---------- elder regalia (his B on er-grammar-look-1, 2026-11-19: "strong gender dimorphism but the idea is there is a
+// regality to the elder robes marks of rank and station that can be observed from a distance"). One word, `regalia`,
+// draws a different mark on a man and on a woman, as the references do (the Ming official's hoop belt and his wife's
+// stole, /mnt/project-files/elder-robes/refs-rank/). Both carry the face's colour, so the station reads with the rank.
+
+// the girdle (a man's): a stiff hoop that stands off the robe, sits at the waist at the back and dips in front, with
+// metal plaques round it and a larger one at the centre front. Rigid, on the hips bone, as a stiff belt rides.
+export function girdle(C, pc, L, H) {
+  const k = C.k, Fm = frame(C, L, H), metal = C.metal || '#c9a55a', band = pc.c || '#7a2630';
+  const yB = C.yWaist + 0.005 * k, dip = (pc.dip ?? 0.1) * k, w = (pc.w ?? 0.038) * k, t = 0.01 * k;
+  const fr = th => 0.5 + 0.5 * Math.cos(th), yAt = th => yB - dip * fr(th) ** 2, offAt = th => (0.012 + 0.026 * fr(th) ** 2) * k;
+  const thAt = u => -Math.PI + 2 * Math.PI * u;
+  const g = ribbon({ c: u => Fm.on(thAt(u), yAt(thAt(u)), offAt(thAt(u))), across: () => V(0, 1, 0), w: () => w, t, nu: 120, nv: 3, color: band,
+    shade: (u, v) => 1 - 0.18 * Math.abs(v) * 2, hem: 0.004 * k, end: 0 });
+  const pl = [], n = pc.plaques ?? 12;
+  for (let i = 0; i < n; i++) { const th = -Math.PI + (i + 0.5) / n * 2 * Math.PI, big = Math.abs(th) < 1e-3 + Math.PI / n, ww = (big ? 0.075 : 0.042) * k;
+    const p = Fm.on(th, yAt(th), offAt(th) + t / 2 + 0.003 * k), out = Fm.out(th), al = Fm.along(th);
+    const b = new THREE.BoxGeometry(ww, w * (big ? 1.45 : 1.2), 0.007 * k, 2, 2, 1); b.applyMatrix4(basis(al, V(0, 1, 0), out, p)); pl.push(flat(b, metal)); }
+  { const th = 0, p = Fm.on(th, yAt(th), offAt(th) + t / 2 + 0.008 * k), b = new THREE.BoxGeometry(0.04 * k, w * 0.8, 0.004 * k); b.applyMatrix4(basis(Fm.along(th), V(0, 1, 0), Fm.out(th), p)); pl.push(flat(b, band, 1.1)); } // the face's colour set in the front plaque
+  return [put(C, H, merge([g]), 'girdle', H.LAYER.sash + 0.2, { bone: 'hips', solid: true, mat: { roughness: 0.55 } }),
+    put(C, H, merge(pl), 'girdle-plaque', H.LAYER.sash + 0.3, { bone: 'hips', solid: true, mat: { roughness: 0.32, metalness: 0.75 } })];
+}
+
+// the stole (a woman's): two long bands of the face's colour from over the shoulders down the front, either side of the
+// rank square, to below the knee, each ending in a point with a metal drop and a tassel. pc.over lifts it over an outer.
+export function stole(C, pc, L, H) {
+  const k = C.k, Fm = frame(C, L, H), metal = C.metal || '#c9a55a', color = pc.c || '#7a2630', parts = [];
+  const W = (pc.w ?? 0.07) * k, x0 = (C.rankS ? C.rankS + 0.012 * k : 0.08 * k) + W / 2, yTop = C.ySh + 0.012 * k, yFront = (C.yApex ?? C.ySh - 0.15 * k) + 0.05 * k;
+  const yEnd = Math.max(C.yKnee - (pc.below ?? 0.12) * k, Fm.yLow + 0.1 * k), over = (pc.over ?? 0) * k, sashH = (C.sashH || 0.07) * k;
+  const bump = y => 0.016 * k * Math.exp(-(((y - C.yWaist) / (sashH * 0.75)) ** 2));
+  for (const s of [1, -1]) {
+    const yAt = u => yTop + (yEnd - yTop) * u, thFront = y => s * Math.atan2(x0, H.loftAt(L, 0, y).r);
+    const thAt = u => { const y = yAt(u), f = Math.min(1, Math.max(0, (yTop - y) / (yTop - yFront))), e = f * f * (3 - 2 * f); return s * 1.15 * (1 - e) + thFront(y) * e; };
+    const off = u => (0.007 + 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront)))) * k + over + bump(yAt(u));
+    const c = u => Fm.on(thAt(u), yAt(u), off(u)), across = u => Fm.along(thAt(u));
+    const w = u => W * (u > 0.95 ? 0.15 + 0.85 * (1 - u) / 0.05 : 1);
+    const g = ribbon({ c, across, w, t: 0.003 * k, nu: 90, nv: 4, color, shade: (u, v) => 0.9 + 0.12 * Math.cos(u * 30 + v), hem: 0.006 * k, end: 0 });
+    parts.push(put(C, H, merge([g]), 'stole', H.LAYER.sash + 0.4, { skirt: true, mat: { roughness: 0.6 } }));
+    const tip = c(1), out = Fm.out(thAt(1)), drop = new THREE.SphereGeometry(1, 16, 12); drop.scale(0.026 * k, 0.04 * k, 0.008 * k);
+    drop.translate(0, -0.03 * k, 0); drop.applyMatrix4(basis(Fm.along(thAt(1)), V(0, 1, 0), out, tip.clone().addScaledVector(out, 0.006 * k)));
+    const ts = tassel(tip.clone().addScaledVector(out, 0.006 * k).add(V(0, -0.07 * k, 0)), k, color, metal, 0.07);
+    parts.push(put(C, H, merge([flat(drop, metal), ...ts.metal]), 'stole-drop', H.LAYER.sash + 0.5, { skirt: true, mat: { roughness: 0.3, metalness: 0.75 } }));
+    parts.push(put(C, H, merge(ts.cloth), 'stole-tassel', H.LAYER.sash + 0.5, { skirt: true }));
+  }
+  return parts;
+}

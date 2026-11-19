@@ -674,6 +674,39 @@ function feet(C, pc, name, off, upTo) {
   return [skinned(C, g, weightsNearest(C, g), pc.color, name, LAYER[name])];
 }
 
+// elder regalia (his B on er-grammar-look-1, 2026-11-19): the Elder's crown, the mark that reads first across a
+// courtyard. A man's is a tall lacquer crown with a long pin and two upswept wings tipped in the face's colour; a woman's
+// is a metal band with a tall fan of plates jewelled in the face's colour and three bead strands falling at each side.
+// Both stand about 9 cm over the head, as the references' crowns do (/mnt/project-files/elder-robes/refs-rank/).
+function elderCrown(C, opt, kp, H, hi, add) {
+  const k = C.k, gold = C.metal || '#c9a55a', face = opt.rankC || '#7a2630', up = V(0, 1, 0), f = C.f, l = C.l;
+  const Mb = (x, y, z, p) => new THREE.Matrix4().makeBasis(x, y, z).setPosition(p);
+  if (C.male) {
+    const base = kp.clone().add(V(0, -0.085 * k, 0)).addScaledVector(f, -0.006 * k), hC = 0.15 * k, cen = base.clone().add(V(0, hC / 2, 0));
+    add(new THREE.CylinderGeometry(0.068 * k, 0.078 * k, hC, 28), new THREE.Matrix4().makeTranslation(cen.x, cen.y, cen.z).multiply(new THREE.Matrix4().makeScale(0.85, 1, 1.15)), '#1c1b20', 'head', 'hair-crown');
+    const tq = new THREE.Quaternion().setFromUnitVectors(V(0, 0, 1), up);
+    add(new THREE.TorusGeometry(0.078 * k, 0.006 * k, 8, 36), new THREE.Matrix4().compose(base.clone().add(V(0, 0.006 * k, 0)), tq, V(0.86, 1.16, 1)), gold, 'head', 'hair-crown');
+    add(new THREE.BoxGeometry(0.014 * k, 0.014 * k, 0.1 * k), Mb(l, up, f, base.clone().add(V(0, hC + 0.004 * k, 0))), gold, 'head', 'hair-crown'); // the ridge along the top
+    add(new THREE.CylinderGeometry(0.0035 * k, 0.0035 * k, 0.2 * k, 8), new THREE.Matrix4().compose(cen.clone().add(V(0, 0.015 * k, 0)), new THREE.Quaternion().setFromUnitVectors(up, l), V(1, 1, 1)), gold, 'head', 'hair-pin');
+    for (const s of [1, -1]) { const ang = s * 0.32, dir = l.clone().multiplyScalar(s).applyAxisAngle(f, ang), nrm = f.clone(), upw = nrm.clone().cross(dir).multiplyScalar(s);
+      const root = cen.clone().addScaledVector(f, -0.075 * k).add(V(0, 0.02 * k, 0)), wl = 0.15 * k;
+      add(new THREE.BoxGeometry(wl, 0.036 * k, 0.005 * k), Mb(dir, upw, nrm, root.clone().addScaledVector(dir, wl / 2)), '#1c1b20', 'head', 'hair-crown');
+      add(new THREE.BoxGeometry(0.036 * k, 0.042 * k, 0.007 * k), Mb(dir, upw, nrm, root.clone().addScaledVector(dir, wl - 0.016 * k)), face, 'head', 'hair-crown'); }
+  } else {
+    const cy = C.crown - 0.025 * k, H0 = V(H.x, cy, H.z).addScaledVector(f, -0.012 * k); let rB = 0.03 * k;
+    for (const i of C.uniq) { if (C.dom[i] !== hi) continue; const p = C.pos(i); if (Math.abs(p.y - cy) < 0.008 * k) rB = Math.max(rB, Math.hypot(p.x - H0.x, p.z - H0.z)); } rB += 0.012 * k;
+    const tq = new THREE.Quaternion().setFromUnitVectors(V(0, 0, 1), up);
+    add(new THREE.TorusGeometry(rB, 0.006 * k, 8, 40), new THREE.Matrix4().compose(H0, tq, V(1, 1, 1.15)), gold, 'head', 'hair-crown');
+    for (let j = 0; j < 9; j++) { const a = (j - 4) / 4 * 1.05, out = V().addScaledVector(f, Math.cos(a)).addScaledVector(l, Math.sin(a)), hgt = (0.095 - 0.045 * Math.abs(j - 4) / 4) * k;
+      const b0 = H0.clone().addScaledVector(out, rB * 1.02), dir = out.clone().multiplyScalar(0.18).add(up).normalize(), side = up.clone().cross(out).normalize();
+      add(new THREE.BoxGeometry(0.02 * k, hgt, 0.003 * k), Mb(side, dir, side.clone().cross(dir), b0.clone().addScaledVector(dir, hgt / 2)), gold, 'head', 'hair-crown');
+      add(new THREE.SphereGeometry(0.0075 * k, 10, 8), new THREE.Matrix4().makeTranslation(...b0.clone().addScaledVector(dir, hgt + 0.004 * k).toArray()), face, 'head', 'hair-crown'); }
+    for (const s of [1, -1]) { const out = l.clone().multiplyScalar(s), pinEnd = H0.clone().addScaledVector(out, rB + 0.03 * k).add(V(0, 0.01 * k, 0));
+      add(new THREE.CylinderGeometry(0.003 * k, 0.003 * k, 0.07 * k, 8), new THREE.Matrix4().compose(H0.clone().addScaledVector(out, rB + 0.005 * k).add(V(0, 0.01 * k, 0)), new THREE.Quaternion().setFromUnitVectors(up, out), V(1, 1, 1)), gold, 'head', 'hair-pin');
+      for (let st = 0; st < 3; st++) { const top = pinEnd.clone().addScaledVector(f, (st - 1) * 0.014 * k);
+        for (let b = 0; b < 7; b++) { const r = (b === 6 ? 0.0075 : 0.0045) * k; add(new THREE.SphereGeometry(r, 8, 6), new THREE.Matrix4().makeTranslation(...top.clone().add(V(0, -(b + 1) * 0.016 * k, 0)).toArray()), b === 6 ? face : gold, 'head', 'hair-crown'); } } }
+  }
+}
 function hair(C, style, color, backAt, opt = {}) {
   const k = C.k, parts = [], hi = C.bn.indexOf('head'), H = wp(C.F.bones.head);
   let fmax = -1e9; for (const i of C.uniq) if (C.dom[i] === hi) fmax = Math.max(fmax, C.pos(i).dot(C.f));
@@ -688,9 +721,10 @@ function hair(C, style, color, backAt, opt = {}) {
     const kp = crownP.clone().add(V(0, 0.028 * k, 0));
     add(new THREE.SphereGeometry(0.04 * k, 20, 14), new THREE.Matrix4().makeTranslation(kp.x, kp.y, kp.z).multiply(new THREE.Matrix4().makeScale(1, 0.85, 1)), color);
     const pin = new THREE.CylinderGeometry(0.0035 * k, 0.0035 * k, 0.15 * k, 8); const q = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), C.l);
-    if (opt.crown !== 'leaf') add(pin, new THREE.Matrix4().compose(kp.clone().add(V(0, 0.006 * k, 0)), q, V(1, 1, 1)), style === 'crown' ? (C.metal || '#b8955a') : '#8a6a44', 'head', 'hair-pin');
+    if (opt.crown !== 'leaf' && opt.crown !== 'elder') add(pin, new THREE.Matrix4().compose(kp.clone().add(V(0, 0.006 * k, 0)), q, V(1, 1, 1)), style === 'crown' ? (C.metal || '#b8955a') : '#8a6a44', 'head', 'hair-pin');
     if (style === 'crown') { const cg = new THREE.CylinderGeometry(0.026 * k, 0.034 * k, 0.045 * k, 20, 1, false);
-      if (opt.crown !== 'leaf') add(cg, new THREE.Matrix4().makeTranslation(kp.x, kp.y + 0.012 * k, kp.z), C.metal || '#b8955a', 'head', 'hair-crown');
+      if (opt.crown === 'elder') elderCrown(C, opt, kp, H, hi, add);
+      else if (opt.crown !== 'leaf') add(cg, new THREE.Matrix4().makeTranslation(kp.x, kp.y + 0.012 * k, kp.z), C.metal || '#b8955a', 'head', 'hair-crown');
       else { // direction C: a gold leaf crown, a band round the head at the crown with leaves rising off it, tallest at the front
         const gold = C.metal || '#b8955a', cy = C.crown - 0.025 * k, H0 = V(H.x, cy, H.z).addScaledVector(C.f, -0.012 * k); let rB = 0.03 * k; for (const i of C.uniq) { if (C.dom[i] !== hi) continue; const p = C.pos(i); if (Math.abs(p.y - cy) < 0.008 * k) rB = Math.max(rB, Math.hypot(p.x - H0.x, p.z - H0.z)); } rB += 0.012 * k; // the band clears the hair cap
         const tq = new THREE.Quaternion().setFromUnitVectors(V(0, 0, 1), V(0, 1, 0));

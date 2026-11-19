@@ -25,6 +25,7 @@ import * as GC from './garments-c.js';
 import { paint } from './painted.js';
 import { hairPaint } from './hairpaint.js';
 import { bellFall, armpitFix } from './posefix.js';
+import * as ACC from './accessories.js';
 export { context } from './garments-c.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -320,12 +321,18 @@ export function dress(C, reg, outfitKey) {
   C.male = !(C.F.mix && C.F.mix.gender === 'f'); C.yWaist = C.yHip + (C.male ? 0.08 : 0.11) * k; C.qixiong = false; C.metal = o.metal || null; C.colliders = []; C.yApex = bustApex(C);
   // round 3: the cup size the wrap reads (mix.bust, 1 = the body as bought) and the apex spread; reg.bust.wrap holds the rule
   C.cup = C.F.mix && C.F.mix.bust != null ? +C.F.mix.bust : (reg.bust ? reg.bust.default : 1); C.wrap = !C.male && reg.bust ? reg.bust.wrap || null : null; C.xApex = bustSpread(C);
-  const rp = o.pieces.find(p => p.p === 'robe'); if (!rp) return []; // a test outfit with no robe: the body alone
+  // elder regalia (2026-11-19): a piece may carry a man's and a woman's form of the same word (pc.m, pc.f, merged over
+  // it), or be worn by one only (pc.who 'm' or 'f'), so one outfit key dresses both bodies in their own cut
+  const pieces = o.pieces.filter(p => !p.who || p.who === (C.male ? 'm' : 'f')).map(p => ({ ...p, ...((C.male ? p.m : p.f) || {}), shell: { ...(p.shell || {}), ...(((C.male ? p.m : p.f) || {}).shell || {}) } }));
+  const rp = pieces.find(p => p.p === 'robe'); if (!rp) return []; // a test outfit with no robe: the body alone
   const sh = { ...(reg.shell || {}), ...(rp.shell || {}) }, yHem = Math.max(0.034 * k, rp.hem * C.S);
   // one loft for the skirt and for what lies on the robe (sash, hair, props): no folds modelled, no drape
   const L = G.loft(C, { yTop: C.yNeck + 0.02 * k, yHem, regionAt: G.torsoOK(C, true), ease: (sh.skirtEase ?? 0.02), flare: rp.flare || 0, folds: 0, cinch: { y: C.yWaist, h: 0.07 * k }, topEase: 0.012, yoke: 0.03, tcut: true });
   const robeParts = [];
-  { const { g, W, Lc } = bodyShell(C, rp, sh); C.Lc = Lc; const pt = G.skinned(C, g, W, rp.color, 'robe-shell', 4); paint(pt, rp, sh.bell ? { ...sh, cuffW: 0 } : sh, 'shell', C); /* fix 4: under a bell the sleeve's own cuff band is hidden, so no gold sliver shows at the elbow */ armpitFix(C, pt); robeParts.push(pt);
+  { const { g, W, Lc } = bodyShell(C, rp, sh); C.Lc = Lc;
+    // the rank square's place: under the collar's crossing, over the sash, at most 17 cm square
+    { const top = Lc.yc - 0.02 * k, bot = C.yWaist + 0.06 * k; C.rankS = Math.max(0.03 * k, Math.min(0.085 * k, (top - bot) / 2)); C.rankY = (top + bot) / 2; }
+    const pt = G.skinned(C, g, W, rp.color, 'robe-shell', 4); paint(pt, rp, sh.bell ? { ...sh, cuffW: 0 } : sh, 'shell', C); /* fix 4: under a bell the sleeve's own cuff band is hidden, so no gold sliver shows at the elbow */ armpitFix(C, pt); robeParts.push(pt);
     // fix 4 (his B on cult-shells-look-5: "an option to have an underwrap to protect modesty"): mix.underwrap puts a second, thinner shell
     // under the robe's, cut with a high round neckline, so the robe's V shows the cloth and not the chest
     if (!C.male && C.F.mix.underwrap) { const uw = rp.underwrap || {}, ush = { ...sh, ease: (sh.ease ?? 0.012) * 0.45, armEase0: (sh.armEase0 ?? 0.01) * 0.45, armEase1: (sh.armEase1 ?? 0.02) * 0.6, minEase: 0.0035, crossBelowApex: uw.crossBelowApex ?? -0.07, vTop: uw.vTop ?? 0.01, neckW: uw.neckW ?? 0.07 }, urp = { ...rp, color: uw.color || '#e8dfcf', collarColor: uw.color || '#e8dfcf', collarW: 0.0, band: uw.color || '#e8dfcf', trim: uw.color || '#e8dfcf', hemBand: 0 };
@@ -333,8 +340,10 @@ export function dress(C, reg, outfitKey) {
     const S = skirt(C, rp, sh, L, Lc, G); const ps = G.skinned(C, S.g, S.W, rp.color, 'robe', 4); paint(ps, rp, sh, 'skirt', C); robeParts.push(ps);
     if (sh.bell) for (const s of ['L', 'R']) { const b = bell(C, rp, sh, s); const pb = G.skinned(C, b.g, b.W, rp.color, 'bell' + s, 4); paint(pb, rp, sh, 'bell', C); bellFall(C, pb, b.B, s); robeParts.push(pb); } }
   let hairPc = null;
-  for (const pc of o.pieces) {
+  const AH = { loftAt: G.loftAt, skinned: G.skinned, weightsBone: G.weightsBone, weightsNearest: G.weightsNearest, weightsSkirt: G.weightsSkirt, LAYER: G.LAYER || { sash: 5 }, okT: i => G.torsoOK(C, true)(C.name(i), C.pos(i).y) };
+  for (const pc of pieces) {
     if (pc.p === 'trousers') parts.push(...G.trousers(C, pc));
+    else if (pc.p === 'regalia') parts.push(...(C.male ? ACC.girdle(C, pc, L, AH) : ACC.stole(C, { ...pc, over: pc.over ?? (pieces.some(q => q.p === 'outer') ? 0.045 : 0) }, L, AH)));
     else if (pc.p === 'shoes') parts.push(...G.feet(C, pc, 'shoes', 0.007, 0.03));
     else if (pc.p === 'boots') { parts.push(...G.feet(C, pc, 'boots', 0.011, 0.06)); parts.push(...G.shin(C, pc, 'boots', yHem < 0.15 * C.S ? 0.72 : (pc.shaft ?? 0.42), 0.02, null)); }
     else if (pc.p === 'robe') parts.push(...robeParts);
