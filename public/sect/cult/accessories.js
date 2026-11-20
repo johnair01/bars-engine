@@ -362,7 +362,11 @@ export function stole(C, pc, L, H) {
     // smoothed top of it (a running maximum over 5 samples, then blurred): a long soft ribbon, never a stair of fins
     const NS = 90, rr = Array.from({ length: NS + 1 }, (_, i) => H.loftAt(L, thFront(yAt(i / NS)), yAt(i / NS)).r); let sm = rr.map((_, i) => Math.max(...rr.slice(Math.max(0, i - 5), i + 6)));
     for (let pass = 0; pass < 14; pass++) sm = sm.map((x, i) => (sm[Math.max(0, i - 1)] + 2 * x + sm[Math.min(NS, i + 1)]) / 4);
-    const lift = u => { const f = u * NS, i0 = Math.min(NS - 1, Math.floor(f)), t = f - i0; return Math.max(0, (sm[i0] - rr[i0]) * (1 - t) + (sm[i0 + 1] - rr[i0 + 1]) * t); };
+    // round 4f (his note on er-regalia-look-7, "separating"): over the shoulder the band turns through an angle, so the running
+    // maximum read the bust's radius a hand lower and held the band's top 4 to 6 cm off the shoulder. The lift fades in from the
+    // V's foot down; above it the band lies at its own offset on the measured envelope
+    const liftIn = u => { if (lowStart) return 1; const f = Math.min(1, Math.max(0, (yTop - yAt(u)) / (yTop - yFront))); return f * f * (3 - 2 * f); };
+    const lift = u => { const f = u * NS, i0 = Math.min(NS - 1, Math.floor(f)), t = f - i0; return liftIn(u) * Math.max(0, (sm[i0] - rr[i0]) * (1 - t) + (sm[i0 + 1] - rr[i0 + 1]) * t); };
     const off = u => (0.005 + (lowStart ? 0 : 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront))))) * k + over + bump(yAt(u)) + lift(u); // round 2: 5 mm off the shell's measured envelope (pc.over is 0: the envelope already includes an over-robe)
     const c = u => Fm.on(thAt(u), yAt(u), off(u)), across = u => Fm.along(thAt(u));
     const w = u => W * (u > 0.95 ? 0.15 + 0.85 * (1 - u) / 0.05 : 1);
