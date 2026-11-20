@@ -23,6 +23,13 @@ export const DEFAULT_LANES: Lane[] = ['claude', 'freebuff']
  * again (2026-11-18: 37 tickets went round 18 to 30 times).
  */
 export const LEASE_MS = 6 * 60 * 60 * 1000
+/**
+ * A claim counts against the lane's worker cap only this long after its last touch (claim or heartbeat). The lease
+ * still holds the ticket for LEASE_MS, so nobody else takes it, but a worker that shipped its pull request and never
+ * called `done` stops filling a slot after three hours. Found 2026-11-20: four finished tickets held the Claude lane
+ * full for hours while fifteen answered looks waited.
+ */
+export const CAP_LIVE_MS = 3 * 60 * 60 * 1000
 /** Most live claims one lane holds at once. A fifth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"). */
 export const LANE_WORKERS = 4
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */

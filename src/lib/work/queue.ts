@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, CAP_LIVE_MS, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -70,7 +70,8 @@ export async function claimTicket(db: Db, lane: string, by: string, now = new Da
   await returnLapsed(db, now)
   // A lane holds at most LANE_WORKERS live claims; the settle pass claims only to close, so it is not counted out.
   if (by !== 'settle') {
-    const live = await db.workTicket.count({ where: { lane, state: 'claimed', leaseUntil: { gte: now } } })
+    const live = await db.workTicket.count({ where: { lane, state: 'claimed', leaseUntil: { gte: now },
+      updatedAt: { gte: new Date(now.getTime() - CAP_LIVE_MS) } } })
     if (live >= LANE_WORKERS) return null
   }
   const until = new Date(now.getTime() + LEASE_MS)
