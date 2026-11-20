@@ -199,9 +199,12 @@ function legProfile(F, B) {
   return out;
 }
 const lq = V(), lm = new THREE.Matrix4();
-function legOut(segs, p) { // -> {o, d, r} for the segment nearest p: the bone point, the distance from it, the leg's radius that way
+// robe-run-1: exported for the skirt chains' leg capsules (motion.js) and robecheck.js. legFrame(X) caches each segment's inverse
+// bone matrix for the current pose, so the chains can ask many times a frame without inverting a matrix each time.
+export function legFrame(X, on = true) { for (const s of ['L', 'R']) for (const g of X.legR[s]) { if (!on) { g.inv = null; continue; } g.bone.updateWorldMatrix(true, false); g.inv = (g.inv || new THREE.Matrix4()).copy(g.bone.matrixWorld).invert(); } } // legFrame(X, false) drops the cache
+export function legOut(segs, p) { // -> {o, d, r} for the segment nearest p: the bone point, the distance from it, the leg's radius that way
   let best = null;
-  for (const g of segs) { lm.copy(g.bone.matrixWorld).invert(); lq.copy(p).applyMatrix4(lm);
+  for (const g of segs) { if (g.inv) lm.copy(g.inv); else lm.copy(g.bone.matrixWorld).invert(); lq.copy(p).applyMatrix4(lm);
     const t = Math.max(0, Math.min(g.len, lq.dot(g.ax))), a = lq.dot(g.u), b = lq.dot(g.v), d = Math.hypot(a, b, lq.dot(g.ax) - t);
     if (best && d >= best.d) continue;
     const fs = Math.min(NS - 1.001, t / DS - 0.5 < 0 ? 0 : t / DS - 0.5), fa = (Math.atan2(b, a) / (2 * Math.PI) * NA + NA) % NA;
@@ -214,7 +217,7 @@ function legOut(segs, p) { // -> {o, d, r} for the segment nearest p: the bone p
 function pushLegs(X, pt, W, m) {
   const F = X.F, p = V(); let moved = 0; const W0 = Float32Array.from(W);
   for (const s of ['L', 'R']) for (let i = 0; i < W.length / 3; i++) { p.set(W[i * 3], W[i * 3 + 1], W[i * 3 + 2]); const q = legOut(X.legR[s], p); const r = q.r + m * F.stature / 1.75;
-    const ramp = THREE.MathUtils.smoothstep(X.yHip - pt.world[i * 3 + 1], 0.04, 0.16); // the waist and sash line stay put
+    const ramp = THREE.MathUtils.smoothstep(X.yHip - pt.world[i * 3 + 1], ...(PUSH_BAND[pt.name] || [0.04, 0.16])); // the waist and sash line stay put
     if (q.d < r && q.d > 1e-5 && ramp > 0) { p.sub(q.o).multiplyScalar(1 + (r / q.d - 1) * ramp).add(q.o); W[i * 3] = p.x; W[i * 3 + 1] = p.y; W[i * 3 + 2] = p.z; moved++; } }
   // a loft (rows of nT points) does not take the push point by point: a thigh coming forward would raise a ledge where
   // the push fades in. Each column takes the strongest nearby push, falling off over 6 rows and 2 columns, so the
@@ -229,7 +232,8 @@ function pushLegs(X, pt, W, m) {
   return moved;
 }
 function onChain(ch, p) { let best = null, s0 = 0; for (let i = 0; i < ch.length - 1; i++) { const a = ch[i], ab = ch[i + 1].clone().sub(a), L = ab.length(); const t = THREE.MathUtils.clamp(p.clone().sub(a).dot(ab) / (L * L), 0, 1); const o = a.clone().addScaledVector(ab, t), d = p.distanceTo(o); if (!best || d < best.d) best = { s: s0 + t * L, o, d }; s0 += L; } return best; }
-const PUSH = {}; // shells round: no leg push, no settle; the skirt is a rigid piece skinned to the pelvis and thighs (his ruling 2026-11-02)
+export const PUSH_BAND = { robe: [0.03, 0.08] }; // robe-run-1: the robe takes the push fully from 8 cm under the hips (the thigh lifts into it there)
+export const PUSH = {}; // robe-run-1: exported so motion.js can put the robe back on the leg push (SKIRT.cap). shells round: no leg push, no settle; the skirt is a rigid piece skinned to the pelvis and thighs (his ruling 2026-11-02)
 // the legs under cloth are not drawn while the figure moves (a stride or a raise), so they cannot poke through it;
 // at the stand pose, the fit pose, they are drawn as the mask left them
 export function legsInMotion(X, moving) { const F = X.F; if (!F.indexMoving) return; F.mesh.geometry.setIndex(moving ? F.indexMoving : F.indexStill); F.legsHidden = !!moving;

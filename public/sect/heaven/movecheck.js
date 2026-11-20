@@ -10,7 +10,7 @@ import { wayColliders } from './crag.js';
 import { segBoxes, MOVE, CAM } from './move.js';
 import { wayRoute } from './walkcheck.js';
 
-export const BOUNDS = { walk: [1.1, 1.5], run: [3.6, 4.8], apex: [0.55, 0.95], air: [0.55, 0.85], slideWalk: 0.04, slideRun: 0.08, land: 0.02, pop: 1.5 };
+export const BOUNDS = { walk: [1.1, 1.5], run: [3.0, 3.9] /* robe-run-1: the robe gait runs at 3.4 m/s, was [3.6, 4.8] for 4.2 */, apex: [0.55, 0.95], air: [0.55, 0.85], slideWalk: 0.04, slideRun: 0.08, land: 0.02, pop: 1.5 };
 const DT = 1 / 30, V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const boxes = [colliders, wayColliders];
 const inBox = c => boxes.some(L => L.some(b => { const dx = c.x - b.x, dz = c.z - b.z, lx = dx * b.c - dz * b.s, lz = dx * b.s + dz * b.c;
