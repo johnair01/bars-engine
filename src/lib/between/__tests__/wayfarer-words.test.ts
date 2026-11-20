@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { WAYFARERS, WAYFARER_KEYS } from '../../../../public/sect/heaven/wayfarer-words.js'
+import { WAYFARERS as RAW, WAYFARER_KEYS } from '../../../../public/sect/heaven/wayfarer-words.js'
 import { CLIMB_KEYS } from '../../../../public/sect/heaven/trainee-words.js'
+
+const WAYFARERS = RAW as Record<string, { open: string; asks: string[][] }>
 
 /* The wayfarers on the guided climb (his B on tw-build-look-2, 2026-11-19). */
 describe('the wayfarers on the climb', () => {
