@@ -11,7 +11,8 @@ import { groundAt } from './walk.js';
 import { PILGRIM } from './layout.js';
 import { CREST_STAIR, ROAD, ROAD_START } from './crag.js';
 import { GREAT } from './world.js';
-import { elder } from './people.js';
+import { elder, wayfarer } from './people.js';
+import { WAYFARERS } from './wayfarer-words.js';
 import { talk } from './talk.js';
 import { doubtQuest } from './doubt.js';
 import { own } from '../../between/walk-own.js';
@@ -143,6 +144,21 @@ export async function traineeWalk(ctx) {
   const intro = () => { state = 'intro'; show(`<p>${esc(climbIntro(want))}</p><div class="tw-row"><button type="button" class="go" data-tw="climb">Start the climb</button></div>`, 'The start of the climb'); const g = card.querySelector('.go'); g && g.focus({ preventScroll: true }); };
   { const [bx, bz] = gw(GREAT.bell[0] + 1.9, GREAT.bell[1] + 1.2); const m = students[0]; if (m) stand(m, bx, bz, courtStart[0] - bx, courtStart[1] - bz); }
   placeAt(courtStart[0], courtStart[1], STOPS[0].at);
+  // wayfarers (his B on tw-build-look-2): a student beside each of four stops, to talk to for more about the sect; built after the page is live
+  (async () => {
+    const keys = Object.keys(WAYFARERS);
+    const got = await Promise.all(keys.map(async (k, n) => {
+      try {
+        const i = CLIMB.findIndex(c => c.key === k), [x, z] = STOPS[i].at, to = STOPS[i + 1].at, dx = to[0] - x, dz = to[1] - z, L = Math.hypot(dx, dz) || 1;
+        // 2.4 m to the side of the way; take the side whose ground is nearer the stop's own height, so nobody stands over the edge
+        const g0 = groundAt(x, z), cand = [1, -1].map(sg => [x - sg * dz / L * 2.4, z + sg * dx / L * 2.4]).sort((a, b) => Math.abs(groundAt(...a) - g0) - Math.abs(groundAt(...b) - g0))[0];
+        const m = await wayfarer(n); stand(m, cand[0], cand[1], x - cand[0], z - cand[1]);
+        return { key: k, m, height: (m.F && m.F.stature) || 1.7, info: WAYFARERS[k] };
+      } catch (e) { console.warn('wayfarer', k, e); return null; }
+    }));
+    const list = got.filter(Boolean);
+    if (list.length) api.wayfarers = talk({ S, A, cam, hooks, people: list, reach: 7, far: 10, busy: () => state !== 'climb' });
+  })();
 
   const entry = () => { show(`<p>${esc(entryLine(want))}</p><div class="tw-row"><button type="button" class="go" data-tw="walkin">Walk in</button></div>`, 'Arriving at the sect'); const g = card.querySelector('.go'); g && g.focus({ preventScroll: true }); };
   card.addEventListener('click', e => {
