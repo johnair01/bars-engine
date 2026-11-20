@@ -273,6 +273,19 @@ describe('the pipeline door', () => {
     expect((lenses.faces as { face: string }[])[0].face).toBe('shaman')
   })
 
+  it('lists shaman_intake and returns a reading with one next step', async () => {
+    const names = ((await rpc('tools/list')).result?.tools ?? []).map((t) => t.name)
+    expect(names).toContain('shaman_intake')
+    const r = payload(await call('shaman_intake', { doubt: 'I do not think I am capable of building the thing that I want' }))
+    expect(r.face).toBe('shaman')
+    expect(r.theme).toBe('capable')
+    expect(String(r.underneath).length).toBeGreaterThan(20)
+    expect(String(r.next_step)).toMatch(/today/)
+    expect(String(r.underneath) + String(r.next_step)).not.toContain('?')
+    expect(payload(await call('shaman_intake', { doubt: 'I feel stuck' })).theme).toBe('other')
+    expect((await call('shaman_intake', { doubt: '  ' })).result?.isError).toBe(true)
+  })
+
   it('refuses a held round with his sentence, and passes a clear one', async () => {
     const no = await call('asset.verify', { strand: 'hand-grip', round: 'r-held' })
     expect(no.result?.isError).toBe(true)
