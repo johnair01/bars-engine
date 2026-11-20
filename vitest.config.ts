@@ -203,6 +203,7 @@ export default defineConfig({
       'src/lib/coaching/__tests__/walk-data.test.ts',
       'src/lib/founder-gate/__tests__/content.test.ts',
       'src/lib/founder-gate/__tests__/seed-packet.test.ts',
+      'src/lib/founder-gate/__tests__/packet-record.test.ts',
       'scripts/__tests__/look-row.test.mjs',
     ],
   },

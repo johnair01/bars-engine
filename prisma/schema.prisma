@@ -5569,3 +5569,16 @@ model ChroniclerFlag {
   @@index([barId])
   @@map("chronicler_flags")
 }
+
+/// Founder support demo (hole H-packet-store): one seed packet per player id, so a game master can read it.
+/// playerId is a plain string with no relation: the gate walk is accountless and may carry a visitor id.
+model FounderPacket {
+  playerId   String   @id @map("player_id")
+  /// The packet as the walk built it (Packet in src/lib/founder-gate/seed-packet.ts), validated before it is written.
+  packetJson String   @map("packet_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([updatedAt])
+  @@map("founder_packets")
+}

@@ -11,6 +11,7 @@
 import { CROP_FAMILY, cropName, bedLabel, type Crop } from '@/lib/between/crops'
 import { newFarm, till, plant, ripen, pick, SLOTS, type Farm } from '@/lib/between/farm'
 import { EMPTY_PACKET, cropOf, seedOf, type Packet } from '@/lib/founder-gate/seed-packet'
+import { parsePacket, isPlayerId } from '@/lib/founder-gate/packet-record'
 import { SEEDS, courierLine, type Seed } from '@/lib/founder-gate/content'
 import { CHANNELS } from '@/lib/between/crops'
 import type { Channel } from '@/lib/coaching/unpacking-walk'
@@ -134,7 +135,11 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
     const grain = seedOf(packet)
     if (!grain) throw new MissingPiece(1, 'no SEEDS entry for Gather Resource')
     log(1, `picked ${CROP_FAMILY[feeling].state}`, ['seed-packet presets (EMPTY_PACKET, cropOf, SEEDS)'], [`packet {seed: Gather Resource, family: ${feeling}}`])
-    hole('H-packet-store', 1, 'The packet lives only in the browser; no record carries a packet and a player id to a game master', 'none')
+    /* H-packet-store is closed: packet-server.ts keeps one packet per player id. The run checks the same gate the store
+       uses (isPlayerId, parsePacket) and keeps the result in memory, since the run has no database. */
+    const kept = isPlayerId(playerId) ? parsePacket(JSON.stringify(packet)) : null
+    if (!kept) throw new MissingPiece(1, 'the packet record refused this packet or player id')
+    log(1, 'kept the packet under the player id', ['packet-record.ts (isPlayerId, parsePacket)'], [`founder_packets[${playerId}] (stand-in: memory; real: packet-server.ts putPacket)`])
 
     /* 2. The payment word and the stand-in $11. */
     const word = world.words.issue(playerId)
