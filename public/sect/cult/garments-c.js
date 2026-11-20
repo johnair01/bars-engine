@@ -804,4 +804,4 @@ export function dress(C, reg, outfitKey) {
 }
 
 // shells round: the pieces the rigid-shell dress (shells.js) reuses as they are
-export { loft, loftAt, loftGeo, skinned, weightsNearest, weightsBone, weightsSkirt, trousers, feet, shin, sash, whisk, hair, col, solid, torsoOK };
+export { tube, tubeGeo, loft, loftAt, loftGeo, skinned, weightsNearest, weightsBone, weightsSkirt, trousers, feet, shin, sash, whisk, hair, col, solid, torsoOK };
