@@ -343,6 +343,19 @@ function bell(C, pc, sh, s) {
   return { g, W: { si, sw }, B: { nR, nT, s0, s1, r0 } };
 }
 
+// round 4d (his answer on er-regalia-look-5, B: "the sleeve shorter to show the hands and the sense of the sleeve of the undershirt inside"):
+// the bell's mouth stops above the wrist, and the undershirt's own sleeve (pc.under, cream) runs on from inside it to the wrist, so the
+// cuff reads as a robe sleeve over a closer one. A tube round the forearm on the inner-robe layer, a few mm out from the arm; the
+// mouth band is a thicker rim at its end. Off unless the robe sets underSleeve.
+function underSleeves(C, G, pc, sh) {
+  const out = [], k = C.k, F = C.F, ok = n => n;
+  for (const s of ['L', 'R']) { const el = wp(F.bones['elbow' + s]), wr = wp(F.bones['wrist' + s]), Lf = el.distanceTo(wr);
+    const T = GC.tube(C, { chain: [el, wr], ok: i => /^(elbow|foreSwing)/.test(C.name(i)) && C.name(i).endsWith(s), s0: Lf * (sh.underFrom ?? 0.3), s1: Lf + (sh.underPast ?? 0.012) * k, ease: (sh.underEase ?? 0.007) * k, nT: 32, ds: 0.012 });
+    const uc = pc.under || '#ebe5d6', gi = GC.tubeGeo(C, T, uc), okA = i => ARM(s).includes(C.name(i));
+    out.push(G.skinned(C, gi, G.weightsNearest(C, gi, okA), uc, 'undersleeve' + s, G.LAYER.innerrobe)); }
+  void ok; return out;
+}
+
 function bustSpread(C) { // round 3: each apex's distance from the midline (the most forward chest point on each side), averaged
   const k = C.k, hl = wp(C.F.bones.hips).dot(C.l), best = { L: [-1e9, 0], R: [-1e9, 0] };
   for (const i of C.uniq) { const n = C.name(i), p = C.pos(i); if (!TORSO.includes(n) || p.y > C.ySh - 0.05 * k || p.y < C.ySh - 0.3 * k) continue; const x = p.dot(C.l) - hl; if (Math.abs(x) < 0.03 * k) continue;
@@ -382,7 +395,7 @@ export function dress(C, reg, outfitKey) {
     // over the 10 cm under the cut), so no gap can open between shell and skirt; the skirt is a drape piece, tagged for the cloth bake
     const hugR = C.reg ? makeHug(C, Lc, pt.world, C.yWaist - 0.022 * k, C.yWaist + 0.03 * k, pt.geo.attributes.aLap.array) : null;
     const S = skirt(C, rp, hugR ? { ...sh, hug: hugR } : sh, L, Lc, G); const ps = G.skinned(C, S.g, S.W, rp.color, 'robe', 4); paint(ps, rp, sh, 'skirt', C); if (C.reg) ACC.tagDrape(ps, 'waist', C.yWaist); robeParts.push(ps);
-    if (sh.bell) for (const s of ['L', 'R']) { const b = bell(C, rp, sh, s); const pb = G.skinned(C, b.g, b.W, rp.color, 'bell' + s, 4); paint(pb, rp, sh, 'bell', C); bellFall(C, pb, b.B, s, !!sh.gravity); if (C.reg) ACC.tagDrape(pb, 'elbow' + s, 0); robeParts.push(pb); } }
+    if (sh.bell) for (const s of ['L', 'R']) { const b = bell(C, rp, sh, s); const pb = G.skinned(C, b.g, b.W, rp.color, 'bell' + s, 4); paint(pb, rp, sh, 'bell', C); bellFall(C, pb, b.B, s, !!sh.gravity); if (C.reg) ACC.tagDrape(pb, 'elbow' + s, 0); robeParts.push(pb); } if (sh.underSleeve) robeParts.push(...underSleeves(C, G, rp, sh)); }
   let hairPc = null;
   const AH = { loftAt: G.loftAt, skinned: G.skinned, weightsBone: G.weightsBone, weightsNearest: G.weightsNearest, weightsSkirt: G.weightsSkirt, LAYER: G.LAYER || { sash: 5 }, okT: i => G.torsoOK(C, true)(C.name(i), C.pos(i).y) };
   for (const pc of pieces) {
@@ -553,6 +566,7 @@ function openShell(C, reg, rp, pc, sh0, G, kind) {
     const og = openFront(C, S, hc, y => lapX(Lc, Math.max(y, Lc.yc + 0.01)), yHem);
     const ps = G.skinned(C, og.g, og.W, pc.color, kind, 5.5); paint(ps, p2, sh, 'skirt', C); if (C.reg) ACC.tagDrape(ps, 'waist', C.yWaist); out.push(ps); void half;
     if (sh.bell) for (const s of ['L', 'R']) { const b = bell(C, p2, { ...sh, sleeveOf: pt.world }, s); const pb = G.skinned(C, b.g, b.W, pc.color, kind + '-bell' + s, 5.5); paint(pb, p2, sh, 'bell', C); bellFall(C, pb, b.B, s, !!sh.gravity); if (C.reg) ACC.tagDrape(pb, 'elbow' + s, 0); out.push(pb); }
+    if (sh.bell && sh.underSleeve) out.push(...underSleeves(C, G, p2, sh));
   }
   C.wrap = wrap; C.Lc = Lc0; C.vSym = vSym; return out;
 }
