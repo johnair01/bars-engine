@@ -12,7 +12,7 @@ import { SINGULAR, listOf } from './settled'
  * copy needs to stop being written. If the store is down the store is down. I don't want a fallback").
  */
 export const FROM_STORE = ['rows', 'positions', 'questions', 'terms', 'causes', 'picks', 'resolved', 'draws', 'battles',
-  'morning', 'intake'] as const
+  'morning', 'intake', 'proofs'] as const
 
 /** The lists the page draws out of cards, in the order their rows fold. */
 export const LISTS = ['positions', 'questions', 'terms', 'causes', 'battles'] as const
@@ -188,6 +188,8 @@ export function merge(docs: Docs): Doc {
   if (intake) out.intake = without(intake, 'savedAt')
   const draws = docs.draws
   if (draws && Object.keys(draws).length) out.draws = { ...draws }
+  const proofs = docs.proofs
+  if (proofs && Object.keys(proofs).length) out.proofs = { ...proofs }
   const picks = docs.picks
   if (picks && Object.keys(picks).length) out.picks = Object.entries(picks).map(([id, d]) => ({ id, ...d }))
   const battles = docs.battles
