@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import * as FG from './figure.js';
 import * as M from './mix.js';
 import * as MO from './motion.js';
+import * as CL from './clips.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const wp = b => b.getWorldPosition(V());
@@ -48,6 +49,10 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
   const G = new THREE.Group(); G.name = 'cultFigure'; parent.add(G);
   for (const o of [...X.scene.children]) { if (o.isLight) continue; G.add(o); }
   X.scene = G; G.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+  // anim-clips-look-1 / robe-run-look-1: the canonical motion is the library clips (clips.js). ?clips=0 brings back the hand-written stride for comparison.
+  const useClips = new URLSearchParams(location.search).get('clips') !== '0';
+  let CR = null; const clipsReady = useClips ? CL.loadLib(new URL('ual.glb', import.meta.url).href).then(U => { CR = CL.retarget(F, U); CR.U = U; }).catch(e => console.warn('clips', e)) : Promise.resolve();
+  await clipsReady;
   const { f, l } = F.fr, q = new THREE.Quaternion(), legs = [['L', 1, 0], ['R', -1, 0.5]];
 
   // measure the stand: legs straight down, arms hanging
@@ -74,6 +79,31 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
   const reset = () => { const p = body.position, yaw = body.rotation.y, fw = fwOf(yaw); st.yaw = yaw; st.ph = 0; st.Y = null;
     for (const [s] of legs) { const ft = feet[s]; ft.P.copy(home(s, p, fw, lftOf(fw))); ft.swing = false; } live.reset(); };
 
+  // the library clips (clips.js): which clip, how far through it, and a crossfade when it changes. The feet are not planted by code any
+  // more; the clip's phase follows the distance walked (rate = speed / the clip's own speed) so the feet do not skate.
+  const CS = { cur: null, t: 0, prev: null, pt: 0, fade: 1, landT: 0, airT: 0, standY: null };
+  const CLIPSPEED = { Walk_Loop: 1.35, Jog_Fwd_Loop: 3.2, Sprint_Loop: 5.4 };
+  const lowest = () => { let low = 1e9; const P = F.mesh.geometry.attributes.position, v = V(); F.mesh.skeleton.update(); for (let i = 0; i < P.count; i += 3) { v.fromBufferAttribute(P, i); F.mesh.applyBoneTransform(i, v); v.applyMatrix4(F.mesh.matrixWorld); low = Math.min(low, v.y); } return low; };
+  function clipFrame(dt, sp, air, rootXZ, ground, mv) {
+    const U = CR.U; let want;
+    if (air) { CS.airT += dt; CS.landT = 0; want = CS.airT < 0.25 ? 'Jump_Start' : 'Jump_Loop'; }
+    else { if (CS.airT > 0) { CS.landT = 0.45; CS.airT = 0; } CS.landT = Math.max(0, CS.landT - dt);
+      want = CS.landT > 0 && sp < 2 ? 'Jump_Land' : sp < 0.15 ? 'Idle_Loop' : sp < 2.3 ? 'Walk_Loop' : 'Jog_Fwd_Loop'; }
+    const dur = n => U.clips[n].duration, loop = n => /Loop/.test(n);
+    if (!CS.cur) { CS.cur = want; CS.t = 0; }
+    else if (want !== CS.cur) { CS.prev = CS.cur; CS.pt = CS.t; CS.fade = 0;
+      CS.t = loop(want) && loop(CS.cur) ? (CS.t / dur(CS.cur)) * dur(want) : 0; CS.cur = want; } // a loop swaps at the same phase; a one-shot starts at its start
+    const adv = (n, t) => { const r = loop(n) ? (CLIPSPEED[n] ? THREE.MathUtils.clamp(sp / CLIPSPEED[n], 0.6, 1.5) : 1) : 1; t += dt * r; return loop(n) ? t % dur(n) : Math.min(t, dur(n) - 1e-3); };
+    CS.t = adv(CS.cur, CS.t); if (CS.prev) CS.pt = adv(CS.prev, CS.pt); CS.fade = Math.min(1, CS.fade + dt / 0.18); if (CS.fade >= 1) CS.prev = null;
+    F.root.quaternion.identity(); F.root.updateMatrixWorld(true);
+    let P = CR.poseOf(CS.cur, CS.t); if (CS.prev) P = CR.blend(CR.poseOf(CS.prev, CS.pt), P, CS.fade);
+    CR.apply(P);
+    if (CS.standY == null) { CR.apply(CR.poseOf('Idle_Loop', 0)); F.root.position.set(0, 0, 0); F.root.updateMatrixWorld(true); CS.standY = -lowest(); CR.apply(P); }
+    F.root.quaternion.copy(q); F.root.position.set(rootXZ.x, ground + CS.standY, rootXZ.z); F.root.updateMatrixWorld(true);
+    if (!air) { let lift = 0; // a foot under the ground (a stair tread, the clip's own scale) lifts the whole figure
+      for (const s of ['L', 'R']) { const a = wp(F.bones['ankle' + s]); lift = Math.max(lift, groundAt(a.x, a.z) + soleH - a.y); }
+      if (lift > 0) { F.root.position.y += lift; F.root.updateMatrixWorld(true); } }
+  }
   function update(dt) {
     if (api.hold) return; // a still: the pose stays as the last frame left it
     const p = body.position;
@@ -135,7 +165,8 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
       const toe = K[s].ball.clone().applyQuaternion(q); if (ft.swing) toe.addScaledVector(DN, 0.35 * Math.sin(Math.PI * ft.u) * st.amp).normalize();
       else if (ft.heel > 1e-3) toe.addScaledVector(DN, ft.heel / 0.14).normalize(); // the toe stays on the stone as the heel lifts
       FG.aim(F, 'ankle' + s, 'ball' + s, toe); }
-    F.mesh.skeleton.update(); F.poseName = 'walk';
+    if (CR) clipFrame(dt, sp, air, rootXZ, ground, mv);
+    F.mesh.skeleton.update(); F.poseName = CR ? 'clip' : 'walk';
     const moving = st.amp > 0.05; if (moving !== st.moving) { st.moving = moving; M.legsInMotion(X, moving); }
     MO.skirtMood(air, st.land);
     live.step(dt);
