@@ -544,7 +544,7 @@ export async function verifyRound(strand: string, round: string): Promise<Verdic
   })
 
   if (!folder)
-    return verdict({ ok: false, reason: 'asset.verify needs the round folder, e.g. `2026-11-09-cc-gate-look-13`' })
+    return verdict({ ok: false, reason: 'asset_verify needs the round folder, e.g. `2026-11-09-cc-gate-look-13`' })
   const text = await readText(receiptPath)
   if (!text)
     return verdict({ ok: false, reason: `no receipt at ${receiptPath}: the round has not been judged. Run ${run}` })
@@ -660,7 +660,7 @@ function ruleBlock(name: string, text: string): CanonBlock | null {
 /** One canon block: a mechanic's file, or a rule in canon/play-canon.md. */
 export async function canonBlock(name: string): Promise<{ block: CanonBlock | null; error: string | null }> {
   const asked = name.trim()
-  if (!asked) return { block: null, error: `canon.lookup needs a name: a ${MECHANICS} file, or a rule in ${PLAY_CANON}` }
+  if (!asked) return { block: null, error: `canon_lookup needs a name: a ${MECHANICS} file, or a rule in ${PLAY_CANON}` }
   if (/^[A-Za-z0-9._-]+$/.test(asked)) {
     const path = `${MECHANICS}/${asked}.yaml`
     const text = await readText(path)
@@ -723,7 +723,7 @@ export async function ontologyProfile(kind: string): Promise<Profile> {
   const fields = pipeline ? fieldOwnersIn(pipeline).map(({ field, owner }) => ({ field, owner })) : []
   const kinds = Object.keys(profiles)
   const base = { kind: asked, loads: [], fields, source: `${ONTOLOGY}:1`, kinds, error: null as string | null }
-  if (!asked) return { ...base, error: `ontology.profile needs a task kind: ${kinds.join(', ') || 'none in the store'}` }
+  if (!asked) return { ...base, error: `ontology_profile needs a task kind: ${kinds.join(', ') || 'none in the store'}` }
   if (!kinds.length) {
     return { ...base, error: `${ONTOLOGY} is not in the store; push it with board/push_content.py` }
   }
@@ -779,7 +779,7 @@ function fadersIn(text: string): Record<string, string>[] {
  * a fader says appear in the feel line it names. */
 export async function evaluateMechanic(name: string, state: Record<string, unknown>): Promise<{ result: MechanicEval | null; error: string | null }> {
   const asked = name.trim()
-  if (!asked) return { result: null, error: 'mechanic.eval needs a mechanic: the name in its canon/mechanics file' }
+  if (!asked) return { result: null, error: 'mechanic_eval needs a mechanic: the name in its canon/mechanics file' }
   const path = `${MECHANICS}/${asked}.yaml`
   const text = await readText(path)
   if (!text) return { result: null, error: `no mechanic at ${path}; push it with board/push_content.py` }
