@@ -387,6 +387,7 @@ export function dress(C, reg, outfitKey) {
   if (C.reg && C.cut === 'm') { sh.manCut = true; sh.collarUp = 0.01; sh.square = !!sh.bell; }
   // one loft for the skirt and for what lies on the robe (sash, hair, props): no folds modelled, no drape
   const L = G.loft(C, { yTop: C.yNeck + 0.02 * k, yHem, regionAt: G.torsoOK(C, true), ease: (sh.skirtEase ?? 0.02), flare: rp.flare || 0, folds: 0, cinch: { y: C.yWaist, h: 0.07 * k }, topEase: 0.012, yoke: 0.03, tcut: true });
+  C.robeLoft = L; // round 4f: the outer's skirt keeps outside this one at every height (his note on er-regalia-look-7)
   const robeParts = [];
   { const { g, W, Lc, base } = bodyShell(C, rp, sh); C.Lc = Lc; if (C.reg) C.robeBase = base;
     // the rank square's place: under the collar's crossing, over the sash, at most 17 cm square
@@ -562,6 +563,10 @@ function openShell(C, reg, rp, pc, sh0, G, kind) {
   if (outer) {
     const yHem = Math.max(0.034 * k, (pc.hem ?? 0.035) * C.S), sk = sh0.skirtEase ?? 0.028;
     const L = G.loft(C, { yTop: C.yNeck + 0.02 * k, yHem, regionAt: G.torsoOK(C, true), ease: Math.max(sk + 0.012, easeUp + 0.004), flare: pc.flare || 0, folds: 0, cinch: null, topEase: 0.012, yoke: 0.03, tcut: true });
+    // round 4f (his note on er-regalia-look-7: "the outer robe hem is separating from the purple femme robes"): the woman's robe flares
+    // more (0.22) than the over-robe's own loft (0.14 to 0.2), so below the knee the robe came out through the over-robe and the hem
+    // bands parted. Every ring of the over-robe's skirt now stands at least 8 mm outside the robe's skirt at its angle and height.
+    if (C.reg && C.robeLoft) for (const rg of L.rings) for (let t = 0; t < L.nT; t++) { const th = t / L.nT * Math.PI * 2, q = G.loftAt(C.robeLoft, th, rg.y), need = (q.a - rg.c[0]) * Math.cos(th) + (q.b - rg.c[1]) * Math.sin(th) + 0.008 * k; if (rg.r[t] < need) rg.r[t] = need; }
     // round 7 (his marks on cult-shells-look-9: a hard horizontal seam at the waist, and from above the sash showed in
     // the gap at the back): the skirt's top hugs the shell it laps over, 4 mm outside it, and widens to its own loft by
     // 10 cm under the shell's cut (where the skirt stands further out than the shell, as over the sash at the back, it
