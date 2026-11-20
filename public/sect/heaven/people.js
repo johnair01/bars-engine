@@ -48,6 +48,12 @@ export async function elder(i) {
   return make(mix, await registry());
 }
 
+/** Wayfarers for the guided climb (build 2026-11-20): four students on the way up, cultivation figures in the sect's own outfits. */
+export async function wayfarer(i) {
+  const OUT = ['A2', 'B1', 'A1', 'B2'], mix = { direction: OUT[i % 4][0], gender: i % 2 ? 'm' : 'f', build: 'average', skin: [5, 2, 6, 1][i % 4], height: [1.63, 1.77, 1.66, 1.73][i % 4], outfit: OUT[i % 4] };
+  return make(mix, await registry());
+}
+
 export async function people(S, gl, { court, avatar }) {
   const reg = await registry(), students = [];
   // one figure at a time, so the page stays live while nine are cut
