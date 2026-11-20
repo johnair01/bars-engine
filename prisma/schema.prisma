@@ -5582,3 +5582,13 @@ model FounderPacket {
   @@index([updatedAt])
   @@map("founder_packets")
 }
+
+/// Founder support demo (hole H-payment-word): the short word a player puts in the payment note, one per player id.
+/// word is unique, so a word names one player. player_id is unique, so a player keeps one word.
+model FounderPaymentWord {
+  word      String   @id
+  playerId  String   @unique @map("player_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("founder_payment_words")
+}

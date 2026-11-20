@@ -12,6 +12,7 @@ import { CROP_FAMILY, cropName, bedLabel, type Crop } from '@/lib/between/crops'
 import { newFarm, till, plant, ripen, pick, SLOTS, type Farm } from '@/lib/between/farm'
 import { EMPTY_PACKET, cropOf, seedOf, type Packet } from '@/lib/founder-gate/seed-packet'
 import { parsePacket, isPlayerId } from '@/lib/founder-gate/packet-record'
+import { makeWord, findWord } from '@/lib/founder-gate/payment-word'
 import { SEEDS, courierLine, type Seed } from '@/lib/founder-gate/content'
 import { CHANNELS } from '@/lib/between/crops'
 import type { Channel } from '@/lib/coaching/unpacking-walk'
@@ -76,12 +77,19 @@ export function standIns(): World {
   const items: Array<{ playerId: string; line: string }> = []
   const marks = new Map<string, string[]>()
   let shipped = 0
-  const bank = ['alder', 'brook', 'cedar', 'dune', 'ember', 'fern', 'glen', 'heron', 'iris', 'juniper']
-  let n = 0
+  const byPlayer = new Map<string, string>()
+  let seq = 0.37
   return {
     money: { send: (word, cents) => ({ word, cents }) },
     words: {
-      issue: (playerId) => { const w = `${bank[n++ % bank.length]}-${n}`; words.set(w, playerId); return w },
+      // Mirrors payment-word-server.ts issueWord: one word per player, never a word twice.
+      issue: (playerId) => {
+        const have = byPlayer.get(playerId)
+        if (have) return have
+        let w = makeWord(() => ((seq = (seq * 9.7 + 0.211) % 1), seq))
+        while (words.has(w)) w = makeWord(() => ((seq = (seq * 9.7 + 0.211) % 1), seq))
+        words.set(w, playerId); byPlayer.set(playerId, w); return w
+      },
       owner: (w) => words.get(w),
     },
     farms: { get: (id) => farms.get(id), put: (id, f) => void farms.set(id, f) },
@@ -143,14 +151,16 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
 
     /* 2. The payment word and the stand-in $11. */
     const word = world.words.issue(playerId)
-    log(2, `payment word issued: ${word}`, ['PaymentWords (stand-in)'], ['word register (stand-in)'])
-    hole('H-payment-word', 2, 'No payment word maker or register; the word is not tied to a player anywhere real', 'none')
+    log(2, `payment word issued: ${word}`, ['payment-word.ts makeWord'], [`founder_payment_words[${word}] (stand-in: memory; real: payment-word-server.ts issueWord)`])
+    /* H-payment-word is closed: payment-word-server.ts holds the register. The makeup of the word is still Wendell's to rule. */
     const payment = world.money.send(word, BOOK_CENTS)
     log(2, `stand-in $${payment.cents / 100} sent carrying "${word}"`, [], ['Money (stand-in)'])
     hole('H-money', 2, 'The game cannot see a Venmo or Cash App payment (no signal, no webhook); the $11 is a stand-in', 'none')
 
     /* 3. The stand-in game master marks the payment by its word (A4). */
-    const owner = world.words.owner(payment.word)
+    const noteWord = findWord(`for the book ${payment.word.toUpperCase()}`)
+    if (noteWord !== payment.word) throw new MissingPiece(3, `findWord could not read "${payment.word}" out of a payment note`)
+    const owner = world.words.owner(noteWord)
     if (!owner) throw new MissingPiece(3, `no player owns the word "${payment.word}"`)
     log(3, `game master marked the payment: word "${payment.word}" belongs to ${owner}`, ['word register (stand-in)'], [])
     hole('H-gm-mark', 3, 'No game master surface: no place he sees an unmarked payment and marks it by its word', 'none')
