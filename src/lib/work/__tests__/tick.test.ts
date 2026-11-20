@@ -17,3 +17,20 @@ describe('orchestrator tick: how many workers to start', () => {
     expect(decideFires({ ...base, cooldownOpen: true })).toBe(0)
   })
 })
+
+import { tickEnv, tickLockLane, fireText, TICK_LANES } from '../tick'
+
+describe('orchestrator tick: lanes', () => {
+  it('feeds Claude first, then Freebuff', () => expect([...TICK_LANES]).toEqual(['claude', 'freebuff']))
+  it('reads each lane from its own settings', () => {
+    process.env.WORKER_ROUTINE_FIRE_URL = 'https://c'; process.env.WORKER_ROUTINE_TOKEN = 'tc'
+    process.env.WORKER_ROUTINE_FIRE_URL_FREEBUFF = 'https://f'; process.env.WORKER_ROUTINE_TOKEN_FREEBUFF = 'tf'
+    expect(tickEnv('claude')).toEqual({ url: 'https://c', token: 'tc' })
+    expect(tickEnv('freebuff')).toEqual({ url: 'https://f', token: 'tf' })
+  })
+  it('keeps a separate cooldown per lane', () => {
+    expect(tickLockLane('claude')).toBe('tick:claude')
+    expect(tickLockLane('freebuff')).toBe('tick:freebuff')
+  })
+  it('names the lane in what the worker is told', () => expect(fireText('freebuff', 90, 0, 2)).toContain('90 ready in the freebuff lane'))
+})
