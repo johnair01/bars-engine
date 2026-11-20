@@ -269,3 +269,17 @@ describe('closeTicket', () => {
     expect(await closeTicket(db, 'nope', 'x', 'council')).toMatchObject({ ok: false, status: 404 })
   })
 })
+
+describe('release with hold', () => {
+  it('holds a released ticket with its reason instead of returning it to the deck', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'claimed', claimedBy: 'thread', basis: { rows: [] } }]
+    const r = await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', 'needs his Mac', new Date(), null, true)
+    expect(r).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'held', result: 'needs his Mac', basis: { hold: { reason: 'needs his Mac' } } })
+  })
+  it('without hold, release still goes back to ready', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'claimed', basis: {} }]
+    await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', 'why')
+    expect(tickets[0]).toMatchObject({ state: 'ready' })
+  })
+})
