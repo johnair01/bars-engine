@@ -283,7 +283,7 @@ describe('release with hold', () => {
     expect(tickets[0]).toMatchObject({ state: 'ready' })
   })
   it('holds a ticket released after MAX_ATTEMPTS claims, so a claim-and-release loop ends', async () => {
-    const tickets = [{ id: 'h', lane: 'claude', state: 'claimed', basis: {}, attempts: MAX_ATTEMPTS }]
+    const tickets: Record<string, unknown>[] = [{ id: 'h', lane: 'claude', state: 'claimed', basis: {}, attempts: MAX_ATTEMPTS }]
     await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', "can't act on this yet")
     expect(tickets[0]).toMatchObject({ state: 'held', claimedBy: null, leaseUntil: null })
     expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times and released/)
