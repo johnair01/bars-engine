@@ -117,8 +117,9 @@ export function paint(pt, rp, sh, kind, C) {
   const surface = rp.surface || null;
   const mat = surface === 'satin' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.55, sheen: 0.8, sheenRoughness: 0.4, sheenColor: new THREE.Color(1, 0.97, 0.9) })
     : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
-  mat.onBeforeCompile = s => {
-    Object.assign(s.uniforms, U);
+  // round 4e: one program builder, so the bell's inside can run the same paint with its own uniforms
+  const prog = UU => s => {
+    Object.assign(s.uniforms, UU);
     s.vertexShader = 'attribute float aEdgeC; attribute float aEdgeH; attribute float aLap; attribute float aSeam; attribute vec3 aRest; attribute float aFold;\nvarying float vFold;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdgeC = aEdgeC; vEdgeH = aEdgeH; vLap = aLap; vSeam = aSeam; vRest = aRest; vFold = aFold;');
     s.fragmentShader = 'varying float vFold; uniform sampler2D uFoldMap; uniform float uFoldS; uniform float uFy0; uniform float uFy1; uniform float uFoldOn;\nvarying float vEdgeC; varying float vEdgeH; varying float vLap; varying float vSeam; varying vec3 vRest;\nuniform int uKind; uniform float uK; uniform vec3 uCollarC; uniform float uCollarW; uniform vec3 uHemC; uniform float uHemW; uniform float uCloud; uniform float uCloudN; uniform float uFoldA; uniform float uFoldN; uniform float uTop; uniform float uHem; uniform float uApex; uniform float uElbow; uniform float uBrW; uniform vec3 uBrC; uniform vec3 uBrE; uniform float uBrB; uniform float uYN; uniform float uWN; uniform float uYC; uniform float uXC; uniform float uP; uniform float uE; uniform float uB; uniform float uS0; uniform float uS1;\nuniform float uWeave; uniform float uWeaveS; uniform vec3 uWeaveC; uniform float uMotif; uniform vec3 uMotifC;\nuniform float uRank; uniform vec3 uRankC; uniform float uRankY; uniform float uRankS; uniform vec3 uRankT;\n' + GLSL_COLLAR + GLSL_WEAVE
       + 'float gBand = 0.0; float gWeave = 0.0; float gMetal = 0.0;\n' + s.fragmentShader.replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_SHEEN\nmaterial.sheenColor *= 1.0 - gBand;\n#endif\nmaterial.specularColor *= 1.0 - 0.85 * gBand; material.specularF90 *= 1.0 - 0.85 * gBand; material.roughness = mix(material.roughness, 1.0, gBand);\nmaterial.roughness = mix(material.roughness, 0.5, gWeave); material.specularColor = mix(material.specularColor, vec3(0.09), gWeave);\nmaterial.roughness = mix(material.roughness, 0.32, gMetal); material.specularColor = mix(material.specularColor, uMotifC, gMetal); material.specularF90 = mix(material.specularF90, 1.0, gMetal);') // round 4 fix 3: nor a grazing highlight (from the side, the band's edge-on glint read as a grey line along her V) // round 4: no satin sheen on the collar band (at a grazing angle it greyed the black band into smoke)
@@ -195,6 +196,7 @@ if (uFoldOn > 0.5 && vFold > 0.02) {
   diffuseColor.rgb = c;
 }`);
   };
+  mat.onBeforeCompile = prog(U);
   mat.customProgramCacheKey = () => 'shell-paint-' + kind + '-' + (surface || '');
   mat.userData.U = U; mat.userData.weave = !!rp.weave; // round 2: a preview's sliders set the weave live
   pt.mesh.material = mat;
@@ -202,6 +204,15 @@ if (uFoldOn > 0.5 && vFold > 0.02) {
   // V showed a thin grey line of lining along its edge); the lining keeps its colour everywhere else
   const lin = col(rp.lining || rp.trim || rp.color), back = new THREE.MeshStandardMaterial({ color: lin.multiplyScalar(0.8), roughness: 0.95, side: THREE.BackSide });
   if (kind === 'shell') { back.onBeforeCompile = mat.onBeforeCompile; back.customProgramCacheKey = () => 'shell-paint-back-' + kind; }
+  // round 4e (his note on er-regalia-look-6: "paint the inside of the robe sleeve"): on a bell that sets paintInside the
+  // inside is the lining at full strength, not dimmed, with the woven pattern in a deeper tone of it and the cuff band
+  // running on round the mouth as a facing, so the colour shows wherever the sleeve opens
+  if (kind === 'bell' && sh.paintInside) {
+    const lc = col(rp.lining || rp.trim || rp.color), deep = lc.clone().multiplyScalar(0.62);
+    back.color.copy(lc.clone().multiplyScalar(rp.lining && rp.lining === (rp.band || rp.trim) ? 0.86 : 1)); back.roughness = 0.85;
+    const UB = { ...U, uWeave: { value: Math.max(U.uWeave.value, 0.4) }, uWeaveC: { value: deep }, uRank: { value: 0 }, uFoldOn: { value: 0 }, uBrW: { value: 0 } };
+    back.onBeforeCompile = prog(UB); back.customProgramCacheKey = () => 'shell-paint-back-bell-lined';
+  }
   pt.back.material = back;
   return pt;
 }

@@ -351,8 +351,13 @@ function underSleeves(C, G, pc, sh) {
   const out = [], k = C.k, F = C.F, ok = n => n;
   for (const s of ['L', 'R']) { const el = wp(F.bones['elbow' + s]), wr = wp(F.bones['wrist' + s]), Lf = el.distanceTo(wr);
     const T = GC.tube(C, { chain: [el, wr], ok: i => /^(elbow|foreSwing)/.test(C.name(i)) && C.name(i).endsWith(s), s0: Lf * (sh.underFrom ?? 0.3), s1: Lf + (sh.underPast ?? 0.012) * k, ease: (sh.underEase ?? 0.007) * k, nT: 32, ds: 0.012 });
-    const uc = pc.under || '#ebe5d6', gi = GC.tubeGeo(C, T, uc), okA = i => ARM(s).includes(C.name(i));
-    out.push(G.skinned(C, gi, G.weightsNearest(C, gi, okA), uc, 'undersleeve' + s, G.LAYER.innerrobe)); }
+    // round 4e (his note on er-regalia-look-6: "Add more Colee to the inner sleeves"): the inner sleeve takes a colour of its
+    // own (sh.underSleeveC, a deeper tone of the face's colour) and the undershirt's cream shows only as a band at the wrist
+    const uc = sh.underSleeveC || pc.under || '#ebe5d6', gi = GC.tubeGeo(C, T, uc), okA = i => ARM(s).includes(C.name(i));
+    out.push(G.skinned(C, gi, G.weightsNearest(C, gi, okA), uc, 'undersleeve' + s, G.LAYER.innerrobe));
+    if (sh.underSleeveC) { const bw = (sh.underCuffW ?? 0.03) * k, cc = pc.under || '#ebe5d6';
+      const Tc = GC.tube(C, { chain: [el, wr], ok: i => /^(elbow|foreSwing)/.test(C.name(i)) && C.name(i).endsWith(s), s0: Lf + (sh.underPast ?? 0.012) * k - bw, s1: Lf + (sh.underPast ?? 0.012) * k + 0.002 * k, ease: ((sh.underEase ?? 0.007) + 0.0025) * k, nT: 32, ds: 0.006 });
+      const gc = GC.tubeGeo(C, Tc, cc); out.push(G.skinned(C, gc, G.weightsNearest(C, gc, okA), cc, 'undercuff' + s, G.LAYER.innerrobe)); } }
   void ok; return out;
 }
 
