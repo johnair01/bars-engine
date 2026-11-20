@@ -111,6 +111,12 @@ function chainStep(ch, T1, fps, dt) {
     for (let j = 1; j < N; j++) { a.fromArray(x, j * 3 - 3); b.fromArray(x, j * 3); const d = b.clone().sub(a), L = d.length() || 1; b.copy(a).addScaledVector(d, ch.len[j - 1] / L); // the bone keeps its length
       t.set(T0[j * 3] + (T1[j * 3] - T0[j * 3]) * f, T0[j * 3 + 1] + (T1[j * 3 + 1] - T0[j * 3 + 1]) * f, T0[j * 3 + 2] + (T1[j * 3 + 2] - T0[j * 3 + 2]) * f);
       const o = b.clone().sub(t), lim = max * j / (N - 1); if (o.length() > lim) b.copy(t).addScaledVector(o.normalize(), lim);
+      // robe-run-1, the swing limit: a segment turns at most ang[0] (root) to ang[1] (hem) radians off its skinned direction
+      if (ch.cfg.ang) { const tp = V(T0[j * 3 - 3] + (T1[j * 3 - 3] - T0[j * 3 - 3]) * f, T0[j * 3 - 2] + (T1[j * 3 - 2] - T0[j * 3 - 2]) * f, T0[j * 3 - 1] + (T1[j * 3 - 1] - T0[j * 3 - 1]) * f);
+        const want = t.clone().sub(tp).normalize(), has = b.clone().sub(a), L = has.length() || 1, am = ch.cfg.ang[0] + (ch.cfg.ang[1] - ch.cfg.ang[0]) * (j - 1) / Math.max(1, N - 2), th = want.angleTo(has);
+        if (th > am) { const ax = V().crossVectors(want, has); if (ax.lengthSq() > 1e-12) b.copy(a).addScaledVector(want.applyAxisAngle(ax.normalize(), am), L); } }
+      // robe-run-1, the leg capsules: a node inside a thigh or shin (the leg's own outline plus a gap) goes out of it, and loses its speed into the leg
+      const nrm = ch.collide ? ch.collide(b, j) : null; if (nrm) { const vn = v[j * 3] * nrm.x + v[j * 3 + 1] * nrm.y + v[j * 3 + 2] * nrm.z; if (vn < 0) { v[j * 3] -= vn * nrm.x; v[j * 3 + 1] -= vn * nrm.y; v[j * 3 + 2] -= vn * nrm.z; } }
       b.toArray(x, j * 3); } }
   ch.T0 = T1;
 }
@@ -133,7 +139,11 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
   // clothing-bones-look-5: his note, "the skirt chains are getting closer. A slit down the side and the front should solve for a lot of the issues".
   // The chains hang closer (max 0.13 -> 0.085) and the skirt is cut open at the front and both sides: a point either side of a cut follows
   // only its own column, so the two edges swing apart instead of dragging one another through the legs. slits are the column gaps (k = between column k and k+1).
-  slits: [15, 3, 7], slitHalf: 0.02 };
+  slits: [15, 3, 7], slitHalf: 0.02,
+  // robe-run-1 (his A on robe-research-look-1, 2026-11-20: "Bone chains with leg capsules and a leash"). The leash is `max` above, a node's
+  // reach off its skinned place growing from the waist to the hem; `ang` caps how far a segment turns off its skinned direction (radians,
+  // first segment to hem); `cap` turns on the leg capsules, which push every chain node out of the thigh and shin it hangs over, `gap` clear.
+  ang: [0.3, 0.75], cap: true, gap: 0.02, skin: 0.006 }; // skin: the robe points' own clearance off the legs (the backstop)
 // anim-robe-look-4: below the hip the robe is half re-hung from the thighs to the pelvis (a robe is not a pair of trousers): a point's skin
 // weights move `hm` of the way to the hips bone, from just under the hips (u = 0) to the knee (u = 1). A front panel then goes with its
 // thigh only partway and trails. Call once after the figure is built, before the first frame.
@@ -157,14 +167,29 @@ function skirtOf(X, pt) {
     const a = ((Math.atan2(z - hips.z, x - hips.x) / (2 * Math.PI) + 1) % 1 * K.cols + (K.off ?? 0.5)) % K.cols; c0[i] = Math.floor(a) % K.cols; wc[i] = a - Math.floor(a);
     if (K.slits.includes(c0[i])) wc[i] = ramp(0.5 - K.slitHalf, 0.5 + K.slitHalf, wc[i]); // the cut: a point beside it follows one column only; a narrow band blends so no long sliver spans the gap
     r[i] = ramp(0, K.soft, u); } // the first quarter of the drop stays skinned
-  const cfg = { n: K.n, hz: K.hz, zeta: K.zeta, max: K.max };
-  return { skirt: true, cfg, N: K.n, j0, wj, c0, wc, r, cols: Array.from({ length: K.cols }, () => ({ cfg, N: K.n, x: null, v: null, T0: null, len: null })) };
+  const cfg = { n: K.n, hz: K.hz, zeta: K.zeta, max: K.max, ang: K.ang };
+  const collide = X.legR ? legCapsules(X) : null;
+  return { skirt: true, X, cfg, N: K.n, j0, wj, c0, wc, r, cols: Array.from({ length: K.cols }, () => ({ cfg, N: K.n, x: null, v: null, T0: null, len: null, collide })) };
+}
+// robe-run-1: the capsules are the legs' own outlines (mix.js legProfile, per 2 cm and 15 degrees round the bone), not round tubes.
+// A node closer to a thigh or shin bone than that leg's skin that way plus SKIRT.gap is moved straight out from the bone; the
+// unit push direction goes back to chainStep, which takes the node's speed into the leg away.
+function legCapsules(X) {
+  const o = V(), g = SKIRT.gap * X.F.stature / 1.75;
+  return b => { if (!SKIRT.cap) return null; let n = null;
+    for (const s of ['L', 'R']) { const q = M.legOut(X.legR[s], b); if (!q) continue; const r = q.r + g;
+      if (q.d < r && q.d > 1e-5) { o.copy(b).sub(q.o); b.copy(q.o).addScaledVector(o, r / q.d); n = o.normalize().clone(); } }
+    return n; };
 }
 // clothing-bones-look-5: in the air the hem may swing wider (it lags the body's fall and opens, as the gate figure's try 3 did);
 // for a quarter second after a landing it is damped harder so it settles instead of ringing. cultwalk.js calls skirtMood each frame.
 export const MOOD = { air: false, land: 1 }; export function skirtMood(air, land) { MOOD.air = !!air; MOOD.land = land; }
 function skirtOut(ch, W, fps, dt) {
-  ch.cfg.max = SKIRT.max * (MOOD.air ? 1.6 : 1); ch.cfg.zeta = SKIRT.zeta + 0.4 * (1 - MOOD.land);
+  if (ch.X && ch.X.legR) M.legFrame(ch.X); // the capsules read the posed legs, one matrix inverse per segment per frame
+  try { return skirtSwing(ch, W, fps, dt); } finally { if (ch.X && ch.X.legR) M.legFrame(ch.X, false); }
+}
+function skirtSwing(ch, W, fps, dt) {
+  ch.cfg.max = SKIRT.max * (MOOD.air ? 1.6 : 1); ch.cfg.ang = SKIRT.ang; ch.cfg.zeta = SKIRT.zeta + 0.4 * (1 - MOOD.land);
   const { N, cols } = ch, C = cols.length, n = W.length / 3, T = cols.map(() => new Float32Array(N * 3)), cnt = cols.map(() => new Float32Array(N));
   for (let i = 0; i < n; i++) for (const [c, wc] of [[ch.c0[i], 1 - ch.wc[i]], [(ch.c0[i] + 1) % C, ch.wc[i]]]) for (const [j, wj] of [[ch.j0[i], 1 - ch.wj[i]], [ch.j0[i] + 1, ch.wj[i]]]) {
     const w = wc * wj; if (w <= 0) continue; cnt[c][j] += w; for (let k = 0; k < 3; k++) T[c][j * 3 + k] += w * W[i * 3 + k]; }
@@ -232,7 +257,10 @@ export function live(X, { drag = true } = {}) {
             const o = x[j] - T; if (o > mx) x[j] = T + mx; else if (o < -mx) x[j] = T - mx; } }
         s.T0 = T1; out = new Float32Array(n); for (let j = 0; j < n; j++) { const q = (j / 3) | 0; out[j] = T1[j] + s.d.w[q] * (x[j] - T1[j]); } }
       s.pt.settled = out; }
-    M.legPush(X); if (drag) pushOff(X, st); M.showLive(X);
+    // robe-run-1: the backstop. The capsules hold the chain bones off the legs; the points between two bones can still cut a corner
+    // into a thigh, so with SKIRT.cap the robe's own points are pushed off the legs as well (mix.js pushLegs, outward only, tented)
+    if (SKIRT.cap && SKIRT_ON) M.PUSH.robe = SKIRT.skin; else delete M.PUSH.robe;
+    M.legFrame(X); M.legPush(X); M.legFrame(X, false); if (drag) pushOff(X, st); M.showLive(X);
   };
   return { step, reset };
 }
