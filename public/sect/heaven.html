@@ -56,6 +56,8 @@ import { cultWalker, GAIT } from './cult/cultwalk.js';
 import { cameraRig, MOVE, touchStick, forgetKeysOnBlur } from './heaven/move.js';
 import { wayColliders } from './heaven/crag.js';
 import { traineeWalk } from './heaven/trainee.js';
+import { makeBellyGlow } from '../between/cult/belly-glow.js';
+import { layersFrom, shouldPulse } from '../between/cult/belly-rules.js';
 
 // The join leg from the Hollow (chapter1-demo plan step 3): a player who walked on from the Hollow's last card starts the
 // trainee walk (heaven/trainee.js). ?tour=1 keeps the builder's tour with its stop buttons.
@@ -121,6 +123,19 @@ let dressAll = null, walker = null;
 const ready = people(S, gl, { court: GREAT.G }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
 const walking = cultWalker(S, A, { groundAt, tread: stairTread, stepOn: (x, z) => stairTread(x, z) ? TREAD : GAIT.step })
   .then(w => { walker = w; return w; }).catch(e => { console.warn('cultivation figure', e); A.children.forEach(c => { c.visible = true; }); });
+// The belly glow (cultivated character T008): the signed-in player's sheet count from the passport, brighter by layer, one
+// pulse when a layer opened since the figure was last here. A guest, or a passport with no sheet yet, shows the faint ember.
+let belly = null;
+walking.then(async w => {
+  if (!w?.X?.F) return;
+  belly = makeBellyGlow(S, w.X.F);
+  const p = await fetch('/api/passport', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const layers = layersFrom(p?.passport?.sheet?.gathered ?? 0);
+  let seen = null; try { const v = localStorage.getItem('belly-layers-seen'); seen = v === null ? null : Number(v); } catch {}
+  belly.set(layers, { pulse: shouldPulse(seen, layers) });
+  try { localStorage.setItem('belly-layers-seen', String(layers)); } catch {}
+  belly.read = true; // the passport has been read, for stills
+}).catch(e => console.warn('belly glow', e));
 const cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 3000);
 const orbit = new OrbitControls(cam, R.domElement);
 orbit.enableDamping = true; orbit.maxPolarAngle = Math.PI * 0.49; orbit.minDistance = 2; orbit.maxDistance = 120; orbit.enablePan = false;
@@ -220,6 +235,7 @@ function simulate(dt) {
   if (dressAll) dressAll(dt);
   for (const h of frameHooks) h(dt);
   if (walker) walker.update(dt);
+  if (belly) belly.update(dt);
   placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
 }
@@ -262,7 +278,7 @@ function shot(name) {
   rig.free = true; cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
+window.heaven = { belly: () => belly, rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, stop: Q.get('stop'), hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
 </script>
