@@ -401,10 +401,10 @@ const STREET = {
    The street clothes of STREET were colour painted on the old body, so a visitor now wears a cultivation outfit instead; the
    figure keeps the calls the hall makes (holder, set, pose, hang, obj). The bench sit and the purse weight were drawn on the old
    skeleton and are not carried over (no purse, no sit pose yet). */
-const WHO = { me: "m", denim: "m", puffer: "f" };
+const WHO = { me: "m", denim: "m", puffer: "f" }, WEAR = { me: "A3", denim: "B3", puffer: "C3" };   // street outfits in cult/make/parts.json: the real world, not the sect robe
 export async function figure(kind = "me") {
   const { makeWalker } = await import("../cult/walker.js");
-  const W = await makeWalker({ who: WHO[kind] || "m" });
+  const W = await makeWalker({ who: WHO[kind] || "m", outfit: WEAR[kind] || "A3" });
   const F = W.X.F, turn = -Math.atan2(F.fr.f.x, F.fr.f.z);   // the figure faces +z in its holder, as the hall's people did
   if (Math.abs(turn) > 1e-3) { F.root.rotation.y = turn; F.fr.f.applyAxisAngle(V(0, 1, 0), turn); F.fr.l.applyAxisAngle(V(0, 1, 0), turn); F.root.updateMatrixWorld(true); }
   scene.add(W.holder);
