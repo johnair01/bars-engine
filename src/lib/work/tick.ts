@@ -26,6 +26,12 @@ export function decideFires(i: { ready: number; live: number; dry: boolean; cool
   return Math.max(0, Math.min(i.ready, slots, i.max ?? TICK_MAX_FIRES))
 }
 
+/** Pure: the beat note for a tick that tried to fire. A refusal names its HTTP status so the watchdog can say why. */
+export function fireNote(fired: number, n: number, ready: number, live: number, refused: number[]): string {
+  const why = refused.length ? ` refused ${[...new Set(refused)].join(',')}` : ''
+  return `fired ${fired}/${n}${why}: ${ready} ready, ${live} live`
+}
+
 export type TickResult = { fired: number; ready: number; live: number; reason: string }
 
 export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean } = {}): Promise<TickResult> {
@@ -49,6 +55,7 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
   }
   if (opts.dry) return { ...base, fired: 0, reason: `dry-run: would fire ${n}` }
   let fired = 0
+  const refused: number[] = []
   for (let k = 0; k < n; k++) {
     try {
       const res = await fetch(url, {
@@ -61,13 +68,13 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
         signal: AbortSignal.timeout(8000),
       })
       if (res.ok) fired++
-      else console.error(`[work] tick fire refused: ${res.status}`)
-    } catch (e) { console.error('[work] tick fire failed', e) }
+      else { refused.push(res.status); console.error(`[work] tick fire refused: ${res.status}`) }
+    } catch (e) { refused.push(0); console.error('[work] tick fire failed', e) }
   }
   if (fired > 0) {
     const until = new Date(now.getTime() + TICK_COOLDOWN_MS)
     await db.workLane.upsert({ where: { lane: TICK_LOCK_LANE }, create: { lane: TICK_LOCK_LANE, dry: false, dryUntil: until, note: 'tick cooldown' }, update: { dryUntil: until } })
   }
-  await beatLane(db, 'tick', `fired ${fired}/${n}: ${ready} ready, ${live} live`, now)
-  return { ...base, fired, reason: fired === n ? 'fired' : 'partial' }
+  await beatLane(db, 'tick', fireNote(fired, n, ready, live, refused), now)
+  return { ...base, fired, reason: fired === n ? 'fired' : refused.length ? `refused-${[...new Set(refused)].join('-')}` : 'partial' }
 }
