@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, closeTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
-import { routeLane } from '../lanes'
+import { routeLane, ticketKind } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -193,6 +193,20 @@ describe('the ceiling', () => {
     const tickets = [...full('claude', 3), ...full('claude', 40, 'claimed'), ...full('freebuff', 75)]
     const db = fakeDb(tickets)
     expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+  })
+  it('keeps picture builds and design questions out of DeepAI, even when the lanes ahead are full', () => {
+    const lit = new Set(['claude', 'freebuff', 'deepai'])
+    const full = { claude: 30, freebuff: 25, deepai: 0 }
+    expect(routeLane(['claude', 'freebuff'], lit, full, 20, 'picture')?.lane).toBe('freebuff')
+    expect(routeLane(['claude', 'freebuff'], lit, full, 20, 'build')?.lane).toBe('deepai')
+    expect(routeLane(['deepai'], lit, { claude: 0, deepai: 0 }, 20, 'design')?.lane).toBe('claude')
+  })
+  it('classifies the tickets DeepAI failed as picture or design work', () => {
+    expect(ticketKind('Tuck the robe at the shoulder')).toBe('picture')
+    expect(ticketKind('Fix the magenta band on the over-robe skirt')).toBe('picture')
+    expect(ticketKind('Run gait on the cultivation figure')).toBe('picture')
+    expect(ticketKind('Fate-clearing: which option for the clearing?')).toBe('design')
+    expect(ticketKind('Add a retry button to the harbour page')).toBe('build')
   })
   it('never routes to zo, so the closing lever keeps its monopoly', () => {
     expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), {})).toMatchObject({ lane: 'claude' })
