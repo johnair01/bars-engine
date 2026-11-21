@@ -201,7 +201,7 @@ describe('the ceiling', () => {
   })
   it('keeps the Calrunian lane steered only: no overflow, but a ticket that names it gets it', () => {
     const lit = new Set(['claude', 'freebuff', 'deepai', 'calrunian'])
-    expect(routeLane(['claude', 'freebuff'], lit, { claude: 30, freebuff: 30, deepai: 30 }).lane).not.toBe('calrunian')
+    expect(routeLane(['claude', 'freebuff'], lit, { claude: 30, freebuff: 30, deepai: 30 })?.lane).not.toBe('calrunian')
     expect(routeLane(['calrunian'], lit, { calrunian: 30 })).toMatchObject({ lane: 'calrunian' })
     expect(routeLane(['claude', 'calrunian'], lit, { claude: 30, calrunian: 3 })).toMatchObject({ lane: 'calrunian' })
   })
