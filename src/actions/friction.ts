@@ -3,7 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { FRICTION_TYPES, type FrictionType } from '@/lib/friction-types'
+import { FRICTION_TYPES, isLegacySymptom, type FrictionType } from '@/lib/friction-types'
 
 function isValidFrictionType(value: string): value is FrictionType {
   return FRICTION_TYPES.includes(value as FrictionType)
@@ -22,6 +22,11 @@ export async function recordQuestFriction(
     if (!player) return { error: 'Not logged in' }
 
     if (!isValidFrictionType(frictionType)) {
+      if (isLegacySymptom(frictionType)) {
+        return {
+          error: `"${frictionType}" is the closed pre-2026-11-13 symptom vocabulary. Record which belief is blocking instead: ${FRICTION_TYPES.join(', ')}`,
+        }
+      }
       return { error: `Invalid friction type. Must be one of: ${FRICTION_TYPES.join(', ')}` }
     }
 

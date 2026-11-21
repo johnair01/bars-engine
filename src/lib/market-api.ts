@@ -26,6 +26,14 @@ export type MarketQuest = {
   creator: MarketQuestCreator | null
   /** True when questSource === 'bounty' or stakedPool > 0 */
   isBounty?: boolean
+  /** Fixed at authorship: which of the six beliefs this quest is against. */
+  questBeliefKey?: string | null
+  /** Fixed at authorship: the player's own sentence about what would show them wrong. */
+  prediction?: string | null
+  /** When the disproof comes due. Blank unless the player set it. */
+  predictionDue?: string | null
+  /** Set once, at completion: met, missed, or redefined. */
+  predictionOutcome?: string | null
 }
 
 /** Client-side filter params. Server returns all player quests; client filters for UX. */

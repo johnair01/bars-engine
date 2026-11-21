@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { getQuestTemplates } from '@/actions/quest-templates'
 import { QuestTemplate } from '@/lib/quest-templates'
 import { createQuestFromWizard, getGatingOptions } from '@/actions/create-bar'
+import { SHADOW_BELIEFS, SHADOW_BELIEF_LABELS } from '@/lib/friction-types'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { listPublishedStories } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
@@ -926,6 +927,46 @@ export function QuestWizard({
                             placeholder="e.g. I sent the message / I logged one honest action / I named the pattern out loud."
                             value={formData.successCriteria || ''}
                             onChange={(e) => handleInputChange('successCriteria', e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-zinc-300 mb-1">Against which belief</label>
+                        <p className="text-[10px] text-zinc-600 mb-2">The self-sabotaging belief this quest is meant to disprove. You pick from the six; you never type it.</p>
+                        <div className="flex flex-wrap gap-2">
+                            {SHADOW_BELIEFS.map((belief) => (
+                                <button
+                                    key={belief}
+                                    type="button"
+                                    onClick={() => handleInputChange('questBeliefKey', formData.questBeliefKey === belief ? '' : belief)}
+                                    className={
+                                        formData.questBeliefKey === belief
+                                            ? 'px-3 py-1.5 rounded-full border text-xs bg-purple-600 border-purple-500 text-white'
+                                            : 'px-3 py-1.5 rounded-full border text-xs bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600'
+                                    }
+                                >
+                                    {SHADOW_BELIEF_LABELS[belief]}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-zinc-300 mb-1">What would show you it was wrong</label>
+                        <p className="text-[10px] text-zinc-600 mb-2">One thing you could record as a BAR. Written before the attempt it is evidence; written after, it is a story.</p>
+                        <textarea
+                            rows={2}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
+                            placeholder="e.g. I ask one person for the thing I actually need, and take the answer without softening it."
+                            value={formData.prediction || ''}
+                            onChange={(e) => handleInputChange('prediction', e.target.value)}
+                        />
+                        <label className="block text-[10px] text-zinc-600 mt-2 mb-1">By when <span className="text-zinc-500">— required</span></label>
+                        <input
+                            type="date"
+                            className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-white text-xs"
+                            value={formData.predictionDue || ''}
+                            onChange={(e) => handleInputChange('predictionDue', e.target.value)}
                         />
                     </div>
                 </div>
