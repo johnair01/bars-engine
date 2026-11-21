@@ -2,7 +2,8 @@
 
 - [ ] Add a pure authored scenario fixture; do not reuse a real player seed.
 - [ ] Add `LoopLabState` and a resettable local reducer.
-- [ ] Add an activation + orientation read control isolated from the current scalar-charge persistence model.
+- [ ] Add an activation + orientation read control isolated from the live signed-charge persistence model (which stays, per ruling `dr-charge-model`).
+- [ ] When the Lab hands a word to live practice, offer the starting charge from the spec's "Boundary with the live dojo" table and let the player keep or change it.
 - [ ] Add player-controlled proposed / confirmed / declined EA anchor decisions.
 - [ ] Reuse `deriveSupportedElementalTriads` for the teaching overlay; do not implement another EA edge resolver.
 - [ ] Build `resolveDojoActionGrammar` as a pure, versioned registry lookup.

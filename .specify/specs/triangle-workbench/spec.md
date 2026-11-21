@@ -10,7 +10,7 @@ Make Triangle Workshop a place for sustained play with many related triangles, r
 2. **Arrange** — grow a thought string by adding triangles that share a word with an existing triangle; strings can branch from any shared word.
 3. **Select** — tap a triangle to focus it; the selected triangle becomes the candidate for the dojo.
 4. **Project** — send one focused word-triangle from the active thought string into the room.
-5. **Read charge** — mark each word's **activation** (0–3) and present orientation (**constricting, supportive, mixed, or unread**). A triangle can show these player-owned reads without claiming that intensity and goodness are the same thing.
+5. **Read charge** — mark each word's signed **charge** from −3 to +3. A negative number is the size of the player's dissatisfaction with that word, a positive number the size of their satisfaction, and 0 is neutral. A triangle's charge is the sum of its three words.
 6. **Work** — make a bounded move on the selected triangle or word: name it, distinguish a value from a harmful form, shift a polarity, introduce a WOCGS / Emotional Alchemy move, or use an appropriately-scoped Mastering Alchemy preparation.
 7. **Return** — bring the edited triangle back to the workbench as the same object, with its history and status visible.
 8. **Settle** — leave it fluid for further play, archive it, or lock it in place as a current working insight. Locking is reversible.
@@ -82,11 +82,14 @@ Words are reusable: several word-triangles can reference the same word. Editing 
 
 ### Charge grammar
 
-- Every word has a player-owned read with **activation** (0–3) and **orientation** (`constricting`, `supportive`, `mixed`, or `unread`). This is a present-time self-report, not an objective diagnosis or a measure of another person.
-- Activation and orientation must remain distinct: excitement can be high-activation and supportive; grief can be high-activation and mixed. The game never assigns either value from the word itself.
-- A triangle displays its three reads; it does not collapse them into a misleading summed moral score. Shared words visibly carry their player-owned read wherever they occur.
-- A string can be extended from any selected triangle. The player may optionally label an extension as a supportive continuation; the system never infers a solution from a positive score.
-- An 8th-Ray representation targets a player-selected constricting or mixed triangle only after explicit pause/orientation confirmation. M1 records a chosen operation and later player revision; it does not change a word's read automatically or claim that the product cleared an energy field.
+Ruling `dr-charge-model` (Wendell, 2026-11-02, answer B, on the Council Board) keeps the signed charge in the live dojo. His steer: "The negative charge is the magnitude of dissatisfaction and the positive charge is the satisfaction. The sum is the goal of working a triangle into neutral or satisfaction. Everything moves toward that direction"
+
+- Every word carries one player-owned **charge**, an integer from −3 to +3. Below 0 measures dissatisfaction, above 0 measures satisfaction, and 0 is neutral. It is a present-time self-report, not an objective diagnosis or a measure of another person, and the game never assigns it from the word itself. A new word starts at 0.
+- A triangle's charge is the sum of its three word charges, from −9 to +9. Shared words carry the same charge into every triangle that holds them, so one change moves every triangle on the string.
+- The direction of play is toward a triangle sum of 0 or above: working a triangle means bringing it into neutral or satisfaction. Nothing in the dojo pushes a sum downward on the player's behalf.
+- An 8th-Ray move is offered only on a triangle whose sum is below 0, only after explicit pause/orientation confirmation, and only on one of that triangle's own words below 0. It raises that word one step toward satisfaction, records the step in history, and can be undone while the word still sits where the step left it. It does not claim that the product cleared an energy field.
+- A string can be extended from any selected triangle; a triangle at or above 0 can grow a positive continuation through a shared word. The system never writes a word for the player.
+- The Dojo Loop Lab keeps its own read (activation 0–3 plus orientation) inside its non-persistent demonstration. Where a Lab word is carried into live practice, the boundary in `.specify/specs/dojo-loop-lab/spec.md` § "Boundary with the live dojo" says how its read maps to a charge.
 
 ### Emotional Alchemy crosswalk
 
