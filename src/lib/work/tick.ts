@@ -49,6 +49,7 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
   }
   if (opts.dry) return { ...base, fired: 0, reason: `dry-run: would fire ${n}` }
   let fired = 0
+  let lastRefusal = ''
   for (let k = 0; k < n; k++) {
     try {
       const res = await fetch(url, {
@@ -61,13 +62,18 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
         signal: AbortSignal.timeout(8000),
       })
       if (res.ok) fired++
-      else console.error(`[work] tick fire refused: ${res.status}`)
-    } catch (e) { console.error('[work] tick fire failed', e) }
+      else {
+        const body = (await res.text().catch(() => '')).slice(0, 300)
+        lastRefusal = `${res.status}`
+        console.error(`[work] tick fire refused: ${res.status} ${body}`)
+      }
+    } catch (e) { lastRefusal = 'error'; console.error('[work] tick fire failed', e) }
   }
   if (fired > 0) {
     const until = new Date(now.getTime() + TICK_COOLDOWN_MS)
     await db.workLane.upsert({ where: { lane: TICK_LOCK_LANE }, create: { lane: TICK_LOCK_LANE, dry: false, dryUntil: until, note: 'tick cooldown' }, update: { dryUntil: until } })
   }
-  await beatLane(db, 'tick', `fired ${fired}/${n}: ${ready} ready, ${live} live`, now)
-  return { ...base, fired, reason: fired === n ? 'fired' : 'partial' }
+  const reason = fired === n ? 'fired' : fired === 0 ? `fire-refused-${lastRefusal}` : `partial-${lastRefusal}`
+  await beatLane(db, 'tick', `${reason}: fired ${fired}/${n}, ${ready} ready, ${live} live`, now)
+  return { ...base, fired, reason }
 }
