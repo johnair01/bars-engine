@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, LEASE_MS, MAX_DRY_MS, routeLane, ticketKind, kindBars } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -28,7 +28,11 @@ export async function laneDepth(db: Db): Promise<Record<string, number>> {
 export async function pushTicket(db: Db, t: TicketDraft) {
   const dry = await dryLanes(db)
   const lit = new Set(LANES.filter(l => !dry.has(l)))
-  const lane = routeLane(t.lanes, lit, await laneDepth(db))?.lane ?? firstLitLane(t.lanes, dry)
+  const kind = ticketKind(t.title, t.brief)
+  // Picture builds and design questions never enter DeepAI (it timed out on 43 of 48, 2026-11-21); the stored order drops it.
+  const order = kindBars(kind).length ? (t.lanes.filter(l => !kindBars(kind).includes(l)).length ? t.lanes.filter(l => !kindBars(kind).includes(l)) : ['claude' as const]) : t.lanes
+  t = { ...t, lanes: order }
+  const lane = routeLane(t.lanes, lit, await laneDepth(db), undefined, kind)?.lane ?? firstLitLane(t.lanes, dry)
   const existing = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
   if (existing) return { ticket: existing, created: false }
   const ticket = await db.workTicket.create({
