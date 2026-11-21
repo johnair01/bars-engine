@@ -68,7 +68,12 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
         signal: AbortSignal.timeout(8000),
       })
       if (res.ok) fired++
-      else { refused.push(res.status); console.error(`[work] tick fire refused: ${res.status}`) }
+      else {
+        refused.push(res.status)
+        // The reply body says why (the 11-21 403s had no reason attached). Truncated; the token is never logged.
+        const body = (await res.text().catch(() => '')).slice(0, 300)
+        console.error(`[work] tick fire refused: ${res.status} ${body}`)
+      }
     } catch (e) { refused.push(0); console.error('[work] tick fire failed', e) }
   }
   if (fired > 0) {
