@@ -28,3 +28,13 @@ testHistoricalRanksDoNotReuse()
 
 console.log('tap the vein commit policy: cap and historical rank behavior OK')
 
+
+import { isAlreadyLiveToday, sameTaskWords } from '@/lib/tap-the-vein/commit-policy'
+
+function testSameWordsIgnoreCaseAndSpacing() {
+  assert.equal(sameTaskWords('SEnd Dan a Copy of the Book', ' send dan  a copy of the book '), true)
+  assert.equal(sameTaskWords('Call my mom', 'Call my dad'), false)
+  assert.equal(isAlreadyLiveToday(['Call my mom'], 'call my mom'), true)
+  assert.equal(isAlreadyLiveToday([], 'call my mom'), false)
+}
+testSameWordsIgnoreCaseAndSpacing()
