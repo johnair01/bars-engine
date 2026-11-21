@@ -181,6 +181,12 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
       // A hold with a reason sticks: the ticket rests (not re-claimed, not re-announced) until an unhold move.
       ? { state: 'held', claimedBy: null, leaseUntil: null, result,
           basis: { ...((t.basis ?? {}) as object), hold: { reason: (result ?? '').trim(), by: t.claimedBy, at: now.toISOString() } } as Prisma.InputJsonValue }
+    : move === 'release' && t.attempts >= MAX_ATTEMPTS
+      // The circuit breaker for a plain release. returnLapsed holds a ticket only when its lease lapses, so a worker
+      // that claimed and released the same ticket every hour never lapsed it: one ticket reached 106 claims
+      // (found 2026-11-20). A ticket released after MAX_ATTEMPTS claims rests held until an unhold or a steer.
+      ? { state: 'held', claimedBy: null, leaseUntil: null,
+          result: `${AUTO_HELD}: claimed ${t.attempts} times and released without a result (last: ${(result ?? '').trim().slice(0, 120) || 'no note'}). Lift the hold or steer it from the board.` }
     : { state: 'ready', claimedBy: null, leaseUntil: null, result }
   const ticket = await db.workTicket.update({ where: { id }, data })
   return { ok: true as const, ticket }
