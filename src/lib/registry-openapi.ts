@@ -34,7 +34,6 @@ interface RegistryRoute {
   example?: string;
   agentDiscoverable?: boolean;
   sourceFile: string;
-  lineNumber: number;
 }
 
 interface Registry {
@@ -234,7 +233,6 @@ function convertRouteToOpenAPIPath(route: RegistryRoute): any {
       permissions: route.permissions,
       agentDiscoverable: route.agentDiscoverable,
       sourceFile: route.sourceFile,
-      lineNumber: route.lineNumber,
     },
   };
 

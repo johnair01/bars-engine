@@ -52,7 +52,6 @@ interface RouteDefinition {
   agentDiscoverable: boolean;
   experimental: boolean;
   sourceFile: string;
-  lineNumber: number;
 }
 
 interface ParamDefinition {
@@ -188,11 +187,10 @@ const DIMENSIONS: Record<string, DimensionDefinition> = {
   },
 };
 
-function parseRouteAnnotation(jsDoc: JSDoc, filePath: string, lineNumber: number): RouteDefinition | null {
+function parseRouteAnnotation(jsDoc: JSDoc, filePath: string): RouteDefinition | null {
   const tags = jsDoc.getTags();
   const route: Partial<RouteDefinition> = {
     sourceFile: filePath,
-    lineNumber,
     params: [],
     query: [],
     relationships: [],
@@ -300,7 +298,7 @@ export async function buildRegistry(): Promise<Registry> {
       const jsDocs = func.getJsDocs?.() || [];
 
       for (const jsDoc of jsDocs) {
-        const routeDef = parseRouteAnnotation(jsDoc, filePath, func.getStartLineNumber?.() || 0);
+        const routeDef = parseRouteAnnotation(jsDoc, filePath);
         if (routeDef) {
           registry.routes.push(routeDef);
         }
