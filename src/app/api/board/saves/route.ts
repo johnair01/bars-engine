@@ -75,6 +75,12 @@ export async function POST(req: NextRequest) {
   }
   if (collection === 'rows')  // rows are the council's, posted by sessions (/api/board/session-writes); his saves are answers
     return NextResponse.json({ error: 'Rows are posted by sessions, not saved from the page' }, { status: 403 })
+  // A voice event is his only when he made it: the owner's cookie sets the mark and a body's own value is dropped
+  // (voice-desk FR-003). Only the owner's cookie reaches here with a voice save; the menu token is refused above.
+  if (collection === 'voice') {
+    const { marked_by: _ignored, ...rest } = v.save.data
+    v.save.data = ownerSession ? { ...rest, marked_by: 'wendell' } : rest
+  }
   // A page that read a picture as its link and saves the document back gets the picture put back first.
   const linked = carriesLink(v.save.data)
   const latest = v.save.mode === 'update' || linked ? await latestDoc(board, collection, docId) : null

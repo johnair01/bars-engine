@@ -35,5 +35,14 @@ export function rowErrors(data: Record<string, unknown>): string[] {
   if (list === 'terms' && !(text(data.term) && typeof data.plain === 'string')) errors.push('a term needs term and plain')
   if (list === 'causes' && !text(data.desc)) errors.push('a cause needs desc')
   if (list === 'battles' && !(text(data.name) && Array.isArray(data.rounds))) errors.push('a battle needs name and rounds')
+  if (data.copy !== undefined) errors.push(...copyErrors(data.copy))
   return errors
+}
+
+/** A look row's `copy`: the lines the board draws with a pencil beside each (voice-desk FR-014, at most twelve). */
+export function copyErrors(copy: unknown): string[] {
+  if (!Array.isArray(copy) || copy.length === 0 || copy.length > 12) return ['copy is a list of one to twelve lines']
+  return copy.every(c => c && typeof c === 'object' && !Array.isArray(c)
+      && text((c as Record<string, unknown>).line) && text((c as Record<string, unknown>).screen) && text((c as Record<string, unknown>).file))
+    ? [] : ['each copy line needs line, screen and file']
 }
