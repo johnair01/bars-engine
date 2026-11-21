@@ -1,7 +1,7 @@
 // Speaking to a person (step 1 of the Heaven quest demo, 2026-11-17). A small lantern floats over a person the player can
 // speak to. Within 10 m a Speak seal and a tap target over her appears beside her (tap her, her lantern or the seal; E on a keyboard); her card opens with one line and reply seals.
 // Deterministic: no AI in any line. The card reuses the trainee walk's card classes (trainee.js CSS), so it runs after
-// traineeWalk has set up the page. Quest state is kept in sessionStorage under 'hq-quest': none, offered, held, met, taken, tried.
+// traineeWalk has set up the page. Quest state is kept in sessionStorage under 'hq-quest': none, offered, held, met, taken, tried. From met on, onBar() shows the BAR card (bar.js).
 import * as THREE from 'three';
 import { replies, lineAt } from './talk-words.js';
 
@@ -29,7 +29,7 @@ function lantern() {
 }
 
 /** talk({ S, A, cam, hooks, people }): people = [{ key, m (a figure from people.js), height, lines }]. Returns the controller. */
-export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, busy }) {
+export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, onBar, busy }) {
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const card = document.createElement('div'); card.className = 'tw-card'; card.setAttribute('role', 'dialog'); card.hidden = true;
   const seal = document.createElement('button'); seal.type = 'button'; seal.className = 'tk-seal'; seal.hidden = true; seal.textContent = 'Speak'; seal.setAttribute('aria-label', 'Speak to the Elder');
@@ -48,7 +48,7 @@ export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, bus
     card.setAttribute('aria-label', 'The Elder speaks'); card.hidden = false;
     const b = card.querySelector('button'); b && b.focus({ preventScroll: true });
   };
-  const openCard = p => { open = p; open_p = p; node = state() === 'none' ? 'open' : state() === 'held' ? 'held' : state() === 'met' ? 'met' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
+  const openCard = p => { if (onBar && ['met', 'taken', 'tried'].includes(state())) { open_p = p; seal.hidden = true; hit.hidden = true; onBar(p); return; } open = p; open_p = p; node = state() === 'none' ? 'open' : state() === 'held' ? 'held' : state() === 'met' ? 'met' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
   const closeCard = () => { open = null; card.hidden = true; };
   seal.addEventListener('click', () => near && openCard(near));
   hit.addEventListener('click', () => near && openCard(near));
