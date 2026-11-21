@@ -199,6 +199,12 @@ describe('the ceiling', () => {
     expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), { claude: 40 })).toMatchObject({ lane: 'claude' })
     expect(routeLane(['zo'], new Set(['zo']), {})).toMatchObject({ lane: 'zo' })
   })
+  it('keeps the Calrunian lane steered only: no overflow, but a ticket that names it gets it', () => {
+    const lit = new Set(['claude', 'freebuff', 'deepai', 'calrunian'])
+    expect(routeLane(['claude', 'freebuff'], lit, { claude: 30, freebuff: 30, deepai: 30 }).lane).not.toBe('calrunian')
+    expect(routeLane(['calrunian'], lit, { calrunian: 30 })).toMatchObject({ lane: 'calrunian' })
+    expect(routeLane(['claude', 'calrunian'], lit, { claude: 30, calrunian: 3 })).toMatchObject({ lane: 'calrunian' })
+  })
   it('reports no lane when every lane in the order has its lamp out', () => {
     expect(routeLane(['claude', 'freebuff'], new Set(), {})).toBeNull()
   })

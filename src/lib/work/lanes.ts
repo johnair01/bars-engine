@@ -9,8 +9,15 @@ import { givenToken, tokenMatches } from '@/lib/council/token'
  * the closing ritual's lever (src/lib/close/lever.ts) puts tickets in it. COUNCIL_MENU_TOKEN (the council's own sessions) may act in any lane and push
  * tickets.
  */
-export const LANES = ['claude', 'freebuff', 'deepai', 'zo'] as const
+export const LANES = ['claude', 'freebuff', 'deepai', 'zo', 'calrunian'] as const
 export type Lane = (typeof LANES)[number]
+/**
+ * The Calrunian lane (Wendell, 2026-11-21): the always-on box's local-model workers pull from it. It has no token of
+ * its own, so the council token acts in it (laneCaller already lets COUNCIL_MENU_TOKEN act in any lane), and the same
+ * token pushes the tickets the lane generates for itself (POST /api/work/tickets with lanes ["calrunian"]). It opens
+ * steered only: a ticket reaches it when its order names it, never as overflow from the other lanes.
+ */
+export const CALRUNIAN_LANE = 'calrunian'
 /**
  * Where his answers go by themselves (`wq-who-routes`): Claude first, Freebuff when Claude runs dry. DeepAI is
  * deliberately not here. It opens as an explicit lane (a ticket naming it, or a claim from it) so its throughput and
@@ -92,12 +99,14 @@ export function routeLane(
   lanes: string[], lit: Set<string>, depth: Record<string, number>, ceiling = DECK_CEILING,
 ): Route | null {
   const zoOnly = lanes.length === 1 && lanes[0] === 'zo'
-  const order = zoOnly ? lanes : lanes.filter(l => l !== 'zo')
+  const calrunianOnly = lanes.length === 1 && lanes[0] === CALRUNIAN_LANE
+  const solo = zoOnly || calrunianOnly
+  const order = solo ? lanes : lanes.filter(l => l !== 'zo')
   const room = order.find(l => lit.has(l) && (depth[l] ?? 0) < ceiling)
   if (room) return { lane: room, reason: 'order' }
   // His words: when no lane in the order is under the ceiling, the lit lane with the smallest deck takes it.
   // That pool is every lane, not the order, which is how a maker outside DEFAULT_LANES receives work at all.
-  const pool = zoOnly ? order : [...new Set([...order, ...LANES])].filter(l => l !== 'zo')
+  const pool = solo ? order : [...new Set([...order, ...LANES])].filter(l => order.includes(l) || (l !== 'zo' && l !== CALRUNIAN_LANE))
   const open = pool.filter(l => lit.has(l))
   if (!open.length) return null
   const byDepth = [...open].sort((a, b) => (depth[a] ?? 0) - (depth[b] ?? 0) || pool.indexOf(a) - pool.indexOf(b))
