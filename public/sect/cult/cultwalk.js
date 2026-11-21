@@ -82,13 +82,16 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
   // the library clips (clips.js): which clip, how far through it, and a crossfade when it changes. The feet are not planted by code any
   // more; the clip's phase follows the distance walked (rate = speed / the clip's own speed) so the feet do not skate.
   const CS = { cur: null, t: 0, prev: null, pt: 0, fade: 1, landT: 0, airT: 0, standY: null };
-  const CLIPSPEED = { Walk_Loop: 1.35, Jog_Fwd_Loop: 3.2, Sprint_Loop: 5.4 };
+  // robe-run-clips-1 B: each loop's own ground speed on this figure, measured from the planted foot's slide past the hips (2026-11-21),
+  // so the clip plays at speed / its own speed and the feet do not skate. Shift (MOVE.run) plays the Sprint; the Jog is only the
+  // few frames of speeding up between the walk and the sprint.
+  const CLIPSPEED = { Walk_Loop: 1.05, Jog_Fwd_Loop: 5.4, Sprint_Loop: 7.1 };
   const lowest = () => { let low = 1e9; const P = F.mesh.geometry.attributes.position, v = V(); F.mesh.skeleton.update(); for (let i = 0; i < P.count; i += 3) { v.fromBufferAttribute(P, i); F.mesh.applyBoneTransform(i, v); v.applyMatrix4(F.mesh.matrixWorld); low = Math.min(low, v.y); } return low; };
   function clipFrame(dt, sp, air, rootXZ, ground, mv) {
     const U = CR.U; let want;
     if (air) { CS.airT += dt; CS.landT = 0; want = CS.airT < 0.25 ? 'Jump_Start' : 'Jump_Loop'; }
     else { if (CS.airT > 0) { CS.landT = 0.45; CS.airT = 0; } CS.landT = Math.max(0, CS.landT - dt);
-      want = CS.landT > 0 && sp < 2 ? 'Jump_Land' : sp < 0.15 ? 'Idle_Loop' : sp < 2.3 ? 'Walk_Loop' : 'Jog_Fwd_Loop'; }
+      want = CS.landT > 0 && sp < 2 ? 'Jump_Land' : sp < 0.15 ? 'Idle_Loop' : sp < 2.3 ? 'Walk_Loop' : sp < 4.6 ? 'Jog_Fwd_Loop' : 'Sprint_Loop'; }
     const dur = n => U.clips[n].duration, loop = n => /Loop/.test(n);
     if (!CS.cur) { CS.cur = want; CS.t = 0; }
     else if (want !== CS.cur) { CS.prev = CS.cur; CS.pt = CS.t; CS.fade = 0;
