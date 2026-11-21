@@ -268,21 +268,26 @@ function drawWorld(world) {
     else if (c.kind === 'note') { const p = mesh(new THREE.BoxGeometry(0.22, 0.01, 0.28), toon('#f3e6c8'), false); p.position.set(x, 0.06, z); p.rotation.y = 0.4; worldGroup.add(p); }
   }
 }
-// ---------- the shelf: each sealed parcel is a wrapped bundle under a lit wax seal (farm-world-write-look-3) ----------
-const shelfGroup = new THREE.Group(); shelfGroup.name = 'shelf'; scene.add(shelfGroup);
-const SHELF = V(GATE_W / 2 - 0.25, 0, FZ + 1.7); let PARCELS = [], SATCHEL = [], PSEL = null; const seals = [];
+// ---------- the gate post: each sealed parcel hangs by a cord from a weathered post beside the gate, under its lit wax seal (his steer on farm-world-write-look-3: no shelf, a farm-native drop point) ----------
+const shelfGroup = new THREE.Group(); shelfGroup.name = 'gatepost'; scene.add(shelfGroup);
+const SHELF = V(GATE_W / 2 + 0.55, 0, FZ + 1.45); let PARCELS = [], SATCHEL = [], PSEL = null; const seals = [];
 function drawShelf() {
   shelfGroup.clear(); seals.length = 0; if (!PARCELS.length) return;
-  const w = 0.34 + PARCELS.length * 0.52, board = mesh(new THREE.BoxGeometry(w, 0.07, 0.42), toon(PAL.wood)); board.position.set(SHELF.x + w / 2 - 0.2, 0.62, SHELF.z); shelfGroup.add(board);
-  for (const k of [0.05, w - 0.35]) { const leg = mesh(new THREE.BoxGeometry(0.07, 0.62, 0.07), toon(PAL.woodDark)); leg.position.set(SHELF.x + k, 0.31, SHELF.z); shelfGroup.add(leg); }
-  PARCELS.forEach((p, n) => {
-    const G = new THREE.Group(); G.position.set(SHELF.x + 0.18 + n * 0.52, 0.66, SHELF.z); G.userData.parcel = p.id;
+  const SHOWN = PARCELS.slice(0, 4), W = 0.3 + SHOWN.length * 0.42, T = '#8a7355', ARM_Y = 1.3;
+  // a leaning, weathered post with a cap, and an arm reaching toward the gate that the cords hang from
+  const post = mesh(new THREE.BoxGeometry(0.15, 1.5, 0.15), toon(T)); post.position.set(SHELF.x, 0.75, SHELF.z); post.rotation.z = 0.035; shelfGroup.add(post);
+  const cap = mesh(new THREE.BoxGeometry(0.2, 0.05, 0.2), toon(PAL.woodDark)); cap.position.set(SHELF.x - 0.03, 1.52, SHELF.z); shelfGroup.add(cap);
+  const arm = mesh(new THREE.BoxGeometry(W, 0.07, 0.07), toon(T)); arm.position.set(SHELF.x - W / 2, ARM_Y, SHELF.z); shelfGroup.add(arm);
+  const brace = mesh(new THREE.BoxGeometry(0.4, 0.05, 0.05), toon(PAL.woodDark)); brace.position.set(SHELF.x - 0.17, ARM_Y - 0.17, SHELF.z); brace.rotation.z = -Math.PI / 4; shelfGroup.add(brace);
+  SHOWN.forEach((p, n) => {
+    const G = new THREE.Group(); G.position.set(SHELF.x - 0.36 - n * 0.42, 0.78, SHELF.z); G.userData.parcel = p.id;
     const wrap = mesh(new THREE.BoxGeometry(0.34, 0.26, 0.28), toon('#e9d9b4')); wrap.position.y = 0.13; wrap.userData.parcel = p.id;
     const band = mesh(new THREE.BoxGeometry(0.36, 0.05, 0.3), toon(PAL.cloth), false); band.position.y = 0.13;
     const cord = mesh(new THREE.BoxGeometry(0.05, 0.27, 0.3), toon(PAL.cloth), false); cord.position.y = 0.13;
+    const hang = mesh(new THREE.CylinderGeometry(0.012, 0.012, ARM_Y - 0.78 - 0.26, 5), toon(PAL.woodDark), false); hang.position.y = 0.26 + (ARM_Y - 0.78 - 0.26) / 2; hang.userData.parcel = p.id;
     const wax = mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 14), toon('#b3321f', { emissive: new THREE.Color('#ff7a3a'), emissiveIntensity: 0 }), false); wax.rotation.x = Math.PI / 2; wax.position.set(0, 0.2, 0.15); wax.userData.parcel = p.id;
     const lit = new THREE.PointLight('#ff9a5a', 0, 1.6); lit.position.set(0, 0.28, 0.3);
-    G.add(wrap, band, cord, wax, lit); shelfGroup.add(G); seals.push({ wax, lit, t0: performance.now() + n * 120 });
+    G.add(wrap, band, cord, hang, wax, lit); shelfGroup.add(G); seals.push({ wax, lit, t0: performance.now() + n * 120 });
     for (const o of [wrap, band, cord]) o.userData.parcel = p.id;
   });
 }
