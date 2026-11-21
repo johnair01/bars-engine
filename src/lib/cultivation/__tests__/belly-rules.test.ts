@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error a plain ES module from public/, with no types
 import { glowStrength, layersFrom, shouldPulse } from '../../../../public/between/cult/belly-rules.js'
 import { layers, QI_PER_MOVE } from '../sheet'
 
