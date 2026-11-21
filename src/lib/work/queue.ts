@@ -236,6 +236,12 @@ export async function beatLane(db: Db, lane: string, note: string, now = new Dat
   return { lane, note, beatAt: now.toISOString() }
 }
 
+/** The orchestrator tick's last beat (lane row `tick`): when it ran and its note. Null before the first run. */
+export async function tickBeat(db: Db) {
+  const row = await db.workLane.findUnique({ where: { lane: 'tick' }, select: { note: true, updatedAt: true } })
+  return row?.note != null ? { beatAt: row.updatedAt.toISOString(), beatNote: row.note } : null
+}
+
 /** A lane counts as live when it touched a ticket inside this window. */
 export const LIVE_MS = 24 * 60 * 60 * 1000
 
