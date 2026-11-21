@@ -55,11 +55,19 @@ export async function returnLapsed(db: Db, now = new Date()): Promise<number> {
     data: { state: 'held', claimedBy: null, leaseUntil: null,
       result: `${AUTO_HELD}: claimed ${MAX_ATTEMPTS} times and never closed. Lift the hold or steer it from the board.` },
   })
+  // A READY ticket already past the limit (released before the circuit breaker existed, found 2026-11-21: twenty
+  // tickets at 90 to 106 claims sat at the head of the oldest-first deck, so every worker took one and ended with
+  // nothing, and the 16 newer tickets never reached a lane) is held too, so it stops heading the deck.
+  const stale = await db.workTicket.updateMany({
+    where: { state: 'ready', attempts: { gte: MAX_ATTEMPTS } },
+    data: { state: 'held', claimedBy: null, leaseUntil: null,
+      result: `${AUTO_HELD}: claimed ${MAX_ATTEMPTS} or more times and never closed. Lift the hold or steer it from the board.` },
+  })
   const r = await db.workTicket.updateMany({
     where: lapsed,
     data: { state: 'ready', claimedBy: null, leaseUntil: null },
   })
-  return r.count + stalled.count
+  return r.count + stalled.count + stale.count
 }
 
 /**
@@ -131,7 +139,7 @@ export async function retryTicket(db: Db, id: string, aar: string, by: string, n
   const attempts = Array.isArray(basis.attempts) ? (basis.attempts as unknown[]) : []
   const past = [...attempts, { at: now.toISOString(), by, aar, failed: t.result ?? null }]
   const ticket = await db.workTicket.update({ where: { id }, data: {
-    state: 'ready', claimedBy: null, leaseUntil: null, result: null,
+    state: 'ready', claimedBy: null, leaseUntil: null, result: null, attempts: 0,
     basis: { ...basis, attempts: past } as Prisma.InputJsonValue,
   } })
   return { ok: true as const, ticket }
