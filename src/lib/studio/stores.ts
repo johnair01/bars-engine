@@ -14,17 +14,24 @@ import { listNames, readText } from '@/lib/board/content-store'
 import { pullTime, RUN_MS } from './fleet'
 import type { BoardData } from './shaman'
 
-export type ThingKind = 'jar' | 'seed' | 'thread' | 'husk'
+export type ThingKind = 'jar' | 'seed' | 'thread' | 'husk' | 'crate'
 export type Place = 'shelf' | 'seeds' | 'bell' | 'compost' | 'tide'
 export const PLACES: Place[] = ['shelf', 'seeds', 'bell', 'compost', 'tide']
 /** What keeping costs from the bowl, and what composting a spent draft gives back (stores-move-purse). */
-export const COST: Record<ThingKind, number> = { jar: 1, seed: 1, thread: 2, husk: 0 }
-const BACK: Record<ThingKind, number> = { jar: 0, seed: 0, thread: 0, husk: 1 }
+export const COST: Record<ThingKind, number> = { jar: 1, seed: 1, thread: 2, husk: 0, crate: 1 }
+const BACK: Record<ThingKind, number> = { jar: 0, seed: 0, thread: 0, husk: 1, crate: 0 }
 /** The floor holds eight things, the room's eight spots. */
 export const FLOOR_CAP = 8
 
-export type Thing = { id: string; kind: ThingKind; words: string; st?: Place }
-export type StoresWorld = { run: string; day: string; things: Thing[]; beads: number; at: string; demo: boolean }
+/** A crate is a finished asset (the gallery's `recent` view): `pic` is its picture's url, `title` its name, `place` the
+ * round it was made in. A crate's placement is saved under the run key CRATE_RUN, so a crate placed once never returns. */
+export type Thing = { id: string; kind: ThingKind; words: string; st?: Place; pic?: string; title?: string; place?: string }
+/** A planned row not yet made, stencilled on the shelf (the gallery's `holes` view, cheapest first). */
+export type StoresHole = { id: string; title: string; words: string; price: string }
+export type StoresWorld = { run: string; day: string; things: Thing[]; beads: number; at: string; demo: boolean; hole?: StoresHole | null }
+export const CRATE_RUN = 'gallery'
+/** At most this many crates share the floor with a run's leftovers. */
+export const CRATE_CAP = 3
 /** A saved placement, as the `stores` collection holds it. */
 export type Placement = { run?: string; thing?: string; kind?: string; words?: string; to?: string; savedAt?: string }
 /** A ledger pull as the Stores reads it. */
@@ -53,7 +60,7 @@ function thingsOf(day: StoresPull[], board: BoardData | null, doneKeys: Set<stri
   const qs = new Map((board?.questions ?? []).map(q => [q.id, q.q ?? q.id]))
   const ps = new Map((board?.positions ?? []).map(p => [p.id, p.pos ?? p.id]))
   const open = new Set<string>()
-  const lists: Record<ThingKind, Thing[]> = { jar: [], seed: [], thread: [], husk: [] }
+  const lists: Record<ThingKind, Thing[]> = { jar: [], seed: [], thread: [], husk: [], crate: [] }
   for (const p of day) for (const line of p.needs_work ?? []) {
     const i = line.indexOf(': ')
     const row = i < 0 ? line : line.slice(0, i), what = i < 0 ? line : line.slice(i + 2), key = `${p.stem}#${row}`
@@ -81,23 +88,27 @@ function thingsOf(day: StoresPull[], board: BoardData | null, doneKeys: Set<stri
 
 export function storesWorldOf(input: {
   pulls: StoresPull[]; board: BoardData | null; doneKeys: string[]; placed: Record<string, Placement>; now?: Date
+  crates?: Thing[]; hole?: StoresHole | null
 }): StoresWorld {
   const now = input.now ?? new Date(), today = dayOf(now.toISOString()), done = new Set(input.doneKeys)
+  // a crate placed once, under the gallery's run key, has left the floor for good
+  const crates = (input.crates ?? []).filter(c => !input.placed[placementId(CRATE_RUN, c.id)]).slice(0, CRATE_CAP)
+  const hole = input.hole ?? null, room = FLOOR_CAP - crates.length
   const days = [...new Set(input.pulls.map(p => dayOf(p.at)))].filter(d => d < today).sort().reverse()
   for (const day of days) {
     const run = `run-${day}`
-    const things = thingsOf(input.pulls.filter(p => dayOf(p.at) === day).sort((a, b) => a.at.localeCompare(b.at)), input.board, done)
-    if (!things.length) continue
-    let beads = purseOf(things.length)
-    for (const t of things) {
+    const left = thingsOf(input.pulls.filter(p => dayOf(p.at) === day).sort((a, b) => a.at.localeCompare(b.at)), input.board, done).slice(0, room)
+    if (!left.length) continue
+    let beads = purseOf(left.length + crates.length)
+    for (const t of left) {
       const to = input.placed[placementId(run, t.id)]?.to as Place | undefined
       if (!to || !PLACES.includes(to)) continue
       t.st = to
       beads += to === 'compost' || to === 'tide' ? BACK[t.kind] : -COST[t.kind]
     }
-    return { run, day, things, beads: Math.max(0, beads), at: now.toISOString(), demo: false }
+    return { run, day, things: [...crates, ...left], beads: Math.max(0, beads), at: now.toISOString(), demo: false, hole }
   }
-  return { run: '', day: '', things: [], beads: 0, at: now.toISOString(), demo: false }
+  return { run: crates.length ? 'run-gallery' : '', day: '', things: crates, beads: purseOf(crates.length), at: now.toISOString(), demo: false, hole }
 }
 
 /** The run of the round's mock (ship run 1's still round), for &demo=1 and for a ledger with nothing to close. Nothing
@@ -110,7 +121,13 @@ export function demoStores(now = new Date()): StoresWorld {
     t('jar', "The plane still's rows, landed on the board", 4), t('husk', 'A second gourd, drawn from nothing', 5),
     t('seed', 'On a phone, crop the chamber; never shrink the hull', 6), t('jar', "The Challenger's objection: the Bell first", 7),
   ]
-  return { run: 'demo', day: '', things, beads: purseOf(things.length), at: now.toISOString(), demo: true }
+  const crates: Thing[] = [
+    { id: 'demo-c1', kind: 'crate', words: 'Raise heaven to 7, part 12', title: 'The sect hall from above', place: 'the heaven climb, round 28', pic: '/studio/demo/crate-1.jpg' },
+    { id: 'demo-c2', kind: 'crate', words: 'Raise heaven to 7, part 11', title: 'The hall at the stair head', place: 'the heaven climb, round 27', pic: '/studio/demo/crate-2.jpg' },
+  ]
+  const all = [...crates, ...things.slice(0, FLOOR_CAP - crates.length)]
+  return { run: 'demo', day: '', things: all, beads: purseOf(all.length), at: now.toISOString(), demo: true,
+    hole: { id: 'demo-hole', title: 'A carried object, not yet made', words: "A sealed bundle in its feeling's colour, for the nook's shelf", price: 'About 20,000 tokens, no dollars' } }
 }
 
 function json<T>(s: string | null): T | null { try { return s ? JSON.parse(s) as T : null } catch { return null } }
@@ -121,12 +138,19 @@ export async function loadStores(placed: Record<string, Placement>, now = new Da
   const names = await listNames('council/ledger/')
   if (!names.length) return null
   const timed = names.map(n => ({ n, t: pullTime(n) })).filter((x): x is { n: string; t: string } => !!x.t)
-  const recent = timed.filter(x => now.getTime() - Date.parse(x.t) < 8 * RUN_MS)
-  const pulls = (await Promise.all(recent.map(async (x): Promise<StoresPull | null> => {
+  const inWindow = timed.filter(x => now.getTime() - Date.parse(x.t) < 8 * RUN_MS)
+  const pulls = (await Promise.all(inWindow.map(async (x): Promise<StoresPull | null> => {
     const j = json<Partial<StoresPull>>(await readText('council/ledger/' + x.n))
     return j ? { at: x.t, stem: x.n.replace(/\.json$/, ''), answers: j.answers ?? {}, steps: j.steps ?? [], needs_work: j.needs_work ?? [] } : null
   }))).filter((p): p is StoresPull => !!p)
   const doneFile = json<{ done?: Record<string, unknown> }>(await readText('council/needs-work-done.json'))
   const board = json<BoardData>(await readText('board/board_data.json'))
-  return storesWorldOf({ pulls, board, doneKeys: Object.keys(doneFile?.done ?? {}), placed, now })
+  const gallery = await import('@/lib/board/gallery')
+  const crates: Thing[] = (await gallery.recent(null).catch(() => null))?.cards
+    .filter(c => !c.reviewed)
+    .map(c => ({ id: 'crate-' + c.sha.slice(0, 16), kind: 'crate' as const, words: c.maker ?? c.round, title: c.title, place: c.round, pic: c.picture })) ?? []
+  const first = (await gallery.holes(null).catch(() => null))?.cards[0]
+  const hole: StoresHole | null = first ? { id: first.id, title: first.name, words: first.name,
+    price: first.price?.dollars ? `About $${first.price.dollars}` : `About ${(first.price?.tokens ?? 0).toLocaleString('en-US')} tokens, no dollars` } : null
+  return storesWorldOf({ pulls, board, doneKeys: Object.keys(doneFile?.done ?? {}), placed, now, crates, hole })
 }
