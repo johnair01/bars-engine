@@ -35,7 +35,7 @@ export const SPOKE_FUNNEL_MAP: readonly SpokeFunnel[] = [
     numeral: "I",
     band: "free-door",
     ribbon: "Begin free",
-    href: "/handbook",
+    href: "/inner-garden/chapter-1",
     wallTint: null,
   },
   {
