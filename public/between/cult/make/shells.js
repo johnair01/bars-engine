@@ -421,9 +421,12 @@ export function dress(C, reg, outfitKey) {
     else if (pc.p === 'hair') hairPc = pc; // shells round 2: the hair goes on last, over the clothes it lies on
     else throw new Error('piece ' + pc.p);
   }
-  if (hairPc) { const fem = !C.male, styles = (fem || hairPc.long) && hairPc.style !== 'braid' ? [hairPc.style, 'long'] : [hairPc.style], backAt = hairBack(C, parts);
+  if (hairPc && C.F.mix && C.F.mix.hair) { const h = C.F.mix.hair; hairPc = { ...hairPc, long: false, style: h }; }
+  if (!hairPc && C.F.mix && C.F.mix.hair) hairPc = { p: 'hair', style: C.F.mix.hair };
+  if (hairPc) { const picked = !!(C.F.mix && C.F.mix.hair), fem = !C.male;
+    const styles = (!picked && (fem || hairPc.long) && hairPc.style !== 'braid') ? [hairPc.style, 'long'] : (hairPc.style === 'loose' ? ['crop', 'long'] : [hairPc.style]), backAt = hairBack(C, parts);
     C.hairW = hairWeights(C); hairPc = { ...hairPc, envAt: C.env || null }; // round 2: the man's beard lies on the envelope of the robe
-    for (const st of styles) parts.push(...G.hair(C, st, reg.hairColor, backAt, hairPc));
+    for (const st of styles) parts.push(...(picked ? GC : G).hair(C, st, reg.hairColor, backAt, hairPc));
     C.hairW = null;
     if (C.male && C.reg && hairPc.crown === 'elder' && hairPc.beard !== false) parts.push(...elderBeard(C, parts, G, reg.hairColor));
     hairPaint(C, parts); } // round 4 fix 3: strands and sheen painted on the hair
