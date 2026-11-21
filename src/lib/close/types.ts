@@ -20,6 +20,10 @@ export interface Safety {
   nextOwner: boolean
 }
 
+/** One of the up-to-three things he kept this morning in Tap the Vein, come back at the close. `state` is his seal. */
+export type KeptState = 'done' | 'smaller' | 'let-go'
+export interface Kept { id: string; title: string; state?: KeptState }
+
 export type Stage = 'done' | 'doing' | 'next'
 
 /** One piece of the day's work. `proof` is its seal (a pull request, a store record, a board row); no proof, no show. */
@@ -73,6 +77,8 @@ export interface CloseRecord {
   /** Wins he tapped (item id to 1..5). Each lights a lantern that stays lit. */
   wins: Record<string, number>
   items: Item[]
+  /** The things he kept this morning (Tap the Vein), at most three. Absent on closes begun before this existed. */
+  kept?: Kept[]
   /** Set once the Challenger has asked "what would show this false?" about the Triumph rating. */
   challenged?: boolean
   unpacking: string[]
@@ -88,10 +94,11 @@ export interface CloseRecord {
 export const MAX_TICKETS = 5
 export const MAX_MINUTES = 120
 export const CAP_MINUTES = 20
+export const MAX_KEPT = 3
 
 export function dayId(date: string): string { return `close-${date}` }
 
-export function newClose(date: string, items: Item[] = [], now = new Date().toISOString()): CloseRecord {
-  return { date, status: 'open', move: 'glass', after: {}, wins: {}, items, unpacking: [], picks: [], pushback: [],
+export function newClose(date: string, items: Item[] = [], now = new Date().toISOString(), kept: Kept[] = []): CloseRecord {
+  return { date, status: 'open', move: 'glass', after: {}, wins: {}, items, kept, unpacking: [], picks: [], pushback: [],
     plan: { tickets: [] }, sent: [], skipped: [], startedAt: now }
 }

@@ -14,6 +14,7 @@ function controls(r: CloseRecord, move: Move): string {
     out.push('<textarea id="sentence" rows="2" placeholder="Say the day in one sentence"></textarea>', '<button class="b" data-field="sentence">Say it</button>')
     for (const [k, n] of [['p', 'Peace'], ['t', 'Triumph'], ['w', 'Wonder']])
       out.push(`<div class="row"><span>${n}</span>${[1, 2, 3, 4, 5].map(i => btn(`${k}${i}`, String(i))).join('')}</div>`)
+    r.kept?.forEach((k, i) => out.push(`<div class="row"><span>${esc(k.title)}</span>${btn(`kept ${i + 1} done`, 'Done', k.state === 'done' ? 'go' : '')}${btn(`kept ${i + 1} smaller`, 'Smaller')}${btn(`kept ${i + 1} let go`, 'Let it go')}</div>`))
     const wins = hullsOf(r).wins
     if (wins.length) out.push('<div class="row"><span>Light a lantern</span></div>', ...wins.map(w => `<div class="row"><span>${esc(w.title)}</span>${[1, 2, 3, 4, 5].map(i => btn(`win ${w.id} ${i}`, String(i))).join('')}</div>`))
   } else if (move === 'unpacking') {
