@@ -105,6 +105,20 @@ await page.locator('[data-demo-key="open-choice-wave"]').click();
 await waveFrom(page, 'welcome', 'stay');
 await clickText('Yes, something shifted');
 await page.locator('[data-demo-key="state-confirm-satisfied"]').click();
+// BAR naming card (FR-001 to FR-004): title is the satisfied name, six sentences in altitude order,
+// none pre-selected, "Not now" leaves no claim.
+ok(await page.locator('[data-naming-card] .naming-title').textContent() === 'Triumph', 'naming card titles the channel\'s satisfied name');
+ok(await page.locator('[data-naming-sentence]').count() === 6
+  && (await page.locator('[data-naming-sentence]').evaluateAll(els => els.map(e => e.dataset.namingSentence).join()) === 'magenta,red,amber,orange,green,teal')
+  && await page.locator('[data-naming-sentence][aria-pressed="true"]').count() === 0, 'six sentences in altitude order, none pre-selected');
+ok(!/claim|measure|score|BAR/.test(await page.locator('[data-naming-card]').textContent()), 'the card never shows claim, measure, score or BAR');
+await page.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-naming-card.png', fullPage: true });
+await page.locator('[data-naming-sentence="orange"]').click();
+await page.locator('[data-naming-words]').fill('I said it plainly');
+await page.locator('[data-naming-continue]').click();
+const named = (await gs(page)).namedClaims;
+ok(named.length === 1 && named[0].channel === 'anger' && named[0].lens === 'amber' && named[0].named === 'orange' && named[0].words === 'I said it plainly',
+  'pressing a sentence and Continue records one claim: ' + JSON.stringify(named));
 await clickText("No, that's all of it");
 ok(await page.getByText('Where next?').count() === 1, 'reached phase 6');
 // Flow forward keeps WAVE as opener
@@ -120,6 +134,10 @@ const ta = page.locator('textarea[readonly]');
 await ta.waitFor();
 const code = await ta.inputValue();
 ok(code.startsWith('OAG1.'), 'coach code shown after sharing (' + code.length + ' chars)');
+const carry = await page.locator('[data-carry-claims]').getAttribute('href');
+const carried = carry && JSON.parse(Buffer.from(carry.split('#OAG2.')[1].split('.')[0], 'base64url').toString());
+ok(carried && carried.v === 2 && carried.k.length === 1 && carried.k[0][1] === 'anger' && carried.k[0][3] === 'orange' && /^\/claim#OAG2\.[\w-]+\.[0-9a-f]{8}$/.test(carry),
+  'Carry this to the engine links /claim with an OAG2 code of the named claim');
 await page.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-done.png', fullPage: true });
 
 await page.reload();
@@ -251,6 +269,8 @@ ok(st.openWaveLevel === 'allow' && (await p5.locator('[data-wave-step="validate"
 await waveFrom(p5, 'validate', 'stay');
 await p5.getByText('Yes, something shifted', { exact: true }).click();
 await p5.locator('[data-demo-key="state-confirm-satisfied"]').click();
+await p5.locator('[data-naming-not-now]').click();
+ok((await gs(p5)).namedClaims.length === 0, '"Not now" leaves no claim (FR-003)');
 await p5.getByText("No, that's all of it", { exact: true }).click();
 await p5.getByText('Complete This Cycle', { exact: true }).click();
 ok(await p5.locator('[data-map-block]').count() === 2, 'map draws a loop for each block (' + await p5.locator('[data-map-block]').count() + ')');

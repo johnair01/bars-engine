@@ -16,7 +16,7 @@ export function morningSeed(prev: CloseRecord | null): MorningSeed | null {
   const wins = Object.entries(prev.wins)
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1])
-    .map(([id]) => prev.items.find(i => i.id === id)?.title)
+    .map(([id]) => prev.items.find(i => i.id === id)?.title ?? prev.kept?.find(k => `kept-${k.id}` === id)?.title)
     .filter((t): t is string => !!t)
   return { kind: 'lanterns', wins, lantern: prev.plan.lantern }
 }
