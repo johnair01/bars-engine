@@ -33,7 +33,7 @@ for k in range(H):
 # office: wall block with a door
 for y in range(6,10):
     for x in range(1,8): ground[idx(x,y)]=4; coll[idx(x,y)]=4
-ground[idx(4,9)]=11; coll[idx(4,9)]=0
+ground[idx(4,9)]=12; coll[idx(4,9)]=0
 # paths: door square, then three lanes fan out to the places
 def path(x0,y0,x1,y1):
     for x in range(min(x0,x1),max(x0,x1)+1): ground[idx(x,y0)]=2
@@ -44,10 +44,10 @@ path(8,12,22,12); path(22,12,30,12); path(22,12,22,5); path(22,5,30,5); path(22,
 start[idx(4,12)]=9
 # notice posts beside the door: three posts at x=10, y=9,12,15 (board tile on detail, collides)
 posts=[(10,9),(10,12),(10,15)]
-for (x,y) in posts: detail[idx(x,y)]=10; coll[idx(x,y)]=10
+for (x,y) in posts: detail[idx(x,y)]=11; coll[idx(x,y)]=11
 # places: lantern post at the end of each lane
 places=[(31,5),(31,12),(31,19)]
-for (x,y) in places: detail[idx(x,y)]=9; coll[idx(x,y)]=9
+for (x,y) in places: detail[idx(x,y)]=10; coll[idx(x,y)]=10
 # a few trees and flowers for the walk
 for (x,y) in [(14,3),(17,3),(15,7),(26,8),(27,16),(15,17),(18,21),(34,8),(35,16),(36,3),(36,21)]:
     detail[idx(x,y)]=5; coll[idx(x,y)]=5; o1[idx(x,y-1)]=6
@@ -83,7 +83,7 @@ def tl(i,name,data,props=None):
     if props: l["properties"]=props
     return l
 layers=[tl(1,"ground",ground),tl(2,"detail",detail),tl(3,"collisions",coll,[{"name":"collides","type":"bool","value":True}]),
-        tl(4,"floorLayer",floor),tl(5,"over1",o1),tl(6,"over2",o2),tl(7,"start",start),
+        tl(4,"floorLayer",floor),tl(5,"over1",o1),tl(6,"over2",o2),dict(tl(7,"start",start),visible=False),
         {"id":8,"name":"objects","type":"objectgroup","x":0,"y":0,"opacity":1,"visible":True,"draworder":"topdown","objects":objs}]
 m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"orthogonal","renderorder":"right-down","tiledversion":"1.10.2",
    "tileheight":T,"tilewidth":T,"type":"map","version":"1.10","nextlayerid":9,"nextobjectid":oid,"layers":layers,
