@@ -9,6 +9,7 @@ export default defineConfig({
     environment: 'node',
     include: [
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
+      'src/lib/ontology-game/__tests__/claim-code.test.ts',
       'src/lib/wake-up/__tests__/check-content.test.ts',
       'src/lib/economy/__tests__/bar-mint.test.ts',
       'src/lib/npc-from-321/__tests__/casting-sheet.test.ts',
