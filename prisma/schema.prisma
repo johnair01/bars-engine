@@ -5592,3 +5592,16 @@ model FounderPaymentWord {
 
   @@map("founder_payment_words")
 }
+
+/// Founder support demo (hole H-gm-mark): a payment the game master marked. ref is his own reference for the payment
+/// (so marking it twice writes one row); word and player_id are what the note's payment word named at the time.
+model FounderPaymentMark {
+  ref       String   @id
+  word      String
+  playerId  String   @map("player_id")
+  cents     Int
+  markedAt  DateTime @default(now()) @map("marked_at")
+
+  @@index([playerId])
+  @@map("founder_payment_marks")
+}

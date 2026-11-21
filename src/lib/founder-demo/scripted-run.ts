@@ -11,8 +11,9 @@
 import { CROP_FAMILY, cropName, bedLabel, type Crop } from '@/lib/between/crops'
 import { newFarm, till, plant, ripen, pick, SLOTS, type Farm } from '@/lib/between/farm'
 import { EMPTY_PACKET, cropOf, seedOf, type Packet } from '@/lib/founder-gate/seed-packet'
+import { readNote } from '@/lib/founder-gate/mark-payment'
 import { parsePacket, isPlayerId } from '@/lib/founder-gate/packet-record'
-import { makeWord, findWord } from '@/lib/founder-gate/payment-word'
+import { makeWord } from '@/lib/founder-gate/payment-word'
 import { SEEDS, courierLine, type Seed } from '@/lib/founder-gate/content'
 import { CHANNELS } from '@/lib/between/crops'
 import type { Channel } from '@/lib/coaching/unpacking-walk'
@@ -158,12 +159,16 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
     hole('H-money', 2, 'The game cannot see a Venmo or Cash App payment (no signal, no webhook); the $11 is a stand-in', 'none')
 
     /* 3. The stand-in game master marks the payment by its word (A4). */
-    const noteWord = findWord(`for the book ${payment.word.toUpperCase()}`)
-    if (noteWord !== payment.word) throw new MissingPiece(3, `findWord could not read "${payment.word}" out of a payment note`)
-    const owner = world.words.owner(noteWord)
-    if (!owner) throw new MissingPiece(3, `no player owns the word "${payment.word}"`)
-    log(3, `game master marked the payment: word "${payment.word}" belongs to ${owner}`, ['word register (stand-in)'], [])
-    hole('H-gm-mark', 3, 'No game master surface: no place he sees an unmarked payment and marks it by its word', 'none')
+    /* The mark's reading is real (mark-payment.ts readNote); the register behind it is the stand-in, and markPayment
+       (mark-payment-server.ts) is the same reading with the register and a mark row in the database. */
+    const read = readNote(`for the book ${payment.word.toUpperCase()}`, (w) => world.words.owner(w))
+    if (read.kind === 'no-word') throw new MissingPiece(3, `readNote could not read "${payment.word}" out of a payment note`)
+    if (read.kind === 'unknown-word') throw new MissingPiece(3, `no player owns the word "${read.word}"`)
+    const owner = read.playerId
+    log(3, `game master marked the payment: word "${read.word}" belongs to ${owner}`, ['mark-payment.ts readNote', 'word register (stand-in)'], [`founder_payment_marks[ref] (stand-in: none; real: mark-payment-server.ts markPayment)`])
+    /* H-gm-mark's engine is closed: a note in, a mark row out, the same ref twice writes one row. What stays open is the
+       PLACE he does it: no surface shows him an unmarked payment (H27: not a list or dashboard), so he cannot yet call it. */
+    hole('H-gm-surface', 3, 'The mark has no place he can do it: no surface where he gives the game a payment note and sees whose farm it names', 'src/lib/founder-gate/mark-payment-server.ts markPayment (no caller)')
 
     /* 4. A crop of the player's family, in the grain form, on that player's farm (real farm.ts). */
     const farm0 = world.farms.get(owner) ?? newFarm()
