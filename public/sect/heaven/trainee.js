@@ -11,7 +11,7 @@ import { groundAt } from './walk.js';
 import { PILGRIM } from './layout.js';
 import { CREST_STAIR, ROAD, ROAD_START } from './crag.js';
 import { GREAT } from './world.js';
-import { elder, wayfarer } from './people.js';
+import { elder, wayfarer, ELDER_MIX } from './people.js';
 import { WAYFARERS } from './wayfarer-words.js';
 import { talk } from './talk.js';
 import { doubtQuest } from './doubt.js';
@@ -169,7 +169,7 @@ export async function traineeWalk(ctx) {
     else if (k === 'scan') { scanN = card.querySelectorAll('[data-tw="sense"][aria-pressed="true"]').length; state = 'stone'; glow.intensity = 30; pulse = now(); speak('stone', stoneLine(scanN), 5000, () => { state = 'team'; show(`<p>${esc(TEAM)}</p><div class="tw-row"><button type="button" class="go" data-tw="onward">Go on</button></div>`, 'Your team'); }); }
     else if (k === 'onward') endCard();
     else if (k === 'again') location.href = '/between/walk';
-    else if (k === 'stay') { card.hidden = true; state = 'free'; setHint(''); if (ELD.shaman && !api.talk) { api.doubt = doubtQuest({ S, A, cam, hooks, at, wrist }); api.talk = talk({ S, A, cam, hooks, people: [{ key: 'shaman', m: ELD.shaman, height: 1.78 }], onGo: () => api.doubt.start(), busy: () => api.doubt.busy() }); api.doubt.restore(); } }
+    else if (k === 'stay') { card.hidden = true; state = 'free'; setHint(''); if (ELD.shaman && !api.talk) { api.doubt = doubtQuest({ S, A, cam, hooks, at, wrist }); api.talk = talk({ S, A, cam, hooks, people: [{ key: 'shaman', m: ELD.shaman, height: ELDER_MIX[0].height }], onGo: () => api.doubt.start(), busy: () => api.doubt.busy() }); api.doubt.restore(); } }
   });
   let pulse = 0;
   function endCard() {
