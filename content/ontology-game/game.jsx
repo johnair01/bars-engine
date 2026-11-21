@@ -920,6 +920,37 @@
             }
         };
 
+        // BAR claim (spec ontology-game-bar-claim, look bcn-card-look-1 A): the naming card
+        // after a thread lands resolved. Its title is the channel's satisfied name; under it
+        // sit the six satisfied sentences already in `stems`, in altitude order. A press names
+        // the claim. Carrying it to the engine is the player's own press, as an OAG2. code.
+        const SATISFIED_NAME = { anger: "Triumph", fear: "Wonder", sadness: "Poignance", joy: "Bliss", neutrality: "Peace" };
+        const CLAIM_ALTITUDES = ["magenta", "red", "amber", "orange", "green", "teal"];
+        const CLAIM_CODE_PREFIX = "OAG2.";
+        const base64urlOfString = (str) => {
+            const bytes = new TextEncoder().encode(str);
+            let bin = "";
+            bytes.forEach(b => { bin += String.fromCharCode(b); });
+            return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        };
+        // The checksum is the first 8 hex chars of SHA-256 over the base64url body. It catches
+        // a copy error and nothing more; the code is the player's own report.
+        const encodeClaimCode = async (summary, claims, build) => {
+            const body = base64urlOfString(JSON.stringify({
+                v: 2,
+                build: build || "oag",
+                s: {
+                    totalCycles: summary.totalCycles || 0,
+                    channelCounts: summary.channelCounts || {},
+                    channelsSatisfied: summary.channelsSatisfied || {},
+                },
+                k: claims.slice(0, 30).map(c => [c.at, c.channel, c.lens, c.named, (c.words || "").slice(0, 280)]),
+            }));
+            const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(body));
+            const hex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+            return CLAIM_CODE_PREFIX + body + "." + hex;
+        };
+
         // Archetype classifier — a deliberately simplified, faithful port of the
         // rule-based session-shape classifier from classify_archetypes.py (validated
         // against the 20-run random-walk study, Simulated Playtesting doc, Sept 23 2026).
@@ -1676,6 +1707,12 @@
             const [primaryFace, setPrimaryFace] = useState(null);
             const [resolvedThreads, setResolvedThreads] = useState([]); // {channel, face, belief, passive, endState}
             const [deferredThreads, setDeferredThreads] = useState([]); // {channel, face} named but not yet worked
+            // BAR claims named on the naming card this cycle: {at, channel, lens, named, words}.
+            // Reset by handleNewCycle like resolvedThreads. claimPick/claimWords are the open card.
+            const [namedClaims, setNamedClaims] = useState([]);
+            const [claimPick, setClaimPick] = useState(null);
+            const [claimWords, setClaimWords] = useState("");
+            const [claimCode, setClaimCode] = useState(null);
             const [recheckTarget, setRecheckTarget] = useState(null); // {channel, face} currently being checked back on
             // The satisfaction state ("dissatisfied" | "neutral" | "satisfied") the channel
             // currently being worked is starting FROM. Every entry point sets this
@@ -1938,7 +1975,7 @@
                         phase, selectedChannel, selectedFace, shifted, phase3Context,
                         previousChannel, location, texture,
                         primaryChannel, primaryFace,
-                        resolvedThreads, deferredThreads, recheckTarget,
+                        resolvedThreads, namedClaims, deferredThreads, recheckTarget,
                         incomingState,
                         currentPractice: currentPractice ? currentPractice.id : null,
                         scanContext,
@@ -2110,6 +2147,10 @@
                 setPrimaryChannel(null);
                 setPrimaryFace(null);
                 setResolvedThreads([]);
+                setNamedClaims([]);
+                setClaimPick(null);
+                setClaimWords("");
+                setClaimCode(null);
                 setDeferredThreads([]);
                 setRecheckTarget(null);
                 setHistory([]);
@@ -2316,6 +2357,30 @@
                 }
                 logRoute({ kind: "stop", channel: selectedChannel, face: selectedFace, endState: state, job: jobTextFor(selectedChannel) });
                 setResolvedThreads(prev => [...prev, { channel: selectedChannel, face: selectedFace, belief: userBelief, passive: false, endState: state }]);
+                // Only a resolved thread offers the naming card, never workable or aching,
+                // and a scripted Demo Mode run never creates a claim.
+                if (state === "satisfied" && !demoMode) {
+                    setClaimPick(null);
+                    setClaimWords("");
+                    setPhase("phase5-name-claim");
+                    return;
+                }
+                afterThreadResolved();
+            };
+
+            // "Not now" leaves no trace; Continue after a press records the claim.
+            const closeNamingCard = (record) => {
+                if (record && claimPick && selectedChannel) {
+                    setNamedClaims(prev => [...prev, {
+                        at: Date.now(),
+                        channel: selectedChannel.toLowerCase(),
+                        lens: selectedFace.toLowerCase(),
+                        named: claimPick,
+                        words: claimWords.trim().slice(0, 280),
+                    }]);
+                }
+                setClaimPick(null);
+                setClaimWords("");
                 afterThreadResolved();
             };
 
@@ -2760,6 +2825,16 @@
                 // not pollute (or, for a first-time visitor, silently create) a real
                 // player's saved pattern-summary rollup.
                 if (!demoMode) persistCompletedCycle(features, archetype);
+                // Site only: the claim code is built here from what this cycle named plus the
+                // player's saved counts, so unnamed cycles stay the denominator.
+                if (ON_SITE && !demoMode && namedClaims.length > 0) {
+                    const prior = patternSummary || {};
+                    const channelCounts = { ...(prior.channelCounts || {}) };
+                    for (const t of resolvedThreads) channelCounts[t.channel] = (channelCounts[t.channel] || 0) + 1;
+                    const channelsSatisfied = mergeChannelsSatisfied(prior.channelsSatisfied, resolvedThreads);
+                    encodeClaimCode({ totalCycles: (prior.totalCycles || 0) + 1, channelCounts, channelsSatisfied }, namedClaims, window.__ontologyBuild)
+                        .then(setClaimCode).catch(() => {});
+                }
                 // The player's record (oag-record): the charge they came with and the
                 // beliefs that resolved it. Written only if switched on.
                 if (!demoMode) recordStore.add({
@@ -2856,6 +2931,10 @@
                 setPrimaryChannel(null);
                 setPrimaryFace(null);
                 setResolvedThreads([]);
+                setNamedClaims([]);
+                setClaimPick(null);
+                setClaimWords("");
+                setClaimCode(null);
                 setDeferredThreads([]);
                 setRecheckTarget(null);
                 setDeeperStems([]);
@@ -2957,6 +3036,10 @@
                 setPrimaryChannel(null);
                 setPrimaryFace(null);
                 setResolvedThreads([]);
+                setNamedClaims([]);
+                setClaimPick(null);
+                setClaimWords("");
+                setClaimCode(null);
                 setDeferredThreads([]);
                 setRecheckTarget(null);
                 setDeeperStems([]);
@@ -4620,6 +4703,50 @@
                 );
             }
 
+            if (phase === "phase5-name-claim" && selectedChannel && selectedFace) {
+                const chKey = selectedChannel.toLowerCase();
+                return (
+                    <div className="container">
+                        <div className="card naming-card" data-naming-card>
+                            <h2 className="naming-title">{SATISFIED_NAME[chKey]}</h2>
+                            <p className="prompt">Which of these is true now?</p>
+                            <div className="naming-sentences">
+                                {CLAIM_ALTITUDES.map(alt => (
+                                    <div
+                                        key={alt}
+                                        className={"naming-sentence naming-" + alt + (claimPick && claimPick !== alt ? " naming-faded" : "")}
+                                        data-naming-sentence={alt}
+                                        role="button"
+                                        tabIndex="0"
+                                        aria-pressed={claimPick === alt}
+                                        onClick={() => setClaimPick(alt)}
+                                        onKeyPress={(e) => e.key === 'Enter' && setClaimPick(alt)}
+                                    >
+                                        {stems[chKey][alt].satisfied}
+                                    </div>
+                                ))}
+                            </div>
+                            {claimPick && (
+                                <div className="naming-words">
+                                    <input
+                                        type="text"
+                                        data-naming-words
+                                        maxLength={280}
+                                        placeholder="In your words (optional)"
+                                        value={claimWords}
+                                        onChange={(e) => setClaimWords(e.target.value)}
+                                    />
+                                    <button className="primary" data-naming-continue onClick={() => closeNamingCard(true)}>Continue</button>
+                                </div>
+                            )}
+                            <div className="button-group">
+                                <button className="secondary" data-naming-not-now onClick={() => closeNamingCard(false)}>Not now</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
             if (phase === "phase5-state-confirm") {
                 const key = selectedChannel.toLowerCase();
                 const faceKey = selectedFace.toLowerCase();
@@ -5366,6 +5493,12 @@
                                 </div>
                             ) : (
                                 <p className="prompt">You've completed one full cycle.</p>
+                            )}
+                            {ON_SITE && claimCode && namedClaims.length > 0 && (
+                                <div className="mini-section">
+                                    <a className="secondary" data-carry-claims target="_blank" rel="noopener"
+                                       href={"/claim#" + claimCode}>Carry this to the engine</a>
+                                </div>
                             )}
                             {coachShareCode && (
                                 <div className="mini-section">

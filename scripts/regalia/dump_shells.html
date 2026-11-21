@@ -1,0 +1,11 @@
+<!doctype html><html><body>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { makeWalker } from './between/cult/walker.js';
+const q=new URLSearchParams(location.search);
+const W=await makeWalker({who:q.get('who')||'m',outfit:q.get('outfit')||'R4',underwrap:(q.get('who')==='f')});
+window.INFO=()=>W.X.parts.map(p=>({name:p.name,kind:p.kind,n:p.mesh.geometry.attributes.position.count,tri:p.mesh.geometry.index&&p.mesh.geometry.index.count/3,attrs:Object.keys(p.mesh.geometry.attributes),vis:p.mesh.visible,keys:Object.keys(p)}));
+window.DUMP=(i)=>{const p=W.X.parts[i],g=p.mesh.geometry;const f=n=>g.attributes[n]?Array.from(g.attributes[n].array):null;return {pos:f('position'),rest:f('aRest'),fold:f('aFold'),idx:Array.from(g.index.array),wpos:p.world?Array.from(p.world):null,C:W.X.C?{yWaist:W.X.C.yWaist,ySh:W.X.C.ySh,yNeck:W.X.C.yNeck,k:W.X.C.k}:null};};
+window.XK=()=>Object.keys(W.X);window.CC=()=>{const C=W.X.C||W.X.ctx||W.X.cx;return C?{yWaist:C.yWaist,ySh:C.ySh,yNeck:C.yNeck,k:C.k}:null};window.CC=()=>{const F=W.X.F,w=n=>F.bones[n].getWorldPosition(new THREE.Vector3()).y,k=F.stature/1.75;const yHip=w('hips');return {k,stature:F.stature,yHip,yWaist:yHip+0.11*k,ySh:(w('shoulderL')+w('shoulderR'))/2,yNeck:w('neck'),rootY:F.root.position.y,rootWorldY:F.root.getWorldPosition(new THREE.Vector3()).y};};window.ready=true;
+</script></body></html>

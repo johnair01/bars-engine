@@ -3391,10 +3391,13 @@ function checkinSheet() {
   }
   const sp = feedable(), g = view().g, room = g && !isHome(g) && isMember(g) && g.phase !== "closed";
   const given = w.given, hearthOffer = isHome(g) && !given && careOffered(hearthCareNow(), caredThisVisit) != null;
+  const firstEmber = hearthOffer && minuteOn() && !mstate().done.ember; // the minute's ember beat: the only place for this ember is the ash
   return `<div class="stack wave" style="--c:${c}">${head}
     <div class="emberbig"><span class="ember" style="--c:${c};--s:58px"></span></div>
     <h2>${given ? esc(given) + " took your ember" : "An ember of " + esc(FEELS[w.ember || w.feel])}</h2>
     ${given ? `<p class="small muted">Your check-in is kept in your homeroom.</p><div class="row"><button type="button" data-close>Back to the room</button></div>`
+    : firstEmber ? `<p class="small muted">What you walked through left this ember. The hearth is cold under old ash. Give the ember to the ash, and the ash sweeps it.</p>
+    <div class="row"><button type="button" data-act="hearthGiveWalk">Give it to the ash</button></div>`
     : `<p class="small muted">What you walked through left this ember. Give it to one of your spirits, and it feeds them. An ember of a spirit's own element feeds it twice over.</p>
     ${sp.length ? `<div class="choice">${sp.map(x => spiritBtn(x, w.ember || w.feel)).join("")}</div>` : `<p class="small">None of your spirits is with you. ${isHome(g) ? "Call one up from the caves under Spirits, or keep the ember for later." : "Bring one in from your homeroom, or keep the ember for later."}</p>`}
     <div class="row">${hearthOffer ? `<button type="button" data-act="hearthGiveWalk">Give it to the hearth</button>` : ""}<button class="ghost" type="button" data-act="emberKeep">Keep it for later</button>${room ? `<button class="ghost" type="button" data-act="emberStone">Leave it on a stone for them</button>` : ""}</div>`}</div>`;
@@ -4212,7 +4215,14 @@ function hearthGiveSheet() {
 function minuteTap(key) {
   if (!garden || !isHome(garden) || storeDown) return false;
   const st = mstate(), beat = minuteBeat();
-  if (key === "hearth") { const c = hearthCareNow(); if (careOffered(c, caredThisVisit) != null) { openSheet("hearthgive"); return true; } return false; }
+  if (key === "hearth") {
+    const c = hearthCareNow();
+    if (careOffered(c, caredThisVisit) == null) return false;
+    // the first ember is a check-in (hw2-first-ember A): a cold hearth with no ember waiting asks you what you feel first
+    if (!st.done.ember && !embersWaiting().length) setTimeout(() => openSheet("checkin"), 350); // after the tap's own click, so it cannot land on a feeling under the finger
+    else openSheet("hearthgive");
+    return true;
+  }
   if (key === "portal" && minuteOn()) {
     if (st.step === "vine" && beat === "vine") { standUp(); burst(PORTAL_AT.clone().setY(1.0), 0x8fd08a); minuteAct("vine"); }
     else toast("The vines fall as you learn the room.");

@@ -3,11 +3,13 @@
    learned by doing it once. Each one done pulls a vine away; the last vine is the yes rule itself, touched by hand.
 
      0:00 wake    "This is yours. Nobody comes in here."
-     0:10 ember   one ember glows in the hearth; tap it and the fire catches. "Things here grow when you tend them." Vine one.
+     0:10 ember   the first check-in (Wendell's A on hw2-first-ember, 2026-11-09): tap the cold hearth, name what you feel, walk the
+                  seven W.A.V.E. steps, and give the ember it leaves to the ash, which sweeps it. This beat is most of the
+                  two minutes the first minute now takes. "Things here grow when you tend them." Vine one.
      0:22 mirror  the mirror glows in the satchel; set it on a spot. "Your room is yours to arrange." Vine two.
      0:35 hope    look into the mirror: what do you hope for in your friendships? Write it or skip it. "Only you will ever see this."
      0:48 vine    touch the last vine. "Nobody comes through without a yes, from both of you." It falls; a blank scroll is on the shelf.
-     1:00 open    the doorway shimmers open.
+     ~2:00 open   the doorway shimmers open (the times below are the earliest each beat may start; the check-in sets the pace).
 
    A step you skip stays as a small glow in the room to come back to (the ember in the hearth, the mirror in the satchel, the
    mirror's glass). The last vine cannot be skipped: it is the rule the doorway keeps.
@@ -41,7 +43,7 @@ export const CAPTIONS = {
 };
 /** What each beat asks, plainly, while it waits for you (the HUD's hint line, not a caption). */
 export const PROMPTS = {
-  ember: "The hearth is cold and thick with old ash. Tap it.", // stand-in until the built look (Impeccable copy pass)
+  ember: "The hearth is cold under old ash. Tap it, name what you feel right now, and walk it through seven short steps. The ash takes the ember it leaves.",
   mirror: "A mirror glows in your satchel. Set it on a spot.",
   hope: "Look into the mirror.",
   vine: "The last vine waits on the doorway. Touch it.",

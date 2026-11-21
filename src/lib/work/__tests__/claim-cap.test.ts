@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { claimTicket } from '../queue'
-import { LANE_WORKERS, LEASE_MS } from '../lanes'
+import { CAP_LIVE_MS, LANE_WORKERS, LEASE_MS } from '../lanes'
 
 const now = new Date('2026-11-19T00:00:00Z')
 function db(live: number) {
@@ -17,6 +17,14 @@ function db(live: number) {
 describe('the per-lane worker cap', () => {
   it('holds a lease for six hours', () => {
     expect(LEASE_MS).toBe(6 * 60 * 60 * 1000)
+  })
+  it('counts a claim against the cap only for three hours after its last touch', async () => {
+    const count = vi.fn(async () => 0)
+    const d = { workTicket: { updateMany: vi.fn(async () => ({ count: 0 })), count }, $queryRaw: vi.fn(async () => [{ id: 't1' }]) } as never
+    await claimTicket(d, 'claude', 'pickup routine', now)
+    expect(CAP_LIVE_MS).toBeLessThan(LEASE_MS)
+    expect(count).toHaveBeenCalledWith({ where: expect.objectContaining({ lane: 'claude', state: 'claimed',
+      updatedAt: { gte: new Date(now.getTime() - CAP_LIVE_MS) } }) })
   })
   it('refuses a claim when the lane already holds its live claims', async () => {
     const { db: d, queryRaw } = db(LANE_WORKERS)
