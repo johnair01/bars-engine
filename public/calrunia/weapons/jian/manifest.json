@@ -1,0 +1,106 @@
+{
+  "schema": "calrunia.jian_assets.v1",
+  "family": "jian",
+  "status": "approved_design_study_available_for_game_use",
+  "gameplay_activation": "catalog_only",
+  "reference": "tools/blender-cloud/make/jian/evidence.json",
+  "transform_spec": "tools/blender-cloud/make/jian/jian-identities.json",
+  "coordinate_contract": {
+    "source_blender_tip_axis": "+Z",
+    "glb_tip_axis": "+Y",
+    "grip_socket_node": "GripSocket",
+    "attachment_note": "Attach the character hand to GripSocket; do not assume the GLB origin is the grip."
+  },
+  "source_sha256": {
+    "base_jian.py": "b37d22742bae23024dfdc7e09ab10d431a2d34c1610f5df7e0bccb90228e6b59",
+    "transform_contract.py": "4e5446041afc225cbfe1693c9e19555b794026537102ba88fd7662a0f9611f4d",
+    "build_inventory.py": "3b1a9d86fb838ecf574be16ffe3476bd97f89764a148f4050f10b6dafda136cc",
+    "asset_study.py": "5b0e2ebab5157625f6babedbdfc092b9e00289487cb421160d2473b57bddc4fc",
+    "build_release.py": "8d241d6a0f210f44a421492ed55d936c8030408ddb9a26bc4f41e9c982b64f50",
+    "jian-identities.json": "bc2966a63c69d9628a5a8290a0c82aa58d1179f7fe6b13b904c691cc2c9170f2",
+    "evidence.json": "807bb346b085dac75a81e387dab3d6685fe07043fd2052127d5d877ac7814807",
+    "reference/met-27931.jpg": "0526b7bb38688e5373aa307c091b42d7ce69a014d51f2f829040eb44366b0dd4"
+  },
+  "variants": {
+    "argyra": {
+      "nation": "Argyra",
+      "model": "/calrunia/weapons/jian/argyra.glb",
+      "inventory_icon": "/calrunia/weapons/jian/argyra.png",
+      "model_sha256": "7253ae03396ba9b4b2164e7911817a8b597b8dc2e3aa449cd3787b8490afa4bb",
+      "icon_sha256": "8696af8e72ae42249862074c032291e0c2d6b688add7b49b971ac89bd3ff2748",
+      "triangles": 494,
+      "blade_length_m": 0.838,
+      "overall_length_m": 1.0375,
+      "blade_contrast_delta_96px": 61.9,
+      "glb": {
+        "nodes": 11,
+        "meshes": 10,
+        "grip_socket": true
+      }
+    },
+    "pyrakanth": {
+      "nation": "Pyrakanth",
+      "model": "/calrunia/weapons/jian/pyrakanth.glb",
+      "inventory_icon": "/calrunia/weapons/jian/pyrakanth.png",
+      "model_sha256": "b8ec4b73c5598543956c81382c09a5cac6e905301df04f00dc32ca8a35e177a9",
+      "icon_sha256": "a95a4a8b5e66980b4364bc805a60c138f992a42474192169175e660b3a61a3d8",
+      "triangles": 566,
+      "blade_length_m": 0.838,
+      "overall_length_m": 1.038,
+      "blade_contrast_delta_96px": 31.7,
+      "glb": {
+        "nodes": 18,
+        "meshes": 17,
+        "grip_socket": true
+      }
+    },
+    "lamenth": {
+      "nation": "Lamenth",
+      "model": "/calrunia/weapons/jian/lamenth.glb",
+      "inventory_icon": "/calrunia/weapons/jian/lamenth.png",
+      "model_sha256": "bf6aed80813f9df1c2f02ce3e0b09e7758602057a6d2f2355c35d3077dcd6f18",
+      "icon_sha256": "559e53e18da8cc722cb0ba9b7900b42c6fe7705decb3145cea6c4d1209ba7e0e",
+      "triangles": 574,
+      "blade_length_m": 0.838,
+      "overall_length_m": 1.038,
+      "blade_contrast_delta_96px": 51.5,
+      "glb": {
+        "nodes": 11,
+        "meshes": 10,
+        "grip_socket": true
+      }
+    },
+    "virelune": {
+      "nation": "Virelune",
+      "model": "/calrunia/weapons/jian/virelune.glb",
+      "inventory_icon": "/calrunia/weapons/jian/virelune.png",
+      "model_sha256": "c87fec6c36752d0a4edecabadc702300fb8118154a9f5647b9c03155a5f0bf6e",
+      "icon_sha256": "bbf5cea22cd3cabb35a8a143624df639939fb42630f2b4a8fd5c02bddfcb3fd7",
+      "triangles": 886,
+      "blade_length_m": 0.838,
+      "overall_length_m": 1.038,
+      "blade_contrast_delta_96px": 54.9,
+      "glb": {
+        "nodes": 19,
+        "meshes": 18,
+        "grip_socket": true
+      }
+    },
+    "meridia": {
+      "nation": "Meridia",
+      "model": "/calrunia/weapons/jian/meridia.glb",
+      "inventory_icon": "/calrunia/weapons/jian/meridia.png",
+      "model_sha256": "65b942104a4b26f3d728a26e28ae4f2b054dfc1f35fb1c8f4cb8a5b6e2cbfadb",
+      "icon_sha256": "0225f89871422be20fcf46ac495852031f59fb39afe045c55ae59aac22eea979",
+      "triangles": 362,
+      "blade_length_m": 0.838,
+      "overall_length_m": 1.038,
+      "blade_contrast_delta_96px": 29.0,
+      "glb": {
+        "nodes": 11,
+        "meshes": 10,
+        "grip_socket": true
+      }
+    }
+  }
+}

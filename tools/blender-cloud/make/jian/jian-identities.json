@@ -1,0 +1,82 @@
+{
+  "schema": "calrunia.jian_identity.v1",
+  "status": "design_hypotheses_for_review",
+  "source": "06 Specs/Imported/2026-05-26/06-assets-worldbuilding/Users/wendellbritt/Downloads/calrunian_costume_spec (1).md",
+  "base": {"code": "base_jian.py", "blade_length_m": 0.838, "overall_length_m": 1.038, "tip_axis": "+Z", "front_axis": "-Y", "hand_socket": "GripSocket"},
+  "variants": {
+    "Argyra": {
+      "design_intent": "a measured instrument: narrow constant blade, architectural cross, square termination",
+      "source_cue": "Argyra costume: clarity, precision, restraint, geometric silver clasp, pale cream/black",
+      "blade_profile": [0.77,0.77,0.77,0.75,0.72,0.68,0.58,0.70],
+      "guard_arms": [
+        {"from":[0.01,0],"to":[0.082,0],"radius_m":0.005},
+        {"from":[-0.01,0],"to":[-0.082,0],"radius_m":0.005},
+        {"from":[0.082,-0.015],"to":[0.082,0.015],"radius_m":0.004},
+        {"from":[-0.082,-0.015],"to":[-0.082,0.015],"radius_m":0.004}
+      ],
+      "pommel":"ring", "grip_radius_multiplier":0.86,
+      "palette":{"blade":"#a7bdc4","guard":"#d2d8d2","grip":"#101419","pommel":"#c8d3d3"}
+    },
+    "Pyrakanth": {
+      "design_intent": "a deliberate flame: broad changing blade, high rising guard wings, and forged flame accents rooted in the hilt",
+      "source_cue": "Pyrakanth costume: intense crimson, ember accents, flame sleeves and heavy clasps",
+      "blade_profile": [1.30,1.36,1.28,1.12,1.30,1.43,1.18,0.80],
+      "guard_arms": [
+        {"from":[0.01,0],"to":[0.052,0.022],"radius_m":0.009},
+        {"from":[0.052,0.022],"to":[0.093,0.079],"radius_m":0.006},
+        {"from":[-0.01,0],"to":[-0.052,0.022],"radius_m":0.009},
+        {"from":[-0.052,0.022],"to":[-0.093,0.079],"radius_m":0.006}
+      ],
+      "pommel":"hex_point", "grip_radius_multiplier":1.09,
+      "palette":{"blade":"#78838d","guard":"#8d3d1d","grip":"#4d0a12","pommel":"#ba5a20"},
+      "detail_ops":[
+        {"kind":"flame_tines","target":"Guard","count":4,"length_m":0.043,"color":"#d7893d"},
+        {"kind":"flame_inlay","target":"Grip","count":3,"length_m":0.060,"color":"#d7893d"}
+      ]
+    },
+    "Lamenth": {
+      "design_intent": "a descending tide: long lean blade, low flowing crescent, weighted drop",
+      "source_cue": "Lamenth costume: navy layers, water-worn stones, weighted trailing sash, ripples",
+      "blade_profile": [0.87,0.88,0.88,0.84,0.82,0.78,0.74,0.75],
+      "guard_arms": [
+        {"from":[0.01,0],"to":[0.057,-0.012],"radius_m":0.007},
+        {"from":[0.057,-0.012],"to":[0.096,-0.049],"radius_m":0.005},
+        {"from":[-0.01,0],"to":[-0.057,-0.012],"radius_m":0.007},
+        {"from":[-0.057,-0.012],"to":[-0.096,-0.049],"radius_m":0.005}
+      ],
+      "pommel":"droplet", "grip_radius_multiplier":0.92,
+      "palette":{"blade":"#86aebd","guard":"#c5d6d7","grip":"#0b3655","pommel":"#d5dee0"}
+    },
+    "Virelune": {
+      "design_intent": "an elegant living branch: leaf-bellied blade, uneven carved-wood guard, wood grip scales, seed ending",
+      "source_cue": "Virelune costume: asymmetrical drape, braided botanical cord, carved wood, forest green",
+      "blade_profile": [0.86,1.02,1.27,1.48,1.36,1.13,0.88,0.65],
+      "guard_arms": [
+        {"from":[0.01,0],"to":[0.06,-0.008],"radius_m":0.006},
+        {"from":[0.06,-0.008],"to":[0.079,-0.036],"radius_m":0.004},
+        {"from":[-0.01,0],"to":[-0.051,0.017],"radius_m":0.007},
+        {"from":[-0.051,0.017],"to":[-0.102,0.058],"radius_m":0.005},
+        {"from":[-0.051,0.017],"to":[-0.077,-0.008],"radius_m":0.004}
+      ],
+      "pommel":"seed", "grip_radius_multiplier":0.96,
+      "palette":{"blade":"#8ca695","guard":"#725236","grip":"#503821","pommel":"#80613e"},
+      "detail_ops":[
+        {"kind":"wood_scales","target":"Grip","count":5,"length_m":0.105,"color":"#9a7349"},
+        {"kind":"leaf_terminals","target":"Guard","count":2,"length_m":0.025,"color":"#8a995b"}
+      ]
+    },
+    "Meridia": {
+      "design_intent": "held weight: broad shoulder, thick stepped guard, squared stone-like counterweight",
+      "source_cue": "Meridia costume: square shoulders, heavy belt, stone emblem, ochre and brocade",
+      "blade_profile": [1.60,1.62,1.50,1.35,1.19,1.08,0.89,0.74],
+      "guard_arms": [
+        {"from":[0.01,0],"to":[0.081,0],"radius_m":0.012},
+        {"from":[-0.01,0],"to":[-0.081,0],"radius_m":0.012},
+        {"from":[0.081,-0.023],"to":[0.081,0.023],"radius_m":0.010},
+        {"from":[-0.081,-0.023],"to":[-0.081,0.023],"radius_m":0.010}
+      ],
+      "pommel":"stone", "grip_radius_multiplier":1.26,
+      "palette":{"blade":"#7c807a","guard":"#796044","grip":"#52331e","pommel":"#8c7050"}
+    }
+  }
+}
