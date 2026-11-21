@@ -1,4 +1,4 @@
-"""Offline tier: G1, G2, G2b, G6, G7, D1, J7b. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
+"""Offline tier: G1, G2, G2b, G6, G7, D1, J7b, RM2. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
 
 usage: python3 tools/blender-cloud/tests/test_offline.py [G1,G2,...]
 """
@@ -183,6 +183,36 @@ def j7b():
         raised = (0.0, 0.0, 0.25 * L)
         check(general(s, raised), f"general check: a hand raised a quarter of the forearm over {s} should fail")
     return "general passes 1.0, 1.2 and 1.31 m; honored form fails the hanging right arm and passes the other two"
+
+
+@test("RM2")
+def rm2():
+    """The run score's arithmetic (rig_mocap/score_math.py): a figure that copies the source passes; a figure whose arms
+    swing the wrong way, one whose arms barely swing, and one whose thigh is out of phase each fail with a reason."""
+    import math
+    sys.path.insert(0, str(TOOLS / "rig_mocap"))
+    import score_math as sm
+    n = 24
+    ph = [2 * math.pi * k / n for k in range(n)]
+    src = {}
+    for s, sign in (("L", 1), ("R", -1)):
+        src["thigh." + s] = [30 * sign * math.sin(p) for p in ph]
+        src["shin." + s] = [20 + 20 * sign * math.sin(p - 1) for p in ph]
+        src["upper_arm." + s] = [-35 * sign * math.sin(p) for p in ph]  # opposes the same-side leg
+        src["forearm." + s] = [15 - 10 * sign * math.sin(p) for p in ph]
+    ok = sm.score(src, src)
+    check(ok["pass"] and not ok["fails"], f"a copy should pass: {ok['fails']}")
+    check(all(o["figure"] <= -0.99 for o in ok["arm_leg_correlation"].values()), "opposition should read -1")
+    same = dict(src, **{"upper_arm.L": src["thigh.L"], "upper_arm.R": src["thigh.R"]})
+    bad = sm.score(same, src)
+    check(not bad["pass"] and any("not opposed" in f for f in bad["fails"]), f"arms in step with legs: {bad['fails']}")
+    stiff = dict(src, **{"upper_arm.L": [0.2 * x for x in src["upper_arm.L"]]})
+    r = sm.score(stiff, src)
+    check(not r["pass"] and any("arm swing L" in f for f in r["fails"]), f"stiff arm: {r['fails']}")
+    late = dict(src, **{"thigh.R": src["thigh.R"][6:] + src["thigh.R"][:6]})
+    r = sm.score(late, src)
+    check(not r["pass"] and any(f.startswith("thigh.R") for f in r["fails"]), f"thigh a quarter cycle late: {r['fails']}")
+    return "a copy passes; in-step arms, stiff arms and a late thigh each fail with a reason"
 
 
 if __name__ == "__main__":
