@@ -27,7 +27,7 @@ const saveBones = F => ({ q: Object.fromEntries(Object.entries(F.bones).map(([k,
 const loadBones = (F, s) => { for (const k in s.q) F.bones[k].quaternion.copy(s.q[k]); F.bones.hips.position.copy(s.hp); F.root.position.copy(s.rp); F.root.updateMatrixWorld(true); F.mesh.skeleton.update(); F.poseName = s.name; };
 
 // pt: the bell part (skinned, bind-space positions); B: its build (nR, nT rings, s0, s1, r0); s: 'L' or 'R'
-export function bellFall(C, pt, B, s) {
+export function bellFall(C, pt, B, s, grav = false) {
   const F = C.F, k = C.k, mesh = pt.mesh, g = mesh.geometry, n = g.attributes.position.count, saved = saveBones(F);
   pose(F, 'raise');
   const e = wp(F.bones['elbow' + s]), w = wp(F.bones['wrist' + s]), head = wp(F.bones.head), ax = w.clone().sub(e).normalize();
@@ -44,9 +44,15 @@ export function bellFall(C, pt, B, s) {
       // below the hold the sleeve folds back on itself and drops down the upper arm, gathered: it drops 0.42 of its length
       // (the rest is taken up in the gathers), its radius grows to about 10 cm, and its centre moves away from the head by
       // most of that growth, so the side toward the head stays close to the arm
-      const f = (a - hold) / (L - hold), drop = (a - hold) * 0.42 * (1 + 0.12 * f * Math.sin(2 * th + 1.0) + 0.06 * f * Math.sin(5 * th + 2.0)), r = B.r0 * 1.22 + (0.1 * k - B.r0 * 1.22) * Math.pow(f, 0.7);
-      const gather = 1 + 0.10 * Math.sin(9 * th + 3.1 * f) * Math.min(1, f * 3), c = top.clone().addScaledVector(dn, drop).addScaledVector(out, (r - B.r0 * 1.22) * 0.75);
-      const q = c.addScaledVector(out, r * gather * Math.cos(th)).addScaledVector(fw, -r * gather * Math.sin(th) * 0.9); // the angle runs the other way: the fold reverses the tube, and the outside must stay the outside
+      // round 3 (his steer on er-regalia-look-2, "the arms raised is strange"): the fallen sleeve was a straight tube with a flat
+      // mouth, a block at each shoulder, and the man's square bell made it worse. Now the target is round for every cut: the
+      // sleeve flares from the arm like a hung cone (radius grows as f^1.15), hangs deepest on the outer side (the weight of the
+      // cloth sags away from the head), takes five soft folds whose depth grows toward the mouth (rounded crests, no sixth-order
+      // ripple), and the mouth edge undulates with them instead of lying flat
+      const f = (a - hold) / (L - hold), co = Math.cos(th), fold = Math.sin(5 * th + 0.6) * 0.8 + Math.sin(10 * th + 2.0) * 0.2, fd = Math.pow(f, 1.4),
+        drop = (a - hold) * 0.42 * (1 + 0.3 * f * co) * (1 + 0.10 * fd * fold), r = B.r0 * 1.22 + ((grav ? 0.08 : 0.115) * k - B.r0 * 1.22) * Math.pow(f, 1.15);
+      const gather = 1 + 0.13 * fd * fold, c = top.clone().addScaledVector(dn, drop).addScaledVector(out, (r - B.r0 * 1.22) * (grav ? 1.0 : 0.75)); // round 4c: with gravity the side toward the head stays on the arm, all the growth hangs away from it
+      const q = c.addScaledVector(out, r * gather * co).addScaledVector(fw, -r * gather * Math.sin(th) * 0.9); // the angle runs the other way: the fold reverses the tube, and the outside must stay the outside
       const mix = sstep(0, 0.06, f); fall.copy(rp).lerp(q, mix); T.set([fall.x, fall.y, fall.z], i * 3); } }
   // world normals of the fallen shape, then both into bind space with this pose's transforms
   const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.BufferAttribute(T, 3)); wg.setIndex(g.index.clone()); wg.computeVertexNormals();
@@ -71,7 +77,7 @@ export function bellFall(C, pt, B, s) {
 // joint, and more than 6 cm from an open edge, is smoothed (20 passes, full strength within 7 cm, none past 15), so the cloth spans the hollow as cloth does, then every vertex that lies closer than 9 mm to
 // the raised body, or inside it, is set 9 mm out along the body's normal. Each side's weight follows its upper arm
 // (smoothstep on its height, 0.2 to 0.9), so standing and stepping are as they were.
-export function armpitFix(C, pt) {
+export function armpitFix(C, pt, margin9 = 0.009) {
   const F = C.F, k = C.k, mesh = pt.mesh, g = mesh.geometry, n = g.attributes.position.count, saved = saveBones(F);
   pose(F, 'raise');
   const B = posed(F), bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.BufferAttribute(B.P, 3)); bg.setIndex(F.idx0.clone()); const bvh = new MeshBVH(bg), BI = bg.index.array;
@@ -90,7 +96,7 @@ export function armpitFix(C, pt) {
       for (let i = 0; i < n; i++) { if (rep[i] !== i || !w[i] || !nb[i].size) continue; let ax = 0, ay = 0, az = 0; for (const j of nb[i]) { ax += tmp[j * 3]; ay += tmp[j * 3 + 1]; az += tmp[j * 3 + 2]; } const m = nb[i].size, a = 0.5 * w[i];
         Q[i * 3] += a * (ax / m - tmp[i * 3]); Q[i * 3 + 1] += a * (ay / m - tmp[i * 3 + 1]); Q[i * 3 + 2] += a * (az / m - tmp[i * 3 + 2]); } }
     // out of the raised body: 9 mm along the normal of the nearest body face
-    const hit = {}, fa = V(), fb = V(), fc = V(), fn = V(), margin = 0.009 * k;
+    const hit = {}, fa = V(), fb = V(), fc = V(), fn = V(), margin = margin9 * k; // round 3: an upper layer passes a larger margin, so the shell beneath it cannot come through at the raised armpit
     for (let i = 0; i < n; i++) { if (rep[i] !== i || !w[i]) continue; p.set(Q[i * 3], Q[i * 3 + 1], Q[i * 3 + 2]);
       if (!bvh.closestPointToPoint(p, hit, 0, 0.05 * k)) continue; const f = hit.faceIndex * 3;
       fa.fromArray(B.P, BI[f] * 3); fb.fromArray(B.P, BI[f + 1] * 3); fc.fromArray(B.P, BI[f + 2] * 3); fn.subVectors(fc, fb).cross(fa.clone().sub(fb)).normalize();
