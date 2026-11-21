@@ -51,7 +51,7 @@ import * as FF from "./friends-fire.js";
 import * as FS from "./fire-song.js";
 import * as CH from "./chamber.js";
 import { makeCultSeated } from "./cult-seat.js";
-import { cultPick } from "../cult/pick.js";
+import { cultPick, cultLook } from "../cult/pick.js";
 import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 import { mountRoad } from "./road.js";
@@ -437,9 +437,11 @@ async function makeCultFigure(M) {
 }
 /* the cultivation walker, wrapped in makeFigure's shape. The pack is an empty group on the back; the road hangs its bundle there. */
 async function makeRoadFigure() {
-  let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
+  const picked = cultLook();   // the figure she made at the mirror walks the road (hj-character-creator-1 A, hj-comb-look-1 A)
+  let who = Q.get("who"); if (who !== "m" && who !== "f") who = picked.body; if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
   const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
-  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2h", underwrap: true });
+  const { body: _b, outfit: _o, ...look } = picked;           // the road keeps its travel robe; build, skin, height and hair come from the mirror
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2h", underwrap: true, look });
   scene.add(W.holder);
   const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
   const { packGroup } = await import("./pack.js"); bag.add(packGroup(THREE));   // a bundle, not the toolbag's box
