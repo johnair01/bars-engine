@@ -26,9 +26,9 @@ function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: 
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => { const t = { id: 't' + tickets.length, state: 'ready', ...data }; tickets.push(t); return t }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const t = tickets.find(x => x.id === where.id)!; Object.assign(t, data); return t }),
-      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date }; attempts?: { gte: number } }; data: Record<string, unknown> }) => {
+      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil?: { lt: Date }; attempts?: { gte: number } }; data: Record<string, unknown> }) => {
         const hit = tickets.filter(t => t.state === where.state
-          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt
+          && (!where.leaseUntil || (t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt))
           && (!where.attempts || (t.attempts as number) >= where.attempts.gte))
         hit.forEach(t => Object.assign(t, data))
         return { count: hit.length } }),
@@ -248,6 +248,13 @@ describe('the claim loop guard', () => {
     await returnLapsed(fakeDb(tickets), now)
     expect(tickets[0]).toMatchObject({ state: 'held', leaseUntil: null })
     expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times/)
+  })
+  it('holds a ready ticket already past the limit, so it stops heading the deck', async () => {
+    const tickets: Record<string, unknown>[] = [{ id: 'a', state: 'ready', attempts: 103 }, { id: 'b', state: 'ready', attempts: 1 }]
+    await returnLapsed(fakeDb(tickets), now)
+    expect(tickets[0]).toMatchObject({ state: 'held' })
+    expect(String(tickets[0].result)).toMatch(/^auto-held:/)
+    expect(tickets[1]).toMatchObject({ state: 'ready' })
   })
   it('lifting the hold starts the count again', async () => {
     const tickets = [{ id: 'a', state: 'held', attempts: MAX_ATTEMPTS, result: 'auto-held: x' }]
