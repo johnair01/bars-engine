@@ -1,20 +1,20 @@
 // The belly glow on the cultivation figure (cultivated character T008, FR-010, ccb-qi-in-the-belly).
-// Wendell's note on cc-sheet-glow-look-1: it only shows while the character introspects, and it is more than a brighter
-// light: qi is collected, condensed and distilled, in layers and colours that change as it develops. So this is no wash over
-// the robe. A small dense core (the distilled qi) sits at the dantian, and each layer reached adds one thin shell around it,
-// tighter and cooler as the layers rise: gold, then amber-gold, then jade, then a pale violet-white at the ninth. It draws no
-// number (FR-010).
+// Wendell's answers on cc-sheet-glow-look-1 and qi-growth-pearl-rings-look-2: it shows only while the character introspects,
+// and what shows is a pearl, the distilled qi, at the dantian, with one ring of light opened round it for each realm she has
+// reached: gold, then jade, then a pale sky blue (the water glow, lightened; the aesthetic contract bars invented purples, so the
+// violet in the look's picture is not used). Layers inside a realm brighten the pearl and swell it a little; the ninth brims.
+// It draws no number (FR-010).
 //
-// makeBellyGlow(scene, F, { k }) -> { set(layers, { pulse }), introspect(on), update(dt), strength, shown, dispose() }
+// makeBellyGlow(scene, F, { k }) -> { set(layers, { pulse, realm }), introspect(on), update(dt), strength, shown, dispose() }
 //   F: the figure (X.F): its hips and spine01 bones place the glow each frame, so it rides a walking or seated figure.
-//   Hidden until introspect(true); it fades in and out over about 0.6 s.
+//   realm 1..3 (default 1) is how many rings are open. Hidden until introspect(true); it fades in and out over about 0.6 s.
 import * as THREE from "three";
-import { glowStrength, LAYERS_PER_FLOOR } from "./belly-rules.js";
+import { glowStrength, LAYERS_PER_FLOOR, REALMS } from "./belly-rules.js";
 
 const V = () => new THREE.Vector3();
 const wp = b => b.getWorldPosition(V());
-// Shell colours by layer, 1..9: the qi is gold at first, turns jade, and ends a pale violet-white.
-export const LAYER_COLORS = ["#ffcf6e", "#ffc860", "#ffd27a", "#d9d98a", "#9fe0a8", "#6fd8b8", "#7fd0e0", "#a9b8f2", "#e6d6ff"];
+// Ring colours by realm, 1..3: gold, jade (the wood glow), pale sky (the water glow, lightened).
+export const REALM_COLORS = ["#ffcf6e", "#27ae60", "#8fd0ff"];
 const TEX = {};
 function disc() {
   if (TEX.disc) return TEX.disc;
@@ -37,13 +37,14 @@ function mk(cv) { const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SR
 
 export function makeBellyGlow(scene, F, { k = (F.stature || 1.75) / 1.75, up = 0.12, forward = 0.24 } = {}) {
   const sprite = (map, color, o, add = false) => new THREE.Sprite(new THREE.SpriteMaterial({ map, color: new THREE.Color(color), transparent: true, opacity: o, blending: add ? THREE.AdditiveBlending : THREE.NormalBlending, depthWrite: false }));
-  const halo = sprite(disc(), LAYER_COLORS[0], 0), core = sprite(disc(), "#ffb23a", 0);
-  const shells = Array.from({ length: LAYERS_PER_FLOOR }, (_, i) => sprite(ring(), LAYER_COLORS[i], 0));
-  const light = new THREE.PointLight(new THREE.Color(LAYER_COLORS[0]), 0, 0.7 * k, 2);
-  const G = new THREE.Group(); G.name = "bellyGlow"; G.add(halo, ...shells, core, light); scene.add(G);
-  halo.renderOrder = 10; shells.forEach((s, i) => { s.renderOrder = 11 + i; }); core.renderOrder = 21;
-  let layers = 0, strength = glowStrength(0), pulseT = -1, vis = 0, want = 0;
+  const halo = sprite(disc(), REALM_COLORS[0], 0), pearl = sprite(disc(), "#ffd98a", 0), lustre = sprite(disc(), "#fff4d6", 0);
+  const rings = REALM_COLORS.map(c => sprite(ring(), c, 0));
+  const light = new THREE.PointLight(new THREE.Color(REALM_COLORS[0]), 0, 0.7 * k, 2);
+  const G = new THREE.Group(); G.name = "bellyGlow"; G.add(halo, ...rings, pearl, lustre, light); scene.add(G);
+  halo.renderOrder = 10; rings.forEach((s, i) => { s.renderOrder = 11 + i; }); pearl.renderOrder = 21; lustre.renderOrder = 22;
+  let layers = 0, realm = 1, strength = glowStrength(0), pulseT = -1, vis = 0, want = 0;
   const PULSE = 1.6, FADE = 0.6; // seconds
+  const RING_R = [0.1, 0.15, 0.2]; // ring radii, tight round the pearl: the next realm opens one ring wider
 
   function place() {
     const hips = wp(F.bones.hips), sp1 = wp(F.bones.spine01);
@@ -56,22 +57,23 @@ export function makeBellyGlow(scene, F, { k = (F.stature || 1.75) / 1.75, up = 0
   function draw(t = 0) {
     const s = pulseT >= 0 ? Math.sin(Math.PI * Math.min(1, pulseT / PULSE)) : 0; // 0 -> 1 -> 0 over the pulse
     const e = vis * vis * (3 - 2 * vis); // eased fade
-    const top = layers > 0 ? LAYER_COLORS[layers - 1] : LAYER_COLORS[0];
-    // the core is the distilled qi: small and dense, a little tighter as the layers rise
-    core.material.opacity = e * Math.min(1, 0.75 + 0.2 * s); core.material.color.set(layers > 0 ? LAYER_COLORS[Math.min(layers, 4) - 1] : "#e8a64a");
-    core.scale.setScalar((0.045 - 0.01 * (layers / LAYERS_PER_FLOOR) + 0.03 * s) * k);
-    // a faint breath of colour round the core, never a wash over the robe
-    halo.material.color.set(top);
-    halo.material.opacity = e * (0.06 + 0.1 * (layers / LAYERS_PER_FLOOR) + 0.1 * s);
-    halo.scale.setScalar((0.17 + 0.012 * layers + 0.05 * s) * k);
-    // one thin shell per layer reached, each tighter inside the last as the qi condenses; it breathes slowly
-    for (let i = 0; i < shells.length; i++) {
-      const on = i < layers, sh = shells[i];
-      const r = (0.2 - 0.0115 * i) * k * (1 + 0.025 * Math.sin(t * 1.4 + i * 0.9) + 0.06 * s);
-      sh.scale.setScalar(r);
-      sh.material.opacity = on ? e * (0.75 + 0.03 * i) : 0;
+    const f = layers / LAYERS_PER_FLOOR, brim = layers >= LAYERS_PER_FLOOR ? 1 : 0, lead = REALM_COLORS[realm - 1];
+    // the pearl: dense and round, a little larger and warmer with each layer; at the ninth it brims
+    pearl.material.opacity = e * Math.min(1, 0.7 + 0.25 * f + 0.1 * s);
+    pearl.scale.setScalar((0.06 + 0.014 * f + 0.01 * brim + 0.025 * s) * k);
+    lustre.material.opacity = e * (0.55 + 0.3 * f + 0.15 * s);
+    lustre.scale.setScalar((0.03 + 0.008 * f) * k);
+    // a faint breath of the newest ring's colour round the pearl, never a wash over the robe
+    halo.material.color.set(lead);
+    halo.material.opacity = e * (0.06 + 0.1 * f + 0.08 * brim + 0.1 * s);
+    halo.scale.setScalar((0.15 + 0.1 * (realm - 1) + 0.03 * f + 0.05 * s) * k);
+    // one ring per realm reached; the newest ring brightens as its layers fill, the earlier ones stay full
+    for (let i = 0; i < rings.length; i++) {
+      const on = i < realm, r = rings[i];
+      r.scale.setScalar(RING_R[i] * 2 * k * (1 + 0.025 * Math.sin(t * 1.4 + i * 1.3) + 0.05 * s));
+      r.material.opacity = on ? e * (i < realm - 1 ? 0.9 : 0.55 + 0.4 * f) : 0;
     }
-    light.color.set(top);
+    light.color.set(lead);
     light.intensity = e * 0.1 * s;
   }
   let clock = 0;
@@ -80,7 +82,7 @@ export function makeBellyGlow(scene, F, { k = (F.stature || 1.75) / 1.75, up = 0
     get strength() { return strength; },
     get shown() { return vis; },
     introspect(on) { want = on ? 1 : 0; },
-    set(n, { pulse = false } = {}) { layers = Math.max(0, Math.min(LAYERS_PER_FLOOR, n | 0)); strength = glowStrength(layers); if (pulse) pulseT = 0; draw(clock); },
+    set(n, { pulse = false, realm: rm = 1 } = {}) { layers = Math.max(0, Math.min(LAYERS_PER_FLOOR, n | 0)); realm = Math.max(1, Math.min(REALMS, rm | 0 || 1)); strength = glowStrength(layers); if (pulse) pulseT = 0; draw(clock); },
     pulseAt(t) { pulseT = t; draw(clock); }, // for stills: a frame part way through the pulse
     showNow(on = true) { want = vis = on ? 1 : 0; draw(clock); }, // for stills: no fade
     update(dt) {
@@ -89,6 +91,6 @@ export function makeBellyGlow(scene, F, { k = (F.stature || 1.75) / 1.75, up = 0
       vis += Math.sign(want - vis) * Math.min(Math.abs(want - vis), dt / FADE);
       place(); draw(clock);
     },
-    dispose() { G.removeFromParent(); for (const s of [halo, core, ...shells]) s.material.dispose(); },
+    dispose() { G.removeFromParent(); for (const s of [halo, pearl, lustre, ...rings]) s.material.dispose(); },
   };
 }

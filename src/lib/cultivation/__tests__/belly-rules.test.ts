@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { glowStrength, layersFrom, shouldPulse } from '../../../../public/between/cult/belly-rules.js'
+import { glowStrength, layersFrom, realmFrom, shouldPulse } from '../../../../public/between/cult/belly-rules.js'
 import { layers, QI_PER_MOVE } from '../sheet'
 
 describe('belly glow rules (T008) match the sheet', () => {
@@ -18,5 +18,12 @@ describe('belly glow rules (T008) match the sheet', () => {
     expect(shouldPulse(null, 3)).toBe(false)
     expect(shouldPulse(2, 3)).toBe(true)
     expect(shouldPulse(3, 3)).toBe(false)
+  })
+  it('opens one ring per realm, from one to three', () => {
+    expect(realmFrom(undefined)).toBe(1)
+    expect(realmFrom(0)).toBe(1)
+    expect(realmFrom(1)).toBe(2)
+    expect(realmFrom(2)).toBe(3)
+    expect(realmFrom(9)).toBe(3)
   })
 })

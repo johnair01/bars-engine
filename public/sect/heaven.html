@@ -57,7 +57,7 @@ import { cameraRig, MOVE, touchStick, forgetKeysOnBlur } from './heaven/move.js'
 import { wayColliders } from './heaven/crag.js';
 import { traineeWalk } from './heaven/trainee.js';
 import { makeBellyGlow } from '../between/cult/belly-glow.js';
-import { layersFrom, shouldPulse } from '../between/cult/belly-rules.js';
+import { layersFrom, realmFrom, shouldPulse } from '../between/cult/belly-rules.js';
 
 // The join leg from the Hollow (chapter1-demo plan step 3): a player who walked on from the Hollow's last card starts the
 // trainee walk (heaven/trainee.js). ?tour=1 keeps the builder's tour with its stop buttons.
@@ -132,7 +132,7 @@ walking.then(async w => {
   const p = await fetch('/api/passport', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).catch(() => null);
   const layers = layersFrom(p?.passport?.sheet?.gathered ?? 0);
   let seen = null; try { const v = localStorage.getItem('belly-layers-seen'); seen = v === null ? null : Number(v); } catch {}
-  belly.set(layers, { pulse: shouldPulse(seen, layers) });
+  belly.set(layers, { pulse: shouldPulse(seen, layers), realm: realmFrom(p?.passport?.sheet?.breakthroughs) });
   try { localStorage.setItem('belly-layers-seen', String(layers)); } catch {}
   belly.read = true; // the passport has been read, for stills
 }).catch(e => console.warn('belly glow', e));
