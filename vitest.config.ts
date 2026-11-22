@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'src/lib/cultivation/__tests__/sheet.test.ts',
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
       'src/lib/ontology-game/__tests__/claim-code.test.ts',
       'src/lib/wake-up/__tests__/check-content.test.ts',
