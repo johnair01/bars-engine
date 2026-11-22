@@ -64,7 +64,7 @@ export function barQuest() {
   async function take(text) {
     const s = sentence(text); if (!s) return;
     store.set('hq-bar-at', new Date().toISOString()); store.set('hq-bar', s); store.set('hq-quest', 'taken');
-    const r = await post({ do: 'take', sentence: s });
+    const r = await post({ do: 'take', sentence: s, seal: seal() });
     if (r.status === 200 && r.barId) { signed = true; store.set('hq-bar-id', r.barId); store.set('hq-signed', '1'); }
     held();
   }
@@ -88,7 +88,7 @@ export function barQuest() {
   async function sync() {
     const s = saved();
     if (quest() === 'taken' && s.sentence && !s.id) {   // the BAR was taken as a guest, then the player signed in and came back to this tab
-      const r = await post({ do: 'take', sentence: s.sentence });
+      const r = await post({ do: 'take', sentence: s.sentence, seal: seal() });
       if (r.status === 200 && r.barId) { signed = true; store.set('hq-bar-id', r.barId); store.set('hq-signed', '1'); }
       return;
     }
@@ -97,7 +97,7 @@ export function barQuest() {
       const r = await fetch(API, { credentials: 'same-origin' });
       if (r.status !== 200) return;   // a guest: nothing to find, no message
       const j = await r.json(); signed = true; store.set('hq-signed', '1');
-      if (j.bar && quest() !== 'tried') { store.set('hq-quest', 'taken'); store.set('hq-bar', j.bar.sentence); store.set('hq-bar-id', j.bar.id); }
+      if (j.bar && quest() !== 'tried') { store.set('hq-quest', 'taken'); store.set('hq-bar', j.bar.sentence); store.set('hq-bar-id', j.bar.id); store.set('hq-bar-seal', JSON.stringify(cleanSeal(j.bar.seal))); if (j.bar.at) store.set('hq-bar-at', j.bar.at); }
     } catch (e) { /* offline: carry on as a guest */ }
   }
   return {

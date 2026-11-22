@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { cleanSealStrokes } from '../../heaven-quest-bar'
 import { cleanSeal, momentFields, backRows, shortDate, GIVEN_AT } from '../../../../public/between/bar-card-data.js'
 
 describe('the BAR card, two sides', () => {
@@ -21,5 +22,10 @@ describe('the BAR card, two sides', () => {
   it('writes the short date, empty for none', () => {
     expect(shortDate('2026-11-21T10:00:00Z')).toBe('21 Nov')
     expect(shortDate(undefined)).toBe('')
+  })
+  it('the server keeps exactly the strokes the card draws', () => {
+    const cases: unknown[] = [[[[-1, 2], [0.5, 0.25], ['x', 1], [NaN, 0]]], 'no', null, Array.from({ length: 30 }, () => [[0.1, 0.1]]), [[]], [[[0.12345, 0.98765]]],
+      [[Array.from({ length: 300 }, (_, k) => [k / 300, 0.5])]]]
+    for (const c of cases) expect(cleanSealStrokes(c)).toEqual(cleanSeal(c))
   })
 })
