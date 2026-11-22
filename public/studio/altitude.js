@@ -1961,11 +1961,12 @@
   let SM = null
   function smNew() {
     SM = {
-      items: ST_FLOOR.map((r, i) => ({ i, id: r.id, kind: r.kind, words: r.words, pic: r.pic, title: r.title, place: r.place, x: ST_AT[i % ST_AT.length][0], y: ST_AT[i % ST_AT.length][1], st: ST_PLACES.includes(r.st) ? r.st : 'floor', f: r.st === 'tide' ? 1 : 0 })),
+      items: ST_FLOOR.map((r, i) => ({ i, id: r.id, kind: r.kind, words: r.words, pic: r.pic, title: r.title, place: r.place, ret: !!r.returned, x: ST_AT[i % ST_AT.length][0], y: ST_AT[i % ST_AT.length][1], st: ST_PLACES.includes(r.st) ? r.st : 'floor', f: r.st === 'tide' ? 1 : 0 })),
       down: null, focus: null, shelved: [],
       beads: ST_PURSE, keeper: { x: 2.3, y: 6.3, tx: 2.3, ty: 6.3, face: 1 }, held: null, plan: null, fly: [], ring: 0,
       shelfN: 0, seedN: 0, compostN: 0, belled: 0, shake: 0, clock: 0, done: false, msg: null, glowAt: {},
     }
+    if (SM.items.some((q) => q.ret && q.st === 'floor')) SM.ring = 1 // a crate came back down the bell line: the bell rings once, here only
     for (const it of SM.items) { // a thing placed before this visit starts in its place
       if (it.st === 'shelf') SM.shelfN++
       if (it.st === 'seeds') SM.seedN++
