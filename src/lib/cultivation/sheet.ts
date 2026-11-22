@@ -95,7 +95,7 @@ export function skill(sheet: Sheet, weapon: Weapon): { skill: number; raw: numbe
 }
 
 /** Adds 10 qi a completed move. Returns the new sheet and how many layers opened, for the glow's pulse. */
-export function gainQi(sheet: Sheet, moves: number): { sheet: Sheet; opened: number } {
+export function gainQi<S extends Pick<Sheet, 'qi' | 'breakthroughs'>>(sheet: S, moves: number): { sheet: S; opened: number } {
   const n = Math.max(0, Math.floor(moves))
   const next = { ...sheet, qi: sheet.qi + QI_PER_MOVE * n }
   return { sheet: next, opened: layers(next) - layers(sheet) }
