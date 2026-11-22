@@ -194,7 +194,7 @@ export default defineConfig({
       'src/lib/between/__tests__/coin-table-camera.test.ts',
       'src/lib/board/__tests__/card.test.ts',
       'src/lib/emotional-alchemy/__tests__/dbt-skills.test.ts',
-      'src/lib/studio/__tests__/stores.test.ts', 'src/lib/studio/__tests__/gallery-call.test.ts', 'src/lib/studio/__tests__/gallery-call-page.test.ts',
+      'src/lib/studio/__tests__/stores.test.ts', 'src/lib/studio/__tests__/wings.test.ts', 'src/lib/studio/__tests__/gallery-call.test.ts', 'src/lib/studio/__tests__/gallery-call-page.test.ts',
       'src/lib/work/__tests__/seals.test.ts',
       'src/lib/work/__tests__/wake.test.ts',
       'src/lib/work/__tests__/tick.test.ts',

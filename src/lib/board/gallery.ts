@@ -46,3 +46,9 @@ export async function holes(cursor: string | null) {
   const { items, next } = page(all, cursor)
   return { view: 'holes', cards: items, next }
 }
+
+/** Every finished crate, newest made first, each with its picture url: the wings group them by strand. */
+export async function allCrates() {
+  const all = (await rows<Crate>('council/gallery/crates.json')).slice().sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
+  return all.map(c => ({ ...c, picture: `/board/stills/sha/${c.sha}` }))
+}
