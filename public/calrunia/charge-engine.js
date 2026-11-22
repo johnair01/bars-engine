@@ -15,8 +15,11 @@ export const WAVE_STEPS = [
 export const BREATH = { inMs: 4000, outMs: 6000 };
 export const SIZE_WORDS = ["", "a pebble", "a coin", "a stone", "a fist", "a loaf", "a boulder", "a door", "a wall of bricks", "a hillside", "a wall"];
 export const ROUTING = {
+  // Every move raises one satisfaction stage; the alchemy is an upward spiral (Wendell,
+  // 2026-11-20). Control raises from dissatisfied to neutral but can never carry anyone INTO
+  // satisfied — only transcend or generate does that. Keep in step with move-table.json.
   sheng: { dissatisfied: "neutral", neutral: "satisfied", satisfied: "satisfied" },
-  ke: { dissatisfied: "dissatisfied", neutral: "dissatisfied", satisfied: "satisfied" },
+  ke: { dissatisfied: "neutral", neutral: "neutral", satisfied: "satisfied" },
 };
 /* A copy of move-table.json's cycles; charge-engine.test.ts asserts they are equal. */
 export const CYCLES = {
@@ -128,10 +131,22 @@ export function scan(charge, { location, texture } = {}, now) {
   return enter({ ...charge, location: location == null ? "" : String(location), texture: texture == null ? "" : String(texture) }, "done", now);
 }
 
-/** Moves the channel by the cycle and the state by the routing table. */
+/* Transcend stays in its channel and lifts one state: dissatisfied to neutral (metabolize), then neutral to satisfied.
+   It is not offered from satisfied. A copy of move-table.json's families.transcend.state (Wendell, 2026-11-20: transcend
+   "needs a new action because the moves are decided based on the current state and where they players are trying to
+   get to"). */
+export const TRANSCEND = { dissatisfied: "neutral", neutral: "satisfied", satisfied: null };
+
+/** Moves the channel by the cycle and the state by the routing table; `transcend` keeps the channel and lifts one state. */
 export function move(charge, family, now) {
   if (charge.wave.step !== "done") fail("a move needs a finished WAVE");
-  if (!CYCLES[family]) fail("move is sheng or ke");
+  if (family === "transcend") {
+    const cur = charge.moveChannel || charge.reading.channel;
+    const state = TRANSCEND[charge.state];
+    if (!state) fail("transcend is not offered from satisfied");
+    return { ...charge, moveChannel: cur, state, route: [...charge.route, { kind: "move", at: now, family, from: cur, to: cur, by: `${ELEMENT_OF[cur]}_transcend`, state }] };
+  }
+  if (!CYCLES[family]) fail("move is sheng, ke or transcend");
   const cur = charge.moveChannel || charge.reading.channel;
   const dest = fromTable(CYCLES[family][tableChannel(cur)]);
   const state = ROUTING[family][charge.state];
