@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { newFarm, till, plant, water, ripen, reclear, pick, settle, enter, TILL_COST, STARTING_MANA, type Farm } from '../farm'
+import { newFarm, till, plant, water, ripen, reclear, pick, settle, enter, setSatchel, satchelOf, DEFAULT_SATCHEL, TILL_COST, STARTING_MANA, type Farm } from '../farm'
 
 const day = (n: number) => new Date(Date.UTC(2026, 10, 1 + n)).toISOString().slice(0, 10)
 const ok = (r: { ok: boolean; why?: string; farm: Farm }) => { expect(r.why).toBeUndefined(); return r.farm }
@@ -60,5 +60,25 @@ describe('farm rules on a test clock', () => {
     expect(r.harvest).toMatchObject({ fromBarId: 'bar1', line: 'steady', notes: [{ on: day(1), line: 'sent it' }] })
     expect(r.farm.slots['5'].state).toBe('tilled')
     expect(pick(planted(), 5, day(1)).ok).toBe(false)
+  })
+})
+
+describe('the satchel (farm-toolbox)', () => {
+  it('starts with the hoe and the watering can', () => expect(satchelOf(newFarm())).toEqual(DEFAULT_SATCHEL))
+  it('saves up to six tools and seeds and reads them back', () => {
+    const ids = ['tool:trowel', 'seed:pcl-abc-0', 'tool:hoe']
+    expect(satchelOf(ok(setSatchel(newFarm(), ids)))).toEqual(ids)
+  })
+  it('refuses a seventh place, a repeat, or something that is not a tool or seed', () => {
+    const six = ['tool:hoe', 'tool:watering-can', 'tool:trowel', 'tool:sickle', 'tool:gloves', 'seed:a']
+    expect(setSatchel(newFarm(), six).ok).toBe(true)
+    expect(setSatchel(newFarm(), [...six, 'seed:b']).ok).toBe(false)
+    expect(setSatchel(newFarm(), ['tool:hoe', 'tool:hoe']).ok).toBe(false)
+    expect(setSatchel(newFarm(), ['tool:axe']).ok).toBe(false)
+    expect(setSatchel(newFarm(), 'tool:hoe').ok).toBe(false)
+  })
+  it('leaves the original farm unchanged and costs nothing', () => {
+    const f = newFarm(), r = setSatchel(f, ['tool:hoe'])
+    expect(f.kit).toBeUndefined(); expect(r.mint).toBe(0); expect(r.farm.mana).toBe(f.mana)
   })
 })
