@@ -206,6 +206,8 @@ export default defineConfig({
       'src/lib/founder-gate/__tests__/packet-record.test.ts',
       'src/lib/founder-gate/__tests__/payment-word.test.ts',
       'src/lib/founder-gate/__tests__/mark-payment.test.ts',
+      'src/lib/founder-gate/__tests__/mark-input.test.ts',
+      'src/app/api/founder-gate/mark/__tests__/route.test.ts',
       'scripts/__tests__/look-row.test.mjs',
     ],
   },

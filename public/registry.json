@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-18T20:26:56.889Z",
+  "generatedAt": "2026-11-22T15:31:52.619Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -2774,6 +2774,46 @@
       ],
       "example": "/admin",
       "id": "page_system_49e20f34"
+    },
+    {
+      "sourceFile": "/src/app/admin/payment-mark/page.tsx",
+      "lineNumber": 15,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/payment-mark",
+      "entity": "SYSTEM",
+      "description": "The game master pastes a payment note to mark it (founder support demo, H-gm-surface; board gm-mark-surface-1 \"C. Both\").",
+      "permissions": [
+        "admin (the admin layout; the action checks again)"
+      ],
+      "example": "/admin/payment-mark",
+      "id": "page_system_e97183f4"
+    },
+    {
+      "sourceFile": "/src/app/admin/payment-mark/page.tsx",
+      "lineNumber": 15,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/payment-mark",
+      "entity": "SYSTEM",
+      "description": "The game master pastes a payment note to mark it (founder support demo, H-gm-surface; board gm-mark-surface-1 \"C. Both\").",
+      "permissions": [
+        "admin (the admin layout; the action checks again)"
+      ],
+      "example": "/admin/payment-mark",
+      "id": "page_system_e97183f4"
     },
     {
       "sourceFile": "/src/app/admin/player-signal-backlog/page.tsx",
