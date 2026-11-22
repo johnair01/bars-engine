@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1b120d">
 <title>Your sheet</title>
-<!-- The character sheet's BAR shelf (board bar-two-sides-look-3, A, Wendell 2026-11-22): the BARs the Elder handed you, each drawn with both sides at once, the seal and the moment. -->
+<!-- The character sheet's BAR shelf (board bar-two-sides-look-3, A, Wendell 2026-11-22): the BARs the Elder handed you, each drawn with a card you flip, the seal on one side and the moment on the other. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
   :root { --ui-display: Marcellus, Georgia, serif; --ui-body: 'Atkinson Hyperlegible', system-ui, sans-serif; }
@@ -19,11 +19,11 @@
 </style></head><body>
 <main>
   <h1>Your sheet</h1>
-  <p class="lede">The BARs the Elder handed you. Each has two sides: the seal you drew, and the moment you made it in.</p>
+  <p class="lede">The BARs the Elder handed you. Tap a BAR to flip it: the seal you drew on one side, the moment you made it in on the other.</p>
   <div id="shelf" aria-live="polite"><p class="empty">Opening your BARs…</p></div>
 </main>
 <script type="module">
-import { barSides } from './bar-card.js';
+import { barCard } from './bar-card.js';
 const shelf = document.getElementById('shelf');
 const day = t => { const d = new Date(t); return isNaN(+d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); };
 (async () => {
@@ -38,7 +38,7 @@ const day = t => { const d = new Date(t); return isNaN(+d) ? '' : d.toLocaleDate
   bars.forEach((b, i) => {
     const s = document.createElement('section'), h = document.createElement('h2');
     h.textContent = (b.ended ? 'Done · ' : 'Open · ') + day(b.at);
-    s.append(h, barSides({ seal: b.seal, title: 'Tonight', moment: { sentence: b.sentence, at: b.at }, id: 'b' + i }));
+    s.append(h, barCard({ seal: b.seal, title: 'Tonight', moment: { sentence: b.sentence, at: b.at }, id: 'b' + i }));
     shelf.append(s);
   });
 })();

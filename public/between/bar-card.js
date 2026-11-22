@@ -17,8 +17,6 @@ const CSS = `.bc{--bc-red:#c0392b;--bc-brass:#b8914a;--bc-cap:#f6ecdc;--bc-cap2:
 .bc-hand{font:500 19px/1.2 Caveat,'Segoe Print','Bradley Hand',cursive;color:#e6c98a;margin:0}
 .bc dl{margin:10px 0 0;display:grid;grid-template-columns:76px 1fr;row-gap:6px;font-size:13px}.bc dt{color:var(--bc-cap2)}.bc dd{margin:0}
 .bc-foot{display:flex;justify-content:space-between;gap:8px;margin-top:auto;padding-top:8px;font-size:11px;color:var(--bc-cap2)}
-/* the sheet shows both sides at once, flat, with no flip */
-.bc[data-flat]{cursor:default}.bc[data-flat] .bc-in{transform:none!important;transition:none}.bc[data-flat=front] .bc-b,.bc[data-flat=back] .bc-a{display:none}.bc[data-flat=back] .bc-b{transform:none}
 @media (prefers-reduced-motion: reduce){.bc-in{transition:none}.bc[data-side=front] .bc-b,.bc[data-side=back] .bc-f{visibility:hidden}}`;
 let styled = false;
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -30,7 +28,7 @@ export function sealSvg(strokes, id = 'bc') {
 }
 
 /** card({ seal, moment: { sentence, at, given }, title }) -> a button that turns over. `seal` is the strokes; none draws a plain seal. */
-export function barCard({ seal, moment = {}, title = 'Tonight', id = 'bc' + Math.random().toString(36).slice(2, 6), flat = null } = {}) {
+export function barCard({ seal, moment = {}, title = 'Tonight', id = 'bc' + Math.random().toString(36).slice(2, 6) } = {}) {
   if (!styled && typeof document !== 'undefined') { const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); styled = true; }
   const el = document.createElement('button'); el.type = 'button'; el.className = 'bc'; el.dataset.side = 'front';
   const when = shortDate(moment.at);
@@ -39,17 +37,8 @@ export function barCard({ seal, moment = {}, title = 'Tonight', id = 'bc' + Math
 <span class="bc-f bc-b">${corners}<span class="bc-k"><i></i>BAR · the moment</span><p class="bc-hand">“${esc(moment.sentence || '')}”</p><dl>${backRows(moment).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl><span class="bc-foot"><span></span><span>tap to turn</span></span></span></span>`;
   const turn = () => { el.dataset.side = el.dataset.side === 'front' ? 'back' : 'front'; el.setAttribute('aria-label', el.dataset.side === 'front' ? `BAR, ${title}, seal side. Turn over.` : 'BAR, the moment side. Turn over.'); };
   el.setAttribute('aria-label', `BAR, ${title}, seal side. Turn over.`);
-  if (flat) { el.dataset.flat = flat; el.dataset.side = flat; el.disabled = true; el.setAttribute('aria-label', flat === 'front' ? `BAR, ${title}, the seal side.` : 'BAR, the moment side.'); el.querySelectorAll('.bc-foot span:last-child').forEach(f => { f.textContent = ''; }); return el; }
   el.addEventListener('click', turn);
   return el;
-}
-
-/** Both sides of one BAR side by side, flat, for the sheet. Two cards in a wrapping row; the seal side first. */
-export function barSides(opts = {}) {
-  const row = document.createElement('div'); row.className = 'bc-sides'; row.style.cssText = 'display:flex;flex-wrap:wrap;gap:16px;justify-content:center';
-  const id = opts.id || 'bc' + Math.random().toString(36).slice(2, 6);
-  const a = barCard({ ...opts, id: id + 'a', flat: 'front' }), b = barCard({ ...opts, id: id + 'b', flat: 'back' });
-  row.append(a, b); return row;
 }
 
 /** The pad where the player draws the seal: a canvas, brush strokes recorded 0..1. `onChange(strokes)` fires after each stroke. */
