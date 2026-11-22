@@ -39,6 +39,8 @@ def build(path):
 def parts():
     import bpy
     from mathutils import Vector
+    # Without this the last object made still reports its unscaled box (a scaled Floor measured as "no floor").
+    bpy.context.view_layer.update()
     out = []
     for o in bpy.data.objects:
         if o.type != "MESH":
@@ -75,9 +77,12 @@ def measure(pack, ps):
                    if blade else "no blade above the shaft at the pack's size"})
     gap = None
     if blade:
-        below = [p for p in ps if p is not blade and p["hi_z"] <= blade["lo_z"] + 0.001]
+        # A part that starts at or below the blade's base touches it, even when it reaches above it: a blade
+        # buried in its socket collar is joined, not floating. Wide parts (wall, floor, rack) do not count.
+        below = [p for p in ps if p is not blade and p["lo_z"] <= blade["lo_z"] + 0.001
+                 and max(p["wx"], p["wy"]) <= 0.6]
         if below:
-            gap = round(blade["lo_z"] - max(p["hi_z"] for p in below), 3)
+            gap = round(max(0.0, blade["lo_z"] - max(p["hi_z"] for p in below)), 3)
     tol = c["contact_max_gap"]
     checks.append({"check": "contact", "ok": gap is not None and gap <= tol,
                    "detail": (f"blade sits {gap * 100:.0f} cm above the nearest part below it"
@@ -95,6 +100,55 @@ def measure(pack, ps):
     checks.append({"check": "total height", "ok": th["min"] <= top <= th["max"],
                    "detail": f"{top:.2f} m against the pack's {th['min']} to {th['max']} m"})
     return checks
+
+
+def outline_overlap(pack):
+    """Overlap (IoU) of the built head's front silhouette with a traced outline, in place in the world.
+
+    The pack's `blade_outline` holds the traced points (x, z in metres), `min_iou` and `z_min`, the height below
+    which the socket collar and shaft are ignored. Only parts narrower than 1 m and shorter than 2.5 m count, so the
+    rack, wall, floor and shaft do not. Returns None when the pack has no outline."""
+    bo = pack.get("blade_outline")
+    if not bo:
+        return None
+    import bpy
+    import numpy as np
+    px, z0 = 200, bo["z_min"]
+    xs = np.arange(-0.7, 0.7, 1 / px) + 0.5 / px
+    zs = np.arange(z0, z0 + 1.2, 1 / px) + 0.5 / px
+    gx, gz = np.meshgrid(xs, zs)
+    built = np.zeros(gx.shape, bool)
+    dg = bpy.context.evaluated_depsgraph_get()
+    for ob in bpy.context.scene.objects:
+        if ob.type != "MESH":
+            continue
+        ev = ob.evaluated_get(dg)
+        me = ev.to_mesh()
+        vs = [ob.matrix_world @ v.co for v in me.vertices]
+        if vs and (max(v.x for v in vs) - min(v.x for v in vs)) <= 1.0 and (max(v.z for v in vs) - min(v.z for v in vs)) <= 2.5:
+            me.calc_loop_triangles()
+            for t in me.loop_triangles:
+                a, b, c = (vs[i] for i in t.vertices)
+                if max(a.z, b.z, c.z) < z0 or min(a.z, b.z, c.z) > z0 + 1.2:
+                    continue
+                d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z)
+                if abs(d) < 1e-12:
+                    continue
+                l1 = ((b.z - c.z) * (gx - c.x) + (c.x - b.x) * (gz - c.z)) / d
+                l2 = ((c.z - a.z) * (gx - c.x) + (a.x - c.x) * (gz - c.z)) / d
+                built |= (l1 >= 0) & (l2 >= 0) & (l1 + l2 <= 1)
+        ev.to_mesh_clear()
+    pts = bo["points"]
+    inside = np.zeros(gx.shape, bool)
+    for i in range(len(pts)):  # even-odd ray cast, so the concave hook fills correctly
+        (x1, z1), (x2, z2) = pts[i], pts[(i + 1) % len(pts)]
+        if z1 == z2:
+            continue
+        cross = ((z1 > gz) != (z2 > gz)) & (gx < (x2 - x1) * (gz - z1) / (z2 - z1) + x1)
+        inside ^= cross
+    inside &= gz >= z0
+    union = int((built | inside).sum())
+    return round(int((built & inside).sum()) / union, 3) if union else 0.0
 
 
 def scene(pack, ps):
@@ -125,6 +179,11 @@ def main():
     ps = parts()
     checks = measure(pack, ps)
     extras = scene(pack, ps)
+    iou = outline_overlap(pack)
+    if iou is not None:
+        need = pack["blade_outline"]["min_iou"]
+        checks.append({"check": "blade outline", "ok": iou >= need,
+                       "detail": f"front silhouette overlaps the traced outline {iou:.2f}; the pack asks for {need:.2f}"})
     result = {"candidate": os.path.basename(src), "pack": pack["id"],
               "ok": all(c["ok"] for c in checks), "checks": checks, "scene": extras,
               "parts": sorted(({"name": p["name"], "long": round(p["long"], 2),
