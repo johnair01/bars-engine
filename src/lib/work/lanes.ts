@@ -37,8 +37,8 @@ export const LEASE_MS = 6 * 60 * 60 * 1000
  * full for hours while fifteen answered looks waited.
  */
 export const CAP_LIVE_MS = 3 * 60 * 60 * 1000
-/** Most live claims one lane holds at once. A fifth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"). */
-export const LANE_WORKERS = 4
+/** Most live claims one lane holds at once. A ninth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"; raised to 8 on 2026-11-22 when he said yes to more parallel workers). */
+export const LANE_WORKERS = 8
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */
 export const DRY_MS = 5 * 60 * 60 * 1000
 /** The furthest out he can set the renewal gate by hand. Beyond this the gate is a guess, not a signal. */
