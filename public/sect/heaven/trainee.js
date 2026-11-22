@@ -16,6 +16,7 @@ import { WAYFARERS } from './wayfarer-words.js';
 import { talk } from './talk.js';
 import { doubtQuest } from './doubt.js';
 import { own } from '../../between/walk-own.js';
+import { ARRIVAL, FACES, MAX_CHARS, clean, sheet } from './arrival-words.js';
 
 import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, climbIntro } from './trainee-words.js';
 export { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, climbIntro };
@@ -30,6 +31,9 @@ const CSS = `
 .tw-row button{font:700 15px/1 var(--ui-body,system-ui,sans-serif);min-height:48px;padding:0 18px;border-radius:24px;cursor:pointer;border:1px solid rgba(255,255,255,.35);color:#fff;background:transparent}
 .tw-row button.go,.tw-row button[aria-pressed="true"]{background:#2f8f86;border-color:#2f8f86}
 .tw-row button:focus-visible{outline:3px solid #5fc2ba;outline-offset:2px}
+.dq-line{box-sizing:border-box;width:100%;min-height:48px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.08);color:#f6ecdc;font:400 16px/1.3 var(--ui-body,system-ui,sans-serif)}
+.dq-line:focus-visible{outline:3px solid #5fc2ba;outline-offset:2px}
+.dq-src{font-size:14px;color:#d9cdb8}
 .tw-hint{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));z-index:55;max-width:min(92vw,440px);padding:8px 14px;border-radius:14px;background:rgba(243,234,214,.92);color:#2b2118;font:600 14px/1.35 system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .tw-hint[hidden]{display:none}
 .tw-skip{position:fixed;right:12px;top:calc(76px + env(safe-area-inset-top,0px));z-index:56;min-height:44px;padding:0 18px;border-radius:22px;border:1px solid rgba(255,255,255,.4);background:rgba(18,14,24,.8);color:#f6ecdc;font:600 14px/1 system-ui,sans-serif;cursor:pointer}
@@ -176,6 +180,23 @@ export async function traineeWalk(ctx) {
     state = 'end'; setHint('');
     show(`<b>You are an Initiate</b><p>${esc(endLine(want))}</p><div class="tw-row"><button type="button" class="go" data-tw="again">Walk it again</button><button type="button" data-tw="stay">Stay a while</button></div>`, 'The end of the walk');
   }
+  // the founder's two-line arrival card (his B on bhq-arrival-1): home face, then quest; each line skippable; kept in this tab only
+  function arrivalCard(next) {
+    let sh = {}; try { sh = sheet(JSON.parse(sessionStorage.getItem('hq-sheet') || '{}')); } catch (e) { /* private mode */ }
+    const save = () => { try { sessionStorage.setItem('hq-sheet', JSON.stringify(sheet(sh))); } catch (e) { /* private mode */ } };
+    const questStep = () => {
+      show(`<p>${esc(ARRIVAL.quest)}</p><input class="dq-line" type="text" maxlength="${MAX_CHARS}" aria-label="${esc(ARRIVAL.questLabel)}" autocomplete="off" data-tw="q"><div class="tw-row"><button type="button" class="go" data-tw="qkeep" disabled>${esc(ARRIVAL.keep)}</button><button type="button" data-tw="qskip">${esc(ARRIVAL.skip)}</button></div><p class="dq-src">${esc(ARRIVAL.later)}</p>`, 'Your quest');
+      const inp = card.querySelector('input'), keepB = card.querySelector('[data-tw="qkeep"]'); inp.focus({ preventScroll: true });
+      inp.addEventListener('input', () => { keepB.disabled = !clean(inp.value); });
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !keepB.disabled) keepB.click(); });
+      const fin = () => { card.removeEventListener('click', onQ); card.hidden = true; next(); };
+      const onQ = e => { const b = e.target.closest('[data-tw]'); if (!b) return; if (b.dataset.tw === 'qkeep') { const v = clean(inp.value); if (v) sh.quest = v; save(); fin(); } else if (b.dataset.tw === 'qskip') fin(); };
+      card.addEventListener('click', onQ);
+    };
+    show(`<p>${esc(ARRIVAL.open)}</p><p>${esc(ARRIVAL.face)}</p><div class="tw-row">${FACES.map(([n, g]) => `<button type="button" data-tw="face" data-face="${n}" title="${esc(g)}" aria-label="${n}: ${esc(g)}">${n}</button>`).join('')}</div><div class="tw-row"><button type="button" data-tw="fskip">${esc(ARRIVAL.skip)}</button></div>`, 'Your home face');
+    const onF = e => { const b = e.target.closest('[data-tw]'); if (!b) return; if (b.dataset.tw === 'face') { sh.face = b.dataset.face; save(); } else if (b.dataset.tw !== 'fskip') return; card.removeEventListener('click', onF); questStep(); };
+    card.addEventListener('click', onF);
+  }
   function scanCard() {
     show(`<b>The heart stone</b><p>Stand with your team and notice your body. Tap each one you feel right now.</p><div class="tw-row">${SENSATIONS.map(s => `<button type="button" data-tw="sense" aria-pressed="false">${s}</button>`).join('')}</div><div class="tw-row"><button type="button" class="go" data-tw="scan">Touch the stone</button></div>`, 'The four-sensation scan');
   }
@@ -203,11 +224,11 @@ export async function traineeWalk(ctx) {
         for (const k of Object.keys(LINES)) { if (spoke.has(k) || !ELD[k]) continue; const d = Math.hypot(ELD[k].h.position.x - px, ELD[k].h.position.z - pz); if (d < bd && qy < 20.5) { bd = d; best = k; } }
         if (best) { spoke.add(best); speak(best, LINES[best], 3800); }
         else if (spoke.size === Object.keys(LINES).length && Math.hypot(px - DISC[0], pz - DISC[1]) < 4.6 && ELD.shaman) {
-          state = 'readback'; speak('shaman', readBack(want), 7000, () => { state = 'chore'; carrying = true; bucket.visible = true; wayLit.visible = true;
+          state = 'arrival'; arrivalCard(() => { state = 'readback'; speak('shaman', readBack(want), 7000, () => { state = 'chore'; carrying = true; bucket.visible = true; wayLit.visible = true;
             // two students leave the court for the stone
             const [a, b] = [students[1], students[5]]; const front = [at(ALTAR.r - 0.9, -1.5), at(ALTAR.r - 0.9, 1.5)];
             [a, b].forEach((m, i) => { if (m) stand(m, front[i][0], front[i][1], stone[0] - front[i][0], stone[1] - front[i][1]); if (m) m.h.position.y = stoneY + 0.02; });
-            setHint('Carry the bucket to the heart stone, behind the hall.'); });
+            setHint('Carry the bucket to the heart stone, behind the hall.'); }); });
         }
       }
     } else if (state === 'chore') {

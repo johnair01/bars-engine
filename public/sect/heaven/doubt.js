@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { ALTAR } from './altar.js';
 import { groundAt } from './walk.js';
 import { spirit } from './people.js';
+import { SPIRIT_ASKS, SPIRIT_SKIP, nextAsk, sheet, clean as cleanSheet } from './arrival-words.js';
 import { DOUBT, SLIP, SPIRIT, MAX_LINES, MAX_CHARS, clean, keep, promptAt } from './doubt-words.js';
 
 const CSS = `
@@ -18,6 +19,7 @@ const CSS = `
 `;
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const store = { get: k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* private mode */ } } };
+const readSheet = () => { try { return sheet(JSON.parse(store.get('hq-sheet') || '{}')); } catch (e) { return {}; } };
 const readLines = () => { try { return keep(JSON.parse(store.get('hq-doubts') || '[]')); } catch (e) { return []; } };
 
 /** The spirits' places on the altar walk: the walk from the founder's north doors, then the apron's near edge. [r, v] in crown coordinates. */
@@ -74,14 +76,16 @@ export function doubtQuest({ S, A, cam, hooks, at, wrist, reach = 2.6, far = 4.2
   const flush = () => {  // the typed text becomes a kept line (only when there is text)
     const inp = card.querySelector('input'); const t = inp ? clean(inp.value) : ''; if (t) draft.push(t); return !!t;
   };
+  card.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.dq === 'sheet') { const kb = card.querySelector('[data-dq="sheetkeep"]'); if (kb) kb.disabled = !cleanSheet(e.target.value); } });
   card.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.dq === 'line') { const ok = !!clean(e.target.value); card.querySelectorAll('[data-dq="one"],[data-dq="another"]').forEach(b => { b.disabled = !ok; }); } });
-  card.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.dq === 'line') { e.preventDefault(); const b = card.querySelector('[data-dq="another"]') || card.querySelector('[data-dq="one"]'); b && !b.disabled && b.click(); } else if (e.key === 'Escape' && mode === 'write') hide(); });
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.dq === 'line') { e.preventDefault(); const b = card.querySelector('[data-dq="another"]') || card.querySelector('[data-dq="one"]'); b && !b.disabled && b.click(); } else if (e.key === 'Enter' && e.target.dataset && e.target.dataset.dq === 'sheet') { e.preventDefault(); const b = card.querySelector('[data-dq="sheetkeep"]'); b && !b.disabled && b.click(); } else if (e.key === 'Escape' && mode === 'write') hide(); });
   card.addEventListener('click', e => {
     const b = e.target.closest('[data-dq]'); if (!b || b.disabled) return; const k = b.dataset.dq;
     if (k === 'another') { if (flush()) writing(); }
     else if (k === 'one') { if (flush()) { store.set('hq-doubts', JSON.stringify(keep(draft))); slipCard(); } }
     else if (k === 'later') hide();   // the errand stays offered; the draft stays in this tab's memory
     else if (k === 'take') take();
+    else if (k === 'sheetkeep') { const inp = card.querySelector('[data-dq="sheet"]'), v = inp ? cleanSheet(inp.value) : ''; if (v && openSpirit && openSpirit.ask) { const sh = readSheet(); sh[openSpirit.ask] = v; store.set('hq-sheet', JSON.stringify(sheet(sh))); } hide(); openSpirit = null; }
     else if (k === 'walk') { hide(); openSpirit = null; }
   });
 
@@ -105,7 +109,9 @@ export function doubtQuest({ S, A, cam, hooks, at, wrist, reach = 2.6, far = 4.2
       s.m.h.position.y = groundAt(s.x, s.z) + 0.08 + 0.05 * Math.sin(t / 900 + s.t0);   // a slow float
       const d = Math.hypot(s.x - px, s.z - pz);
       if (d < reach && !s.shown && mode !== 'write' && mode !== 'slip') { s.shown = true; openSpirit = s; mode = 'spirit';
-        show(`<p class="dq-quote">“${esc(s.line)}”</p><p class="dq-cap">${esc(SPIRIT.caption)}</p><div class="tw-row"><button type="button" data-dq="walk">${esc(SPIRIT.walk)}</button></div>`, 'A spirit speaks your line'); }
+        // his B on bhq-arrival-1: shadow and myth are asked here, one line per spirit, each skippable
+        const ask = nextAsk(readSheet()), A2 = ask && SPIRIT_ASKS[ask]; s.ask = ask;
+        show(`<p class="dq-quote">“${esc(s.line)}”</p><p class="dq-cap">${esc(SPIRIT.caption)}</p>${A2 ? `<p>${esc(A2.ask)}</p><input class="dq-line" type="text" maxlength="${MAX_CHARS}" aria-label="${esc(A2.label)}" autocomplete="off" data-dq="sheet"><div class="tw-row"><button type="button" class="go" data-dq="sheetkeep" disabled>${esc(A2.keep)}</button><button type="button" data-dq="walk">${esc(SPIRIT_SKIP)}</button></div>` : `<div class="tw-row"><button type="button" data-dq="walk">${esc(SPIRIT.walk)}</button></div>`}`, 'A spirit speaks your line'); }
       else if (d > far) { s.shown = false; if (openSpirit === s) { hide(); openSpirit = null; } }
     }
   }
