@@ -3,10 +3,12 @@
 import * as THREE from 'three';
 
 // m/s, m, s. Walk is round 19's pace; run is a jog (a long stride and a short stance, both feet off the ground at
-// mid-stride). Jump: v0 and g give the apex (v0^2 / 2g) and the time in the air (2 v0 / g).
+// mid-stride). Jump: v0 and g (the rise) give the apex (v0^2 / 2g); fallGravity is the heavier pull once the figure is
+// falling, 1.8 x the rise by the platformer skill, so the jump lifts easily and lands with weight. Air time is
+// v0 / g + sqrt(2 apex / fallGravity). Set fallGravity equal to gravity for a symmetric jump.
 export const MOVE = {
   walk: 1.3, run: 4.2, stair: 0.55, stairRun: 1.1, accel: 10, decel: 14,
-  jumpV: 4.4, gravity: 13, coyote: 0.12, buffer: 0.14, airControl: 0.35, stepDown: 0.35, landStep: 0.45,
+  jumpV: 3.74, gravity: 10.94, fallGravity: 19.69, coyote: 0.12, buffer: 0.14, airControl: 0.35, stepDown: 0.35, landStep: 0.45,
 };
 // the follow camera: a spring arm from a pivot at the head. dist is what the player last zoomed to; the arm shortens
 // at once when a wall or roof comes between, and grows back slowly. After `hands` seconds without a drag, a moving
@@ -33,7 +35,7 @@ export function vertical(A, input, dt, ground) {
     m.air = true; m.vy = MOVE.jumpV; m.buf = 0; m.since = MOVE.coyote; m.apex = p.y; m.apex0 = p.y;
   }
   if (m.air) {
-    m.vy -= MOVE.gravity * dt; p.y += m.vy * dt; m.apex = Math.max(m.apex, p.y);
+    m.vy -= (m.vy > 0 ? MOVE.gravity : MOVE.fallGravity ?? MOVE.gravity) * dt; p.y += m.vy * dt; m.apex = Math.max(m.apex, p.y);
     if (p.y <= ground && m.vy <= 0) { p.y = ground; m.air = false; m.vy = 0; m.landed = 0; }
   } else m.landed += dt;
   return m;
