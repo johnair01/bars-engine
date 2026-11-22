@@ -1904,7 +1904,12 @@
   function shamanHearth() { return SHM.hearth ? { x: SHM.hearth.x, y: SHM.hearth.y, r: SHM.hearth.r } : null }
   function shamanEmbers() { return SHM.embers.map((e) => ({ id: e.id, x: e.x, y: e.y })) }
 
-  // ================= the Stores' move: the close stage's room inside the Gourd Star (2026-10-30) =================
+  // ================= the asset gallery as the Stores' fifth leftover: a crate (2026-11-11) =================
+  // Copied from ../../2026-10-30-stores-move/make/stores.part.js (his A on stores-move-look-1 and -2, stores-first-place).
+  // New marks only: the crate (a made asset with its real picture on its face), the stencilled empty place on the top
+  // shelf (a hole, drawn from a planned callsheet row), and a crate coming down the bell line (a call answered).
+  // Shelf = keep, bell line = steer, compost ring = compost. No count, no grid. Direction: ../art-direction.md.
+  // ---- the Stores' move as it was: the close stage's room inside the Gourd Star (2026-10-30) ----
   // Spliced into board/moorings/altitude.js (the built Gourd Star: geo('gourd-star'), SKIN.shaman, rimG, hullG,
   // elementFx vines, room(), crew(), bead(), store(), storesM's WOOD and jars, lantern, floorPool) by make/build.py, so
   // the room is drawn with the ship's own code and nothing about the gourd is redrawn. Direction: ../art-direction.md.
@@ -1922,13 +1927,22 @@
     shelf: [3.9, ST_Y0 + 0.45], bell: [1.05, ST_Y0 + 0.75], seeds: [6.15, 2.75], compost: [1.35, 5.55], bowl: [2.3, 3.7],
   }
   const STAND = { shelf: [3.9, ST_Y0 + 1.25], bell: [0.95, ST_Y0 + 1.7], seeds: [5.45, 3.25], compost: [2.15, 5.35] }
-  const NAME = { jar: 'A sealed jar', seed: 'A seed', thread: 'A loose thread', husk: 'A dry husk' }
+  const NAME = { jar: 'A sealed jar', seed: 'A seed', thread: 'A loose thread', husk: 'A dry husk', crate: 'A crate' }
+  // a crate's picture is fetched by its url (the item's `pic`), once, from the content store
+  const IMG = {}
+  function crateImg(url) { if (!url) return null; let im = IMG[url]; if (!im) { im = IMG[url] = new Image(); im.src = url }; return im }
+  // the hole: a planned row not yet made, stencilled on the top shelf (storesRun sets it; none means no stencil)
+  let HOLE = null
+  const HOLE_SLOT = 2
   const KINDS = {
     jar: { to: 'shelf', cost: 1, hint: 'Something done. It keeps on the shelf.' },
     seed: { to: 'seeds', cost: 1, hint: 'A lesson. It keeps in the seed basket for the next intake.' },
     thread: { to: 'bell', cost: 2, hint: 'Work not finished. The bell line sends it up to the Bell.' },
     husk: { to: 'compost', cost: 0, back: 1, hint: 'A spent draft. Composting it gives its bead back.' },
+    crate: { to: 'shelf', cost: 1, also: { bell: 2 }, hint: 'Shelve it to keep it. Send it up the bell line to steer it. Let the compost ring take it.' },
   }
+  const fitsFor = (K, dest, beads) => dest === 'compost' || (dest === K.to && beads >= K.cost) || (K.also && K.also[dest] !== undefined && beads >= K.also[dest])
+  const costFor = (K, dest) => dest === K.to ? K.cost : K.also && K.also[dest] !== undefined ? K.also[dest] : 0
   // the run being closed is real: ship run 1's still round (council/callsheets/studio-lot.md, 2026-10-27)
   const RUN = [
     { kind: 'jar', words: "The art director's review of the plane still", at: [3.3, 4.7] },
@@ -1947,7 +1961,8 @@
   let SM = null
   function smNew() {
     SM = {
-      items: ST_FLOOR.map((r, i) => ({ i, id: r.id, kind: r.kind, words: r.words, x: ST_AT[i % ST_AT.length][0], y: ST_AT[i % ST_AT.length][1], st: ST_PLACES.includes(r.st) ? r.st : 'floor', f: r.st === 'tide' ? 1 : 0 })),
+      items: ST_FLOOR.map((r, i) => ({ i, id: r.id, kind: r.kind, words: r.words, pic: r.pic, title: r.title, place: r.place, x: ST_AT[i % ST_AT.length][0], y: ST_AT[i % ST_AT.length][1], st: ST_PLACES.includes(r.st) ? r.st : 'floor', f: r.st === 'tide' ? 1 : 0 })),
+      down: null, focus: null, shelved: [],
       beads: ST_PURSE, keeper: { x: 2.3, y: 6.3, tx: 2.3, ty: 6.3, face: 1 }, held: null, plan: null, fly: [], ring: 0,
       shelfN: 0, seedN: 0, compostN: 0, belled: 0, shake: 0, clock: 0, done: false, msg: null, glowAt: {},
     }
@@ -1968,21 +1983,28 @@
     if (!SM.held) {
       let best = null, bd = 1e9
       for (const it of SM.items) if (it.st === 'floor') { const q = P(it.x, it.y, 0.38), d = Math.hypot(px - q[0], py - q[1]); if (d < bd) { bd = d; best = it } }
-      if (best && bd < Math.max(30, 0.75 * k)) { SM.plan = { kind: 'pick', it: best, tx: best.x - 0.35, ty: best.y + 0.25 }; SM.msg = null; return 'item' }
+      if (best && bd < Math.max(30, 0.75 * k)) { SM.plan = { kind: 'pick', it: best, tx: best.x - 0.35, ty: best.y + 0.25 }; SM.msg = null; SM.focus = null; return 'item' }
+      const hp = HOLE ? holeAt() : null; if (hp && Math.hypot(px - hp[0], py - hp[1]) < Math.max(30, 0.5 * k)) { SM.focus = 'hole'; return 'hole' }
+      SM.focus = null
       return null
     }
     const dest = ['shelf', 'bell', 'seeds', 'compost'].find((d) => near(destAt(d), Math.max(44, 1.05 * k)))
     if (!dest) return null
-    const K = KINDS[SM.held.kind], fits = dest === 'compost' || (dest === K.to && SM.beads >= K.cost)
+    return smSend(dest)
+  }
+  function smSend(dest) { // the card's three verbs route here too
+    if (!SM || !SM.held || SM.plan) return null
+    const K = KINDS[SM.held.kind], fits = fitsFor(K, dest, SM.beads)
     if (!fits) {
       SM.shake = 1
-      SM.msg = dest === K.to ? 'The bowl is short of beads for that. The compost ring takes anything, free.' : K.hint
+      SM.msg = dest === K.to || (K.also && K.also[dest] !== undefined) ? 'The bowl is short of beads for that. The compost ring takes anything, free.' : K.hint
       return 'refused'
     }
     SM.plan = { kind: 'put', dest, tx: STAND[dest][0], ty: STAND[dest][1] }
     SM.msg = null
     return dest
   }
+  function holeAt() { const s = SPOT.shelf; return P(s[0] - 1.1 + HOLE_SLOT * 0.44, s[1], 1.58 + 0.3) }
   function destAt(d) {
     const s = SPOT[d], z = d === 'shelf' ? 1.0 : d === 'bell' ? 1.7 : d === 'seeds' ? 0.5 : 0.3
     return P(s[0], s[1], z)
@@ -2015,9 +2037,9 @@
       SM.compostN++
       if (K.back) SM.fly.push({ from: [SPOT.compost[0], SPOT.compost[1], 0.5], to: [SPOT.bowl[0], SPOT.bowl[1], 0.75], t: 0, dur: 1.4, land: () => { SM.beads++ } })
     } else {
-      SM.beads -= K.cost
-      for (let i = 0; i < K.cost; i++) SM.fly.push({ from: [SPOT.bowl[0], SPOT.bowl[1], 0.75], to: [...SPOT[p.dest], p.dest === 'bell' ? 2.4 : 1.0], t: -i * 0.35, dur: 1.1 })
-      if (p.dest === 'shelf') SM.shelfN++
+      const c = costFor(K, p.dest); SM.beads -= c
+      for (let i = 0; i < c; i++) SM.fly.push({ from: [SPOT.bowl[0], SPOT.bowl[1], 0.75], to: [...SPOT[p.dest], p.dest === 'bell' ? 2.4 : 1.0], t: -i * 0.35, dur: 1.1 })
+      if (p.dest === 'shelf') { if (HOLE && SM.shelved.length === HOLE_SLOT) SM.shelved.push(null); SM.shelved.push(it); SM.shelfN = SM.shelved.length }
       if (p.dest === 'seeds') SM.seedN++
       if (p.dest === 'bell') { SM.belled++; SM.ring = 1; it.rise = SM.clock }
     }
@@ -2052,7 +2074,34 @@
     g.strokeStyle = '#e98fb8'; g.lineWidth = Math.max(1, 0.035 * k * s); g.lineCap = 'round'
     g.beginPath(); g.moveTo(a[0], a[1]); g.bezierCurveTo(a[0] + 0.3 * k * s, a[1] - 0.2 * k * s + sw, b[0] - 0.1 * k * s, b[1] - 0.25 * k * s, b[0], b[1]); g.stroke()
   }
+  function crate(x, y, z, sc, lit, pic) { // a made asset: a slatted crate, its real picture pasted on the face toward you
+    const s = sc || 1, w = 0.27 * s, d = 0.2 * s, h = 0.4 * s
+    if (lit) glow3(x, y, z + h * 0.6, 0.7, '#fff1c8', 0.5 * lit)
+    box(x - w, y - d, z, x + w, y + d, z + h, '#ecd2a8', '#d9b88c', '#b48c62', 'rgba(90,60,40,0.35)')
+    plane('z', z + h + 0.001, () => { g.strokeStyle = 'rgba(120,85,55,0.55)'; g.lineWidth = 0.012 * s; for (let i = 1; i < 3; i++) { const yy = y - d + (2 * d * i) / 3; g.beginPath(); g.moveTo(x - w, yy); g.lineTo(x + w, yy); g.stroke() } })
+    plane('x', x + w + 0.001, () => { g.strokeStyle = 'rgba(110,78,50,0.5)'; g.lineWidth = 0.012 * s; g.beginPath(); g.moveTo(y - d, z + h * 0.5); g.lineTo(y + d, z + h * 0.5); g.stroke() })
+    plane('y', y + d + 0.002, () => {
+      const m = 0.045 * s, fw = 2 * w - 2 * m, fh = h - 2 * m, im = crateImg(pic)
+      g.save(); g.translate(x - w + m, z + h - m); g.scale(1, -1)
+      g.fillStyle = '#fbf3e2'; g.fillRect(-0.012 * s, -0.012 * s, fw + 0.024 * s, fh + 0.024 * s)
+      if (im && im.complete && im.naturalWidth) { const iw = im.naturalWidth, ih = iw * fh / fw; g.drawImage(im, 0, (im.naturalHeight - ih) / 2, iw, ih, 0, 0, fw, fh) }
+      else { g.fillStyle = '#c9b49a'; g.fillRect(0, 0, fw, fh) }
+      g.strokeStyle = 'rgba(70,50,40,0.6)'; g.lineWidth = 0.008 * s; g.strokeRect(0, 0, fw, fh)
+      g.restore()
+    })
+  }
+  function hole(x, cy, zz, lit) { // the stencilled empty place: a planned row's thing, outlined where it will stand
+    glow3(x, cy, zz + 0.25, 0.9, '#ffd98a', 0.45 + 0.4 * lit)
+    plane('z', zz + 0.004, () => { g.fillStyle = 'rgba(255,226,160,0.6)'; g.beginPath(); g.ellipse(x, cy, 0.19, 0.19, 0, 0, TAU); g.fill() })
+    plane('y', cy + 0.001, () => { // a sealed bundle's outline, tied at the neck, in dashed chalk
+      g.save(); g.translate(x, zz); g.strokeStyle = `rgba(160,100,40,${0.75 + 0.25 * lit})`; g.lineWidth = 0.03; g.setLineDash([0.05, 0.04]); g.lineJoin = 'round'
+      g.beginPath(); g.moveTo(-0.05, 0.31); g.quadraticCurveTo(-0.2, 0.3, -0.19, 0.14); g.quadraticCurveTo(-0.19, 0.0, 0, 0.0); g.quadraticCurveTo(0.19, 0.0, 0.19, 0.14); g.quadraticCurveTo(0.2, 0.3, 0.05, 0.31)
+      g.moveTo(-0.07, 0.32); g.lineTo(-0.11, 0.42); g.moveTo(0.07, 0.32); g.lineTo(0.11, 0.42); g.moveTo(-0.07, 0.33); g.lineTo(0.07, 0.33)
+      g.stroke(); g.setLineDash([]); g.restore()
+    })
+  }
   function thing(it, x, y, z, sc, lit) {
+    if (it.kind === 'crate') crate(x, y, z, sc, lit, it.pic)
     if (it.kind === 'jar') jar(x, y, z, sc, lit)
     if (it.kind === 'seed') seed(x, y, z + 0.14 * (sc || 1), 0.4 + 0.5 * (lit || 0), 1.35 * (sc || 1))
     if (it.kind === 'husk') husk(x, y, z, sc)
@@ -2068,7 +2117,8 @@
         const x = cx - 1.1 + i * 0.44
         if (b < 2) { if (i < old[b]) cylinder(x, cy, zz + 0.07, zz + 0.45, 0.13, i % 2 ? '#8fd0d0' : '#fff1d8', '#e7d4b0') }
         else if (i < open) {
-          if (i < n) jar(x, cy, zz + 0.07, 0.9, 0.6 + 0.4 * Math.sin(S.time * 2 + i))
+          if (HOLE && i === HOLE_SLOT && !SM.holeFilled) hole(x, cy, zz + 0.07, 0.6 + 0.4 * Math.sin(S.time * 2.2))
+          else if (i < n) { const kept = SM.shelved[i]; if (kept && kept.kind === 'crate') crate(x, cy - 0.02, zz + 0.07, 0.6, 0.5, kept.pic); else jar(x, cy, zz + 0.07, 0.9, 0.6 + 0.4 * Math.sin(S.time * 2 + i)) }
           else plane('z', zz + 0.075, () => { g.fillStyle = 'rgba(255,236,190,0.55)'; g.beginPath(); g.ellipse(x, cy, 0.17, 0.17, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(170,120,70,0.8)'; g.lineWidth = 0.035; g.setLineDash([0.06, 0.05]); g.stroke(); g.setLineDash([]) })
         }
       }
@@ -2087,6 +2137,13 @@
     g.fillStyle = gr; g.beginPath(); g.moveTo(-0.07 * s, 0); g.quadraticCurveTo(-0.11 * s, 0.3 * s, -0.25 * s, 0.5 * s); g.lineTo(0.25 * s, 0.5 * s); g.quadraticCurveTo(0.11 * s, 0.3 * s, 0.07 * s, 0); g.closePath(); g.fill()
     g.restore()
     if (lit) glow3(cx, cy, 1.6, 1.1, SEED, 0.45 * lit)
+    if (SM.down) { // a crate coming down the bell line: a call answered, slung from the rope
+      const z = SM.down.z, top = P(cx, cy, z + 0.75), sc = 0.8
+      glow3(cx, cy, z + 0.2, 0.9, '#fff1c8', 0.45)
+      g.strokeStyle = '#b89870'; g.lineWidth = Math.max(1, 0.03 * k)
+      for (const [dx, dy] of [[-0.2, -0.15], [0.2, -0.15], [-0.2, 0.15], [0.2, 0.15]]) { const q = P(cx + dx * sc, cy + dy * sc, z + 0.4 * sc); g.beginPath(); g.moveTo(top[0], top[1]); g.lineTo(q[0], q[1]); g.stroke() }
+      crate(cx, cy, z, sc, 0, SM.down.pic)
+    }
   }
   function compostRing(cx, cy, n, lit) { // a woven ring of dark soil; every thing let go grows a sprout in it
     if (lit) glow3(cx, cy, 0.3, 1.1, '#bff3c8', 0.4 * lit)
@@ -2134,7 +2191,7 @@
     ribbon([[xl + 0.6, 7.6], [xr - 0.6, 7.6]], 0.02, 0.6)
     ribbon([[8.4, 7.6], [9.3, 5.6]], 0.02, 0.5)
     const held = SM.held, K = held ? KINDS[held.kind] : null
-    const can = (d) => !held ? 0 : d === 'compost' ? 0.7 : d === K.to && SM.beads >= K.cost ? 1 : 0
+    const can = (d) => !held ? 0 : d === 'compost' ? 0.7 : d !== 'compost' && fitsFor(K, d, SM.beads) ? 1 : 0
     const pulse = 0.8 + 0.2 * Math.sin(S.time * 3)
     room({ x0: ST.x0, x1: ST.x1, d: ST.d, front: ST.front, H: ST.H, col: RUNG[1], wall: wallOf(sk) }, (y0, ft) => {
       floorPool(ST.x0 + 3.4, ST.front - 2.6, ft, 4.2, [ST.x0, y0, ST.x1 - ST.x0, ST.d], 0.3)
@@ -2166,7 +2223,7 @@
           const back = (sx, sy) => { const d = AX[0] * AY[1] - AX[1] * AY[0]; return [((sx - ox) * AY[1] - (sy - oy + 0) * AY[0]) / k / d, (-(sx - ox) * AX[1] + (sy - oy) * AX[0]) / k / d] }
           const [wx, wy] = back(hx, hy + 0.0)
           glow(hx, hy, 1.1 * k, '#fff6dc', 0.8)
-          thing(SM.held, wx, wy, 0, 1.25, 1)
+          thing(SM.held, wx, wy, 0, SM.held.kind === 'crate' ? 0.8 : 1.25, 1)
         }
       } })
       sortDraw(items)
@@ -2206,23 +2263,18 @@
     storesReset()
     const put = (i, dest) => { const it = SM.items[i]; SM.held = it; it.st = 'held'; SM.plan = { kind: 'put', dest }; SM.keeper.x = STAND[dest][0]; SM.keeper.y = STAND[dest][1]; arrive(); SM.fly.forEach((f) => { f.t = 99; if (f.land) { f.land(); f.land = null } }); SM.fly = [] }
     if (name === 'open') { SM.clock = 6 }
-    if (name === 'hold') {
-      put(1, 'compost'); put(0, 'shelf'); put(2, 'seeds')
-      SM.clock = 74
-      const it = SM.items[3]; it.st = 'held'; SM.held = it; SM.keeper.x = 4.7; SM.keeper.y = 4.9; SM.keeper.face = -1
-    }
-    if (name === 'closed') {
-      put(1, 'compost'); put(0, 'shelf'); put(2, 'seeds'); put(5, 'compost'); put(3, 'bell'); put(4, 'shelf'); put(6, 'compost'); put(7, 'compost')
-      SM.items[3].rise = undefined; SM.ring = 0; SM.clock = 140; SM.keeper.x = 2.6; SM.keeper.y = 5.9; SM.done = true; SM.held = null
-    }
     return SM
   }
   function storesHint(kind) { return KINDS[kind].hint }
+  function storesHole() { return HOLE ? { slot: HOLE_SLOT } : null }
+  function storesHoleAt() { if (!HOLE) return null; const q = holeAt(); return { x: q[0], y: q[1] } } // screen px, for the render script
+  const storesSend = (d) => smSend(d)
   function storesName(kind) { return NAME[kind] }
   const storesTap = smTap
-  function storesRun(things, beads) { // a real run's leftovers ({ id, kind, words, st? }, at most 8) and the bowl's beads
+  function storesRun(things, beads, hole0) { // a real run's leftovers ({ id, kind, words, st? }, at most 8) and the bowl's beads
     ST_FLOOR = (things || []).filter((t) => KINDS[t.kind]).slice(0, ST_AT.length)
     ST_PURSE = Math.max(0, beads | 0)
+    HOLE = hole0 || null
     return storesReset()
   }
   function storesAim() { // for the render script's play-through: where a player would tap next, in screen px
@@ -2232,5 +2284,5 @@
     return { x: q[0], y: q[1], what: 'put:' + d }
   }
 
-  window.AltR9 = { storesFrame, storesTap, storesState, storesReset, storesPose, storesHint, storesName, storesAim, storesRun, shamanFrame, shamanHit, shamanBox, shamanPoint, shamanAnchor, shamanHearth, shamanAt, shamanKeep, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
+  window.AltR9 = { storesSend, storesHole, storesHoleAt, storesFrame, storesTap, storesState, storesReset, storesPose, storesHint, storesName, storesAim, storesRun, shamanFrame, shamanHit, shamanBox, shamanPoint, shamanAnchor, shamanHearth, shamanAt, shamanKeep, shamanEmbers, SHAMAN_STAGES: STAGES8, frame, state, hit, at, fleetFrame, fleetHit, fleetBox, PHASES, DUR, START, LOOP, RUNG }
 })()

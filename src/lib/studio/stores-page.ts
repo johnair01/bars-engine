@@ -26,12 +26,18 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
 .card h1{font-size:18px;line-height:1.3;margin:0 0 6px;font-weight:700}
 .card p{font-size:15px;line-height:1.45;margin:0;color:var(--ink-soft)}
 .card button{margin-top:12px;font:inherit;font-size:15px;color:var(--paper);background:var(--seal);border:0;border-radius:999px;padding:9px 18px;min-height:44px;cursor:pointer}
+.card [hidden]{display:none!important}
+.card img{display:block;width:100%;max-height:21vh;object-fit:cover;border-radius:9px;border:1px solid var(--edge);margin:0 0 10px;background:#c9b49a}
+.verbs{display:flex;gap:8px;margin-top:12px}
+.verbs button{flex:1;margin:0;padding:9px 6px}
+.verbs button.soft{background:transparent;color:var(--ink);border:1.5px solid var(--edge)}
 .card button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @media (min-width:760px){.card{right:auto;width:360px;left:28px;bottom:28px}}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style></head><body>
 <canvas id="c" aria-label="The Stores room inside the Gourd Star. Tap a thing on the floor, then tap where it goes."></canvas>
-<div class="card" id="card" role="status" aria-live="polite"><h1 id="cardT"></h1><p id="cardP"></p><button id="again" hidden>Play it again</button></div>
+<div class="card" id="card" role="status" aria-live="polite"><img id="cardImg" alt="" hidden><h1 id="cardT"></h1><p id="cardP"></p><button id="again" hidden>Play it again</button>
+  <div class="verbs" id="verbs" hidden><button id="vKeep">Keep</button><button id="vSteer">Steer</button><button id="vCompost" class="soft">Compost</button></div></div>
 <script>window.STORES=${esc(world)};</script>
 <script src="${ALTITUDE_JS}"></script>
 <script>
@@ -39,23 +45,29 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
   const W0 = window.STORES, cv = document.getElementById('c'), ctx = cv.getContext('2d')
   const cT = document.getElementById('cardT'), cP = document.getElementById('cardP'), again = document.getElementById('again'), card = document.getElementById('card')
   const DAY = W0.demo ? 'A practice run' : W0.day ? new Date(W0.day + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }) + "'s run" : ''
-  AltR9.storesRun(W0.things, W0.beads)
+  AltR9.storesRun(W0.things, W0.beads, W0.hole)
+  const cImg = document.getElementById('cardImg'), verbs = document.getElementById('verbs')
   let W = 0, H = 0, dpr = 1, failed = null, shown = ''
   function size() { dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr) }
   window.addEventListener('resize', size); size()
   window.StoresOnPlace = function (thing, where) {
     if (W0.demo) return
-    const body = { board: 'council', collection: 'stores', docId: (W0.run + '~' + thing.id).replace(/[\\\\/]/g, '.').slice(0, 200), mode: 'set',
-      data: { run: W0.run, thing: thing.id, kind: thing.kind, words: thing.words, to: where, savedAt: new Date().toISOString() } }
+    const body = { board: 'council', collection: 'stores', docId: ((thing.kind === 'crate' ? 'gallery' : W0.run) + '~' + thing.id).replace(/[\\\\/]/g, '.').slice(0, 200), mode: 'set',
+      data: { run: thing.kind === 'crate' ? 'gallery' : W0.run, thing: thing.id, kind: thing.kind, words: thing.words, to: where, savedAt: new Date().toISOString() } }
     fetch('/api/board/saves', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { if (!r.ok) return r.text().then(function (t) { failed = 'It did not save (' + r.status + '): ' + t.slice(0, 160) }) })
       .catch(function (e) { failed = 'It did not save: ' + e.message })
   }
-  function say(t, p, end) {
-    const key = t + '|' + p + '|' + !!end
+  function say(t, p, end, pic, hasVerbs) {
+    const key = t + '|' + p + '|' + !!end + '|' + (pic || '') + '|' + !!hasVerbs
     if (key === shown) return
     shown = key; cT.textContent = t; cP.textContent = p; again.hidden = !end || !W0.demo; card.classList.toggle('away', !t)
+    cImg.hidden = !pic; if (pic) cImg.src = pic
+    verbs.hidden = !hasVerbs
   }
+  document.getElementById('vKeep').addEventListener('click', function () { AltR9.storesSend('shelf') })
+  document.getElementById('vSteer').addEventListener('click', function () { AltR9.storesSend('bell') })
+  document.getElementById('vCompost').addEventListener('click', function () { AltR9.storesSend('compost') })
   const INTRO = [DAY ? 'The Stores' : 'The Stores are quiet',
     DAY ? DAY + ' has come home, and what it left has drifted in across the floor. Tap one thing to pick it up.' + (W0.demo ? ' Nothing you place here is saved.' : '')
         : 'Every run up to today is closed. What today leaves will be on the floor tomorrow.']
@@ -64,6 +76,8 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
     const s = AltR9.storesState()
     if (!s || !s.items.length) return say(...INTRO)
     if (s.done) return say(DAY + ' is closed', 'Kept things are on the shelf, lessons wait as seeds, and what you let go feeds the compost with its words kept. The berth is free.', true)
+    if (s.held && s.held.kind === 'crate') return say(s.held.title || 'A crate', (s.held.place ? 'Made in ' + s.held.place + '. ' : '') + (s.msg || ''), false, s.held.pic, !s.plan)
+    if (s.focus === 'hole' && W0.hole && !s.held) return say(W0.hole.title, W0.hole.words + '. ' + W0.hole.price + '.')
     if (s.msg && s.held) return say(AltR9.storesName(s.held.kind), '\\u201c' + s.held.words + '.\\u201d ' + s.msg)
     if (s.held) return say(AltR9.storesName(s.held.kind), '\\u201c' + s.held.words + '.\\u201d ' + AltR9.storesHint(s.held.kind))
     if (s.plan) return say('', '')
