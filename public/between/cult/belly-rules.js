@@ -3,6 +3,13 @@
 // breakthrough yet, so the glow reads the lower floor: nine layers at 30 qi each, the ninth held at the gate.
 export const LAYER_COST = 30;
 export const LAYERS_PER_FLOOR = 9;
+export const REALMS = 3; // lower, middle, upper floor: one ring of light each
+
+/** Realms reached (1..3) from the sheet's breakthroughs: the first realm is the lower floor, each breakthrough opens one more. */
+export function realmFrom(breakthroughs) {
+  const b = Math.max(0, Math.floor(Number(breakthroughs) || 0));
+  return Math.min(REALMS, 1 + b);
+}
 
 /** Layers reached on the lower floor from the sheet's count (sheet.ts layers() with no breakthrough). */
 export function layersFrom(gathered) {
