@@ -10,7 +10,7 @@ import { LANE_WORKERS } from './lanes'
  * "this project is paused" on 2026-11-21 (anthropics/claude-code#102874), so the fire call was removed.
  */
 export const TICK_LANE = 'claude'
-export const TICK_MAX_FIRES = 2
+export const TICK_MAX_FIRES = 4
 export const TICK_COOLDOWN_MS = 15 * 60 * 1000
 export const TICK_LOCK_LANE = 'tick:claude'
 
