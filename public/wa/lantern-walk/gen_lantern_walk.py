@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); T = 32; W, H = 40, 24
 cols = [(70,120,60),(150,120,80),(40,90,160),(90,80,90),(100,70,40),(30,110,40),(200,80,120),(130,130,130),(240,200,40),
         (255,190,70),(120,85,50),(60,45,40)]
-N=19; import random; random.seed(7)
+N=27; import random; random.seed(7)
 img = Image.new('RGBA',(T*N,T),(0,0,0,0)); d = ImageDraw.Draw(img)
 for i,c in enumerate(cols):
     x=i*T
@@ -34,8 +34,19 @@ for f,(a,b) in enumerate(((200,120),(255,170),(230,90))):
     d.rectangle((x+2,2,x+29,22),fill=(10,24,26,255),outline=(100,255,220,255))
     for k,(yy) in enumerate((7,12,17)): d.line((x+6,yy,x+6+(14 if k!=2 else 9),yy),fill=(100,255,220,a),width=2)
     for yy in range(4,21,3): d.line((x+3,yy,x+28,yy),fill=(0,0,0,b//4))
-for f,al in enumerate((26,44)):
-    x=(17+f)*T; d.rectangle((x,0,x+T-1,T-1),fill=(100,255,220,al))
+# 17-20: unread sparkle halo frames (cyan, four-point stars in changing spots); 21: same frames in another order (animated);
+# 25: read sign, steady soft white; 26: read halo, steady soft white (no sparkle)
+def star(x,y,c,r=3):
+    d.line((x-r,y,x+r,y),fill=c); d.line((x,y-r,x,y+r),fill=c); d.point((x,y),fill=(255,255,255,255))
+SPOTS=[[(5,6),(26,10),(15,27)],[(24,5),(6,20),(20,25)],[(8,26),(27,22),(14,5)],[(28,14),(4,12),(22,28)]]
+for f in range(4):
+    x=(17+f)*T; d.rectangle((x,0,x+T-1,T-1),fill=(100,255,220,26))
+    for (sx,sy) in SPOTS[f]: star(x+sx,sy,(200,255,245,255),2 if (sx+f)%2 else 3)
+x=21*T; img.paste(img.crop((19*T,0,20*T,T)),(x,0))
+x=25*T; d.rectangle((x,0,x+T-1,T-1),fill=cols[0]+(255,)); d.rectangle((x+14,22,x+17,31),fill=(60,45,40,255))
+d.rectangle((x+2,2,x+29,22),fill=(238,232,220,255),outline=(255,252,244,255))
+for k,yy in enumerate((7,12,17)): d.line((x+6,yy,x+6+(14 if k!=2 else 9),yy),fill=(150,140,125,255),width=2)
+x=26*T; d.rectangle((x,0,x+T-1,T-1),fill=(255,248,235,30))
 img.save(f'{HERE}/tiles.png')
 idx = lambda x,y: y*W+x
 ground=[13 if (x*7+y*13)%5 else (14 if (x+y)%3==0 else 1) for y in range(H) for x in range(W)]; detail=[0]*(W*H); coll=[0]*(W*H); floor=[0]*(W*H); o1=[0]*(W*H); o2=[0]*(W*H); start=[0]*(W*H)
@@ -58,10 +69,18 @@ start[idx(4,12)]=9
 # notice posts: glowing VFD signs flanking the lane, off every path (sign tile collides, the lane stays open)
 posts=[(10,10),(13,14),(16,10)]   # beside the lane (row 12), never on it
 for (x,y) in posts:
-    detail[idx(x,y)]=15; coll[idx(x,y)]=15
+    coll[idx(x,y)]=15   # the sign itself lives on the state layers below; this tile only blocks
+# per-sign state layers (visible toggled by lantern-walk.js): unread = sparkling cyan, read = settled soft white
+st={}
+for n,(x,y) in enumerate(posts,1):
+    u=[0]*(W*H); ug=[0]*(W*H); r=[0]*(W*H); rg=[0]*(W*H)
+    u[idx(x,y)]=15
+    r[idx(x,y)]=26
     for dx in (-1,0,1):
         for dy in (-1,0,1):
-            if (dx or dy): o1[idx(x+dx,y+dy)]=18
+            if dx or dy:
+                ug[idx(x+dx,y+dy)]=18 if (dx+dy)%2 else 22; rg[idx(x+dx,y+dy)]=27
+    st[n]=(u,ug,r,rg)
 # places: lantern post at the end of each lane
 places=[(31,5),(31,12),(31,19)]
 for (x,y) in places: detail[idx(x,y)]=10; coll[idx(x,y)]=10
@@ -101,10 +120,14 @@ def tl(i,name,data,props=None):
     return l
 layers=[tl(1,"ground",ground),tl(2,"detail",detail),tl(3,"collisions",coll,[{"name":"collides","type":"bool","value":True}]),
         tl(4,"floorLayer",floor),tl(5,"over1",o1),tl(6,"over2",o2),dict(tl(7,"start",start),visible=False),
+        *[tl(20+10*n+k,nm.format(n),dat,None) if k in (0,2) else tl(20+10*n+k,nm.format(n),dat,None)
+          for n,(u,ug,r,rg) in st.items() for k,(nm,dat) in enumerate((("unread-{}",u),("unread-{}-glow",ug),("read-{}",r),("read-{}-glow",rg)))],
         {"id":8,"name":"objects","type":"objectgroup","x":0,"y":0,"opacity":1,"visible":True,"draworder":"topdown","objects":objs}]
+for l in layers:
+    if l['name'].startswith('read-'): l['visible']=False
 m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"orthogonal","renderorder":"right-down","tiledversion":"1.10.2",
-   "tileheight":T,"tilewidth":T,"type":"map","version":"1.10","nextlayerid":9,"nextobjectid":oid,"layers":layers,
-   "tilesets":[{"firstgid":1,"name":"tiles","image":"tiles.png","imagewidth":T*N,"imageheight":T,"tilewidth":T,"tileheight":T,"tilecount":N,"columns":N,"margin":0,"spacing":0,"tiles":[{"id":14,"animation":[{"tileid":14,"duration":400},{"tileid":15,"duration":400},{"tileid":16,"duration":200},{"tileid":15,"duration":400}]},{"id":17,"animation":[{"tileid":17,"duration":800},{"tileid":18,"duration":800}]}]}],
-   "properties":[{"name":"mapName","type":"string","value":"The Lantern Walk"}]}
+   "tileheight":T,"tilewidth":T,"type":"map","version":"1.10","nextobjectid":oid,"layers":layers,
+   "nextlayerid":60,"tilesets":[{"firstgid":1,"name":"tiles","image":"tiles.png","imagewidth":T*N,"imageheight":T,"tilewidth":T,"tileheight":T,"tilecount":N,"columns":N,"margin":0,"spacing":0,"tiles":[{"id":14,"animation":[{"tileid":14,"duration":400},{"tileid":15,"duration":400},{"tileid":16,"duration":200},{"tileid":15,"duration":400}]},{"id":17,"animation":[{"tileid":17,"duration":300},{"tileid":18,"duration":300},{"tileid":19,"duration":300},{"tileid":20,"duration":300}]},{"id":21,"animation":[{"tileid":19,"duration":300},{"tileid":20,"duration":300},{"tileid":17,"duration":300},{"tileid":18,"duration":300}]}]}],
+   "properties":[{"name":"mapName","type":"string","value":"The Lantern Walk"},{"name":"script","type":"string","value":"lantern-walk.js"}]}
 json.dump(m,open(f'{HERE}/lantern-walk.tmj','w'),separators=(',',':'))
 print(sorted(os.listdir(HERE)))
