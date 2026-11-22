@@ -69,7 +69,7 @@ const css = `
 /* the room stays in view while you write (FR-005): the kneeling writer is seen on the left, the strip sits to the right
    (below on a phone) on a dark that fades into the room, never a full-screen backdrop */
 .bw{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:flex-end;background:linear-gradient(90deg,rgba(12,8,6,0) 0%,rgba(12,8,6,0) 38%,rgba(20,12,8,.55) 62%,rgba(20,12,8,.82) 100%);padding:16px 4vw;box-sizing:border-box}
-@media (max-aspect-ratio:1/1){.bw{align-items:flex-end;justify-content:center;background:linear-gradient(180deg,rgba(12,8,6,0) 0%,rgba(12,8,6,0) 42%,rgba(20,12,8,.6) 60%,rgba(20,12,8,.86) 100%);padding:12px 16px}.bw-strip{width:auto;height:min(30vh,250px)}.bw-in{gap:8px}}
+@media (max-aspect-ratio:1/1){.bw{align-items:flex-end;justify-content:center;background:linear-gradient(180deg,rgba(12,8,6,0) 0%,rgba(12,8,6,0) 42%,rgba(20,12,8,.6) 60%,rgba(20,12,8,.86) 100%);padding:12px 16px}.bw-strip{width:auto;height:min(38vh,340px)}.bw-in{gap:8px}}
 .bw[hidden]{display:none}
 .bw-in{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:360px;width:100%;color:#f3e6cc;font:15px/1.4 Georgia,serif}
 .bw-dip{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:44px}
@@ -214,8 +214,8 @@ export function createBrushWrite({ write, onClose, onDip, onStroke, onSet, first
   function open(embers) {
     s = { embers, ember: embers.length === 1 ? embers[0] : null, strokes: [], line: -1, busy: false, done: false, coin: null, ask: "" };
     markIn.value = ""; reAsk(); say.textContent = s.ember ? `The brush takes the ${ELEMENT_WORD[s.ember.el].toLowerCase()} ember's light.` : embers.length ? "Dip the brush in an ember." : "";
-    el.hidden = false; draw(); hud(); if (s.ember && onDip) onDip(s.ember); setTimeout(() => (s.ember ? cv : dip.querySelector("button") || backBtn).focus?.(), 0);
+    document.body.classList.add("brushwriting"); el.hidden = false; draw(); hud(); if (s.ember && onDip) onDip(s.ember); setTimeout(() => (s.ember ? cv : dip.querySelector("button") || backBtn).focus?.(), 0);
   }
-  function close() { if (!s) return; const done = s.done; if (s.coin) s.coin.remove(); s = null; el.hidden = true; onClose && onClose(done); }
+  function close() { if (!s) return; const done = s.done; if (s.coin) s.coin.remove(); s = null; el.hidden = true; document.body.classList.remove("brushwriting"); onClose && onClose(done); }
   return { open, close, get isOpen() { return !!s; }, get ember() { return s ? s.ember : null; }, el };
 }
