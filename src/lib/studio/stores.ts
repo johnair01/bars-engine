@@ -12,6 +12,7 @@
  * on main (board/pull.py, find_steps). Pure apart from `loadStores`. */
 import { listNames, readText } from '@/lib/board/content-store'
 import { pullTime, RUN_MS } from './fleet'
+import { callsOf } from './gallery-call'
 import type { BoardData } from './shaman'
 
 export type ThingKind = 'jar' | 'seed' | 'thread' | 'husk' | 'crate'
@@ -25,7 +26,7 @@ export const FLOOR_CAP = 8
 
 /** A crate is a finished asset (the gallery's `recent` view): `pic` is its picture's url, `title` its name, `place` the
  * round it was made in. A crate's placement is saved under the run key CRATE_RUN, so a crate placed once never returns. */
-export type Thing = { id: string; kind: ThingKind; words: string; st?: Place; pic?: string; title?: string; place?: string }
+export type Thing = { id: string; kind: ThingKind; words: string; st?: Place; pic?: string; title?: string; place?: string; returned?: boolean }
 /** A planned row not yet made, stencilled on the shelf (the gallery's `holes` view, cheapest first). */
 export type StoresHole = { id: string; title: string; words: string; price: string }
 export type StoresWorld = { run: string; day: string; things: Thing[]; beads: number; at: string; demo: boolean; hole?: StoresHole | null }
@@ -146,10 +147,16 @@ export async function loadStores(placed: Record<string, Placement>, now = new Da
   const doneFile = json<{ done?: Record<string, unknown> }>(await readText('council/needs-work-done.json'))
   const board = json<BoardData>(await readText('board/board_data.json'))
   const gallery = await import('@/lib/board/gallery')
-  const crates: Thing[] = (await gallery.recent(null).catch(() => null))?.cards
+  const calls = callsOf(placed)
+  // a crate that came back down the bell line is returned, not done: it waits on the floor, first, for his keep, steer or compost
+  const returnedIds = new Set(Object.values(calls).filter(c => c.state === 'returned' && c.crate).map(c => 'crate-' + c.crate))
+  const crates: Thing[] = ((await gallery.recent(null).catch(() => null))?.cards
     .filter(c => !c.reviewed)
-    .map(c => ({ id: 'crate-' + c.sha.slice(0, 16), kind: 'crate' as const, words: c.maker ?? c.round, title: c.title, place: c.round, pic: c.picture })) ?? []
-  const first = (await gallery.holes(null).catch(() => null))?.cards[0]
+    .map(c => ({ id: 'crate-' + c.sha.slice(0, 16), kind: 'crate' as const, words: c.maker ?? c.round, title: c.title, place: c.round, pic: c.picture,
+      ...(returnedIds.has('crate-' + c.sha.slice(0, 16)) ? { returned: true } : {}) })) ?? [])
+    .sort((a, b) => Number(!!b.returned) - Number(!!a.returned))
+  // the stencil is the cheapest planned row nobody has called for yet
+  const first = (await gallery.holes(null).catch(() => null))?.cards.find(h => !calls[h.id])
   const hole: StoresHole | null = first ? { id: first.id, title: first.name, words: first.name,
     price: first.price?.dollars ? `About $${first.price.dollars}` : `About ${(first.price?.tokens ?? 0).toLocaleString('en-US')} tokens, no dollars` } : null
   return storesWorldOf({ pulls, board, doneKeys: Object.keys(doneFile?.done ?? {}), placed, now, crates, hole })
