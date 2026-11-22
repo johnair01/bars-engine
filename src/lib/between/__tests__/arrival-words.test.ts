@@ -5,7 +5,8 @@ import { ARRIVAL, FACES, MAX_CHARS, SPIRIT_ASKS, SPIRIT_SKIP, clean, sheet, next
 describe('the arrival card words', () => {
   it('offers the six faces and asks for home face and quest only', () => {
     expect(FACES.map(f => f[0])).toEqual(['Shaman', 'Architect', 'Challenger', 'Regent', 'Diplomat', 'Sage'])
-    expect(ARRIVAL.face).toMatch(/face/)
+    expect(ARRIVAL.face).not.toMatch(/\bface\b/)
+    expect(ARRIVAL.face).toMatch(/like you/)
     expect(ARRIVAL.quest).toMatch(/own words/)
     expect(ARRIVAL.later).toMatch(/Shadow and myth/)
   })

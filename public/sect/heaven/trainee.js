@@ -28,6 +28,7 @@ const CSS = `
 .tw-card b{font:400 22px/1.2 var(--ui-display,Georgia,serif)}
 .tw-card p{margin:0}
 .tw-row{display:flex;gap:10px;flex-wrap:wrap}
+.tw-row.tw-col{flex-direction:column}.tw-col button{text-align:left;border-radius:16px;padding:12px 16px;min-height:48px;line-height:1.3}
 .tw-row button{font:700 15px/1 var(--ui-body,system-ui,sans-serif);min-height:48px;padding:0 18px;border-radius:24px;cursor:pointer;border:1px solid rgba(255,255,255,.35);color:#fff;background:transparent}
 .tw-row button.go,.tw-row button[aria-pressed="true"]{background:#2f8f86;border-color:#2f8f86}
 .tw-row button:focus-visible{outline:3px solid #5fc2ba;outline-offset:2px}
@@ -193,7 +194,7 @@ export async function traineeWalk(ctx) {
       const onQ = e => { const b = e.target.closest('[data-tw]'); if (!b) return; if (b.dataset.tw === 'qkeep') { const v = clean(inp.value); if (v) sh.quest = v; save(); fin(); } else if (b.dataset.tw === 'qskip') fin(); };
       card.addEventListener('click', onQ);
     };
-    show(`<p>${esc(ARRIVAL.open)}</p><p>${esc(ARRIVAL.face)}</p><div class="tw-row">${FACES.map(([n, g]) => `<button type="button" data-tw="face" data-face="${n}" title="${esc(g)}" aria-label="${n}: ${esc(g)}">${n}</button>`).join('')}</div><div class="tw-row"><button type="button" data-tw="fskip">${esc(ARRIVAL.skip)}</button></div>`, 'Your home face');
+    show(`<p>${esc(ARRIVAL.open)}</p><p>${esc(ARRIVAL.face)}</p><div class="tw-row tw-col">${FACES.map(([n, g]) => `<button type="button" data-tw="face" data-face="${n}">${esc(g)}</button>`).join('')}</div><div class="tw-row"><button type="button" data-tw="fskip">${esc(ARRIVAL.skip)}</button></div>`, 'Your home face');
     const onF = e => { const b = e.target.closest('[data-tw]'); if (!b) return; if (b.dataset.tw === 'face') { sh.face = b.dataset.face; save(); } else if (b.dataset.tw !== 'fskip') return; card.removeEventListener('click', onF); questStep(); };
     card.addEventListener('click', onF);
   }

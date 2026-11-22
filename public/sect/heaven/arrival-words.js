@@ -13,7 +13,7 @@ export const FACES = [
 ];
 export const ARRIVAL = {
   open: 'The founder stands on the dais. Two lines start your character sheet.',
-  face: 'Which face do you lead with most days?',
+  face: 'Which of these is most like you on an ordinary day?',
   quest: 'What is one thing you want to do while you are here? Write it in your own words.',
   questLabel: 'Your quest, in your own words',
   keep: 'Write it on my sheet',
