@@ -739,12 +739,12 @@ function hair(C, style, color, backAt, opt = {}) {
           const lq = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir); const tw = new THREE.Quaternion().setFromAxisAngle(dir, Math.atan2(out.x, out.z));
           add(new THREE.ConeGeometry(0.011 * k, hgt, 4), new THREE.Matrix4().compose(base.clone().addScaledVector(dir, hgt / 2), tw.multiply(lq), V(1, 1, 0.35)), gold, 'head', 'hair-crown'); } } }
   }
-  if (style === 'long') { // hair falling from the nape to the shoulder blades, lying on the robe
+  if (style === 'long' || style === 'bob') { // hair falling from the nape to the shoulder blades, lying on the robe (bob: it ends at the shoulders)
     // shells round 3: one smooth sheet, not a stack of lobes (round 2 drew 30 flattened spheres 1.1 cm apart, which read
     // as stacked bands from behind). Each row is an ellipse across the back (half-width wdt, half-depth 0.016) centred on
     // the line backAt gives, rows 6 mm apart, the tip rounded; the strands are painted as fine darker partings down the
     // sheet. The part above the neck base rides the head, the part below lies on the back (C.hairW), with an overlap.
-    const y0 = C.crown - 0.13 * k, y1 = C.yNeck - 0.24 * k, yS = C.yNeck + 0.01 * k;
+    const y0 = C.crown - 0.13 * k, y1 = style === 'bob' ? C.yNeck - 0.035 * k : C.yNeck - 0.24 * k, yS = C.yNeck + 0.01 * k;
     // round 4 fix 3 (tuck): the upper sheet's lowest 1.5 cm tucks 8% inside the lower one and is left open, so no edge line
     // shows across the strands at the neck
     const sheet = (ya, yb, bone, tuck = false) => { const n = Math.max(2, Math.round((ya - yb) / (0.006 * k))), nT = 40, P = [], Cc = [], I = [], c0 = col(color);
@@ -764,6 +764,24 @@ function hair(C, style, color, backAt, opt = {}) {
     const nb = C.fromAB(...backAt(C.crown - 0.1 * k), C.crown - 0.1 * k);
     add(new THREE.SphereGeometry(1, 18, 12), new THREE.Matrix4().makeTranslation(nb.x, nb.y, nb.z).multiply(new THREE.Matrix4().makeRotationY(Math.atan2(-C.l.z, C.l.x))).multiply(new THREE.Matrix4().makeScale(0.075 * k, 0.07 * k, 0.03 * k)), color, 'head', 'hair-long');
   }
+
+  // hj-mirror-2 (his B on hj-mirror-look-1, the comb): hair that is chosen, not carried by the robe. All ride the same cap.
+  const ball = (p, r, sc, nm, bone = 'head') => add(new THREE.SphereGeometry(r, 14, 10), new THREE.Matrix4().makeTranslation(p.x, p.y, p.z).multiply(new THREE.Matrix4().makeScale(sc[0], sc[1], sc[2])), color, bone, nm);
+  if (style === 'lowbun') { // a bun gathered at the nape, a tie round its neck
+    const yb = C.crown - 0.15 * k, bk = backAt(yb), p = C.fromAB(bk[0] - 0.026 * k, bk[1], yb);
+    ball(p, 0.042 * k, [1, 0.92, 0.95], 'hair-long'); ball(p.clone().addScaledVector(C.f, 0.03 * k).add(V(0, 0.012 * k, 0)), 0.03 * k, [1, 0.9, 0.9], 'hair-long');
+    add(new THREE.TorusGeometry(0.036 * k, 0.0035 * k, 8, 24), new THREE.Matrix4().compose(p.clone().addScaledVector(C.f, 0.026 * k), new THREE.Quaternion().setFromUnitVectors(V(0, 0, 1), C.f.clone().add(V(0, -0.35, 0)).normalize()), V(1, 1, 1)), '#8c4a32', 'head', 'hair-tie'); }
+  if (style === 'tail') { // a high tail tied at the crown's back, falling over the nape onto the back
+    const yT = C.crown - 0.045 * k, yE = C.yNeck - 0.2 * k, n = Math.round((yT - yE) / (0.012 * k));
+    for (let j = 0; j <= n; j++) { const u = j / n, yy = yT + (yE - yT) * u, bk = backAt(yy), out = 0.055 * k * Math.sin(Math.PI * Math.min(1, u * 2.4)) * Math.max(0, 1 - u * 1.3), p = C.fromAB(bk[0] - out, bk[1], yy), r = (0.026 - 0.011 * u * u) * k;
+      ball(p, r, [1, 1.5, 0.85], 'hair-long', yy > C.yNeck ? 'head' : 'spine03'); }
+    const bk = backAt(yT), pt = C.fromAB(bk[0] - 0.004 * k, bk[1], yT); add(new THREE.CylinderGeometry(0.02 * k, 0.02 * k, 0.014 * k, 14), new THREE.Matrix4().makeTranslation(pt.x, pt.y, pt.z), '#8c4a32', 'head', 'hair-tie'); }
+  if (style === 'twin') { // two braids down the back, one each side
+    const y0 = C.crown - 0.14 * k, y1 = C.yNeck - 0.22 * k, n = Math.round((y0 - y1) / (0.024 * k));
+    for (const sd of [-1, 1]) { let last = null;
+      for (let j = 0; j <= n; j++) { const yy = y0 + (y1 - y0) * j / n, bk = backAt(yy), side = sd * (0.04 - 0.012 * Math.min(1, j / 3)) * k, p = C.fromAB(bk[0], bk[1], yy).addScaledVector(C.l, side + (j % 2 ? 1 : -1) * 0.004 * k), r = (0.017 - 0.005 * j / n) * k;
+        add(new THREE.SphereGeometry(r, 12, 8), new THREE.Matrix4().makeTranslation(p.x, p.y, p.z).multiply(new THREE.Matrix4().makeScale(1, 1.35, 0.8)), color, yy > C.yNeck ? 'head' : 'spine03', 'hair-braid'); last = p; }
+      add(new THREE.CylinderGeometry(0.01 * k, 0.01 * k, 0.016 * k, 10), new THREE.Matrix4().makeTranslation(last.x, last.y - 0.016 * k, last.z), '#8c4a32', 'spine03', 'hair-tie'); } }
   if (style === 'braid') {
     const y0 = C.crown - 0.15 * k, y1 = C.yWaist + 0.04 * k, n = Math.round((y0 - y1) / (0.028 * k));
     for (let j = 0; j <= n; j++) { const yy = y0 + (y1 - y0) * j / n; const bk = backAt(yy); const p = C.fromAB(bk[0], bk[1], yy).addScaledVector(C.l, (j % 2 ? 1 : -1) * 0.005 * k);
@@ -795,7 +813,7 @@ export function dress(C, reg, outfitKey) {
     else if (pc.p === 'sash') parts.push(...sash(C, pc, outer));
     else if (pc.p === 'whisk') parts.push(...whisk(C, pc, outer));
     else if (pc.p === 'cape') { const r = cape(C, pc, outer); parts.push(...r.parts); capeL = r.loft; }
-    else if (pc.p === 'hair') { const fem = C.F.mix && C.F.mix.gender === 'f'; const styles = (fem || pc.long) && pc.style !== 'braid' ? [pc.style, 'long'] : [pc.style];
+    else if (pc.p === 'hair') { if (C.F.mix && C.F.mix.hair) { const h = C.F.mix.hair; pc = { ...pc, long: false, style: h === 'loose' ? 'long' : h, crown: pc.crown }; } const fem = C.F.mix && C.F.mix.gender === 'f'; const styles = (fem || pc.long) && pc.style !== 'braid' ? [pc.style, 'long'] : [pc.style];
       for (const st of styles) parts.push(...hair(C, st, reg.hairColor, yy => { const L = capeL && yy > capeL.yHem ? capeL : outer; const s = loftAt(L, Math.PI, yy); return [s.c[0] + (s.r + 0.018 * C.k) * Math.cos(Math.PI), s.c[1] + (s.r + 0.018 * C.k) * Math.sin(Math.PI)]; }, pc)); }
     else throw new Error('piece ' + pc.p);
     addCol(from); // round 5: what is on already is what the next layer drapes over
