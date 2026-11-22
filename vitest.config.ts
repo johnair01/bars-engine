@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'src/lib/cultivation/__tests__/sheet.test.ts',
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
       'src/lib/ontology-game/__tests__/claim-code.test.ts',
       'src/lib/wake-up/__tests__/check-content.test.ts',
@@ -194,7 +195,7 @@ export default defineConfig({
       'src/lib/between/__tests__/coin-table-camera.test.ts',
       'src/lib/board/__tests__/card.test.ts',
       'src/lib/emotional-alchemy/__tests__/dbt-skills.test.ts',
-      'src/lib/studio/__tests__/stores.test.ts',
+      'src/lib/studio/__tests__/stores.test.ts', 'src/lib/studio/__tests__/wings.test.ts', 'src/lib/studio/__tests__/gallery-call.test.ts', 'src/lib/studio/__tests__/gallery-call-page.test.ts',
       'src/lib/work/__tests__/seals.test.ts',
       'src/lib/work/__tests__/wake.test.ts',
       'src/lib/work/__tests__/tick.test.ts',

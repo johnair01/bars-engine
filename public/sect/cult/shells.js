@@ -408,7 +408,11 @@ export function dress(C, reg, outfitKey) {
     if (pc.p === 'trousers') parts.push(...G.trousers(C, pc));
     else if (pc.p === 'regalia') { // round 2: the girdle and the stole seat on the measured envelope of the shells and skirts under them (not on the loft), so none floats
       const env = buildEnv(C, L, G, parts), AHr = { ...AH, loftAt: (L2, th, y) => { const s0 = G.loftAt(L2, th, y), e = env(th, y); return e > s0.r ? { ...s0, r: e } : s0; } };
-      parts.push(...(C.male ? ACC.girdle(C, pc, L, AHr) : ACC.stole(C, { ...pc, over: 0, under: pieces.some(q => q.p === 'outer') }, L, AHr))); C.env = env; }
+      // round 4f (his note on er-regalia-look-7: "The outer robe hem is separating from the purple femme robes"): the stole lay on the
+      // larger of the robe's loft and the shell's measured envelope, and on the woman the loft stands 4 to 5 cm off the shell
+      // from the shoulder to the sash, so the band floated clear of the robe. Where the envelope has a reading the stole takes it.
+      const AHs = { ...AH, loftAt: (L2, th, y) => { const s0 = G.loftAt(L2, th, y), e = env(th, y); return e > 0 ? { ...s0, r: e } : s0; } };
+      parts.push(...(C.male ? ACC.girdle(C, pc, L, AHr) : ACC.stole(C, { ...pc, over: 0, under: pieces.some(q => q.p === 'outer') }, L, AHs))); C.env = env; }
     else if (pc.p === 'shoes') parts.push(...G.feet(C, pc, 'shoes', 0.007, 0.03));
     else if (pc.p === 'boots') { parts.push(...G.feet(C, pc, 'boots', 0.011, 0.06)); parts.push(...G.shin(C, pc, 'boots', yHem < 0.15 * C.S ? 0.72 : (pc.shaft ?? 0.42), 0.02, null)); }
     else if (pc.p === 'robe') parts.push(...robeParts);

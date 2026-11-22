@@ -96,7 +96,7 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (c === 'stores') { // the Stores' move: one placement of a run's thing (src/lib/studio/stores.ts)
       if (s.board !== 'council') errors.push('the Stores are the Council Board\'s')
       if (!nonBlank(data.run) || !nonBlank(data.thing) || !nonBlank(data.words)) errors.push('a placement names its run, thing and words')
-      if (!['jar', 'seed', 'thread', 'husk'].includes(data.kind as string)) errors.push('a placement\'s kind is jar, seed, thread or husk')
+      if (!['jar', 'seed', 'thread', 'husk', 'crate', 'call'].includes(data.kind as string)) errors.push('a placement\'s kind is jar, seed, thread, husk, crate or call')
       if (!['shelf', 'seeds', 'bell', 'compost', 'tide'].includes(data.to as string)) errors.push('a placement goes to shelf, seeds, bell, compost or tide')
       if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
     }

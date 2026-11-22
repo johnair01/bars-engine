@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isLane, laneCaller } from '@/lib/work/lanes'
+import { ticketKind } from '@/lib/work/lanes'
 import { closeTicket, moveTicket, retryTicket, unholdTicket } from '@/lib/work/queue'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ const AAR = /^[A-Za-z0-9._:\/-]{3,300}$/
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string; move: string }> }) {
   const { id, move } = await params
   if (!MOVES.has(move)) return NextResponse.json({ error: 'move must be heartbeat, done, release, failed, unhold, retry or close' }, { status: 404 })
-  const t = await db.workTicket.findUnique({ where: { id }, select: { lane: true } })
+  const t = await db.workTicket.findUnique({ where: { id }, select: { lane: true, title: true, brief: true } })
   if (!t) return NextResponse.json({ error: 'No such ticket' }, { status: 404 })
   const who = isLane(t.lane) ? laneCaller(req, t.lane) : null
   if (!who) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -55,6 +56,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane } }, { headers: NO_STORE })
   }
   const look = typeof b.look === 'string' && /^[A-Za-z0-9._:-]{1,120}$/.test(b.look) ? b.look : null
+  // Picture work ends in a look row Wendell can see (2026-11-21: DeepAI closed four tickets and posted no look because
+  // none asked for one). A picture ticket is done with `look` (the board row id) or a result that says `no look:` and why.
+  if (move === 'done' && !look && ticketKind(t.title, t.brief) === 'picture' && !/\bno look:/i.test(result ?? '')) {
+    return NextResponse.json({ error: 'a picture ticket is done with look (the board row id of the look you posted), or a result saying "no look: <why>"' }, { status: 400 })
+  }
   const r = await moveTicket(db, id, who === 'lane' ? t.lane : null, move as 'done', result, new Date(), look, b.hold === true)
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status })
   return NextResponse.json({ ticket: { id: r.ticket.id, state: r.ticket.state, lane: r.ticket.lane,
