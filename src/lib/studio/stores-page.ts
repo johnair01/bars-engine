@@ -36,7 +36,7 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style></head><body>
 <canvas id="c" aria-label="The Stores room inside the Gourd Star. Tap a thing on the floor, then tap where it goes."></canvas>
-<div class="card" id="card" role="status" aria-live="polite"><img id="cardImg" alt="" hidden><h1 id="cardT"></h1><p id="cardP"></p><button id="again" hidden>Play it again</button>
+<div class="card" id="card" role="status" aria-live="polite"><img id="cardImg" alt="" hidden><h1 id="cardT"></h1><p id="cardP"></p><button id="again" hidden>Play it again</button><button id="vCall" hidden>Call for it</button>
   <div class="verbs" id="verbs" hidden><button id="vKeep">Keep</button><button id="vSteer">Steer</button><button id="vCompost" class="soft">Compost</button></div></div>
 <script>window.STORES=${esc(world)};</script>
 <script src="${ALTITUDE_JS}"></script>
@@ -46,8 +46,8 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
   const cT = document.getElementById('cardT'), cP = document.getElementById('cardP'), again = document.getElementById('again'), card = document.getElementById('card')
   const DAY = W0.demo ? 'A practice run' : W0.day ? new Date(W0.day + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }) + "'s run" : ''
   AltR9.storesRun(W0.things, W0.beads, W0.hole)
-  const cImg = document.getElementById('cardImg'), verbs = document.getElementById('verbs')
-  let W = 0, H = 0, dpr = 1, failed = null, shown = ''
+  const cImg = document.getElementById('cardImg'), verbs = document.getElementById('verbs'), callBtn = document.getElementById('vCall')
+  let W = 0, H = 0, dpr = 1, failed = null, shown = '', callSaid = '', callDone = false, callBusy = false
   function size() { dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr) }
   window.addEventListener('resize', size); size()
   window.StoresOnPlace = function (thing, where) {
@@ -58,13 +58,20 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
       .then(function (r) { if (!r.ok) return r.text().then(function (t) { failed = 'It did not save (' + r.status + '): ' + t.slice(0, 160) }) })
       .catch(function (e) { failed = 'It did not save: ' + e.message })
   }
-  function say(t, p, end, pic, hasVerbs) {
-    const key = t + '|' + p + '|' + !!end + '|' + (pic || '') + '|' + !!hasVerbs
+  function say(t, p, end, pic, hasVerbs, hasCall) {
+    const key = t + '|' + p + '|' + !!end + '|' + (pic || '') + '|' + !!hasVerbs + '|' + !!hasCall
     if (key === shown) return
     shown = key; cT.textContent = t; cP.textContent = p; again.hidden = !end || !W0.demo; card.classList.toggle('away', !t)
     cImg.hidden = !pic; if (pic) cImg.src = pic
-    verbs.hidden = !hasVerbs
+    verbs.hidden = !hasVerbs; callBtn.hidden = !hasCall
   }
+  callBtn.addEventListener('click', function () {
+    const h = W0.hole; if (!h || callBusy || callDone) return
+    callBusy = true; callSaid = 'Sending it up the bell line.'
+    fetch('/api/board/gallery/call', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hole: h.id }) })
+      .then(function (r) { return r.json().then(function (j) { callSaid = r.ok && j.words ? j.words : 'The call did not go: ' + (j.error || r.status); callBusy = false; if (r.ok) callDone = true }) })
+      .catch(function (e) { callBusy = false; callSaid = 'The call did not go: ' + e.message })
+  })
   document.getElementById('vKeep').addEventListener('click', function () { AltR9.storesSend('shelf') })
   document.getElementById('vSteer').addEventListener('click', function () { AltR9.storesSend('bell') })
   document.getElementById('vCompost').addEventListener('click', function () { AltR9.storesSend('compost') })
@@ -76,8 +83,8 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:blo
     const s = AltR9.storesState()
     if (!s || !s.items.length) return say(...INTRO)
     if (s.done) return say(DAY + ' is closed', 'Kept things are on the shelf, lessons wait as seeds, and what you let go feeds the compost with its words kept. The berth is free.', true)
-    if (s.held && s.held.kind === 'crate') return say(s.held.title || 'A crate', (s.held.place ? 'Made in ' + s.held.place + '. ' : '') + (s.msg || ''), false, s.held.pic, !s.plan)
-    if (s.focus === 'hole' && W0.hole && !s.held) return say(W0.hole.title, W0.hole.words + '. ' + W0.hole.price + '.')
+    if (s.held && s.held.kind === 'crate') return say(s.held.title || 'A crate', (s.held.ret ? 'It came back down the bell line, and is not done until you decide. ' : '') + (s.held.place ? 'Made in ' + s.held.place + '. ' : '') + (s.msg || ''), false, s.held.pic, !s.plan)
+    if (s.focus === 'hole' && W0.hole && !s.held) return say(W0.hole.title, callSaid || (W0.hole.words + '. ' + W0.hole.price + '.'), false, null, false, !W0.demo && !callDone)
     if (s.msg && s.held) return say(AltR9.storesName(s.held.kind), '\\u201c' + s.held.words + '.\\u201d ' + s.msg)
     if (s.held) return say(AltR9.storesName(s.held.kind), '\\u201c' + s.held.words + '.\\u201d ' + AltR9.storesHint(s.held.kind))
     if (s.plan) return say('', '')
