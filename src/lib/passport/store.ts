@@ -1,7 +1,7 @@
 import 'server-only'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
-import { claimGuest, recordMove, validatePassport, type Passport } from './passport'
+import { claimGuest, countEarlierMoves, EARLIER_MOVES_MARK, recordMove, validatePassport, type Passport } from './passport'
 
 /** The signed-in player's passport, or null before their first claim. A stored record that fails the contract reads as null. */
 export async function passportOf(playerId: string): Promise<Passport | null> {
@@ -49,6 +49,33 @@ export async function recordCompletedMoveFor(player: { id: string; name: string 
       } else current = blankPassport(player)
       const { passport, counted } = recordMove(current, attemptId)
       if (!counted) return { counted }
+      const data = passport as unknown as Prisma.InputJsonValue
+      await tx.passport.upsert({ where: { playerId: player.id }, create: { playerId: player.id, data, claimedGuestIds: [] }, update: { data } })
+      return { counted }
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  )
+}
+
+/**
+ * cc-rs-qi-earlier-moves (Wendell, 2026-11-21, answer A): counts the moves this player completed before the glow existed,
+ * once. The record of them is the player's quest move logs (QuestMoveLog), the only completed moves stored before the sheet
+ * had a count; the deck's move attempts were never saved. The mark in the sheet makes a second call change nothing, and
+ * the transaction is serializable so two tabs cannot both count. Returns how many moves it added (0 when already counted).
+ */
+export async function countEarlierMovesFor(player: { id: string; name: string }): Promise<{ counted: number }> {
+  return db.$transaction(
+    async tx => {
+      const row = await tx.passport.findUnique({ where: { playerId: player.id } })
+      let current: Passport
+      if (row) {
+        const r = validatePassport(row.data)
+        if (!r.ok) return { counted: 0 }
+        current = r.passport
+      } else current = blankPassport(player)
+      if (current.sheet?.counted.includes(EARLIER_MOVES_MARK)) return { counted: 0 }
+      const moves = await tx.questMoveLog.count({ where: { playerId: player.id } })
+      const { passport, counted } = countEarlierMoves(current, moves)
       const data = passport as unknown as Prisma.InputJsonValue
       await tx.passport.upsert({ where: { playerId: player.id }, create: { playerId: player.id, data, claimedGuestIds: [] }, update: { data } })
       return { counted }
