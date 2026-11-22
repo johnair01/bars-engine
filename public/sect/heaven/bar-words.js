@@ -7,6 +7,8 @@ export const BAR = {
   offer: 'The voice you faced has what it needs from you. Before you sleep, do one act in your own life. Write it as a sentence: what you will do, who it reaches, by when, and what it costs you.',
   hint: 'Tonight I will… for… by… It costs me…',
   who: 'Write a role such as “my sister” where a name would go.',
+  sealAsk: 'First, draw your seal. A BAR has two sides: the mark you draw, and the moment you made it in. Draw with your finger or the mouse, or keep it plain.',
+  sealDone: 'This is my seal', sealPlain: 'Keep it plain',
   take: 'Take the BAR', later: 'Not now',
   label: 'The act you will do tonight',
   heldGuest: 'You hold the BAR in this tab. Closing the tab ends it. To keep it for tomorrow, and have me ask how it went, sign in.',
