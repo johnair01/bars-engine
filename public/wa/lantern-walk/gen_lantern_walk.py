@@ -7,7 +7,8 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); T = 32; W, H = 40, 24
 cols = [(70,120,60),(150,120,80),(40,90,160),(90,80,90),(100,70,40),(30,110,40),(200,80,120),(130,130,130),(240,200,40),
         (255,190,70),(120,85,50),(60,45,40)]
-img = Image.new('RGBA',(T*len(cols),T),(0,0,0,0)); d = ImageDraw.Draw(img)
+N=19; import random; random.seed(7)
+img = Image.new('RGBA',(T*N,T),(0,0,0,0)); d = ImageDraw.Draw(img)
 for i,c in enumerate(cols):
     x=i*T
     if i==5: d.ellipse((x+1,1,x+T-2,T-2),fill=c+(235,))
@@ -23,9 +24,21 @@ for i,c in enumerate(cols):
         d.rectangle((x,0,x+T-1,T-1),fill=cols[3]+(255,)); d.rectangle((x+6,4,x+25,T-1),fill=c+(255,)); d.ellipse((x+20,16,x+23,19),fill=(255,190,70,255))
     else:
         d.rectangle((x,0,x+T-1,T-1),fill=c+(255,))
+# extra tiles: 12,13 grass variants; 14-16 notice sign frames (VFD glow, animated); 17,18 halo frames (animated)
+for i in (12,13):
+    x=i*T; d.rectangle((x,0,x+T-1,T-1),fill=cols[0]+(255,))
+    for _ in range(14):
+        px,py=x+random.randrange(T),random.randrange(T); d.point((px,py),fill=(95,150,80,255) if i==12 else (55,100,48,255))
+for f,(a,b) in enumerate(((200,120),(255,170),(230,90))):
+    x=(14+f)*T; d.rectangle((x,0,x+T-1,T-1),fill=cols[0]+(255,)); d.rectangle((x+14,22,x+17,31),fill=(60,45,40,255))
+    d.rectangle((x+2,2,x+29,22),fill=(10,24,26,255),outline=(100,255,220,255))
+    for k,(yy) in enumerate((7,12,17)): d.line((x+6,yy,x+6+(14 if k!=2 else 9),yy),fill=(100,255,220,a),width=2)
+    for yy in range(4,21,3): d.line((x+3,yy,x+28,yy),fill=(0,0,0,b//4))
+for f,al in enumerate((26,44)):
+    x=(17+f)*T; d.rectangle((x,0,x+T-1,T-1),fill=(100,255,220,al))
 img.save(f'{HERE}/tiles.png')
 idx = lambda x,y: y*W+x
-ground=[1]*(W*H); detail=[0]*(W*H); coll=[0]*(W*H); floor=[0]*(W*H); o1=[0]*(W*H); o2=[0]*(W*H); start=[0]*(W*H)
+ground=[13 if (x*7+y*13)%5 else (14 if (x+y)%3==0 else 1) for y in range(H) for x in range(W)]; detail=[0]*(W*H); coll=[0]*(W*H); floor=[0]*(W*H); o1=[0]*(W*H); o2=[0]*(W*H); start=[0]*(W*H)
 for k in range(W):
     for i in (idx(k,0), idx(k,H-1)): ground[i]=4; coll[i]=4
 for k in range(H):
@@ -42,16 +55,20 @@ for y in range(10,15):
     for x in range(2,8): floor[idx(x,y)]=8
 path(8,12,22,12); path(22,12,30,12); path(22,12,22,5); path(22,5,30,5); path(22,12,22,19); path(22,19,30,19)
 start[idx(4,12)]=9
-# notice posts beside the door: three posts at x=10, y=9,12,15 (board tile on detail, collides)
-posts=[(10,9),(10,12),(10,15)]
-for (x,y) in posts: detail[idx(x,y)]=11; coll[idx(x,y)]=11
+# notice posts: glowing VFD signs flanking the lane, off every path (sign tile collides, the lane stays open)
+posts=[(10,10),(13,14),(16,10)]   # beside the lane (row 12), never on it
+for (x,y) in posts:
+    detail[idx(x,y)]=15; coll[idx(x,y)]=15
+    for dx in (-1,0,1):
+        for dy in (-1,0,1):
+            if (dx or dy): o1[idx(x+dx,y+dy)]=18
 # places: lantern post at the end of each lane
 places=[(31,5),(31,12),(31,19)]
 for (x,y) in places: detail[idx(x,y)]=10; coll[idx(x,y)]=10
 # a few trees and flowers for the walk
 for (x,y) in [(14,3),(17,3),(15,7),(26,8),(27,16),(15,17),(18,21),(34,8),(35,16),(36,3),(36,21)]:
     detail[idx(x,y)]=5; coll[idx(x,y)]=5; o1[idx(x,y-1)]=6
-for (x,y) in [(12,10),(13,14),(24,10),(25,14),(24,3),(26,20),(33,10),(33,14),(20,8),(20,16)]:
+for (x,y) in [(24,10),(25,14),(24,3),(26,20),(33,10),(33,14),(20,8),(20,16)]:
     detail[idx(x,y)]=7
 NOTICES=[
  ("Someone who writes","A friend has three lines that will not sit together and needs a second pair of eyes. They are waiting at the Reading Bench.",
@@ -76,7 +93,7 @@ def area(name,x,y,w,h,url):
 for n,((t,b,place,arr),(x,y),(px,py)) in enumerate(zip(NOTICES,posts,places),1):
     open(f'{HERE}/notice-{n}.html','w').write(PAGE.format(title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Agree with the friends at the door on one, then walk there together."))
     open(f'{HERE}/arrive-{n}.html','w').write(PAGE.format(title=html.escape(place),body=html.escape(arr),foot="Next time you visit, tell the table how it went."))
-    area(f"notice-{n}",x-1,y-1,3,3,f"notice-{n}.html")
+    area(f"notice-{n}",x-1,(y+1 if y<12 else y-1),3,1,f"notice-{n}.html")
     area(place,px-1,py-1,3,3,f"arrive-{n}.html")
 def tl(i,name,data,props=None):
     l={"id":i,"name":name,"type":"tilelayer","x":0,"y":0,"width":W,"height":H,"opacity":1,"visible":True,"data":data}
@@ -87,7 +104,7 @@ layers=[tl(1,"ground",ground),tl(2,"detail",detail),tl(3,"collisions",coll,[{"na
         {"id":8,"name":"objects","type":"objectgroup","x":0,"y":0,"opacity":1,"visible":True,"draworder":"topdown","objects":objs}]
 m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"orthogonal","renderorder":"right-down","tiledversion":"1.10.2",
    "tileheight":T,"tilewidth":T,"type":"map","version":"1.10","nextlayerid":9,"nextobjectid":oid,"layers":layers,
-   "tilesets":[{"firstgid":1,"name":"tiles","image":"tiles.png","imagewidth":T*len(cols),"imageheight":T,"tilewidth":T,"tileheight":T,"tilecount":len(cols),"columns":len(cols),"margin":0,"spacing":0}],
+   "tilesets":[{"firstgid":1,"name":"tiles","image":"tiles.png","imagewidth":T*N,"imageheight":T,"tilewidth":T,"tileheight":T,"tilecount":N,"columns":N,"margin":0,"spacing":0,"tiles":[{"id":14,"animation":[{"tileid":14,"duration":400},{"tileid":15,"duration":400},{"tileid":16,"duration":200},{"tileid":15,"duration":400}]},{"id":17,"animation":[{"tileid":17,"duration":800},{"tileid":18,"duration":800}]}]}],
    "properties":[{"name":"mapName","type":"string","value":"The Lantern Walk"}]}
 json.dump(m,open(f'{HERE}/lantern-walk.tmj','w'),separators=(',',':'))
 print(sorted(os.listdir(HERE)))
