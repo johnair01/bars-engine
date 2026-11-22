@@ -236,13 +236,17 @@ export const PUSH_BAND = { robe: [0.03, 0.08] }; // robe-run-1: the robe takes t
 export const PUSH = {}; // robe-run-1: exported so motion.js can put the robe back on the leg push (SKIRT.cap). shells round: no leg push, no settle; the skirt is a rigid piece skinned to the pelvis and thighs (his ruling 2026-11-02)
 // the legs under cloth are not drawn while the figure moves (a stride or a raise), so they cannot poke through it;
 // at the stand pose, the fit pose, they are drawn as the mask left them
+// robe-sprint-look-2 B (2026-11-22: "we need to reintroduce the trousers. they were invisible so they didn't peek through but there's dead air
+// inbetween the boots and the robe"): the trousers stay drawn in motion. The robe's leg push (motion.js SKIRT.passes) now keeps the robe off the legs, so
+// the trousers no longer need hiding to avoid poking through; `TROUSERS.shown = false` brings the old hiding back.
+export const TROUSERS = { shown: true };
 export function legsInMotion(X, moving) { const F = X.F; if (!F.indexMoving) return; F.mesh.geometry.setIndex(moving ? F.indexMoving : F.indexStill); F.legsHidden = !!moving;
   // fix 5 (his B on cult-shells-look-6: "I still see the thighs peeking through in both images while walking"): the trousers'
   // own thighs are cloth under cloth, so the part of them inside the robe's skirt (rest height above the hem + 6 cm) is not drawn either
   // the skirt's hem at this pose: its rim points (aEdgeH about 0), world positions, then each trouser point is hidden when it
   // lies above the hem line of the rim point nearest it across the floor, and is not drawn in motion, since the skirt covers it
   const rim = []; if (moving) for (const rp of X.parts) { if (rp.name !== 'robe') continue; const W = partWorld(rp), E = rp.geo.attributes.aEdgeH; for (let i = 0; i < E.count; i++) if (E.getX(i) < 0.004) rim.push(W[i * 3], W[i * 3 + 1], W[i * 3 + 2]); }
-  for (const pt of X.parts) { if (!/^trousers/.test(pt.name) || (moving && !rim.length)) continue; const g = pt.geo; if (!pt.indexStill) pt.indexStill = g.index.array.slice();
+  for (const pt of X.parts) { if (!/^trousers/.test(pt.name) || TROUSERS.shown || (moving && !rim.length)) continue; const g = pt.geo; if (!pt.indexStill) pt.indexStill = g.index.array.slice();
     const I = pt.indexStill, keep = [], hid = moving ? new Uint8Array(g.attributes.position.count) : null;
     if (moving) { const W = partWorld(pt), m = 0.05 * (F.stature / 1.75); /* fix 5b (his image: too aggressive, jagged cuts): hidden only above the HIGHEST hem point within 30 cm, plus 5 cm, so every cut edge is under cloth */ for (let i = 0; i < hid.length; i++) { let by = -1e9; for (let j = 0; j < rim.length; j += 3) { const d = (W[i * 3] - rim[j]) ** 2 + (W[i * 3 + 2] - rim[j + 2]) ** 2; if (d < 0.3 * 0.3 && rim[j + 1] > by) by = rim[j + 1]; } if (by > -1e8 && W[i * 3 + 1] > by + m) hid[i] = 1; } }
     for (let t = 0; t < I.length; t += 3) if (!moving || !(hid[I[t]] && hid[I[t + 1]] && hid[I[t + 2]])) keep.push(I[t], I[t + 1], I[t + 2]);
