@@ -2600,7 +2600,7 @@ async function starterEmber() { // the fire lifts one small coal, once: only a p
   if (embers().length) { burst(HEARTH_AT.clone().setY(0.5), 0xf0a24a); openBrush(); }
 }
 function openBrush() {
-  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar,
+  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar, first: lentCoal,
     onDip: () => brushFig && brushFig.ember(), onStroke: e => brushFig && brushFig.stroke(e), onSet: () => brushFig && brushFig.finish(),
     onClose: done => { brushFigureOff(); if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
   const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0))
@@ -2611,14 +2611,18 @@ function openBrush() {
   brushFigureOn();
 }
 /* Saving the BAR: the route mints its vibeulon and marks the ember written. A preview's demo ember writes on this page only. */
-async function writeBar({ ember, mark, demo }) {
+/* The strip's first question names the coal the fire lent (starterEmber): the player's first strip, dipped in an Earth ember
+   with no glow, before any ember of theirs is written or lit. Embers keep no extra fields (rules.ts EMBER_KEYS), so it is
+   read from that shape; a first check-in that also left a glowless Earth ember reads the same, and the line still fits. */
+const lentCoal = e => !!e && e.el === "earth" && embers().every(([, x]) => x.state === "held") && (() => { const r = embers().find(([k]) => k === e.id); return r && r[1].move === "earth_transcend" && r[1].glow == null; })();
+async function writeBar({ ember, mark, ask, demo }) {
   const el = MOVES[(embers().find(([k]) => k === ember) || [, {}])[1].move]?.[1];
   if (demo || !gardenId || storeDown) {
     if (demoPouch[ember]) demoPouch[ember] = { ...demoPouch[ember], state: "written", bar: "local-" + hkey() };
     return { ink: el && INK[el] ? INK[el].set : null };
   }
   let j;
-  try { j = await api("/api/between/" + gardenId + "/bar", { ember, mark }); }
+  try { j = await api("/api/between/" + gardenId + "/bar", { ember, mark, ask }); }
   catch (e) { throw new Error(e && e.code === "unavailable" ? "No connection. The strip waits until you are back online." : (e && e.message) || "It did not set. Try again in a moment."); }
   const p = myPouch && myPouch.embers ? myPouch : { embers: {} };
   myPouch = { ...p, embers: { ...p.embers, [ember]: { ...(p.embers[ember] || {}), state: "written", bar: j.barId } } };
