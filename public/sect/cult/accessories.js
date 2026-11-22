@@ -171,7 +171,7 @@ export function sashKnot(C, pc, L, H) {
     const bumpAt = (u, v) => amp(u) * (0.5 + 0.5 * Math.cos(v * 2 * Math.PI * folds));
     const at = (u, v) => { const y = yc + v * 2 * hw(u), a = th(u); return { p: Fm.on(a, y, surf(y, a) + gap + bumpAt(u, v)), n: Fm.out(a) }; };
     const t = u => 0.0007 * k + (g0 - 0.0007 * k) * (1 - smooth(0, 0.9, u));
-    const col = (u, v, s, c) => { const fold = 0.86 + 0.22 * Math.cos(v * 2 * Math.PI * folds) * (1 - smooth(0.15, 1, u)), press = 1 - 0.38 * Math.exp(-((u / 0.16) ** 2)), sh = fold * press * (s ? rim(v) : 0.55) * tone;
+    const col = (u, v, s, c) => { const fold = 0.86 + 0.22 * Math.cos(v * 2 * Math.PI * folds) * (1 - smooth(0.15, 1, u)), press = 1 - 0.38 * Math.exp(-((u / 0.12) ** 2)), sh = fold * press * (s ? rim(v) : 0.55) * tone;
       c.copy(base).multiplyScalar(sh); lift(c, base, sh); };
     return slab(at, t, 8, 8, col);
   };
@@ -362,10 +362,17 @@ export function stole(C, pc, L, H) {
     // smoothed top of it (a running maximum over 5 samples, then blurred): a long soft ribbon, never a stair of fins
     const NS = 90, rr = Array.from({ length: NS + 1 }, (_, i) => H.loftAt(L, thFront(yAt(i / NS)), yAt(i / NS)).r); let sm = rr.map((_, i) => Math.max(...rr.slice(Math.max(0, i - 5), i + 6)));
     for (let pass = 0; pass < 14; pass++) sm = sm.map((x, i) => (sm[Math.max(0, i - 1)] + 2 * x + sm[Math.min(NS, i + 1)]) / 4);
-    const lift = u => { const f = u * NS, i0 = Math.min(NS - 1, Math.floor(f)), t = f - i0; return Math.max(0, (sm[i0] - rr[i0]) * (1 - t) + (sm[i0 + 1] - rr[i0 + 1]) * t); };
-    const off = u => (0.005 + (lowStart ? 0 : 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront))))) * k + over + bump(yAt(u)) + lift(u); // round 2: 5 mm off the shell's measured envelope (pc.over is 0: the envelope already includes an over-robe)
+    // round 4f (his note on er-regalia-look-7, "separating"): over the shoulder the band turns through an angle, so the running
+    // maximum read the bust's radius a hand lower and held the band's top 4 to 6 cm off the shoulder. The lift fades in from the
+    // V's foot down; above it the band lies at its own offset on the measured envelope
+    const liftIn = u => { if (lowStart) return 1; const f = Math.min(1, Math.max(0, (yTop - yAt(u)) / (yTop - yFront))); return f * f * (3 - 2 * f); };
+    const lift = u => { const f = u * NS, i0 = Math.min(NS - 1, Math.floor(f)), t = f - i0; return liftIn(u) * Math.max(0, (sm[i0] - rr[i0]) * (1 - t) + (sm[i0 + 1] - rr[i0 + 1]) * t); };
+    // round 4g (his B on er-regalia-look-8, "tuck the shoulder end"): the band's top end turned over the far shoulder as a flat tab 15 mm
+    // off the robe. Over the first 12 percent the band narrows to 40 percent of its width and sinks 8 mm, so its end goes under the robe's collar
+    const tuck = u => lowStart ? 1 : (t => t * t * (3 - 2 * t))(Math.min(1, u / 0.12));
+    const off = u => (0.005 + (lowStart ? 0 : 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront))))) * k + over + bump(yAt(u)) + lift(u) - 0.008 * k * (1 - tuck(u)); // round 2: 5 mm off the shell's measured envelope (pc.over is 0: the envelope already includes an over-robe)
     const c = u => Fm.on(thAt(u), yAt(u), off(u)), across = u => Fm.along(thAt(u));
-    const w = u => W * (u > 0.95 ? 0.15 + 0.85 * (1 - u) / 0.05 : 1);
+    const w = u => W * (0.4 + 0.6 * tuck(u)) * (u > 0.95 ? 0.15 + 0.85 * (1 - u) / 0.05 : 1);
     const g = ribbon({ c, across, w, t: 0.003 * k, nu: 90, nv: 4, color, shade: (u, v) => 0.9 + 0.12 * Math.cos(u * 30 + v), hem: 0.006 * k, end: 0 });
     { const ps = put(C, H, merge([g]), 'stole', H.LAYER.sash + 0.4, { skirt: true, mat: { roughness: 0.6 } }); tagDrape(ps, 'sash', C.yWaist); parts.push(ps); } // the tails below the sash are drape; the part above it lies on the shell
     const tip = c(1), out = Fm.out(thAt(1)), drop = new THREE.SphereGeometry(1, 16, 12); drop.scale(0.026 * k, 0.04 * k, 0.008 * k);
