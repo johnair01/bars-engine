@@ -2,6 +2,7 @@
 // doc from GET /api/between/farm and sends one act at a time. Style: one toon ramp, from the stills' make/farm.js (council 2026-11-09-farm-3).
 import * as THREE from 'three';
 import { barCard, sealSvg } from '../bar-card.js';
+import { createKit } from './kit.js';
 
 const COLS = 14, ROWS = 11, STEP = 0.9, SLOTS = COLS * ROWS, GROW = 7;
 const Q = new URLSearchParams(location.search);
@@ -342,7 +343,7 @@ function drawShelf() {
 // lading-seal: the press lasts 0.3 s, then the wax lights over 0.15 s
 function sealFrame(now) { for (const s of seals) { const t = (now - s.t0) / 1000; if (t < 0) continue; const press = Math.min(1, t / 0.3), lightUp = Math.min(1, Math.max(0, (t - 0.3) / 0.15));
   s.wax.scale.setScalar(1.5 - 0.5 * press); s.wax.material.emissiveIntensity = 0.9 * lightUp; s.lit.intensity = 0.7 * lightUp; } }
-function setParcels(j) { PARCELS = (j && j.parcels) || []; SATCHEL = (j && j.satchelSeeds) || []; if (PSEL && !PARCELS.some(p => p.id === PSEL)) PSEL = null; drawShelf(); }
+function setParcels(j) { PARCELS = (j && j.parcels) || []; SATCHEL = (j && j.satchelSeeds) || []; kit.setSeeds(SATCHEL); if (PSEL && !PARCELS.some(p => p.id === PSEL)) PSEL = null; drawShelf(); }
 async function parcelAct(act) {
   const r = await fetch('/api/between/farm/parcel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: PSEL, act }) }); const j = await r.json().catch(() => ({}));
   if (!r.ok) { say(j.error || 'The parcel stayed sealed'); return; } PSEL = null; setParcels({ parcels: (j.world && j.world.parcels) || [], satchelSeeds: j.satchelSeeds });
@@ -388,6 +389,11 @@ async function api(body) {
 async function act(name, extra = {}) {
   if (name === 'till' || name === 'plant' || name === 'water' || name === 'reclear') { swing = 1; swingKind = name === 'till' ? 'till' : 'tend'; }
   const j = await api({ act: name, i: SEL, ...extra }); if (!j) return; if (name === 'pick') say('Picked. A harvest BAR and one vibeulon.'); else if (j.mint) say('One vibeulon minted.'); renderCard(); }
+// the tool box at the gate and the satchel ring (farm-toolbox-look-2): kit.js draws the chest, the panel and the ring
+const kit = createKit({ THREE, scene, camera, avatar, toon, mesh, PAL, V, FZ, GATE_W, $, esc, say, api, getFarm: () => FARM,
+  satchelOf: f => (f && f.kit && Array.isArray(f.kit.satchel) ? f.kit.satchel : ['tool:hoe', 'tool:watering-can']),
+  routeNear: (to, look) => { faceTo = look; routeTo(to); } });
+async function plantSeed(i, seedId) { swing = 1; swingKind = 'tend'; const j = await api({ act: 'plant-seed', i, seedId }); if (!j) return; SATCHEL = j.satchelSeeds || []; kit.setSeeds(SATCHEL); kit.seedGone(seedId); renderCard(); }
 function renderCard() {
   if (PSEL != null) { const pc = PARCELS.find(x => x.id === PSEL); if (!pc) PSEL = null; else { card.hidden = false; card.className = 'card';
     card.innerHTML = `<h2>${esc(pc.label)}</h2>${pc.line ? `<p>${esc(pc.line)}</p>` : ''}<p>The farm heard you.</p><div class="row"><button id="b-take">Put it in the satchel</button><button class="alt" id="b-not">Not yet</button><button class="alt" id="b-comp">Compost</button></div>`;
@@ -404,7 +410,7 @@ function renderCard() {
   on('b-x', () => { if (deep != null) closeDeepen(); else { SEL = null; selRing.visible = false; renderCard(); } }); on('b-deep', () => openDeepen(SEL)); on('b-till', () => act('till'));
   on('b-plant', () => { const bar = val('f-bar'), line = val('f-line'); if (!bar || !line) return say('A BAR and one line.'); act('plant', { barId: ($('f-bar').dataset.barId && $('f-bar').value === short(qbById($('f-bar').dataset.barId).sentence)) ? $('f-bar').dataset.barId : 'bar-' + bar.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) + '-' + Date.now().toString(36), line }); });
   card.querySelectorAll('[data-qb]').forEach(b => { b.onclick = () => { const q = qbById(b.dataset.qb); if (q) { if ($('f-bar')) { $('f-bar').value = short(q.sentence); $('f-bar').dataset.barId = q.id; } openCard(q); } }; });
-  for (const b of card.querySelectorAll('[data-seed]')) b.onclick = async () => { swing = 1; swingKind = 'tend'; const j = await api({ act: 'plant-seed', i: SEL, seedId: b.dataset.seed }); if (!j) return; SATCHEL = j.satchelSeeds || []; renderCard(); };
+  for (const b of card.querySelectorAll('[data-seed]')) b.onclick = () => plantSeed(SEL, b.dataset.seed);
   on('b-water', () => act('water')); on('b-reclear', () => { const line = val('f-line'); if (!line) return say('One line about what kept you away.'); act('reclear', { line }); });
   on('b-ripe', () => { const line = val('f-line'); if (!line) return say('One line about what you did.'); act('ripen', { line }); });
   on('b-aligned', () => { const line = val('f-line'); if (!line) return say('One line from your day.'); act('water', { aligned: 'line:' + line.slice(0, 60) }); }); on('b-pick', () => act('pick'));
@@ -413,9 +419,11 @@ function renderCard() {
 // ---------- input: tap a slot to walk to it and choose ----------
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 renderer.domElement.addEventListener('pointerdown', e => {
-  if (deep != null) return; ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); { const hit = ray.intersectObjects(shelfGroup.children, true).find(h => h.object.userData.parcel); if (hit) { PSEL = hit.object.userData.parcel; SEL = null; selRing.visible = false; renderCard(); return; } } const p = V(); if (!ray.ray.intersectPlane(groundPlane, p)) return;
+  if (deep != null) return; ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); { if (ray.intersectObject(kit.chest, true).length && !kit.isOpen()) { SEL = null; selRing.visible = false; PSEL = null; renderCard(); kit.open(); return; } if (kit.isOpen()) return; }
+  { const hit = ray.intersectObjects(shelfGroup.children, true).find(h => h.object.userData.parcel); if (hit) { PSEL = hit.object.userData.parcel; SEL = null; selRing.visible = false; renderCard(); return; } } const p = V(); if (!ray.ray.intersectPlane(groundPlane, p)) return;
   const c = Math.round(p.x / STEP + (COLS - 1) / 2), r = Math.round(p.z / STEP + (ROWS - 1) / 2); if (c < 0 || c >= COLS || r < 0 || r >= ROWS) { faceTo = null; routeTo(V(Math.max(STREAM_X + 1.4, Math.min(10, p.x)), 0, Math.max(-7, Math.min(9, p.z)))); return; }
-  SEL = r * COLS + c; selRing.visible = true; const [x, z] = slotXZ(SEL); selRing.position.set(x, 0.13, z); walkTo(SEL); renderCard(); });
+  SEL = r * COLS + c; selRing.visible = true; const [x, z] = slotXZ(SEL); selRing.position.set(x, 0.13, z); walkTo(SEL); renderCard();
+  const hs = kit.heldSeed(); if (hs) { const sl = FARM.slots[SEL]; if (sl && sl.state === 'tilled') plantSeed(SEL, hs); else say(sl ? 'This bed is taken.' : 'Till this bed first, then plant.', 3000); } });
 $('homeBtn').onclick = () => { location.href = '/between/'; };
 
 // ---------- loop ----------
@@ -428,7 +436,7 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
   // the gate swings open as she comes near it, and closes behind her
   const near = Math.hypot(p.x, p.z - FZ) < 1.9; for (const g of gateLeaves) { g.open += ((near ? 1 : 0) - g.open) * Math.min(1, dt * 4); g.hinge.rotation.y = g.s * g.open * 1.45; }
   if (selRing.visible) selRing.scale.setScalar(1 + Math.sin(performance.now() / 300) * 0.06);
-  sealFrame(performance.now()); frame(dt); renderer.render(scene, camera); requestAnimationFrame(tick); }
+  sealFrame(performance.now()); kit.frame(dt, deep != null); frame(dt); renderer.render(scene, camera); requestAnimationFrame(tick); }
 
 // ---------- first entry: the whole field from above; later, a short walk-in ----------
 (async () => {
