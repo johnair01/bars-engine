@@ -10,7 +10,7 @@ import { COPY as DECK_COPY, applyCopy as applyDeckCopy } from "./friendcraft/dec
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
-import { wheelSvg } from "./wheel.js";   // the Alchemy Wheel over the fire while you sit (pass 2026-11-20-alchemy-wheel-ad, slice 1)
+import { wheelSvg, routeOptions, dealCard, Cell, ELEMENT_CHANNEL } from "./wheel.js";   // the Alchemy Wheel over the fire while you sit (pass 2026-11-20-alchemy-wheel-ad, slices 1+2)
 import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the spark over it (pt1-cushion-first)
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
 import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
@@ -2577,15 +2577,50 @@ const HM_LINES = { first: "When something stirs you, give it to the fire. What's
   home: "Embers you keep here go with you. In a room you share, one can become a lantern for your home together." };
 let hm = null, hmGone = null, hmK = 0, hmUp = 0; // the moment while you sit by the fire; the one just ended, its embers sinking home
 const wheelEl = document.createElement("div"); wheelEl.id = "wheel"; wheelEl.hidden = true;
-wheelEl.style.cssText = "position:fixed;top:6vh;left:50%;transform:translateX(-50%);width:min(300px,62vw);z-index:40;pointer-events:none;filter:drop-shadow(0 6px 18px rgba(0,0,0,.55))";
+wheelEl.style.cssText = "position:fixed;top:6vh;left:50%;transform:translateX(-50%);width:min(300px,62vw);z-index:40;filter:drop-shadow(0 6px 18px rgba(0,0,0,.55))";
 document.body.appendChild(wheelEl);
-/** The Wheel shows the ember you hold or sit with, at its state; with none chosen it shows the instrument at rest. */
+/** The Wheel shows the ember you hold or sit with, at its state; with none chosen it shows the instrument at rest.
+   Slice 2: tap a satisfaction lens → compute routeOptions roads → light them → deal move card. */
 function wheelSync() {
   if (!hm) { wheelEl.hidden = true; wheelEl._k = ""; return; }
   const m = hm.motes.find(x => x.state === "lip") || hm.motes.find(x => x.state === "held");
-  const element = m && m.e ? m.e.feel : null, level = m && m.e ? riseOf(m.e) : 0, k = `${element}:${level}`;
-  wheelEl.hidden = false; if (wheelEl._k !== k) { wheelEl._k = k; wheelEl.innerHTML = wheelSvg({ element, level }); }
+  const element = m && m.e ? m.e.feel : null, level = m && m.e ? riseOf(m.e) : 0;
+  // Track the ember's channel + state for route computation
+  const channel = element ? ELEMENT_CHANNEL[element] : null;
+  if (channel !== wheelChannel || level !== wheelLevel) {
+    wheelChannel = channel;
+    wheelLevel = level;
+    // Reset target if the ember changed
+    if (wheelTarget) { wheelTarget = null; wheelRoads = []; wheelCard = null; }
+  }
+  const k = `${element}:${level}:${wheelTarget}:${wheelCard ? wheelCard.name : ""}:${wheelRoads.length}`;
+  wheelEl.hidden = false;
+  if (wheelEl._k !== k) { wheelEl._k = k; wheelEl.innerHTML = wheelSvg({ element, level, target: wheelTarget, roads: wheelRoads, card: wheelCard }); }
 }
+
+/* ── slice 2 UI ──*/
+wheelEl.addEventListener('click', e => {
+  const targetLens = e.target.closest('.wh-lens');
+  if (!targetLens) return;
+  const channel = targetLens.dataset.lens;
+  if (!channel) return;
+
+  wheelTarget = channel;
+  const fromCell = new Cell(wheelChannel || "joy", wheelLevel || 0);
+  wheelRoads = routeOptions(fromCell, channel);
+  wheelCard = dealCard(wheelChannel || "joy", wheelLevel || 0, channel);
+  cardShownAt = performance.now();
+  // auto-hide card after 3 seconds
+  setTimeout(() => { wheelCard = null; wheelTarget = null; wheelRoads = []; }, W_CARD_MS);
+});
+
+let wheelTarget = null;   // channel the player named (tapped lens)
+let wheelRoads = [];      // routeOptions results array
+let wheelCard = null;   // dealCard result
+let cardShownAt = 0;      // ms when card was dealt
+const W_CARD_MS = 3000;   // card shown for 3s before auto-hide
+let wheelChannel = null;  // channel of the ember currently shown
+let wheelLevel = 0;       // satisfaction state of the ember currently shown
 const hmEl = document.createElement("div"); hmEl.id = "hm"; hmEl.className = "hm"; hmEl.hidden = true; hmEl.setAttribute("role", "group"); hmEl.setAttribute("aria-label", "By the fire"); document.body.appendChild(hmEl);
 const hmGroup = new THREE.Group(); scene.add(hmGroup);
 const hmGlowMat = (c, o) => new THREE.SpriteMaterial({ map: moteMat.map, color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false });
@@ -2642,7 +2677,9 @@ function hmBegin() {
 }
 function hmEnd() {
   if (!hm) return;
-  const h = hm; fsEnd(h); hm = null; wheelSync(); hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
+  const h = hm; fsEnd(h); hm = null; wheelSync(); // resets wheel target/roads/card and channel/level
+  wheelTarget = null; wheelRoads = []; wheelCard = null;
+  hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
   if (h.L && (h.lid || !h.L.lit)) { hmGroup.remove(h.L.g); h.L = null; } // a lantern made is the room's now; one not lit folds away
   for (const m of h.motes) if (m.state !== "lit") m.state = "sink";
   const th = h.lid && things.get(h.lid); if (th) th.group.visible = true;
