@@ -6,7 +6,8 @@ Run it with the bpy venv's Python (README). It strips the figure's own armature,
 figure's joints (fitmeta.py holds the landmark table of content/ontology-game/cave/character.py figures), binds the
 mesh, makes the game skeleton, runs rig_check, and retargets the clip with retarget.py (cycle found by pose
 matching, head, torso and shoulders levelled). With --run it retargets a second clip, a run, as action MocapRun
-(cycle window 55-110 source frames). Writes OUTDIR/mocap.blend (MocapWalk, and MocapRun) and OUTDIR/rig_mocap.json.
+(cycle window 55-110 source frames). Each clip is scored against its source BVH (check.py, score_math.py) and the
+step stops if a score fails. Writes OUTDIR/mocap.blend (MocapWalk, and MocapRun) and OUTDIR/rig_mocap.json.
 Every step is a subprocess, so a failure names the step. The CMU BVH is not stored in the repo (licence: README)."""
 import json, pathlib, subprocess, sys
 
@@ -50,10 +51,13 @@ def main():
     if not rc.get("pass"):
         sys.exit(f"rig_check errors: {rc.get('errors')}")
     sh("retarget", [HERE / "retarget.py", "--", b("game"), bvh, b("mocap")])
-    _, chk = sh("check", [HERE / "check.py", "--", b("mocap")])
+    _, chk = sh("check", [HERE / "check.py", "--", b("mocap"), "--bvh", bvh])
     if run:
         sh("retarget run", [HERE / "retarget.py", "--", b("mocap"), run, b("mocap"), "--action", "MocapRun", "--period", "55,110"])
-        _, chk["run"] = sh("check run", [HERE / "check.py", "--", b("mocap"), "MocapRun"])
+        _, chk["run"] = sh("check run", [HERE / "check.py", "--", b("mocap"), "MocapRun", "--bvh", run])
+    for name, row in (("walk", chk), ("run", chk.get("run"))):
+        if row and not row["score"]["pass"]:
+            sys.exit(f"{name} score failed: {row['score']['fails']}")
     chk["rig_check_warnings"] = rc.get("warnings", [])
     (out / "rig_mocap.json").write_text(json.dumps(chk, indent=1))
     print(json.dumps(chk))

@@ -155,7 +155,7 @@ for fr in frames: fr['_hips'].z+=dz
 rebuild()
 print('hips z shift',round(dz,3),'ratio',round(ratio,4))
 # key it
-act=bpy.data.actions.new(ACT); act['travel_m']=round(travel_m,4); act.use_fake_user=True  # a second clip keeps the first
+act=bpy.data.actions.new(ACT); act['travel_m']=round(travel_m,4); act['src_start']=start; act['src_period']=P; act.use_fake_user=True  # a second clip keeps the first
 T.animation_data_create(); T.animation_data.action=act
 for pb in T.pose.bones: pb.rotation_mode='QUATERNION'
 prevq={}
