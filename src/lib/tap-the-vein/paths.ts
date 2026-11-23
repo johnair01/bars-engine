@@ -32,7 +32,7 @@ export const TTV_PATHS: readonly TtvPath[] = [
   { face: 'shaman', lights: 'sadness', move: 'Write one more line under the one that burns', prompt: 'The next line', take: { kind: 'free-write' }, stamp: '' },
   { face: 'architect', lights: 'fear', move: 'Change one rule of the sitting for today', prompt: 'The rule, and who it is for', take: { kind: 'task', source: 'path-architect', day: 'today' }, stamp: 'Rule for today: ' },
   { face: 'challenger', lights: 'anger', move: 'Write a plain yes or no, with its cost', prompt: 'Yes or no, and what it costs', take: { kind: 'task', source: 'path-challenger', day: 'today' }, stamp: 'Plain answer: ' },
-  { face: 'regent', lights: 'flat', move: 'Name what you will carry, and give it a day', prompt: 'What you carry, and the day', take: { kind: 'task', source: 'path-regent', day: 'tomorrow' }, stamp: 'Carry: ' },
+  { face: 'regent', lights: 'flat', move: 'Pick one thing from today to finish tomorrow', prompt: 'The thing you will finish tomorrow', take: { kind: 'task', source: 'path-regent', day: 'tomorrow' }, stamp: 'Carry: ' },
   { face: 'diplomat', lights: 'joy', move: 'Name one person who should hear it, and send the line', prompt: 'Who, and the line', take: { kind: 'task', source: 'path-diplomat', day: 'today' }, stamp: 'Tell: ' },
   { face: 'sage', lights: 'unsure', move: 'Name the role you want out of, and step outside it', prompt: 'The role', take: { kind: 'task', source: 'path-sage', day: 'today' }, stamp: 'Step outside: ' },
 ]

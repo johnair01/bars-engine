@@ -1,0 +1,20 @@
+version: 1
+set_by: null
+at: null
+faders:
+  length:
+    value: 3
+    low: one short sentence
+    high: a full paragraph
+  figure:
+    value: 2
+    low: plain words only
+    high: images and metaphor
+  warmth:
+    value: 6
+    low: cool and exact
+    high: warm and close
+  address:
+    value: 7
+    low: about the world
+    high: to the player as you

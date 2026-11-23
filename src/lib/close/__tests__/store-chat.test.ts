@@ -12,10 +12,11 @@ vi.mock('@/lib/board/session-write', () => ({
     return { written: docs.map(d => d.docId), same: 0, refused: [] }
   },
 }))
+vi.mock('@/lib/board/owner', () => ({ boardOwnerId: () => 'owner-1' }))
 vi.mock('@/lib/work/queue', () => ({ pushTicket: async (_db: unknown, t: unknown) => { pushed.push(t) } }))
 
 import { closeRead, closeSay } from '../chat'
-import { loadClose, saveClose, openClose, collectDay } from '../store'
+import { loadClose, saveClose, openClose, collectDay, collectKept } from '../store'
 import { morningSeed } from '../seed'
 import { newClose, type CloseRecord } from '../types'
 import { skippedLine } from '../render'
@@ -41,6 +42,28 @@ describe('close store', () => {
     expect(await loadClose('2026-11-14')).toMatchObject({ date: '2026-11-14' })
     expect(await loadClose('2026-11-13')).toBeNull()
     expect(await saveClose(fakeDb(), r)).toBeNull()
+  })
+})
+
+describe('kept things', () => {
+  const keptDb = (rows: { id: string; originalText: string }[]) => ({ workTicket: { findMany: async () => [] }, boardSave: {}, tapTheVeinTask: { findMany: async () => rows } }) as never
+  it('reads the morning tasks into a new close and lights a lantern on done', async () => {
+    const db = keptDb([{ id: 't1', originalText: ' Call Dana ' }, { id: 't2', originalText: 'Draw the gate' }])
+    expect(await collectKept(db, '2026-11-21')).toEqual([{ id: 't1', title: 'Call Dana' }, { id: 't2', title: 'Draw the gate' }])
+    const out = await closeSay(db, 'kept 1 done', '2026-11-21')
+    expect(out.error).toBeUndefined()
+    expect((await loadClose('2026-11-21'))!.wins['kept-t1']).toBe(1)
+  })
+  it('opens without them when the morning cannot be read', async () => {
+    const bad = { workTicket: { findMany: async () => [] }, boardSave: {}, tapTheVeinTask: { findMany: async () => { throw new Error('x') } } } as never
+    expect(await collectKept(bad, '2026-11-21')).toEqual([])
+    expect((await openClose(bad, '2026-11-22')).kept).toEqual([])
+  })
+  it('a close begun before kept cards existed picks them up once', async () => {
+    const old = newClose('2026-11-20', [], '2026-11-20T02:00:00Z'); delete (old as { kept?: unknown }).kept
+    await saveClose(fakeDb(), old)
+    const r = await openClose(keptDb([{ id: 't9', originalText: 'Walk' }]), '2026-11-20')
+    expect(r.kept).toEqual([{ id: 't9', title: 'Walk' }])
   })
 })
 

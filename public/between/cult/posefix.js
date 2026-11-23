@@ -27,7 +27,7 @@ const saveBones = F => ({ q: Object.fromEntries(Object.entries(F.bones).map(([k,
 const loadBones = (F, s) => { for (const k in s.q) F.bones[k].quaternion.copy(s.q[k]); F.bones.hips.position.copy(s.hp); F.root.position.copy(s.rp); F.root.updateMatrixWorld(true); F.mesh.skeleton.update(); F.poseName = s.name; };
 
 // pt: the bell part (skinned, bind-space positions); B: its build (nR, nT rings, s0, s1, r0); s: 'L' or 'R'
-export function bellFall(C, pt, B, s) {
+export function bellFall(C, pt, B, s, grav = false) {
   const F = C.F, k = C.k, mesh = pt.mesh, g = mesh.geometry, n = g.attributes.position.count, saved = saveBones(F);
   pose(F, 'raise');
   const e = wp(F.bones['elbow' + s]), w = wp(F.bones['wrist' + s]), head = wp(F.bones.head), ax = w.clone().sub(e).normalize();
@@ -45,7 +45,7 @@ export function bellFall(C, pt, B, s) {
       // (the rest is taken up in the gathers), its radius grows to about 10 cm, and its centre moves away from the head by
       // most of that growth, so the side toward the head stays close to the arm
       const f = (a - hold) / (L - hold), drop = (a - hold) * 0.42 * (1 + 0.12 * f * Math.sin(2 * th + 1.0) + 0.06 * f * Math.sin(5 * th + 2.0)), r = B.r0 * 1.22 + (0.1 * k - B.r0 * 1.22) * Math.pow(f, 0.7);
-      const gather = 1 + 0.10 * Math.sin(9 * th + 3.1 * f) * Math.min(1, f * 3), c = top.clone().addScaledVector(dn, drop).addScaledVector(out, (r - B.r0 * 1.22) * 0.75);
+      const gather = 1 + 0.10 * Math.sin(9 * th + 3.1 * f) * Math.min(1, f * 3), c = top.clone().addScaledVector(dn, drop).addScaledVector(out, (r - B.r0 * 1.22) * (grav ? 1.0 : 0.75)); // round 4c: with gravity the side toward the head stays on the arm, all the growth hangs away from it
       const q = c.addScaledVector(out, r * gather * Math.cos(th)).addScaledVector(fw, -r * gather * Math.sin(th) * 0.9); // the angle runs the other way: the fold reverses the tube, and the outside must stay the outside
       const mix = sstep(0, 0.06, f); fall.copy(rp).lerp(q, mix); T.set([fall.x, fall.y, fall.z], i * 3); } }
   // world normals of the fallen shape, then both into bind space with this pose's transforms
