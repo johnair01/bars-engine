@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   avatarConfigForTexture,
+  requestedTextureIds,
   resolveRequestedWoka,
   resolveWokaForPlayer,
   textureId,
@@ -82,5 +83,25 @@ describe('wa woka catalog', () => {
       textureId('lamenth', 'still-point'),
     ])
     expect(looks.map((texture) => texture.id)).toEqual([textureId('lamenth', 'still-point')])
+  })
+
+  it('reads both query shapes WorkAdventure and proxies send', () => {
+    const bracket = new URLSearchParams({ 'characterTextureIds[]': textureId('argyra', 'bold-heart') })
+    const repeated = new URLSearchParams([
+      ['characterTextureIds', textureId('argyra', 'bold-heart')],
+      ['characterTextureIds', textureId('lamenth', 'still-point')],
+    ])
+    expect(requestedTextureIds(bracket)).toEqual([textureId('argyra', 'bold-heart')])
+    expect(requestedTextureIds(repeated)).toEqual([
+      textureId('argyra', 'bold-heart'),
+      textureId('lamenth', 'still-point'),
+    ])
+  })
+
+  it('splits comma-separated ids and drops blanks', () => {
+    const params = new URLSearchParams({
+      characterTextureIds: `${textureId('argyra', 'bold-heart')}, , ${textureId('argyra', 'bold-heart')}`,
+    })
+    expect(requestedTextureIds(params)).toEqual([textureId('argyra', 'bold-heart')])
   })
 })

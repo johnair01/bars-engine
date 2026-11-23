@@ -178,6 +178,13 @@ npm run wa:woka
 Replace those palette variants with real ARDS layer sheets when they exist; the
 Admin API only reads the catalog and does not care how the art was made.
 
+**CORS for sheets:** WorkAdventure's `WokaImage` loads textures with
+`crossOrigin="use-credentials"`. A credentialed image load rejects
+`Access-Control-Allow-Origin: *`, so `/wa/woka/*` must reflect the world origin
+and send `Access-Control-Allow-Credentials: true` (see `next.config.ts`).
+Without this, WA logs "One of your Woka textures is invalid for this world" and
+bounces back to the picker even though the PNG returns 200.
+
 ### 4.2 Tiles and props (maps)
 
 1. Put the source sheet in the world folder (`src16/` beside the map).

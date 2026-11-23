@@ -13,6 +13,7 @@ import { WA_ADMIN_API_URL } from '@/lib/wa/config'
 import { canEditForPlayer, emailForPlayer, tagsForPlayer } from '@/lib/wa/player'
 import {
   loadWokaCatalog,
+  requestedTextureIds,
   resolveRequestedWoka,
   resolveWokaForPlayer,
   wokaDetail,
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
 
   const userIdentifier = request.nextUrl.searchParams.get('userIdentifier') ?? ''
   const playUri = request.nextUrl.searchParams.get('playUri') ?? ''
-  const requested = request.nextUrl.searchParams.getAll('characterTextureIds')
+  const requested = requestedTextureIds(request.nextUrl.searchParams)
 
   if (!userIdentifier) return Response.json(anonymousResponse('', playUri, requested))
 

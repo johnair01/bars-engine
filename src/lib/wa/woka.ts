@@ -83,6 +83,34 @@ export function textureId(nationKey: string, archetypeKey: string): string {
 }
 
 /**
+ * Read WorkAdventure's `characterTextureIds` query parameter.
+ *
+ * WA's server uses axios, which serialises arrays as `characterTextureIds[]=...`
+ * by default. Some proxies and manual calls use the bare repeated key. Accept
+ * both (plus comma-separated values) so the Admin API does not silently see an
+ * empty list and reject a valid anonymous pick.
+ */
+export function requestedTextureIds(searchParams: {
+  getAll(name: string): string[]
+}): string[] {
+  const raw = [
+    ...searchParams.getAll('characterTextureIds'),
+    ...searchParams.getAll('characterTextureIds[]'),
+  ]
+  const seen = new Set<string>()
+  const ids: string[] = []
+  for (const value of raw) {
+    for (const id of value.split(',')) {
+      const trimmed = id.trim()
+      if (!trimmed || seen.has(trimmed)) continue
+      seen.add(trimmed)
+      ids.push(trimmed)
+    }
+  }
+  return ids
+}
+
+/**
  * The textures an unauthenticated client already chose, limited to the
  * catalog. WorkAdventure keeps an anonymous pick in localStorage because
  * there is no player row to save it to; the socket upgrade sends it back as

@@ -37,7 +37,22 @@ const nextConfig: NextConfig = {
   },
   // Tap the Vein's embed is framed only by the Council Board on this same site (/board/council).
   async headers() {
-    return [{ source: "/tap-the-vein/embed", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }];
+    return [
+      { source: "/tap-the-vein/embed", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] },
+      // WorkAdventure's WokaImage loads sheets with crossOrigin="use-credentials".
+      // `Access-Control-Allow-Origin: *` is rejected for credentialed image loads, which
+      // made every sheet "invalid for this world" and bounced players back to the picker.
+      // Reflect the world origin and allow credentials; keep Vary so caches do not mix origins.
+      {
+        source: "/wa/woka/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "https://world.masteringallyship.com" },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Methods", value: "GET, HEAD, OPTIONS" },
+          { key: "Vary", value: "Origin" },
+        ],
+      },
+    ];
   },
   // Legacy /hand route renamed to /vault (see .specify/specs/hand-vault-rename).
   // 301-redirect old links/bookmarks, preserving sub-paths and query params.
