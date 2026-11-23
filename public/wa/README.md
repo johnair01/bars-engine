@@ -12,6 +12,23 @@ Each folder here is one map (or one world) that WorkAdventure loads over HTTP. T
 Run one with `python3 gen_<map>.py` (needs Pillow). Each generator checks itself before writing anything and exits
 non-zero rather than emit a map it cannot vouch for.
 
+## Two contracts, both enforced
+
+A map has to satisfy the client (`wa_export.py`, below) **and** the art (`check_assets.py`, and
+[`docs/WA_ASSET_CONTRACT.md`](../../docs/WA_ASSET_CONTRACT.md)): square 32 px tiles, embedded tilesets whose
+image is beside the map, `columns` and `tilecount` that agree with that image, every gid the layers use coming
+from a tileset in that map, walkers that are 96×128 (3 frames × 4 facings), and a `LICENSE*` file under the
+world's folder. A generator runs both checks before it writes anything. Either can be run by hand:
+
+```sh
+python3 public/wa/check_assets.py public/wa/calrunian-dojo --lang dojo-language.json
+python3 public/wa/check_assets.py --woka public/wa/calrunian-dojo/sprites/monk-woka.png
+```
+
+The dojo is the exception to "generated": its map is owned by the WorkAdventure map editor
+(`dojo-language.json` says `owner: editor`), so `gen_dojo.py` refuses to overwrite it and seeds into a scratch
+directory instead.
+
 ## The rules WorkAdventure reads that Tiled does not show
 
 `wa_export.py` holds these, applies them in `apply()`, and re-checks them in `check()`. A generator calls both just

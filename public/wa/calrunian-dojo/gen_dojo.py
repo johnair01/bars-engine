@@ -14,6 +14,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
 from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits  # noqa: E402
+from check_assets import check_language as assets_language, check_map as assets_map, check_woka as assets_woka, fatal as assets_fatal  # noqa: E402
 args = sys.argv[1:]
 SEED = int(args[args.index('--seed') + 1]) if '--seed' in args else 7
 OUT = args[args.index('--out') + 1] if '--out' in args else HERE
@@ -250,9 +251,12 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
 # WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
 # collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
 wa_apply(tmj)
-_wa = wa_check(tmj) + wa_exits(tmj, OUT)
+# The map half of the contract (five WorkAdventure rules) and the art half (docs/WA_ASSET_CONTRACT.md):
+# both fail the build, so a map that WorkAdventure would reject, or whose tiles no longer fit the world,
+# is never written in the first place.
+_wa = wa_check(tmj) + wa_exits(tmj, OUT) + assets_fatal(assets_language(LANG, HERE)) + assets_map(tmj, OUT)
 if _wa:
-    print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
+    print('RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 json.dump(tmj, open(os.path.join(OUT, 'calrunian-dojo.tmj'), 'w'), separators=(',', ':'))
 
 # ---- walker sheets (WorkAdventure woka: 3 frames x [down, left, right, up], 32 px) ----
@@ -267,8 +271,11 @@ def woka(src, out):
     return sheet
 
 
-woka('src16/MasterSheet.png', 'sprites/yun-woka.png')
+yun = woka('src16/MasterSheet.png', 'sprites/yun-woka.png')
 monk = woka('src16/MonkSheet.png', 'sprites/monk-woka.png')
+_wa = assets_woka([os.path.join(OUT, 'sprites/yun-woka.png'), os.path.join(OUT, 'sprites/monk-woka.png')])
+if _wa:
+    print('RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 
 # ---- render ----
 def tile_img(g):

@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); T = 32; W, H = 40, 24
 sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
 from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits  # noqa: E402
+from check_assets import check_map as assets_map  # noqa: E402
 cols = [(70,120,60),(150,120,80),(40,90,160),(90,80,90),(100,70,40),(30,110,40),(200,80,120),(130,130,130),(240,200,40),
         (255,190,70),(120,85,50),(60,45,40)]
 N=27; import random; random.seed(7)
@@ -147,7 +148,7 @@ m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"or
 # WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
 # collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
 wa_apply(m)
-_wa = wa_check(m) + wa_exits(m, HERE)
+_wa = wa_check(m) + wa_exits(m, HERE) + assets_map(m, HERE)
 if _wa:
     print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 
