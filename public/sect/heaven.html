@@ -36,9 +36,9 @@
 <div class="hud" id="hud"><b id="where">The road</b><span id="what">The summit is in view from the first step.</span></div>
 <div class="stops" id="stops"></div>
 <div class="views"><button id="watchBtn">Walk to the Watch</button><button id="crestBtn">Climb to the crest</button><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
-<div class="hint">WASD or arrows to walk, Shift to run, Space to jump; tap the ground to walk there; drag to look round.</div>
+<div class="hint">WASD or arrows to walk, Shift to run, Space to jump, I to look inward (the belly glow shows while you stay still); tap the ground to walk there; drag to look round.</div>
 <div class="stick" id="stickBase" aria-label="Walk stick"><div id="stickKnob"></div></div>
-<div class="pads"><button id="runBtn" aria-pressed="false">Run</button><button id="hopBtn">Jump</button></div>
+<div class="pads"><button id="inwardBtn" aria-pressed="false">Look inward</button><button id="runBtn" aria-pressed="false">Run</button><button id="hopBtn">Jump</button></div>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -202,6 +202,11 @@ document.getElementById('topBtn').onclick = () => { topView = !topView; S.getObj
 const input = { keys: new Set(), target: null, run: false, jump: false, stick: null };
 touchStick(input, document.getElementById('stickBase'), document.getElementById('stickKnob')); forgetKeysOnBlur(input);
 addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === ' ') { e.preventDefault(); if (!e.repeat) input.jump = true; return; } input.keys.add(e.key.toLowerCase()); });
+// The introspect switch: the belly glow shows only while she looks inward, and any step, jump or tap on the ground ends it.
+let inward = false;
+function setInward(on) { inward = on; belly?.introspect(on); document.getElementById('inwardBtn').setAttribute('aria-pressed', on); }
+document.getElementById('inwardBtn').onclick = () => setInward(!inward);
+addEventListener('keydown', e => { if (e.target.tagName !== 'INPUT' && !e.repeat && e.key.toLowerCase() === 'i') setInward(!inward); });
 document.getElementById('hopBtn').onpointerdown = e => { e.preventDefault(); input.jump = true; };
 document.getElementById('runBtn').onclick = e => { input.run = !input.run; e.currentTarget.setAttribute('aria-pressed', input.run); };
 addEventListener('keyup', e => input.keys.delete(e.key.toLowerCase()));
@@ -235,6 +240,7 @@ function simulate(dt) {
   if (dressAll) dressAll(dt);
   for (const h of frameHooks) h(dt);
   if (walker) walker.update(dt);
+  if (inward && ([...input.keys].some(k => k !== 'i') || input.target || input.stick || input.jump)) setInward(false);
   if (belly) belly.update(dt);
   placeSun(sun, A.position);
   S.fog = topView ? null : fog; R.render(S, topView ? top : cam);
@@ -278,7 +284,7 @@ function shot(name) {
   rig.free = true; cam.position.copy(w(ANCHOR_VIEW.cam)); orbit.target.copy(w(ANCHOR_VIEW.look)); orbit.update();
   hud.where.textContent = 'The great court'; hud.what.textContent = 'Inside the gate, at eye height, looking up the court to the hall.'; input.target = null;
 }
-window.heaven = { belly: () => belly, introspect: on => belly?.introspect(on), rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
+window.heaven = { belly: () => belly, introspect: on => setInward(!!on), rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
 if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, stop: Q.get('stop'), hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
 </script>
