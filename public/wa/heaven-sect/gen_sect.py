@@ -52,8 +52,19 @@ def add_sheet(name, big, fn):
     firstgid += cols * rows
 
 
+def motes_sheet():
+    """Three 16 px frames of a spirit: a soft water-teal light (#1a7a8a, ui-water-glow) with a pale core."""
+    im = Image.new('RGBA', (SP * 3, SP), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    for f, r in enumerate((3, 4, 3)):
+        cx, cy = f * SP + 8, 8 + (1 - f % 2)
+        d.ellipse([cx - r - 2, cy - r - 2, cx + r + 2, cy + r + 2], fill=(26, 122, 138, 70))
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(60, 170, 185, 170))
+        d.ellipse([cx - 1, cy - 1, cx + 1, cy + 1], fill=(235, 250, 245, 255))
+    return im
+
+
 for name, rel in BASE['sheets'].items():
-    im = Image.open(os.path.join(HERE, rel)).convert('RGBA')
+    im = motes_sheet() if rel == '@motes' else Image.open(os.path.join(HERE, rel)).convert('RGBA')
     im = im.crop((0, 0, im.width // SP * SP, im.height // SP * SP))
     big = im.resize((im.width * K, im.height * K), Image.NEAREST)
     for rc in BASE['recolor'].values():
@@ -252,6 +263,22 @@ def furnish(r, ix, iy, iw, ih):
         stamp('altar_table', cx - 1, iy + 2)
         seat(rid, cx - 1, iy + 3); seat(rid, cx, iy + 3)
         stamp('jar', ix + 1, iy + 1); stamp('jar', ix + iw - 2, iy + 1)
+    elif kind == 'mote_well':
+        # the well at the centre on dark stone, a ring of motes above it, seats round it, the ladder plate on the north wall
+        wx, wy = cx - 1, iy + ih // 2 - 1
+        for dy in range(-2, 4):
+            for dx in range(-3, 5):
+                L['ground'][I(wx + dx, wy + dy)] = gid('ifloor', 11 + (wx + dx) % 4, 12 + (wy + dy) % 4)
+        stamp('mote_well', wx, wy)
+        for k, (mx, my, nm) in enumerate(((-2, -1, 'mote'), (3, 0, 'mote_2'), (-1, 3, 'mote_3'), (2, -2, 'mote_2'))):
+            L['over1'][I(wx + mx, wy + my)] = gid('motes', int(nm[-1]) - 1 if nm != 'mote' else 0, 0)
+        stamp('notice_board', cx - 1, iy)
+        ring = [(wx - 2, wy), (wx - 2, wy + 1), (wx + 3, wy), (wx + 3, wy + 1), (wx, wy + 3), (wx + 1, wy + 3)]
+        for (x, y) in ring[:n]: seat(rid, x, y)
+        must[f'{r["label"]}: at the well'] = (wx, wy + 2)
+        must[f'{r["label"]}: before the ladder plate'] = (cx, iy + 1)
+        stamp('plant_pot', ix, iy); stamp('plant_pot', ix + iw - 1, iy)
+        stamp('bookshelf', ix + 2, iy); stamp('jar', ix + iw - 3, iy + 1); stamp('fern', ix + 1, iy + ih - 1); stamp('fern', ix + iw - 2, iy + ih - 1)
     elif kind == 'court':
         pass
 
@@ -408,3 +435,35 @@ canvas.convert('RGB').save(os.path.join(OUT, f'{MAP}-render.png'))
 seats = sum(len(v) for k, v in seats_at.items() if not k.endswith('-dais'))
 print(f'ok: {MAP} {W}x{H} tiles at {T} px, seed {SEED}; {len(LEVEL["rooms"])} rooms, {seats} seats, {len(LEVEL["exits"])} exits; '
       f'{len(must)} named squares reachable from the start ({len(R)} walkable)')
+
+# ---- a moving look, when the level has a "walk": a visitor walks the points, one spirit rises over the well ----
+if LEVEL.get('walk'):
+    pts = LEVEL['walk']['points']; cx0, cy0, cw, ch = LEVEL['walk']['crop']
+    base = Image.new('RGBA', (W * T, H * T), (20, 14, 11, 255))
+    for name in ('ground', 'detail', 'floorLayer'):
+        for i, g in enumerate(L[name]):
+            if g: base.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
+    top = Image.new('RGBA', base.size, (0, 0, 0, 0))
+    for name in ('over1', 'over2'):
+        for i, g in enumerate(L[name]):
+            if g: top.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
+    msheet = sheets['motes']['img']
+    path = []                                         # one square per step, 2 frames a square
+    for (a, b) in zip(pts, pts[1:]):
+        n = max(abs(b[0] - a[0]), abs(b[1] - a[1]))
+        for k in range(n * 2): path.append((a[0] + (b[0] - a[0]) * k / (2 * n), a[1] + (b[1] - a[1]) * k / (2 * n), 1 if b[1] < a[1] else 3))
+    path += [path[-1]] * 20
+    well = next(r for r in LEVEL['rooms'] if r['kind'] == 'mote_well'); bx, by, bw, bh = well['box']
+    wx, wy = bx + 1 + (bw - 2) // 2 - 1, by + 1 + (bh - 2) // 2 - 1
+    frames = []
+    for f, (x, y, facing) in enumerate(path):
+        im = base.copy(); im.alpha_composite(monk.crop(((f // 3 % 4) * 32, facing * 32, (f // 3 % 4) * 32 + 32, facing * 32 + 32)), (int(x * T), int(y * T) - 6))
+        im.alpha_composite(top)
+        for m in range(3):                            # spirits drift up from the well and fade
+            t = ((f + m * 14) % 42) / 42
+            sp = msheet.crop((m * T, 0, m * T + T, T)).copy()
+            sp.putalpha(sp.getchannel('A').point(lambda v, t=t: int(v * (1 - t))))
+            im.alpha_composite(sp, ((wx + 1 + m - 1) * T, int((wy + 0.6 - 2.6 * t) * T)))
+        frames.append(im.crop((cx0 * T, cy0 * T, (cx0 + cw) * T, (cy0 + ch) * T)).convert('RGB').resize((cw * T // 2, ch * T // 2), Image.NEAREST))
+    frames[0].save(os.path.join(OUT, f'{MAP}-walk.gif'), save_all=True, append_images=frames[1:], duration=90, loop=0, optimize=True)
+    print(f'ok: {MAP}-walk.gif, {len(frames)} frames')

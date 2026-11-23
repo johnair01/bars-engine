@@ -9,7 +9,8 @@
     "element": "../calrunian-dojo/src16/TilesetElement.png",
     "ifloor": "../calrunian-dojo/src16/TilesetInteriorFloor.png",
     "wall": "../calrunian-dojo/src16/TilesetWallSimple.png",
-    "yun": "../calrunian-dojo/src16/MasterSheet.png"
+    "yun": "../calrunian-dojo/src16/MasterSheet.png",
+    "motes": "@motes"
   },
   "recolor": {
     "about": "The one banner drawn in purple is redrawn in the water element's colours from public/ui/tokens.css (--ui-water-glow #1a7a8a); the aesthetic contract allows no invented purples.",
@@ -61,6 +62,8 @@
     "banner_4": {"sheet": "house", "x": 25, "y": 20, "w": 1, "h": 2, "over_rows": 0},
     "banner_5": {"sheet": "house", "x": 26, "y": 20, "w": 1, "h": 2, "over_rows": 0},
     "banner_6": {"sheet": "house", "x": 27, "y": 20, "w": 1, "h": 2, "over_rows": 0, "recolor": "house_banner_violet"},
+    "mote": {"sheet": "motes", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 1, "about": "a spirit, a small water-teal light drawn by gen_sect.py, not from the pack"},
+    "mote_well": {"sheet": "house", "x": 3, "y": 15, "w": 2, "h": 2, "over_rows": 1, "about": "placeholder rim, replaced by a drawn well when the WizardGenie tiles land"},
     "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0}
   },
   "plaque": {
@@ -84,6 +87,7 @@
     "dojo":     {"wall": "tan", "floor": "boards_tan", "plan": "sparring medallion, six stance panels, seats round the floor", "meeting": true},
     "tea":      {"wall": "green", "floor": "boards_green", "plan": "tea tables with a seat each side, shelves on the north wall", "meeting": true},
     "shrine":   {"wall": "brown", "floor": "stone_dark", "plan": "a seated figure, an altar table, two seats", "meeting": false},
+    "mote_well": {"wall": "green", "floor": "boards_green", "plan": "a well at the centre on dark stone, motes above it, six seats round it, the ladder plate on the north wall", "meeting": true},
     "court":    {"wall": null, "floor": "paving", "plan": "open paving, standing room, gate and notice board", "meeting": false}
   }
 }
