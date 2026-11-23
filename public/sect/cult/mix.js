@@ -232,7 +232,7 @@ function pushLegs(X, pt, W, m) {
   return moved;
 }
 function onChain(ch, p) { let best = null, s0 = 0; for (let i = 0; i < ch.length - 1; i++) { const a = ch[i], ab = ch[i + 1].clone().sub(a), L = ab.length(); const t = THREE.MathUtils.clamp(p.clone().sub(a).dot(ab) / (L * L), 0, 1); const o = a.clone().addScaledVector(ab, t), d = p.distanceTo(o); if (!best || d < best.d) best = { s: s0 + t * L, o, d }; s0 += L; } return best; }
-export const PUSH_BAND = { robe: [0.03, 0.08] }; // robe-run-1: the robe takes the push fully from 8 cm under the hips (the thigh lifts into it there)
+export const PUSH_BAND = { robe: [0, 0.05] }; // robe-sprint-look-4: the push starts at the hip (was 3-8 cm under it), where the trousers' tops rode through the robe; // robe-run-1: the robe takes the push fully from 8 cm under the hips (the thigh lifts into it there)
 export const PUSH = {}; // robe-run-1: exported so motion.js can put the robe back on the leg push (SKIRT.cap). shells round: no leg push, no settle; the skirt is a rigid piece skinned to the pelvis and thighs (his ruling 2026-11-02)
 // the legs under cloth are not drawn while the figure moves (a stride or a raise), so they cannot poke through it;
 // at the stand pose, the fit pose, they are drawn as the mask left them

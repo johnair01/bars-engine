@@ -143,7 +143,7 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
   // robe-run-1 (his A on robe-research-look-1, 2026-11-20: "Bone chains with leg capsules and a leash"). The leash is `max` above, a node's
   // reach off its skinned place growing from the waist to the hem; `ang` caps how far a segment turns off its skinned direction (radians,
   // first segment to hem); `cap` turns on the leg capsules, which push every chain node out of the thigh and shin it hangs over, `gap` clear.
-  ang: [0.3, 0.75], cap: true, gap: 0.02, skin: 0.006,
+  ang: [0.3, 0.75], cap: true, gap: 0.02, skin: 0.02, /* robe-sprint-look-4: was 0.006, under the trousers' own thickness (up to 1.7 cm off the leg skin), so the grey cloth shook through the robe */
   // robe-sprint-look-1 C (2026-11-21, "fix the robe on the legs first"): one leg push per frame leaves points inside a thigh or knee at the
   // sprint (the left leg's push can shove a point into the right, and the tent hands a point a neighbour's push). Each pass starts from the
   // last, so four settle it: 0 points inside a leg in 190 frames (one pass: 5 in 38).
