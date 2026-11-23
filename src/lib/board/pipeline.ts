@@ -189,7 +189,7 @@ export async function readLoop(strand: string): Promise<{ path: string; loop: Lo
 
 // ------------------------------------------------------------ the pipeline
 
-export type Stage = { id: string; owners: string[]; gate: string; line: number }
+export type Stage = { id: string; owners: string[]; gate: string; line: number; produces?: string }
 
 function stagesIn(text: string): Stage[] {
   const ls = lines(text)
@@ -214,6 +214,24 @@ function stagesIn(text: string): Stage[] {
     if (!cur) continue
     const owners = /^ {4}owners:\s*(.+)$/.exec(l)
     if (owners) { cur.owners = inlineList(owners[1]); continue }
+    // `produces:` is what the route names when a refusal has to say what to write (stage_route.py reads the same line).
+    const prod = /^ {4}produces:\s*(.*)$/.exec(l)
+    if (prod) {
+      const rest = prod[1].trim()
+      const body: string[] = []
+      let j = i + 1
+      if (rest && rest !== '>' && rest !== '|') body.push(rest)
+      else
+        for (; j < ls.length; j++) {
+          const b = ls[j]
+          if (!b.trim()) { body.push(''); continue }
+          if (!/^\s{6,}/.test(b)) break
+          body.push(b.trim())
+        }
+      cur.produces = body.join(' ').replace(/\s+/g, ' ').trim()
+      i = Math.max(i, j - 1)
+      continue
+    }
     const g = /^ {4}gate:\s*(.*)$/.exec(l)
     if (!g) continue
     const rest = g[1].trim()
@@ -252,15 +270,20 @@ function commandIn(gate: string): string | null {
 export type SignedLine = { stage: string; line: string; date: string | null; source: string }
 export type Gap = { check: string; sentence: string; source: string }
 export type NextStage = { stage: string; gate: string; command: string | null; source: string }
+// A line in the callsheet that claims a stage's artifact, and whether that stage is actually signed.
+export type Claim = { artifact: string; stage: string; line: string; signed: boolean }
 export type Standing = {
   strand: string
   sheet: { path: string; found: boolean }
   stage: { id: string; source: string } | null
   signed: SignedLine[]
+  claims: Claim[]
   gaps: Gap[]
   next: NextStage | null
   files: string[]
   notes: string[]
+  /** The pipeline's stages, so a refusal can name the route out of it (Wendell, 2026-11-22). */
+  pipeline: { stages: { id: string; owners?: string[]; produces?: string; gate?: string }[] }
 }
 
 type SignedBullet = { stage: string; rest: string; date: string | null; at: number }
@@ -277,10 +300,100 @@ function signedBullets(text: string): SignedBullet[] {
     const m = /^-\s+([A-Za-z0-9-]+):\s*(.+)$/.exec(l.trim())
     if (!m) continue
     const rest = m[2].trim()
+    // A line that says it is unsigned records the gap without claiming the stage: the strand reads as behind, not ahead.
+    if (/^\(?\s*(?:unsigned|not signed|none|pending)\b/i.test(rest)) continue
     const date = /\((\d{4}-\d{2}-\d{2})\)\s*$/.exec(rest)
     out.push({ stage: m[1].toLowerCase(), rest, date: date ? date[1] : null, at: i + 1 })
   }
   return out
+}
+
+/** The artifact each `## Pipeline` line states, and the stage council/pipeline.yaml says produces it. */
+const ARTIFACT_STAGE: Record<string, string> = {
+  'game frame': 'intake',
+  spec: 'spec',
+  roles: 'spec',
+  falsify: 'falsify',
+  art: 'assets',
+  assets: 'assets',
+}
+
+/** A callsheet's `## Pipeline` lines, each mapped to the stage that must be signed for it to be lawful. */
+function claimLines(text: string, signed: SignedLine[]): Claim[] {
+  const ls = lines(text)
+  const have = new Set(signed.map((s) => s.stage))
+  const out: Claim[] = []
+  let inside = false
+  for (const l of ls) {
+    if (/^##\s+Pipeline\b/.test(l)) { inside = true; continue }
+    if (!inside) continue
+    if (/^#/.test(l)) break
+    const m = /^\s*[-*]?\s*\**([Gg]ame frame|[Ss]pec|[Rr]oles|[Ff]alsify|[Aa]rt|[Aa]ssets)\**\s*:/.exec(l)
+    if (!m) continue
+    const artifact = m[1].toLowerCase().replace(/\s+/g, ' ')
+    const stage = ARTIFACT_STAGE[artifact]
+    if (!stage) continue
+    out.push({ artifact, stage, line: l.trim().slice(0, 90), signed: have.has(stage) })
+  }
+  return out
+}
+
+// ------------------------------------------------------------- the route and the loud rule
+//
+// Wendell, 2026-11-22: "every refusal comes with a route" and "It shouldn't be allowed to sign on their own behalf.
+// This should be specifically disallowed and fail loudly." council/tools/stage_route.py is the repo's half; these are
+// the board's, so the page refuses on the same terms and hands over the same next step.
+
+/** Signer words that mean the signer is the agent, the strand or the sheet - never a face. */
+const AGENT_VOICES = new Set([
+  'agent', 'claude', 'freebuff', 'deepai', 'zo', 'codex', 'assistant', 'ai', 'bot', 'llm',
+  'strand', 'callsheet', 'sheet', 'self', 'auto', 'automatic', 'me', 'i', 'we',
+])
+
+/** The signer list of a `## Signed` entry: the words before the date or the reason in parentheses. */
+function signersOf(rest: string): string[] {
+  const cut = rest.split('(')[0]
+  return cut.toLowerCase().split(/[^a-z]+/).filter(Boolean)
+}
+
+/** The agent/strand voices this entry credits AS A SIGNER. A reason mentioning a callsheet is not a signer. */
+function selfSigners(rest: string): string[] {
+  return [...new Set(signersOf(rest).filter((w) => AGENT_VOICES.has(w)))]
+}
+
+/** What taking one stage means, read out of pipeline.yaml so the advice moves when the pipeline does. */
+export type Route = { stage: string; owners: string[]; produces: string; gate: string; command: string | null }
+
+export function routeOf(pipeline: { stages: { id: string; owners?: string[]; produces?: string; gate?: string }[] }, stage: string): Route | null {
+  const st = pipeline.stages.find((s) => s.id === stage)
+  if (!st) return null
+  const gate = (st.gate || '').trim()
+  const cmd = /python3\s+\S+/.exec(gate)
+  return {
+    stage,
+    owners: st.owners || [],
+    produces: (st.produces || '').trim(),
+    gate,
+    command: cmd ? cmd[0] : null,
+  }
+}
+
+/** The file a stage produces, lifted off the front of its `produces:` line. */
+function artefactOf(produces: string): string {
+  const first = (produces || '').split('\n')[0].trim()
+  const m = /^(\S+?\.(?:yaml|yml|md|json|py))(?:\s|,|:|$)/.exec(first)
+  return m ? m[1] : ''
+}
+
+/** A route as one readable line, for a refusal's advice. */
+export function routeLine(pipeline: Parameters<typeof routeOf>[0], stage: string): string {
+  const r = routeOf(pipeline, stage)
+  if (!r) return `sign \`${stage}\` (not a stage in council/pipeline.yaml — check the id)`
+  const parts = [`sign \`${r.stage}\` (${r.owners.join(', ')} sign it)`]
+  const art = artefactOf(r.produces)
+  if (art) parts.push(`by writing ${art}`)
+  if (r.command) parts.push(`then run \`${r.command}\``)
+  return parts.join('; ')
 }
 
 /** The numbered steps under a callsheet's last `## NEXT` heading: the order the work goes up in. */
@@ -328,6 +441,37 @@ async function standingOf(strand: string): Promise<{ status: Standing; deft: Loo
     if (!stage || idx > order.indexOf(stage.id)) stage = { id: s.stage, source: s.source }
   }
 
+  // A `## Pipeline` line claims an artifact exists. It is only lawful when the stage that produces it is signed
+  // (Wendell, 2026-11-22: "the pipeline shouldn't be a suggestion"). council/tools/stage_gate.py enforces the same rule
+  // in the repo; this is the board's half, so the page refuses what the push would refuse. Every refusal carries its
+  // route - the missing stage's faces, the file it writes and the command - read out of pipeline.yaml.
+  const claims: Claim[] = sheetText ? claimLines(sheetText, signed) : []
+  for (const c of claims) {
+    if (!c.signed)
+      notes.push(`REFUSED: the Pipeline line claims ${c.stage} (${c.line}) but Signed never signs that stage. `
+        + `Route: ${routeLine(pipeline, c.stage)}`)
+  }
+
+  // Nobody signs on their own behalf. A stage is signed by the faces pipeline.yaml names and by nobody else; an agent,
+  // a strand or the sheet itself naming itself as signer is a fault, not a warning, and comes back named as one.
+  for (const b of sheetText ? signedBullets(sheetText) : []) {
+    const voices = selfSigners(b.rest)
+    if (voices.length)
+      notes.push(`SELF-SIGNED, WHICH IS DISALLOWED: ${b.stage} is signed by ${voices.join(', ')}. `
+        + `A stage is signed by its faces, never by the agent, the strand or the sheet itself (${sheetPath}:${b.at}).`)
+    else {
+      const owners = pipeline.stages.find((s) => s.id === b.stage)?.owners || []
+      const named = owners.filter((f) => new RegExp(`\\b${f}\\b`, 'i').test(b.rest))
+      const lacking = owners.filter((f) => !named.includes(f))
+      if (owners.length && !named.length)
+        notes.push(`REFUSED: ${b.stage} is signed with no face named. `
+          + `Route: name the faces council/pipeline.yaml gives ${b.stage} - ${owners.join(', ')}`)
+      else if (lacking.length)
+        notes.push(`REFUSED: ${b.stage} is signed without ${lacking.join(', ')}. `
+          + `Route: add ${lacking.join(', ')} - or, if they have not signed it, the stage is not signed`)
+    }
+  }
+
   const at = stage ? order.indexOf(stage.id) : -1
   if (!stage && sheetText) notes.push(`no Signed line in ${sheetPath}, so the door names the pipeline's first stage`)
   const nextStage = pipeline.stages[at + 1] ?? null
@@ -353,10 +497,12 @@ async function standingOf(strand: string): Promise<{ status: Standing; deft: Loo
       sheet: { path: sheetPath, found: Boolean(sheetText) },
       stage,
       signed,
+      claims,
       gaps,
       next,
       files,
       notes,
+      pipeline: { stages: pipeline.stages },
     },
     deft,
   }
@@ -388,11 +534,24 @@ export function statusLines(s: Standing): string[] {
     ? `stage: ${s.stage.id} (signed, ${s.stage.source})`
     : `stage: none signed (${s.sheet.path})`)
   for (const line of s.signed) out.push(`signed ${line.line} (${line.source})`)
+  // A claim without its signature is a refusal, printed as one: the pipeline holds, or the strand is outside it.
+  const unlawful = s.claims.filter((c) => !c.signed)
+  for (const c of s.claims) {
+    out.push(c.signed
+      ? `claim ${c.artifact} -> ${c.stage}: signed, holds`
+      : `claim ${c.artifact} -> ${c.stage}: REFUSED, ${c.stage} is not signed`)
+  }
+  if (unlawful.length) {
+    out.push(`refused: ${unlawful.length} claim(s) name a stage the strand has not signed`)
+    // Every refusal comes with a route (Wendell, 2026-11-22), so a refusal never stands alone on the page.
+    for (const c of unlawful) out.push(`route for ${c.artifact} -> ${c.stage}: ${routeLine(s.pipeline, c.stage)}`)
+  }
   for (const g of s.gaps) out.push(`gap ${g.check}: "${g.sentence}" (${g.source})`)
   if (s.next) {
     out.push(`next: ${s.next.stage} (${s.next.source})`)
     out.push(`gate: ${s.next.gate}`)
     if (s.next.command) out.push(`run: ${s.next.command}`)
+    out.push(`route: ${routeLine(s.pipeline, s.next.stage)}`)
   } else out.push('next: none: the pipeline names no stage after this one')
   for (const n of s.notes) out.push(`note: ${n}`)
   out.push(`files: ${s.files.join(', ')}`)

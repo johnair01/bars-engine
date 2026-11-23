@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-18T20:21:58.320Z",
+  "generatedAt": "2026-11-23T18:07:14.354Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -5077,7 +5077,7 @@
     },
     {
       "sourceFile": "/src/app/campaigns/page.tsx",
-      "lineNumber": 32,
+      "lineNumber": 31,
       "params": [],
       "query": [],
       "relationships": [],
@@ -5102,7 +5102,7 @@
     },
     {
       "sourceFile": "/src/app/campaigns/page.tsx",
-      "lineNumber": 32,
+      "lineNumber": 31,
       "params": [],
       "query": [],
       "relationships": [],
