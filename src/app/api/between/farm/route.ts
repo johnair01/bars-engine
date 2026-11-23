@@ -18,6 +18,7 @@ import { db } from '@/lib/db'
 import { currentPlayer, ensureHome } from '@/lib/between/store'
 import { mintVibulon } from '@/actions/economy'
 import * as F from '@/lib/between/farm'
+import { worldForPlayer } from '@/lib/between/farm-world-store'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +48,9 @@ export async function GET(req: NextRequest) {
   if (!s) return NextResponse.json({ error: 'No homeroom yet' }, { status: 409 })
   const today = localDay(req.nextUrl.searchParams.get('today'))
   const farm = F.settle(s.farm, today)
-  return NextResponse.json({ farm, today, first: !s.farm.firstEntryAt, cols: F.COLS, rows: F.ROWS })
+  // What agents changed in this farm (farm-world-write): applied signs, notes and objects, and the not-yets. Read-only here.
+  const world = await worldForPlayer(db, s.gardenId, player.id).catch(() => ({ changes: [], notYet: [] }))
+  return NextResponse.json({ farm, today, first: !s.farm.firstEntryAt, cols: F.COLS, rows: F.ROWS, world })
 }
 
 export async function POST(req: NextRequest) {
