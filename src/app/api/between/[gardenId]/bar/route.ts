@@ -57,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ gar
   const m = await member(gardenId)
   if ('error' in m) return m.error
   const me = m.player.id
-  const body = (await req.json().catch(() => null)) as { ember?: unknown; mark?: unknown; barId?: unknown; offer?: unknown } | null
+  const body = (await req.json().catch(() => null)) as { ember?: unknown; mark?: unknown; ask?: unknown; barId?: unknown; offer?: unknown } | null
   if (!body) return NextResponse.json({ error: 'Send JSON', code: 'invalid_argument' }, { status: 400 })
 
   // Offering a written BAR in the Hollow, or taking it back (FR-006): public stakes its vibeulon, private releases it.
@@ -79,6 +79,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ gar
   const mark = typeof body.mark === 'string' ? body.mark.trim().replace(/\s+/g, ' ') : ''
   if (!emberId || !mark) return NextResponse.json({ error: 'Choose an ember and write its mark', code: 'invalid_argument' }, { status: 400 })
   if (mark.length > MARK_MAX) return NextResponse.json({ error: 'A mark is one short line', code: 'invalid_argument' }, { status: 400 })
+  // The question the strip asked (round strip-prompt-1): kept with the words, so the BAR reads as an answer. Optional.
+  const ask = typeof body.ask === 'string' ? body.ask.trim().replace(/\s+/g, ' ').slice(0, 140) : ''
   const where = { gardenId_playerId_key: { gardenId, playerId: me, key: 'pouch' } }
   const pouch = await db.betweenPrivate.findUnique({ where })
   if (!pouch || keptIn(pouch.data) < 1) return NextResponse.json({ error: 'Work a charge at the hearth first', code: 'not_yet' }, { status: 409 })
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ gar
 
   const out = await db.$transaction(async tx => {
     const bar = await tx.customBar.create({
-      data: { creatorId: me, title: mark, description: mark, type: 'vibe', reward: 1, visibility: 'private', storyPath: 'between', storyMood: element },
+      data: { creatorId: me, title: mark, description: ask ? `${ask}\n${mark}` : mark, type: 'vibe', reward: 1, visibility: 'private', storyPath: 'between', storyMood: element },
       select: { id: true },
     })
     await tx.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })

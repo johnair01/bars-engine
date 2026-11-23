@@ -171,7 +171,7 @@ export function sashKnot(C, pc, L, H) {
     const bumpAt = (u, v) => amp(u) * (0.5 + 0.5 * Math.cos(v * 2 * Math.PI * folds));
     const at = (u, v) => { const y = yc + v * 2 * hw(u), a = th(u); return { p: Fm.on(a, y, surf(y, a) + gap + bumpAt(u, v)), n: Fm.out(a) }; };
     const t = u => 0.0007 * k + (g0 - 0.0007 * k) * (1 - smooth(0, 0.9, u));
-    const col = (u, v, s, c) => { const fold = 0.86 + 0.22 * Math.cos(v * 2 * Math.PI * folds) * (1 - smooth(0.15, 1, u)), press = 1 - 0.38 * Math.exp(-((u / 0.16) ** 2)), sh = fold * press * (s ? rim(v) : 0.55) * tone;
+    const col = (u, v, s, c) => { const fold = 0.86 + 0.22 * Math.cos(v * 2 * Math.PI * folds) * (1 - smooth(0.15, 1, u)), press = 1 - 0.38 * Math.exp(-((u / 0.12) ** 2)), sh = fold * press * (s ? rim(v) : 0.55) * tone;
       c.copy(base).multiplyScalar(sh); lift(c, base, sh); };
     return slab(at, t, 8, 8, col);
   };
@@ -308,4 +308,79 @@ export function whisk(C, pc, L, H) {
   return [put(C, H, merge([handle, hookCord]), 'whisk-handle', H.LAYER.sash, { mat: { roughness: 0.45 } }),
     put(C, H, merge([fer]), 'whisk-metal', H.LAYER.sash, { mat: { roughness: 0.35, metalness: 0.7 } }),
     put(C, H, merge(hair), 'whisk-hair', H.LAYER.sash, { skirt: true, mat: { roughness: 0.6 } })];
+}
+
+// ---------- elder regalia (his B on er-grammar-look-1, 2026-11-19: "strong gender dimorphism but the idea is there is a
+// regality to the elder robes marks of rank and station that can be observed from a distance"). One word, `regalia`,
+// draws a different mark on a man and on a woman, as the references do (the Ming official's hoop belt and his wife's
+// stole, /mnt/project-files/elder-robes/refs-rank/). Both carry the face's colour, so the station reads with the rank.
+
+// the drape pieces carry userData.drape and their pin (the seam they hang from) for clip lab 2's Blender cloth bake
+export function tagDrape(pt, seam, y) { for (const m of [pt.mesh, pt.back]) if (m) { m.userData.drape = true; m.userData.pin = { seam, y }; } }
+
+// one waist mark for both cuts (round 2, his B on er-regalia-look-1): the same rectangular gold plaque, with the face's colour
+// set in it, at the front centre of the man's girdle and of the woman's high sash, sized alike, so rank reads the same at the
+// waist on either body. Rigid, on the hips bone.
+const PLAQUE_W = 0.075, PLAQUE_H = 0.055;
+function waistPlaque(C, H, Fm, y, off, metal, face) {
+  const k = C.k, th = 0, p = Fm.on(th, y, off), out = Fm.out(th), al = Fm.along(th), pl = [];
+  const b = new THREE.BoxGeometry(PLAQUE_W * k, PLAQUE_H * k, 0.007 * k, 2, 2, 1); b.applyMatrix4(basis(al, V(0, 1, 0), out, p.clone().addScaledVector(out, 0.0035 * k))); pl.push(flat(b, metal));
+  const c = new THREE.BoxGeometry(PLAQUE_W * 0.55 * k, PLAQUE_H * 0.55 * k, 0.004 * k); c.applyMatrix4(basis(al, V(0, 1, 0), out, p.clone().addScaledVector(out, 0.008 * k))); pl.push(flat(c, face, 1.1));
+  return put(C, H, merge(pl), 'waist-plaque', H.LAYER.sash + 0.3, { bone: 'hips', solid: true, mat: { roughness: 0.32, metalness: 0.75 } });
+}
+
+// the girdle (a man's): a stiff hoop that stands off the robe, sits at the waist at the back and dips in front, with
+// metal plaques round it and a larger one at the centre front. Rigid, on the hips bone, as a stiff belt rides.
+export function girdle(C, pc, L, H) {
+  const k = C.k, Fm = frame(C, L, H), metal = C.metal || '#c9a55a', band = pc.c || '#7a2630';
+  const yB = C.yWaist + 0.005 * k, dip = (pc.dip ?? 0.1) * k, w = (pc.w ?? 0.038) * k, t = 0.01 * k;
+  const fr = th => 0.5 + 0.5 * Math.cos(th), yAt = th => yB - dip * fr(th) ** 2, offAt = th => (0.007 + 0.012 * fr(th) ** 2) * k; // round 2: 2 mm off the shell's measured envelope at the sides (the ribbon is 10 mm thick, centred), standing off only as the front dips
+  const thAt = u => -Math.PI + 2 * Math.PI * u;
+  const g = ribbon({ c: u => Fm.on(thAt(u), yAt(thAt(u)), offAt(thAt(u))), across: () => V(0, 1, 0), w: () => w, t, nu: 120, nv: 3, color: band,
+    shade: (u, v) => 1 - 0.18 * Math.abs(v) * 2, hem: 0.004 * k, end: 0 });
+  const pl = [], n = pc.plaques ?? 12;
+  for (let i = 0; i < n; i++) { const th = -Math.PI + (i + 0.5) / n * 2 * Math.PI, big = Math.abs(th) < 1e-3 + Math.PI / n; if (big) continue; const ww = 0.042 * k; // the front plaque is the shared one below
+    const p = Fm.on(th, yAt(th), offAt(th) + t / 2 + 0.003 * k), out = Fm.out(th), al = Fm.along(th);
+    const b = new THREE.BoxGeometry(ww, w * 1.2, 0.007 * k, 2, 2, 1); b.applyMatrix4(basis(al, V(0, 1, 0), out, p)); pl.push(flat(b, metal)); }
+  const gp = put(C, H, merge([g]), 'girdle', H.LAYER.sash + 0.2, { bone: 'hips', solid: true, mat: { roughness: 0.55 } }); for (const m of [gp.mesh, gp.back]) if (m) m.userData.hoop = true; // a stiff hoop, not cloth: only its front dip hangs
+  return [gp, put(C, H, merge(pl), 'girdle-plaque', H.LAYER.sash + 0.3, { bone: 'hips', solid: true, mat: { roughness: 0.32, metalness: 0.75 } }),
+    waistPlaque(C, H, Fm, yAt(0), offAt(0) + t / 2 + 0.002 * k, metal, band)];
+}
+
+// the stole (a woman's): two long bands of the face's colour from over the shoulders down the front, either side of the
+// rank square, to below the knee, each ending in a point with a metal drop and a tassel. pc.over lifts it over an outer.
+export function stole(C, pc, L, H) {
+  const k = C.k, Fm = frame(C, L, H), metal = C.metal || '#c9a55a', color = pc.c || '#7a2630', parts = [];
+  const W = (pc.w ?? 0.07) * k, x0 = (C.rankS ? C.rankS + 0.012 * k : 0.08 * k) + W / 2, yTop0 = C.ySh + 0.012 * k, yFront = (C.yApex ?? C.ySh - 0.15 * k) + 0.05 * k;
+  const yEnd = Math.max(C.yKnee - (pc.below ?? 0.12) * k, Fm.yLow + 0.1 * k), over = (pc.over ? 0 : 0) * k, lowStart = !!(pc.over || pc.under), yTop = lowStart ? yFront : yTop0, sashH = (C.sashH || 0.07) * k;
+  const bump = y => 0.016 * k * Math.exp(-(((y - C.yWaist) / (sashH * 0.75)) ** 2));
+  for (const s of [1, -1]) {
+    const yAt = u => yTop + (yEnd - yTop) * u, thFront = y => s * Math.atan2(x0, H.loftAt(L, 0, y).r);
+    // under an over-robe the stole comes out from beneath its collar at the V's foot, so it never crosses the collar band
+    const thAt = u => { const y = yAt(u); if (lowStart) return thFront(y); const f = Math.min(1, Math.max(0, (yTop - y) / (yTop - yFront))), e = f * f * (3 - 2 * f); return s * 1.15 * (1 - e) + thFront(y) * e; };
+    // round 2: the envelope under the stole's edge steps where the shell's lip gives way to the skirt, so the band is lifted to the
+    // smoothed top of it (a running maximum over 5 samples, then blurred): a long soft ribbon, never a stair of fins
+    const NS = 90, rr = Array.from({ length: NS + 1 }, (_, i) => H.loftAt(L, thFront(yAt(i / NS)), yAt(i / NS)).r); let sm = rr.map((_, i) => Math.max(...rr.slice(Math.max(0, i - 5), i + 6)));
+    for (let pass = 0; pass < 14; pass++) sm = sm.map((x, i) => (sm[Math.max(0, i - 1)] + 2 * x + sm[Math.min(NS, i + 1)]) / 4);
+    // round 4f (his note on er-regalia-look-7, "separating"): over the shoulder the band turns through an angle, so the running
+    // maximum read the bust's radius a hand lower and held the band's top 4 to 6 cm off the shoulder. The lift fades in from the
+    // V's foot down; above it the band lies at its own offset on the measured envelope
+    const liftIn = u => { if (lowStart) return 1; const f = Math.min(1, Math.max(0, (yTop - yAt(u)) / (yTop - yFront))); return f * f * (3 - 2 * f); };
+    const lift = u => { const f = u * NS, i0 = Math.min(NS - 1, Math.floor(f)), t = f - i0; return liftIn(u) * Math.max(0, (sm[i0] - rr[i0]) * (1 - t) + (sm[i0 + 1] - rr[i0 + 1]) * t); };
+    // round 4g (his B on er-regalia-look-8, "tuck the shoulder end"): the band's top end turned over the far shoulder as a flat tab 15 mm
+    // off the robe. Over the first 12 percent the band narrows to 40 percent of its width and sinks 8 mm, so its end goes under the robe's collar
+    const tuck = u => lowStart ? 1 : (t => t * t * (3 - 2 * t))(Math.min(1, u / 0.12));
+    const off = u => (0.005 + (lowStart ? 0 : 0.01 * (1 - Math.min(1, (yTop - yAt(u)) / (yTop - yFront))))) * k + over + bump(yAt(u)) + lift(u) - 0.008 * k * (1 - tuck(u)); // round 2: 5 mm off the shell's measured envelope (pc.over is 0: the envelope already includes an over-robe)
+    const c = u => Fm.on(thAt(u), yAt(u), off(u)), across = u => Fm.along(thAt(u));
+    const w = u => W * (0.4 + 0.6 * tuck(u)) * (u > 0.95 ? 0.15 + 0.85 * (1 - u) / 0.05 : 1);
+    const g = ribbon({ c, across, w, t: 0.003 * k, nu: 90, nv: 4, color, shade: (u, v) => 0.9 + 0.12 * Math.cos(u * 30 + v), hem: 0.006 * k, end: 0 });
+    { const ps = put(C, H, merge([g]), 'stole', H.LAYER.sash + 0.4, { skirt: true, mat: { roughness: 0.6 } }); tagDrape(ps, 'sash', C.yWaist); parts.push(ps); } // the tails below the sash are drape; the part above it lies on the shell
+    const tip = c(1), out = Fm.out(thAt(1)), drop = new THREE.SphereGeometry(1, 16, 12); drop.scale(0.026 * k, 0.04 * k, 0.008 * k);
+    drop.translate(0, -0.03 * k, 0); drop.applyMatrix4(basis(Fm.along(thAt(1)), V(0, 1, 0), out, tip.clone().addScaledVector(out, 0.006 * k)));
+    const ts = tassel(tip.clone().addScaledVector(out, 0.006 * k).add(V(0, -0.07 * k, 0)), k, color, metal, 0.07);
+    parts.push(put(C, H, merge([flat(drop, metal), ...ts.metal]), 'stole-drop', H.LAYER.sash + 0.5, { skirt: true, mat: { roughness: 0.3, metalness: 0.75 } }));
+    parts.push(put(C, H, merge(ts.cloth), 'stole-tassel', H.LAYER.sash + 0.5, { skirt: true }));
+  }
+  parts.push(waistPlaque(C, H, Fm, C.yWaist, (C.sashOff ?? 0.034) * k, metal, color)); // the woman's high sash carries the same plaque as the man's girdle
+  return parts;
 }

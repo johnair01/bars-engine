@@ -1,12 +1,16 @@
 import { createHash } from 'crypto'
 import { cleanLanes, DEFAULT_LANES, type Lane } from './lanes'
 
+/** The brief an answer runs: text, a list of steps, or a mapping keyed by answer. A mapping used to be stringified, so
+ * a lane read `[object Object]` where its brief goes (council position bf-card-brief-lands-object-object, 2026-11-16). */
+type ThenValue = string | string[] | Record<string, string | string[]>
+
 /** A board row as sessions post it (rows collection): a question with options; any option, or the row, may carry
  * `then` (the brief a worker runs on that answer) and the row may carry `lanes`. */
 export interface RowDoc {
   q?: string
-  options?: { v?: string; label?: string; then?: string }[]
-  then?: string
+  options?: { v?: string; label?: string; then?: ThenValue }[]
+  then?: ThenValue
   lanes?: string[]
   /** The Council Board card riding on the row (Board v2); only its hold and face matter to a ticket. */
   card?: { project?: string; wildcard?: { branch?: string } | null; hold?: { text?: string; at?: string } | null; front?: { next_step?: string } } | null
@@ -31,6 +35,15 @@ export interface TicketDraft {
 }
 
 const COUNCIL = 'wendell-britt/six-faces-council'
+
+/** A row's `then` as the text a worker reads: a string as it stands, a list one step per line, a mapping by the
+ * chosen answer's key. An answer no key holds gives '' and the caller falls back to the gate line. */
+export function thenText(value: ThenValue | null | undefined, answer = ''): string {
+  if (!value) return ''
+  if (typeof value === 'string') return value.trim()
+  if (Array.isArray(value)) return value.map(v => v.trim()).filter(Boolean).join('\n')
+  return thenText(answer ? value[answer] : undefined)
+}
 
 /** What he chose, as board/pull.py reads it: several choices joined by commas, else the one choice, else ''. */
 export function answerOf(doc: AnswerDoc): string {
@@ -57,8 +70,9 @@ export function ticketFromAnswer(board: string, collection: string, docId: strin
   const label = answer ? labelOf(row, answer) : 'Steer only'
   const picked = (row?.options ?? []).find(o => o.v && o.v === answer)
   const said = `Wendell answered ${docId} on the Council Board: ${label}` + (steer ? `, with the note: "${steer}"` : '') + '.'
-  const brief = picked?.then || row?.then
-    ? `${said}\n\n${picked?.then || row?.then}`
+  const carried = thenText(picked?.then, answer) || thenText(row?.then, answer)
+  const brief = carried
+    ? `${said}\n\n${carried}`
     : `${said}\n\nIn ${COUNCIL}, this ticket is the gate's claim: no other thread takes ${docId} while you hold it, `
       + `and nothing is claimed on main. Follow the line python3 board/gates.py ${docId} --line --live prints. His answer `
       + `above is the ruling and main may not have it yet; read the board with python3 board/read.py --live, never wait `

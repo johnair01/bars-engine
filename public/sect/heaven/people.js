@@ -42,9 +42,27 @@ export async function spirit(i) {
   return make(mix, await registry());
 }
 
-/** Six Elders for the trainee walk (build 2026-11-17): one cultivation figure each, six distinct outfits, no names. */
+/** Six Elders for the trainee walk: one cultivation figure each, in the Elder regalia Wendell approved (er-regalia-look-10,
+ * 2026-11-20), one face's colour and trigram per Elder. i follows trainee.js ORDER (shaman, challenger, regent, architect,
+ * diplomat, sage). Until 2026-11-21 they wore the students' outfits A1..C2, which made an Elder read as a student and left
+ * the approved regalia unused in the sect (his note on heaven-sect-givers-look-1). Women wear the underwrap, as the
+ * regalia looks did. */
+export const ELDER_MIX = [
+  { key: 'shaman', outfit: 'R1', gender: 'f', skin: 2, height: 1.66 },
+  { key: 'challenger', outfit: 'R3', gender: 'm', skin: 5, height: 1.8 },
+  { key: 'regent', outfit: 'R4', gender: 'm', skin: 1, height: 1.76 },
+  { key: 'architect', outfit: 'R2', gender: 'f', skin: 6, height: 1.68 },
+  { key: 'diplomat', outfit: 'R5', gender: 'f', skin: 3, height: 1.64 },
+  { key: 'sage', outfit: 'R6', gender: 'm', skin: 4, height: 1.72 },
+];
 export async function elder(i) {
-  const OUT = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], mix = { direction: OUT[i][0], gender: i % 2 ? 'f' : 'm', build: 'average', skin: [2, 5, 1, 6, 3, 4][i], height: [1.78, 1.64, 1.8, 1.62, 1.74, 1.68][i], outfit: OUT[i] };
+  const e = ELDER_MIX[i], mix = { direction: e.outfit[0], gender: e.gender, build: 'average', skin: e.skin, height: e.height, outfit: e.outfit, underwrap: e.gender === 'f' };
+  return make(mix, await registry());
+}
+
+/** Wayfarers for the guided climb (build 2026-11-20): four students on the way up, cultivation figures in the sect's own outfits. */
+export async function wayfarer(i) {
+  const OUT = ['A2', 'B1', 'A1', 'B2'], mix = { direction: OUT[i % 4][0], gender: i % 2 ? 'm' : 'f', build: 'average', skin: [5, 2, 6, 1][i % 4], height: [1.63, 1.77, 1.66, 1.73][i % 4], outfit: OUT[i % 4] };
   return make(mix, await registry());
 }
 

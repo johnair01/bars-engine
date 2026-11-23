@@ -8,11 +8,20 @@
  * The passport carries no level or rank (the Regent's guard in the pass): nothing here lets one place rank a player in another.
  */
 
+import { gainQi } from '@/lib/cultivation/sheet'
+
 export const PASSPORT_VERSION = 1
 /** The places in calrunia/world.yaml. A place appears on a player's map once they have entered it (cw-emergent-map). */
 export const PLACES = ['vessel', 'sprout', 'cave', 'root', 'between', 'element-lands'] as const
 export type Place = (typeof PLACES)[number]
 export const PASSPORT_KEYS = ['v', 'player', 'spirits', 'hand', 'qi', 'vibeulons', 'embers', 'places_reached', 'updated_at'] as const
+/**
+ * Optional fields (ccb3-sheet-qi, Wendell's answer A, 2026-11-21: the qi a finished move earns stays a separate count from
+ * the ship's `qi` meter). `sheet.gathered` is that count; `sheet.counted` holds the ids of the moves already counted, so
+ * recording one move twice grants once. Nothing here is a level or rank, and no place draws the number.
+ */
+export const OPTIONAL_KEYS = ['sheet'] as const
+export const MAX_COUNTED = 500
 export const CARE_STATES = ['well', 'corrupted', 'dead'] as const
 export const HAND_KINDS = ['card', 'bar'] as const
 const MAX_LINEAGE = 60
@@ -31,6 +40,7 @@ export type Spirit = {
 }
 export type HandItem = { id: string; kind: (typeof HAND_KINDS)[number]; title: string; from: Place }
 export type Ember = { id: string; source: string; element: string | null; look: number; state: string; at: string; label: string }
+export type PassportSheet = { gathered: number; counted: string[] }
 export type Passport = {
   v: 1
   player: { id: string | null; name: string | null; guest_id: string | null }
@@ -41,6 +51,7 @@ export type Passport = {
   embers: Ember[]
   places_reached: Place[]
   updated_at: string
+  sheet?: PassportSheet
 }
 
 /**
@@ -49,12 +60,13 @@ export type Passport = {
  * These owners are a position, standing unless Wendell flips it: the cave wakes spirits, Sprout's Chapter 1 deals the hand,
  * and the ship holds the qi meter, the vibeulons condensed from it and the embers its parts are made from (inner-vessel1).
  */
-export const FIELD_OWNERS: Record<'spirits' | 'hand' | 'qi' | 'vibeulons' | 'embers', Place> = {
+export const FIELD_OWNERS: Record<'spirits' | 'hand' | 'qi' | 'vibeulons' | 'embers' | 'sheet', Place> = {
   spirits: 'cave',
   hand: 'sprout',
   qi: 'vessel',
   vibeulons: 'vessel',
   embers: 'vessel',
+  sheet: 'vessel',
 }
 
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x)
@@ -67,7 +79,7 @@ const isCount = (x: unknown) => typeof x === 'number' && Number.isInteger(x) && 
 export function validatePassport(p: unknown): { ok: true; passport: Passport } | { ok: false; errors: string[] } {
   const e: string[] = []
   if (!isObj(p)) return { ok: false, errors: ['not an object'] }
-  for (const k of Object.keys(p)) if (!(PASSPORT_KEYS as readonly string[]).includes(k)) e.push(`unknown field ${k}`)
+  for (const k of Object.keys(p)) if (!(PASSPORT_KEYS as readonly string[]).includes(k) && !(OPTIONAL_KEYS as readonly string[]).includes(k)) e.push(`unknown field ${k}`)
   if (p.v !== PASSPORT_VERSION) e.push('v must be 1')
   const pl = p.player
   if (!isObj(pl) || !strOrNull(pl.id) || !strOrNull(pl.name) || !strOrNull(pl.guest_id)) e.push('player needs id, name and guest_id (string or null)')
@@ -101,6 +113,12 @@ export function validatePassport(p: unknown): { ok: true; passport: Passport } |
     e.push('embers must be a list of { id, source, element, look 0..1, state, at, label }')
   if (!Array.isArray(p.places_reached) || !p.places_reached.every(x => (PLACES as readonly unknown[]).includes(x)) || new Set(p.places_reached).size !== p.places_reached.length)
     e.push('places_reached must list places from calrunia/world.yaml, once each')
+  if (p.sheet !== undefined) {
+    const sh = p.sheet
+    if (!isObj(sh) || !isCount(sh.gathered) || !Array.isArray(sh.counted) || sh.counted.length > MAX_COUNTED || !sh.counted.every(isStr) || new Set(sh.counted).size !== sh.counted.length)
+      e.push(`sheet must be { gathered: whole number, counted: up to ${MAX_COUNTED} distinct ids }`)
+    else if (Object.keys(sh).some(k => k !== 'gathered' && k !== 'counted')) e.push('sheet carries a field beyond gathered and counted')
+  }
   if (!isWhen(p.updated_at)) e.push('updated_at must be a time')
   return e.length ? { ok: false, errors: e } : { ok: true, passport: p as unknown as Passport }
 }
@@ -174,5 +192,27 @@ export function claimGuest(server: Passport | null, guest: Passport, player: { i
     embers: unionBy(base.embers, guest.embers, a => a),
     places_reached: PLACES.filter(x => base.places_reached.includes(x) || guest.places_reached.includes(x)),
     updated_at: at,
+    ...mergeSheets(base.sheet, guest.sheet),
+  }
+}
+
+/** Two sheets join without minting: the larger count stands and the counted ids are unioned (newest kept past the cap). */
+function mergeSheets(a?: PassportSheet, b?: PassportSheet): { sheet?: PassportSheet } {
+  if (!a && !b) return {}
+  const counted = Array.from(new Set([...(a?.counted ?? []), ...(b?.counted ?? [])])).slice(-MAX_COUNTED)
+  return { sheet: { gathered: Math.max(a?.gathered ?? 0, b?.gathered ?? 0), counted } }
+}
+
+/**
+ * One finished move counts once. The sheet's count rises through gainQi (src/lib/cultivation/sheet.ts), the one door,
+ * and only the first record of an attempt id does it. The ship's `qi` meter is never touched.
+ */
+export function recordMove(p: Passport, attemptId: string, at = new Date().toISOString()): { passport: Passport; counted: boolean } {
+  const sheet = p.sheet ?? { gathered: 0, counted: [] }
+  if (sheet.counted.includes(attemptId)) return { passport: p, counted: false }
+  const gained = gainQi({ qi: sheet.gathered, breakthroughs: 0 as const }, 1).sheet.qi
+  return {
+    passport: { ...p, sheet: { gathered: gained, counted: [...sheet.counted, attemptId].slice(-MAX_COUNTED) }, updated_at: at },
+    counted: true,
   }
 }

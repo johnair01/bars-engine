@@ -32,8 +32,8 @@ function lantern() {
 export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, busy }) {
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const card = document.createElement('div'); card.className = 'tw-card'; card.setAttribute('role', 'dialog'); card.hidden = true;
-  const seal = document.createElement('button'); seal.type = 'button'; seal.className = 'tk-seal'; seal.hidden = true; seal.textContent = 'Speak'; seal.setAttribute('aria-label', 'Speak to the Elder');
-  const hit = document.createElement('button'); hit.type = 'button'; hit.className = 'tk-hit'; hit.hidden = true; hit.setAttribute('aria-label', 'Speak to the Elder'); hit.tabIndex = -1;
+  const seal = document.createElement('button'); seal.type = 'button'; seal.className = 'tk-seal'; seal.hidden = true; seal.textContent = 'Speak'; seal.setAttribute('aria-label', 'Speak');
+  const hit = document.createElement('button'); hit.type = 'button'; hit.className = 'tk-hit'; hit.hidden = true; hit.setAttribute('aria-label', 'Speak'); hit.tabIndex = -1;
   for (const ev of ['pointerdown', 'pointerup', 'keydown', 'wheel']) { card.addEventListener(ev, e => e.stopPropagation()); seal.addEventListener(ev, e => e.stopPropagation()); hit.addEventListener(ev, e => e.stopPropagation()); }
   document.body.append(card, hit, seal);
   const v3 = new THREE.Vector3();
@@ -42,19 +42,29 @@ export function talk({ S, A, cam, hooks, people, reach = 10, far = 14, onGo, bus
   let open = null, open_p = null, node = 'open', near = null;
   const state = () => store.get('hq-quest') || 'none';
 
+  // A wayfarer (p.info = { open, asks: [[reply, answer], ...] }, build 2026-11-20): one opening line, then the asks not yet read.
+  const infoRender = I => {
+    const m = /^ask(\d+)$/.exec(node), cur = m ? +m[1] : -1;
+    const rs = I.asks.map((a, i) => [i, a[0]]).filter(([i]) => i !== cur);
+    card.innerHTML = `<p>${esc(cur >= 0 ? I.asks[cur][1] : I.open)}</p><div class="tw-row">${rs.map(([i, t]) => `<button type="button" data-tk="ask${i}">${esc(t)}</button>`).join('')}<button type="button" class="go" data-tk="done">Walk on</button></div>`;
+    card.setAttribute('aria-label', 'A student speaks'); card.hidden = false;
+    const b = card.querySelector('button'); b && b.focus({ preventScroll: true });
+  };
   const render = () => {
+    if (open && open.info) return infoRender(open.info);
     const rs = replies(node);
     card.innerHTML = `<p>${esc(lineAt(node))}</p><div class="tw-row">${rs.map(([id, t]) => `<button type="button" class="${id === 'go' ? 'go' : ''}" data-tk="${id}">${esc(t)}</button>`).join('')}${rs.length ? '' : '<button type="button" class="go" data-tk="done">Walk on</button>'}</div>`;
     card.setAttribute('aria-label', 'The Elder speaks'); card.hidden = false;
     const b = card.querySelector('button'); b && b.focus({ preventScroll: true });
   };
-  const openCard = p => { open = p; open_p = p; node = state() === 'none' ? 'open' : state() === 'held' ? 'held' : state() === 'met' ? 'met' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
+  const openCard = p => { open = p; open_p = p; node = p.info ? 'open' : state() === 'none' ? 'open' : state() === 'held' ? 'held' : state() === 'met' ? 'met' : 'again'; seal.hidden = true; hit.hidden = true; render(); };
   const closeCard = () => { open = null; card.hidden = true; };
   seal.addEventListener('click', () => near && openCard(near));
   hit.addEventListener('click', () => near && openCard(near));
   card.addEventListener('click', e => {
     const b = e.target.closest('[data-tk]'); if (!b) return; const k = b.dataset.tk;
-    if (k === 'go') { if (state() === 'none') store.set('hq-quest', 'offered'); if (onGo) { closeCard(); onGo(open_p); } else { node = 'close'; render(); } }
+    if (open && open.info) { if (k === 'done') closeCard(); else { node = k; render(); } }
+    else if (k === 'go') { if (state() === 'none') store.set('hq-quest', 'offered'); if (onGo) { closeCard(); onGo(open_p); } else { node = 'close'; render(); } }
     else if (k === 'done') closeCard();
     else { node = k; render(); }
   });
