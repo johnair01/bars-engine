@@ -13,11 +13,10 @@ import {
   PLACE_IMG,
   keepsakeLine,
   placesFor,
-  moveAction,
-  stuckPath,
   LINKS,
   PAY,
   ROBES,
+  FARM_STILL,
   SCENES,
   SKIN_RAMP,
   STORY,
@@ -28,6 +27,10 @@ import {
   type Scene,
 } from '@/lib/founder-gate/content'
 import { setShippedCount } from '@/actions/founder-gate'
+import { EMPTY_PACKET, feelingFor, type Packet } from '@/lib/founder-gate/seed-packet'
+import type { Channel } from '@/lib/coaching/unpacking-walk'
+import { SeedPacket } from './SeedPacket'
+import { Bed, Harvest, Move, Planting } from './BedFlow'
 
 const GOLD = '#f3d27a'
 const INK = '#f1ebf7'
@@ -86,7 +89,7 @@ function PayRow() {
 
 const ROBE_COLOR: Record<string, string> = { A1: '#3b4a8a', A2: '#b99a6b', B1: '#3f6b52', B2: '#8a7a64', C1: '#efe6c8', C2: '#7d7a86' }
 
-interface Ctx { feeling: string | null; stuckFrom: string | null; stuckDone: boolean; shipped: number | null }
+interface Ctx { feeling: string | null; stuckDone: boolean; shipped: number | null }
 
 /** The scene for an id: a story beat is built from STORY (his text) and STORY_IMG (real stills); grounds and places depend on the feeling picked. */
 function sceneFor(id: string, c: Ctx): Scene | null {
@@ -102,7 +105,7 @@ function sceneFor(id: string, c: Ctx): Scene | null {
   if (id === 'grounds' && f) {
     const lit = placesFor(f.id)
     return {
-      id, img: SCENES.feeling.img, motion: 'out', domain: 'The outer grounds · the places', source: SCENES.feeling.source,
+      id, img: FARM_STILL.img, motion: 'out', domain: 'The outer grounds · the places', source: FARM_STILL.source,
       lines: [`Each lit place is a move toward ${f.name}. ${IMPACT_LINE}`],
       hotspots: [
         ...PLACES.map((p) => {
@@ -111,22 +114,10 @@ function sceneFor(id: string, c: Ctx): Scene | null {
           const [x, y] = GROUND_SPOTS[p.id] ?? [50, 50]
           return { id: p.id, x, y, label: quiet && !c.stuckDone ? `${p.name} (opens when you are stuck)` : p.name, to: on ? (quiet ? 'place-quiet-room' : `place-${p.id}`) : undefined, locked: !on, note: !on ? (quiet ? 'This room opens only when something specific has you stuck. Tap Stuck? and find out.' : `This place does not serve ${f.name}. Pick another feeling to light it.`) : undefined }
         }),
-        { id: 'stuck', x: 50, y: 40, label: 'Stuck?', to: 'stuck' },
+        { id: 'stuck', x: 50, y: 40, label: 'Stuck?', to: 'bed' },
       ],
       next: 'dream', nextLabel: 'Plant my dream',
     }
-  }
-  const sm = /^stuck-(\d)$/.exec(id)
-  if (sm && f && c.stuckFrom) {
-    const path = stuckPath(c.stuckFrom, f.id)
-    const i = Number(sm[1]); const mv = path[i]
-    if (!mv) return SCENES['work-with']
-    const lastStep = i >= path.length - 1
-    return { ...SCENES.stuck, id, domain: `Befriending what is in the way · step ${i + 1} of ${path.length}`, lines: [`${mv.name}. ${moveAction(mv)}`], hotspots: [
-      { id: 'moved', x: 28, y: 34, label: 'That moved me', to: 'grounds' },
-      { id: 'next', x: 72, y: 40, label: lastStep ? 'I am still stuck on this' : 'Next step', to: lastStep ? 'work-with' : `stuck-${i + 1}` },
-      ...(lastStep ? [] : [{ id: 'still', x: 50, y: 56, label: 'I am still stuck on this', to: 'work-with' }]),
-    ] }
   }
   const pm = /^place-(.+)$/.exec(id)
   if (pm) {
@@ -179,7 +170,8 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
   const [seen, setSeen] = useState<string[]>([])
   const [feeling, setFeeling] = useState<string | null>(null)
   const [stuckDone, setStuckDone] = useState(false)
-  const [stuckFrom, setStuckFrom] = useState<string | null>(null)
+  const [stuckFrom, setStuckFrom] = useState<Channel | null>(null)
+  const [packet, setPacket] = useState<Packet>(EMPTY_PACKET)
   const [offer, setOffer] = useState(false)
   const [ready, setReady] = useState<'wait' | 'yes' | 'no'>('wait')
   const frame = useRef<HTMLIFrameElement>(null)
@@ -200,7 +192,9 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
 
   const go = (to: string) => { setId(to); setLine(0); setNote(null); setSeen([]) }
   const isMake = id === 'make'
-  const sc = isMake ? null : sceneFor(id, { feeling, stuckFrom, stuckDone, shipped })
+  const moveM = /^stuck-(\d)$/.exec(id)
+  const custom = isMake || id === 'packet' || id === 'planting' || id === 'bed' || id === 'harvest' || !!moveM
+  const sc = custom ? null : sceneFor(id, { feeling, stuckDone, shipped })
   const placeOffers = id.startsWith('place-') ? PLACES.find((p) => `place-${p.id}` === id) : undefined
   const lastLine = !sc || line >= sc.lines.length - 1
   const small = id === 'dream' || id === 'end'
@@ -215,7 +209,6 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
   const tapSpot = (h: Hotspot) => {
     if (h.locked) { setNote(h); return }
     if (h.feeling) setFeeling(h.feeling)
-    if (h.id.startsWith('from-')) setStuckFrom(h.id.slice(5))
     if (h.to === 'work-with') setStuckDone(true)
     if (h.to) return go(h.to)
     if (h.href) { window.open(h.href, '_blank', 'noopener,noreferrer'); setSeen((v) => [...v, h.id]); return }
@@ -233,7 +226,12 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
         {sc && (
           <img key={sc.id} className="gw-img" src={sc.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: sc.pos ?? '50% 50%', animationName: `gw-${sc.motion}` }} />
         )}
-        {isMake && <Nook me={me} setMe={setMe} turn={() => setView((v) => (v + 1) % 4)} done={() => go('feeling')} />}
+        {id === 'packet' && <SeedPacket done={(p) => { setPacket(p); setFeeling(feelingFor(p)); go('planting') }} />}
+        {id === 'planting' && <Planting packet={packet} onDone={() => go('bed')} />}
+        {id === 'bed' && <Bed packet={packet} onObject={(c) => { setStuckFrom(c); go('stuck-0') }} onRest={() => go('grounds')} onStill={() => { setStuckDone(true); go('work-with') }} />}
+        {moveM && stuckFrom && <Move key={id} packet={packet} from={stuckFrom} i={Number(moveM[1])} onNext={(n) => go(n === 'harvest' ? 'harvest' : `stuck-${n}`)} onStill={() => { setStuckDone(true); go('work-with') }} />}
+        {id === 'harvest' && <Harvest packet={packet} onOffering={() => setOffer(true)} onGrounds={() => go('grounds')} onQuietRoom={() => { setStuckDone(true); go('room-intro') }} />}
+        {isMake && <Nook me={me} setMe={setMe} turn={() => setView((v) => (v + 1) % 4)} done={() => go('packet')} />}
 
         {/* the one live figure: large in the nook, small beside the planted dream */}
         <div style={{ position: 'absolute', zIndex: 2, pointerEvents: isMake ? 'auto' : 'none', opacity: isMake || small ? 1 : 0, transition: 'all .35s',
@@ -244,7 +242,7 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
         {/* top bar: where you are, and the offering exit, reachable from every scene */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5, padding: '14px 14px 28px', display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', background: 'linear-gradient(rgba(15,11,19,.78),rgba(15,11,19,0))' }}>
           <span style={{ color: GOLD, letterSpacing: '.12em', fontSize: '.68rem', textTransform: 'uppercase', maxWidth: '55%' }}>
-            {isMake ? 'Direct action · play the game' : sc?.domain}
+            {isMake ? 'Direct action · play the game' : id === 'packet' ? 'Your seed · six questions' : custom ? 'Your bed · the crop' : sc?.domain}
             {sc?.standIn ? <span style={{ display: 'block', color: MUTED, textTransform: 'none', letterSpacing: 0 }}>stand-in picture</span> : null}
           </span>
           <button type="button" style={chip} onClick={(e) => { e.stopPropagation(); setOffer(true) }}>Leave an offering</button>
@@ -274,11 +272,11 @@ export function GateWalk({ shipped, isAdmin }: { shipped: number | null; isAdmin
 
         {isMake && (
           <p style={{ position: 'absolute', zIndex: 4, left: 0, right: 0, bottom: 86, margin: 0, textAlign: 'center', color: MUTED, fontSize: '.78rem' }}>
-            Tap the pegs, the bowl and the lanterns. Tap the figure to turn it.{ready === 'no' ? ' The figure did not load on this device; the walk works without it.' : ''}
+            Tap the pegs, the bowl and the lanterns. Tap the figure to turn it.{ready === 'no' ? ' The figure failed to load on this device. You can walk on without it.' : ''}
           </p>
         )}
         <div style={{ position: 'absolute', zIndex: 5, left: 0, right: 0, bottom: 4, display: 'flex', justifyContent: 'center', gap: 6 }} aria-hidden>
-          {['story', 'shape', 'make', 'feeling', 'grounds', 'dream', 'end'].map((k) => <i key={k} style={{ width: 6, height: 6, borderRadius: 3, background: id.startsWith(k) ? GOLD : LINE }} />)}
+          {['story', 'shape', 'make', 'packet', 'grounds', 'dream', 'end'].map((k) => <i key={k} style={{ width: 6, height: 6, borderRadius: 3, background: (k === 'packet' ? ['packet', 'planting', 'bed', 'stuck', 'harvest'].some((x) => id.startsWith(x)) : id.startsWith(k)) ? GOLD : LINE }} />)}
         </div>
 
         {offer && (

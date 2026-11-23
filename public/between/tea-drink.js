@@ -1,12 +1,12 @@
 /* The drink of tea as authored in Blender (round 5 of the Between tea, his choice on look tea-drink-look-1): the clips in
-   m/dusk/tea-drink.glb, baked by art/between/tea-drink/build.py from IK arms, a head that leads, an arc to the lips, unequal
+   m/cult/tea-drink-<f|m>.glb, baked by art/between/tea-drink/build.py from IK arms, a head that leads, an arc to the lips, unequal
    ease, overlap and a breathing layer, played on the live figure by a three.js AnimationMixer. No loading here and no scene,
-   so the page (tea.js) and the probe (tools/tea-hand-probe.mjs) play the same clips the same way.
+   so the page (tea.js) and the stills (tools/tea-stills.mjs) play the same clips the same way.
    The glb carries only turns for the bones the drink moves (spine, neck, head, both arms), as the bones' own local turns, so
    the legs, the hips and the robe stay the sit's. Its scene's extras hold the timeline the build wrote: the clips' times, the
    frame the hand lifts the cup, the stream, the lips, and the cup's place in the right hand (the Child Of the build switches
    to), so the cup the page draws sits where Blender held it. */
-export const DRINK_URL = "/between/m/dusk/tea-drink.glb";
+export const drinkUrl = who => `/between/m/cult/tea-drink-${who === "m" ? "m" : "f"}.glb`;   // one bake per cultivation figure (their bones differ)
 export const FADE = { cut: 0.12, join: 0.5, onset: 0.4 };   // crossfades (s): between clips cut from one bake, into a sip from the hold, off the sit
 
 const smooth = k => (k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k));
@@ -24,7 +24,7 @@ function runOf(tl, mode) {
 /* The drink's numbers from a parsed glb (GLTFLoader's result). */
 export function drinkFrom(gltf) {
   const tl = JSON.parse((gltf.scene && gltf.scene.userData && gltf.scene.userData.tea_drink) || "null");
-  if (!tl) throw new Error("tea-drink.glb has no timeline");
+  if (!tl) throw new Error("the tea-drink glb has no timeline");
   const keep = new Set(tl.driven);
   const clips = {};
   for (const a of gltf.animations) {

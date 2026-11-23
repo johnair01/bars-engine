@@ -397,33 +397,20 @@ const STREET = {
   puffer: { look: { shape: "c", build: "average", skin: "olive", style: "page", colour: "dark_brown", outfit: "coat", dye: "violet" },
         top: "#b0443c", cuff: "#8e352f", sleeve: "long", legs: "#8a8790", legsDark: "#6d6a73", shoes: "#d9d4ca", beanie: "#2e3b4a", pack: "#3e4a3a", shell: "puffer" },
 };
-let gltfDusk = null;
-export async function figure(kind = "me", look = null) {
-  const S = look ? { ...STREET[kind], look: { ...STREET[kind].look, ...look, outfit: "coat", dye: "violet" } } : STREET[kind];
-  const gl = gltfDusk || (gltfDusk = await loader.loadAsync("/between/m/dusk/average-dusk.glb"));
-  const root = gl.scene; root.updateMatrixWorld(true);
-  const bb = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); bb.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else bb.expandByObject(o); } });
-  const obj = skClone(root), k = 1.7 / Math.max(bb.getSize(V(0, 0, 0)).y, 0.01);
-  obj.scale.setScalar(k); obj.position.y = -bb.min.y * k;
-  const wardrobe = dressFigure(obj, await loadParts(u => loader.loadAsync(u)));
-  wardrobe.set(S.look);
-  street(obj, wardrobe, S);
-  obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-  const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
-  const mixer = new THREE.AnimationMixer(obj), acts = {};
-  for (const nm of ["Walk", "Idle"]) { const c = gl.animations.find(a => a.name === nm); if (c) { acts[nm] = mixer.clipAction(c); acts[nm].play(); } }
-  if (S.purse) {
-    // the purse at the hip (FR-009): drawn as weight, no count; three coins hang it low and round
-    const purse = new THREE.Group();
-    const bag = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), std(0x6a3b2a, { roughness: 0.7 })); bag.scale.set(1, 1.25, 0.8); purse.add(bag);
-    const tie = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.035, 0.05, 10), std(0xc9a25a)); tie.position.y = 0.1; purse.add(tie);
-    purse.position.set(-0.21, 0.88, 0.03); purse.scale.setScalar(1.25); holder.add(purse);
-    var purseBag = bag;
-  }
-  return { holder, mixer, acts, wardrobe, obj, purse: S.purse ? purseBag : null,
-    hang(w) { if (!this.purse) return; this.purse.scale.set(0.55 + 0.45 * w, 0.5 + 0.75 * w, 0.4 + 0.4 * w); this.purse.position.y = -0.03 * w; },   // fuller hangs lower and rounder
-    set(walk) { if (acts.Walk) acts.Walk.setEffectiveWeight(walk ? 1 : 0); if (acts.Idle) acts.Idle.setEffectiveWeight(walk ? 0 : 1); },
-    pose(dt) { mixer.update(dt); } };
+/* The hall's people are the cultivation characters (Wendell, 2026-11-16: Average Dusk is deprecated; docs/DEPRECATED_DUSK_FIGURE.md).
+   The street clothes of STREET were colour painted on the old body, so a visitor now wears a cultivation outfit instead; the
+   figure keeps the calls the hall makes (holder, set, pose, hang, obj). The bench sit and the purse weight were drawn on the old
+   skeleton and are not carried over (no purse, no sit pose yet). */
+const WHO = { me: "m", denim: "m", puffer: "f" }, WEAR = { me: "A3", denim: "B3", puffer: "C3" };   // street outfits in cult/make/parts.json: the real world, not the sect robe
+export async function figure(kind = "me") {
+  const { makeWalker } = await import("../cult/walker.js");
+  const W = await makeWalker({ who: WHO[kind] || "m", outfit: WEAR[kind] || "A3" });
+  const F = W.X.F, turn = -Math.atan2(F.fr.f.x, F.fr.f.z);   // the figure faces +z in its holder, as the hall's people did
+  if (Math.abs(turn) > 1e-3) { F.root.rotation.y = turn; F.fr.f.applyAxisAngle(V(0, 1, 0), turn); F.fr.l.applyAxisAngle(V(0, 1, 0), turn); F.root.updateMatrixWorld(true); }
+  scene.add(W.holder);
+  let walking = false;
+  return { holder: W.holder, obj: F.root, mixer: null, acts: {}, wardrobe: { set() {} }, purse: null,
+    hang() {}, set(walk) { walking = !!walk; }, pose(dt) { W.update(dt, walking); } };
 }
 function street(obj, wardrobe, S) {
   const L = wardrobe.layers, body = L.body;

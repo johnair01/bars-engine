@@ -1,0 +1,93 @@
+<!doctype html><meta charset=utf-8><body>
+<!-- Bakes the cultivation figure (public/between/cult/) into the cave's player/cult-f.glb and cult-m.glb; run by run.mjs. -->
+<script type="importmap">{"imports":{"three":"/nm/three/build/three.module.js","three/addons/":"/nm/three/examples/jsm/","three-mesh-bvh":"/nm/three-mesh-bvh/build/index.module.js"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
+import { makeWalker } from "/between/cult/walker.js";
+window.bake = async function (who) {
+  const w = await makeWalker({ who, outfit: "B2" });
+  const F = w.X.F, root = w.holder;
+  const meshes = []; root.traverse(o => { if (o.isMesh) meshes.push({ n: o.name, skinned: !!o.isSkinnedMesh, tris: (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3, mat: o.material.type, vc: !!o.geometry.attributes.color, map: !!o.material.map, vis: o.visible }); });
+  const mk = m => [m.type,m.roughness,m.metalness,m.side,m.transparent,m.opacity,m.emissive&&m.emissive.getHex(),m.emissiveIntensity,m.color.getHex(),m.flatShading,m.alphaTest].join('|'); const keys={}; root.traverse(o=>{ if(o.isMesh){ const k=mk(o.material); keys[k]=(keys[k]||0)+1; } }); console.log('KEYS '+JSON.stringify(keys));
+  // sample the stride: walk the holder so the phase advances by the ground covered, 24 frames a cycle after the blend settles
+  F.root.name = 'figroot'; console.log('FACING ' + JSON.stringify(F.fr.f.toArray()) + ' rootrot ' + F.root.rotation.y);
+  const bones = []; root.traverse(o => { if (o.isBone) bones.push(o); });
+  const STR = 1.0; // metres per cycle is internal; drive by position steps
+  let t = 0; w.holder.position.set(0, 0, 0);
+  const step = (d, moving) => { w.holder.position.z += d; w.update(1 / 60, moving); };
+  w.update(1/60, false);
+  for (let i = 0; i < 120; i++) step(0.03, true); // settle
+  const cyc = w.stride;
+  const N = 24, rec = [];
+  for (let k = 0; k < N; k++) {
+    // advance to the start of cycle + k/N
+    rec.push(null);
+  }
+  // record: continue from a crossing, step in N pieces
+  const recFrames = [], rootPos = [];
+  for (let k = 0; k < N; k++) {
+    step(cyc / N, true);
+    const fr = {}; for (const b of bones) fr[b.uuid] = [b.position.toArray(), b.quaternion.toArray()];
+    rootPos.push(...F.root.position.toArray());
+    recFrames.push(fr);
+  }
+  // idle: the rest pose (amt 0)
+  for (let i = 0; i < 300; i++) w.update(1 / 60, false);
+  const idleFr = {}; for (const b of bones) idleFr[b.uuid] = [b.position.toArray(), b.quaternion.toArray()];
+  const times = recFrames.map((_, k) => k / N * (1)); // 1 s per cycle, rate scaled in the cave
+  const tracks = [];
+  for (const b of bones) {
+    const pos = [], q = [];
+    for (const fr of recFrames) { pos.push(...fr[b.uuid][0]); q.push(...fr[b.uuid][1]); }
+    // close the loop
+    pos.push(...recFrames[0][b.uuid][0]); q.push(...recFrames[0][b.uuid][1]);
+    const tt = [...times, 1];
+    tracks.push(new THREE.VectorKeyframeTrack(b.name + ".position", tt, pos), new THREE.QuaternionKeyframeTrack(b.name + ".quaternion", tt, q));
+  }
+  tracks.push(new THREE.VectorKeyframeTrack('figroot.position', [...times, 1], [...rootPos, ...rootPos.slice(0, 3)]));
+  const walk = new THREE.AnimationClip("Walk", 1, tracks);
+  const itracks = [];
+  for (const b of bones) itracks.push(new THREE.VectorKeyframeTrack(b.name + ".position", [0, 1], [...idleFr[b.uuid][0], ...idleFr[b.uuid][0]]), new THREE.QuaternionKeyframeTrack(b.name + ".quaternion", [0, 1], [...idleFr[b.uuid][1], ...idleFr[b.uuid][1]]));
+  itracks.push(new THREE.VectorKeyframeTrack('figroot.position', [0, 1], [...F.root.position.toArray(), ...F.root.position.toArray()]));
+  const idle = new THREE.AnimationClip("Idle", 1, itracks);
+  // cycle distance in figure heights, for foot-matching in the cave
+  root.position.set(0, 0, 0); root.updateMatrixWorld(true);
+  root.updateMatrixWorld(true); const box = new THREE.Box3(); F.mesh.computeBoundingBox(); box.copy(F.mesh.boundingBox).applyMatrix4(F.mesh.matrixWorld);
+  // merge the meshes that share a material into one skinned mesh each (83 draw calls to a dozen)
+  const sk = F.mesh.skeleton, groups = {}; let bad = 0;
+  root.updateMatrixWorld(true);
+  root.traverse(o => { if (!o.isSkinnedMesh) return;
+    if (o.skeleton.bones.length !== sk.bones.length || o.skeleton.boneInverses.some((m, i) => m.elements.some((v, j) => Math.abs(v - sk.boneInverses[i].elements[j]) > 1e-5)) || o.bindMatrix.elements.some((v, j) => Math.abs(v - F.mesh.bindMatrix.elements[j]) > 1e-5) || o.matrixWorld.elements.some((v, j) => Math.abs(v - F.mesh.matrixWorld.elements[j]) > 1e-5)) bad++;
+    (groups[mk(o.material)] = groups[mk(o.material)] || []).push(o); });
+  console.log("MISMATCH " + bad);
+  const parent = F.mesh.parent; const KEEP = ["position", "normal", "color", "skinIndex", "skinWeight"];
+  let gi = 0; const merged = [];
+  for (const k in groups) {
+    const list = groups[k]; const geos = list.map(o => { const g = o.geometry.clone(); for (const n of Object.keys(g.attributes)) if (!KEEP.includes(n)) g.deleteAttribute(n);
+      for (const n of KEEP) if (!g.attributes[n]) { console.log("MISSING " + n); }
+      if (!g.index) { const c = g.attributes.position.count; g.setIndex(Array.from({ length: c }, (_, i) => i)); } return g; });
+    const g = mergeGeometries(geos, false); const m = new THREE.SkinnedMesh(g, list[0].material); m.name = "part" + (gi++);
+    m.frustumCulled = false; m.bind(sk, F.mesh.bindMatrix); merged.push([m, list]);
+  }
+  for (const [m, list] of merged) { for (const o of list) o.removeFromParent(); parent.add(m); }
+  root.updateMatrixWorld(true);
+  console.log("MERGED " + merged.length);
+  // r160 lights in linear light and shows sRGB; the cave's r128 page shows what it is given, as its own colours are written. So the
+  // colours are baked as sRGB values (vertex colours and each material's colour)
+  const lin2s = x => x <= 0.0031308 ? x * 12.92 : 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
+  for (const [m] of merged) { const c = m.geometry.attributes.color; if (c) for (let i = 0; i < c.count; i++) for (let k = 0; k < 3; k++) c.setComponent(i, k, lin2s(c.getComponent(i, k))); const mt = m.material; mt.color.setRGB(lin2s(mt.color.r), lin2s(mt.color.g), lin2s(mt.color.b), THREE.LinearSRGBColorSpace); }
+  // quantise what the phone does not need at full width: normals to bytes, colours to bytes, joints to bytes, weights to bytes
+  for (const [m] of merged) { const g = m.geometry, A = g.attributes;
+    const to = (name, Ctor, items, norm) => { const a = A[name]; if (!a) return; const out = new Ctor(a.count * items); for (let i = 0; i < a.count; i++) for (let c = 0; c < items; c++) out[i * items + c] = a.itemSize > c ? (norm === "n" ? Math.round(Math.max(-1, Math.min(1, a.getComponent(i, c))) * 127) : norm === "u" ? Math.round(Math.max(0, Math.min(1, a.getComponent(i, c))) * 255) : a.getComponent(i, c)) : (norm === "u" && c === 3 ? 255 : 0); g.setAttribute(name, new THREE.BufferAttribute(out, items, norm === "n" || norm === "u")); };
+    to("normal", Int8Array, 3, "n"); to("color", Uint8Array, 3, "u"); to("skinIndex", Uint8Array, 4, null); to("skinWeight", Uint8Array, 4, "u");
+  }
+  // restore the rest pose in the scene graph for export
+  const names = bones.map(b => b.name);
+  const out = await new Promise((res, rej) => new GLTFExporter().parse(root, res, rej, { binary: true, animations: [walk, idle], onlyVisible: true }));
+  const bytes = new Uint8Array(out); let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return { meshes, nb: bones.length, names: names.slice(0, 5), cyc, height: box.max.y - box.min.y, box: [box.min.toArray(), box.max.toArray()], b64: btoa(s) };
+};
+window.ready = true;
+</script>

@@ -1,6 +1,7 @@
 // BARs farm, slice one (bars-farm T004/T005, round 3 look). Rules live on the server (src/lib/between/farm.ts); this page draws the farm
 // doc from GET /api/between/farm and sends one act at a time. Style: one toon ramp, from the stills' make/farm.js (council 2026-11-09-farm-3).
 import * as THREE from 'three';
+import { barCard, sealSvg } from '../bar-card.js';
 
 const COLS = 14, ROWS = 11, STEP = 0.9, SLOTS = COLS * ROWS, GROW = 7;
 const Q = new URLSearchParams(location.search);
@@ -105,7 +106,54 @@ const tuft = (x, z, s = 1, dry = 0) => { const G = new THREE.Group(); const n = 
 const slabGeo = new THREE.BoxGeometry(STEP * 0.86, 0.1, STEP * 0.86);
 function leafy(h, n) { const G = new THREE.Group(); const st = mesh(new THREE.CylinderGeometry(0.02, 0.03, h, 6), toon(PAL.leafA)); st.position.y = h / 2; G.add(st);
   for (let i = 0; i < n; i++) { const l = mesh(new THREE.SphereGeometry(0.08, 8, 6), toon(i % 2 ? PAL.leafB : PAL.leafA)); l.scale.set(1.7, 0.3, 0.75); const a = i * 2.4; l.position.set(Math.cos(a) * 0.1, 0.1 + (h - 0.1) * (i / Math.max(1, n)), Math.sin(a) * 0.1); l.rotation.y = -a; l.rotation.z = 0.35; G.add(l); } return G; }
+// ---------- satisfaction crops (design pass satisfaction-crops-2026-11-16): a ripe plant with a crop draws its family ----------
+const CLEAF = '#5f9e45', CLEAF2 = '#7cbb52';
+const CHANNEL_LIGHT = { anger: '#ff9a6b', sadness: '#8fb8ff', fear: '#e6edf5', joy: '#b6f08a', neutrality: '#f3d79a' };
+const FAMILIES = [
+  { channel: 'anger', state: 'Triumph', crop: 'Ember pepper', fruit: '#e2522f' },
+  { channel: 'sadness', state: 'Poignance', crop: 'Rain bell', fruit: '#5f86d9' },
+  { channel: 'fear', state: 'Wonder-Excitement', crop: 'Moon radish', fruit: '#f4f1ea' },
+  { channel: 'joy', state: 'Bliss', crop: 'Sun pea', fruit: '#9fd84a' },
+  { channel: 'neutrality', state: 'Peace', crop: 'Hearth squash', fruit: '#f2b93a' },
+];
+function cropLeaf(len, w, c) { const g = new THREE.SphereGeometry(0.1, 10, 6); g.translate(0.1, 0, 0); const l = mesh(g, toon(c)); l.scale.set(len * 10, 0.28, w * 10); return l; }
+function cropStem(h, c = CLEAF, r = 0.02) { const s = mesh(new THREE.CylinderGeometry(r * 0.7, r, h, 6), toon(c)); s.position.y = h / 2; return s; }
+function cropHalo(G, y, c, r = 0.22) { const h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), glow(c, { transparent: true, opacity: 0.28, depthWrite: false })); h.position.y = y; G.add(h); }
+const builders = {
+  anger(f) { const G = new THREE.Group(); G.add(cropStem(0.5));
+    for (let i = 0; i < 7; i++) { const l = cropLeaf(0.018, 0.008, i % 2 ? CLEAF : CLEAF2); l.position.y = 0.15 + i * 0.05; l.rotation.y = i * 2.3; l.rotation.z = 0.4; G.add(l); }
+    for (let i = 0; i < 5; i++) { const a = i * 1.26, p = mesh(new THREE.ConeGeometry(0.045, 0.2, 10), toon(f.fruit, { emissive: new THREE.Color('#3a0a00') })); p.rotation.z = Math.PI; p.position.set(Math.cos(a) * 0.13, 0.33 + (i % 2) * 0.08, Math.sin(a) * 0.13); G.add(p);
+      const c = mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.03, 6), toon(CLEAF)); c.position.copy(p.position); c.position.y += 0.1; G.add(c); }
+    cropHalo(G, 0.38, CHANNEL_LIGHT.anger, 0.26); return G; },
+  sadness(f) { const G = new THREE.Group();
+    for (let k = 0; k < 3; k++) { const S = new THREE.Group(); S.add(cropStem(0.62, CLEAF, 0.015)); S.rotation.z = 0.25; S.rotation.y = k * 2.1; G.add(S);
+      for (let i = 0; i < 3; i++) { const b = mesh(new THREE.ConeGeometry(0.05, 0.09, 12, 1, true), toon(f.fruit, { side: THREE.DoubleSide })); const y = 0.36 + i * 0.1; b.position.set(0.06 + i * 0.015, y, 0); b.rotation.z = 0.2; S.add(b);
+        const d = mesh(new THREE.SphereGeometry(0.012, 6, 4), glow('#dceaff')); d.position.set(0.06 + i * 0.015, y - 0.06, 0); S.add(d); } }
+    for (let i = 0; i < 6; i++) { const l = cropLeaf(0.02, 0.006, i % 2 ? CLEAF : CLEAF2); l.position.y = 0.05; l.rotation.y = i * 1.05; l.rotation.z = -0.25; G.add(l); }
+    cropHalo(G, 0.45, CHANNEL_LIGHT.sadness, 0.25); return G; },
+  fear(f) { const G = new THREE.Group(); const r = mesh(new THREE.SphereGeometry(0.11, 16, 12), toon(f.fruit, { emissive: new THREE.Color('#202430') })); r.scale.set(1, 1.15, 1); r.position.y = 0.08; G.add(r);
+    for (let i = 0; i < 7; i++) { const l = mesh(new THREE.ConeGeometry(0.035, 0.55 + (i % 3) * 0.08, 6), toon(i % 2 ? '#6fae5a' : '#8cc4a0')); l.position.set(Math.cos(i * 0.9) * 0.04, 0.42, Math.sin(i * 0.9) * 0.04); l.rotation.set(Math.sin(i * 0.9) * 0.3, 0, Math.cos(i * 0.9) * 0.3); G.add(l); }
+    for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 4), glow('#ffffff')); s.position.set(Math.cos(i) * 0.2, 0.5 + (i % 3) * 0.12, Math.sin(i) * 0.2); G.add(s); }
+    cropHalo(G, 0.15, CHANNEL_LIGHT.fear, 0.24); return G; },
+  joy(f) { const G = new THREE.Group();
+    for (const x of [-0.14, 0.14]) { const p = mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.8, 5), toon('#b07c4c')); p.position.set(x, 0.4, 0); G.add(p); }
+    const bar = mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.32, 5), toon('#b07c4c')); bar.rotation.z = Math.PI / 2; bar.position.y = 0.78; G.add(bar);
+    const pts = []; for (let t = 0; t <= 1.0001; t += 0.05) pts.push(new THREE.Vector3(Math.sin(t * 12) * 0.13, 0.02 + t * 0.75, Math.cos(t * 12) * 0.04));
+    G.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.012, 5), toon(CLEAF)));
+    pts.forEach((q, i) => { if (i % 2) return; const l = cropLeaf(0.008, 0.005, i % 4 ? CLEAF2 : CLEAF); l.position.copy(q); l.rotation.y = i; G.add(l);
+      if (i % 4 === 0 && i > 2) { const pod = mesh(new THREE.CapsuleGeometry(0.025, 0.1, 4, 8), toon(f.fruit, { emissive: new THREE.Color('#1c3000') })); pod.position.copy(q); pod.position.x += 0.04; pod.rotation.z = 0.5; G.add(pod); }
+      if (i % 6 === 2) { const fl = mesh(new THREE.SphereGeometry(0.03, 8, 6), toon('#fff3a8')); fl.position.copy(q); fl.position.x -= 0.04; G.add(fl); } });
+    cropHalo(G, 0.45, CHANNEL_LIGHT.joy, 0.3); return G; },
+  neutrality(f) { const G = new THREE.Group(); const sq = mesh(new THREE.SphereGeometry(0.15, 18, 12), toon(f.fruit, { emissive: new THREE.Color('#3a2600') })); sq.scale.set(1.15, 0.8, 1.15); sq.position.y = 0.12; G.add(sq);
+    for (let i = 0; i < 8; i++) { const rib = mesh(new THREE.TorusGeometry(0.15, 0.008, 4, 24), toon('#d79a22')); rib.scale.set(1.15, 0.8, 1.15); rib.rotation.order = 'YXZ'; rib.rotation.set(0, i * Math.PI / 8, 0); rib.position.y = 0.12; G.add(rib); }
+    const st = mesh(new THREE.CylinderGeometry(0.015, 0.025, 0.07, 6), toon('#6b7a2e')); st.position.y = 0.25; G.add(st);
+    for (let i = 0; i < 4; i++) { const l = cropLeaf(0.022, 0.016, i % 2 ? CLEAF : CLEAF2); l.position.y = 0.03; l.rotation.y = i * 1.57 + 0.6; l.rotation.z = -0.1; G.add(l); }
+    cropHalo(G, 0.14, CHANNEL_LIGHT.neutrality, 0.27); return G; },
+};
+function cropMesh(channel) { const f = FAMILIES.find(x => x.channel === channel); return builders[channel](f); }
+
 function plantMesh(p) { const d = p.tendedDays; const G = new THREE.Group();
+  if (p.ripe && p.crop && builders[p.crop.family]) return cropMesh(p.crop.family);   // stages before ripe stay leafy
   if (p.ripe) { const g = leafy(0.7, 6); G.add(g); const pod = mesh(new THREE.SphereGeometry(0.11, 14, 10), toon(PAL.pod, { emissive: new THREE.Color('#5a3f00') })); pod.scale.set(0.85, 1.25, 0.85); pod.position.y = 0.82; G.add(pod);
     const halo = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), glow(PAL.podHi, { transparent: true, opacity: 0.35, depthWrite: false })); halo.position.y = 0.82; G.add(halo); }
   else if (d === 0) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), glow(PAL.seed)); s.scale.set(.8, 1.2, .8); s.position.y = 0.14; G.add(s); const h = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), glow('#fff2c0', { transparent: true, opacity: 0.35, depthWrite: false })); h.position.y = 0.14; G.add(h); }
@@ -311,6 +359,20 @@ function closeDeepen() { deep = null; deepGroup.clear(); renderCard(); }
 async function fieldSpirits() { const w = Object.entries(FARM.slots).find(([, s]) => s.state === 'weeded'); if (!w) return; const [x, z] = slotXZ(+w[0]);
   const sp = await spirit('skeptic', 0xb89a3a, x, z, 1.0, 0.35, 'gas'); if (sp) deepGroup.add(sp); const t = tag(x + 0.9, 1.2, z - 0.2, [w[1].plant.line.slice(0, 18), 'the Skeptic']); t.lookAt(camera.position.x, 1.2, camera.position.z); t.rotation.x = 0; deepGroup.add(t); }
 
+// ---------- the BARs the Elder handed: the same two-sided card as the altar (bar-two-sides spec, slice 3) ----------
+// GET /api/between/quest-bar?all=1 lists the player's BARs with their seals. A tilled slot offers them to plant; a planted one shows its card.
+let QB = []; const qbById = id => QB.find(b => b.id === id);
+const loadQB = async () => { try { const r = await fetch('/api/between/quest-bar?all=1', { credentials: 'same-origin' }); if (r.ok) QB = (await r.json()).bars || []; } catch (e) { /* offline: the farm still works without the cards */ } };
+const short = t => { const w = String(t).split(/\s+/).slice(0, 8).join(' '); return w.length < String(t).length ? w + '…' : w; };
+const cardBox = document.createElement('div'); cardBox.id = 'bqo'; cardBox.hidden = true; cardBox.style.display = 'none'; cardBox.setAttribute('role', 'dialog'); cardBox.setAttribute('aria-label', 'Your BAR card');
+cardBox.style.cssText = 'position:fixed;inset:0;z-index:50;background:rgba(20,16,12,.72);place-items:center;align-content:center;gap:14px;padding:16px';
+document.body.append(cardBox);
+const closeCard = () => { cardBox.hidden = true; cardBox.style.display = 'none'; };
+const openCard = b => { cardBox.replaceChildren(barCard({ seal: b.seal, title: 'Tonight', moment: { sentence: b.sentence, at: b.at } })); const x = document.createElement('button'); x.type = 'button'; x.textContent = 'Close'; x.onclick = closeCard; cardBox.append(x); cardBox.hidden = false; cardBox.style.display = 'grid'; x.focus(); };
+addEventListener('keydown', e => { if (e.key === 'Escape') closeCard(); });
+/** A small seal you can tap to turn into the whole card. */
+const thumb = b => `<button type="button" class="alt qb-thumb" data-qb="${esc(b.id)}" aria-label="Open the BAR card: ${esc(short(b.sentence))}" style="display:flex;gap:10px;align-items:center;text-align:left;min-height:64px;padding:6px 10px"><span style="width:52px;height:52px;flex:none;background:#1b120d;border-radius:8px;display:block">${sealSvg(b.seal, 'qt' + esc(b.id).slice(-5))}</span><span><b style="font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;opacity:.8">A BAR the Elder handed you</b><br>${esc(short(b.sentence))}</span></button>`;
+
 // ---------- the card and the acts ----------
 const card = $('card'), cap = $('cap'); let capT;
 function say(t, ms = 5000) { cap.textContent = t; cap.classList.add('on'); clearTimeout(capT); capT = setTimeout(() => cap.classList.remove('on'), ms); }
@@ -328,14 +390,15 @@ function renderCard() {
   if (SEL == null) { card.hidden = true; return; } const s = FARM.slots[SEL], p = s && s.plant; card.hidden = false; card.className = 'card' + (deep != null ? ' deepen' : '');
   const inp = (id, ph) => `<div class="row"><input id="${id}" maxlength="280" placeholder="${ph}" aria-label="${ph}"></div>`; let h = '';
   if (!s) h = `<h2>Untilled earth</h2><p>Swing the hoe to break this slot into rows.</p><div class="row"><button id="b-till" ${FARM.mana < 5 ? 'disabled' : ''}>Till it · 5 mana</button><button class="alt" id="b-x">Close</button></div>`;
-  else if (s.state === 'tilled') h = `<h2>Soil</h2><p>Plant a BAR as a seed, with one line (one word is enough).</p>${SATCHEL.length ? `<h3>Plant from your satchel</h3><div class="row">${SATCHEL.map(x => `<button class="alt" data-seed="${esc(x.id)}">${esc(x.label)}</button>`).join('')}</div>` : ''}${inp('f-bar', 'The BAR to plant')}${inp('f-line', 'What you want from it')}<div class="row"><button id="b-plant">Kneel and plant</button><button class="alt" id="b-x">Close</button></div>`;
+  else if (s.state === 'tilled') h = `<h2>Soil</h2><p>Plant a BAR as a seed, with one line (one word is enough).</p>${SATCHEL.length ? `<h3>Plant from your satchel</h3><div class="row">${SATCHEL.map(x => `<button class="alt" data-seed="${esc(x.id)}">${esc(x.label)}</button>`).join('')}</div>` : ''}${QB.filter(b => !b.ended && !Object.values(FARM.slots).some(x => x && x.plant && x.plant.barId === b.id)).slice(0, 2).map(thumb).join('')}${inp('f-bar', 'The BAR to plant')}${inp('f-line', 'What you want from it')}<div class="row"><button id="b-plant">Kneel and plant</button><button class="alt" id="b-x">Close</button></div>`;
   else if (s.state === 'weeded') h = `<h2>${esc(p.line)}</h2><p>Weeds have crept over it. Your ${p.tendedDays} tended days wait underneath.</p>${inp('f-line', 'What kept you away?')}<div class="row"><button id="b-reclear" ${FARM.mana < 1 ? 'disabled' : ''}>Clear the weeds · 1 mana</button><button class="alt" id="b-x">Close</button></div>`;
-  else if (p.ripe) h = `<h2>${esc(p.line)}</h2><p>Full. Ready to pick.</p><div class="row"><button id="b-pick">Pick it</button><button class="alt" id="b-deep">Look closer</button><button class="alt" id="b-x">Close</button></div>`;
+  else if (p.ripe) h = `<h2>${esc(p.line)}</h2><p>Full. Ready to pick.</p>${qbById(p.barId) ? thumb(qbById(p.barId)) : ''}<div class="row"><button id="b-pick">Pick it</button><button class="alt" id="b-deep">Look closer</button><button class="alt" id="b-x">Close</button></div>`;
   else if (deep != null) h = `<div style="font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#7a4a2c">A planted BAR, growing</div><h2 style="font-size:1.7rem;font-style:italic">${esc(p.line)}</h2><p>${p.tendedDays} of ${GROW} days. ${p.notes.length ? p.notes.map(n => `<i>${esc(n.line)}</i>`).join(', ') : ''}</p><b>What from today feeds this?</b>${inp('f-line', 'A line from your day')}<div class="row"><button id="b-aligned">Grow a leaf</button><button class="alt" id="b-ripe">It is done: ripen</button><button class="alt" id="b-x">Back to the field</button></div><p>The Protector is listening.</p>`;
-  else h = `<h2>${esc(p.line)}</h2><p>${p.tendedDays} of ${GROW} days.</p><div class="row"><button id="b-water" ${FARM.mana < 1 ? 'disabled' : ''}>Water · 1 mana</button><button class="alt" id="b-deep">Look closer</button><button class="alt" id="b-x">Close</button></div>`;
+  else h = `<h2>${esc(p.line)}</h2><p>${p.tendedDays} of ${GROW} days.</p>${qbById(p.barId) ? thumb(qbById(p.barId)) : ''}<div class="row"><button id="b-water" ${FARM.mana < 1 ? 'disabled' : ''}>Water · 1 mana</button><button class="alt" id="b-deep">Look closer</button><button class="alt" id="b-x">Close</button></div>`;
   card.innerHTML = h; const on = (id, f) => { const b = $(id); if (b) b.onclick = f; }; const val = id => ($(id) ? $(id).value.trim() : '');
   on('b-x', () => { if (deep != null) closeDeepen(); else { SEL = null; selRing.visible = false; renderCard(); } }); on('b-deep', () => openDeepen(SEL)); on('b-till', () => act('till'));
-  on('b-plant', () => { const bar = val('f-bar'), line = val('f-line'); if (!bar || !line) return say('A BAR and one line.'); act('plant', { barId: 'bar-' + bar.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) + '-' + Date.now().toString(36), line }); });
+  on('b-plant', () => { const bar = val('f-bar'), line = val('f-line'); if (!bar || !line) return say('A BAR and one line.'); act('plant', { barId: ($('f-bar').dataset.barId && $('f-bar').value === short(qbById($('f-bar').dataset.barId).sentence)) ? $('f-bar').dataset.barId : 'bar-' + bar.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) + '-' + Date.now().toString(36), line }); });
+  card.querySelectorAll('[data-qb]').forEach(b => { b.onclick = () => { const q = qbById(b.dataset.qb); if (q) { if ($('f-bar')) { $('f-bar').value = short(q.sentence); $('f-bar').dataset.barId = q.id; } openCard(q); } }; });
   for (const b of card.querySelectorAll('[data-seed]')) b.onclick = async () => { swing = 1; swingKind = 'tend'; const j = await api({ act: 'plant-seed', i: SEL, seedId: b.dataset.seed }); if (!j) return; SATCHEL = j.satchelSeeds || []; renderCard(); };
   on('b-water', () => act('water')); on('b-reclear', () => { const line = val('f-line'); if (!line) return say('One line about what kept you away.'); act('reclear', { line }); });
   on('b-ripe', () => { const line = val('f-line'); if (!line) return say('One line about what you did.'); act('ripen', { line }); });
@@ -366,7 +429,7 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
 (async () => {
   const r = await fetch('/api/between/farm?today=' + localDay()); if (!r.ok) { $('loading').textContent = r.status === 401 ? 'Sign in to bars-engine to open your farm' : 'The farm could not open'; return; }
   const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); drawWorld(j.world); setParcels(j); fieldSpirits();
-  await Promise.all([api({ act: 'enter' }), loadCultivator()]);
+  await Promise.all([api({ act: 'enter' }), loadCultivator(), loadQB()]);
   const IN = V(0, 0, FZ - 1.3);   // inside the gate, in front of the first row
   if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land, fenced and waiting. Every slot is bare earth until you till it.', 7000); avatar.position.set(0, 0, FZ + 2.2); setTimeout(() => { faceTo = V(0, 0, 0); routeTo(IN); }, 3500); }
   else { avatar.position.set(0, 0, FZ + 3.2); faceTo = V(0, 0, 0); routeTo(IN); }
