@@ -24,7 +24,7 @@ import { sendAppreciationAction } from '@/actions/appreciation'
 import { getCurrentPlayerId } from '@/actions/auth'
 import { getAdventuresForQuest } from '@/lib/quest-adventure'
 import { recordQuestFriction } from '@/actions/friction'
-import { FRICTION_TYPES, type FrictionType } from '@/lib/friction-types'
+import { FRICTION_TYPES, SHADOW_BELIEF_LABELS, type FrictionType } from '@/lib/friction-types'
 import { getNextActionForQuest, linkBarToQuestAsNextAction } from '@/actions/next-action-bridge'
 import { collapseQuestToBar } from '@/actions/bars'
 
@@ -38,6 +38,11 @@ interface QuestDetailModalProps {
         reward: number
         inputs?: string // JSON definition of inputs
         moveType?: string | null
+        /** Compose-and-validate: the belief this quest is written against, and the disproof. */
+        questBeliefKey?: string | null
+        prediction?: string | null
+        predictionDue?: string | null
+        predictionOutcome?: string | null
         twineLogic?: string | null // JSON string of TwineLogic
         twineStoryId?: string | null // Reference to uploaded TwineStory
         microTwine?: {
@@ -87,6 +92,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
     const [responses, setResponses] = useState<Record<string, any>>({})
+    const [predictionOutcome, setPredictionOutcome] = useState<'met' | 'missed' | 'redefined' | null>(null)
     const [intentionMode, setIntentionMode] = useState<'direct' | 'guided' | 'options'>('direct')
 
     // Nation moves / graveyard state
@@ -252,7 +258,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const handleComplete = () => {
         if (isPending) return
         startTransition(async () => {
-            const result = await completeQuest(quest.id, { ...responses, autoTriggered: archetypeData ? true : false }, { ...context, source: 'dashboard' })
+            const result = await completeQuest(quest.id, { ...responses, ...(predictionOutcome ? { predictionOutcome } : {}), autoTriggered: archetypeData ? true : false }, { ...context, source: 'dashboard' })
             if ('success' in result && result.success) {
                 const r = result as { campaignImpact?: string; nextQuestId?: string; nextQuestTitle?: string; reward?: number; threadType?: string | null }
                 setCompletionResult({
@@ -609,7 +615,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                                         : 'border-cyan-700/50 bg-cyan-900/20 text-cyan-200 hover:bg-cyan-800/30 disabled:opacity-50'
                                                 }`}
                                             >
-                                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                {SHADOW_BELIEF_LABELS[type]}
                                             </button>
                                         ))}
                                     </div>
@@ -957,6 +963,50 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         />
                     )}
 
+                    {/* COMPOSE-AND-VALIDATE: the disproof the player wrote when they made this quest. */}
+                    {quest.prediction && (
+                        <div className="mx-4 mb-4 rounded-lg border border-emerald-900/60 bg-emerald-950/20 p-4 space-y-3">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-emerald-400/80">
+                                The disproof you wrote
+                            </p>
+                            <p className="text-sm text-emerald-100/90 whitespace-pre-wrap">{quest.prediction}</p>
+                            {quest.predictionDue && (
+                                <p className="text-[11px] text-emerald-700 font-mono">due {quest.predictionDue.slice(0, 10)}</p>
+                            )}
+                            {quest.predictionOutcome ? (
+                                <p className="text-[11px] uppercase tracking-widest font-mono text-emerald-600">
+                                    verdict: {quest.predictionOutcome}
+                                </p>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-[11px] font-mono uppercase tracking-widest text-zinc-500">
+                                        Did it hold?
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {([
+                                            ['met', 'It held'],
+                                            ['missed', 'It did not hold'],
+                                            ['redefined', 'It moved'],
+                                        ] as const).map(([value, label]) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setPredictionOutcome(value)}
+                                                className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors ${
+                                                    predictionOutcome === value
+                                                        ? 'border-emerald-400 bg-emerald-900/60 text-emerald-100'
+                                                        : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                                }`}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* TWINE NARRATIVE ENGINE (LEGACY/JSON) */}
                     {shouldRenderTwine && effectiveTwineLogic && (
                         <QuestTwinePlayer
@@ -971,7 +1021,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
                                 setResponses(mergedResponses)
                                 startTransition(async () => {
-                                    const result = await completeQuest(quest.id, mergedResponses, { ...context, source: 'dashboard' })
+                                    const result = await completeQuest(quest.id, { ...mergedResponses, ...(predictionOutcome ? { predictionOutcome } : {}) }, { ...context, source: 'dashboard' })
                                     if ('success' in result && result.success) {
                                         const r = result as { campaignImpact?: string; nextQuestId?: string; nextQuestTitle?: string; reward?: number; threadType?: string | null }
                                         setCompletionResult({

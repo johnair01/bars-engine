@@ -418,6 +418,7 @@ export async function getLinkableQuests() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wizard form data shape varies
+import { isShadowBelief } from '@/lib/friction-types'
 export async function createQuestFromWizard(data: any) {
     const requestId = createRequestId()
     const cookieStore = await cookies()
@@ -425,6 +426,24 @@ export async function createQuestFromWizard(data: any) {
 
     if (!playerId) {
         return { error: 'Not logged in' }
+    }
+
+    // Compose-and-validate (Q3): a quest enters only with a belief from the closed six and a
+    // dated disproof. A form-only guard is bypassed by a direct call, so the refusal is here.
+    const questBeliefKey = typeof data?.questBeliefKey === 'string' ? data.questBeliefKey.trim() : ''
+    const questPrediction = typeof data?.prediction === 'string' ? data.prediction.trim() : ''
+
+    const dueRaw = typeof data?.predictionDue === 'string' ? new Date(data.predictionDue) : null
+    const questPredictionDue = dueRaw && !Number.isNaN(dueRaw.getTime()) ? dueRaw : null
+
+    if (!isShadowBelief(questBeliefKey) || !questPrediction) {
+        return { error: 'name the belief this quest is against, then name what would show you it was wrong' }
+    }
+
+    // The horizon is required at authoring, not defaulted: a default writes a deadline the player
+    // did not choose, and a blank lets the prediction sit unmeasured. Neither is the player's answer.
+    if (!questPredictionDue) {
+        return { error: 'name when you would expect to know whether that was wrong' }
     }
 
     try {
@@ -467,6 +486,8 @@ export async function createQuestFromWizard(data: any) {
             }
             gmFaceMoveId?: string | null
             kotterHexagramId?: number | null
+            beliefKey?: string | null
+            prediction?: string | null
         }
 
         const creator = await db.player.findUnique({
@@ -644,6 +665,9 @@ export async function createQuestFromWizard(data: any) {
                     allyshipDomain: finalAllyshipDomain,
                     campaignRef: (dataCampaignRef as string) || null,
                     campaignGoal: effectiveCampaignGoal,
+                    questBeliefKey,
+                    prediction: questPrediction,
+                    predictionDue: questPredictionDue,
                     ...(kotterWizardStamp
                         ? {
                               kotterStage: kotterWizardStamp.kotterStage,

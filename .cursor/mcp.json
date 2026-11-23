@@ -1,9 +1,10 @@
 {
   "mcpServers": {
-    "bars-agents": {
-      "command": "bash",
-      "args": ["scripts/run-bars-agents-mcp.sh"],
-      "cwd": "${workspaceFolder}"
+    "council-board": {
+      "url": "https://bars-engine.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:COUNCIL_MENU_TOKEN}"
+      }
     }
   }
 }

@@ -9,24 +9,21 @@ alwaysApply: true
 
 The six Game Master faces are: **shaman**, **regent**, **challenger**, **architect**, **diplomat**, **sage**.
 
-**Sage = integration agent** — synthesis, meta, coordination, cross-cutting. For integration work, use `sage_consult` (bars-agents MCP) or `mcp_task` with subagent_type `evaluator`.
+**Sage = integration agent** — synthesis, meta, coordination, cross-cutting. For integration work, use `mcp_task` with subagent_type `evaluator`, or `read_rows` on council-board when the answer is already a stored record.
 
-## MCP must be available (do not skip)
+## MCP: council-board is the only mounted server
 
-When the user requires **bars-agents**, **sage_consult**, or **strand** synthesis via MCP:
+`bars-agents` (local Python, `backend/app/mcp_server.py`) is **archived as a mount**. Cursor no longer launches it. Its tools — `sage_consult`, `challenger_propose`, `shaman_read`, `architect_draft`, `regent_assess`, `diplomat_guide`, `diplomat_bridge`, `architect_compile` — are **not callable from the editor**. The backend agents still run inside the app; they are no longer an editor surface. `npm run verify:bars-agents-mcp`, `scripts/verify-bars-agents-mcp.ts`, and `scripts/mcp-serve-with-backend.ts` remain in the repo unmaintained.
 
-1. Run **`npm run verify:bars-agents-mcp`** and fix failures before treating MCP as unavailable.
-2. Confirm **Cursor → Settings → MCP → bars-agents** is enabled; **Reload Window** if the server does not show.
-3. **Do not** substitute inline “Sage” prose instead of calling **`sage_consult`** or **`strand_run`** if the workflow explicitly depends on MCP.
-4. If **`call_mcp_tool` fails** (e.g. backend health, URL errors): **do not** decide unilaterally to skip MCP. Report the error, follow `docs/AGENT_WORKFLOWS.md` (local FastAPI: `npm run dev:backend`, optional **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`** in `.env.local`, verify + reload), **retry the tool**, or **ask the user** for direction before substituting prose.
+`.cursor/mcp.json` mounts **council-board**: `https://bars-engine.vercel.app/api/mcp`, bearer `COUNCIL_MENU_TOKEN` read from the environment Cursor inherits. Tools: `read_rows`, `post_board_docs`, `write_board_rows`.
 
-The MCP health probe **retries local `http://127.0.0.1:8000/api/health`** once when the primary URL fails (`backend/app/mcp_health.py`) — ensure local API is running so that retry can succeed.
+Before calling any move-shaped tool, read the store record `engine-usage-for-environments` — board `council`, collection `records`. It holds the fifteen canonical positions and the refusal rules. A move that is not in the record is not legal, and the server refuses it loudly rather than accepting a near-miss.
 
-See `docs/AGENT_WORKFLOWS.md` § **MCP availability (do not skip)**.
+If the server does not appear in Cursor: confirm `COUNCIL_MENU_TOKEN` is exported in the environment Cursor inherits, then **Reload Window**.
 
-## bars-agents as orchestrators, Cursor subagents as tools
+## Faces without the server
 
-When delegating via `mcp_task`, use the Sage's mapping:
+When council-board is unreachable, do not invent a face's verdict. Use the subagent mapping below and label the output as a subagent read, not a face call.
 
 | Face | Cursor subagent |
 |------|-----------------|
@@ -36,15 +33,3 @@ When delegating via `mcp_task`, use the Sage's mapping:
 | architect | generalPurpose |
 | diplomat | simplifier |
 | sage | evaluator |
-
-- Prefer **bars-agents MCP tools** for BARS domain work (quest design, emotional reading, campaign assessment, copy refinement, integration).
-- When using `mcp_task`, pick subagent by the face you're embodying.
-
-## Tool mapping (bars-agents MCP)
-
-- architect_draft, architect_compile → architect
-- challenger_propose → challenger
-- shaman_read, shaman_identify → shaman
-- regent_assess → regent
-- diplomat_guide, diplomat_bridge → diplomat
-- sage_consult → sage

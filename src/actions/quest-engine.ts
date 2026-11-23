@@ -1,6 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { isPredictionOutcome, PREDICTION_OUTCOME_REFUSAL } from '@/lib/prediction-outcome'
 import { getCurrentPlayer } from '@/lib/auth'
 import { isCampaignQuest } from '@/lib/quest-scope'
 import { completePackQuest } from '@/actions/quest-pack'
@@ -106,6 +107,13 @@ export async function completeQuestForPlayer(
     })
 
     if (!quest) throw new Error('Quest not found')
+
+    // Compose-and-validate (Q7): a quest authored against a belief carries a dated prediction.
+    // It cannot close without a verdict, and the verdict lands before any write below.
+    const outcome = (inputs as { predictionOutcome?: unknown } | null)?.predictionOutcome
+    if (quest.questBeliefKey && quest.prediction && !isPredictionOutcome(outcome)) {
+        return { error: PREDICTION_OUTCOME_REFUSAL }
+    }
 
     if (quest.status === 'blocked') {
         return {
@@ -214,6 +222,15 @@ export async function completeQuestForPlayer(
                 assignedAt: new Date()
             }
         })
+
+        // Q5: the verdict lands on the quest itself, one row, beside the prediction it answers.
+        // Written here, not after the campaign hook, so single-player quests persist it too.
+        if (quest.prediction && isPredictionOutcome(outcome)) {
+            await tx.customBar.update({
+                where: { id: questId },
+                data: { predictionOutcome: outcome },
+            })
+        }
 
         // GRANT VIBEULONS with bonus (BYPASS IF REPEAT ONBOARDING)
         const baseReward = quest.reward || 1
