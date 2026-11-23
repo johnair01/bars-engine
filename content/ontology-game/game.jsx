@@ -2442,9 +2442,12 @@
             // rules): sheng (Flow Forward) always advances one rung toward satisfaction;
             // ke (Tempering) never advances — it holds or pulls back toward dissatisfied.
             // Satisfied is a ceiling on both cycles.
+            // Every move raises one satisfaction stage; the alchemy is an upward spiral
+            // (Wendell, 2026-11-20). Control raises from dissatisfied to neutral but can never
+            // carry anyone INTO satisfied — only transcend or generate does that.
             const routingTable = {
                 sheng: { dissatisfied: "neutral", neutral: "satisfied", satisfied: "satisfied" },
-                ke: { dissatisfied: "dissatisfied", neutral: "dissatisfied", satisfied: "satisfied" }
+                ke: { dissatisfied: "neutral", neutral: "neutral", satisfied: "satisfied" }
             };
 
             const currentThreadEndState = () => {
