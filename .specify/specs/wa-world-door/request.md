@@ -110,6 +110,32 @@ Tested today, so the intake does not ask what the box would answer:
 **The round closes when** the door's owner is answered on the board card `wa-world-door-intake-1`. Then the identity
 question is asked, this record is extended with the answer, and spec.md is written against it.
 
+## His answer: C, sealed worlds and one editable workroom (2026-11-23, 02:36 UTC)
+
+> "C. Sealed worlds, one editable workroom"
+>
+> — Wendell, on the board card `wa-world-door-intake-1`
+
+So the fork is settled, and the round closes. What it decides:
+
+- The generated worlds — Lantern Walk, Calrunian Dojo, Heaven Sect court, and the hub when it is built — keep their
+  generators as the only author. They stay read-only in the client, which means each one ships with no `.wam`.
+- One world, the **Workroom**, is his to draw in. It carries a `.wam`, so WorkAdventure's editor opens in it and
+  map-storage lists it.
+- Every world names its owner in its own folder, so a regenerate can never quietly eat a drawing. The owner is read
+  from the folder's design-language file (`*-language.json`, `*-base.json`) when it has one and from `owner.json`
+  otherwise, because two of the worlds are generated without a language file. `public/wa/wa_owner.py` prints the
+  table and fails on a fault; `src/lib/wa/__tests__/map-owner.test.ts` is the same rule in the repo's own gate.
+- An editor-owned generator seeds once: `gen_workroom.py` refuses to overwrite `workroom.tmj` unless it is run with
+  `--seed`.
+
+Still open, and asked on the board as `wa-world-door-workroom-1`: whether the Workroom starts as the Oddboro office
+or as a new room. The seed is a new room — a plank floor, a workbench along the north wall, a chalk stage in the
+middle and a door south to the Lantern Walk — so there is something to walk into while he answers; on the office
+answer the seed is replaced by the office's level file, and nothing else in this record changes.
+
+The identity question (anonymous uuid versus OIDC with `sub = Player.id`) is the next one asked, per the plan above.
+
 ## What the intake is not
 
 It is not a plan to fork WorkAdventure (unchanged: extend only, WA runs unmodified at `v1.35.0`), and it is not a plan

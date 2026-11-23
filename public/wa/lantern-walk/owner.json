@@ -1,0 +1,6 @@
+{
+  "map": "lantern-walk",
+  "owner": "generator",
+  "why": "A sealed world: gen_lantern_walk.py is its only author, so it carries no .wam and the client cannot redraw it (wa-world-door-intake-1, answer C, 2026-11-23).",
+  "generator": "gen_lantern_walk.py"
+}
