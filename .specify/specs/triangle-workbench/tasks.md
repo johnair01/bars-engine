@@ -12,7 +12,7 @@
 - [x] Preserve the end-to-end ontology and first demo contract in the Dojo Loop Library.
 - [ ] Build the non-persistent Dojo Loop Lab authored scenario: thought string → confirmed EA triangle → life lens / domain / personal-move selection → BAR preview.
 - [ ] Author the first deterministic gathering action grammar for Career + small dojo gathering across Skillful Organizing, Gathering Resources, Raise Awareness, and Direct Action.
-- [ ] Replace the prototype's scalar charge control with activation plus player-owned orientation.
+- [x] ~~Replace the prototype's scalar charge control with activation plus player-owned orientation.~~ Composted 2026-11-02: ruling `dr-charge-model` (B) keeps the signed −3…+3 charge in the live dojo; the Loop Lab keeps activation plus orientation behind the boundary in its spec.
 - [ ] Add a player-confirmed EA-anchor picker; proposed/declined anchors must never affect move availability.
 - [ ] Render derived EA teaching triangles as an optional lens over a thought string, never as a replacement for player-language triangles.
 - [x] Build a replayable authored orientation constellation with no BAR, spirit, daemon, ember, or Between mutations.

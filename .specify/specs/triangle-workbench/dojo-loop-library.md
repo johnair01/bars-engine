@@ -13,7 +13,7 @@ This document is the durable entry point for a future human or AI working on tha
 - A word is player language: concept, felt tone, image, phrase, action, question, or emotion.
 - Three player-selected words form a word-triangle; triangles chain and branch through shared words.
 - A thought string is an evolving private pattern map, not an asserted causal model or a clinical profile.
-- Reads belong to the player: **activation** (0–3) and **orientation** (`constricting`, `supportive`, `mixed`, `unread`). Do not collapse these into one moralized charge score.
+- Reads belong to the player. In the live dojo a word carries one signed **charge** from −3 (dissatisfaction) to +3 (satisfaction), and a triangle's charge is the sum of its words; play moves a triangle toward a sum of 0 or above (ruling `dr-charge-model`, 2026-11-02). The non-persistent Loop Lab reads a word as **activation** (0–3) plus **orientation** (`constricting`, `supportive`, `mixed`, `unread`); `.specify/specs/dojo-loop-lab/spec.md` § "Boundary with the live dojo" maps one to the other.
 - A word may remain unanchored. Its value does not depend on becoming an EA primitive.
 
 ### Emotional Alchemy is the canonical movement grammar
@@ -119,7 +119,7 @@ The scenario contains no claim that these words are automatically EA states.
 
 ### Player path
 
-1. Mark a word read: activation and orientation.
+1. Mark a word read: signed charge in the live dojo; activation and orientation in the Loop Lab.
 2. Confirm, decline, or leave alone the proposed anchors for Wonder-Excitement/Metal, Poignance/Water, and Joy/Wood.
 3. Observe the Metal → Water → Wood EA teaching triangle appear only when all three same-altitude anchors are confirmed.
 4. See the exact available moves: Deepen Value, Renew Vitality, Activate Hope.
