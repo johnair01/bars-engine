@@ -12,7 +12,7 @@ preview: none (Vercel builds production only since 2026-11-04); every step tests
 - [x] T002 [claude] `content/voice/` with the four files; lexicon seeded from `glossary.ts` (faces, moves, BAR, charge) plus ribbon, face, sitting, pull with empty `plain`; empty bank; chart defaults; `screens.yaml` with the Tap the Vein screens (FR-001)
 - [ ] T003 [claude] Collection `voice` in `src/lib/board/save.ts` and the council's `schema/board-save.schema.json`, with fixtures in both repos, as a pair of pull requests (FR-002)
 - [ ] T004 [claude] The saves route marks owner-cookie `voice` saves `wendell` and strips a body's mark; a token save is never marked; route test (FR-003)
-- [ ] T005 [claude] `GET /api/board/voice?after=` behind COUNCIL_MENU_TOKEN; route test (FR-004)
+- [x] T005 [claude] `GET /api/board/voice?after=` behind COUNCIL_MENU_TOKEN; route test (FR-004)
 - [x] T006 [claude] `foldVoice` in `src/lib/voice/export.ts` and `scripts/voice-export.ts` (`--from`, `--check`); a vitest per event kind, a byte-identical rerun, and the refusals (FR-005)
 
 ## Step 3: the gate and the packet
