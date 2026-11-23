@@ -38,7 +38,7 @@
 <div class="views"><button id="watchBtn">Walk to the Watch</button><button id="crestBtn">Climb to the crest</button><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
 <div class="hint">WASD or arrows to walk, Shift to run, Space to jump; tap the ground to walk there; drag to look round.</div>
 <div class="stick" id="stickBase" aria-label="Walk stick"><div id="stickKnob"></div></div>
-<div class="pads"><button id="runBtn" aria-pressed="false">Run</button><button id="hopBtn">Jump</button></div>
+<div class="pads"><button id="runBtn" aria-pressed="false">Run</button><button id="hopBtn">Jump</button><button id="inwardBtn" aria-pressed="false">Look inward</button></div>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -203,6 +203,16 @@ const input = { keys: new Set(), target: null, run: false, jump: false, stick: n
 touchStick(input, document.getElementById('stickBase'), document.getElementById('stickKnob')); forgetKeysOnBlur(input);
 addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === ' ') { e.preventDefault(); if (!e.repeat) input.jump = true; return; } input.keys.add(e.key.toLowerCase()); });
 document.getElementById('hopBtn').onpointerdown = e => { e.preventDefault(); input.jump = true; };
+// The introspect switch (cultivated character, cc-sheet-glow-look-3 B): the belly glow shows while she looks inward, the I key or the
+// button toggles it, and walking, jumping or tapping the ground ends it. It needs the figure's glow, so it waits for it.
+let inward = false;
+function setInward(on) {
+  if (!belly) return;
+  inward = on; belly.introspect(on);
+  document.getElementById('inwardBtn').setAttribute('aria-pressed', on);
+}
+document.getElementById('inwardBtn').onclick = () => setInward(!inward);
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key.toLowerCase() === 'i') setInward(!inward); });
 document.getElementById('runBtn').onclick = e => { input.run = !input.run; e.currentTarget.setAttribute('aria-pressed', input.run); };
 addEventListener('keyup', e => input.keys.delete(e.key.toLowerCase()));
 let down = null; const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
@@ -216,6 +226,7 @@ R.domElement.addEventListener('pointerup', e => {
 addEventListener('resize', () => { R.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); fitTop(); });
 
 const frameHooks = [];
+frameHooks.push(() => { if (inward && ([...input.keys].some(k => k !== 'i') || input.stick || input.target || input.jump)) setInward(false); });
 let last = performance.now();
 const prev = new THREE.Vector3();
 function frame(now) {
