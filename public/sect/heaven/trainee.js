@@ -18,8 +18,8 @@ import { doubtQuest } from './doubt.js';
 import { barQuest } from './bar.js';
 import { own } from '../../between/walk-own.js';
 
-import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, climbIntro } from './trainee-words.js';
-export { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, climbIntro };
+import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, PATREON_LINE, PATREON_URL, CLIMB, climbIntro } from './trainee-words.js';
+export { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, PATREON_LINE, PATREON_URL, CLIMB, climbIntro };
 const ORDER = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']; // layout.js COURTS order
 
 const CSS = `
@@ -27,6 +27,7 @@ const CSS = `
 .tw-card[hidden]{display:none}
 .tw-card b{font:400 22px/1.2 var(--ui-display,Georgia,serif)}
 .tw-card p{margin:0}
+.tw-card a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .tw-row{display:flex;gap:10px;flex-wrap:wrap}
 .tw-row button{font:700 15px/1 var(--ui-body,system-ui,sans-serif);min-height:48px;padding:0 18px;border-radius:24px;cursor:pointer;border:1px solid rgba(255,255,255,.35);color:#fff;background:transparent}
 .tw-row button.go,.tw-row button[aria-pressed="true"]{background:#2f8f86;border-color:#2f8f86}
@@ -175,7 +176,7 @@ export async function traineeWalk(ctx) {
   let pulse = 0;
   function endCard() {
     state = 'end'; setHint('');
-    show(`<b>You are an Initiate</b><p>${esc(endLine(want))}</p><div class="tw-row"><button type="button" class="go" data-tw="again">Walk it again</button><button type="button" data-tw="stay">Stay a while</button></div>`, 'The end of the walk');
+    show(`<b>You are an Initiate</b><p>${esc(endLine(want))}</p><p>${esc(PATREON_LINE)} <a href="${PATREON_URL}" target="_blank" rel="noopener">patreon.com/wendell_britt</a></p><div class="tw-row"><button type="button" class="go" data-tw="again">Walk it again</button><button type="button" data-tw="stay">Stay a while</button></div>`, 'The end of the walk');
   }
   function scanCard() {
     show(`<b>The heart stone</b><p>Stand with your team and notice your body. Tap each one you feel right now.</p><div class="tw-row">${SENSATIONS.map(s => `<button type="button" data-tw="sense" aria-pressed="false">${s}</button>`).join('')}</div><div class="tw-row"><button type="button" class="go" data-tw="scan">Touch the stone</button></div>`, 'The four-sensation scan');
