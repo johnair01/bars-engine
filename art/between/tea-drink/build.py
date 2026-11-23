@@ -55,7 +55,9 @@ KS = D["k"]                          # this body's size against the 1.75 m figur
 FPS = 30
 LAG_ELBOW, LAG_WRIST, LAG_LEFT = 2, 4, 4   # frames the elbow and the wrist trail the shoulder (overlap); the cradling wrist the same
 SETTLE = 0.008                       # how far the cup sinks past where it lands, before it settles back (m)
-SLANT, DROP = 0.4, 0.012             # the right hand holds the cup slanting down across it, its middle DROP under the hand's line
+SLANT = {"f": 0.0, "m": 0.2}[WHO]    # the right hand's slant down across the cup: 0.4 lifted the wrist over the face at the lips;
+SLANT = float(os.environ.get("TEA_SLANT", SLANT))   # the bow below is deeper so the lower wrist still lands on the cup on the stone
+DROP = 0.012                         # the cup's middle DROP under the hand's line
 SPINE = (("spine01", 0.45), ("spine", 0.30), ("spine03", 0.25))   # the bow is shared along the back, from the lowest bone up
 CHAIN = ["hips", "spine01", "spine", "spine03", "neck", "head",
          "clavR", "shoulderR", "elbowR", "wristR", "clavL", "shoulderL", "elbowL", "wristL"]
@@ -326,13 +328,14 @@ CLIPS = [("reach", 0.0, T["pour"]), ("pour", T["pour"], T["lift"]), ("lift", T["
          ("sip3", T["sip3"], T["settle"]), ("settle", T["settle"], T["hold"]), ("hold", HOLD_FROM, HOLD_TO),
          ("sip", EXTRA, EXTRA + SIP_LEN)]
 SAVOUR = (3.6, SIP_LEN + 0.2)            # of each sip: the savour swells as the cup comes down and lands, gone by the next
-TIP = {"sip1": 0.30, "sip2": 0.55, "sip3": 0.85, "sip": 0.85}   # each sip tips the cup further (rad at the end of the sip)
+TIP = {"sip1": 0.30, "sip2": 0.45, "sip3": 0.55, "sip": 0.55}   # each sip tips the cup further (rad at the end of the sip); past
+# about 0.6 the hand on the cup's side turns up over her face, so the last sips tip the head back instead (sip_fk)
 BREATH = {"period": 4.0, "spine": 0.022, "neck": -0.5}       # one breath every four seconds, the neck half against it
 
 UPV = Sd(0, 1, 0)
 LAP = (-0.02, 0.40 - float(os.environ.get('TEA_LAPY', -0.04)), 0.09 + float(os.environ.get('TEA_LAPZ', 0)))        # the cup's middle held in front of the belly, in both hands, the back a little forward
 REST = (-0.02, 0.385, 0.07)      # and settled a little lower and nearer once the sips are done
-BOW = 1.0                       # how far she bows from the hips to the cup on the stone (rad)
+BOW = float(os.environ.get("TEA_BOW", 1.15))   # how far she bows from the hips to the cup on the stone (rad; 1.0 before the level hand)
 
 
 def tipU(th):
@@ -409,6 +412,7 @@ for s in ("R", "L"):
 # ---------------------------------------------------------------- the hands, keyed from where the cup should be
 KEYS = {"R": [], "L": []}   # (frame, ease) per key, for the handle pass
 LEFT_UNTIL = 1e9            # the left hand is keyed until it rides the cup (CRADLE)
+RIGHT_F = None              # from the lap on, the way the right hand's fingers run round the cup (set below)
 
 
 def wrist_frame(side, C, U, f):
@@ -444,6 +448,8 @@ def key_hand(side, t, C, U, ease="hold", f0=None):
     hand = handR if side == "R" else handL
     frame = fr(t)
     sc.frame_set(frame)
+    if side == "R" and not f0 and RIGHT_F is not None:   # the right hand on the cup's outer side, its fingers round the front
+        f0 = proj(RIGHT_F, U)
     if side == "L" and not f0:   # the cradling hand's fingers run forward and across under the cup, whatever the forearm does
         f0 = proj(Sd(-0.6, 0, 0.8), U)
     f = f0 or proj(bone_world("wrist" + side).translation - bone_world("elbow" + side).translation, U)
@@ -500,6 +506,38 @@ def both(t, C, th=0.0, ease="hold", left=True):
             key_hand("L", tt, P, U, e)
 
 
+# the elbows: each IK pole is keyed with the hands, so the elbow always sits outside the body (Wendell, 2026-11-21, on
+# tea-cult-look-2: "her left arm coming out through her chest ... this arm isn't supposed to collide with the body"). With the
+# kneel's poles (down and back) a hand raised to the lips folds its elbow back into the ribs and the forearm comes out of
+# the chest. "kneel": the kneel's own poles. "lap": out to the side and a little forward, the cup held in front of the belly.
+# "lips": forward of the chest and out, below the shoulder, so the forearm rises in front of the chest to the cup and the
+# elbow stays near the ribs' line instead of flaring up across the face.
+POLE0 = {s: (pole_place(s)) for s in "RL"}
+POLE = {"lap": (0.42, -0.22, 0.22), "lips": (0.30, -0.32, 0.50)}   # (out, down, ahead) from the shoulder, seat frame
+
+
+def key_pole(side, t, mode):
+    pole = poleR if side == "R" else poleL
+    if mode == "kneel":
+        pole.location = POLE0[side]
+    else:
+        o, d, a = POLE[mode]
+        sh = seat_of(HEAD["shoulder" + side])
+        pole.location = S(sh[0] + (o if side == "L" else -o), sh[1] + d, sh[2] + a)
+    pole.keyframe_insert("location", frame=fr(t))
+
+
+def key_poles(t, mode, sides="RL"):
+    for s_ in sides:
+        key_pole(s_, t, mode)
+
+
+key_poles(0.0, "kneel")
+key_pole("R", 5.4, "kneel")
+key_pole("L", 5.8, "kneel")
+key_pole("R", 6.6, "lap")
+key_pole("L", 6.8, "lap")
+
 # the left hand stays planted on its thigh until it comes up under the cup
 key_rest("L", 0.0)
 key_rest("L", 5.5)
@@ -549,6 +587,10 @@ key_hand("R", 5.9, S(*up1), UPV, "pass")
 key_hand("R", 6.75, S(LAP[0] - 0.12, LAP[1] + 0.02, LAP[2] + 0.06), UPV, "pass")
 key_rest("L", 5.8)
 key_hand("L", 6.8, S(LAP[0] + 0.03, LAP[1] - 0.02, LAP[2] + 0.03), UPV, "pass")      # the left hand rises from the thigh to meet the cup at the lap
+# from the lap to the end the right hand holds the cup by its outer side, the palm on her right of it, the fingers running
+# forward round its front: the hand never lies across the front of the cup, so at the lips it stays beside her face, not over
+# it (Wendell, tea-cult-look-1: "ungrammatical hand placement"; the look-2 plan: "her right hand holds the cup by its side")
+RIGHT_F = Sd(float(os.environ.get("TEA_RFX", 0.25)), 0, 1)
 both(7.5, LAP, 0.0, "land")
 
 # from here the left hand rides the cup: its IK target copies an empty parented to the cup, so it stays under the cup's foot
@@ -569,6 +611,8 @@ LEFT_UNTIL = CRADLE
 both(T["savour"], LAP, 0.0, "fast")
 
 # savour: up to under the nose on a short arc, a breath there (a few mm up and back)
+key_poles(T["savour"], "lap")
+key_poles(8.9, "lips")
 both(8.4, (LAP[0] * 0.5, 0.5, 0.19), 0.0, "pass")
 n0 = nose(9.0)
 both(9.0, n0, 0.0, "slowin")
@@ -579,6 +623,11 @@ both(T["sip1"], n0, 0.0, "fast")
 def sip_keys(T0, kind, start, first=False):
     th = TIP[kind]
     a = 1.2 if first else 1.4
+    if not first:
+        key_poles(T0 + 0.25, "lap")
+    key_poles(T0 + a - 0.3, "lips")                                            # the elbows come forward as the cup rises
+    key_poles(T0 + a + 1.55, "lips")
+    key_poles(T0 + 4.45, "lap")
     if not first:
         both(T0 + 0.25, (start[0], start[1] - 0.008, start[2] + 0.004), 0.0, "fast")   # anticipation: a little dip
         c1, _ = lips(T0 + a, th * 0.5)
@@ -663,6 +712,49 @@ tb.name = "Breath"
 sb = tb.strips.new("Breath", 1, br)
 sb.blend_type = "COMBINE"
 sc.frame_start, sc.frame_end = 1, fr(END)
+
+# ---------------------------------------------------------------- the arms clear the body: a check, every few frames
+# The torso as an elliptic tube along the back (hips to neck), CLEAR_W wide and CLEAR_D deep each side of the spine's line;
+# points along each upper arm (past the shoulder joint) and forearm must stay outside it. Prints the worst intrusion per clip.
+CLEAR_W, CLEAR_D = 0.125 * KS, 0.095 * KS
+
+
+def arm_intrusion(f):
+    sc.frame_set(f)
+    a0, a1 = bone_world("spine01").translation, bone_world("neck").translation
+    lat = (bone_world("shoulderL").translation - bone_world("shoulderR").translation)
+    up = (a1 - a0).normalized()
+    lat = (lat - up * lat.dot(up)).normalized()
+    fwd = lat.cross(up)
+    if fwd.dot(Sd(0, 0, 1)) < 0:
+        fwd = -fwd
+    worst = {"R": 0.0, "L": 0.0}
+    for s_ in "RL":
+        sh, el, wr = (bone_world(n + s_).translation for n in ("shoulder", "elbow", "wrist"))
+        pts = [sh.lerp(el, k) for k in (0.45, 0.7, 1.0)] + [el.lerp(wr, k) for k in (0.25, 0.5, 0.75)]
+        for p in pts:
+            t = max(0.0, min(1.0, (p - a0).dot(a1 - a0) / (a1 - a0).length_squared))
+            r = p - a0.lerp(a1, t)
+            x, z = r.dot(lat) / CLEAR_W, r.dot(fwd) / CLEAR_D
+            worst[s_] = max(worst[s_], 1.0 - math.hypot(x, z))
+    m = mouth.matrix_world.translation
+    for s_ in "RL":                       # and no hand rises over the face: the hand's tip stays below the mouth's line
+        wr = bone_world("wrist" + s_)
+        tip = wr.translation + wr.to_3x3() @ Vector((0, 1, 0)) * (2.0 * HAND)
+        worst["face" + s_] = max(0.0, tip.z - (m.z + 0.02 * KS)) if (tip - m).length < 0.16 else 0.0
+    return worst
+
+
+CLEAR = {}
+for name, t0, t1 in CLIPS:
+    w = {"R": 0.0, "L": 0.0, "faceR": 0.0, "faceL": 0.0}
+    for f in range(fr(t0), fr(t1) + 1, 3):
+        a = arm_intrusion(f)
+        w = {k: max(w[k], a[k]) for k in w}
+    CLEAR[name] = {k: round(v, 3) for k, v in w.items()}
+print("CLEAR", json.dumps(CLEAR))
+if os.environ.get("TEA_STAGE") == "check":
+    sys.exit(0)
 
 sc.frame_set(fr(T["sip2"] + 1.4))
 os.makedirs(os.path.dirname(OUT_BLEND), exist_ok=True)
