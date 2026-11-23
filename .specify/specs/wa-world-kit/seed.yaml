@@ -1,0 +1,353 @@
+goal: Build a publish path that takes a world kit authored locally into the running
+  bars-engine game. It has two parts. The first is a world-kit repo with a CLI that
+  validates a kit and publishes it through the engine's real gate. The second is one
+  thin engine route that returns gate findings. Locally authored kits land in the
+  dojo, their home in the game.
+task_type: code
+brownfield_context:
+  project_type: brownfield
+  context_references:
+  - path: /Users/wendellbritt/.ouroboros/worktrees/wa-kit/auto_6c234f5ec5c2
+    role: primary
+    summary: 'bars-engine worktree: a Next.js, Prisma and TypeScript game engine holding
+      the kit gate and the dojo; the findings route is added here'
+  - path: docs/LOCAL_FIRST_TESTING.md
+    role: reference
+    summary: 'Local-first testing procedure: dev.sh, check.sh --build and the ship-next
+      flow'
+  - path: docs/PRISMA_MIGRATE_STRATEGY.md
+    role: reference
+    summary: Migrations-only Prisma workflow; db push is forbidden
+  - path: CLAUDE.md
+    role: reference
+    summary: 'Project rules: Council Board for questions, no self-merge, the cultivation
+      character model'
+  existing_patterns:
+  - Next.js App Router route handlers under src/ for engine routes
+  - Prisma with PostgreSQL through migrations only
+  - Local dev via scripts/local/dev.sh and verification via scripts/local/check.sh
+    --build
+  - Tests live in tests/ and run under vitest
+  - PRs labeled ship-next for a daily batch merge
+  existing_dependencies:
+  - Next.js 14+
+  - TypeScript
+  - Prisma
+  - PostgreSQL
+  - vitest
+  - Tailwind CSS
+constraints:
+- Publishing goes through the engine's real gate; the CLI must not bypass it or use
+  a substitute validation path
+- The engine change is one thin route for findings
+- The dojo is where locally authored kits live
+- The world-kit repo and CLI handle both validating a kit and publishing it
+- 'Test locally first: start the engine with scripts/local/dev.sh dev against a local
+  Postgres database and never point a run at the production database'
+- Before pushing an engine change, scripts/local/check.sh --build must pass, and the
+  pull request must name the command and its result
+- 'Do not merge your own bars-engine pull request: when the build check is green,
+  mark the PR ready for review and add the ship-next label'
+- Any question whose answer changes what gets built goes through the six-faces reach
+  test and onto the Council Board, never into chat
+- 'Prisma schema changes follow the migrations-only workflow: run npx prisma migrate
+  dev and migrate deploy, never db push'
+- Tests, previews and looks use the cultivation character model, never average-dusk.glb
+- Resolve Seed QA feedback before execution without copying recovery persona prompts,
+  failed-run transcripts, or diagnostic prose.
+acceptance_criteria:
+- description: A command/API check returns stable observable output or artifacts proving
+    the original requirement for An author can run the world-kit CLI against a kit
+    folder on disk and see whether the kit passes validation, with any problems listed
+    as findings.
+  semantic_ac_key: ac_49809707c36ffc8d
+  verify_exemption_reason: Neither the CLI's location, language and invocation nor
+    the kit's on-disk shape is fixed by a recorded decision, so no exact command can
+    be named in advance
+- description: A command/API check returns stable observable output or artifacts proving
+    the original requirement for Publishing a valid kit with the CLI sends the kit
+    through the engine's real gate, and an accepted kit appears in the author's dojo
+    in the running local game.
+  semantic_ac_key: ac_94b99782147f2391
+  verify_exemption_reason: Proving the outcome needs a running local engine, a seeded
+    database and an author identity, and the requester's end-to-end check answer,
+    which decides the procedure, is withheld from this spec
+- description: A command/API check returns stable observable output or artifacts proving
+    the original requirement for A kit the gate rejects not published, and the author
+    sees the gate's findings for the kit, served by the engine's single new findings
+    route.
+  semantic_ac_key: ac_6aa7ff424736daf9
+  verify_exemption_reason: The route path, the shape of the findings and the refusal
+    behavior depend on withheld requester answers, so no fixed command can decide
+    the outcome before implementation
+- description: 'The bars-engine change passes the local build check: lint, type-check,
+    vitest and next build'
+  semantic_ac_key: ac_5276026357755dea
+  verify_command: scripts/local/check.sh --build
+assumptions:
+- 'The requester''s own answers on these points reach the worker verbatim and override
+  every assumption here: what state a published kit lands in, whether findings include
+  non-blocking warnings, whether republishing replaces or adds a version, the end-to-end
+  check, author identity and authentication, how much the engine may change, the kit''s
+  on-disk shape and CLI output, and where the check runs'
+- The world-kit CLI may live in its own sibling repo or package beside bars-engine;
+  the location, language and install method are not fixed
+- The engine URL the CLI targets defaults to the local dev server that scripts/local/dev.sh
+  dev starts
+- The CLI may separate a local validate step from publish and use distinct exit codes
+  for success, findings and errors; no exact codes or output strings are required
+- Findings carry stable identifiers so the CLI can report them consistently
+- No exact kit manifest filename, folder layout or token file location is required;
+  any example of one shown to the requester only illustrated the question
+requester_answers:
+- question: 'When the CLI''s publish succeeds, what exact state should the kit land
+    in: playable by other players immediately, or staged in the dojo as a draft visible
+    only to its author until a separate promotion step?'
+  answer: 'assumption: A successful publish puts the kit in the dojo, where only its
+    author can see and play it. This release does not build a promotion step that
+    opens it to other players. His record says "you can publish a world kit to the
+    bars engine, and a world kit will use all the little modules to make something
+    playable," and it names the dojo as "the home for locally authored kits." It never
+    says other players get the kit right after publish. If he wants publish to mean
+    playable by everyone, this can be flipped later without changing the gate or the
+    findings route.'
+- question: 'When the engine''s gate rejects or flags a kit, what should the findings
+    route return to the CLI: only blocking errors that stop publish, or also non-blocking
+    warnings the author can ignore while still publishing to the dojo?'
+  answer: 'Both kinds come back. The record says the gate "keeps whatever the engine
+    accepts, and turns what it rejects or rewrites into findings," and "a kit that
+    the engine''s gate refuses does not publish." Findings for rewritten or individually
+    rejected obstacles don''t block: the publish goes ahead with the accepted content,
+    and the CLI shows the author those findings to read. A refusal of the kit as a
+    whole is the only thing that stops publish, and it returns its findings with no
+    signature. The envelope''s `kind` field marks each finding as blocking or not.
+    This holds wherever the kit is published, including the dojo.'
+- question: When an author publishes a kit that already exists in their dojo, should
+    the new publish replace the earlier version in place, or keep the earlier version
+    alongside it as a separate entry?
+  answer: Replace it in place. The record says republishing "updates and never duplicates,"
+    so the dojo keeps one entry per world. The earlier version survives only as the
+    snapshot taken before each publish (spec.md:79-80, 182). It does not appear in
+    the dojo as a separate entry.
+- question: '(ambiguity: 0.36) What single end-to-end check would prove this release
+    is done: for example, running the CLI against a sample kit in the world-kit repo,
+    then confirming that the kit appears once in the author''s dojo, is playable there,
+    and shows non-blocking findings; and confirming that a deliberately broken kit
+    is refused with no signature?'
+  answer: 'The record already lists what would prove this release works. The end-to-end
+    check runs a sample kit through those steps in order:
+
+
+    1. `world-kit publish --dry-run` prints a diff of the world with no network.
+
+    2. `world-kit publish` against a local engine either "publishes and returns a
+    signature, or refuses with findings the author can read."
+
+    3. Publishing the same kit again shows the engine route storing findings idempotently
+    with stable ids, and the world updates without being duplicated.
+
+    4. "The dojo shows the kit and its seeds," and "docs render the author''s world''s
+    markdown."
+
+
+    The broken-kit half is also in the record: "A kit that the engine''s gate refuses
+    does not publish," so it gets no signature.
+
+
+    His proof list never says the kit must be playable in the dojo. Playability is
+    the overall aim ("a world kit will use all the little modules to make something
+    playable"), but it is not a check for this first release.'
+- question: '(ambiguity: 0.29) When an author runs `world-kit publish` against the
+    engine, how should the engine know which author owns the kit: reuse an existing
+    engine login or session token, use a new per-author API key issued for the CLI,
+    or skip authentication entirely in this release because publishing targets only
+    a local engine?'
+  answer: 'Publishing authenticates with an engine API token. The record says "publish
+    uses an engine API token only," with "no engine DB credentials" and "no secrets
+    in the kit." That rules out skipping auth and rules out reusing a browser login
+    session. The record doesn''t say whether the engine issues one token per author.
+    Assumption: each author gets their own CLI token, stored outside the kit folder,
+    and the engine reads ownership from that token. The engine grants author access
+    only when the kit is published by that author, and never to a GM/admin token.'
+- question: '(ambiguity: 0.27) Beyond the one new findings route, is the engine allowed
+    any other change in this release (for example, a new publish endpoint or token-issuing
+    screen), or must `world-kit publish` call only engine endpoints and gate code
+    that already exist today?'
+  answer: 'The record permits more than the findings route, but every engine change
+    must be additive. Scope item 3 names two endpoints: the findings route and "a
+    contract endpoint returning what the engine expects." Item 4 also has the engine
+    receive the world through "the thin bridge," which grants author access as actor
+    grants only when the author publishes it. The constraints say the change "must
+    not require breaking any existing engine route," and that it is "one thin bridge,
+    not a second kingdom." Assumption: the bridge is one new publish endpoint that
+    takes an API token and reuses the existing gate code, including `narrateObstacle`,
+    without changing it. Assumption: no token-issuing screen ships in this release,
+    and an admin issues the token by hand or with a script.'
+- question: '(ambiguity: 0.29) For the sample kit the end-to-end check runs, what
+    exact on-disk shape does `world-kit publish` accept as input, and what exact output
+    does the author see? Please commit to one answer, for example: input is one kit
+    folder with a `kit.yaml` manifest (world id, title, author), a `seeds/` folder,
+    and markdown docs, plus a token read from `~/.world-kit/token`; output is either
+    a printed signature with the dojo world id, or a numbered findings list with stable
+    ids and a nonzero exit code.'
+  answer: 'The input is one kit folder in the shape the scope already fixes: `world.yaml`,
+    which holds the name, blurb, persona, portrait, claim phrasings, close line, the
+    "how this world cares" list and author access, plus `world.md`, `conditions.yaml`,
+    `obstacles.yaml`, `npcs.yaml` (onboarding NPC, info NPCs and rival) and `portraits/`.
+    There is no `kit.yaml` manifest and no `seeds/` folder. The kit holds no secrets,
+    and the CLI uses only an engine API token. `--dry-run` prints a diff of what it
+    would write and makes no network calls. A real publish ends one of two ways: the
+    engine accepts the kit and returns a signature, or it refuses with findings the
+    author can read, each with a stable id the engine assigns.
+
+
+    assumption: the token comes from an environment variable or a file outside the
+    kit folder, never from inside the kit. A successful publish exits 0 and prints
+    the signature and world id. A refusal prints the numbered findings, writes nothing
+    and exits 1. A usage error exits 2.'
+- question: '(ambiguity: 0.29) Where does the end-to-end check for the sample kit
+    run, and who runs it? For example: a script in the world-kit repo starts a local
+    bars-engine dev server against a seeded test database and issues an author token
+    through an admin script. It then runs `world-kit publish --dry-run`, a refused
+    publish and an accepted publish in CI. The check passes when exit codes 0, 1 and
+    2 match, the dojo holds exactly one entry for the world after two publishes, and
+    a second author''s token cannot see the world. If the setup differs, please name
+    the engine instance, the database, how the test author''s token is issued, and
+    whether CI or a person runs the check.'
+  answer: 'assumption: A person runs the end-to-end check locally in the session that
+    builds the change; CI does not run it. The check uses the engine started with
+    `scripts/local/dev.sh dev`, which runs against this workspace''s own local Postgres
+    database and never production. The test author''s API token comes from a local
+    admin script run against that database. The check covers four steps: `world-kit
+    publish --dry-run`, one publish the gate refuses, and the same accepted publish
+    run twice. It passes when the dry run makes no network call, the refused publish
+    returns readable findings and writes nothing, and the second accepted publish
+    updates the world without creating a duplicate dojo entry or new finding ids.
+    CI runs only the offline parts: dry-run validation, and the engine route''s tests
+    against a test database.'
+open_questions:
+- '(ambiguity: 0.24) What runtime and home does the world-kit CLI use, and who runs
+  it? Please commit to one answer, for example: a TypeScript CLI on Node 20 in a new
+  sibling repo `world-kit`, run by the kit author through `npx world-kit` from inside
+  the kit folder, with the engine URL read from `WORLD_KIT_ENGINE_URL` and defaulting
+  to the local `scripts/local/dev.sh dev` address. If the CLI instead lives inside
+  bars-engine or uses another language, name the location, the language, and how the
+  author installs or invokes it.'
+- '(ambiguity: 0.21) Before closing, please confirm the non-goals for this release:
+  no promotion of dojo kits to other players, no token-issuing screen, no proof of
+  playability in the dojo, and no changes to existing engine routes or gate code.
+  Is anything missing from this list, or does any item belong in scope?'
+- '(ambiguity: 0.25) The default non-goal treats authentication as out of scope, but
+  the record says "publish uses an engine API token only," and ownership in the dojo
+  depends on that token: does this release require an author API token on the publish
+  bridge, or does it skip auth against a local engine and assign every published kit
+  to one fixed author?'
+- '(ambiguity: 0.30) The ledger has two entries in conflict: the non-goals list rules
+  out authentication, while the constraints require every publish to carry an engine
+  API token tied to one author, and the dojo''s ''only the author sees the kit'' rule
+  depends on the token. Commit to one reading. (a) The CLI sends a token the engine
+  already issues today, and bars-engine maps the token to an existing player account;
+  this release builds no new login, signup or token-issuing flow beyond the local
+  admin script used in the check. (b) This release skips tokens, and every publish
+  lands under one fixed local author. If (a), name the existing engine mechanism the
+  token comes from and the player account the test author maps to.'
+sourced_scope:
+  goal: 'Publish path for a locally-authored world kit into the running bars-engine
+    game: a world-kit repo and CLI that validates a kit and publishes it through the
+    engine''s real gate, plus one thin engine route for findings; the dojo is the
+    home for locally authored kits.'
+  constraints: []
+  acceptance_criteria: []
+ontology_schema:
+  name: WorldKitPublishPath
+  description: A world kit authored locally, the CLI that validates and publishes
+    it, the engine gate that judges it, the findings the gate returns, and the dojo
+    entry an accepted publish produces
+  fields:
+  - name: kit
+    type: object
+    description: 'A world kit authored on disk: its identity, metadata and content
+      files'
+    required: true
+  - name: kitId
+    type: string
+    description: Stable identifier of the world kit across publishes
+    required: true
+  - name: author
+    type: string
+    description: The player or account that owns the published kit
+    required: true
+  - name: gateResult
+    type: object
+    description: 'Outcome of passing the kit through the engine''s real gate: accepted
+      or refused'
+    required: true
+  - name: findings
+    type: array
+    description: Findings the gate produced for the kit, returned by the engine's
+      findings route
+    required: true
+  - name: findingSeverity
+    type: string
+    description: How severe each finding is, which decides whether the finding blocks
+      publishing
+    required: true
+  - name: dojoEntry
+    type: object
+    description: The kit's entry in the author's dojo after an accepted publish
+    required: true
+  - name: engineUrl
+    type: string
+    description: The address of the bars-engine instance the CLI publishes to
+    required: true
+  - name: exitStatus
+    type: number
+    description: The CLI's process exit status, which reports the publish or validation
+      outcome
+    required: true
+evaluation_principles:
+- name: Real gate fidelity
+  description: Publishing uses the engine's actual gate code, not a copy or a stand-in
+  weight: 0.3
+- name: Minimal engine footprint
+  description: The engine gains one thin findings route, and other engine changes
+    are avoided unless the requester's answers allow them
+  weight: 0.2
+- name: Author legibility
+  description: The CLI output tells the author clearly whether the kit was published
+    and what the findings are
+  weight: 0.2
+- name: Local-first verification
+  description: Everything is shown working against a local engine and database, never
+    production
+  weight: 0.15
+- name: Fidelity to requester answers
+  description: The work follows the requester's verbatim answers over any assumption
+    in this spec
+  weight: 0.15
+exit_conditions:
+- name: Publish path proven locally
+  description: A sample kit is validated and published through the real gate into
+    the dojo on a local engine, and a broken kit is refused with findings shown
+  criteria: All acceptance criteria are met, and scripts/local/check.sh --build is
+    green on the engine branch
+- name: PR handed to daily ship
+  description: The engine change is ready for the daily shipping session
+  criteria: The PR is marked ready for review and labeled ship-next, and the author
+    did not merge it
+- name: Blocking question escalated
+  description: A decision only Wendell can make blocks progress
+  criteria: The question passed the reach test and is posted on the Council Board,
+    and work stops on the blocked point
+metadata:
+  seed_id: seed_bbe9a62eb755
+  version: 1.0.0
+  created_at: '2026-11-23T19:29:40.065878Z'
+  ambiguity_score: 0.337
+  gate_forced: true
+  interview_id: interview_da38fde2873e473a
+  parent_seed_id: seed_764746669dd0
+  generation_mode: normal
+  degraded: false
+  unresolved_slots: []
+  recovery_reason: null
