@@ -937,7 +937,7 @@
  "lieutenant": {
   "key": "lieutenant",
   "title": "A lieutenant's room: Virelune, in the Shaman's court",
-  "sub": "One of thirty. Your team's mentor lives here; the room is the nation, the walls are the founder's.",
+  "sub": "One of thirty. Your team's mentor lives here; the room is the lieutenant's, the walls are the founder's.",
   "Wd": 5.5,
   "D": 4.5,
   "Ht": 2.8,
@@ -1198,7 +1198,7 @@
    "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
    "The other four lieutenants' rooms in this court share the walls and differ in everything else."
   ],
-  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: plants, seeds, a vine roof."
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Lieutenant's dress: plants, seeds, a vine roof."
  },
  "elder-challenger": {
   "key": "elder-challenger",
@@ -2736,7 +2736,7 @@
    "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
    "The other four lieutenants' rooms in this court share the walls and differ in everything else."
   ],
-  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: whetstone bench and the polished blades, a bronze mirror."
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Lieutenant's dress: whetstone bench and the polished blades, a bronze mirror."
  },
  "lt-lamenth": {
   "key": "lt-lamenth",
@@ -2947,7 +2947,7 @@
    "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
    "The other four lieutenants' rooms in this court share the walls and differ in everything else."
   ],
-  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: basin stand and the tide chart, a still bowl of water."
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Lieutenant's dress: basin stand and the tide chart, a still bowl of water."
  },
  "lt-pyrakanth": {
   "key": "lt-pyrakanth",
@@ -3158,7 +3158,7 @@
    "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
    "The other four lieutenants' rooms in this court share the walls and differ in everything else."
   ],
-  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: brazier and the drill candles, the ember lamp."
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Lieutenant's dress: brazier and the drill candles, the ember lamp."
  },
  "lt-meridia": {
   "key": "lt-meridia",
@@ -3369,7 +3369,7 @@
    "The drill board shows the team's wax-on marks for the five basic moves, chalked by hand.",
    "The other four lieutenants' rooms in this court share the walls and differ in everything else."
   ],
-  "bend": "Founder's standard: red plaster, teal beam, the same door. Nation's dress: clay jars of seed grain, a standing stone."
+  "bend": "Founder's standard: red plaster, teal beam, the same door. Lieutenant's dress: clay jars of seed grain, a standing stone."
  },
  "dojo": {
   "title": "The dojo",
