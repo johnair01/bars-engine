@@ -22,11 +22,11 @@ export const EXPERIENCES = [
 export const CHANNEL_LIGHT = { anger: "#ff9a6b", sadness: "#8fb8ff", fear: "#e6edf5", joy: "#b6f08a", neutrality: "#f3d79a" };
 
 export const SATISFACTIONS = [
-  { channel: "anger", state: "triumph", means: "You use your power cleanly, a boundary is honoured, and what was stuck moves." },
-  { channel: "sadness", state: "poignance", means: "You are close to what you care about, and it means something." },
-  { channel: "fear", state: "excitement", means: "You see the risk clearly and have the nerve to step into it." },
-  { channel: "joy", state: "bliss", means: "You feel delight, and you get to share it and play." },
-  { channel: "neutrality", state: "peace", means: "You feel settled and present. You can see the whole, and nothing pulls at you." },
+  { channel: "anger", state: "triumph", means: "You push on the thing that blocked you until it gives. You can point to what changed because you pushed: the call made, the box shipped, the no said out loud." },
+  { channel: "sadness", state: "poignance", means: "You remember someone who showed up for you once. Now you do the same for someone else: a call, a meal, an hour of your time." },
+  { channel: "fear", state: "excitement", means: "You name what could go wrong: they might say no. You ask anyway. Your heart pounds while you wait for the answer." },
+  { channel: "joy", state: "bliss", means: "You laugh out loud in the middle of the work. You want to tell a friend about it the same day." },
+  { channel: "neutrality", state: "peace", means: "You cross the last item off the list. No loose end nags at you tonight. You know which part was yours." },
 ];
 
 export const DISSATISFACTIONS = [

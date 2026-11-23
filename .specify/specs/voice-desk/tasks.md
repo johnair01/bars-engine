@@ -17,9 +17,9 @@ preview: none (Vercel builds production only since 2026-11-04); every step tests
 
 ## Step 3: the gate and the packet
 
-- [ ] T007 [claude] `copy-scan.py --lexicon` with the watched-word, banned, screen, rewritten-line and coinage rules; inside `check.sh --build` (FR-006, FR-007, FR-008, FR-009, FR-010, FR-011)
-- [ ] T008 [claude] Run it on Tap the Vein and list every hit in the pull request; read the first falsify bullet against the result before step 4 starts (FR-012)
-- [ ] T009 [claude] `scripts/voice-packet.py <screen>`; point the no-ai-slop skill and the concrete-referent rule at it (FR-013)
+- [x] T007 [claude] `copy-scan.py --lexicon` with the watched-word, banned, screen, rewritten-line and coinage rules; inside `check.sh --build` (FR-006, FR-007, FR-008, FR-009, FR-010, FR-011)
+- [x] T008 [claude] Run it on Tap the Vein and list every hit in the pull request; read the first falsify bullet against the result before step 4 starts (FR-012)
+- [x] T009 [claude] `scripts/voice-packet.py <screen>`; point the no-ai-slop skill and the concrete-referent rule at it (FR-013)
 
 ## Step 4: the pencil
 
