@@ -12,20 +12,18 @@
    are slow (tea-pose.js TEA), steam rises from a full cup, and after each sip the figure savours it: the head lifts, the chest
    opens, a warm glow comes up round the head and a few motes of light drift up from the heart. Look tea-cup-look-3 (his note
    2026-10-29): the cup passed through the hands and the table clipped the robe and the arms, so the cup is held by its side
-   (GRIP) and the kettle's table stone stands beside the seat, clear of the figure along the whole pour (tools/tea-hand-probe.mjs).
+   (the build's Child Of) and the kettle's table stone stands beside the seat, clear of the figure along the whole pour.
    Round 5 (his choice on look tea-drink-look-1): the drink is authored in Blender (art/between/tea-drink/build.py) and baked to
-   clips (m/dusk/tea-drink.glb) that tea-drink.js plays on the figure with an AnimationMixer: the reach, the pour, the lift with
-   the left hand coming up under the cup, a pause under the nose, three sips that tip the cup further each time with the head
-   bowing to meet it, the settle, and a breathing hold. The cup rides the right wrist where the build's Child Of held it. Round 4's
-   pose blending (tea-pose.js) stays reachable with ?drink=r4, for the side by side. */
+   clips (m/cult/tea-drink-<f|m>.glb) that tea-drink.js plays on the figure with an AnimationMixer: the reach, the pour, the lift
+   with the left hand coming up under the cup, a pause under the nose, three sips that tip the cup further each time with the
+   head bowing to meet it, the settle, and a breathing hold. The cup rides the right wrist where the build's Child Of held it.
+   Wendell, 2026-11-17: only the Arcade keeps Average Dusk, so the drink is the cultivation figure's: it kneels, so the drink is a
+   bow from the hips, the laid robe follows the lap each frame (body.follow), and the bones go back to the kneel when it ends. */
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { teaAt, sipAt, HAND, GRIP, KETTLE, CUP, TOTAL, TEA, kettleAt } from "./tea-pose.js";
-import { DRINK_URL, drinkFrom, drinkPlayer, beatAt, cupInHand } from "./tea-drink.js";
+import { KETTLE, CUP, TOTAL, TEA, kettleAt } from "./tea-pose.js";
+import { drinkUrl, drinkFrom, drinkPlayer, beatAt, cupInHand } from "./tea-drink.js";
 
-/* ?drink=r4 plays round 4's pose blending instead of the baked drink (the side by side). */
-const R4 = typeof location !== "undefined" && new URLSearchParams(location.search).get("drink") === "r4";
-const SKIP_R4 = TEA.reach + TEA.pour + TEA.back - 0.4;   // ?tea=sip: where each drink's first sip starts (s into the pour)
-const SKIP_R5 = 0.6;                                     // round 5: this far past the first sip's start, the cup on its way from the nose to the lips
+const SKIP_R5 = 0.6;   // ?tea=sip: this far past the first sip's start, the cup on its way from the nose to the lips
 
 const IRON = 0x332f2c, STONE = 0x6a645c, CLAY = 0xd8c8ae, AMBER = 0xd9a24a, GLOW = 0xffc874;
 const TEA_FULL = TEA.streamTo;   // of the pour beat: the cup counts as full once the stream stops
@@ -76,9 +74,14 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
   const seed = Array.from({ length: MOTES }, (_, i) => ({ a: i * 2.39996, r: 0.05 + (i % 3) * 0.025, d: i / MOTES }));
 
   const J = {};   // the held figure's bones, looked up once on attach
-  let drink = null, player = null, holdT0 = 0, skipTo = 0;   // round 5: the baked clips, their player on the held figure
-  if (!R4 && typeof document !== "undefined") new GLTFLoader().load(DRINK_URL, g => { try { drink = drinkFrom(g); } catch (e) { console.warn("tea drink:", e.message); } }, undefined, () => console.warn("tea drink: no clips, round 4's drink plays"));
-  const r5 = () => !R4 && !!drink;
+  let player = null, holdT0 = 0, skipTo = 0;
+  const drinks = {};   // the baked clips per figure ("f", "m"), loaded when someone first sits there
+  function loadDrink(who) {
+    if (drinks[who] !== undefined || typeof document === "undefined") return;
+    drinks[who] = null;
+    new GLTFLoader().load(drinkUrl(who), g => { try { drinks[who] = drinkFrom(g); } catch (e) { console.warn("tea drink:", e.message); } }, undefined, () => console.warn("tea drink: no clips for", who));
+  }
+  let drink = null;
   let frozen = null, lastT = null;   // frozen: a probe holds the beat at that many seconds in (freeze())
   let seatNow = seat, attached = null, t0 = null, mode = "pour", held = false, stoneH = 0.04, full = false, glowK = 0;
   const a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), ws = new THREE.Vector3(), X = new THREE.Vector3(1, 0, 0), gv = new THREE.Vector3();
@@ -109,75 +112,26 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     cup.quaternion.identity(); cup.scale.setScalar(1); cup.visible = true;
   }
 
-  /* The cup goes to the right hand once the hand is on it (the back beat): HAND past the wrist joint, along the hand, and then
-     GRIP out through the palm, so the hand holds its side (tea-cup-look-3: the cup passed through the hands). A figure without
-     a wrist bone keeps it at the elbow's end. */
+  /* The cup goes to the right wrist once the hand is on it (the back beat), at the build's Child Of offset. The clips replace the
+     kneel's bones and nothing re-poses a resting kneeler, so detach() asks the body to kneel again (body.restore). */
   function attach(body3d) {
-    const o = body3d && body3d.holder;
-    const wrist = o && o.getObjectByName("wristR"), bone = wrist || (o && o.getObjectByName("elbowR"));
-    if (!bone) return false;
-    attached = body3d; J.hand = bone; J.along = wrist ? HAND : 0.3; J.wrist = wrist; player = null;
-    for (const n of ["shoulderR", "elbowR", "neck", "spine", "head"]) J[n] = o.getObjectByName(n);
+    const o = body3d && body3d.holder, wrist = o && o.getObjectByName("wristR");
+    if (!wrist) return false;
+    attached = body3d; J.wrist = wrist; player = null; drink = null;
+    const who = body3d.who || "f"; loadDrink(who); drink = drinks[who] || null; J.who = who;
     return true;
   }
-  /* In the hand, its side against the palm: `grip` is the way the palm faces, in the figure's frame (x left, z ahead). */
-  function inHand(grip, tilt) {
-    if (cup.parent !== J.hand) J.hand.add(cup);
-    orient(tilt);
-    const k = attached.scale || 1;
-    J.hand.localToWorld(a.set(0, J.along, 0));
-    attached.holder.getWorldQuaternion(qt);
-    gv.set(grip.x, 0, grip.z).normalize().applyQuaternion(qt).multiplyScalar(GRIP * k);
-    cup.position.copy(J.hand.worldToLocal(a.add(gv)));
-  }
-  function detach() { attached = null; player = null; held = false; t0 = null; full = false; glowK = 0; stream.visible = false; surface.visible = false; putDown(); for (const m of [...steam, halo, ...motes]) m.visible = false; }
+  function detach() { if (attached && attached.restore) attached.restore(); attached = null; drink = null; player = null; held = false; t0 = null; full = false; glowK = 0; stream.visible = false; surface.visible = false; putDown(); for (const m of [...steam, halo, ...motes]) m.visible = false; }
 
-  /* Upright in the figure's frame, tipped `tilt` about its left-right line, and sized in metres at the figure's scale,
-     whatever the forearm's turn and the build's bone scales. */
-  function orient(tilt) {
-    const par = cup.parent; if (!par || !attached) return;
-    attached.holder.updateMatrixWorld(true);
-    attached.holder.getWorldQuaternion(qt).multiply(qp.setFromAxisAngle(X, tilt));
-    par.getWorldQuaternion(qp);
-    cup.quaternion.copy(qp.invert().multiply(qt));
-    par.getWorldScale(ws); const k = attached.scale || 1;
-    cup.scale.set(k / ws.x, k / ws.y, k / ws.z);
-  }
-
-  /* Each frame after pose(), while the cup is in a hand: the arm turns for the beat (or the lap, once poured), the cup's
-     tilt, and the stream while it pours. Returns the beat, or null with nothing in hand. */
+  /* Each frame after the pose, while the figure holds the cup: the clips' turns for the beat, the laid robe following the lap,
+     the cup, the stream while it pours. Returns the beat, or null with nothing in hand. */
   let last = null;
   function tick(t) {
     if (!attached) return null;
-    let s;
     const dt = lastT == null ? 0 : Math.min(0.1, Math.max(0, t - lastT)); lastT = t;
-    if (!R4 && !drink && J.wrist) { if (t0 != null) t0 += dt; return null; }   // the clips are still loading: the drink waits for them
-    if (r5() && J.wrist) return tick5(t, dt);
-    if (skipTo) { t0 -= skipTo === "sip" ? SKIP_R4 : skipTo; skipTo = 0; }
-    if (t0 != null) { s = (mode === "sip" ? sipAt : teaAt)(frozen != null ? frozen : t - t0); if (s.done) { t0 = null; held = true; } }
-    else s = teaAt(TOTAL + 1);
-    const S = J.shoulderR, E = J.elbowR;
-    if (S) S.quaternion.multiply(qt.setFromEuler(eu.set(s.arm.sx, s.arm.sy || 0, s.arm.sz, "XYZ")));   // after pose(), so it sits on the sit
-    if (E) E.quaternion.multiply(qt.setFromEuler(eu.set(s.arm.ex, 0, 0, "XYZ")));
-    /* The savour: the head lifts and the chest opens a little (neck and spine X back, read off the rig). */
-    const sv = s.savor || 0, N = J.neck, Sp = J.spine, lean = s.arm.lean || 0;
-    if (Sp && lean) Sp.quaternion.multiply(qt.setFromAxisAngle(X, lean));   // the body bends a little toward the stone
-    if (sv > 0.001) {
-      if (N) N.quaternion.multiply(qt.setFromAxisAngle(X, -0.22 * sv));
-      if (Sp) Sp.quaternion.multiply(qt.setFromAxisAngle(X, -0.05 * sv));
-    }
-    if (s.phase === "reach" || s.phase === "pour") { if (cup.parent !== g) putDown(); }   // on the stone until the hand has it
-    else inHand(s.grip || { x: 1, z: 0 }, s.tilt);
-    if (s.phase === "pour" ? s.pour > TEA_FULL : s.phase !== "reach") full = true;   // poured into once, it stays full
-    glow(t, sv, dt); last = { phase: s.phase, savor: sv, up: s.up || 0, pour: s.pour || 0, glow: glowK, full, steam: steam.map(m => [m.visible, +m.material.opacity.toFixed(2), m.position.toArray().map(x => +x.toFixed(2))])[0], halo: [halo.visible, +halo.material.opacity.toFixed(2)] };
-    if (s.stream) {
-      lipAt.getWorldPosition(a); cup.getWorldPosition(b);
-      dir.subVectors(a, b); const len = dir.length();
-      if (len > 1e-4) {
-        stream.visible = true; stream.position.copy(b).addScaledVector(dir, 0.5);
-        stream.quaternion.setFromUnitVectors(up, dir.normalize()); stream.scale.y = len;
-      }
-    } else stream.visible = false;
+    if (!drink) { drink = drinks[J.who] || null; if (!drink) { if (t0 != null) t0 += dt; return null; } }   // the clips are still loading: the drink waits for them
+    const s = tick5(t, dt);
+    if (attached.follow) attached.follow();
     return s;
   }
 
@@ -199,7 +153,7 @@ export function buildTea({ THREE, scene, seat, groundY = () => 0 }) {
     if (s.inHand) inHand5(); else onStone5();
     if (s.phase === "pour" ? s.pour > TEA_FULL : s.phase !== "reach") full = true;
     glow(t, s.savor, dt);
-    last = { phase: s.phase, clip: s.clip, savor: s.savor, up: s.lips ? 1 : 0, pour: s.pour || 0, glow: glowK, full, drink: "r5", steam: steam.map(m => [m.visible, +m.material.opacity.toFixed(2), m.position.toArray().map(x => +x.toFixed(2))])[0], halo: [halo.visible, +halo.material.opacity.toFixed(2)] };
+    last = { phase: s.phase, clip: s.clip, savor: s.savor, up: s.lips ? 1 : 0, pour: s.pour || 0, glow: glowK, full, drink: "baked", steam: steam.map(m => [m.visible, +m.material.opacity.toFixed(2), m.position.toArray().map(x => +x.toFixed(2))])[0], halo: [halo.visible, +halo.material.opacity.toFixed(2)] };
     if (s.stream) {
       lipAt.getWorldPosition(a); cup.getWorldPosition(b);
       dir.subVectors(a, b); const len = dir.length();

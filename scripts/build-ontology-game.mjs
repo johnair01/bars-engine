@@ -217,13 +217,14 @@ for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.jo
 // only when a scene asks for that daemon.
 mkdirSync(path.join(outDir, 'cave', 'daemons'), { recursive: true });
 for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) copyFileSync(path.join(srcDir, 'cave', 'daemons', d + '.glb'), path.join(outDir, 'cave', 'daemons', d + '.glb'));
-// The player's own figure: Average Dusk walking a CMU mocap clip (rig_mocap, bake_daemons.py --walker), worn over the avatar.
+// The player's own figure: the cultivation figure the player picks, baked from public/between/cult/ by cave/bake_cult/
+// (Walk and Idle clips on the UBC rig), worn over the avatar in the caves and in the basin (cave/cult-figure.js).
 mkdirSync(path.join(outDir, 'cave', 'player'), { recursive: true });
-copyFileSync(path.join(srcDir, 'cave', 'player', 'walker.glb'), path.join(outDir, 'cave', 'player', 'walker.glb'));
-// The standard character in the basin: the Between's figure read through r128 (cave/dusk-figure.js; cave/vendor/README.md).
+for (const who of ['f', 'm']) copyFileSync(path.join(srcDir, 'cave', 'player', 'cult-' + who + '.glb'), path.join(outDir, 'cave', 'player', 'cult-' + who + '.glb'));
+// cult-figure.js reads them through r128 with the vendor/ loaders (cave/vendor/README.md).
 mkdirSync(path.join(outDir, 'cave', 'vendor'), { recursive: true });
-copyFileSync(path.join(srcDir, 'cave', 'dusk-figure.js'), path.join(outDir, 'cave', 'dusk-figure.js'));
-for (const f of ['GLTFLoader.js', 'SkeletonUtils.js', 'three-shim.js', 'skeleton-utils-shim.js']) copyFileSync(path.join(srcDir, 'cave', 'vendor', f), path.join(outDir, 'cave', 'vendor', f));
+copyFileSync(path.join(srcDir, 'cave', 'cult-figure.js'), path.join(outDir, 'cave', 'cult-figure.js'));
+for (const f of ['GLTFLoader.js', 'SkeletonUtils.js']) copyFileSync(path.join(srcDir, 'cave', 'vendor', f), path.join(outDir, 'cave', 'vendor', f));
 // The spirits' core and hologram per family (cave/bake_spirits.py, from the spirit page's GLBs), fetched by spirit-forms.js
 // only when a spirit first unfolds into one (board sic-unfold-by-sitting).
 mkdirSync(path.join(outDir, 'cave', 'spirits'), { recursive: true });

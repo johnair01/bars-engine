@@ -29,8 +29,10 @@ const files = {
 };
 // The daemon bodies (cave/bake_daemons.py), fetched by a scene that meets a daemon.
 for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) files['/ontology-game/cave/daemons/' + d + '.glb'] = ['cave/daemons/' + d + '.glb', 'model/gltf-binary'];
-// The player's own figure, Average Dusk on its mocap walk (bake_daemons.py --walker).
-files['/ontology-game/cave/player/walker.glb'] = ['cave/player/walker.glb', 'model/gltf-binary'];
+// The player's own figure, the cultivation figure baked from public/between/cult/ (bake_cult.mjs), read by cult-figure.js.
+files['/ontology-game/cave/cult-figure.js'] = ['cave/cult-figure.js', 'text/javascript'];
+for (const v of ['GLTFLoader.js', 'SkeletonUtils.js']) files['/ontology-game/cave/vendor/' + v] = ['cave/vendor/' + v, 'text/javascript'];
+for (const w of ['f', 'm']) files['/ontology-game/cave/player/cult-' + w + '.glb'] = ['cave/player/cult-' + w + '.glb', 'model/gltf-binary'];
 // The family spirits' core and hologram (bake_spirits.py), fetched when a spirit unfolds.
 for (const f of ['shellback', 'romp', 'tinker', 'hedge', 'ballad']) for (const st of ['core', 'hologram']) files['/ontology-game/cave/spirits/' + f + '-' + st + '.glb'] = ['cave/spirits/' + f + '-' + st + '.glb', 'model/gltf-binary'];
 // The Shellback's creature and ally, the first family drawn in all five forms (the elder spirit in home base, slice 5).
@@ -261,11 +263,11 @@ ok(Math.abs((await free()).s - fA.s) < 2 && avS.offPath > 1, 'off the path\'s li
 ok((await C(() => window.__oagCave.camInside())).inside, 'the camera follows it, inside the tunnel');
 // walking down the stick comes back toward the camera (the walker's clip frames are read on the way)
 const wk0 = await C(() => window.__oagCave.walker());
-ok(wk0.worn && wk0.standInShown === 0 && wk0.joints >= 30 && wk0.length > 20, `the player wears Average Dusk on its mocap walk (${wk0.joints} joints, ${wk0.length} frames), the stand-in's parts hidden`);
+ok(wk0.worn && wk0.standInShown === 0 && wk0.joints >= 30 && wk0.length > 20, `the player wears the cultivation figure on its Walk clip (${wk0.joints} joints, ${wk0.length} frames), the stand-in's parts hidden`);
 const wf = [];
 // at least ten samples, more while a slow renderer has shown fewer than six frames
 await page.keyboard.down('ArrowDown'); for (let i = 0; i < 10 || (i < 40 && new Set(wf.map((f) => f.toFixed(1))).size < 6); i++) { await page.waitForTimeout(120); wf.push((await C(() => window.__oagCave.walker())).frame); } await page.keyboard.up('ArrowDown');
-ok(new Set(wf.map((f) => f.toFixed(1))).size >= 6, `walking turns the mocap clip (frames ${wf.map((f) => f.toFixed(1)).join(', ')})`);
+ok(new Set(wf.map((f) => f.toFixed(1))).size >= 6, `walking turns the Walk clip (frames ${wf.map((f) => f.toFixed(1)).join(', ')})`);
 const fD = await free();
 ok(fD.s < fS.s - 2 && fD.dir === 1, `the down key walks back toward the camera, which stays behind (${fS.s.toFixed(1)} to ${fD.s.toFixed(1)})`);
 // up to the welcome marker: its prompt shows by the right thumb, and the way past it stays shut
