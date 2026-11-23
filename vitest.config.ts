@@ -87,6 +87,8 @@ export default defineConfig({
       'src/lib/cyoa-composer/__tests__/step-registry.test.ts',
       'src/lib/voice/__tests__/export.test.ts',
       'src/lib/__tests__/vitest-include-registration.test.ts',
+      'src/app/api/board/saves/__tests__/route-voice.test.ts',
+      'src/lib/board/__tests__/rows.test.ts',
       'src/lib/__tests__/local-db-guard.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
       'src/lib/board/__tests__/records.test.ts',

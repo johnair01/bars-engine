@@ -194,7 +194,7 @@ export function recommend(walk: Walk): Offer[] {
   const held = walk.reservations.length
   const selfSabotageWhy =
     held > 0
-      ? `You named ${held === 1 ? 'a reservation' : `${held} reservations`}. That is the voice we work with: what it protects, and how to get it working for you.`
+      ? `You named ${held === 1 ? 'a reservation' : `${held} reservations`}. That is the voice we work with: what it protects and how to get it working for you.`
       : 'In a session, we look for a part of you that keeps putting off what you want. We ask that part what it is trying to protect you from. Then we give it a new job: helping you get what you said you wanted at the start of this walk.'
 
   if (exp?.allyship) {
