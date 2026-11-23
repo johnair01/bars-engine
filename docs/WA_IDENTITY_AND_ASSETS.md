@@ -185,6 +185,11 @@ and send `Access-Control-Allow-Credentials: true` (see `next.config.ts`).
 Without this, WA logs "One of your Woka textures is invalid for this world" and
 bounces back to the picker even though the PNG returns 200.
 
+**Query shape:** WA's axios client sends `characterTextureIds[]=...`, not the
+bare repeated key. `room/access` reads both (plus comma-separated values) via
+`requestedTextureIds` in `src/lib/wa/woka.ts`; otherwise an anonymous pick looks
+empty and is rejected with the same message.
+
 ### 4.2 Tiles and props (maps)
 
 1. Put the source sheet in the world folder (`src16/` beside the map).
