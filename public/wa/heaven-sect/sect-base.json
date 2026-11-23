@@ -88,6 +88,7 @@
     "tea":      {"wall": "green", "floor": "boards_green", "plan": "tea tables with a seat each side, shelves on the north wall", "meeting": true},
     "shrine":   {"wall": "brown", "floor": "stone_dark", "plan": "a seated figure, an altar table, two seats", "meeting": false},
     "mote_well": {"wall": "green", "floor": "boards_green", "plan": "a well at the centre on dark stone, motes above it, six seats round it, the ladder plate on the north wall", "meeting": true},
+    "cloister": {"wall": "brown", "floor": "brick_pale", "plan": "a walled garden at the centre, a round walked all the way about it, four seats on the outer edge, the round's plate on the north wall", "meeting": true},
     "court":    {"wall": null, "floor": "paving", "plan": "open paving, standing room, gate and notice board", "meeting": false}
   }
 }

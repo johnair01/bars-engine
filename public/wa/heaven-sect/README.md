@@ -25,3 +25,11 @@ door and hall, six seats round the well, the ladder plate on the north wall, the
 not built. A level with a `walk` also writes `<map>-walk.gif`: a visitor walks in and spirits rise over the well.
 The `motes` sheet is drawn by `gen_sect.py`, not taken from the pack. The well rim is a placeholder statue until the
 WizardGenie tiles land (`/mnt/project-files/calrunian-dojo/round-3/`).
+
+### The Cloister Round (second room)
+
+`levels/oddboro-cloister.json`: new room kind `cloister` (a planted garden at the centre, a covered round about it, four
+seats on the outer edge, the round's plate on the north wall). Interior 13x12, so a 15x14 box, at the scale Wendell
+answered on odb-mote-well-look-3. The west exit goes back to the Mote Well; the Staff Hall exit is named, not built.
+Its `walk` block has a `daemon` loop: one daemon (the walker redrawn in water-teal, with a glow under it) walks the
+round once in `oddboro-cloister-walk.gif`. The walk code now works with or without a well.
