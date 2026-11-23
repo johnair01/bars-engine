@@ -15,6 +15,8 @@ from collections import deque
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
+from wa_export import apply as wa_apply, check as wa_check  # noqa: E402
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 BASE = json.load(open(os.path.join(HERE, 'sect-base.json')))
@@ -372,6 +374,12 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
        'properties': [prop('mapName', LEVEL['title']),
                       prop('mapDescription', 'The Heaven Sect, first 2D map: labelled meeting rooms and doors to other maps. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.'),
                       prop('generator', f'gen_sect.py --level levels/{MAP}.json --seed {SEED}')]}
+# WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
+# collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
+wa_apply(tmj)
+_wa = wa_check(tmj)
+if _wa:
+    print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 json.dump(tmj, open(os.path.join(OUT, f'{MAP}.tmj'), 'w'), separators=(',', ':'))
 
 
