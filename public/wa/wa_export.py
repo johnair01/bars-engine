@@ -14,7 +14,9 @@ read maps the way Tiled draws them, and three of its rules cannot be seen in a s
                but a *collided* tile there spawns the player inside a wall.
   exits        an area's `exitUrl` is fetched as soon as the map opens, not when someone walks
                into it: one exit to a map that does not exist greys out the whole room with
-               "NETWORK_ERROR — An error occurred while loading a resource".
+               "NETWORK_ERROR — An error occurred while loading a resource". An exit *around the
+               start tile* is worse and quieter: the room opens and instantly throws you into the
+               next map, which is what the first live walk-through did to the sect court.
 
 `apply()` fixes the first three in a map dict; `check()` returns the reasons a map would not load,
 and `check_exits()` the exits that point at nothing. All are pure functions over the parsed JSON,
@@ -213,6 +215,22 @@ def check(tmj):
             if g and (g & FLIP_MASK) in collided:
                 errs.append(f'start marker tile {g & FLIP_MASK} is a collided tile: the player would spawn inside a wall')
                 break
+
+    tw, th = tmj.get("tilewidth") or 32, tmj.get("tileheight") or 32
+    starts = [(i % l.get("width", tmj.get("width", 0)), i // l.get("width", tmj.get("width", 1)))
+              for l in _layers(tmj, "start", "tilelayer") for i, g in enumerate(l["data"]) if g]
+    for l in tmj.get("layers", []):
+        if l.get("type") != "objectgroup":
+            continue
+        for o in l.get("objects", []):
+            if not any(p.get("name") == "exitUrl" for p in o.get("properties") or []):
+                continue
+            x0, y0 = o.get("x", 0) / tw, o.get("y", 0) / th
+            x1, y1 = x0 + o.get("width", 0) / tw, y0 + o.get("height", 0) / th
+            for (sx, sy) in starts:
+                if x0 <= sx + 0.5 < x1 and y0 <= sy + 0.5 < y1:
+                    errs.append(f'start tile ({sx},{sy}) stands inside the exit "{o.get("name")}": '
+                                f'the player is teleported out of the room the moment it opens')
 
     if tmj.get("tilewidth") != 32 or tmj.get("tileheight") != 32:
         errs.append(f'tiles are {tmj.get("tilewidth")}x{tmj.get("tileheight")}; WorkAdventure characters are 32x32')
