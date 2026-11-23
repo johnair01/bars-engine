@@ -2,9 +2,11 @@
 usage: python3 gen_lantern_walk.py   (writes tiles.png, lantern-walk.tmj, notice-N.html, arrive-N.html here)
 One 40x24 orthogonal map, 32 px tiles: the office door at the left, three notice posts beside it, and three
 places to walk to. Each notice post and each place is a rectangle area carrying an openWebsite property."""
-import json, os, html
+import json, os, html, sys
 from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); T = 32; W, H = 40, 24
+sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
+from wa_export import apply as wa_apply, check as wa_check  # noqa: E402
 cols = [(70,120,60),(150,120,80),(40,90,160),(90,80,90),(100,70,40),(30,110,40),(200,80,120),(130,130,130),(240,200,40),
         (255,190,70),(120,85,50),(60,45,40)]
 N=27; import random; random.seed(7)
@@ -129,5 +131,12 @@ m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"or
    "tileheight":T,"tilewidth":T,"type":"map","version":"1.10","nextobjectid":oid,"layers":layers,
    "nextlayerid":60,"tilesets":[{"firstgid":1,"name":"tiles","image":"tiles.png","imagewidth":T*N,"imageheight":T,"tilewidth":T,"tileheight":T,"tilecount":N,"columns":N,"margin":0,"spacing":0,"tiles":[{"id":14,"animation":[{"tileid":14,"duration":400},{"tileid":15,"duration":400},{"tileid":16,"duration":200},{"tileid":15,"duration":400}]},{"id":17,"animation":[{"tileid":17,"duration":300},{"tileid":18,"duration":300},{"tileid":19,"duration":300},{"tileid":20,"duration":300}]},{"id":21,"animation":[{"tileid":19,"duration":300},{"tileid":20,"duration":300},{"tileid":17,"duration":300},{"tileid":18,"duration":300}]}]}],
    "properties":[{"name":"mapName","type":"string","value":"The Lantern Walk"},{"name":"script","type":"string","value":"lantern-walk.js"}]}
+# WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
+# collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
+wa_apply(m)
+_wa = wa_check(m)
+if _wa:
+    print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
+
 json.dump(m,open(f'{HERE}/lantern-walk.tmj','w'),separators=(',',':'))
 print(sorted(os.listdir(HERE)))
