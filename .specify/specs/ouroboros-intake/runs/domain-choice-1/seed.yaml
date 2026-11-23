@@ -1,0 +1,312 @@
+goal: Make all 28 chosenDomain compile errors across 12 files in bars-engine go away
+  by giving every quest-building caller a real domain. Each caller either carries
+  the domain from its quest's single campaign (or the seed, sect or lens behind it)
+  or stops and asks a person to pick one of the four. Nothing falls back to a default.
+  The four domains are Gathering Resources, Direct Action, Raise Awareness and Skillful
+  Organizing.
+task_type: code
+brownfield_context:
+  project_type: brownfield
+  context_references:
+  - path: /Users/wendellbritt/Library/Application Support/wizardgenie/projects/default/six-faces-council
+    role: primary
+    summary: Council workspace holding the decision record and callsheets
+  - path: six-faces-council/council/callsheets/weapon-forms.md
+    role: reference
+    summary: Council callsheet to read before asking anything it already answers
+  - path: bars-engine/src/lib/quest-grammar/types.ts
+    role: primary
+    summary: QuestCompileInput with required chosenDomain; lines 178-195 hold the
+      2026-11-20 ruling comment against defaults; also GameMasterFace
+  - path: bars-engine/src/lib/allyship-domains.ts
+    role: reference
+    summary: ALLYSHIP_DOMAINS, AllyshipDomainKey, getDomainLabel and DomainElement;
+      half-renamed, and the rename stays out of scope here
+  - path: bars-engine/src/app/admin/campaign-seeds/CampaignSeedCreateForm.tsx
+    role: reference
+    summary: Existing admin campaign-seed form; the pattern for domain selection in
+      admin UI
+  - path: bars-engine UnpackingForm.tsx and GenerationFlow.tsx
+    role: primary
+    summary: 'Admin quest-grammar form: pre-select the seed''s domain, or show all
+      four with none selected and require a pick'
+  - path: bars-engine generate-quest.ts, quest-generation.ts and gameboard.ts
+    role: primary
+    summary: Quest actions that must carry the campaign's domain or require a pick
+  - path: bars-engine characterCreationPacket.ts, storyIntroPacket.ts, orientationMetaPacket.ts,
+      compileQuestSkeleton.ts and orientationFaceSubPackets.ts
+    role: primary
+    summary: Packet builders that must pass chosenDomain through to the compiler
+  - path: bars-engine/src/lib/quest-grammar/__tests__
+    role: reference
+    summary: Existing tests (charge-engine.test.ts uses assert.throws); no domain
+      test exists yet
+  existing_patterns:
+  - chosenDomain is a required field enforced by TypeScript and backed by a ruling
+    comment in types.ts
+  - Campaign carries allyshipDomain, parentCampaignId and createdById; campaignId
+    on a quest is a single optional string
+  - Stewardship is a CampaignMembership row with role STEWARD and a stewardScope (FULL,
+    DECK, SPOKE_1..SPOKE_8); the steward acts as the Elder
+  - 'Domain helpers in allyship-domains.ts: the ALLYSHIP_DOMAINS constant, the AllyshipDomainKey
+    type and getDomainLabel'
+  - Quest-grammar tests live in src/lib/quest-grammar/__tests__ and use node assert,
+    including assert.throws
+  - NpcProfile is an AI agent running as a Player, not a sect NPC
+  existing_dependencies:
+  - TypeScript
+  - React (admin forms in .tsx)
+  - Prisma (Campaign and CampaignMembership schema)
+  - node:assert test style in quest-grammar/__tests__
+constraints:
+- chosenDomain stays required on QuestCompileInput per Wendell's 2026-11-20 ruling;
+  it must never be defaulted, inferred or made optional
+- A build must never fall through to GATHERING_RESOURCES (or any other domain) as
+  an inferred or hardcoded value, and must never persist a null domain
+- 'Every caller has exactly two legal behaviours and no third: if there is a domain
+  to carry, pass it; if there is nothing to carry, stop and require a pick, then pass
+  what was picked'
+- 'Nothing to carry means either no campaign (campaignId empty) or a campaign whose
+  domain field (Campaign.allyshipDomain) is empty; both are treated the same way:
+  show all four domains with none selected and require a pick. Refusing to build in
+  this case is rejected because it would make a live campaign unplayable'
+- In the admin quest-grammar form, when the campaign seed's need sits in a domain,
+  that domain is pre-selected; all four domains stay visible and reachable, and choosing
+  a different one takes a deliberate override
+- 'When a source exists, the domain is pre-selected from it: a sect''s need, the domain
+  of the lens a player''s own quest works from, or the campaign''s domain for a quest
+  received from an NPC or started on the player''s own initiative toward a campaign'
+- A blank domain is allowed only as the form's starting state, never as a stored value;
+  no quest is built without a domain
+- 'A quest is scoped to a single campaign: campaignId stays a single optional string,
+  not a list'
+- 'Out of scope for this card: building the Elder or steward grid, NPC-to-campaign
+  membership, or the refusal of an NPC quest for a campaign the NPC does not belong
+  to; these belong to their own card'
+- 'Out of scope: the repo-wide rename from allyship domain to domain; identifiers
+  such as ALLYSHIP_DOMAINS, AllyshipDomainKey and Campaign.allyshipDomain stay unchanged,
+  while new prose, labels and comments say ''domain'''
+- A sect NPC must not be given a playerId just because the data shape fits
+- Done requires BOTH zero chosenDomain compile errors AND an automated test proving
+  no quest builds without a domain; manual click-through of the admin form is not
+  part of done
+- 'Careful — a campaign is not singular. There can be multiple campaigns in a world.
+  If a quest comes from an NPC it inherits one or MORE campaigns. If it comes from
+  another player, they may have their own campaign they are running. Players are also
+  able to create their own campaigns based on their lens intake. And there is a real
+  chance a campaign is not filled in yet, because the player has not inherited one
+  or made one for themselves. So the build cannot assume a campaign exists. Override
+  rule: a player must not have access to creating their own campaign until they have
+  finished at least one — the orientation campaign will do. That orientation campaign
+  is a Skillful Organizing campaign for the Sect, whose subdomain is raising awareness:
+  raising the players'' awareness of what they can and cannot do in the sect.'
+- 'SCOPE CALL: this card is done when all 28 callers pass a domain inherited from
+  their quest''s single campaign. The Elder and the NPC membership are their own card
+  - do NOT build them here. So this card is the wiring, not the world: it does not
+  build the Elder model, the steward grid or NPC membership. What it builds is that
+  every caller passes a domain, and that the domain comes from the quest''s single
+  campaign rather than a default. Two corrections to what I recorded earlier, both
+  from him. First: the Elder already exists. In bars-engine a campaign has a steward,
+  and the steward IS the elder for people not playing the Calrunian game - it is a
+  CampaignMembership row with role STEWARD and a stewardScope, not a separate table.
+  StewardScope already carries eight spokes (FULL, DECK, SPOKE_1..SPOKE_8), so the
+  ''four campaigns in their sphere of influence'' grid is the existing stewardship
+  model, not a new concept. Second: the campaign''s rank and rung is defined by its
+  steward, so a campaign does not need its own rank field - rank is inherited the
+  same way domain is. Elders are based on the game master faces (shaman, challenger,
+  regent, architect, diplomat, sage - GameMasterFace in types.ts) and the Spiral Dynamics
+  integral levels. Ranks within a face along specific skill trees are explicitly not
+  scoped yet. Also: NpcProfile is an AI agent running AS A PLAYER, not a sect NPC,
+  and the goal is for these to be the same thing eventually - both are agents, only
+  one is a player. NPCs are not players but are made out of the same data, so a sect
+  NPC must not be given a playerId just because the shape fits.'
+- 'REQUIRE A PICK. When a caller has no campaign behind its quest - campaignId empty,
+  as in the admin form with no seed, or a player who has not reached orientation yet
+  - the build does NOT refuse. It shows all four domains with none pre-selected and
+  requires the caller to pick one before the quest can be built. This is the only
+  case where a blank is correct, and it does not weaken the rule that a domain is
+  never blank: the FORM starts with nothing chosen, but the QUEST is never built without
+  a domain. The blank is a starting state, not a stored value - which is exactly what
+  keeps chosenDomain required while letting a form open with no pre-selection. It
+  is consistent with both earlier rulings rather than a third exception: the sect
+  offers all four because a player is never steered; the seed pre-selects because
+  the seed already declares what it is for; and where nothing at all exists, the person
+  authoring IS the source, so they pick, visibly. So a domain is always carried from
+  something, and where nothing exists to carry from, the person supplies it by choosing.
+  For the 28 callers this means exactly two legal behaviours and no third: pass a
+  domain the user chose, or stop and ask. Never fall through to GATHERING_RESOURCES,
+  never persist a null.'
+- 'BOTH, and both are required - zero compile errors AND a test showing no quest builds
+  without a domain. Neither is sufficient alone, and the two failure modes are different.
+  Zero compile errors proves every one of the 28 callers now passes something; it
+  does NOT prove what it passes traces to a campaign, because a caller could write
+  chosenDomain: ''GATHERING_RESOURCES'' as a hardcoded literal and that compiles perfectly
+  - which is exactly the silent-default failure types.ts:178-195 warns about. So the
+  compile errors catch OMISSION and the test catches INVENTION. He did not ask to
+  click through the admin form, so manual verification is not part of done - the test
+  has to be the durable proof, not a screenshot. Written to the five-source ruling,
+  the test should assert: a quest with no campaign and no pick does not build; a quest
+  whose campaign HAS a domain inherits THAT domain; a quest with no campaign builds
+  only once a domain is picked; and a build never falls through to GATHERING_RESOURCES
+  as an inferred value. Checked the code: no such test exists today - the only assert.throws
+  calls in quest-grammar/__tests__ are in charge-engine.test.ts and concern charge
+  mechanics, not domains. The guard is TypeScript''s required field alone, so the
+  test half is work still to be written, not a check already green.'
+acceptance_criteria:
+- description: 'bars-engine type-checks with zero errors: all 28 former chosenDomain
+    errors across the 12 caller files (UnpackingForm.tsx, GenerationFlow.tsx, generate-quest.ts,
+    quest-generation.ts, gameboard.ts and the packet builders) are resolved and chosenDomain
+    is still required on QuestCompileInput'
+  semantic_ac_key: ac_2326deb11db87f78
+  verify_command: cd bars-engine && npx tsc --noEmit
+  expected_artifacts:
+  - bars-engine/src/lib/quest-grammar/types.ts
+- description: 'An automated test proves no quest builds without a real domain. It
+    covers: no campaign and no pick does not build; a campaign with an empty domain
+    and no pick does not build; a campaign with a domain makes the quest inherit that
+    exact domain; no campaign builds only once a domain is picked; the admin form
+    pre-selects the seed''s domain when it has one and otherwise starts with none
+    selected; and no build ever falls through to GATHERING_RESOURCES as an inferred
+    value'
+  semantic_ac_key: ac_6a8302edcc44849d
+  verify_command: cd bars-engine && npx tsx --test src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+  expected_artifacts:
+  - bars-engine/src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+- description: 'No quest-building caller invents a domain: none of the caller or packet
+    files assigns chosenDomain from a hardcoded GATHERING_RESOURCES literal or a fallback
+    default'
+  semantic_ac_key: ac_fb44c1411599c352
+  verify_command: cd bars-engine && ! grep -rnE "chosenDomain[^\n]*(\?\?|\|\|)?[^\n]*['\"]GATHERING_RESOURCES['\"]"
+    src/app src/actions src/lib/quest-grammar --include=*.ts --include=*.tsx | grep
+    -v __tests__
+- description: 'A campaign whose domain is EMPTY is treated exactly as if there were
+    no campaign. The resolver takes (campaignId, campaignDomain): a campaignId with
+    an empty or null campaignDomain yields requiresPick=true, preselectedDomain=null
+    and domainSource=null — the same result as campaignId being null. It does not
+    refuse and does not substitute a default. This is the ruling collapsed into code:
+    what matters is whether there is a domain to carry, not whether a campaign row
+    exists, and refusing would leave a live campaign unplayable.'
+  semantic_ac_key: ac_60a038448e6cd21a
+  verify_command: cd bars-engine && npx tsx --test src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+  expected_artifacts:
+  - bars-engine/src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+  - bars-engine/src/lib/quest-grammar/domain-source.ts
+- description: 'The empty-campaign-domain case is COVERED BY THE SAME TEST as the
+    no-campaign case and passes for the same reason: both inputs produce requiresPick=true.
+    The test asserts them as two separate inputs with one shared expectation, so a
+    regression in either path fails independently. campaignId remains a single optional
+    string and is never widened to a list.'
+  semantic_ac_key: ac_4295fd58a9ba8aba
+  verify_command: cd bars-engine && npx tsx --test src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+  expected_artifacts:
+  - bars-engine/src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+assumptions:
+- bars-engine sits at bars-engine/ relative to the run workspace, and its TypeScript
+  project can be type-checked with npx tsc --noEmit from that directory
+- The new domain test lives at bars-engine/src/lib/quest-grammar/__tests__/chosen-domain.test.ts
+  and runs with node's test runner through tsx (npx tsx --test), the same style as
+  the existing assert.throws tests in quest-grammar/__tests__; the worker may choose
+  another runner already used in the repo
+- The form's pre-select / require-a-pick logic is pulled into a pure resolver that
+  the domain test can call directly, so the form's behaviour is covered without rendering
+  React
+- Subdomain choice for NPC-received quests (source 3) and linking a campaign-derived
+  domain to a player's lens domain later (source 4) are not wired by this card beyond
+  carrying the campaign's domain
+- The campaign-creation gate (a player must complete a campaign before creating their
+  own) and the orientation campaign's outgoing join are world rules for later cards,
+  not this card's work
+- The sect UI keeps offering all four domains every time, per the 2026-11-20 ruling;
+  this card does not change it
+ontology_schema:
+  name: QuestDomainProvenance
+  description: 'Where a quest''s domain comes from: one of four sources carried from
+    the world (sect need, lens, campaign, seed), or a person''s explicit pick when
+    there is nothing to carry. A blank domain exists only as a form''s starting state.'
+  fields:
+  - name: chosenDomain
+    type: string
+    description: 'Required domain the quest serves: GATHERING_RESOURCES, DIRECT_ACTION,
+      RAISE_AWARENESS or SKILLFUL_ORGANIZING (AllyshipDomainKey); never defaulted,
+      never null when stored'
+    required: true
+  - name: campaignId
+    type: string
+    description: The quest's single optional campaign; a quest is never scoped to
+      more than one campaign
+    required: true
+  - name: campaignDomain
+    type: string
+    description: Campaign.allyshipDomain; when present it is the domain the quest
+      inherits; when empty it counts as nothing to carry
+    required: true
+  - name: domainSource
+    type: string
+    description: 'Where the domain came from: sect_need, lens, campaign, seed, or
+      user_pick'
+    required: true
+  - name: preselectedDomain
+    type: string
+    description: The domain a form opens with when a source exists; empty only when
+      there is nothing to carry
+    required: true
+  - name: requiresPick
+    type: boolean
+    description: True when there is no campaign or the campaign's domain is empty;
+      the build waits until a person picks one of the four
+    required: true
+  - name: availableDomains
+    type: array
+    description: All four domains, always visible and reachable even when one is pre-selected
+    required: true
+  - name: subdomain
+    type: string
+    description: Optional subdomain a player may choose on an inherited NPC campaign
+      quest; not wired by this card
+    required: true
+evaluation_principles:
+- name: No silent default
+  description: No path supplies GATHERING_RESOURCES or any other domain that was not
+    carried from a real source or picked by a person
+  weight: 1.0
+- name: Omission and invention both caught
+  description: Compile errors catch callers that leave the domain out; the test catches
+    callers that make one up. Both must pass
+  weight: 0.9
+- name: Two behaviours only
+  description: Each caller either carries an available domain or stops and requires
+    a pick; there is no third branch such as refusing or falling back
+  weight: 0.85
+- name: Scope discipline
+  description: The diff is the wiring for the 28 callers; it does not build the Elder
+    or NPC-membership model and does not do the allyship-to-domain identifier rename
+  weight: 0.75
+- name: Preselection respects the source
+  description: A seed, sect, lens or campaign domain is pre-selected while all four
+    stay reachable; a blank appears only when there is nothing to carry
+  weight: 0.7
+exit_conditions:
+- name: Done
+  description: Every caller passes a carried or picked domain and this is proven
+  criteria: npx tsc --noEmit is clean in bars-engine AND chosen-domain.test.ts passes,
+    covering inherit, empty-campaign-domain, no-campaign-without-pick, no-campaign-with-pick,
+    and no GATHERING_RESOURCES fallback
+- name: Scope breach
+  description: Finishing the work would require building the Elder or steward model,
+    NPC membership, or the identifier rename
+  criteria: Stop and surface it as a separate card instead of building it here
+- name: Ruling conflict
+  description: A caller has no source to carry from and no way to ask a person
+  criteria: Stop and ask Wendell rather than adding a default or a third behaviour
+metadata:
+  seed_id: seed_37f54f88a10c
+  version: 1.0.0
+  created_at: '2026-11-23T02:08:04.150933Z'
+  ambiguity_score: 0.19
+  gate_forced: false
+  interview_id: interview_20261123_003945
+  parent_seed_id: null
+  generation_mode: normal
+  degraded: false
+  unresolved_slots: []
+  recovery_reason: null

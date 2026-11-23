@@ -1,0 +1,151 @@
+{
+ "card": "domain-choice-1",
+ "package": "ouroboros-ai==0.59.9",
+ "session_id": "interview_20261123_003945",
+ "turns": [
+  {
+   "n": 1,
+   "at": "2026-11-23T00:39:52Z",
+   "answer_sent": null,
+   "question": "In the admin quest-grammar form, should the domain question show all four domains with none pre-selected, the same rule your 2026-11-20 ruling sets for the sect, even when the campaign seed's own need sits in one domain?",
+   "ambiguity": null,
+   "milestone": null,
+   "seed_ready": null,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 2,
+   "at": "2026-11-23T00:42:33Z",
+   "answer_sent": "Pre-selected. If the seed's need is Gathering Resources, the domain defaults to Gathering Resources. The seed sets the default, and leaving that domain takes a deliberate act — you have to override it, or change the vibe of the quest. The four are still all visible and all reachable, but the seed's need is the starting answer, not a blank.",
+   "question": "When a quest is built with no form in front of anyone (generate-quest.ts, quest-generation.ts, gameboard.ts), should those actions use the seed's need as the domain the way the form pre-selects it, or refuse to run until a person has picked one?",
+   "ambiguity": null,
+   "milestone": null,
+   "seed_ready": null,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 3,
+   "at": "2026-11-23T00:47:16Z",
+   "answer_sent": "There are four sources of a domain, not one. (1) The sect pre-selects based on the needs of the sect. (2) If a player is working their own quest for their own lenses, the domain is still pre-selected, based on the domain of the lens the quest operates from. (3) If a player receives a quest from a sect NPC as part of a sect campaign, the player INHERITS the sect's domain — but can potentially choose its SUBDOMAIN. For instance, receiving a quest from an NPC for the campaign, the very act of doing a subdomain may have them reach out to another NPC to target the approach. (4) Meanwhile a player could take their own initiative and create their own quest toward the goal of the campaign.",
+   "question": "For source (4), when a player starts their own quest toward a sect campaign's goal without being handed it by an NPC, does the domain start pre-selected from the campaign's need, start from the player's own lens, or start with no domain chosen?",
+   "ambiguity": null,
+   "milestone": null,
+   "seed_ready": null,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 4,
+   "at": "2026-11-23T00:53:03Z",
+   "answer_sent": "The domain is pre-selected from the campaign, and then they have the opportunity to link it to one of their own lens domains — at whatever timescale fits. So it is not either/or. It starts as the campaign's domain, because that is the fact in the world and a domain is never blank. Then the player may link that to one of their lens domains, and that link can happen at whatever timescale suits them — now, later, or as the quest develops. The campaign sets where the work lives; the lens is how the player connects to it.",
+   "question": "(ambiguity: 0.43) When none of your four sources applies, such as an admin generating a quest with no seed, sect, campaign, or lens behind it, should the build refuse until someone picks a domain, or show all four with none selected and require a pick?",
+   "ambiguity": 0.429,
+   "milestone": "initial",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 5,
+   "at": "2026-11-23T00:58:04Z",
+   "answer_sent": "Careful — a campaign is not singular. There can be multiple campaigns in a world. If a quest comes from an NPC it inherits one or MORE campaigns. If it comes from another player, they may have their own campaign they are running. Players are also able to create their own campaigns based on their lens intake. And there is a real chance a campaign is not filled in yet, because the player has not inherited one or made one for themselves. So the build cannot assume a campaign exists. Override rule: a player must not have access to creating their own campaign until they have finished at least one — the orientation campaign will do. That orientation campaign is a Skillful Organizing campaign for the Sect, whose subdomain is raising awareness: raising the players' awareness of what they can and cannot do in the sect.",
+   "question": "(ambiguity: 0.46) When an NPC hands a player a quest that inherits two or more campaigns whose needs sit in different domains, which domain starts pre-selected: the NPC's sect's own need, the first or primary campaign's domain, or does the player have to pick among those campaigns' domains before the quest can be built?",
+   "ambiguity": 0.4625,
+   "milestone": "initial",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 6,
+   "at": "2026-11-23T01:02:52Z",
+   "answer_sent": "A player cannot create their own campaign until they have completed one, and the orientation campaign does not itself satisfy that gate - it leads them to a campaign they can join. The sequence: the orientation campaign is unlocked and is what a new player starts with; it leads them to JOINING a campaign; completing a campaign then gives them the opportunity to CREATE THEIR OWN campaigns, and those are for their Lens Domains. So the gate tests completion of a campaign, not completion of orientation specifically, and the orientation campaign owes an outgoing join - if a player finishes orientation and there is nothing to join, the gate can never open, and the whole sequence is shut. Creating a campaign is an expression of the player's own Lens Domains, which is why it waits until they have seen a sect campaign through and know what they can and cannot do in the sect.",
+   "question": "(ambiguity: 0.41) When a quest from an NPC inherits two campaigns whose domains differ (say Direct Action and Raise Awareness), which domain should start pre-selected: the NPC's own sect's need, one campaign marked primary, or neither until the player picks one of the two?",
+   "ambiguity": 0.409,
+   "milestone": "initial",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 7,
+   "at": "2026-11-23T01:13:09Z",
+   "answer_sent": "The question's premise is rejected: NPCs should not be handing conflicting quests at all. An NPC's quest is scoped to a SINGLE campaign. So there is never a conflict to break - no need for the sect's own need, no primary campaign, no player choice among two domains. The plurality of campaigns is true of a world and of a player (a player may be in several, may run their own), but it is NOT true of a quest. This matches the code, which already declares campaignId as a single optional string rather than a list, so nothing in the builder needs to change to allow this - what was wrong was the record calling it 'one or more campaigns' at quest level. What remains is whether the scoping is enforced anywhere, since nothing currently checks that an NPC's quest is scoped to the campaign that NPC belongs to.",
+   "question": "(ambiguity: 0.45) When an NPC hands out a quest whose campaign is not one that NPC belongs to, should the build refuse it outright, or allow it and flag it for you to review?",
+   "ambiguity": 0.4525,
+   "milestone": "initial",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 8,
+   "at": "2026-11-23T01:19:47Z",
+   "answer_sent": "REFUSE, and there is nothing to flag for review. An NPC cannot hand out a quest for a campaign it does not belong to. All NPCs are associated with campaigns - this is how the story makes sense. The story for the sect is the player rising through the ranks of the sect's quests and gaining access to increasingly challenging campaigns and quests. Membership is not bookkeeping, it is the mechanism by which the sect's story coheres, so a quest from a campaign the NPC does not belong to is a story that does not connect - refuse it. This also closes the join gap: any NPC sends the player to the requisite Elder if they want to take on that Elder's campaign, and the Elder offers 4 campaigns in their sphere of influence for each of the available domains. The player joins ONE campaign from that Elder's grid, and that campaign's domain is the domain the quest inherits. Campaigns come from several sources and it is choose your own adventure: an Elder's campaign (what you join by studying under them), a farming campaign, and each book imported into the sect is a campaign of its own, plus the orientation campaign. Checked against the schema: Campaign has allyshipDomain, parentCampaignId and createdById but NO Elder field, NO rank field and NO NPC relation - there is no Elder model at all and NpcProfile is an AI-run Player, not a sect NPC. So an Elder and the NPC-to-campaign membership link have to be created; this is the largest build the strand has implied.",
+   "question": "(ambiguity: 0.39) Is this card done once all 28 callers pass a domain inherited from their quest's single campaign, with the Elder model and the NPC-membership refusal moved to their own card, or must this card also build those?",
+   "ambiguity": 0.3875,
+   "milestone": "progress",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 9,
+   "at": "2026-11-23T01:26:26Z",
+   "answer_sent": "SCOPE CALL: this card is done when all 28 callers pass a domain inherited from their quest's single campaign. The Elder and the NPC membership are their own card - do NOT build them here. So this card is the wiring, not the world: it does not build the Elder model, the steward grid or NPC membership. What it builds is that every caller passes a domain, and that the domain comes from the quest's single campaign rather than a default. Two corrections to what I recorded earlier, both from him. First: the Elder already exists. In bars-engine a campaign has a steward, and the steward IS the elder for people not playing the Calrunian game - it is a CampaignMembership row with role STEWARD and a stewardScope, not a separate table. StewardScope already carries eight spokes (FULL, DECK, SPOKE_1..SPOKE_8), so the 'four campaigns in their sphere of influence' grid is the existing stewardship model, not a new concept. Second: the campaign's rank and rung is defined by its steward, so a campaign does not need its own rank field - rank is inherited the same way domain is. Elders are based on the game master faces (shaman, challenger, regent, architect, diplomat, sage - GameMasterFace in types.ts) and the Spiral Dynamics integral levels. Ranks within a face along specific skill trees are explicitly not scoped yet. Also: NpcProfile is an AI agent running AS A PLAYER, not a sect NPC, and the goal is for these to be the same thing eventually - both are agents, only one is a player. NPCs are not players but are made out of the same data, so a sect NPC must not be given a playerId just because the shape fits.",
+   "question": "(ambiguity: 0.31) When a caller has no campaign behind its quest (campaignId empty, as in the admin form with no seed or a player before orientation), should it refuse to build, or show the four domains with none pre-selected and require a pick?",
+   "ambiguity": 0.307,
+   "milestone": "progress",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 10,
+   "at": "2026-11-23T01:39:55Z",
+   "answer_sent": "REQUIRE A PICK. When a caller has no campaign behind its quest - campaignId empty, as in the admin form with no seed, or a player who has not reached orientation yet - the build does NOT refuse. It shows all four domains with none pre-selected and requires the caller to pick one before the quest can be built. This is the only case where a blank is correct, and it does not weaken the rule that a domain is never blank: the FORM starts with nothing chosen, but the QUEST is never built without a domain. The blank is a starting state, not a stored value - which is exactly what keeps chosenDomain required while letting a form open with no pre-selection. It is consistent with both earlier rulings rather than a third exception: the sect offers all four because a player is never steered; the seed pre-selects because the seed already declares what it is for; and where nothing at all exists, the person authoring IS the source, so they pick, visibly. So a domain is always carried from something, and where nothing exists to carry from, the person supplies it by choosing. For the 28 callers this means exactly two legal behaviours and no third: pass a domain the user chose, or stop and ask. Never fall through to GATHERING_RESOURCES, never persist a null.",
+   "question": "(ambiguity: 0.27) What proves this card is done: zero chosenDomain compile errors plus a test showing no quest builds without a domain (inherited or picked), or do you also need to click through the admin form yourself?",
+   "ambiguity": 0.2675,
+   "milestone": "refined",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 11,
+   "at": "2026-11-23T01:44:05Z",
+   "answer_sent": "BOTH, and both are required - zero compile errors AND a test showing no quest builds without a domain. Neither is sufficient alone, and the two failure modes are different. Zero compile errors proves every one of the 28 callers now passes something; it does NOT prove what it passes traces to a campaign, because a caller could write chosenDomain: 'GATHERING_RESOURCES' as a hardcoded literal and that compiles perfectly - which is exactly the silent-default failure types.ts:178-195 warns about. So the compile errors catch OMISSION and the test catches INVENTION. He did not ask to click through the admin form, so manual verification is not part of done - the test has to be the durable proof, not a screenshot. Written to the five-source ruling, the test should assert: a quest with no campaign and no pick does not build; a quest whose campaign HAS a domain inherits THAT domain; a quest with no campaign builds only once a domain is picked; and a build never falls through to GATHERING_RESOURCES as an inferred value. Checked the code: no such test exists today - the only assert.throws calls in quest-grammar/__tests__ are in charge-engine.test.ts and concern charge mechanics, not domains. The guard is TypeScript's required field alone, so the test half is work still to be written, not a check already green.",
+   "question": "(ambiguity: 0.20) If a quest's campaign exists but its allyshipDomain is empty, should the build refuse, or show the four domains unselected and require a pick like the no-campaign case?",
+   "ambiguity": 0.205,
+   "milestone": "refined",
+   "seed_ready": false,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 12,
+   "at": "2026-11-23T01:48:32Z",
+   "answer_sent": "NAMING RULING, and it dissolves the question rather than answering it: the domains and the allyship domains are the same thing. There is no second concept. 'Domain' is the better fit because this was originally created for Mastering Allyship, but has now expanded to friendcraft and flirtcraft and other projects - so naming the four domains after the first project mis-describes the other three. The four are unchanged: Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing. 'Allyship domain' is a project name the concept has outgrown, not a property of the domains themselves. Checked the code: src/lib/allyship-domains.ts is already half renamed against itself - ALLYSHIP_DOMAINS and AllyshipDomainKey kept the prefix while getDomainLabel and DomainElement dropped it, so the rename has effectively been agreed in half the file. Scope measured, not guessed: 1027 occurrences across 215 files - 971 in bars-engine/src (198 files), 8 in bars-engine/prisma (3 files), 48 in new-repo/src (14 files). That is not this card's work: this card is the 28 callers passing a domain, and a repo-wide rename would bury that diff. So prose says 'domain'; identifiers (ALLYSHIP_DOMAINS, AllyshipDomainKey, Campaign.allyshipDomain) are left alone for a rename card of their own. The schema column and the prose now disagree by one word, deliberately and temporarily.",
+   "question": "(ambiguity: 0.20) When a quest's campaign exists but its domain field is empty, should the build show all four domains with none selected and require a pick, as in the no-campaign case, or refuse?",
+   "ambiguity": 0.197,
+   "milestone": "ready",
+   "seed_ready": true,
+   "completed": false,
+   "is_error": false
+  },
+  {
+   "n": 13,
+   "at": "2026-11-23T01:56:08Z",
+   "answer_sent": "REQUIRE A PICK, the same as the no-campaign case. A campaign that exists but whose domain field is empty behaves exactly like no campaign at all: show all four domains with none selected and require a pick. Neither earlier ruling covered this - source 5 assumed NO campaign, and the inheritance ruling assumed a campaign WITH a domain to inherit - but the answer makes the three cases collapse into one rule. The distinction that matters is not 'is there a campaign' but 'is there a domain to carry'. No campaign, or a campaign with an empty domain, are the SAME input state as far as a domain is concerned, because what counts is the fact in the world, not the row in the table. Refusing was the other branch and it was rejected for a concrete reason: refusing would make a live campaign UNPLAYABLE - it exists, players can be in it, and no quest could be built from it until an admin went back and filled the field. Requiring a pick keeps the campaign alive and asks the person at the keyboard to say what it is for; that choice then becomes the source. So for the 28 callers the two legal behaviours do not depend on whether a campaign is present: if a domain is available to carry, pass it; if there is nothing to carry - no campaign OR a campaign with an empty domain - stop and ask, then pass what was picked. Still no third behaviour, and the rule is now closed in both directions.",
+   "question": "Interview completed. Session ID: interview_20261123_003945\n\n(ambiguity: 0.19) Ready for Seed generation.\nGenerate a Seed with: session_id=\"interview_20261123_003945\"",
+   "ambiguity": 0.19,
+   "milestone": "ready",
+   "seed_ready": true,
+   "completed": true,
+   "is_error": false
+  }
+ ],
+ "parent": "quest-grammar"
+}
