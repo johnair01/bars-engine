@@ -22,8 +22,8 @@ export function useKneel(fn) { KNEEL = fn; }
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const ease = x => x * x * (3 - 2 * x);
 
-export async function makeCultBody({ who = "f", outfit = "B2", look = {}, ring = null, ringR = 0.42, ringW = 0.09, ringA = 0.85 } = {}) {
-  const W = await makeWalker({ who, outfit, look });
+export async function makeCultBody({ who = "f", outfit = "B2", look = {}, ring = null, ringR = 0.42, ringW = 0.09, ringA = 0.85, ...dress } = {}) {
+  const W = await makeWalker({ who, outfit, look, ...dress });   // dress: outfitDef, build, skin, hairColor (walker.js)
   const F = W.X.F, holder = W.holder;
   /* garden.js turns a body by holder.rotation.y = yaw + FACE with FACE = 0: the figure must face +z in the holder. The
      figure faces F.fr.f; turn the figure's root to +z and turn its body frame with it, so every aim stays in holder space. */
