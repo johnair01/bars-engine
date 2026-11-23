@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { describe, expect, it } from 'vitest'
-import { claimGuest, FIELD_OWNERS, PASSPORT_KEYS, PLACES, validatePassport, writeFromPlace, type Passport } from '@/lib/passport/passport'
+import { claimGuest, FIELD_OWNERS, OPTIONAL_KEYS, PASSPORT_KEYS, PLACES, recordMove, validatePassport, writeFromPlace, type Passport } from '@/lib/passport/passport'
 
 // The passport contract (six-faces-council pass calrunia-world1): schema/passport.schema.json, its fixtures, the guest fold the
 // browser runs (public/passport/guest.js) and the claim at sign-in, with tests W1 and W2 of the pass at the desk.
@@ -30,7 +30,7 @@ describe('passport contract', () => {
 
   it('names the same fields and places as the JSON schema', () => {
     expect([...schema.required].sort()).toEqual([...PASSPORT_KEYS].sort())
-    expect(Object.keys(schema.properties).sort()).toEqual([...PASSPORT_KEYS].sort())
+    expect(Object.keys(schema.properties).sort()).toEqual([...PASSPORT_KEYS, ...OPTIONAL_KEYS].sort())
     expect(schema.$defs.place.enum).toEqual([...PLACES])
     expect(guest.PLACES).toEqual([...PLACES])
   })
@@ -148,5 +148,48 @@ describe('arrival from Chapter 1', () => {
     const frag = arrive.encode(full)
     expect(arrive.decode(frag).value).toEqual(full)
     expect((ARRIVE_URL + frag).length).toBeLessThan(PHONE_SAFE_URL)
+  })
+})
+
+// ccb3-sheet-qi (Wendell, 2026-11-21, answer A): the qi a finished move earns is its own count, apart from the ship's meter.
+describe('the sheet count beside the ship meter', () => {
+  const base = () => ok(guest.fold(null, null, 'guest-1', AT)) as Passport
+
+  it('counts a finished move once and leaves the ship meter alone', () => {
+    const once = recordMove({ ...base(), qi: 7 }, 'attempt-1', AT)
+    expect(once.counted).toBe(true)
+    expect(once.passport.sheet).toEqual({ gathered: 10, counted: ['attempt-1'] })
+    expect(once.passport.qi).toBe(7)
+    const again = recordMove(once.passport, 'attempt-1', AT)
+    expect(again.counted).toBe(false)
+    expect(again.passport).toBe(once.passport)
+    ok(recordMove(again.passport, 'attempt-2', AT).passport)
+    expect(recordMove(again.passport, 'attempt-2', AT).passport.sheet?.gathered).toBe(20)
+  })
+
+  it('raising the ship meter never moves the sheet count', () => {
+    const s = recordMove(base(), 'a', AT).passport
+    expect({ ...s, qi: 999 }.sheet).toEqual(s.sheet)
+  })
+
+  it('refuses a malformed sheet and a sheet with extra fields', () => {
+    const p = base()
+    expect(validatePassport({ ...p, sheet: { gathered: -1, counted: [] } }).ok).toBe(false)
+    expect(validatePassport({ ...p, sheet: { gathered: 1, counted: ['a', 'a'] } }).ok).toBe(false)
+    expect(validatePassport({ ...p, sheet: { gathered: 1, counted: [], level: 3 } }).ok).toBe(false)
+  })
+
+  it('a claim keeps the larger count and the union of counted ids, and never mints', () => {
+    const server = { ...recordMove(recordMove(base(), 'a', AT).passport, 'b', AT).passport, player: { id: 'pl-1', name: 'W', guest_id: 'g0' } }
+    const g = recordMove(base(), 'b', AT).passport
+    const p = ok(claimGuest(server, g, { id: 'pl-1', name: 'W' }, AT))
+    expect(p.sheet).toEqual({ gathered: 20, counted: ['a', 'b'] })
+    expect(claimGuest(p, g, { id: 'pl-1', name: 'W' }, AT).sheet).toEqual(p.sheet)
+  })
+
+  it('only the vessel writes the sheet', () => {
+    const p = recordMove(base(), 'a', AT).passport
+    expect(writeFromPlace(p, 'cave', { sheet: p.sheet }).ok).toBe(false)
+    expect(writeFromPlace(p, 'vessel', { sheet: p.sheet }).ok).toBe(true)
   })
 })

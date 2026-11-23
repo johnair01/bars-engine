@@ -9,3 +9,20 @@ export function cultPick() {
   try { const s = sessionStorage.getItem("between-cult"); if (s === "m" || s === "f") return s; } catch (e) { /* the default */ }
   return "f";
 }
+
+/* The mirror's look (hj-comb-look-1, hj-mirror-look-1): what she has touched beside the glass, kept for the tab like the
+   figure above. One store: the stones, the palm, the pegs and the comb each write one key here. No key means the body's own
+   default (cult/walker.js BODIES) and the robe's own hair. */
+export const HAIRS = ["crop", "loose", "bob", "lowbun", "tail", "twin", "braid", "topknot"];
+const LOOK_KEY = "between-cult-look";
+let MEM = {};
+export function cultLook() {
+  try { const o = JSON.parse(sessionStorage.getItem(LOOK_KEY) || "null"); if (o && typeof o === "object") return o; } catch (e) { /* the page's own copy */ }
+  return MEM;
+}
+export function setCultLook(patch) {
+  const o = { ...cultLook(), ...patch };
+  MEM = o;
+  try { sessionStorage.setItem(LOOK_KEY, JSON.stringify(o)); } catch (e) { /* kept for this page only */ }
+  return o;
+}
