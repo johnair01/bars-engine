@@ -188,8 +188,15 @@ export function merge(docs: Docs): Doc {
   if (draws && Object.keys(draws).length) out.draws = { ...draws }
   const picks = docs.picks
   if (picks && Object.keys(picks).length) out.picks = Object.entries(picks).map(([id, d]) => ({ id, ...d }))
-  const battles = docs.battles
-  if (battles && Object.keys(battles).length) out.battles = foldBattles(battles)
+  // A battle reaches the store two ways: the `battles` collection holds the record's own, and a battle posted as a row
+  // (the MCP's post_rows, and board/post_rows.py) lands in `rows` and folds above. Both draw, the record's first. Before
+  // 2026-11-23 the collection replaced the row's battles whenever it held any, so a battle posted through the MCP never
+  // reached the page (found by check_visible on mgl-battle-1).
+  const held = docs.battles && Object.keys(docs.battles).length ? foldBattles(docs.battles) : []
+  const fromRows = (out.battles as Doc[] | undefined) ?? []
+  const named = new Set(held.map((b) => String(b.id)))
+  const battles = [...held, ...fromRows.filter((b) => !named.has(String(b.id)))]
+  if (battles.length) out.battles = battles
   trimSettled(out)
   return out
 }
