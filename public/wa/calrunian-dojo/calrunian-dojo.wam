@@ -1,0 +1,12 @@
+{
+ "version": "2.1.0",
+ "mapUrl": "./calrunian-dojo.tmj",
+ "areas": [],
+ "entities": {},
+ "entityCollections": [],
+ "metadata": {
+  "name": "The Calrunian Dojo",
+  "description": "Master Yun's dojo in the sect: gate, courtyard, two halls and the practice floor. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.",
+  "copyright": "Ninja Adventure Asset Pack, CC0. The dojo's own arrangement: bars-engine."
+ }
+}

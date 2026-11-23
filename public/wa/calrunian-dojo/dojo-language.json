@@ -1,55 +1,309 @@
 {
-  "about": "Design language for Calrunian places in WorkAdventure, first slice (the Dojo). Every piece the generator may place is named here; the layout code places names, never raw tile numbers. Source art: Ninja Adventure Asset Pack by Pixel-boy and AAA, CC0 (src16/LICENSE-CC0.txt), 16 px tiles drawn up 2x to WorkAdventure's 32 px.",
-  "src_px": 16,
-  "scale": 2,
-  "sheets": {
-    "house": "src16/TilesetHouse.png",
-    "nature": "src16/TilesetNature.png",
-    "floor": "src16/TilesetFloor.png",
-    "element": "src16/TilesetElement.png",
-    "ifloor": "src16/TilesetInteriorFloor.png",
-    "wall": "src16/TilesetWallSimple.png",
-    "yun": "src16/MasterSheet.png"
-  },
-  "recolor": {
-    "about": "The one banner drawn in purple is redrawn in the water element's colours from public/ui/tokens.css (--ui-water #1a3a5c, --ui-water-glow #1a7a8a); the aesthetic contract allows no invented purples.",
-    "house_banner_violet": {"sheet": "house", "x": 27, "y": 20, "w": 1, "h": 2, "hue_to": "#1a7a8a"}
-  },
-  "fills": {
-    "grass": {"sheet": "floor", "tiles": [[0, 12], [0, 12], [0, 12], [1, 12], [2, 12], [3, 12]]},
-    "paving": {"sheet": "ifloor", "grid4": [0, 12], "about": "3x3 cobbled panels with one-tile seams, period 4"},
-    "dojo_floor": {"sheet": "ifloor", "grid4": [11, 0], "about": "3x3 framed boards with one-tile seams, period 4"},
-    "dojo_medallion": {"sheet": "ifloor", "x": 15, "y": 0, "w": 4, "h": 4},
-    "wall": {"sheet": "wall", "nine": {"tl": [0, 0], "t": [3, 0], "tr": [4, 0], "l": [0, 1], "r": [4, 1], "bl": [0, 4], "b": [3, 4], "br": [4, 4]}}
-  },
-  "stamps": {
-    "hall_thatch": {"sheet": "house", "x": 25, "y": 7, "w": 4, "h": 7, "over_rows": 2, "about": "Elder's hall, thatched; door on its south face"},
-    "hall_timber": {"sheet": "house", "x": 25, "y": 14, "w": 4, "h": 5, "over_rows": 2, "about": "Lieutenants' hall, timber"},
-    "plum": {"sheet": "nature", "x": 0, "y": 18, "w": 3, "h": 3, "over_rows": 2, "about": "Plum in blossom"},
-    "pine": {"sheet": "nature", "x": 0, "y": 0, "w": 2, "h": 2, "over_rows": 1},
-    "round_tree": {"sheet": "nature", "x": 16, "y": 0, "w": 2, "h": 2, "over_rows": 1},
-    "big_tree": {"sheet": "nature", "x": 4, "y": 2, "w": 4, "h": 3, "over_rows": 2},
-    "bamboo_tall": {"sheet": "nature", "x": 11, "y": 8, "w": 1, "h": 3, "over_rows": 2},
-    "bamboo_short": {"sheet": "nature", "x": 12, "y": 9, "w": 1, "h": 2, "over_rows": 1},
-    "scholar_rock": {"sheet": "nature", "x": 19, "y": 8, "w": 2, "h": 2, "over_rows": 0},
-    "pebble_rock": {"sheet": "nature", "x": 21, "y": 9, "w": 1, "h": 1, "over_rows": 0},
-    "bush": {"sheet": "nature", "x": 1, "y": 10, "w": 1, "h": 1, "over_rows": 0, "collide": false},
-    "fern": {"sheet": "nature", "x": 9, "y": 10, "w": 1, "h": 1, "over_rows": 0, "collide": false},
-    "stance_panel_1": {"sheet": "house", "x": 22, "y": 20, "w": 1, "h": 2, "over_rows": 0},
-    "stance_panel_2": {"sheet": "house", "x": 23, "y": 20, "w": 1, "h": 2, "over_rows": 0},
-    "stance_panel_3": {"sheet": "house", "x": 24, "y": 20, "w": 1, "h": 2, "over_rows": 0},
-    "stance_panel_4": {"sheet": "house", "x": 25, "y": 20, "w": 1, "h": 2, "over_rows": 0},
-    "stance_panel_5": {"sheet": "house", "x": 26, "y": 20, "w": 1, "h": 2, "over_rows": 0},
-    "stance_panel_6": {"sheet": "house", "x": 27, "y": 20, "w": 1, "h": 2, "over_rows": 0, "recolor": "house_banner_violet"},
-    "weapon_rack": {"sheet": "element", "x": 11, "y": 2, "w": 3, "h": 2, "over_rows": 0},
-    "dummy": {"sheet": "element", "x": 15, "y": 0, "w": 1, "h": 1, "over_rows": 0},
-    "bench": {"sheet": "element", "x": 11, "y": 1, "w": 3, "h": 1, "over_rows": 0},
-    "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0, "about": "Master Yun, standing, facing the floor"}
-  },
-  "rules": {
-    "about": "Walkable-scale rules proven on the Oddboro office round (odb-ladder-look-2): WorkAdventure v1.35 walker feet are 16x16.",
-    "corridor_min": 3,
-    "door_min": 2,
-    "clear_round_npc": 2
+ "about": "Design language for Calrunian places in WorkAdventure, first slice (the Dojo). Every piece the generator may place is named here; the layout code places names, never raw tile numbers. Source art: Ninja Adventure Asset Pack by Pixel-boy and AAA, CC0 (src16/LICENSE-CC0.txt), 16 px tiles drawn up 2x to WorkAdventure's 32 px.",
+ "owner": "editor",
+ "owner_note": "The map in map-storage is owned by the WorkAdventure map editor: it is edited in the client, and the editor writes the .tmj and the .wam. This language stays the contract for the art and the room rules; gen_dojo.py is a seeder, not the source of truth.",
+ "src_px": 16,
+ "scale": 2,
+ "sheets": {
+  "house": "src16/TilesetHouse.png",
+  "nature": "src16/TilesetNature.png",
+  "floor": "src16/TilesetFloor.png",
+  "element": "src16/TilesetElement.png",
+  "ifloor": "src16/TilesetInteriorFloor.png",
+  "wall": "src16/TilesetWallSimple.png",
+  "yun": "src16/MasterSheet.png"
+ },
+ "recolor": {
+  "about": "The one banner drawn in purple is redrawn in the water element's colours from public/ui/tokens.css (--ui-water #1a3a5c, --ui-water-glow #1a7a8a); the aesthetic contract allows no invented purples.",
+  "house_banner_violet": {
+   "sheet": "house",
+   "x": 27,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "hue_to": "#1a7a8a"
   }
+ },
+ "fills": {
+  "grass": {
+   "sheet": "floor",
+   "tiles": [
+    [
+     0,
+     12
+    ],
+    [
+     0,
+     12
+    ],
+    [
+     0,
+     12
+    ],
+    [
+     1,
+     12
+    ],
+    [
+     2,
+     12
+    ],
+    [
+     3,
+     12
+    ]
+   ]
+  },
+  "paving": {
+   "sheet": "ifloor",
+   "grid4": [
+    0,
+    12
+   ],
+   "about": "3x3 cobbled panels with one-tile seams, period 4"
+  },
+  "dojo_floor": {
+   "sheet": "ifloor",
+   "grid4": [
+    11,
+    0
+   ],
+   "about": "3x3 framed boards with one-tile seams, period 4"
+  },
+  "dojo_medallion": {
+   "sheet": "ifloor",
+   "x": 15,
+   "y": 0,
+   "w": 4,
+   "h": 4
+  },
+  "wall": {
+   "sheet": "wall",
+   "nine": {
+    "tl": [
+     0,
+     0
+    ],
+    "t": [
+     3,
+     0
+    ],
+    "tr": [
+     4,
+     0
+    ],
+    "l": [
+     0,
+     1
+    ],
+    "r": [
+     4,
+     1
+    ],
+    "bl": [
+     0,
+     4
+    ],
+    "b": [
+     3,
+     4
+    ],
+    "br": [
+     4,
+     4
+    ]
+   }
+  }
+ },
+ "stamps": {
+  "hall_thatch": {
+   "sheet": "house",
+   "x": 25,
+   "y": 7,
+   "w": 4,
+   "h": 7,
+   "over_rows": 2,
+   "about": "Elder's hall, thatched; door on its south face"
+  },
+  "hall_timber": {
+   "sheet": "house",
+   "x": 25,
+   "y": 14,
+   "w": 4,
+   "h": 5,
+   "over_rows": 2,
+   "about": "Lieutenants' hall, timber"
+  },
+  "plum": {
+   "sheet": "nature",
+   "x": 0,
+   "y": 18,
+   "w": 3,
+   "h": 3,
+   "over_rows": 2,
+   "about": "Plum in blossom"
+  },
+  "pine": {
+   "sheet": "nature",
+   "x": 0,
+   "y": 0,
+   "w": 2,
+   "h": 2,
+   "over_rows": 1
+  },
+  "round_tree": {
+   "sheet": "nature",
+   "x": 16,
+   "y": 0,
+   "w": 2,
+   "h": 2,
+   "over_rows": 1
+  },
+  "big_tree": {
+   "sheet": "nature",
+   "x": 4,
+   "y": 2,
+   "w": 4,
+   "h": 3,
+   "over_rows": 2
+  },
+  "bamboo_tall": {
+   "sheet": "nature",
+   "x": 11,
+   "y": 8,
+   "w": 1,
+   "h": 3,
+   "over_rows": 2
+  },
+  "bamboo_short": {
+   "sheet": "nature",
+   "x": 12,
+   "y": 9,
+   "w": 1,
+   "h": 2,
+   "over_rows": 1
+  },
+  "scholar_rock": {
+   "sheet": "nature",
+   "x": 19,
+   "y": 8,
+   "w": 2,
+   "h": 2,
+   "over_rows": 0
+  },
+  "pebble_rock": {
+   "sheet": "nature",
+   "x": 21,
+   "y": 9,
+   "w": 1,
+   "h": 1,
+   "over_rows": 0
+  },
+  "bush": {
+   "sheet": "nature",
+   "x": 1,
+   "y": 10,
+   "w": 1,
+   "h": 1,
+   "over_rows": 0,
+   "collide": false
+  },
+  "fern": {
+   "sheet": "nature",
+   "x": 9,
+   "y": 10,
+   "w": 1,
+   "h": 1,
+   "over_rows": 0,
+   "collide": false
+  },
+  "stance_panel_1": {
+   "sheet": "house",
+   "x": 22,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "over_rows": 0
+  },
+  "stance_panel_2": {
+   "sheet": "house",
+   "x": 23,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "over_rows": 0
+  },
+  "stance_panel_3": {
+   "sheet": "house",
+   "x": 24,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "over_rows": 0
+  },
+  "stance_panel_4": {
+   "sheet": "house",
+   "x": 25,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "over_rows": 0
+  },
+  "stance_panel_5": {
+   "sheet": "house",
+   "x": 26,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "over_rows": 0
+  },
+  "stance_panel_6": {
+   "sheet": "house",
+   "x": 27,
+   "y": 20,
+   "w": 1,
+   "h": 2,
+   "over_rows": 0,
+   "recolor": "house_banner_violet"
+  },
+  "weapon_rack": {
+   "sheet": "element",
+   "x": 11,
+   "y": 2,
+   "w": 3,
+   "h": 2,
+   "over_rows": 0
+  },
+  "dummy": {
+   "sheet": "element",
+   "x": 15,
+   "y": 0,
+   "w": 1,
+   "h": 1,
+   "over_rows": 0
+  },
+  "bench": {
+   "sheet": "element",
+   "x": 11,
+   "y": 1,
+   "w": 3,
+   "h": 1,
+   "over_rows": 0
+  },
+  "master_yun": {
+   "sheet": "yun",
+   "x": 0,
+   "y": 0,
+   "w": 1,
+   "h": 1,
+   "over_rows": 0,
+   "about": "Master Yun, standing, facing the floor"
+  }
+ },
+ "rules": {
+  "about": "Walkable-scale rules proven on the Oddboro office round (odb-ladder-look-2): WorkAdventure v1.35 walker feet are 16x16.",
+  "corridor_min": 3,
+  "door_min": 2,
+  "clear_round_npc": 2
+ }
 }

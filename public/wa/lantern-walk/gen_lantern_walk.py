@@ -118,8 +118,12 @@ def exit_area(name,x,y,w,h,url,role):
     objs.append({"id":oid,"name":name,"type":"area","x":x*T,"y":y*T,"width":w*T,"height":h*T,"rotation":0,"visible":True,
       "properties":[{"name":"exitUrl","type":"string","value":url},{"name":"role","type":"string","value":role}]})
     oid+=1
-# the office door at (4,9) is a doorway you can stand in; standing in it walks you through to the dojo
-exit_area("Office door",4,9,1,1,"../calrunian-dojo/calrunian-dojo.tmj","to-dojo")
+# The office door at (4,9) is a doorway you can stand in. It points at the dojo's editable address: the
+# `/~` segment is what makes the back end answer `editable: true`, so arriving through this door puts you
+# in the room with the map editor, not a read-only copy of the same files. Absolute because a room URL is
+# what exitUrl has to be, and the editable form is a different path shape than this map's own.
+DOJO_ROOM = "https://world.masteringallyship.com/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam"
+exit_area("Office door",4,9,1,1,DOJO_ROOM,"to-dojo")
 for n,((t,b,place,arr),(x,y),(px,py)) in enumerate(zip(NOTICES,posts,places),1):
     open(f'{HERE}/notice-{n}.html','w').write(PAGE.format(title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Agree with the friends at the door on one, then walk there together."))
     open(f'{HERE}/arrive-{n}.html','w').write(PAGE.format(title=html.escape(place),body=html.escape(arr),foot="Next time you visit, tell the table how it went."))

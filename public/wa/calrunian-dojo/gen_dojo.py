@@ -18,6 +18,15 @@ args = sys.argv[1:]
 SEED = int(args[args.index('--seed') + 1]) if '--seed' in args else 7
 OUT = args[args.index('--out') + 1] if '--out' in args else HERE
 LANG = json.load(open(os.path.join(HERE, 'dojo-language.json')))
+# The dojo is owned by the map editor (dojo-language.json says "owner": "editor"), so this generator is a
+# seeder: the map in map-storage is the truth, and rewriting calrunian-dojo.tmj here would silently throw
+# away every room someone drew in the client. Re-seed deliberately, into a scratch directory, or pass --force.
+if LANG.get('owner') == 'editor' and '--force' not in args and os.path.abspath(OUT) == os.path.abspath(HERE):
+    print(f"{HERE}/calrunian-dojo.tmj is owned by the map editor (see dojo-language.json).")
+    print("This generator would overwrite it. Seed into a scratch directory instead:")
+    print(f"  python3 gen_dojo.py --seed {SEED} --out /tmp/dojo-seed")
+    print("or pass --force to overwrite the editor's map on purpose.")
+    sys.exit(2)
 SP, K = LANG['src_px'], LANG['scale']
 T = SP * K
 W, H = 44, 36
