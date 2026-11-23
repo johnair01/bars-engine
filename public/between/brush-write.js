@@ -18,6 +18,20 @@ export const INK = {
 };
 const PAPER = "#e8cf7a", CINNABAR = "#b8261a", W = 440, H = 690;
 const ELEMENT_WORD = { wood: "Wood", fire: "Fire", earth: "Earth", metal: "Metal", water: "Water" };
+/* The strip's own question (round strip-prompt-1, 2026-11-21, after his A on nook-brush-table-look-1: "the next round gives
+   the strips their own first-minute prompt"). The strip asks one question, in pencil at its head, so the few words under
+   the mark answer something: one thing the player will do next. One question, never two clauses (the Player and Skeptic
+   daemons on pass strip-prompt-1). The first strip ever is dipped in the coal the fire lent, so it names that coal; after
+   that the question names the feeling the ember holds (its starting element). On "Set it down" the pencil turns to ink. */
+export const FIRST_ASK = "The fire lent you this coal. What will you do with it tomorrow?";
+export const ASK = {
+  wood: "This ember holds your joy. What will you start with it this week?",
+  fire: "This ember holds your anger. What will you say tomorrow, out loud?",
+  earth: "This ember holds your steadiness. What will you keep doing tomorrow?",
+  metal: "This ember holds your fear. What small step will you take anyway?",
+  water: "This ember holds your sadness. Who will you go back to this week?",
+};
+export const askFor = (ember, first) => (first ? FIRST_ASK : (ember && ASK[ember.el]) || FIRST_ASK);
 
 /* ---------- on the shelf: three blank strips in a little fan, and the brush beside them ---------- */
 function paperTex(THREE) {
@@ -64,7 +78,8 @@ const css = `
 .bw-ember[aria-pressed=true]{border-color:#f3e6cc;box-shadow:0 0 14px var(--c)}
 .bw-strip{width:min(62vw,250px);aspect-ratio:${W}/${H};touch-action:none;border-radius:2px;box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 40px rgba(255,190,110,.18);cursor:not-allowed}
 .bw-strip.wet{cursor:crosshair}
-.bw-mark{width:min(80vw,300px);background:rgba(20,12,8,.6);border:1px solid rgba(232,207,122,.4);border-radius:6px;color:#f3e6cc;font:inherit;padding:10px 12px}
+.bw-mark{width:min(80vw,300px);background:transparent;border:0;border-bottom:1px solid rgba(232,207,122,.55);border-radius:0;color:#f3e6cc;font:inherit;font-style:italic;padding:8px 2px;text-align:center}
+.bw-mark:focus{outline:none;border-bottom-color:#f3e6cc}
 .bw-mark::placeholder{color:rgba(243,230,204,.55)}
 .bw-row{display:flex;gap:10px}
 .bw-row button{font:inherit;border-radius:20px;padding:9px 18px;border:1px solid rgba(232,207,122,.5);background:rgba(40,24,14,.7);color:#f3e6cc;cursor:pointer;min-height:44px}
@@ -79,14 +94,14 @@ const css = `
 `;
 
 /** The writing at the cloth. `write({ ember, mark })` saves it and resolves to `{ ink }`, or throws with a message. */
-export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}) {
+export function createBrushWrite({ write, onClose, onDip, onStroke, onSet, first = () => false } = {}) {
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
   const el = document.createElement("div"); el.className = "bw"; el.hidden = true;
   el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Write a BAR with the brush");
   el.innerHTML = `<div class="bw-in">
     <div class="bw-dip" role="group" aria-label="Dip the brush in an ember"></div>
     <div style="position:relative"><canvas class="bw-strip" width="${W}" height="${H}" aria-label="The strip. Draw your mark on it with the brush."></canvas></div>
-    <input class="bw-mark" maxlength="80" placeholder="What it is, in a few words" aria-label="What it is, in a few words">
+    <input class="bw-mark" maxlength="80" placeholder="A few words. One is enough." aria-label="${FIRST_ASK}">
     <p class="bw-say" aria-live="polite"></p>
     <div class="bw-row"><button type="button" class="back">Not now</button><button type="button" class="set" disabled>Set it down</button></div>
   </div>`;
@@ -102,6 +117,31 @@ export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}
     for (let i = 0; i < 900; i++) { cx.fillStyle = `rgba(150,110,40,${rnd() * 0.05})`; cx.fillRect(rnd() * W, rnd() * H, 2 + rnd() * 6, 1); }
     cx.strokeStyle = CINNABAR; cx.lineWidth = 9; cx.strokeRect(18, 18, W - 36, H - 36); cx.lineWidth = 3; cx.strokeRect(32, 32, W - 64, H - 64);
   }
+  function lines(text, maxW) { // word-wrap one line of copy to the strip's width
+    const out = []; let cur = "";
+    for (const w of text.split(" ")) { const t = cur ? cur + " " + w : w; if (cx.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; }
+    if (cur) out.push(cur); return out;
+  }
+  function balanced(text, maxW) { // the same number of lines, as even as they go, so no word stands alone on the last line
+    const n = lines(text, maxW).length; let w = maxW;
+    while (w > 120 && lines(text, w - 10).length === n) w -= 10;
+    return lines(text, w);
+  }
+  function ask(ink) { // the question at the strip's head: pencil while it waits, the ember's ink once the strip is set
+    if (!s || !s.ask) return;
+    cx.save(); cx.font = "italic 27px Georgia, serif"; cx.textAlign = "center"; cx.textBaseline = "top";
+    cx.fillStyle = ink || "rgba(78,70,62,.82)"; // graphite grey until set
+    balanced(s.ask, W - 110).forEach((l, i) => cx.fillText(l, W / 2, 60 + i * 34));
+    cx.restore();
+  }
+  function words(ink) { // the player's few words, written on the strip under the mark as they type
+    const t = markIn.value.trim(); if (!s || !t) return;
+    cx.save(); cx.font = "30px Georgia, serif"; cx.textAlign = "center"; cx.textBaseline = "alphabetic";
+    cx.fillStyle = ink || "rgba(88,80,72,.75)";
+    const ls = balanced(t, W - 110).slice(0, 2); // last line sits just above the seal
+    ls.forEach((l, i) => cx.fillText(l, W / 2, H - 132 - (ls.length - 1 - i) * 36));
+    cx.restore();
+  }
   function seal() { cx.fillStyle = CINNABAR; cx.fillRect(W / 2 - 34, H - 112, 68, 68); cx.fillStyle = PAPER; cx.fillRect(W / 2 - 22, H - 100, 44, 44); cx.fillStyle = CINNABAR; cx.fillRect(W / 2 - 12, H - 90, 24, 24); }
   function stroke(pts, color, glow) {
     if (pts.length < 1) return;
@@ -115,7 +155,10 @@ export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}
   function draw() {
     paper();
     const ink = s && s.ember ? INK[s.ember.el] : null;
+    const inked = s && s.done && ink ? ink.set : null;
+    ask(inked);
     for (const [i, pts] of (s ? s.strokes : []).entries()) stroke(pts, ink ? ink.set : "#333", s.line === i && !reduce ? ink.wet : null);
+    words(inked);
     if (s && s.done) seal();
   }
   function hud() {
@@ -124,10 +167,11 @@ export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}
     cv.classList.toggle("wet", !!s.ember);
     setBtn.disabled = !!(s.busy || s.done || !s.ember || !s.strokes.length || !markIn.value.trim());
     backBtn.textContent = s.done ? "Done" : "Not now";
+    markIn.hidden = !!s.done; // once set, the words live on the strip only
   }
   dip.addEventListener("click", ev => {
     const b = ev.target.closest(".bw-ember"); if (!b || !s || s.done) return;
-    s.ember = s.embers.find(e => e.id === b.dataset.id) || null;
+    s.ember = s.embers.find(e => e.id === b.dataset.id) || null; reAsk();
     say.textContent = s.ember ? `The brush takes the ${ELEMENT_WORD[s.ember.el].toLowerCase()} ember's light.` : "";
     draw(); hud(); if (s.ember && onDip) onDip(s.ember);
   });
@@ -148,14 +192,15 @@ export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}
   });
   const up = () => { if (!down || !s) return; down = null; s.line = -1; draw(); hud(); }; // the stroke dries to its set colour
   cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
-  markIn.addEventListener("input", hud);
+  markIn.addEventListener("input", () => { draw(); hud(); });
+  function reAsk() { if (!s) return; s.ask = s.ember ? askFor(s.ember, !!first(s.ember)) : ""; markIn.setAttribute("aria-label", s.ask || "A few words"); }
   backBtn.addEventListener("click", () => close());
   el.addEventListener("keydown", ev => { if (ev.key === "Escape") close(); });
   setBtn.addEventListener("click", async () => {
     if (!s || setBtn.disabled) return;
     s.busy = true; hud(); say.textContent = "";
     try {
-      await write({ ember: s.ember.id, mark: markIn.value.trim().slice(0, 80), demo: s.ember.demo });
+      await write({ ember: s.ember.id, mark: markIn.value.trim().slice(0, 80), ask: s.ask, demo: s.ember.demo });
       s.done = true; s.busy = false; draw(); hud(); if (onSet) onSet();
       const box = cv.getBoundingClientRect(), wrap = cv.parentElement.getBoundingClientRect();
       const coin = document.createElement("div"); coin.className = "bw-coin fall";
@@ -167,8 +212,8 @@ export function createBrushWrite({ write, onClose, onDip, onStroke, onSet } = {}
 
   /** Opens at the cloth. `embers`: the pouch's held embers as [{ id, el, name, light, demo }]. */
   function open(embers) {
-    s = { embers, ember: embers.length === 1 ? embers[0] : null, strokes: [], line: -1, busy: false, done: false, coin: null };
-    markIn.value = ""; say.textContent = s.ember ? `The brush takes the ${ELEMENT_WORD[s.ember.el].toLowerCase()} ember's light.` : embers.length ? "Dip the brush in an ember." : "";
+    s = { embers, ember: embers.length === 1 ? embers[0] : null, strokes: [], line: -1, busy: false, done: false, coin: null, ask: "" };
+    markIn.value = ""; reAsk(); say.textContent = s.ember ? `The brush takes the ${ELEMENT_WORD[s.ember.el].toLowerCase()} ember's light.` : embers.length ? "Dip the brush in an ember." : "";
     el.hidden = false; draw(); hud(); if (s.ember && onDip) onDip(s.ember); setTimeout(() => (s.ember ? cv : dip.querySelector("button") || backBtn).focus?.(), 0);
   }
   function close() { if (!s) return; const done = s.done; if (s.coin) s.coin.remove(); s = null; el.hidden = true; onClose && onClose(done); }

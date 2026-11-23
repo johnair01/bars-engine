@@ -1,9 +1,10 @@
 import type { PrismaClient } from '@prisma/client'
 import { latestDoc } from '@/lib/board/store'
 import { sessionWrite } from '@/lib/board/session-write'
-import { dayId, newClose, type CloseRecord, type Item } from './types'
+import { boardOwnerId } from '@/lib/board/owner'
+import { dayId, newClose, MAX_KEPT, type CloseRecord, type Item, type Kept } from './types'
 
-type Db = Pick<PrismaClient, 'boardSave' | 'workTicket'>
+type Db = Pick<PrismaClient, 'boardSave' | 'workTicket' | 'tapTheVeinTask'>
 
 /**
  * Where a close lives. A new store collection needs a paired council schema pull request, so the close is kept as a
@@ -55,11 +56,32 @@ export async function collectDay(db: Pick<PrismaClient, 'workTicket'>, date: str
   })
 }
 
+/**
+ * The things he kept this morning: his Tap the Vein tasks for that day's sitting, in the order he kept them, at most
+ * three. A composted task is gone; a finished one still comes back, so the close can light its lantern. Any failure
+ * reads as "nothing kept", since the close must open without the morning.
+ */
+export async function collectKept(db: Pick<PrismaClient, 'tapTheVeinTask'>, date: string, playerId = boardOwnerId()): Promise<Kept[]> {
+  if (!playerId || !db.tapTheVeinTask) return []
+  try {
+    const rows = await db.tapTheVeinTask.findMany({
+      where: { playerId, status: { notIn: ['composted'] }, dailySession: { sessionDate: new Date(`${date}T00:00:00Z`) } },
+      orderBy: [{ priorityRank: 'asc' }, { createdAt: 'asc' }], take: MAX_KEPT,
+      select: { id: true, originalText: true },
+    })
+    return rows.map(t => ({ id: t.id, title: t.originalText.trim().slice(0, 160) }))
+  } catch { return [] }
+}
+
 /** Today's close, started from the day's tickets when none exists yet. */
 export async function openClose(db: Db, date: string, now = new Date()): Promise<CloseRecord> {
   const held = await loadClose(date)
-  if (held) return held
-  const r = newClose(date, await collectDay(db, date), now.toISOString())
+  if (held) {
+    // A close begun before the kept cards existed picks them up once, so the Glass can show them.
+    if (held.kept === undefined && held.status === 'open') { held.kept = await collectKept(db, date); await saveClose(db, held) }
+    return held
+  }
+  const r = newClose(date, await collectDay(db, date), now.toISOString(), await collectKept(db, date))
   await saveClose(db, r)
   return r
 }

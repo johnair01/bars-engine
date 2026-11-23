@@ -77,6 +77,26 @@ interface Head {
   received_at: Date
 }
 
+/** A read that failed. list_open reports it beside what it could still read, so a blank 500 never hides the pile. */
+export interface ReadFail { read: string; detail: string }
+
+/** Why a read failed, short enough to ride in a payload: the class and the first line of its message. */
+export function why(e: unknown): string {
+  const err = e as { name?: string; message?: string; code?: string; meta?: unknown } | null
+  const name = typeof err?.name === 'string' ? err.name : 'Error'
+  const code = typeof err?.code === 'string' && err.code ? ` [${err.code}]` : ''
+  const raw = typeof err?.message === 'string' ? err.message : String(e)
+  const msg = raw.split('\n').map((l) => l.trim()).filter(Boolean).join(' · ')
+  const meta = err?.meta ? ' · ' + JSON.stringify(err.meta) : ''
+  return `${name}${code}: ${msg || '(no message)'}${meta}`.slice(0, 500)
+}
+
+/** Postgres hands back a Date; a pooled proxy or replica may hand back text. Either is a moment. */
+function iso(v: unknown): string {
+  const d = v instanceof Date ? v : new Date(typeof v === 'string' || typeof v === 'number' ? v : '')
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString()
+}
+
 export interface OpenQuestion { id: string; q: string; kind: string; postedAt: string }
 export interface OpenTurn { battle: string; name: string; round: number; open: string[] }
 export interface ReadyTicket { sourceKey: string; title: string; brief: string; owner: string; lanes: string[]; createdAt: string }
@@ -111,7 +131,7 @@ export function openFrom(heads: Head[], limit: number) {
   const questions: OpenQuestion[] = []
   for (const h of rows.values()) {
     if (h.kind !== 'questions' || answered(h.doc_id)) continue
-    questions.push({ id: h.doc_id, q: (h.q ?? '').slice(0, 300), kind: h.kind, postedAt: h.received_at.toISOString() })
+    questions.push({ id: h.doc_id, q: (typeof h.q === 'string' ? h.q : '').slice(0, 300), kind: h.kind, postedAt: iso(h.received_at) })
   }
   questions.sort((a, b) => b.postedAt.localeCompare(a.postedAt))
   const turns: OpenTurn[] = []
@@ -126,20 +146,64 @@ export function openFrom(heads: Head[], limit: number) {
 }
 
 export async function listOpen(limit: number) {
-  const heads = await db.$queryRaw<Head[]>`
+  const failed: ReadFail[] = []
+  // The rows and battles the page draws. Small per row, many rows.
+  //
+  // Two attempts, because a blank answer hides the pile. The wide read carries every row's choices and
+  // rounds; if the pooler refuses it (a statement timeout, a payload past memory), the narrow read below
+  // still names the open questions and battles, and `failed` says which shapes were dropped.
+  const wide = async () => db.$queryRaw<Head[]>`
     SELECT DISTINCT ON (collection, doc_id) collection, doc_id,
       data->>'kind' AS kind, data->>'q' AS q, data->>'name' AS name,
       data->>'decision' AS decision,
-      CASE WHEN collection = 'records' THEN data->>'body' END AS body,
       data->>'choice' AS choice, data->'choices' AS choices, data->>'steer' AS steer, data->>'deferred' AS deferred,
       CASE WHEN data->>'kind' = 'battles' OR collection = 'battles' THEN data->'rounds' END AS rounds,
       data->>'savedAt' AS saved_at, received_at
     FROM board_saves
-    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved', 'records')
+    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved')
     ORDER BY collection, doc_id, received_at DESC, id DESC`
+  const narrow = async () => db.$queryRaw<Head[]>`
+    SELECT DISTINCT ON (collection, doc_id) collection, doc_id,
+      data->>'kind' AS kind, data->>'q' AS q, data->>'name' AS name,
+      data->>'decision' AS decision,
+      data->>'choice' AS choice, data->>'steer' AS steer, data->>'deferred' AS deferred,
+      data->>'savedAt' AS saved_at, received_at
+    FROM board_saves
+    WHERE board = 'council' AND collection IN ('rows', 'questions', 'battles', 'resolved')
+    ORDER BY collection, doc_id, received_at DESC, id DESC`
+  let heads: Head[] = []
+  const first = await wide().catch((e: unknown) => { failed.push({ read: 'board_saves', detail: why(e) }); return null })
+  if (first) heads = first
+  else {
+    const second = await narrow().catch((e: unknown) => { failed.push({ read: 'board_saves_narrow', detail: why(e) }); return null })
+    if (second) {
+      heads = second
+      failed.push({ read: 'board_saves_narrow', detail: 'the wide read failed, so questions and battles list without their choices and rounds' })
+    }
+  }
+  // The records that settle a question, and only those. The wide read above used to drag every
+  // record body along with it (the whole pass corpus); that is what timed out and hid the pile.
+  const settledRecords = await db.$queryRaw<Head[]>`
+    SELECT DISTINCT ON (doc_id) 'records' AS collection, doc_id,
+      data->>'kind' AS kind, data->>'name' AS name, data->>'body' AS body,
+      data->>'savedAt' AS saved_at, received_at
+    FROM board_saves
+    WHERE board = 'council' AND collection = 'records'
+      AND data->>'kind' = 'resolved' AND data->>'name' LIKE 'questions/%'
+    ORDER BY doc_id, received_at DESC, id DESC`.catch((e: unknown) => {
+    failed.push({ read: 'board_records', detail: why(e) })
+    return [] as Head[]
+  })
+  // Only what this read asked for: a settled question's record. openFrom applies the same test, so a
+  // row that arrived from anywhere else is dropped rather than counted twice.
+  heads.push(...settledRecords.filter((h) =>
+    h.collection === 'records' && h.kind === 'resolved' && (h.name ?? '').startsWith('questions/')))
   const ready = await db.workTicket.findMany({
     where: { state: 'ready' }, orderBy: { createdAt: 'asc' },
     select: { sourceKey: true, title: true, brief: true, lane: true, lanes: true, createdAt: true },
+  }).catch((e: unknown) => {
+    failed.push({ read: 'work_tickets', detail: why(e) })
+    return [] as { sourceKey: string; title: string; brief: string | null; lane: string; lanes: string[] | null; createdAt: Date }[]
   })
   const lanes: Record<string, { count: number; tickets: ReadyTicket[] }> = {}
   for (const t of ready) {
@@ -147,12 +211,17 @@ export async function listOpen(limit: number) {
     l.count++
     if (l.tickets.length < PER_LANE) {
       l.tickets.push({
-        sourceKey: t.sourceKey, title: t.title, brief: t.brief.length > BRIEF_CHARS ? t.brief.slice(0, BRIEF_CHARS) + '…' : t.brief,
-        owner: t.lane, lanes: t.lanes, createdAt: t.createdAt.toISOString(),
+        sourceKey: t.sourceKey, title: String(t.title ?? ''),
+        brief: (t.brief ?? '').length > BRIEF_CHARS ? (t.brief ?? '').slice(0, BRIEF_CHARS) + '…' : (t.brief ?? ''),
+        owner: t.lane, lanes: Array.isArray(t.lanes) ? t.lanes : [], createdAt: iso(t.createdAt),
       })
     }
   }
-  return { board: 'council', asOf: new Date().toISOString(), ...openFrom(heads, limit), readyTickets: lanes }
+  let open: ReturnType<typeof openFrom> = { totalQuestions: 0, questions: [], battleTurns: [] }
+  if (heads.length || settledRecords.length) {
+    try { open = openFrom(heads, limit) } catch (e) { failed.push({ read: 'open_from', detail: why(e) }) }
+  }
+  return { board: 'council', asOf: new Date().toISOString(), ...open, readyTickets: lanes, ...(failed.length ? { failed } : {}) }
 }
 
 export interface VisibleRead {

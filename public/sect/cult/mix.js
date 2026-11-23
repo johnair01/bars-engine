@@ -250,7 +250,7 @@ export function settle(X) {
   for (const pt of X.parts) { const m = PUSH[pt.name]; if (m == null) continue; pt.settled = null; const W = partWorld(pt), p = V();
     moved += pushLegs(X, pt, W, m);
     pt.settled = W;
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(W, 3)); g.setAttribute('color', pt.geo.attributes.color); g.setIndex(pt.geo.index); g.computeVertexNormals();
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(W, 3)); for (const k in pt.geo.attributes) if (k !== 'position' && k !== 'normal' && k !== 'skinIndex' && k !== 'skinWeight') g.setAttribute(k, pt.geo.attributes[k]); /* elder regalia round 3: the painted shells' fields (aRest, aEdgeH, aFold...) ride along, or the shader paints every settled part as one band */ g.setIndex(pt.geo.index); g.computeVertexNormals();
     if (pt.static) { pt.static.geometry.dispose(); pt.static.geometry = g; pt.staticB.geometry = g; } else { pt.static = new THREE.Mesh(g, pt.mesh.material); pt.staticB = new THREE.Mesh(g, pt.back.material); pt.static.frustumCulled = pt.staticB.frustumCulled = false; X.scene.add(pt.static, pt.staticB); }
     pt.static.visible = pt.staticB.visible = true; pt.mesh.visible = pt.back.visible = false; }
   return moved;
@@ -266,7 +266,7 @@ export function legPush(X) {
 }
 export function showSettled(X) {
   for (const pt of X.parts) { const W = pt.settled; if (!W) { pt.mesh.visible = pt.back.visible = true; if (pt.static) pt.static.visible = pt.staticB.visible = false; continue; }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(W, 3)); g.setAttribute('color', pt.geo.attributes.color); g.setIndex(pt.geo.index); g.computeVertexNormals();
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(W, 3)); for (const k in pt.geo.attributes) if (k !== 'position' && k !== 'normal' && k !== 'skinIndex' && k !== 'skinWeight') g.setAttribute(k, pt.geo.attributes[k]); /* elder regalia round 3: the painted shells' fields (aRest, aEdgeH, aFold...) ride along, or the shader paints every settled part as one band */ g.setIndex(pt.geo.index); g.computeVertexNormals();
     if (pt.static) { pt.static.geometry.dispose(); pt.static.geometry = g; pt.staticB.geometry = g; } else { pt.static = new THREE.Mesh(g, pt.mesh.material); pt.staticB = new THREE.Mesh(g, pt.back.material); pt.static.frustumCulled = pt.staticB.frustumCulled = false; X.scene.add(pt.static, pt.staticB); }
     pt.static.visible = pt.staticB.visible = true; pt.mesh.visible = pt.back.visible = false; }
 }
@@ -274,7 +274,7 @@ export function showSettled(X) {
 // place each frame (showSettled builds a new BufferGeometry per part per frame, which a 60 fps page cannot afford)
 export function showLive(X) {
   for (const pt of X.parts) { const W = pt.settled; if (!W) { pt.mesh.visible = pt.back.visible = true; if (pt.static) pt.static.visible = pt.staticB.visible = false; continue; }
-    if (!pt.static || !pt.liveGeo) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(W.length), 3)); g.setAttribute('color', pt.geo.attributes.color); g.setIndex(pt.geo.index);
+    if (!pt.static || !pt.liveGeo) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(W.length), 3)); for (const k in pt.geo.attributes) if (k !== 'position' && k !== 'normal' && k !== 'skinIndex' && k !== 'skinWeight') g.setAttribute(k, pt.geo.attributes[k]); /* elder regalia round 3: the painted shells' fields (aRest, aEdgeH, aFold...) ride along, or the shader paints every settled part as one band */ g.setIndex(pt.geo.index);
       if (pt.static) { pt.static.geometry.dispose(); pt.static.geometry = g; pt.staticB.geometry = g; } else { pt.static = new THREE.Mesh(g, pt.mesh.material); pt.staticB = new THREE.Mesh(g, pt.back.material); pt.static.frustumCulled = pt.staticB.frustumCulled = false; X.scene.add(pt.static, pt.staticB); }
       pt.static.castShadow = true; pt.liveGeo = g; }
     const a = pt.liveGeo.attributes.position; a.array.set(W); a.needsUpdate = true; pt.liveGeo.setIndex(pt.geo.index); pt.liveGeo.computeVertexNormals();

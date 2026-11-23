@@ -1,0 +1,11 @@
+version: 1
+screens:
+  - id: tap-the-vein/free-write
+    files:
+      - src/app/tap-the-vein/TapTheVeinRunner.tsx
+    after: []
+  - id: tap-the-vein/ribbons
+    files:
+      - src/lib/tap-the-vein/paths.ts
+    after:
+      - tap-the-vein/free-write

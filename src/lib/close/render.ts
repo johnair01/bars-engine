@@ -7,6 +7,7 @@ export interface Rendered { move: Move; title: string; text: string; inputs: Inp
 
 type Ticket = CloseRecord['plan']['tickets'][number]
 const KEYS: [RatingKey, string, string][] = [['peace', 'Peace', 'p'], ['triumph', 'Triumph', 't'], ['wonder', 'Wonder', 'w']]
+const KEPT_WORD = { done: 'done, lantern lit', smaller: 'made smaller', 'let-go': 'let go' } as const
 const item = (i: Item) => `- ${i.title} (proof: ${i.proof})`
 
 /** Minutes since the close began; 0 when it has no start time. */
@@ -27,6 +28,10 @@ function glass(r: CloseRecord, now: Date): Rendered {
   if (r.held) L.push(`This morning's turn held: ${r.held}.`)
   if (r.before && Object.keys(r.before).length)
     L.push('This morning: ' + KEYS.filter(([k]) => r.before![k]).map(([k, n]) => `${n} ${r.before![k]!.n}`).join(', ') + '.')
+  if (r.kept?.length) {
+    L.push('You kept these this morning:')
+    r.kept.forEach((k, i) => L.push(`${i + 1}. ${k.title}${k.state ? ` [${KEPT_WORD[k.state]}]` : ''}`))
+  }
   const sections: [string, Item[]][] = [['Wins', h.wins], ['Momentum', h.momentum], ['Ready for tomorrow', h.ready], ['Safe to run tonight', h.tonight]]
   for (const [name, list] of sections) {
     L.push(`${name}:`)
@@ -41,13 +46,14 @@ function glass(r: CloseRecord, now: Date): Rendered {
   }
   if (r.after.triumph && !r.challenged) L.push('Challenger: what would show this Triumph false?')
   const wins = Object.entries(r.wins)
-  if (wins.length) L.push('Lanterns lit: ' + wins.map(([id, n]) => `${r.items.find(i => i.id === id)?.title ?? id} (${n})`).join(', ') + '.')
+  if (wins.length) L.push('Lanterns lit: ' + wins.map(([id, n]) => `${r.items.find(i => i.id === id)?.title ?? r.kept?.find(k => `kept-${k.id}` === id)?.title ?? id} (${n})`).join(', ') + '.')
   if (r.costPerAsset)
     L.push(`Cost per shipped asset: $${(r.costPerAsset.dollars / Math.max(1, r.costPerAsset.assets)).toFixed(2)} (${r.costPerAsset.source}).`)
   L.push(clockLine(r, now))
   return { move: 'glass', title: 'The Glass', text: L.join('\n'), inputs: [
     { key: 'sentence', label: 'Say the feeling', chat: 'any sentence' },
     ...KEYS.map(([k, n, c]) => ({ key: k, label: `Rate ${n}`, chat: `${c}<1-5>` })),
+    ...(r.kept?.length ? [{ key: 'kept', label: 'Seal a kept thing', chat: 'kept <n> done|smaller|let go' }] : []),
     { key: 'win', label: 'Light a lantern for a win', chat: 'win <id> <1-5>' }] }
 }
 

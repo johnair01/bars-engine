@@ -1,7 +1,7 @@
 /**
  * @route POST /api/work/claim
  * @entity SYSTEM
- * @description A lane pulls its next piece of work: the oldest ready ticket in that lane, held for two hours (heartbeat
+ * @description A lane pulls its next piece of work: the oldest ready ticket in that lane, held for six hours, at most four live claims per lane (heartbeat
  *   extends it). The ticket carries the brief and his answer itself. 204 when the lane's deck is empty.
  *   Work queues, slice 1 (six-faces-council council/callsheets/work-queues.md, docs/work-queues.md).
  * @permissions the lane's own token (WORK_TOKEN_CLAUDE, WORK_TOKEN_FREEBUFF) or COUNCIL_MENU_TOKEN, as a bearer token

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cultivator</title>
+<!-- The founder's gate walk (/ally/gate): the cultivation figure as a still the walk's page shows. It builds the
+     figure the way public/coaching/walk and the nook do (public/between/cult/make/mix.js, the one cultivation model),
+     and answers the walk's messages: {type:"ally-gate-figure", who, outfit, skin, view}. Tap the figure to turn it. -->
+<style>
+  html,body{margin:0;height:100%;background:#1c1822;overflow:hidden}
+  #still{display:block;width:100%;height:100%;object-fit:contain;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #say{position:fixed;inset:auto 0 12px 0;text-align:center;font:400 .9rem/1.3 system-ui,sans-serif;color:#cbbfd8}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
+} }
+</script>
+</head><body>
+<img id="still" alt="Your cultivator" hidden>
+<div id="say" aria-live="polite">Dressing your figure…</div>
+<script type="module">
+import * as THREE from "three";
+import * as M from "/between/cult/make/mix.js";
+const VIEWS = ["front", "q", "side", "back"];
+const HEIGHT = { f: 1.66, m: 1.75 };
+const img = document.getElementById("still"), say = document.getElementById("say");
+const reg = await fetch("/between/cult/make/parts.json").then(r => r.json());
+let want = { who: "f", outfit: "B2", skin: 4, view: 0 }, busy = false, again = false, X = null, key = "";
+const q = new URLSearchParams(location.search);
+if (q.get("who") === "m") want.who = "m";
+if (reg.outfits[q.get("outfit")]) want.outfit = q.get("outfit");
+if (q.get("skin") !== null && +q.get("skin") >= 0 && +q.get("skin") < 8) want.skin = +q.get("skin");
+async function draw() {
+  if (busy) { again = true; return; }
+  busy = true;
+  try {
+    const k = [want.who, want.outfit, want.skin].join("|");
+    if (k !== key) {
+      if (X) M.dispose(X);
+      X = await M.build({ gender: want.who, build: "average", skin: want.skin, height: HEIGHT[want.who], direction: want.outfit[0], outfit: want.outfit }, reg);
+      X.scene.background = new THREE.Color("#1c1822"); key = k;
+    }
+    const h = innerHeight, w = innerWidth, s = 2;
+    img.src = M.shoot(X, VIEWS[want.view % 4], Math.round(w * s), Math.round(h * s), { ty: 0.92, dist: 5.4, fov: 19 });
+    img.hidden = false; say.textContent = ""; parent.postMessage({ type: "ally-gate-ready", ...want }, location.origin);
+  } catch (e) { say.textContent = "The figure did not load on this device."; parent.postMessage({ type: "ally-gate-failed" }, location.origin); }
+  busy = false; if (again) { again = false; draw(); }
+}
+addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data || e.data.type !== "ally-gate-figure") return;
+  const d = e.data;
+  if (d.who === "f" || d.who === "m") want.who = d.who;
+  if (reg.outfits[d.outfit]) want.outfit = d.outfit;
+  if (Number.isInteger(d.skin) && d.skin >= 0 && d.skin < 8) want.skin = d.skin;
+  if (Number.isInteger(d.view)) want.view = d.view;
+  draw();
+});
+img.addEventListener("click", () => { want.view = (want.view + 1) % 4; draw(); });
+draw();
+</script>
+</body></html>
