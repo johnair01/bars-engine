@@ -357,8 +357,8 @@ const TOOLS = [
     name: 'farm_world_change',
     title: 'Change a player\'s farm',
     description: 'Answer a player\'s capture by changing their farm. DATA changes apply at once and show on the next load: '
-      + 'kind seed (a seed labeled with text, 60 characters, one per slot; `sign` is accepted as the same thing), note (text, 280) or object (object: lantern, bench, stone, flowers '
-      + 'or scarecrow, with optional text) on a slot 0 to 153. Anything that changes how the farm plays (mana, costs, '
+      + 'kind seed (a seed labeled with text, 60 characters, and an optional `line`, 280; it arrives as a sealed parcel on the farm shelf that the player opens into their satchel and then plants, so it takes no slot; `sign` is accepted as the same thing), note (text, 280) or object (object: lantern, bench, stone, flowers '
+      + 'or scarecrow, with optional text) on a slot 0 to 153 (a seed needs no slot). Anything that changes how the farm plays (mana, costs, '
       + 'growing days, the land\'s shape, a new act, a new object) is a RULE: it is refused, kept on the player\'s farm '
       + 'as a not-yet with its reason, and you bring it to Wendell as one board row. Send `ask` instead of `kind` to '
       + 'file a rule request. Pass `before`, an https link to a picture of the place as it was.',
@@ -370,6 +370,7 @@ const TOOLS = [
         slot: { type: 'integer', minimum: 0, maximum: 153 },
         kind: { type: 'string', description: 'seed, note or object.' },
         text: { type: 'string' },
+        line: { type: 'string', description: 'A seed only: one line of words for the parcel card, 280 characters.' },
         object: { type: 'string', description: 'lantern, bench, stone, flowers or scarecrow.' },
         before: { type: 'string', description: 'https link to the before picture.' },
         ask: { type: 'string', description: 'A rule-level request, in words, to keep as a not-yet.' },
@@ -662,7 +663,7 @@ async function farmWorldTool(name: string, args: Record<string, unknown>): Promi
   const lane = typeof args.lane === 'string' ? args.lane : 'agent'
   if (name === 'farm_world_change') {
     const r = await agentChange(db, home.id, playerId, args, now)
-    if (r.tier === 'data') return ok({ tier: 'data', applied: true, change: r.change, note: 'It shows on the player\'s next load.' })
+    if (r.tier === 'data') return ok({ tier: 'data', applied: true, ...(r.parcel !== undefined ? { parcel: r.parcel, note: 'A sealed parcel is on the player\'s shelf at the next load. They open it, then plant it.' } : { change: r.change, note: 'It shows on the player\'s next load.' }) })
     if (r.tier === 'rule') return ok({ tier: 'rule', applied: false, notYet: r.notYet, why: r.why,
       next: 'This is a rule-level change. It is kept on the farm as a not-yet. Bring it to Wendell as one board row.' })
     return bad(r.why)

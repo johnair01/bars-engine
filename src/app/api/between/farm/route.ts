@@ -18,7 +18,7 @@ import { db } from '@/lib/db'
 import { currentPlayer, ensureHome } from '@/lib/between/store'
 import { mintVibulon } from '@/actions/economy'
 import * as F from '@/lib/between/farm'
-import { worldForPlayer } from '@/lib/between/farm-world-store'
+import { plantSeedAct, worldAndSeeds } from '@/lib/between/farm-world-store'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,9 +33,9 @@ async function load(playerId: string) {
   return { gardenId: home.id, farm }
 }
 
-const save = (gardenId: string, playerId: string, farm: F.Farm) => {
+const save = (gardenId: string, playerId: string, farm: F.Farm, tx: Pick<typeof db, 'betweenPrivate'> = db) => {
   const data = farm as unknown as Prisma.InputJsonValue
-  return db.betweenPrivate.upsert({
+  return tx.betweenPrivate.upsert({
     where: { gardenId_playerId_key: { gardenId, playerId, key: 'farm' } },
     create: { gardenId, playerId, key: 'farm', data }, update: { data },
   })
@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
   const today = localDay(req.nextUrl.searchParams.get('today'))
   const farm = F.settle(s.farm, today)
   // What agents changed in this farm (farm-world-write): applied signs, notes and objects, and the not-yets. Read-only here.
-  const world = await worldForPlayer(db, s.gardenId, player.id).catch(() => ({ changes: [], notYet: [] }))
-  return NextResponse.json({ farm, today, first: !s.farm.firstEntryAt, cols: F.COLS, rows: F.ROWS, world })
+  const { world, satchelSeeds } = await worldAndSeeds(db, s.gardenId, player.id).catch(() => ({ world: { changes: [], notYet: [], parcels: [] }, satchelSeeds: [] }))
+  return NextResponse.json({ farm, today, first: !s.farm.firstEntryAt, cols: F.COLS, rows: F.ROWS, world, parcels: world.parcels, satchelSeeds })
 }
 
 export async function POST(req: NextRequest) {
@@ -65,6 +65,24 @@ export async function POST(req: NextRequest) {
   const i = Number(b.i)
   const base = F.settle(s.farm, today)
   const str = (v: unknown) => (typeof v === 'string' ? v : '')
+  if (b.act === 'plant-seed') {
+    const seedId = str(b.seedId)
+    let planted: F.Farm | null = null
+    const out = await plantSeedAct(fn => db.$transaction(tx => fn(tx)), s.gardenId, player.id, seedId, async (tx, seed) => {
+      // Read the farm inside the transaction so two tabs cannot plant the same seed twice.
+      const row = await tx.betweenPrivate.findUnique({ where: { gardenId_playerId_key: { gardenId: s.gardenId, playerId: player.id, key: 'farm' } } })
+      const raw = row?.data as Partial<F.Farm> | undefined
+      const cur: F.Farm = raw && typeof raw === 'object' ? { ...F.newFarm(), ...raw } : F.newFarm()
+      const pr = F.plant(F.settle(cur, today), i, seed.captureId, seed.label, now, today)
+      if (!pr.ok) return { ok: false, why: pr.why }
+      await save(s.gardenId, player.id, pr.farm, tx)
+      planted = pr.farm
+      return { ok: true }
+    })
+    if (!out.ok || !planted) return NextResponse.json({ error: out.why ?? 'That did not work', farm: base }, { status: 422 })
+    const sat = await worldAndSeeds(db, s.gardenId, player.id)
+    return NextResponse.json({ farm: planted, mint: 0, harvest: null, satchelSeeds: sat.satchelSeeds })
+  }
   let r: F.Result
   switch (b.act) {
     case 'enter': r = { farm: F.enter(base, now), ok: true, mint: 0 }; break

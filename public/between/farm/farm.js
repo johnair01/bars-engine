@@ -316,6 +316,32 @@ function drawWorld(world) {
     else if (c.kind === 'note') { const p = mesh(new THREE.BoxGeometry(0.22, 0.01, 0.28), toon('#f3e6c8'), false); p.position.set(x, 0.06, z); p.rotation.y = 0.4; worldGroup.add(p); }
   }
 }
+// ---------- the shelf: each sealed parcel is a wrapped bundle under a lit wax seal (farm-world-write-look-3) ----------
+const shelfGroup = new THREE.Group(); shelfGroup.name = 'shelf'; scene.add(shelfGroup);
+const SHELF = V(GATE_W / 2 - 0.25, 0, FZ + 1.7); let PARCELS = [], SATCHEL = [], PSEL = null; const seals = [];
+function drawShelf() {
+  shelfGroup.clear(); seals.length = 0; if (!PARCELS.length) return;
+  const w = 0.34 + PARCELS.length * 0.52, board = mesh(new THREE.BoxGeometry(w, 0.07, 0.42), toon(PAL.wood)); board.position.set(SHELF.x + w / 2 - 0.2, 0.62, SHELF.z); shelfGroup.add(board);
+  for (const k of [0.05, w - 0.35]) { const leg = mesh(new THREE.BoxGeometry(0.07, 0.62, 0.07), toon(PAL.woodDark)); leg.position.set(SHELF.x + k, 0.31, SHELF.z); shelfGroup.add(leg); }
+  PARCELS.forEach((p, n) => {
+    const G = new THREE.Group(); G.position.set(SHELF.x + 0.18 + n * 0.52, 0.66, SHELF.z); G.userData.parcel = p.id;
+    const wrap = mesh(new THREE.BoxGeometry(0.34, 0.26, 0.28), toon('#e9d9b4')); wrap.position.y = 0.13; wrap.userData.parcel = p.id;
+    const band = mesh(new THREE.BoxGeometry(0.36, 0.05, 0.3), toon(PAL.cloth), false); band.position.y = 0.13;
+    const cord = mesh(new THREE.BoxGeometry(0.05, 0.27, 0.3), toon(PAL.cloth), false); cord.position.y = 0.13;
+    const wax = mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 14), toon('#b3321f', { emissive: new THREE.Color('#ff7a3a'), emissiveIntensity: 0 }), false); wax.rotation.x = Math.PI / 2; wax.position.set(0, 0.2, 0.15); wax.userData.parcel = p.id;
+    const lit = new THREE.PointLight('#ff9a5a', 0, 1.6); lit.position.set(0, 0.28, 0.3);
+    G.add(wrap, band, cord, wax, lit); shelfGroup.add(G); seals.push({ wax, lit, t0: performance.now() + n * 120 });
+    for (const o of [wrap, band, cord]) o.userData.parcel = p.id;
+  });
+}
+// lading-seal: the press lasts 0.3 s, then the wax lights over 0.15 s
+function sealFrame(now) { for (const s of seals) { const t = (now - s.t0) / 1000; if (t < 0) continue; const press = Math.min(1, t / 0.3), lightUp = Math.min(1, Math.max(0, (t - 0.3) / 0.15));
+  s.wax.scale.setScalar(1.5 - 0.5 * press); s.wax.material.emissiveIntensity = 0.9 * lightUp; s.lit.intensity = 0.7 * lightUp; } }
+function setParcels(j) { PARCELS = (j && j.parcels) || []; SATCHEL = (j && j.satchelSeeds) || []; if (PSEL && !PARCELS.some(p => p.id === PSEL)) PSEL = null; drawShelf(); }
+async function parcelAct(act) {
+  const r = await fetch('/api/between/farm/parcel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: PSEL, act }) }); const j = await r.json().catch(() => ({}));
+  if (!r.ok) { say(j.error || 'The parcel stayed sealed'); return; } PSEL = null; setParcels({ parcels: (j.world && j.world.parcels) || [], satchelSeeds: j.satchelSeeds });
+  say(act === 'take' ? 'In your satchel. Till a slot, then plant it.' : 'Composted.'); renderCard(); }
 async function spirit(daemon, colour, x, z, hgt, hover = 0, stage = 'creature') {
   const SF = await spiritForms(); if (!SF) return null;
   try { const root = SF.buildForm(THREE, daemon, colour, { stage: 'gas' }); if (stage !== 'gas') await root.userData.unfold(stage, false);
@@ -358,10 +384,13 @@ async function act(name, extra = {}) {
   if (name === 'till' || name === 'plant' || name === 'water' || name === 'reclear') { swing = 1; swingKind = name === 'till' ? 'till' : 'tend'; }
   const j = await api({ act: name, i: SEL, ...extra }); if (!j) return; if (name === 'pick') say('Picked. A harvest BAR and one vibeulon.'); else if (j.mint) say('One vibeulon minted.'); renderCard(); }
 function renderCard() {
+  if (PSEL != null) { const pc = PARCELS.find(x => x.id === PSEL); if (!pc) PSEL = null; else { card.hidden = false; card.className = 'card';
+    card.innerHTML = `<h2>${esc(pc.label)}</h2>${pc.line ? `<p>${esc(pc.line)}</p>` : ''}<p>The farm heard you.</p><div class="row"><button id="b-take">Put it in the satchel</button><button class="alt" id="b-not">Not yet</button><button class="alt" id="b-comp">Compost</button></div>`;
+    $('b-take').onclick = () => parcelAct('take'); $('b-comp').onclick = () => parcelAct('compost'); $('b-not').onclick = () => { PSEL = null; renderCard(); }; return; } }
   if (SEL == null) { card.hidden = true; return; } const s = FARM.slots[SEL], p = s && s.plant; card.hidden = false; card.className = 'card' + (deep != null ? ' deepen' : '');
   const inp = (id, ph) => `<div class="row"><input id="${id}" maxlength="280" placeholder="${ph}" aria-label="${ph}"></div>`; let h = '';
   if (!s) h = `<h2>Untilled earth</h2><p>Swing the hoe to break this slot into rows.</p><div class="row"><button id="b-till" ${FARM.mana < 5 ? 'disabled' : ''}>Till it · 5 mana</button><button class="alt" id="b-x">Close</button></div>`;
-  else if (s.state === 'tilled') h = `<h2>Soil</h2><p>Plant a BAR as a seed, with one line (one word is enough).</p>${QB.filter(b => !b.ended && !Object.values(FARM.slots).some(x => x && x.plant && x.plant.barId === b.id)).slice(0, 2).map(thumb).join('')}${inp('f-bar', 'The BAR to plant')}${inp('f-line', 'What you want from it')}<div class="row"><button id="b-plant">Kneel and plant</button><button class="alt" id="b-x">Close</button></div>`;
+  else if (s.state === 'tilled') h = `<h2>Soil</h2><p>Plant a BAR as a seed, with one line (one word is enough).</p>${SATCHEL.length ? `<h3>Plant from your satchel</h3><div class="row">${SATCHEL.map(x => `<button class="alt" data-seed="${esc(x.id)}">${esc(x.label)}</button>`).join('')}</div>` : ''}${QB.filter(b => !b.ended && !Object.values(FARM.slots).some(x => x && x.plant && x.plant.barId === b.id)).slice(0, 2).map(thumb).join('')}${inp('f-bar', 'The BAR to plant')}${inp('f-line', 'What you want from it')}<div class="row"><button id="b-plant">Kneel and plant</button><button class="alt" id="b-x">Close</button></div>`;
   else if (s.state === 'weeded') h = `<h2>${esc(p.line)}</h2><p>Weeds have crept over it. Your ${p.tendedDays} tended days wait underneath.</p>${inp('f-line', 'What kept you away?')}<div class="row"><button id="b-reclear" ${FARM.mana < 1 ? 'disabled' : ''}>Clear the weeds · 1 mana</button><button class="alt" id="b-x">Close</button></div>`;
   else if (p.ripe) h = `<h2>${esc(p.line)}</h2><p>Full. Ready to pick.</p>${qbById(p.barId) ? thumb(qbById(p.barId)) : ''}<div class="row"><button id="b-pick">Pick it</button><button class="alt" id="b-deep">Look closer</button><button class="alt" id="b-x">Close</button></div>`;
   else if (deep != null) h = `<div style="font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#7a4a2c">A planted BAR, growing</div><h2 style="font-size:1.7rem;font-style:italic">${esc(p.line)}</h2><p>${p.tendedDays} of ${GROW} days. ${p.notes.length ? p.notes.map(n => `<i>${esc(n.line)}</i>`).join(', ') : ''}</p><b>What from today feeds this?</b>${inp('f-line', 'A line from your day')}<div class="row"><button id="b-aligned">Grow a leaf</button><button class="alt" id="b-ripe">It is done: ripen</button><button class="alt" id="b-x">Back to the field</button></div><p>The Protector is listening.</p>`;
@@ -370,6 +399,7 @@ function renderCard() {
   on('b-x', () => { if (deep != null) closeDeepen(); else { SEL = null; selRing.visible = false; renderCard(); } }); on('b-deep', () => openDeepen(SEL)); on('b-till', () => act('till'));
   on('b-plant', () => { const bar = val('f-bar'), line = val('f-line'); if (!bar || !line) return say('A BAR and one line.'); act('plant', { barId: ($('f-bar').dataset.barId && $('f-bar').value === short(qbById($('f-bar').dataset.barId).sentence)) ? $('f-bar').dataset.barId : 'bar-' + bar.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) + '-' + Date.now().toString(36), line }); });
   card.querySelectorAll('[data-qb]').forEach(b => { b.onclick = () => { const q = qbById(b.dataset.qb); if (q) { if ($('f-bar')) { $('f-bar').value = short(q.sentence); $('f-bar').dataset.barId = q.id; } openCard(q); } }; });
+  for (const b of card.querySelectorAll('[data-seed]')) b.onclick = async () => { swing = 1; swingKind = 'tend'; const j = await api({ act: 'plant-seed', i: SEL, seedId: b.dataset.seed }); if (!j) return; SATCHEL = j.satchelSeeds || []; renderCard(); };
   on('b-water', () => act('water')); on('b-reclear', () => { const line = val('f-line'); if (!line) return say('One line about what kept you away.'); act('reclear', { line }); });
   on('b-ripe', () => { const line = val('f-line'); if (!line) return say('One line about what you did.'); act('ripen', { line }); });
   on('b-aligned', () => { const line = val('f-line'); if (!line) return say('One line from your day.'); act('water', { aligned: 'line:' + line.slice(0, 60) }); }); on('b-pick', () => act('pick'));
@@ -378,7 +408,7 @@ function renderCard() {
 // ---------- input: tap a slot to walk to it and choose ----------
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 renderer.domElement.addEventListener('pointerdown', e => {
-  if (deep != null) return; ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); const p = V(); if (!ray.ray.intersectPlane(groundPlane, p)) return;
+  if (deep != null) return; ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); { const hit = ray.intersectObjects(shelfGroup.children, true).find(h => h.object.userData.parcel); if (hit) { PSEL = hit.object.userData.parcel; SEL = null; selRing.visible = false; renderCard(); return; } } const p = V(); if (!ray.ray.intersectPlane(groundPlane, p)) return;
   const c = Math.round(p.x / STEP + (COLS - 1) / 2), r = Math.round(p.z / STEP + (ROWS - 1) / 2); if (c < 0 || c >= COLS || r < 0 || r >= ROWS) { faceTo = null; routeTo(V(Math.max(STREAM_X + 1.4, Math.min(10, p.x)), 0, Math.max(-7, Math.min(9, p.z)))); return; }
   SEL = r * COLS + c; selRing.visible = true; const [x, z] = slotXZ(SEL); selRing.position.set(x, 0.13, z); walkTo(SEL); renderCard(); });
 $('homeBtn').onclick = () => { location.href = '/between/'; };
@@ -393,12 +423,12 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
   // the gate swings open as she comes near it, and closes behind her
   const near = Math.hypot(p.x, p.z - FZ) < 1.9; for (const g of gateLeaves) { g.open += ((near ? 1 : 0) - g.open) * Math.min(1, dt * 4); g.hinge.rotation.y = g.s * g.open * 1.45; }
   if (selRing.visible) selRing.scale.setScalar(1 + Math.sin(performance.now() / 300) * 0.06);
-  frame(dt); renderer.render(scene, camera); requestAnimationFrame(tick); }
+  sealFrame(performance.now()); frame(dt); renderer.render(scene, camera); requestAnimationFrame(tick); }
 
 // ---------- first entry: the whole field from above; later, a short walk-in ----------
 (async () => {
   const r = await fetch('/api/between/farm?today=' + localDay()); if (!r.ok) { $('loading').textContent = r.status === 401 ? 'Sign in to bars-engine to open your farm' : 'The farm could not open'; return; }
-  const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); drawWorld(j.world); fieldSpirits();
+  const j = await r.json(); FARM = j.farm; first = j.first; drawSlots(); drawWorld(j.world); setParcels(j); fieldSpirits();
   await Promise.all([api({ act: 'enter' }), loadCultivator(), loadQB()]);
   const IN = V(0, 0, FZ - 1.3);   // inside the gate, in front of the first row
   if (first) { camPos.set(0, 18, 14); camLook.set(0, 0, 0); say('Your own land, fenced and waiting. Every slot is bare earth until you till it.', 7000); avatar.position.set(0, 0, FZ + 2.2); setTimeout(() => { faceTo = V(0, 0, 0); routeTo(IN); }, 3500); }
@@ -406,4 +436,4 @@ function tick() { const dt = Math.min(0.05, clock.getDelta()); const p = avatar.
   $('loading').classList.add('gone'); tick();
   if (Q.get('deepen') != null) openDeepen(+Q.get('deepen'));
 })();
-window.__farm = { drawWorld, act, api, get farm() { return FARM; }, select: i => { SEL = i; selRing.visible = true; const [x, z] = slotXZ(i); selRing.position.set(x, 0.13, z); walkTo(i); renderCard(); }, openDeepen };
+window.__farm = { drawWorld, setParcels, openParcel: id => { PSEL = id; SEL = null; renderCard(); }, act, api, get farm() { return FARM; }, select: i => { SEL = i; selRing.visible = true; const [x, z] = slotXZ(i); selRing.position.set(x, 0.13, z); walkTo(i); renderCard(); }, openDeepen };
