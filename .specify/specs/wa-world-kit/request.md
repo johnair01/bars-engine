@@ -166,3 +166,10 @@ naming it.
 redraw the dojo. C does not change that tonight. The stopgap that does not conflict with C is the same mechanism B would
 have used, at one user: `MAP_EDITOR_ALLOW_ALL_USERS=false` with `MAP_EDITOR_ALLOWED_USERS` set to the owner's browser
 uuid (`localStorage.localUser` → `uuid`). Nothing about it presumes identity; it is a lock, not a rights model.
+
+---
+
+The seed for this work is `seed.yaml` in this folder: Ouroboros auto session `auto_6c234f5ec5c2`, grade A, IntentGuard pass,
+ambiguity 0.337 (the gate wants <=0.20, so the assumptions it records are still his to flip). Its interview was answered
+from this record by a wired requester, so its `requester_answers` quote his words where they exist and say `assumption:`
+where they do not.
