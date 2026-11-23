@@ -12,16 +12,22 @@ read maps the way Tiled draws them, and three of its rules cannot be seen in a s
   start        a tile layer named "start" is read as spawn positions (GameMapFrontWrapper
                .getLayerCollisionGrid marks those tiles type 3), so the start marker is a tile;
                but a *collided* tile there spawns the player inside a wall.
+  exits        an area's `exitUrl` is fetched as soon as the map opens, not when someone walks
+               into it: one exit to a map that does not exist greys out the whole room with
+               "NETWORK_ERROR — An error occurred while loading a resource".
 
-`apply()` fixes all three in a map dict; `check()` returns the reasons a map would not load.
-Both are pure functions over the parsed JSON, so a generator calls them just before writing:
+`apply()` fixes the first three in a map dict; `check()` returns the reasons a map would not load,
+and `check_exits()` the exits that point at nothing. All are pure functions over the parsed JSON,
+so a generator calls them just before writing:
 
-    from wa_export import apply, check
+    from wa_export import apply, check, check_exits
     apply(tmj)
-    errs = check(tmj)
+    errs = check(tmj) + check_exits(tmj, HERE)
     if errs:
         raise SystemExit("WorkAdventure rules:\\n  " + "\\n  ".join(errs))
 """
+
+import os
 
 FLIP_MASK = 0x1FFFFFFF  # Tiled stores flip/rotate flags in the four high bits of a gid
 
@@ -210,6 +216,26 @@ def check(tmj):
 
     if tmj.get("tilewidth") != 32 or tmj.get("tileheight") != 32:
         errs.append(f'tiles are {tmj.get("tilewidth")}x{tmj.get("tileheight")}; WorkAdventure characters are 32x32')
+    return errs
+
+
+def check_exits(tmj, map_dir):
+    """Exits whose target map is not on disk, relative to the map's own directory."""
+    errs = []
+    for l in tmj.get("layers", []):
+        if l.get("type") != "objectgroup":
+            continue
+        for o in l.get("objects", []):
+            for p in o.get("properties") or []:
+                if p.get("name") != "exitUrl" or not p.get("value"):
+                    continue
+                url = str(p["value"])
+                if "://" in url:
+                    continue  # another server's map; nothing to check here
+                target = os.path.normpath(os.path.join(map_dir, url))
+                if not os.path.isfile(target):
+                    errs.append(f'exit "{o.get("name")}" points at {url}, which is not a map file '
+                                f'(WorkAdventure fetches every exitUrl on load: a missing one fails the room)')
     return errs
 
 

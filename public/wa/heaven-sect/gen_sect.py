@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
-from wa_export import apply as wa_apply, check as wa_check  # noqa: E402
+from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits  # noqa: E402
 
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
@@ -320,7 +320,11 @@ for e in LEVEL['exits']:
     fill('paving', x, y, w, h); keep(x, y, w, h)
     put_plaque(e['label'], *e['plaque_at'])
     must[f'exit to {e["label"]}'] = (x + w // 2, y + h // 2)
-    zones.append((e['label'], x, y, w, h, {'exitUrl': e['exitUrl'], 'role': e['id']}))
+    # A door to a map that does not exist yet stays a door with a plaque, but promises no exitUrl:
+    # WorkAdventure fetches every exitUrl the moment the room opens, and one 404 greys out the room.
+    props = {'role': e['id']}
+    if e.get('built', True): props['exitUrl'] = e['exitUrl']
+    zones.append((e['label'], x, y, w, h, props))
 
 # ---- the grove: a border of pine, bamboo and broad trees, open at the exits; garden pieces in the gaps ----
 ring = []
@@ -391,7 +395,7 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
 # WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
 # collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
 wa_apply(tmj)
-_wa = wa_check(tmj)
+_wa = wa_check(tmj) + wa_exits(tmj, OUT)
 if _wa:
     print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 json.dump(tmj, open(os.path.join(OUT, f'{MAP}.tmj'), 'w'), separators=(',', ':'))
