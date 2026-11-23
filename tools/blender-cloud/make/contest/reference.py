@@ -16,6 +16,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+import vocab  # noqa: E402 - how each named part is measured
 import qa  # noqa: E402 - the gate's own builder, so a candidate is built the way the contest builds it
 
 
@@ -49,6 +50,8 @@ def parts():
         wy = max(v.y for v in pts) - min(v.y for v in pts)
         dims = sorted((float(d) for d in o.dimensions), reverse=True)
         out.append({"name": o.name, "lo_z": min(zs), "hi_z": max(zs), "wx": wx, "wy": wy,
+                    "x0": min(v.x for v in pts), "x1": max(v.x for v in pts),
+                    "y0": min(v.y for v in pts), "y1": max(v.y for v in pts),
                     "long": dims[0], "mid": dims[1], "short": dims[2]})
     return out
 
@@ -123,7 +126,8 @@ def main():
     pack = json.load(open(pack_path, encoding="utf-8"))
     build(src)
     ps = parts()
-    checks = measure(pack, ps)
+    # A pack that names its own parts is measured by the vocabulary; an older pack keeps the weapon's five checks.
+    checks = vocab.run(pack, ps) if "parts" in pack else measure(pack, ps)
     extras = scene(pack, ps)
     result = {"candidate": os.path.basename(src), "pack": pack["id"],
               "ok": all(c["ok"] for c in checks), "checks": checks, "scene": extras,
