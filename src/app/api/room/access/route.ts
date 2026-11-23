@@ -13,6 +13,7 @@ import { WA_ADMIN_API_URL } from '@/lib/wa/config'
 import { canEditForPlayer, emailForPlayer, tagsForPlayer } from '@/lib/wa/player'
 import {
   loadWokaCatalog,
+  resolveRequestedWoka,
   resolveWokaForPlayer,
   wokaDetail,
 } from '@/lib/wa/woka'
@@ -20,7 +21,9 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-function anonymousResponse(userIdentifier: string, playUri: string) {
+function anonymousResponse(userIdentifier: string, playUri: string, requested: string[]) {
+  const catalog = loadWokaCatalog()
+  const textures = resolveRequestedWoka(catalog, requested)
   return {
     status: 'ok' as const,
     email: null,
@@ -28,10 +31,11 @@ function anonymousResponse(userIdentifier: string, playUri: string) {
     userUuid: userIdentifier || 'anonymous',
     tags: [] as string[],
     visitCardUrl: null,
-    // Anonymous visitors keep the default look instead of being trapped on a
-    // customize screen whose save call cannot persist.
-    isCharacterTexturesValid: true,
-    characterTextures: [],
+    // Anonymous players choose locally; echo a valid saved choice so the
+    // socket carries it into the room. With no choice yet, send them to the
+    // picker instead of letting WorkAdventure draw its placeholder sprite.
+    isCharacterTexturesValid: textures.length > 0,
+    characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL)),
     isCompanionTextureValid: true,
     companionTexture: undefined,
     userRoomToken: undefined,
@@ -52,8 +56,9 @@ export async function GET(request: NextRequest) {
 
   const userIdentifier = request.nextUrl.searchParams.get('userIdentifier') ?? ''
   const playUri = request.nextUrl.searchParams.get('playUri') ?? ''
+  const requested = request.nextUrl.searchParams.getAll('characterTextureIds')
 
-  if (!userIdentifier) return Response.json(anonymousResponse('', playUri))
+  if (!userIdentifier) return Response.json(anonymousResponse('', playUri, requested))
 
   const player = await db.player.findUnique({
     where: { id: userIdentifier },
@@ -67,7 +72,7 @@ export async function GET(request: NextRequest) {
     },
   })
 
-  if (!player) return Response.json(anonymousResponse(userIdentifier, playUri))
+  if (!player) return Response.json(anonymousResponse(userIdentifier, playUri, requested))
 
   const catalog = loadWokaCatalog()
   const look = resolveWokaForPlayer(catalog, player.avatarConfig)

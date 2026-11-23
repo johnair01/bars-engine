@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   avatarConfigForTexture,
+  resolveRequestedWoka,
   resolveWokaForPlayer,
   textureId,
   wokaDetail,
@@ -72,5 +73,14 @@ describe('wa woka catalog', () => {
 
   it('refuses an unknown texture instead of writing it', () => {
     expect(avatarConfigForTexture(catalog, 'wa:nobody:nothing')).toBeNull()
+  })
+
+  it('echoes only catalog textures an anonymous client already chose', () => {
+    const looks = resolveRequestedWoka(catalog, [
+      textureId('lamenth', 'still-point'),
+      'wa:nobody:nothing',
+      textureId('lamenth', 'still-point'),
+    ])
+    expect(looks.map((texture) => texture.id)).toEqual([textureId('lamenth', 'still-point')])
   })
 })

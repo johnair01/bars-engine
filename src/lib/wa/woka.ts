@@ -82,6 +82,26 @@ export function textureId(nationKey: string, archetypeKey: string): string {
   return `wa:${nationKey}:${archetypeKey}`
 }
 
+/**
+ * The textures an unauthenticated client already chose, limited to the
+ * catalog. WorkAdventure keeps an anonymous pick in localStorage because
+ * there is no player row to save it to; the socket upgrade sends it back as
+ * `characterTextureIds`, and the Admin API echoes the valid ones so the
+ * client does not fall back to the placeholder sprite.
+ */
+export function resolveRequestedWoka(catalog: WokaCatalog, ids: string[]): WokaTexture[] {
+  const seen = new Set<string>()
+  const textures: WokaTexture[] = []
+  for (const id of ids) {
+    if (seen.has(id)) continue
+    const texture = findTexture(catalog, id)
+    if (!texture) continue
+    seen.add(id)
+    textures.push(texture)
+  }
+  return textures
+}
+
 export function findTexture(catalog: WokaCatalog, id: string): WokaTexture | undefined {
   return catalog.textures.find((texture) => texture.id === id)
 }
