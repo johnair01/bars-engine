@@ -1,9 +1,9 @@
 -- Lenses goal lineage bridge: stable authored goals, draft material, and TTV/BAR lineage snapshots.
 
-ALTER TABLE "custom_bars" ADD COLUMN "lensGoalId" TEXT;
-ALTER TABLE "custom_bars" ADD COLUMN "plantSnapshot" JSONB;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "lensGoalId" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "plantSnapshot" JSONB;
 
-CREATE TABLE "lens_goals" (
+CREATE TABLE IF NOT EXISTS "lens_goals" (
   "id" TEXT NOT NULL,
   "stableKey" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
@@ -27,14 +27,14 @@ CREATE TABLE "lens_goals" (
   CONSTRAINT "lens_goals_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "lens_goals_stableKey_key" ON "lens_goals"("stableKey");
-CREATE INDEX "lens_goals_playerId_lensId_idx" ON "lens_goals"("playerId", "lensId");
-CREATE INDEX "lens_goals_playerId_domain_idx" ON "lens_goals"("playerId", "domain");
-CREATE INDEX "lens_goals_parentGoalId_idx" ON "lens_goals"("parentGoalId");
-CREATE INDEX "lens_goals_supersededById_idx" ON "lens_goals"("supersededById");
-CREATE INDEX "lens_goals_archivedAt_idx" ON "lens_goals"("archivedAt");
+CREATE UNIQUE INDEX IF NOT EXISTS "lens_goals_stableKey_key" ON "lens_goals"("stableKey");
+CREATE INDEX IF NOT EXISTS "lens_goals_playerId_lensId_idx" ON "lens_goals"("playerId", "lensId");
+CREATE INDEX IF NOT EXISTS "lens_goals_playerId_domain_idx" ON "lens_goals"("playerId", "domain");
+CREATE INDEX IF NOT EXISTS "lens_goals_parentGoalId_idx" ON "lens_goals"("parentGoalId");
+CREATE INDEX IF NOT EXISTS "lens_goals_supersededById_idx" ON "lens_goals"("supersededById");
+CREATE INDEX IF NOT EXISTS "lens_goals_archivedAt_idx" ON "lens_goals"("archivedAt");
 
-CREATE TABLE "lens_workshop_drafts" (
+CREATE TABLE IF NOT EXISTS "lens_workshop_drafts" (
   "id" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
   "lensId" TEXT NOT NULL,
@@ -52,11 +52,11 @@ CREATE TABLE "lens_workshop_drafts" (
   CONSTRAINT "lens_workshop_drafts_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "lens_workshop_drafts_playerId_lensId_idx" ON "lens_workshop_drafts"("playerId", "lensId");
-CREATE INDEX "lens_workshop_drafts_parentGoalId_idx" ON "lens_workshop_drafts"("parentGoalId");
+CREATE INDEX IF NOT EXISTS "lens_workshop_drafts_playerId_lensId_idx" ON "lens_workshop_drafts"("playerId", "lensId");
+CREATE INDEX IF NOT EXISTS "lens_workshop_drafts_parentGoalId_idx" ON "lens_workshop_drafts"("parentGoalId");
 
-ALTER TABLE "tap_the_vein_tasks" ADD COLUMN "lensGoalId" TEXT;
-ALTER TABLE "tap_the_vein_tasks" ADD COLUMN "attachSnapshot" JSONB;
-ALTER TABLE "tap_the_vein_tasks" ADD COLUMN "priorityRank" INTEGER;
-CREATE INDEX "tap_the_vein_tasks_lensGoalId_idx" ON "tap_the_vein_tasks"("lensGoalId");
-CREATE UNIQUE INDEX "tap_the_vein_tasks_dailySessionId_priorityRank_key" ON "tap_the_vein_tasks"("dailySessionId", "priorityRank");
+ALTER TABLE "tap_the_vein_tasks" ADD COLUMN IF NOT EXISTS "lensGoalId" TEXT;
+ALTER TABLE "tap_the_vein_tasks" ADD COLUMN IF NOT EXISTS "attachSnapshot" JSONB;
+ALTER TABLE "tap_the_vein_tasks" ADD COLUMN IF NOT EXISTS "priorityRank" INTEGER;
+CREATE INDEX IF NOT EXISTS "tap_the_vein_tasks_lensGoalId_idx" ON "tap_the_vein_tasks"("lensGoalId");
+CREATE UNIQUE INDEX IF NOT EXISTS "tap_the_vein_tasks_dailySessionId_priorityRank_key" ON "tap_the_vein_tasks"("dailySessionId", "priorityRank");

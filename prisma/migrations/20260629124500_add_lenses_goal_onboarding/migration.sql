@@ -1,6 +1,6 @@
 -- Lenses goal-setting onboarding: temporal containers, authored goals, and workshop drafts.
 
-CREATE TABLE "lenses" (
+CREATE TABLE IF NOT EXISTS "lenses" (
   "id" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
   "type" TEXT NOT NULL,
@@ -13,10 +13,10 @@ CREATE TABLE "lenses" (
   CONSTRAINT "lenses_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "lenses_playerId_type_periodKey_key" ON "lenses"("playerId", "type", "periodKey");
-CREATE INDEX "lenses_playerId_type_idx" ON "lenses"("playerId", "type");
+CREATE UNIQUE INDEX IF NOT EXISTS "lenses_playerId_type_periodKey_key" ON "lenses"("playerId", "type", "periodKey");
+CREATE INDEX IF NOT EXISTS "lenses_playerId_type_idx" ON "lenses"("playerId", "type");
 
-CREATE TABLE "lens_goals" (
+CREATE TABLE IF NOT EXISTS "lens_goals" (
   "id" TEXT NOT NULL,
   "stableKey" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
@@ -40,14 +40,14 @@ CREATE TABLE "lens_goals" (
   CONSTRAINT "lens_goals_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "lens_goals_stableKey_key" ON "lens_goals"("stableKey");
-CREATE INDEX "lens_goals_playerId_lensId_idx" ON "lens_goals"("playerId", "lensId");
-CREATE INDEX "lens_goals_playerId_domain_idx" ON "lens_goals"("playerId", "domain");
-CREATE INDEX "lens_goals_parentGoalId_idx" ON "lens_goals"("parentGoalId");
-CREATE INDEX "lens_goals_supersededById_idx" ON "lens_goals"("supersededById");
-CREATE INDEX "lens_goals_archivedAt_idx" ON "lens_goals"("archivedAt");
+CREATE UNIQUE INDEX IF NOT EXISTS "lens_goals_stableKey_key" ON "lens_goals"("stableKey");
+CREATE INDEX IF NOT EXISTS "lens_goals_playerId_lensId_idx" ON "lens_goals"("playerId", "lensId");
+CREATE INDEX IF NOT EXISTS "lens_goals_playerId_domain_idx" ON "lens_goals"("playerId", "domain");
+CREATE INDEX IF NOT EXISTS "lens_goals_parentGoalId_idx" ON "lens_goals"("parentGoalId");
+CREATE INDEX IF NOT EXISTS "lens_goals_supersededById_idx" ON "lens_goals"("supersededById");
+CREATE INDEX IF NOT EXISTS "lens_goals_archivedAt_idx" ON "lens_goals"("archivedAt");
 
-CREATE TABLE "lens_workshop_drafts" (
+CREATE TABLE IF NOT EXISTS "lens_workshop_drafts" (
   "id" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
   "lensId" TEXT NOT NULL,
@@ -65,18 +65,18 @@ CREATE TABLE "lens_workshop_drafts" (
   CONSTRAINT "lens_workshop_drafts_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "lens_workshop_drafts_playerId_lensId_idx" ON "lens_workshop_drafts"("playerId", "lensId");
-CREATE INDEX "lens_workshop_drafts_parentGoalId_idx" ON "lens_workshop_drafts"("parentGoalId");
+CREATE INDEX IF NOT EXISTS "lens_workshop_drafts_playerId_lensId_idx" ON "lens_workshop_drafts"("playerId", "lensId");
+CREATE INDEX IF NOT EXISTS "lens_workshop_drafts_parentGoalId_idx" ON "lens_workshop_drafts"("parentGoalId");
 
-ALTER TABLE "custom_bars" ADD COLUMN "lensId" TEXT;
-ALTER TABLE "custom_bars" ADD COLUMN "lensGoalId" TEXT;
-ALTER TABLE "custom_bars" ADD COLUMN "plantSnapshot" JSONB;
-ALTER TABLE "custom_bars" ADD COLUMN "gardenId" TEXT;
-ALTER TABLE "custom_bars" ADD COLUMN "experienceIntent" TEXT;
-ALTER TABLE "custom_bars" ADD COLUMN "dissatisfaction" TEXT;
-ALTER TABLE "custom_bars" ADD COLUMN "satisfaction" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "lensId" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "lensGoalId" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "plantSnapshot" JSONB;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "gardenId" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "experienceIntent" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "dissatisfaction" TEXT;
+ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "satisfaction" TEXT;
 
-CREATE TABLE "tap_the_vein_daily_sessions" (
+CREATE TABLE IF NOT EXISTS "tap_the_vein_daily_sessions" (
   "id" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -94,10 +94,10 @@ CREATE TABLE "tap_the_vein_daily_sessions" (
   CONSTRAINT "tap_the_vein_daily_sessions_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "tap_the_vein_daily_sessions_playerId_sessionDate_key" ON "tap_the_vein_daily_sessions"("playerId", "sessionDate");
-CREATE INDEX "tap_the_vein_daily_sessions_playerId_status_idx" ON "tap_the_vein_daily_sessions"("playerId", "status");
+CREATE UNIQUE INDEX IF NOT EXISTS "tap_the_vein_daily_sessions_playerId_sessionDate_key" ON "tap_the_vein_daily_sessions"("playerId", "sessionDate");
+CREATE INDEX IF NOT EXISTS "tap_the_vein_daily_sessions_playerId_status_idx" ON "tap_the_vein_daily_sessions"("playerId", "status");
 
-CREATE TABLE "tap_the_vein_tasks" (
+CREATE TABLE IF NOT EXISTS "tap_the_vein_tasks" (
   "id" TEXT NOT NULL,
   "playerId" TEXT NOT NULL,
   "dailySessionId" TEXT NOT NULL,
@@ -124,9 +124,13 @@ CREATE TABLE "tap_the_vein_tasks" (
   CONSTRAINT "tap_the_vein_tasks_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "tap_the_vein_tasks_playerId_status_idx" ON "tap_the_vein_tasks"("playerId", "status");
-CREATE INDEX "tap_the_vein_tasks_playerId_carryCount_idx" ON "tap_the_vein_tasks"("playerId", "carryCount");
-CREATE INDEX "tap_the_vein_tasks_campaignId_visibility_idx" ON "tap_the_vein_tasks"("campaignId", "visibility");
-CREATE INDEX "tap_the_vein_tasks_lensGoalId_idx" ON "tap_the_vein_tasks"("lensGoalId");
-CREATE UNIQUE INDEX "tap_the_vein_tasks_dailySessionId_priorityRank_key" ON "tap_the_vein_tasks"("dailySessionId", "priorityRank");
-ALTER TABLE "tap_the_vein_tasks" ADD CONSTRAINT "tap_the_vein_tasks_dailySessionId_fkey" FOREIGN KEY ("dailySessionId") REFERENCES "tap_the_vein_daily_sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "tap_the_vein_tasks_playerId_status_idx" ON "tap_the_vein_tasks"("playerId", "status");
+CREATE INDEX IF NOT EXISTS "tap_the_vein_tasks_playerId_carryCount_idx" ON "tap_the_vein_tasks"("playerId", "carryCount");
+CREATE INDEX IF NOT EXISTS "tap_the_vein_tasks_campaignId_visibility_idx" ON "tap_the_vein_tasks"("campaignId", "visibility");
+ALTER TABLE "tap_the_vein_tasks" ADD COLUMN IF NOT EXISTS "lensGoalId" TEXT;
+ALTER TABLE "tap_the_vein_tasks" ADD COLUMN IF NOT EXISTS "priorityRank" INTEGER;
+CREATE INDEX IF NOT EXISTS "tap_the_vein_tasks_lensGoalId_idx" ON "tap_the_vein_tasks"("lensGoalId");
+CREATE UNIQUE INDEX IF NOT EXISTS "tap_the_vein_tasks_dailySessionId_priorityRank_key" ON "tap_the_vein_tasks"("dailySessionId", "priorityRank");
+DO $$ BEGIN
+  ALTER TABLE "tap_the_vein_tasks" ADD CONSTRAINT "tap_the_vein_tasks_dailySessionId_fkey" FOREIGN KEY ("dailySessionId") REFERENCES "tap_the_vein_daily_sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
