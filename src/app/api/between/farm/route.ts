@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
     case 'ripen': r = F.ripen(base, i, str(b.line), today); break
     case 'reclear': r = F.reclear(base, i, str(b.line), today); break
     case 'pick': r = F.pick(base, i, today); break
+    case 'satchel': r = F.setSatchel(base, b.ids); break
     default: return NextResponse.json({ error: 'Unknown act' }, { status: 400 })
   }
   if (!r.ok) return NextResponse.json({ error: r.why, farm: base }, { status: 422 })

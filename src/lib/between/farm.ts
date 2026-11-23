@@ -27,7 +27,19 @@ export type Plant = {
 }
 export type Slot = { state: 'tilled' | 'planted' | 'weeded'; clearedAt: string; plant: Plant | null }
 export type Harvest = { fromBarId: string; line: string; notes: Note[]; pickedOn: string; vibeulon: 1; quests: string[] }
-export type Farm = { firstEntryAt: string | null; mana: number; slots: Record<string, Slot>; harvests: Harvest[] }
+/**
+ * The tool box and the satchel (farm-toolbox-look-2 and farm-toolbox-dir-look-2, answered A on 2026-11-22). The box at the
+ * gate holds every tool and seed the player has, 24 places, shown only when opened. The satchel is the ring round the hand:
+ * six places, each a tool or a seed. A seed's own record lives in the pouch (farm-world-store); the satchel names it.
+ */
+export const BOX_SLOTS = 24
+export const SATCHEL_MAX = 6
+/** One tool for each farm verb the page already has: hoe tills, watering can waters, trowel plants, sickle clears weeds, gloves pick. */
+export const TOOLS = ['hoe', 'watering-can', 'trowel', 'sickle', 'gloves'] as const
+export type Tool = (typeof TOOLS)[number]
+export type Kit = { satchel: string[] }
+export const DEFAULT_SATCHEL = ['tool:hoe', 'tool:watering-can']
+export type Farm = { firstEntryAt: string | null; mana: number; slots: Record<string, Slot>; harvests: Harvest[]; kit?: Kit }
 export type Result = { farm: Farm; ok: boolean; why?: string; mint: number; harvest?: Harvest }
 
 export const newFarm = (): Farm => ({ firstEntryAt: null, mana: STARTING_MANA, slots: {}, harvests: [] })
@@ -154,4 +166,19 @@ export function pick(farm: Farm, i: number, today: string): Result {
   f.slots[String(i)] = { ...f.slots[String(i)], state: 'tilled', plant: null }
   f.harvests.push(harvest)
   return { farm: f, ok: true, mint: 1, harvest }
+}
+
+const SATCHEL_ENTRY = /^(tool:(hoe|watering-can|trowel|sickle|gloves)|seed:[A-Za-z0-9_.:-]{1,80})$/
+
+/** What the player carries: the saved satchel, or the hoe and the watering can before the first change. */
+export const satchelOf = (farm: Farm): string[] => (farm.kit && Array.isArray(farm.kit.satchel) ? farm.kit.satchel : DEFAULT_SATCHEL)
+
+/** Set what the ring carries: at most six places, no repeats, each a known tool or a seed id. The page filters seeds to those it holds. */
+export function setSatchel(farm: Farm, ids: unknown): Result {
+  if (!Array.isArray(ids) || ids.length > SATCHEL_MAX) return fail(farm, `The satchel holds ${SATCHEL_MAX}`)
+  if (!ids.every((x): x is string => typeof x === 'string' && SATCHEL_ENTRY.test(x))) return fail(farm, 'The satchel holds tools and seeds')
+  if (new Set(ids).size !== ids.length) return fail(farm, 'One of each in the satchel')
+  const f = clone(farm)
+  f.kit = { satchel: ids }
+  return { farm: f, ok: true, mint: 0 }
 }
