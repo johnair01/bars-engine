@@ -110,6 +110,29 @@ Tested today, so the intake does not ask what the box would answer:
 **The round closes when** the door's owner is answered on the board card `wa-world-door-intake-1`. Then the identity
 question is asked, this record is extended with the answer, and spec.md is written against it.
 
+## 4: The resolution list (owner, 2026-11-23)
+
+Said plainly, in his words, and kept here so it is not re-derived:
+
+1. **The dojo is the main map for the game.** Not the starter office, not a hub built for the purpose: Master
+   Yun's dojo is where the game begins. It is already the editor-owned workroom (WAM + `/~` address, PR #972),
+   so this is a `START_ROOM_URL` change plus the dojo's standing as the place everything buds from.
+2. **A lobby where players choose which world to be part of.** World choice, in one room, before the world. In
+   WorkAdventure's client that is a map whose doors are the worlds (`exitUrl` areas) plus a script for the ones
+   that do not have a door yet — there is no world picker in the OSS client, so the lobby *is* a map.
+3. **A working character creation flow.** Not a repack of two sheets: character creation belongs to user-ID
+   integration and the larger bars-engine integration, so it waits on identity. The technical door is
+   `/api/woka/list` (no script API can set a player's textures); the product door is "who is this player" —
+   the same question that decides who may edit the dojo.
+
+Sequence they imply: the dojo as home, then the lobby whose first door is the dojo, then identity, then
+character creation on the back of identity. The asset contract (`docs/WA_ASSET_CONTRACT.md`, PR #972) is what
+lets each new world in that lobby be made by someone else and still fit.
+
+Still parked from the rounds before: who may edit the dojo (needs identity, so `MAP_EDITOR_ALLOW_ALL_USERS`
+stays true until then, or friends get a read-only door); whether the office door is the friends' door; and the
+portal list, so a friend's world is a row rather than a map edit.
+
 ## What the intake is not
 
 It is not a plan to fork WorkAdventure (unchanged: extend only, WA runs unmodified at `v1.35.0`), and it is not a plan
