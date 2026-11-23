@@ -1,0 +1,355 @@
+<!doctype html><html><head><meta charset="utf-8"><title>wait</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"}}</script></head><body style="margin:0">
+<script type="module">
+// gate.html (cultivated character T001, 2026-11-06): the player's figure sitting on the step of the mountain gate, the
+// qi glow below the navel, a jian lying at the side. The figure is accessories round 4's figure as it stands (mix.js
+// build, the same shells and accessories); this page adds only the seated pose, the place, the glow and the jian.
+// window.JOBS = [{mix, glow, shots:[[name, w, h, camName]]}] -> window.IMGS (JPEG data URLs), window.OUT (numbers)
+import * as THREE from 'three';
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const wp = b => b.getWorldPosition(V());
+try {
+  const reg = await (await fetch('cult/parts.json')).json(); const M = await import('./cult/mix.js'); const FG = await import('./cult/figure.js');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+  window.IMGS = []; window.OUT = [];
+  for (const J of window.JOBS || []) {
+    const X = await M.build(J.mix, reg); const F = X.F, { f, l } = F.fr, up = V(0, 1, 0), dn = V(0, -1, 0), k = F.stature / 1.75;
+    // ---- before the sit: each garment part's points at the stand (the fit pose), and the hip axis there
+    const hipMid = () => wp(F.bones.hipL).add(wp(F.bones.hipR)).multiplyScalar(0.5);
+    const H0 = hipMid(), KNEE0 = 0.5 * (wp(F.bones.kneeL).y + wp(F.bones.kneeR).y); const STAND = new Map(); for (const pt of X.parts) STAND.set(pt, Float32Array.from(M.partWorld(pt)));
+    // ---- the sit: on a stone step, thighs level, shins down, feet on the ground; hands cupped over the lower belly
+    FG.resetPose(F);
+    for (const [s, sg] of [['L', 1], ['R', -1]]) {
+      FG.aim(F, 'hip' + s, 'knee' + s, V().addScaledVector(f, 0.97).addScaledVector(dn, 0.05).addScaledVector(l, sg * 0.10));
+      FG.aim(F, 'knee' + s, 'ankle' + s, V().addScaledVector(dn, 1).addScaledVector(f, 0.10).addScaledVector(l, sg * 0.02));
+      FG.aim(F, 'shoulder' + s, 'elbow' + s, V().addScaledVector(dn, 1).addScaledVector(f, 0.22).addScaledVector(l, sg * 0.16));
+    }
+    FG.aim(F, 'neck', 'head', V().addScaledVector(up, 1).addScaledVector(f, 0.12));
+    F.root.updateMatrixWorld(true);
+    // ground: the feet's lowest point on the ground (y = 0); the seat is the lowest point of the pelvis skin
+    const P = F.mesh.geometry.attributes.position, v = V(); let lo = 1e9, seat = 1e9, frontBelly = -1e9;
+    const skinAll = fn => { for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); F.mesh.applyBoneTransform(i, v); v.applyMatrix4(F.mesh.matrixWorld); fn(i, v); } };
+    skinAll((i, v) => { lo = Math.min(lo, v.y); if (F.boneName[F.dom[i]] === 'hips') seat = Math.min(seat, v.y); });
+    F.root.position.y -= lo - 0.004; F.root.updateMatrixWorld(true); seat -= lo - 0.004;
+    // the glow: the lower dantian, about three finger widths below the navel, just in front of the robe
+    const hips = wp(F.bones.hips), sp1 = wp(F.bones.spine01), Hs = wp(F.bones.hipL).add(wp(F.bones.hipR)).multiplyScalar(0.5), gy = Math.max(hips.y + (J.glowUp ?? 0.55) * (sp1.y - hips.y), Hs.y + ((J.thighR ?? 0.15) + 0.05) * k);
+    skinAll((i, v) => { const d = v.clone().sub(hips); if (Math.abs(v.y - gy) < 0.03 && Math.abs(d.dot(l)) < 0.05) frontBelly = Math.max(frontBelly, d.dot(f)); });
+    const glowAt = hips.clone().setY(gy).addScaledVector(f, frontBelly + 0.05 * k);
+    // the hands cup the glow: each forearm aims at a point beside it, palms in
+    for (const [s, sg] of [['L', 1], ['R', -1]]) { const tgt = glowAt.clone().addScaledVector(l, sg * 0.045 * k).addScaledVector(f, -0.01 * k).addScaledVector(dn, 0.03 * k);
+      const e = wp(F.bones['elbow' + s]); FG.aim(F, 'elbow' + s, 'wrist' + s, tgt.sub(e)); }
+    F.root.updateMatrixWorld(true); F.mesh.skeleton.update();
+    F.poseName = 'sit';
+    /* round 11: the sit as the animation's first pose: each forearm's direction, the root, the hips' matrix */
+    const SIT = { fore: {}, root: F.root.position.clone() }; for (const s of ['L', 'R']) SIT.fore[s] = wp(F.bones['wrist' + s]).sub(wp(F.bones['elbow' + s])).normalize(); SIT.hips = F.bones.hips.matrixWorld.clone();
+    // ---- the drape: the skirt below the hip axis is a rigid shell skinned to the thighs, which folds into a hoop when
+    // they come level. Each point below the hip axis is placed from where it hung at the stand: front cloth turns with
+    // the thighs, lies along them and falls over the knees; back cloth comes down to the seat and lies back along it;
+    // the sides blend the two. Points above the axis keep the skinned sit.
+    const H1 = hipMid(), kneeMid = wp(F.bones.kneeL).add(wp(F.bones.kneeR)).multiplyScalar(0.5), tdir = kneeMid.clone().sub(H1), L = tdir.length(); tdir.normalize();
+    const n = up.clone().addScaledVector(tdir, -up.dot(tdir)).normalize(), seatTop = seat + 0.006, hs = H1.y - seatTop;
+    const sm = (a, b, x) => THREE.MathUtils.smoothstep(x, a, b), q = V(), fr = V(), bk = V(), sk = V();
+    const DRAPE = /^(robe|outer$|sash-tail|whisk-hair|cape)/;
+    let draped = 0;
+    for (const pt of X.parts) { if (!DRAPE.test(pt.name)) continue; const S0 = STAND.get(pt), S1 = M.partWorld(pt), W = new Float32Array(S1.length);
+      for (let i = 0; i < S1.length / 3; i++) { q.set(S0[i * 3], S0[i * 3 + 1], S0[i * 3 + 2]).sub(H0); const d = -q.y, a = q.dot(f), b = q.dot(l);
+        sk.set(S1[i * 3], S1[i * 3 + 1], S1[i * 3 + 2]);
+        const below = sm(-0.02 * k, 0.06 * k, d); if (below <= 0) { W.set([sk.x, sk.y, sk.z], i * 3); continue; }
+        // front: down becomes along the thigh, forward becomes up off it; past the knee the cloth rolls over and falls
+        // across the lap the cloth wraps the two thighs as cylinders (centres 10 cm either side, 15 cm to the cloth): it is
+        // highest over each thigh, sags between them, and past the outer side falls straight down beside the thigh
+        const tc = (J.thighC ?? 0.10) * k, R = (J.thighR ?? 0.15) * k, c = Math.abs(b) - tc, ac = Math.abs(c), dd = Math.max(d, 0);
+        let lift, bs, fall = 0;
+        if (ac <= R) { lift = Math.sqrt(R * R - ac * ac); bs = b; }
+        else if (c > 0) { lift = 0; bs = Math.sign(b) * (tc + R); fall = c - R; }
+        else { lift = 0; bs = 0; }
+        lift = Math.max(lift, 0.06 * k) + 0.12 * Math.max(a - 0.12 * k, 0);
+        if (dd <= L) fr.copy(H1).addScaledVector(l, bs).addScaledVector(tdir, dd).addScaledVector(n, lift);
+        else { const e = dd - L, rho = Math.max(0.04 * k, lift), th = Math.min(e / rho, Math.PI / 2); fr.copy(H1).addScaledVector(l, bs).addScaledVector(tdir, L).addScaledVector(n, rho * Math.cos(th)).addScaledVector(tdir, rho * Math.sin(th)).addScaledVector(dn, Math.max(0, e - rho * Math.PI / 2)); }
+        fr.addScaledVector(dn, fall);
+        // back: down to the seat, then a little back along it (the rest gathers under her)
+        bk.copy(H1).addScaledVector(l, bs).addScaledVector(f, a).addScaledVector(dn, Math.min(dd, hs)).addScaledVector(f, -0.35 * Math.max(0, dd - hs));
+        const w = sm(-0.07 * k, 0.05 * k, a);
+        fr.lerp(bk, 1 - w);
+        // nothing goes into the stone: over the seat (behind its front edge) cloth stays on top of it
+        const fwd = fr.clone().sub(H1).dot(f); if (fwd < 0.20 * k && fr.y < seatTop + 0.004) fr.y = seatTop + 0.004;
+        sk.lerp(fr, below); W.set([sk.x, sk.y, sk.z], i * 3); draped++; }
+      pt.settled = W; (window.DBG = window.DBG || []).push([pt.name, S1.length / 3, (() => { let nF = 0, minA = 9, maxA = -9, maxD = -9; for (let i = 0; i < S0.length / 3; i++) { q.set(S0[i * 3], S0[i * 3 + 1], S0[i * 3 + 2]).sub(H0); const a = q.dot(f), d = -q.y; if (d > 0.06) { nF++; minA = Math.min(minA, a); maxA = Math.max(maxA, a); maxD = Math.max(maxD, d); } } return [nF, +minA.toFixed(3), +maxA.toFixed(3), +maxD.toFixed(3)]; })()]); }
+    M.legsInMotion(X, false);
+    // the trousers' thighs are under the robe at the stand; seated, the robe lies over them, so the part of them that the
+    // robe covered at the stand (above its hem, plus 3 cm) is not drawn, as legsInMotion does in a stride
+    let hemY = 1e9; for (const pt of X.parts) if (/^(robe|outer)$/.test(pt.name)) { const S0 = STAND.get(pt); for (let i = 1; i < S0.length; i += 3) hemY = Math.min(hemY, S0[i]); }
+    const cut = Math.max(hemY, KNEE0) + 0.10 * k; // and never the shins, which come out from under the hem
+    for (const pt of X.parts) { if (!/^trousers/.test(pt.name)) continue; const S0 = STAND.get(pt), I = pt.geo.index.array, keep = []; if (!pt.indexStill) pt.indexStill = I.slice(); /* round 11: the full trousers, for the walk */
+      for (let t = 0; t < I.length; t += 3) if (!(S0[I[t] * 3 + 1] > cut && S0[I[t + 1] * 3 + 1] > cut && S0[I[t + 2] * 3 + 1] > cut)) keep.push(I[t], I[t + 1], I[t + 2]);
+      pt.geo.setIndex(keep); pt.sitIndex = keep; }
+    // drawn as unskinned copies of each part with every attribute kept (the painted shells read their own attributes)
+    for (const pt of X.parts) { const W = pt.settled; if (!W) continue; const g = pt.geo.clone(); g.setAttribute('position', new THREE.BufferAttribute(W, 3)); g.deleteAttribute('skinIndex'); g.deleteAttribute('skinWeight'); g.computeVertexNormals();
+      const a = new THREE.Mesh(g, pt.mesh.material), bb = new THREE.Mesh(g, pt.back.material); a.frustumCulled = bb.frustumCulled = false; pt.backOn = pt.back.visible; pt.sitW = W; pt.copy = [a, bb]; bb.visible = pt.back.visible; X.scene.add(a, bb); pt.mesh.visible = pt.back.visible = false; }
+    const settled = draped;
+    const G = J.glow ?? 0.6, gc = new THREE.Color(J.glowColor || '#ffd88a');
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256; const cx = cv.getContext('2d');
+    const rg = cx.createRadialGradient(128, 128, 0, 128, 128, 128); rg.addColorStop(0, 'rgba(255,250,232,1)'); rg.addColorStop(0.18, 'rgba(255,226,150,0.85)'); rg.addColorStop(0.5, 'rgba(255,190,90,0.28)'); rg.addColorStop(1, 'rgba(255,170,60,0)');
+    cx.fillStyle = rg; cx.fillRect(0, 0, 256, 256); const gt = new THREE.CanvasTexture(cv); gt.colorSpace = THREE.SRGBColorSpace;
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: gt, color: gc, transparent: true, opacity: 0.55 + 0.4 * G, blending: THREE.AdditiveBlending, depthWrite: false }));
+    halo.position.copy(glowAt); halo.scale.setScalar((0.22 + 0.18 * G) * k); X.scene.add(halo);
+    const core = new THREE.Sprite(new THREE.SpriteMaterial({ map: gt, color: gc, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    core.position.copy(glowAt).addScaledVector(f, 0.01); core.scale.setScalar(0.08 * k); X.scene.add(core);
+    const gl = new THREE.PointLight(gc, 1.2 * G, 0.9 * k, 2); gl.position.copy(glowAt).addScaledVector(f, 0.05); X.scene.add(gl);
+    const T = seatTop, hipY = hips.y;
+    // ---- the place, refinement round 1 (2026-11-07, from his note on cc-gate-look-1: "The background will have to go
+    // through a refinement path"). Same layout as look 1: the seat step, the flight, the gate house, four pines, the
+    // mountains. Added: stone blocks with joints and moss, weathered plaster, tile channels and a drip-tile eave, painted
+    // brackets and beam, open doors with studs and light beyond, a plaque reading 山門, pines with branches and needle pads,
+    // and low mist. The figure, the glow and the jian are untouched.
+    const r = l.clone().negate(), basis = new THREE.Matrix4().makeBasis(r, up, f.clone().negate()); // place frame: x right, z back
+    const Pl = new THREE.Group(); Pl.quaternion.setFromRotationMatrix(basis); X.scene.add(Pl);
+    const RND = seed => { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; };
+    const tex = (w, h, draw, rep = [1, 1], srgb = true) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+      const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); t.anisotropy = 4; return t; };
+    // stone in blocks: courses of cut blocks, each a little different, dark joints, moss in the lower joints
+    const blocks = (base, seed, rows, moss) => (x, w, h) => { const rnd = RND(seed); x.fillStyle = base; x.fillRect(0, 0, w, h); const rh = h / rows;
+      for (let j = 0; j < rows; j++) { let px = -rnd() * 60; while (px < w) { const bw = 70 + rnd() * 110, sh = (rnd() - 0.5) * 22;
+        x.fillStyle = `rgb(${158 + sh},${150 + sh},${139 + sh})`; x.globalAlpha = 0.55; x.fillRect(px + 2, j * rh + 2, bw - 4, rh - 4); x.globalAlpha = 1;
+        for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? '50,45,40' : '255,250,240'},${0.04 + 0.06 * rnd()})`; x.fillRect(px + rnd() * bw, j * rh + rnd() * rh, 2 + 8 * rnd(), 1 + 4 * rnd()); }
+        x.fillStyle = 'rgba(48,42,38,0.55)'; x.fillRect(px, j * rh, 3, rh); px += bw; }
+        x.fillStyle = 'rgba(48,42,38,0.6)'; x.fillRect(0, j * rh, w, 3);
+        if (moss) for (let i = 0; i < 26; i++) { x.fillStyle = `rgba(${86 + rnd() * 30},${104 + rnd() * 25},${62 + rnd() * 15},${0.35 + 0.35 * rnd()})`; x.beginPath(); x.ellipse(rnd() * w, (j + 1) * rh - 2, 6 + 22 * rnd(), 2 + 5 * rnd(), 0, 0, 7); x.fill(); } } };
+    const stone = new THREE.MeshStandardMaterial({ map: tex(512, 128, blocks('#9d968c', 7, 1, true), [3, 1]), roughness: 0.93 });
+    const stoneD = new THREE.MeshStandardMaterial({ map: tex(512, 512, blocks('#8a8379', 11, 4, true), [3, 2]), roughness: 0.95 });
+    const paving = new THREE.MeshStandardMaterial({ map: tex(512, 512, (x, w, h) => { const rnd = RND(23); x.fillStyle = '#8f887d'; x.fillRect(0, 0, w, h);
+      for (let j = 0; j < 6; j++) { let px = -rnd() * 50; while (px < w) { const bw = 60 + rnd() * 90, sh = (rnd() - 0.5) * 26; x.fillStyle = `rgb(${146 + sh},${139 + sh},${127 + sh})`; x.fillRect(px + 3, j * h / 6 + 3, bw - 6, h / 6 - 6); px += bw; } }
+      for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(${90 + rnd() * 20},${108 + rnd() * 20},${66},${0.25 + 0.3 * rnd()})`; x.beginPath(); x.ellipse(rnd() * w, rnd() * h, 2 + 9 * rnd(), 1 + 3 * rnd(), 0, 0, 7); x.fill(); } }, [6, 5]), roughness: 0.96 });
+    const box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); Pl.add(b); return b; };
+    const hp = hips.clone(); const seatZ = -(hp.dot(f));
+    box(30, 0.2, 12, paving, 0, -0.1, -2); // the landing (round 4: wider, the gate is 50% wider; round 6: 30% wider again)
+    const frontZ = seatZ - 0.20 * k, rise = T;
+    box(4.2, rise, 0.5, stone, 0, rise / 2, frontZ + 0.25); // the seat step
+    let y = rise, z = frontZ + 0.5; const RISE = 0.17, TREAD = 0.36;
+    for (let i = 0; i < 5; i++) { y += RISE; box(4.2 - 0.05 * i, y, TREAD, stone, 0, y / 2, z + TREAD / 2); z += TREAD; }
+    const FLIGHT = { frontZ, rise, z0: frontZ + 0.5, RISE, TREAD, zEnd: z }; /* round 11: the walk climbs these */
+    const terrace = y, TW = 25; /* round 6: 18.5 to 25, the gate is 30% wider */ box(TW, terrace, 11, stoneD, 0, terrace / 2, z + 5.5);
+    box(TW, 0.02, 11, paving, 0, terrace + 0.01, z + 5.5).material = paving;
+    for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.5, z - frontZ), stoneD); w.position.set(sx * 2.25, 0, (z + frontZ) / 2); w.rotation.x = Math.atan2(terrace - rise, z - frontZ - 0.5) * -1; w.position.y = (terrace + rise) / 2 + 0.05; Pl.add(w); }
+    // the gate house, round 2 (2026-11-07, his note on cc-gate-look-2: "use the free gates as references ... turn these
+    // models into math"): gatehouse.js rebuilds the massing of BlenderKit's CC0 "Chinese Temple 2" from its measured
+    // numbers (REF there), at 0.7 of its size; door and window keep a person's size. Materials stay this page's own.
+    const brassG = new THREE.MeshStandardMaterial({ color: 0xb08f50, roughness: 0.4, metalness: 0.65 });
+    const plaster = new THREE.MeshStandardMaterial({ map: tex(512, 512, (x, w, h) => { const rnd = RND(31); x.fillStyle = '#8f4a3b'; x.fillRect(0, 0, w, h);
+      for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? '70,28,22' : '190,120,100'},${0.03 + 0.05 * rnd()})`; x.fillRect(rnd() * w, rnd() * h, 3 + 14 * rnd(), 2 + 8 * rnd()); }
+      for (let i = 0; i < 26; i++) { const sx = rnd() * w, g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(60,30,24,0.22)'); g.addColorStop(1, 'rgba(60,30,24,0)'); x.fillStyle = g; x.fillRect(sx, 0, 2 + 8 * rnd(), h * (0.3 + 0.6 * rnd())); }
+      for (let i = 0; i < 60; i++) { x.fillStyle = `rgba(200,160,130,${0.08 + 0.1 * rnd()})`; x.fillRect(rnd() * w, h * (0.55 + 0.4 * rnd()), 4 + 30 * rnd(), 2 + 6 * rnd()); }
+      const g = x.createLinearGradient(0, h * 0.8, 0, h); g.addColorStop(0, 'rgba(50,40,34,0)'); g.addColorStop(1, 'rgba(50,40,34,0.45)'); x.fillStyle = g; x.fillRect(0, h * 0.8, w, h * 0.2); }), roughness: 0.92 });
+    const lacR = new THREE.MeshStandardMaterial({ color: 0x86281f, roughness: 0.5 }), wood = new THREE.MeshStandardMaterial({ color: 0x4a3326, roughness: 0.7 });
+    const plinth = new THREE.MeshStandardMaterial({ map: tex(512, 128, blocks('#d8d1c2', 41, 1, false), [3, 1]), roughness: 0.9 });
+    const painted = new THREE.MeshStandardMaterial({ map: tex(1024, 128, (x, w, h) => { x.fillStyle = '#2f5d5c'; x.fillRect(0, 0, w, h); x.fillStyle = '#c8a457'; x.fillRect(0, 0, w, 8); x.fillRect(0, h - 8, w, 8);
+      for (let i = 0; i < 9; i++) { const cx = (i + 0.5) * w / 9; x.fillStyle = '#284a7a'; x.beginPath(); x.ellipse(cx, h / 2, 46, 38, 0, 0, 7); x.fill(); x.strokeStyle = '#e9e1cc'; x.lineWidth = 5; x.beginPath(); x.ellipse(cx, h / 2, 34, 26, 0, 0, 7); x.stroke(); x.fillStyle = '#c8a457'; x.beginPath(); x.arc(cx, h / 2, 9, 0, 7); x.fill(); } }), roughness: 0.7 });
+    /* round 7: an olive glaze (the reference's tile average is rgb 42 46 20). Each tile in a course gets its own shade, the
+       channel's crown catches light, each course's lower lip throws a shadow, and grey-green lichen sits in the joints. */
+    const tileTex = grey => (x, w, h) => { const rnd = RND(53), C = 32, Rw = 32;
+      for (let j = 0; j < h; j += Rw) for (let i0 = 0; i0 < w; i0 += C) { const sh = (rnd() - 0.5) * 0.28, hu = (rnd() - 0.5) * 14;
+        for (let i = 0; i < C; i++) { const u = i / C, c = 0.5 + 0.5 * Math.cos((u - 0.5) * Math.PI * 2), g = x.createLinearGradient(0, j, 0, j + Rw), k = (0.48 + 0.5 * c) * (1 + sh);
+          const col = a => grey ? `rgb(${Math.round(60 + 150 * c * a)},${Math.round(60 + 150 * c * a)},${Math.round(60 + 150 * c * a)})` : `rgb(${Math.round((86 + hu) * k * a)},${Math.round(100 * k * a)},${Math.round((40 - hu * 0.4) * k * a)})`;
+          g.addColorStop(0, col(1.18)); g.addColorStop(0.8, col(0.95)); g.addColorStop(1, col(0.45)); x.fillStyle = g; x.fillRect(i0 + i, j, 1, Rw); } }
+      if (!grey) { for (let i = 0; i < 120; i++) { x.fillStyle = `rgba(230,236,200,${0.10 + 0.18 * rnd()})`; x.fillRect(Math.floor(rnd() * w / C) * C + C * 0.42, rnd() * h, 2, 3 + 8 * rnd()); }
+        for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${rnd() < 0.6 ? '150,158,128' : '40,44,26'},${0.08 + 0.14 * rnd()})`; x.beginPath(); x.ellipse(Math.floor(rnd() * w / C) * C + (rnd() < 0.5 ? 1 : C - 1), rnd() * h, 1.5 + 3 * rnd(), 2 + 5 * rnd(), 0, 0, 7); x.fill(); } } };
+    const tileMap = tex(256, 256, tileTex(false), [0.5, 0.5]), tileBump = tex(256, 256, tileTex(true), [0.5, 0.5], false);
+    const GH = await import('./cult/gatehouse.js'), GS = 1.3, gzc = z + 1.2 + 4.54 * GS;
+    const tileM2 = new THREE.MeshStandardMaterial({ map: tileMap, bumpMap: tileBump, bumpScale: 2.5, color: 0xffffff, roughness: 0.42, metalness: 0.05, side: THREE.DoubleSide }); /* round 7: glazed, so glossier */
+    const ridgeM = new THREE.MeshStandardMaterial({ color: 0x4d5a2c, roughness: 0.45 }); /* round 7: the ridges glazed to match */
+    const lattice = new THREE.MeshStandardMaterial({ map: tex(128, 160, (x, w, h) => { x.fillStyle = '#2a1d17'; x.fillRect(0, 0, w, h); x.strokeStyle = '#6b3a2a'; x.lineWidth = 5; for (let i = 8; i < w; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, h); x.stroke(); } x.lineWidth = 3; for (let j = 10; j < h; j += 22) { x.beginPath(); x.moveTo(0, j); x.lineTo(w, j); x.stroke(); } }), roughness: 0.8, side: THREE.DoubleSide });
+    const beyondM = new THREE.MeshBasicMaterial({ map: tex(64, 256, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#dfe3e0'); g.addColorStop(0.7, '#f1eadb'); g.addColorStop(1, '#b7b2a4'); x.fillStyle = g; x.fillRect(0, 0, w, h); }), fog: false });
+    const plaqueM = new THREE.MeshStandardMaterial({ map: tex(256, 128, (x, w, h) => { x.fillStyle = '#b08f50'; x.fillRect(0, 0, w, h); x.fillStyle = '#1e1715'; x.fillRect(9, 9, w - 18, h - 18);
+      x.fillStyle = '#d4b46a'; x.font = 'bold 80px "WenQuanYi Zen Hei"'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('山門', w / 2, h / 2 + 4); }), roughness: 0.5 });
+    const plaster2 = plaster.clone(); plaster2.map = plaster.map.clone(); plaster2.map.repeat.set(1.5, 1); plaster2.side = THREE.DoubleSide; plaster.map.repeat.set(0.35, 0.35);
+    // round 4: the offshoot rooms are lit by a lantern painted into their walls (warm at the top middle, dim at the edges)
+    const warm = (x, w, h) => { const g = x.createRadialGradient(w / 2, h * 0.25, 0, w / 2, h * 0.3, w * 0.75); g.addColorStop(0, '#c98a4a'); g.addColorStop(0.45, '#7a4a2c'); g.addColorStop(1, '#2a1c16'); x.fillStyle = g; x.fillRect(0, 0, w, h); };
+    const roomM = new THREE.MeshBasicMaterial({ map: tex(256, 256, warm), fog: false }), roomFloorM = new THREE.MeshBasicMaterial({ map: tex(256, 256, (x, w, h) => { const g = x.createRadialGradient(w / 2, h * 0.4, 0, w / 2, h * 0.4, w * 0.7); g.addColorStop(0, '#8a5a36'); g.addColorStop(1, '#2a1c16'); x.fillStyle = g; x.fillRect(0, 0, w, h); for (let j = 0; j < h; j += 32) { x.fillStyle = 'rgba(20,12,8,0.35)'; x.fillRect(0, j, w, 2); } }), fog: false });
+    const lampM = new THREE.MeshBasicMaterial({ color: 0xffd08a, fog: false }), cushionM = new THREE.MeshStandardMaterial({ color: 0x9a7a3f, roughness: 0.9 });
+    /* round 7: plaster wear. One picture spans each whole front and back wall (gatehouse.js maps it once across): rain streaks
+       under the eave, lime render and brick showing where plaster has flaked, scuffs and chips at the arches, a damp band
+       with dark algae above the stone dado, and the red faded where the sun hits highest. Drawn after the house is built,
+       since it needs the doors' places. */
+    const plasterWall = new THREE.MeshStandardMaterial({ roughness: 0.93 });
+    const timberM = new THREE.MeshStandardMaterial({ color: 0x5a3d2a, roughness: 0.75 }), bronzeM = new THREE.MeshStandardMaterial({ color: 0x6f5a36, roughness: 0.45, metalness: 0.6 });
+    const ceramicM = new THREE.MeshStandardMaterial({ color: 0x5b3a22, roughness: 0.35 }), ceramic2M = new THREE.MeshStandardMaterial({ color: 0x3f4a2a, roughness: 0.35 }), sackM = new THREE.MeshStandardMaterial({ color: 0xb39b72, roughness: 0.95 });
+    const paperM = new THREE.MeshStandardMaterial({ color: 0xe6dcc2, roughness: 0.9 }), inkM = new THREE.MeshStandardMaterial({ color: 0x1a1614, roughness: 0.5 }), waterM = new THREE.MeshStandardMaterial({ color: 0x1d2a2c, roughness: 0.1, metalness: 0.3 });
+    const emberM = new THREE.MeshBasicMaterial({ color: 0xff8a3a, fog: false }), drumM = new THREE.MeshStandardMaterial({ color: 0x6e2016, roughness: 0.62 }), drumHeadM = new THREE.MeshStandardMaterial({ color: 0xd9c8a0, roughness: 0.8 });
+    const bannerM = new THREE.MeshStandardMaterial({ map: tex(64, 192, (x, w, h) => { x.fillStyle = '#8a2a20'; x.fillRect(0, 0, w, h); x.fillStyle = '#c8a457'; x.fillRect(0, 0, w, 6); x.fillRect(0, h - 6, w, 6);
+      x.font = 'bold 38px "WenQuanYi Zen Hei"'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('靜', w / 2, h * 0.3); x.fillText('心', w / 2, h * 0.62); }), roughness: 0.85, side: THREE.DoubleSide });
+    /* round 9 (his note on cc-gate-look-8, "needs more light on the inside"): the main chamber gets lime-washed walls, a
+       swept board floor, a timber ceiling and a painted drum head, all lit by the lamps' own point lights below */
+    const chamberM = new THREE.MeshStandardMaterial({ roughness: 0.9, map: tex(512, 512, (x, w, h) => { const rnd = RND(31); x.fillStyle = '#a6916c'; x.fillRect(0, 0, w, h);
+      for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? '120,95,60' : '235,222,195'},${0.04 + rnd() * 0.06})`; const r = 4 + rnd() * 26; x.beginPath(); x.arc(rnd() * w, rnd() * h, r, 0, 7); x.fill(); }
+      const g = x.createLinearGradient(0, h * 0.82, 0, h); g.addColorStop(0, 'rgba(90,60,35,0)'); g.addColorStop(1, 'rgba(90,60,35,0.45)'); x.fillStyle = g; x.fillRect(0, 0, w, h); }, [2, 1]) });
+    const chamberFloorM = new THREE.MeshStandardMaterial({ roughness: 0.7, map: tex(512, 512, (x, w, h) => { const rnd = RND(53);
+      for (let j = 0; j < 16; j++) { const v = 96 + rnd() * 24; x.fillStyle = `rgb(${v},${v * 0.72 | 0},${v * 0.48 | 0})`; x.fillRect(0, j * 32, w, 32); x.fillStyle = 'rgba(40,25,15,0.6)'; x.fillRect(0, j * 32, w, 2);
+        for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(60,38,22,${rnd() * 0.18})`; x.fillRect(rnd() * w, j * 32 + 3 + rnd() * 26, 20 + rnd() * 120, 1 + rnd() * 2); } } }, [2, 4]) });
+    const ceilingM = new THREE.MeshStandardMaterial({ color: 0x55392a, roughness: 0.85 });
+    const drumHeadPaint = new THREE.MeshStandardMaterial({ roughness: 0.75, map: tex(256, 256, (x, w, h) => { const c = w / 2; x.fillStyle = '#e2d2a8'; x.fillRect(0, 0, w, h);
+      const g = x.createRadialGradient(c, c, 0, c, c, c); g.addColorStop(0, 'rgba(255,245,215,0.5)'); g.addColorStop(0.7, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(110,80,40,0.55)'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.lineWidth = 7; x.strokeStyle = '#8a2a20'; x.beginPath(); x.arc(c, c, c * 0.78, 0, 7); x.stroke(); x.lineWidth = 3; x.beginPath(); x.arc(c, c, c * 0.68, 0, 7); x.stroke();
+      x.fillStyle = '#8a2a20'; x.beginPath(); x.arc(c, c, c * 0.34, 0, 7); x.fill(); x.fillStyle = '#c9a04a'; x.beginPath(); x.arc(c, c, c * 0.2, 0, 7); x.fill(); }) });
+    const house = GH.gateHouse(THREE, { s: GS, mats: { chamber: chamberM, chamberFloor: chamberFloorM, ceiling: ceilingM, plasterWall, timber: timberM, bronze: bronzeM, ceramic: ceramicM, ceramic2: ceramic2M, sack: sackM, paper: paperM, ink: inkM, water: waterM, ember: emberM, drum: drumM, drumHead: drumHeadPaint, banner: bannerM, cup: paperM, room: roomM, roomFloor: roomFloorM, lamp: lampM, cushion: cushionM, plinth, plaster, plaster2, passage: new THREE.MeshStandardMaterial({ color: 0x3a2a24, roughness: 0.9, side: THREE.DoubleSide }), dark: new THREE.MeshStandardMaterial({ color: 0x2b2420, roughness: 0.8 }),
+      stone: stoneD, stoneLight: plinth, lacquer: lacR, brass: brassG, beyond: beyondM, plaque: plaqueM, painted, bracket: new THREE.MeshStandardMaterial({ color: 0x2f5d5c, roughness: 0.7 }), bracketG: new THREE.MeshStandardMaterial({ color: 0x9a7a3f, roughness: 0.6, metalness: 0.2 }),
+      tile: tileM2, ridge: ridgeM, wood: lacR, lattice, rafter: new THREE.MeshStandardMaterial({ color: 0x26403d, roughness: 0.8 }), rafterEnd: new THREE.MeshStandardMaterial({ color: 0xc8a457, roughness: 0.6 }) } });
+    { const U0 = house.userData, PXM = 160, W = Math.round(2 * U0.bw * PXM), H = Math.round(U0.bh * PXM), px = xm => (xm + U0.bw) * PXM, py = ym => H - ym * PXM;
+      plasterWall.map = tex(W, H, (x, w, h) => { const rnd = RND(97); x.fillStyle = '#8f4a3b'; x.fillRect(0, 0, w, h);
+        const fade = x.createLinearGradient(0, 0, 0, h); fade.addColorStop(0, 'rgba(214,150,120,0.22)'); fade.addColorStop(0.5, 'rgba(214,150,120,0.05)'); fade.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = fade; x.fillRect(0, 0, w, h);
+        for (let i = 0; i < 9000; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? '70,28,22' : '190,120,100'},${0.03 + 0.05 * rnd()})`; x.fillRect(rnd() * w, rnd() * h, 3 + 14 * rnd(), 2 + 8 * rnd()); }
+        for (let i = 0; i < 160; i++) { const sx = rnd() * w, len = h * (0.15 + 0.6 * rnd()), g = x.createLinearGradient(0, 0, 0, len); g.addColorStop(0, `rgba(55,26,20,${0.18 + 0.2 * rnd()})`); g.addColorStop(1, 'rgba(55,26,20,0)'); x.fillStyle = g; x.fillRect(sx, 0, 2 + 7 * rnd(), len); }
+        const flake = (cx, cy, r) => { x.save(); x.beginPath(); for (let k = 0; k < 14; k++) { const a = k / 14 * 6.283, rr = r * (0.6 + 0.5 * rnd()); x.lineTo(cx + Math.cos(a) * rr * 1.4, cy + Math.sin(a) * rr); } x.closePath();
+          x.globalAlpha = 0.75; x.fillStyle = '#ad967a'; x.fill(); x.globalAlpha = 1; x.clip(); if (rnd() < 0.6) { x.fillStyle = '#7d4a36'; for (let yy = cy - r; yy < cy + r; yy += 14) for (let xx = cx - 1.5 * r + ((yy / 14) % 2) * 15; xx < cx + 1.5 * r; xx += 30) x.fillRect(xx + 1, yy + 1, 28, 12); }
+          x.restore(); x.strokeStyle = 'rgba(60,30,24,0.55)'; x.lineWidth = 2; x.stroke(); };
+        for (let i = 0; i < 14; i++) flake(rnd() * w, h * (0.15 + 0.75 * rnd()), 6 + 18 * rnd());
+        for (const [cx, r0, s0] of U0.doors) { for (const e of [-1, 1]) { for (let i = 0; i < 2; i++) flake(px(cx + e * (r0 + 0.12 + 0.2 * rnd())), py(0.5 + (s0 + r0) * rnd()), 4 + 7 * rnd());
+          const g = x.createLinearGradient(px(cx + e * r0), 0, px(cx + e * (r0 + 0.5)), 0); g.addColorStop(0, 'rgba(40,24,18,0.35)'); g.addColorStop(1, 'rgba(40,24,18,0)'); x.fillStyle = g; x.fillRect(Math.min(px(cx + e * r0), px(cx + e * (r0 + 0.5))), py(1.2), 0.5 * PXM, 1.2 * PXM); } }
+        const damp = x.createLinearGradient(0, py(0.95), 0, h); damp.addColorStop(0, 'rgba(40,36,28,0)'); damp.addColorStop(0.6, 'rgba(40,36,28,0.35)'); damp.addColorStop(1, 'rgba(32,40,26,0.6)'); x.fillStyle = damp; x.fillRect(0, py(0.95), w, h - py(0.95));
+        for (let i = 0; i < 500; i++) { x.fillStyle = `rgba(${40 + 30 * rnd()},${58 + 30 * rnd()},${30},${0.15 + 0.3 * rnd()})`; x.beginPath(); x.ellipse(rnd() * w, py(0.38 + 0.35 * rnd() * rnd()), 3 + 14 * rnd(), 2 + 6 * rnd(), 0, 0, 7); x.fill(); } }, [1, 1]); }
+    house.position.set(0, terrace, gzc); Pl.add(house);
+    /* round 11: two steps up to the plinth (0.48 m) at the main door, so the walk has a way in */
+    const PF = gzc - 4.54 * GS, PH = 0.6 * GS, PN = 4; for (let i = 0; i < PN; i++) box(2.4, terrace + (i + 1) * PH / (PN + 1), 0.32, stone, 0, (terrace + (i + 1) * PH / (PN + 1)) / 2, PF - 0.32 * PN + 0.32 * i + 0.16); /* round 12: four steps (0.16 m each) up the 0.78 m plinth */
+    Object.assign(FLIGHT, { terrace: terrace + 0.02, plinthFront: PF, plinthH: PH, plinthN: PN, gzc });
+    /* round 9: each lamp marker in the gate house becomes a warm point light (no shadows; the walls' backs face away from it) */
+    /* round 10 (his note on cc-gate-look-9, "little too bright"): lights down by half, walls and floor a shade darker */
+    house.updateMatrixWorld(true); house.traverse(m => { if (m.userData.light) { const L = new THREE.PointLight(0xffb46a, 1.25 * m.userData.light, 6.5, 1.8); m.getWorldPosition(L.position); X.scene.add(L); } }); const gz = gzc - 4.54 * GS;
+    // round 6: section caps. A section shot clips the scene with one plane; the cut earth of the terrace and the ground
+    // is drawn as a flat dark face lying in that plane, with the basement left open, so the basement reads as dug in.
+    const U = house.userData, capM = new THREE.MeshBasicMaterial({ color: 0x4a4038, side: THREE.DoubleSide, fog: false }), caps = {};
+    const cap = (outline, hole) => { const sh = new THREE.Shape(outline.map(([a, b]) => new THREE.Vector2(a, b))); sh.holes.push(new THREE.Path(hole.map(([a, b]) => new THREE.Vector2(a, b)))); return new THREE.Mesh(new THREE.ShapeGeometry(sh), capM); };
+    const yb0 = terrace + U.basementY, yb1 = terrace - 0.02, CUTZ = -0.5;
+    { const m = cap([[-30, -4], [30, -4], [30, 0], [TW / 2, 0], [TW / 2, terrace], [-TW / 2, terrace], [-TW / 2, 0], [-30, 0]], [[-U.inner, yb0], [U.inner, yb0], [U.inner, yb1], [-U.inner, yb1]]);
+      m.position.z = gzc + CUTZ + 0.01; m.visible = false; Pl.add(m); caps.secFront = m; }
+    for (const sx of [-1, 1]) { const zt0 = z, zt1 = z + 11, m = cap([[zt0 - 16, -4], [zt1 + 6, -4], [zt1 + 6, 0], [zt1, 0], [zt1, terrace], [zt0, terrace], [zt0, 0], [zt0 - 16, 0]], [[gzc - U.bd, yb0], [gzc + U.bd, yb0], [gzc + U.bd, yb1], [gzc - U.bd, yb1]]);
+      m.rotation.y = -Math.PI / 2; m.position.x = sx * (U.stairX - 0.01); m.visible = false; Pl.add(m); caps[sx < 0 ? 'secWest' : 'secEast'] = m; }
+    /* round 7: secPlan, the basement seen from above. One level plane cuts the terrace just under the ground floor; the cut
+       earth is a flat dark face in that plane with the basement left open. Built in the house's own frame. */
+    { const zt0 = z - gzc, zt1 = z + 11 - gzc, m = cap([[-TW / 2, -zt0], [TW / 2, -zt0], [TW / 2, -zt1], [-TW / 2, -zt1]], [[-U.inner, U.vz], [U.inner, U.vz], [U.inner, -U.vz], [-U.inner, -U.vz]]);
+      m.rotation.x = -Math.PI / 2; m.position.y = -0.06; m.visible = false; house.add(m); caps.secPlan = m; }
+    const section = name => { const L = new THREE.Plane(); if (name === 'secPlan') { L.set(V(0, -1, 0), -0.05); house.updateMatrixWorld(true); return L.applyMatrix4(house.matrixWorld); } if (name === 'secFront') L.set(V(0, 0, 1), -CUTZ); else if (name === 'secWest') L.set(V(1, 0, 0), U.stairX); else L.set(V(-1, 0, 0), U.stairX);
+      house.updateMatrixWorld(true); return L.applyMatrix4(house.matrixWorld); };
+    // pines: a bending trunk with bark, branches that reach out level, and pads of needles at their ends (dark below, lit above)
+    const bark = new THREE.MeshStandardMaterial({ map: tex(128, 256, (x, w, h) => { const rnd = RND(61); x.fillStyle = '#4b372a'; x.fillRect(0, 0, w, h); for (let i = 0; i < 400; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? '25,18,14' : '120,96,74'},${0.2 + 0.3 * rnd()})`; x.fillRect(rnd() * w, rnd() * h, 3 + 12 * rnd(), 6 + 20 * rnd()); } }, [2, 3]), roughness: 0.95 });
+    const ndD = new THREE.MeshStandardMaterial({ color: 0x2c4234, roughness: 0.95, flatShading: true }), ndL = new THREE.MeshStandardMaterial({ color: 0x4e6e4f, roughness: 0.9, flatShading: true });
+    const tuft = new THREE.IcosahedronGeometry(1, 0);
+    const pine = (x0, yb, zz, h, lean = 0.15, seed = 3) => { const g = new THREE.Group(), rnd = RND(seed);
+      const tp = []; for (let i = 0; i <= 6; i++) { const u = i / 6; tp.push(V(Math.sin(lean) * h * u * u * 1.4 + (rnd() - 0.5) * 0.12 * h * u, h * 0.82 * u, (rnd() - 0.5) * 0.1 * h * u)); }
+      const tc = new THREE.CatmullRomCurve3(tp); const tg = new THREE.TubeGeometry(tc, 24, 0.06 * h, 8); { const p = tg.attributes.position, n = tg.attributes.normal; for (let i = 0; i < p.count; i++) { const yy = p.getY(i) / (h * 0.82), s = 1 - 0.55 * yy; const c = tc.getPointAt(Math.min(1, Math.max(0, yy))); p.setXYZ(i, c.x + (p.getX(i) - c.x) * s, p.getY(i), c.z + (p.getZ(i) - c.z) * s); } p.needsUpdate = true; }
+      g.add(new THREE.Mesh(tg, bark));
+      const pads = []; const nb = 5 + Math.floor(rnd() * 2);
+      for (let b = 0; b < nb; b++) { const u = 0.45 + 0.55 * b / (nb - 1), o = tc.getPointAt(Math.min(1, u)), ang = (b % 2 ? 1 : -1) * (0.6 + 0.9 * rnd()) + (rnd() - 0.5), len = h * (0.42 - 0.25 * (u - 0.45));
+        const d = V(Math.cos(ang), 0.15 + 0.2 * rnd(), Math.sin(ang) * 0.6).normalize(), e = o.clone().addScaledVector(d, len), m = o.clone().lerp(e, 0.5).add(V(0, -0.05 * h, 0));
+        g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(o, m, e), 8, 0.018 * h, 6), bark)); pads.push([e, len * 0.5]); }
+      pads.push([tc.getPointAt(1).clone().add(V(0, 0.04 * h, 0)), h * 0.2]);
+      const NT = 90, n = pads.length * NT, imD = new THREE.InstancedMesh(tuft, ndD, n), imL = new THREE.InstancedMesh(tuft, ndL, n), mt = new THREE.Matrix4(), q = new THREE.Quaternion(); let k2 = 0;
+      for (const [c, rad] of pads) for (let i = 0; i < NT; i++) { const a = rnd() * 6.283, rr = Math.sqrt(rnd()) * rad, s = h * (0.022 + 0.018 * rnd()); q.setFromEuler(new THREE.Euler(rnd(), rnd() * 6, rnd()));
+        const p = V(c.x + Math.cos(a) * rr, c.y + (rnd() - 0.5) * 0.03 * h - 0.025 * h * (rr / rad), c.z + Math.sin(a) * rr * 0.75);
+        imD.setMatrixAt(k2, mt.compose(p, q, V(s * 1.4, s * 0.4, s))); imL.setMatrixAt(k2, mt.compose(p.clone().add(V(0, 0.018 * h, 0)), q, V(s * 1.2, s * 0.3, s * 0.9))); k2++; }
+      g.add(imD, imL); g.position.set(x0, yb, zz); Pl.add(g); };
+    pine(-10.6, terrace, gz + 0.6, 3.8, 0.2, 5); pine(10.7, terrace, gz + 1.2, 3.4, -0.25, 9); pine(-9.6, 0, frontZ + 1.2, 3.2, 0.12, 13); pine(9.8, 0, frontZ + 2.2, 3.4, -0.1, 17); // round 4: moved out past the wider eaves; round 6: again
+    // rocks at the foot of the flight and the terrace edge
+    const rockM = new THREE.MeshStandardMaterial({ color: 0x7f7a71, roughness: 0.95, flatShading: true });
+    for (const [rx, ry, rz, rs] of [[-3.1, 0, frontZ + 0.6, 0.35], [-3.6, 0, frontZ + 0.2, 0.2], [3.3, 0, frontZ + 0.9, 0.3], [-9.4, terrace, gz - 0.6, 0.4], [9.6, terrace, gz - 0.4, 0.35]]) { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(rs, 0), rockM); rk.position.set(rx, ry + rs * 0.45, rz); rk.scale.set(1.3, 0.75, 1); rk.rotation.y = rx; Pl.add(rk); }
+    // the sky and the mountains in mist (as look 1), then soft mist banks: one behind the gate house, one at the foot of the terrace
+    const sky = document.createElement('canvas'); sky.width = 64; sky.height = 512; const sx2 = sky.getContext('2d'); const sg = sx2.createLinearGradient(0, 0, 0, 512);
+    sg.addColorStop(0, '#9fb3c4'); sg.addColorStop(0.55, '#e2ddd0'); sg.addColorStop(1, '#efe4cf'); sx2.fillStyle = sg; sx2.fillRect(0, 0, 64, 512);
+    const st = new THREE.CanvasTexture(sky); st.colorSpace = THREE.SRGBColorSpace; X.scene.background = st;
+    const ridge = (w, h, seed, col, alpha, rough) => { const c = document.createElement('canvas'); c.width = 2048; c.height = 512; const x = c.getContext('2d');
+      let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647; const pts = []; let yy = 0.5;
+      for (let i = 0; i <= 64; i++) { yy += (rnd() - 0.5) * rough; yy = Math.min(0.85, Math.max(0.12, yy)); pts.push(yy); }
+      for (let p = 0; p < 4; p++) { const at = Math.floor(rnd() * 64), wd = 3 + Math.floor(rnd() * 5), ht = 0.25 + 0.35 * rnd(); for (let i = -wd; i <= wd; i++) if (pts[at + i] != null) pts[at + i] = Math.max(0.06, pts[at + i] - ht * (1 - Math.abs(i) / (wd + 1))); }
+      const g = x.createLinearGradient(0, 0, 0, 512); g.addColorStop(0, col); g.addColorStop(1, 'rgba(239,228,207,0)');
+      x.fillStyle = g; x.beginPath(); x.moveTo(0, 512); pts.forEach((p, i) => x.lineTo(i / 64 * 2048, p * 512)); x.lineTo(2048, 512); x.closePath(); x.fill();
+      // pines on the ridgelines, as small dark marks
+      x.fillStyle = col; for (let i = 0; i < 90; i++) { const u = rnd(), p = pts[Math.floor(u * 64)]; const px = u * 2048, py = p * 512; x.beginPath(); x.moveTo(px, py - 6 - 10 * rnd()); x.lineTo(px - 4, py + 2); x.lineTo(px + 4, py + 2); x.fill(); }
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+      return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: alpha, fog: false, depthWrite: false })); };
+    const layers = [[150, 40, 3, '#8d9fb0', 0.75, 0.10, 70, 8], [110, 28, 9, '#6f8293', 0.85, 0.14, 48, 2], [80, 18, 21, '#556a73', 0.9, 0.18, 30, -2]];
+    layers.forEach(([w, h, seed, col, a, rough, dist, yb], i) => { const m = ridge(w, h, seed, col, a, rough); m.position.set(0, yb + h / 2, gz + dist); m.rotation.y = Math.PI; m.renderOrder = -10 + i; Pl.add(m); });
+    const mistT = tex(512, 128, (x, w, h) => { const rnd = RND(71); for (let i = 0; i < 40; i++) { const cx = rnd() * w, cy = h * (0.45 + 0.3 * rnd()), rr = 30 + 60 * rnd(); const g = x.createRadialGradient(cx, cy, 0, cx, cy, rr); g.addColorStop(0, 'rgba(243,238,226,0.45)'); g.addColorStop(1, 'rgba(243,238,226,0)'); x.fillStyle = g; x.fillRect(0, 0, w, h); } });
+    for (const [mw, mh, my, mz, ma] of [[46, 4, terrace + 0.2, gz + 12, 0.55], [30, 2.2, 0.3, frontZ + 4.5, 0.0]]) { if (!ma) continue; const m = new THREE.Mesh(new THREE.PlaneGeometry(mw, mh), new THREE.MeshBasicMaterial({ map: mistT, transparent: true, opacity: ma, depthWrite: false, fog: false })); m.position.set(0, my, mz); m.rotation.y = Math.PI; Pl.add(m); }
+    X.scene.fog = new THREE.Fog(0xe9e1d2, 14, 46);
+    // ---- the jian, sheathed, lying on the seat step at her right side, hilt toward the front
+    const J0 = new THREE.Group(), lac = new THREE.MeshStandardMaterial({ color: 0x2a211d, roughness: 0.45 }), brass = new THREE.MeshStandardMaterial({ color: 0xa88a4e, roughness: 0.4, metalness: 0.7 }),
+      grip = new THREE.MeshStandardMaterial({ color: 0x3c2a22, roughness: 0.8 }), cord = new THREE.MeshStandardMaterial({ color: 0x9a3b2c, roughness: 0.9 });
+    const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.022, 0.74, 14), lac); sc.scale.z = 0.45; sc.position.y = -0.37; J0.add(sc);
+    for (const [yy, hh] of [[-0.02, 0.05], [-0.25, 0.025], [-0.72, 0.05]]) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, hh, 14), brass); b.scale.z = 0.5; b.position.y = yy; J0.add(b); }
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.022, 0.03), brass); guard.position.y = 0.012; J0.add(guard);
+    const gr = new THREE.Mesh(new THREE.CylinderGeometry(0.0145, 0.016, 0.17, 12), grip); gr.position.y = 0.11; J0.add(gr);
+    const pm = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 8), brass); pm.scale.set(1, 0.7, 0.6); pm.position.y = 0.205; J0.add(pm);
+    for (let i = 0; i < 7; i++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.002, 0.11, 4), cord); t.position.set((i - 3) * 0.004, 0.26, 0.002 * (i % 2)); J0.add(t); }
+    J0.scale.setScalar(k);
+    // lie it along the step: its length runs front to back beside her right thigh, on its flat
+    const jAt = hips.clone().setY(T + 0.013 * k).addScaledVector(r, 0.46 * k).addScaledVector(f, 0.06 * k);
+    J0.position.copy(jAt); const ja = J.jianTurn ?? -1.42, jd = f.clone().multiplyScalar(Math.cos(ja)).addScaledVector(r, Math.sin(ja)); // hilt toward her knee, the scabbard angled back and out
+    J0.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(jd.clone().cross(up).normalize(), jd, up.clone())); X.scene.add(J0);
+    // the jian's tassel hangs over the step's edge: it is short, fine
+    // ---- dusk light: a low warm key from her front right, the studio set kept so the figure reads as in the creator
+    const key = new THREE.DirectionalLight(0xffd6a0, 0.55); key.position.copy(V().addScaledVector(f, 2).addScaledVector(r, 2.5).addScaledVector(up, 1.4)); X.scene.add(key);
+    const o = { dbg: window.DBG, H0: H0.toArray(), H1: H1.toArray(), L, tdir: tdir.toArray(), f: f.toArray(), mix: J.mix, settled, seat: +T.toFixed(3), hipY: +hipY.toFixed(3), glowAt: glowAt.toArray().map(x => +x.toFixed(3)), frontBelly: +frontBelly.toFixed(3) };
+    // ---- the cameras
+    const cam = (name, W, H) => { const c = new THREE.PerspectiveCamera(30, W / H, 0.05, 300); const tg = hips.clone();
+      if (name === 'rooms') { c.fov = 40; const hc = house.getWorldPosition(V()); c.position.copy(hc).addScaledVector(f, 7.0 + 4.54 * GS).addScaledVector(up, 1.9).addScaledVector(r, 0.6); c.lookAt(hc.clone().addScaledVector(up, 1.5).addScaledVector(f, 4.54 * GS)); }
+      else if (name === 'plan') { c.fov = 34; const hc = house.getWorldPosition(V()); c.position.copy(hc).addScaledVector(f, 9.5).addScaledVector(up, 17).addScaledVector(r, 1.2); c.lookAt(hc.clone().addScaledVector(f, 1.6)); }
+      else if (name === 'gate') { c.fov = 40; const hc = house.getWorldPosition(V()); hc.y = 0; const hh = house.userData.top; c.position.copy(tg).addScaledVector(f, 14.5).addScaledVector(r, 4.0).addScaledVector(up, 0.8); c.lookAt(hc.clone().lerp(tg.clone().setY(0), 0.4).addScaledVector(up, hh * 0.5 + 0.2)); }
+      else if (name === 'wide') { c.fov = 42; c.position.copy(tg).addScaledVector(f, 4.4).addScaledVector(r, 2.4).addScaledVector(up, 0.45); c.lookAt(tg.clone().addScaledVector(up, 1.25).addScaledVector(f, -2.2).addScaledVector(l, 0.9)); }
+      else if (name === 'mid') { c.fov = 30; c.position.copy(tg).addScaledVector(f, 2.6).addScaledVector(r, 1.1).addScaledVector(up, 0.55); c.lookAt(tg.clone().addScaledVector(up, 0.12).addScaledVector(r, 0.08)); }
+      else if (name === 'glow') { c.fov = 26; c.position.copy(glowAt).addScaledVector(f, 1.3).addScaledVector(r, 0.6).addScaledVector(up, 0.35); c.lookAt(glowAt.clone().addScaledVector(r, 0.12).addScaledVector(dn, 0.06)); }
+      else if (name === 'side') { c.fov = 28; c.position.copy(tg).addScaledVector(r, 3.0).addScaledVector(f, 1.0).addScaledVector(up, 0.45); c.lookAt(tg.clone().addScaledVector(up, 0.15)); }
+      if (name.startsWith('walk')) { /* round 8: eye-height stills of the walk from the step through the main chamber */
+        const hc = house.getWorldPosition(V()), gy = hc.y, d = hc.clone().sub(tg).setY(0).normalize(), bd = 4.54 * GS, P = (a, y) => hc.clone().addScaledVector(d, a).setY(gy + y);
+        c.fov = 62; const eye = 1.62;
+        if (name === 'walkStep') { c.position.copy(tg).setY(eye).addScaledVector(d, -3.2).addScaledVector(r, 0.55); c.lookAt(tg.clone().setY(2.7).addScaledVector(d, 3.0)); } /* round 9: from in front of her, so she sits in the picture with the gate behind */
+        else if (name === 'walkDoor') { c.position.copy(P(-bd - 0.9, eye)); c.lookAt(P(bd, 1.35)); }
+        else if (name === 'walkMain') { c.position.copy(P(-0.6, eye)); c.lookAt(P(bd, 1.3)); }
+        else if (name === 'walkDrum') { const dp = house.getObjectByName('drum').getWorldPosition(V()); c.fov = 50; c.position.copy(P(-1.2, eye)).lerp(dp.clone().setY(gy + eye), 0.35); c.lookAt(dp.clone().setY(dp.y + 0.15)); } /* round 9: the drum close, from the walk */
+        else if (name === 'walkBack') { c.position.copy(P(bd * 0.45, eye)); c.lookAt(P(-bd - 3, 1.0)); }
+        c.updateProjectionMatrix(); c.updateMatrixWorld(true); return c; }
+      if (name === 'secPlan') { const hc = house.getWorldPosition(V()).addScaledVector(up, -1.2), hw = 7.4, hh = hw * H / W, o = new THREE.OrthographicCamera(-hw, hw, hh, -hh, 0.1, 200);
+        o.position.copy(hc).addScaledVector(up, 40).addScaledVector(f, 0.001); o.up.copy(f).negate(); o.lookAt(hc); o.updateProjectionMatrix(); o.updateMatrixWorld(true); return o; }
+      if (name.startsWith('sec')) { const hc = house.getWorldPosition(V()).addScaledVector(up, 3.6), hw = name === 'secFront' ? 11.5 : 8.6, hh = hw * H / W, o = new THREE.OrthographicCamera(-hw, hw, hh, -hh, 0.1, 200);
+        const dir = name === 'secFront' ? f.clone() : (name === 'secWest' ? l.clone() : r.clone()); o.position.copy(hc).addScaledVector(dir, 40); if (name !== 'secFront') o.position.addScaledVector(f, 0.0); o.up.copy(up); o.lookAt(hc); o.updateProjectionMatrix(); o.updateMatrixWorld(true); return o; }
+      c.updateProjectionMatrix(); c.updateMatrixWorld(true); return c; };
+    const fog0 = X.scene.fog;
+    /* The first minute (cc-rs-heaven-walk): the player steps out of the arcade cabinet, walks the landing to the step, turns and sits.
+       The walker is Heaven's (cult/cultwalk.js); the sit and the place are the gate rounds'. beats: [{name, t, shot}] with t 0..1 along the walk, 2 = seated. */
+    if (J.walk) {
+      const W0 = await import('./cult/cultwalk.js');
+      const P = (x, z, y = 0) => Pl.localToWorld(V(x, y, z));
+      const seatedBits = [F.root, halo, core, gl, J0, ...X.parts.flatMap(pt => pt.copy || [])];
+      const showSeated = on => seatedBits.forEach(b => { b.visible = on; });
+      // the cabinet: the Infinite Arcade's first cabinet (cabinets.js CH1_TYPE: 0.86 wide, 0.75 deep, 1.95 high), standing on the landing, its screen toward the step
+      const CAB = { x: J.walk.cabX ?? -2.6, z: J.walk.cabZ ?? frontZ - 6.4 };
+      const cab = new THREE.Group(); { const body = new THREE.MeshStandardMaterial({ color: 0x3a2e52, roughness: 0.6 }), scr = new THREE.MeshBasicMaterial({ color: 0x3fd6c4 }), trim = new THREE.MeshStandardMaterial({ color: 0xe0569a, roughness: 0.5 });
+        const bx = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); cab.add(b); return b; };
+        bx(0.86, 1.0, 0.75, body, 0, 0.5, 0); bx(0.86, 0.95, 0.6, body, 0, 1.475, -0.06); bx(0.62, 0.465, 0.04, scr, 0, 1.36 + 0.23, -0.34).rotation.x = -0.25; bx(0.86, 0.24, 0.5, trim, 0, 1.82, -0.1); bx(0.9, 0.05, 0.8, trim, 0, 1.0, 0);
+        const lt = new THREE.PointLight(0x3fd6c4, 1.6, 4.5, 2); lt.position.set(0, 1.5, -0.7); cab.add(lt); }
+      cab.position.set(CAB.x, 0, CAB.z); cab.rotation.y = Math.PI; Pl.add(cab); /* its screen faces the landing, where she steps out */
+      const path = [[CAB.x, CAB.z - 0.2 + 1.15], [CAB.x + 0.3, CAB.z + 2.2], [J.walk.endX ?? 0, frontZ - 1.15]]; // local x, z; the walk runs toward +z, the gate
+      const seg = path.slice(1).map((p, i) => ({ a: path[i], b: p, L: Math.hypot(p[0] - path[i][0], p[1] - path[i][1]) })), total = seg.reduce((s, q) => s + q.L, 0);
+      const at = d => { let r = Math.min(d, total); for (const q of seg) { if (r <= q.L) { const u = q.L ? r / q.L : 0; return [q.a[0] + (q.b[0] - q.a[0]) * u, q.a[1] + (q.b[1] - q.a[1]) * u, Math.atan2(q.b[0] - q.a[0], q.b[1] - q.a[1])]; } r -= q.L; } const q = seg[seg.length - 1]; return [q.b[0], q.b[1], Math.atan2(q.b[0] - q.a[0], q.b[1] - q.a[1])]; };
+      showSeated(false);
+      const A = new THREE.Group(); X.scene.add(A); // heaven's avatar group: position the ground under the walker, rotation.y the heading
+      const walker = await W0.cultWalker(X.scene, A, { groundAt: () => 0, tread: null, stepOn: () => W0.GAIT.step });
+      const setBody = d => { const [lx, lz, hd] = at(d), w = P(lx, lz), a = P(lx + Math.sin(hd), lz + Math.cos(hd)); A.position.copy(w); A.rotation.y = Math.atan2(-(a.x - w.x), -(a.z - w.z)); };
+      const camFor = (c) => { const cm = new THREE.PerspectiveCamera(c.fov || 34, 1, 0.05, 300); const p = P(c.at[0], c.at[1] + frontZ), t = P(c.look[0], c.look[1] + frontZ, c.lookY ?? 1.0); cm.position.copy(p).setY(c.y ?? 1.5); cm.lookAt(t); return cm; };
+      const dt = 1 / 30; let d = 0; setBody(0); walker.update(dt); walker.reset();
+      const beats = J.walk.beats || [];
+      for (const bt of beats) {
+        if (bt.t === 2) { walker.X.scene.visible = false; showSeated(true); }
+        else { showSeated(false); walker.X.scene.visible = true; const goal = bt.t * total; while (d < goal - 1e-6) { d = Math.min(goal, d + 1.3 * dt); setBody(d); walker.update(dt); }
+          if (bt.hold) for (let i = 0; i < bt.hold * 30; i++) walker.update(dt);
+          if (bt.turn != null) { /* the turn at the step: face the way she will sit (back toward the cabinet) */ const [lx, lz] = at(total), w = P(lx, lz), a = P(lx, lz - 1); A.rotation.y = Math.atan2(-(a.x - w.x), -(a.z - w.z)); for (let i = 0; i < 75; i++) walker.update(dt); } }
+        const [nm, W, H] = bt.shot; renderer.setSize(W, H); const cm = camFor(bt.cam); cm.aspect = W / H; cm.updateProjectionMatrix(); cm.updateMatrixWorld(true);
+        X.scene.fog = X.scene.fog; renderer.render(X.scene, cm); window.IMGS.push(renderer.domElement.toDataURL('image/jpeg', 0.92)); (o.walk = o.walk || []).push({ name: nm, d: +d.toFixed(2), total: +total.toFixed(2), body: A.position.toArray().map(v => +v.toFixed(2)) });
+      }
+      window.OUT.push(o); M.dispose(X); continue;
+    }
+    for (const [nm, W, H, cn] of J.shots || []) { const sec = cn.startsWith('sec'); renderer.clippingPlanes = sec ? [section(cn)] : []; X.scene.fog = sec ? null : fog0; for (const k in caps) caps[k].visible = k === cn;
+      const cut = cn === 'plan'; { const sl = house.userData.lower.getObjectByName('slab'); if (sl) sl.visible = cn !== 'secPlan'; } house.userData.upper.visible = !cut; house.userData.lower.getObjectByName('ceiling').visible = !cut; renderer.setSize(W, H); F.root.updateMatrixWorld(true); renderer.render(X.scene, cam(cn, W, H)); window.IMGS.push(renderer.domElement.toDataURL('image/jpeg', 0.92)); }
+    window.OUT.push(o); M.dispose(X);
+  }
+  document.title = 'DONE';
+} catch (e) { console.log('ERR', e.message, e.stack); document.title = 'ERR ' + e.message; }
+</script></body></html>
