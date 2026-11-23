@@ -15,6 +15,9 @@
  * Council Board's Projects tab marks its full-screen harbour this way (his A on cargo-look-1), because a still finger
  * there is the start of a drag or a swipe through the hand.
  *
+ * Scope: loaded with data-scope="images" (the Council Board), a hold counts only on a picture inside a look card; the
+ * rest of the board never rings.
+ *
  * One file, no dependencies. Loaded on previews by src/app/layout.tsx and src/lib/marks/chalk.ts.
  */
 (function () {
@@ -102,8 +105,16 @@
     if (parent) parent.appendChild(n);
     return n;
   }
+  // Scope (Wendell, art-cost-look-3: "gate the ring marks to playable space and on the images in your look"): a page
+  // that loads this file with data-scope="images" (the Council Board) takes a hold only on a picture inside a look.
+  var imagesOnly = false;
+  try { imagesOnly = !!(document.currentScript && document.currentScript.getAttribute('data-scope') === 'images'); } catch (e) { /* ignore */ }
   function optedOut(t) {
-    try { return !!(t && t.closest && t.closest('[data-chalk-off]')); } catch (e) { return false; }
+    try {
+      if (!t || !t.closest) return false;
+      if (t.closest('[data-chalk-off]')) return true;
+      return imagesOnly && !(t.closest('img,picture,canvas,video') && t.closest('[data-look-id],[data-look]'));
+    } catch (e) { return false; }
   }
   function inLayer(e) {
     if (!host) return false;
