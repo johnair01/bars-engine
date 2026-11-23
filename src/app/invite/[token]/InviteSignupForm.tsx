@@ -31,7 +31,6 @@ export function InviteSignupForm({
     const [password, setPassword] = useState('')
     const [selectedNationId, setSelectedNationId] = useState(prefillNationId)
     const [selectedArchetypeId, setSelectedArchetypeId] = useState(prefillArchetypeId)
-    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     const [state, formAction, isPending] = useActionState(createCharacter, null)
@@ -40,9 +39,6 @@ export function InviteSignupForm({
         if (state?.success) {
             router.push('/arrival')
             router.refresh()
-        }
-        if (state?.error) {
-            setError(state.error)
         }
     }, [state, router])
 
@@ -186,9 +182,9 @@ export function InviteSignupForm({
                     value={JSON.stringify({ name, contact: email, password })}
                 />
 
-                {error && (
+                {state?.error && (
                     <div className="p-3 bg-red-900/20 text-red-300 text-sm rounded-lg text-center">
-                        {error}
+                        {state.error}
                     </div>
                 )}
 

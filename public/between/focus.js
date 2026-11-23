@@ -1,8 +1,9 @@
 /* The focus sit at the hearth (council pass integral-octalysis2, his yes on io-focus-sit-look-1, 2026-10-25).
    Sat by the fire, you lay one, two or three sticks on it: that is the length of the sit, and no timer shows; the stack is the
    clock. The hearth spirit tends the fire while you are away. Back early, the fire has banked to coals and the sit costs only
-   itself; the ember you sat with goes back to the satchel as it was. A sit that runs its length raises that ember one state,
-   dissatisfied to satisfied (io-focus-sit-is-care). The clock is the wall clock, so a phone put down still counts.
+   itself; the ember you sat with goes back to the satchel as it was. A sit that runs its length raises that ember one state:
+   dissatisfied to neutral, and the next full sit neutral to satisfied (io-focus-sit-is-care; Wendell, 2026-11-20: "It should
+   be 2 sits or at least 2 moves within one sit"). The clock is the wall clock, so a phone put down still counts.
    Pure: no three.js, no DOM, so the rules read the same here and in the tests. */
 import { careNow as spiritCareNow, feed as spiritFeed } from "../calrunia/spirit-care.js";
 export const FOCUS_MINUTES = [10, 25, 45]; // one stick, two, three (a guess the pass names as unchecked)
@@ -30,12 +31,21 @@ export function focusOnReturn(sit, nowMs, minuteMs = MINUTE_MS) {
   return focusProgress(sit, nowMs, minuteMs).done ? "done" : "banked";
 }
 
-/* The one ember on the hearth's lip warms from its dissatisfied tint toward its satisfied one as the sit runs. An ember that
-   has risen before starts satisfied. Returns 0..1, the satisfied share of the tint. */
-export function emberWarmth(sit, nowMs, minuteMs = MINUTE_MS, risen = false) {
-  if (risen) return 1;
+/* An ember's rise, in three states: no `risen` is dissatisfied, `risen: 1` is neutral, `risen: true` is satisfied. An ember
+   saved before the three-state ruling with `risen: true` reads satisfied. rules.ts holds the same reading. */
+export const RISE_NEUTRAL = 1;
+export function riseOf(e) { const r = e && e.risen; return r === true ? 2 : r === 1 ? 1 : 0; }
+/** The `risen` value one full sit writes next, or null when the ember is already satisfied. */
+export function risenNext(e) { const lv = riseOf(e); return lv === 0 ? RISE_NEUTRAL : lv === 1 ? true : null; }
+
+/* The one ember on the hearth's lip warms one state as the sit runs: from dissatisfied toward neutral, or from neutral
+   toward satisfied. `level` is riseOf(ember) (true reads as 2). Returns 0..1, the satisfied share of the tint. */
+/** @param {number | boolean} [level] */
+export function emberWarmth(sit, nowMs, minuteMs = MINUTE_MS, level = 0) {
+  const lv = level === true ? 2 : Number(level) || 0;
+  if (lv >= 2) return 1;
   const p = focusProgress(sit, nowMs, minuteMs);
-  return p.done ? 1 : p.k * 0.85; // the last step of the warming is the rise itself, at the end
+  return p.done ? (lv + 1) / 2 : lv / 2 + p.k * 0.85 * 0.5; // the last step of the warming is the rise itself, at the end
 }
 
 /* The hearth spirit's story (spec focus-sit-world-growth, FR-006 to FR-008): five fragments, one for each channel, told root to

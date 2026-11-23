@@ -10,13 +10,14 @@ import { COPY as DECK_COPY, applyCopy as applyDeckCopy } from "./friendcraft/dec
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
+import { wheelSvg, routeOptions, dealCard, Cell, ELEMENT_CHANNEL } from "./wheel.js";   // the Alchemy Wheel over the fire while you sit (pass 2026-11-20-alchemy-wheel-ad, slices 1+2)
 import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the spark over it (pt1-cushion-first)
 import { SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // the code-made sit the daemons and spirits share
 import { createAmbient } from "./ambient.js";
 import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
 import { NEAR as TEA_NEAR } from "./tea-pose.js";
-import { focusOnReturn, focusProgress, emberWarmth, FOCUS_SETTLE_MS, MINUTE_MS, FRAGMENT_ORDER, fragmentFor, hearthRecord, stageOf as hearthCareOf, careOffered, CARES, spiritWord, spiritGlow, spiritFed } from "./focus.js";
+import { focusOnReturn, focusProgress, emberWarmth, riseOf, risenNext, FOCUS_SETTLE_MS, MINUTE_MS, FRAGMENT_ORDER, fragmentFor, hearthRecord, stageOf as hearthCareOf, careOffered, CARES, spiritWord, spiritGlow, spiritFed } from "./focus.js";
 import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from "./fragments.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -66,6 +67,7 @@ const FORMS = { fox: "Fox", tortoise: "Tortoise" };
 /* The hearth (council pass crafting-charge1, slice 1). The fifteen moves mirror src/lib/quest-grammar/move-engine.ts, as
    src/lib/between/rules.ts reads them: ids and names identical, each with the element it starts from and the one it goes to. */
 const FEELS = { wood: "joy", fire: "anger", earth: "neutrality", metal: "fear", water: "sadness" };
+const SAT_NAME = { wood: "Bliss", fire: "Triumph", earth: "Peace", metal: "Wonder-Excitement", water: "Poignance" }; // move-table.json satisfied_name
 const elHex = e => ELEMENTS[e[0].toUpperCase() + e.slice(1)];
 const MOVES = {
   wood_transcend: ["Commit to Growth", "wood", "wood"], fire_transcend: ["Achieve Breakthrough (Triumph)", "fire", "fire"], earth_transcend: ["Stabilize Coherence", "earth", "earth"],
@@ -1510,9 +1512,12 @@ const seatId = k => /^\d+$/.test(k) ? +k : k;
 const seatPos = id => { const s = seatBy(id); return s ? new THREE.Vector3(s.x, 0, s.z) : meState.pos.clone().setY(0); };
 /* Every cushion is anyone's (pt1-cushion-look-1): you can sit on any seat nobody else is sitting on right now. */
 const seatTaken = id => [...peers.values()].some(p => p.uid !== me && p.sitting && p.seat === id);
-/* No sit at your own hearth until its second care is done (FR-018): the fire has to be laid first. A Between's hearth and a store-down preview are unchanged. */
+/* Your own hearth is not laid until its second care is done (FR-018): the fire has to be laid before a sit. You can still sit
+   down there; sitting at an unlaid hearth opens its care, which names the next step (Wendell, 2026-11-20: "they should be able
+   to sit down and when they sit the game would tell them the next step to take"). A Between's hearth and a store-down preview
+   are unchanged. */
 const sitBlocked = () => inNook() && !!garden && isHome(garden) && !storeDown && hearthCareNow() < 2;
-const canSitOn = id => !seatTaken(id) && !(sitBlocked() && id === hearthSeatId());
+const canSitOn = id => !seatTaken(id);
 /* The hearth's seat: a cushion you set down in the nook, the one nearest the fire, else the hearth's own cushion. */
 function hearthSeatId() {
   const all = seatsHere(), sp = inNook() ? all.filter(s => s.spot) : [];
@@ -1527,7 +1532,7 @@ function sitOn(id, then = null) {
   meState.seatWant = id; meState.target = seatPos(id); meState.onSeated = then; directCam = null;
   selected = "seat:" + id; refreshHud();
 }
-function sitAtHearth() { if (sitBlocked()) return; sitOn(hearthSeatId(), () => openSheet("hearth")); }
+function sitAtHearth() { sitOn(hearthSeatId(), () => openSheet("hearth")); }
 /* Tea by the fire (between-tea-1 slice 1, the solo cup). The kettle is drawn by the scene at the hearth's seat, not placed
    through the room kit (bt-tea-needs-a-spot), and stands there from the moment the room is up, with its cup on the stone; the cup
    goes into the right hand of whoever is sat there (bt-cup-is-the-figure) and stays held in the lap until they stand.
@@ -2350,7 +2355,6 @@ function moveActs(id, it, g) {
 function freeSeatCard(i) {
   const st = seatBy(i); if (!st) return "";
   const here = meState.sitting && meState.seatWant === i, fire = here && seatedAtHearth(), name = st.hearth ? "The hearth's cushion" : st.coins ? "The coin table's cushion" : "A cushion";
-  if (!here && st.hearth && sitBlocked()) return `<div class="what"><b>${name}</b></div>`;
   if (!here) return `<div class="what"><b>${name}</b><span class="t">${st.hearth ? "Worn flat from sitting by the fire." : "Set down here for sitting."}</span></div><div class="row"><button type="button" data-act="${st.hearth ? "sitHearth" : "sit"}">Sit here</button></div>`;
   return `<div class="what"><b>${name}</b><span class="t">${fire ? "Sitting by the fire." : "Sitting."}</span></div><div class="row">${fire && (hearthOpen() || storeDown) && sheetName !== "hearth" ? `<button type="button" data-act="sitHearth">Sit with what stirs you</button>` : ""}<button class="glassbtn" type="button" data-act="stand">Stand up</button></div>`;
 }
@@ -2376,7 +2380,7 @@ function nearHtml(key, V, g) {
   if (key && key.startsWith("spot:")) return spotNear(key.slice(5), g);
   if (key === "window" && g && isHome(g)) return `<div class="what"><b>The window</b><span class="t">${esc(styleOf(g.style).name)}: ${esc(styleOf(g.style).line)}</span></div><div class="row"><button type="button" data-open="style">Change the light</button></div>`;
   if (!g && !storeDown) return "";
-  if (key === "hearth" && sitBlocked()) return `<div class="what"><b>The hearth</b></div>`;
+  if (key === "hearth" && sitBlocked()) return `<div class="what"><b>The hearth</b><span class="t">The fire is not laid yet. Sit down and it will show you the next step.</span></div><div class="row"><button type="button" data-act="sitHearth">Sit here</button></div>`;
   if (key === "hearth") return `<div class="what"><b>The hearth</b><span class="t">When something stirs you, give it to the fire. What's left is a little glowing ember you keep.</span></div><div class="row"><button type="button" data-act="sitHearth">Go to the hearth</button></div>`;
   if (key && key.startsWith("seat:") && typeof seatId(key.slice(5)) !== "number") return freeSeatCard(seatId(key.slice(5)));
   if (!g) return "";
@@ -2526,8 +2530,10 @@ function hearthSpot(id) { // in front of the hearth, toward the middle of the ro
 async function keepEmber() {
   const m = MOVES[hd.move]; if (!m) return;
   // Only the move, its feeling and the private glow: no words, and nothing of which charge it came from.
-  await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null } } });
-  hd = {}; if (hm) { closeSheet(); hmSync(); } else toast("An ember, in your pouch."); // by the fire, it rises out of the satchel instead
+  // Where the player says it is now (Wendell, 2026-11-20: "there's no way to target it as dissatisfied"): `risen` 1 is neutral, true satisfied.
+  const rise = hd.state === "satisfied" ? { risen: true } : hd.state === "neutral" ? { risen: 1 } : {};
+  await op(pouchPath(), "update", { embers: { ["e" + hkey()]: { move: hd.move, feel: m[1], glow: hd.glow || null, state: "held", at: now(), lantern: null, ...rise } } });
+  hd = {}; if (hm) { closeSheet(); hmSync(); hm.said.kept = false; hmSay("kept", "It's in your satchel now. Lay a stick on the fire to sit with an ember."); } else toast("An ember, in your satchel. Sit by the fire to work it.");
   roomLight.mine = Math.max(roomLight.mine, keptHere()); roomLight.room = Math.max(roomLight.room, roomLight.mine); lightSoon(); syncShelf();
 }
 /* ---------- the room's light and the BAR written with a brush (ember-to-vibeulon FR-004, FR-005, FR-007, FR-008) ----------
@@ -2657,7 +2663,9 @@ function stirSheet(g, V) {
     <label for="hCharge">What stirred you<select id="hCharge"><option value="">A feeling with no words</option>${charges.map(([k, i]) => `<option value="${k}" ${hd.charge === k ? "selected" : ""}>${esc(String(i.text || "").slice(0, 70))}</option>`).join("")}</select></label>
     <span class="small"><b>What it felt like</b></span>
     <div class="choice">${Object.entries(FEELS).map(([el, f]) => pick("hFeel", el, hd.feel === el, `<span class="ember" style="--c:${cssHue(elHex(el))};--s:12px"></span><b>${f[0].toUpperCase() + f.slice(1)}</b>${el}`)).join("")}</div>
-    ${hd.feel ? `<span class="small"><b>A move to work it with</b></span>
+    ${hd.feel ? `<span class="small"><b>Where it is now</b></span>
+    <div class="choice">${[["dissatisfied", "Dissatisfied", "it has hold of me"], ["neutral", "Neutral", "it's settling"], ["satisfied", "Satisfied", SAT_NAME[hd.feel]]].map(([v, l, t]) => pick("hState", v, (hd.state || "dissatisfied") === v, `<b>${l}</b>${esc(t)}`)).join("")}</div>
+    <span class="small"><b>A move to work it with</b></span>
     <div class="choice">${movesFrom(hd.feel).map(([id, m]) => pick("hMove", id, hd.move === id, `<b>${esc(m[0])}</b>${m[1] === m[2] ? "stays " + m[1] : m[1] + " into " + m[2]}`)).join("")}</div>` : ""}
     ${hd.move ? `<span class="small"><b>How strong it felt</b> <span class="muted">(only you see this)</span></span>
     <div class="row dots">${[1, 2, 3, 4, 5].map(n => pick("hGlow", n, hd.glow === n, `<span class="ember" style="--c:${cssHue(elHex(hd.feel))};--s:${8 + n * 3}px"></span>`, `aria-label="${n} of 5"`)).join("")}${pick("hGlow", 0, !hd.glow, "Skip")}</div>
@@ -2675,6 +2683,51 @@ const AMBER = 0xff9436, HM_TRAIL = 14, HM_FIRST = "between.hearth.seen";
 const HM_LINES = { first: "When something stirs you, give it to the fire. What's left is a little glowing ember you keep.", colour: "It shows its colour only if you let it.", them: "For them, when they next come in.",
   home: "Embers you keep here go with you. In a room you share, one can become a lantern for your home together." };
 let hm = null, hmGone = null, hmK = 0, hmUp = 0; // the moment while you sit by the fire; the one just ended, its embers sinking home
+const wheelEl = document.createElement("div"); wheelEl.id = "wheel"; wheelEl.hidden = true;
+wheelEl.style.cssText = "position:fixed;top:6vh;left:50%;transform:translateX(-50%);width:min(300px,62vw);z-index:40;filter:drop-shadow(0 6px 18px rgba(0,0,0,.55))";
+document.body.appendChild(wheelEl);
+/** The Wheel shows the ember you hold or sit with, at its state; with none chosen it shows the instrument at rest.
+   Slice 2: tap a satisfaction lens → compute routeOptions roads → light them → deal move card. */
+function wheelSync() {
+  if (!hm) { wheelEl.hidden = true; wheelEl._k = ""; return; }
+  const m = hm.motes.find(x => x.state === "lip") || hm.motes.find(x => x.state === "held");
+  const element = m && m.e ? m.e.feel : null, level = m && m.e ? riseOf(m.e) : 0;
+  // Track the ember's channel + state for route computation
+  const channel = element ? ELEMENT_CHANNEL[element] : null;
+  if (channel !== wheelChannel || level !== wheelLevel) {
+    wheelChannel = channel;
+    wheelLevel = level;
+    // Reset target if the ember changed
+    if (wheelTarget) { wheelTarget = null; wheelRoads = []; wheelCard = null; }
+  }
+  const k = `${element}:${level}:${wheelTarget}:${wheelCard ? wheelCard.name : ""}:${wheelRoads.length}`;
+  wheelEl.hidden = false;
+  if (wheelEl._k !== k) { wheelEl._k = k; wheelEl.innerHTML = wheelSvg({ element, level, target: wheelTarget, roads: wheelRoads, card: wheelCard }); }
+}
+
+/* ── slice 2 UI ──*/
+wheelEl.addEventListener('click', e => {
+  const targetLens = e.target.closest('.wh-lens');
+  if (!targetLens) return;
+  const channel = targetLens.dataset.lens;
+  if (!channel) return;
+
+  wheelTarget = channel;
+  const fromCell = new Cell(wheelChannel || "joy", wheelLevel || 0);
+  wheelRoads = routeOptions(fromCell, channel);
+  wheelCard = dealCard(wheelChannel || "joy", wheelLevel || 0, channel);
+  cardShownAt = performance.now();
+  // auto-hide card after 3 seconds
+  setTimeout(() => { wheelCard = null; wheelTarget = null; wheelRoads = []; }, W_CARD_MS);
+});
+
+let wheelTarget = null;   // channel the player named (tapped lens)
+let wheelRoads = [];      // routeOptions results array
+let wheelCard = null;   // dealCard result
+let cardShownAt = 0;      // ms when card was dealt
+const W_CARD_MS = 3000;   // card shown for 3s before auto-hide
+let wheelChannel = null;  // channel of the ember currently shown
+let wheelLevel = 0;       // satisfaction state of the ember currently shown
 const hmEl = document.createElement("div"); hmEl.id = "hm"; hmEl.className = "hm"; hmEl.hidden = true; hmEl.setAttribute("role", "group"); hmEl.setAttribute("aria-label", "By the fire"); document.body.appendChild(hmEl);
 const hmGroup = new THREE.Group(); scene.add(hmGroup);
 const hmGlowMat = (c, o) => new THREE.SpriteMaterial({ map: moteMat.map, color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false });
@@ -2731,7 +2784,9 @@ function hmBegin() {
 }
 function hmEnd() {
   if (!hm) return;
-  const h = hm; fsEnd(h); hm = null; hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
+  const h = hm; fsEnd(h); hm = null; wheelSync(); // resets wheel target/roads/card and channel/level
+  wheelTarget = null; wheelRoads = []; wheelCard = null;
+  hmEl.hidden = true; hmEl.innerHTML = ""; hmEl._h = ""; document.body.classList.remove("seatedmoment"); ambient.hush(false);
   if (h.L && (h.lid || !h.L.lit)) { hmGroup.remove(h.L.g); h.L = null; } // a lantern made is the room's now; one not lit folds away
   for (const m of h.motes) if (m.state !== "lit") m.state = "sink";
   const th = h.lid && things.get(h.lid); if (th) th.group.visible = true;
@@ -2825,7 +2880,9 @@ function hmHit(cx, cy) {
 function hmStand() { const st = seatBy(meState.seatWant); standUp(); if (st) meState.target = pushOut(new THREE.Vector3(st.x - Math.sin(st.yaw) * 0.7, 0, st.z - Math.cos(st.yaw) * 0.7)); refreshHud(); }
 /* The words and buttons a screen reader or a keyboard reaches: each ember, breathing on the held one, the lantern, the hooks. */
 function hmHud() {
+  wheelSync();
   if (!hm) return;
+  if (!hm.fs && hm.step === "motes" && hm.motes.some(m => m.state === "slot") && !hm.said.satchel && !hm.satchelTold) (hm.satchelTold = true, setTimeout(() => hmSay("satchel", "These are the embers in your satchel. Lay a stick on the fire to sit with one, or touch one to hold it."), 2500));
   const b = (act, id, label, cls = "sr") => `<button type="button" class="${cls}" data-act="${act}"${id ? ` data-id="${esc(id)}"` : ""}>${label}</button>`;
   const ms = hm.motes.filter(m => m.state === "slot" || m.state === "held" || m.state === "lip"), fs = hm.fs;
   if (fs && fs.step !== "choose") { // the sit: nothing on the screen but the way up; back early, the fire asks
@@ -2886,8 +2943,8 @@ function hmTick(t, dt) {
     const want = m.shown ? 1 : m === h.held && h.press ? h.press.k * 0.35 : 0;
     m.show += (want - m.show) * Math.min(1, dt * 2.5);
     const c = new THREE.Color(AMBER).lerp(m.el, m.show);
-    if (m.e.risen && !m.show) c.lerp(new THREE.Color(FS_SAT), 0.45); // risen once at the fire: a warmer gold
-    if (m.state === "lip" && h.fs && h.fs.step !== "choose") c.set(FS_DIS).lerp(new THREE.Color(FS_SAT), emberWarmth(h.fs, Date.now(), FS_MIN, !!m.e.risen)); // sat with: dissatisfied toward satisfied
+    if (riseOf(m.e) && !m.show) c.lerp(new THREE.Color(FS_SAT), 0.225 * riseOf(m.e)); // risen at the fire: warmer gold at neutral, warmer still at satisfied
+    if (m.state === "lip" && h.fs && h.fs.step !== "choose") c.set(FS_DIS).lerp(new THREE.Color(FS_SAT), emberWarmth(h.fs, Date.now(), FS_MIN, riseOf(m.e))); // sat with: warms one state
     const fl = 0.9 + Math.sin(t * 5.3 + m.riseAt * 3) * 0.06 + Math.sin(t * 13 + m.riseAt) * 0.04;
     m.core.material.color.copy(c).lerp(new THREE.Color(0xffe0b0), 0.25 * (1 - m.show)); m.halo.material.color.copy(c); m.halo.scale.setScalar((m.s * 5 + (m.e.glow || 3) * 0.025) * fl * (m === h.held && h.press ? 1 + h.press.k * 0.25 : 1));
     m.g.position.copy(m.pos);
@@ -3002,11 +3059,12 @@ async function fsDone() {
   if (F) fsPuff(m ? m.pos.clone() : HEARTH_AT.clone().setY(0.5), FS_SAT, 16);
   fs.mote = { t0: performance.now() / 1000, from: (m ? m.pos : HEARTH_AT.clone().setY(0.5)).clone(), g: new THREE.Sprite(hmGlowMat(FS_SAT, 0.9)) }; fs.mote.g.scale.setScalar(0.09); hmGroup.add(fs.mote.g);
   hmSay("done", m ? "It warmed while you were away." : "The fire kept you company.");
-  if (m && m.e.risen && !m.e.woke) wakeEmber(m).catch(() => {});   // already risen once: this sit wakes it (growth FR-011)
-  if (m && !m.e.risen) {
-    m.e = { ...m.e, risen: true };
-    if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], risen: true };
-    else if (!storeDown) await op(pouchPath(), "update", { embers: { [m.eid]: { risen: true } } });
+  if (m && riseOf(m.e) === 2 && !m.e.woke) wakeEmber(m).catch(() => {});   // already satisfied: this sit wakes it (growth FR-011)
+  const rise = m ? risenNext(m.e) : null;   // one state per full sit: dissatisfied to neutral, then neutral to satisfied (`risen: true`)
+  if (m && rise != null) {
+    m.e = { ...m.e, risen: rise };
+    if (isDemoEmber(m.eid)) demoPouch[m.eid] = { ...demoPouch[m.eid], risen: rise };
+    else if (!storeDown) await op(pouchPath(), "update", { embers: { [m.eid]: { risen: rise } } });
   }
   const told = fsOwn() ? await fsKeep(m ? m.e.feel : null, !!m && isDemoEmber(m.eid)) : null; // a Between's hearth writes nothing (FR-013)
   if (told) { const h0 = hm; setTimeout(() => { if (hm && hm === h0) fragStart(told, "told"); }, 7000); } // after the rise and the mote's flight are over (FR-008)
@@ -3084,7 +3142,7 @@ function fireTouch() {
   if (at >= list.length) fragEnd(); else fragStart(list[at], "browse");
   return true;
 }
-/* A sit with an ember that had already risen wakes it into a spirit (growth FR-011): in the homeroom a spirit of the home, in a Between
+/* A sit with an ember that had already risen to satisfied wakes it into a spirit (growth FR-011): in the homeroom a spirit of the home, in a Between
    the hollow's, drawn beside the hearth. Then the sit asks "Give it a name?" with one line and "Leave it be". It wakes once. */
 let wakeSpirit = null;
 async function wakeEmber(m) {
@@ -3195,7 +3253,7 @@ function openSheet(name, arg) {
   // the hearth moment is had sitting (Wendell, 2026-10-24): every way in (the card, the Hearth button) walks you to its cushion first
   if (name === "hearth" && !seatedAtHearth()) { sitAtHearth(); return; }
   // sat by the fire, the moment is had in the room (no card); only "Something stirs" opens the pickers, in the low strip
-  if (name === "hearth" && arg !== "stir") { hmBegin(); return; }
+  if (name === "hearth" && arg !== "stir") { if (sitBlocked()) { openSheet("hearthgive"); return; } hmBegin(); return; }   // an unlaid fire: its care is the next step
   if (name === "hearth" && sheetName !== "hearth") hd = {};
   if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1, intensity: 5, direction: "cant_tell" };
   // in the homeroom the doorway is had at the doorway itself, never as a sheet over the room (veil-turn)
@@ -4295,7 +4353,10 @@ function doCare(c, eid) {
 /** The hearth's own sheet: the embers waiting, each one a care. */
 function hearthGiveSheet() {
   const waiting = embersWaiting(), c = hearthCareNow(), what = { sweep: "sweep the hearth", wood: "bring wood", log: "lay the log", turn: "turn the log" }[CARES[c]] || "tend it";
-  return `<div class="stack"><h2>Give it to the hearth</h2>
+  const unlaid = sitBlocked(), done = careOffered(c, caredThisVisit) == null;
+  const lead = !unlaid ? "" : done ? `<p>The fire took its care for this visit. Come back another time to ${esc(what)}, and the fire will be laid for sitting.</p>`
+    : `<p>The fire is not laid yet. Next step: give it an ember to ${esc(what)}.${c === 0 ? " The care after that lays the fire, and then it is ready for a sit." : " This care lays the fire, and then it is ready for a sit."}</p>`;
+  return `<div class="stack"><h2>${unlaid ? "Lay the fire" : "Give it to the hearth"}</h2>${lead}
     <p class="small muted">An ember feeds the hearth spirit, and the fire takes it for the next care: ${esc(what)}.</p>
     ${waiting.length ? `<div class="choice">${waiting.map(([id, e]) => `<button type="button" data-act="hearthGive" data-id="${esc(id)}"><b><span class="ember" style="--c:${cssHue(elHex(e.feel))};--s:12px"></span>An ember of ${esc(FEELS[e.feel])}</b>${esc(e.feel)}${e.feel === "fire" ? " · its own element" : ""}</button>`).join("")}</div>`
       : `<div class="row"><span class="small muted">No ember waits. Checking in leaves one.</span><button class="ghost" type="button" data-open="checkin">Check in</button></div>`}
@@ -4367,6 +4428,7 @@ document.addEventListener("click", async ev => {
   if (a === "music") { ambient.toggleMusic(); soundLabel(); return; }
   if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
+  if (a === "hState") { hd.state = id; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
   if (a === "hmHold") { hmHold(id); return; }

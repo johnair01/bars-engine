@@ -1,10 +1,12 @@
 {
   "version": 1,
-  "about": "The one move table: 5 channels by 3 satisfaction states, and the 15 moves that step between those cells. Copies live in bars-engine (src/lib/quest-grammar/move-table.json) and sprout (data/move-table.json); tests/test_move_table.py fails when a copy differs. Built 2026-10-19 from Wendell's board answers (ledger council/ledger/2026-10-19-pull-225647.json).",
+  "about": "The one move table: 5 channels by 3 satisfaction states, and the 15 moves that step between those cells. Copies live in bars-engine (src/lib/quest-grammar/move-table.json) and sprout (data/move-table.json); tests/test_move_table.py fails when a copy differs. Built 2026-10-19 from Wendell's board answers (ledger council/ledger/2026-10-19-pull-225647.json). Amended 2026-11-20: every move now raises one satisfaction stage (see families.control and rulings.mn-upward-spiral).",
   "rulings": {
     "mn-q-what-move-is": "both: the cells are the engine (layer 1); actions owned by faces and daemons are named skins, each mapping to exactly one of the fifteen moves (layer 2).",
     "mn-q-face-daemon": "own: each face and daemon owns its moves. Daemons have habits and their own moves, and no home channel.",
-    "mn-q-ke-state": "depends: what a control move does to satisfaction depends on the starting state (families.control.state).",
+    "mn-upward-spiral": "stands, 2026-11-20: ALL of the moves end in satisfaction. One stage up means one satisfaction stage. Emotional alchemy is always an upward spiral — no move in the game leaves someone where they were or further down.",
+    "mn-control-cannot-satisfy": "stands, 2026-11-20: control reaches neutral and no further. Control-then-control is NOT a legal route to satisfaction. A player who forces it anyway triggers fate or stress — the downwind consequence of pushing against the natural order, 'like picking up bags in spades'. See canon/mechanics/fate-and-stress.yaml.",
+    "mn-q-ke-state": "SUPERSEDED 2026-11-20 by mn-upward-spiral: control no longer 'depends'. It raises one satisfaction state like every other family, and from neutral it lands on neutral (it cannot reach satisfaction). Only a transcend or a generative move reaches satisfied.",
     "mn-transcend-plus-two": "overruled: Transcend is two separate steps, dissatisfied to neutral, then neutral to satisfied.",
     "mn-gold-names": "stands: Metal's satisfied name is Wonder-Excitement; Earth's channel is Neutrality, never Neutral.",
     "mn-basic-moves-apart": "stands: the five Basic Moves (Wake, Open, Clean, Grow, Show) are not in this table."
@@ -31,8 +33,8 @@
     },
     "control": {
       "channel": "ke",
-      "state": { "dissatisfied": "dissatisfied", "neutral": "dissatisfied", "satisfied": "satisfied" },
-      "note": "Depends on where you start: from satisfied it holds, from neutral it pulls back, from dissatisfied it holds. Never raises; acts by releasing grip (ea13b-ke-release)."
+      "state": { "dissatisfied": "neutral", "neutral": "neutral", "satisfied": "satisfied" },
+      "note": "Raises one satisfaction stage and no further. From dissatisfied it reaches neutral; from neutral it holds at neutral; from satisfied it holds. It never reaches satisfied — only transcend or generative does that (Wendell, 2026-11-20: 'control can pull people into neutrality but it doesn't pull people to satisfaction'). Control is the harder road, not a different direction."
     }
   },
   "cycles": {
@@ -69,6 +71,6 @@
     "daemons": {}
   },
   "checks": [
-    { "id": "temper-action-play", "from": { "channel": "anger", "state": "dissatisfied" }, "move": "fire_metal", "ends": { "channel": "fear", "state": "dissatisfied" }, "why": "Pass move-nature1 Tests: one charge through Anger dissatisfied and Temper Action ends in one cell on every surface." }
+    { "id": "temper-action-play", "from": { "channel": "anger", "state": "dissatisfied" }, "move": "fire_metal", "ends": { "channel": "fear", "state": "neutral" }, "why": "Pass move-nature1 Tests: one charge through Anger dissatisfied and Temper Action ends in one cell on every surface. Amended 2026-11-20: control raises one satisfaction stage, so it ends in neutral Fear, not dissatisfied (mn-upward-spiral)." }
   ]
 }
