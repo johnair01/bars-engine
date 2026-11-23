@@ -116,3 +116,25 @@ Held for the round after this one, because they are downstream of the answer:
 
 **The round closes when** the trust fork is answered on board card `wa-world-kit-1`. Then the edit-rights card follows,
 and `spec.md` is written against the answers.
+
+## 5: Round one closed — answer A (2026-11-23)
+
+> **A. Claims, keyed by browser uuid.** Saved on `wa-world-kit-1` at 2026-11-23T18:27:41Z; the board opened a claude-lane
+> work item for it.
+
+What A settles, and what it does not:
+
+- **Settled:** the bridge accepts `{uuid, room, tile, event}` and bars-engine re-decides everything server-side. No
+  admin API, no identity provider, no waiting. `WA.player.uuid` is the handle a visit and an event attach to.
+- **Settled by implication:** P3 stops being a caution and becomes the contract — any code that trusts a report
+  without re-reading its own state is a bug in bars-engine, not a hardening task.
+- **Not settled:** B's cost was named honestly (forgeable claims, two browsers are two visitors, clearing storage makes
+  a stranger) and A accepts it. What A does *not* answer is what a forged claim could be worth. That is a property of
+  the events we choose to accept, so the spec gates every event behind "re-decided server-side" and records the
+  upgrade path (a verified `sub` in the same field) without building it.
+- **Carried forward:** the pop-up said `uuid` — so the bridge is anonymous by design, and character creation still
+  waits on identity, as the door intake's §4.3 says.
+
+The edit-rights card `wa-world-kit-2` went up with this answer, because A says nothing about who may *write* the world.
+
+`spec.md`, `plan.md` and `tasks.md` in this folder are written against A.
