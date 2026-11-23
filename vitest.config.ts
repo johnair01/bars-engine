@@ -110,6 +110,7 @@ export default defineConfig({
       'src/lib/tap-the-vein/__tests__/pull.test.ts',
       'src/app/board/__tests__/shim.test.ts',
       'src/app/board/refs/[...path]/__tests__/route.test.ts',
+      'src/app/board/callsheet/[name]/__tests__/route.test.ts',
       'src/app/board/__tests__/serve.test.ts',
       'src/app/board/__tests__/part.test.ts',
       'src/app/board/__tests__/art.test.ts',
