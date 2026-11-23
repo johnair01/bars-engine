@@ -313,9 +313,9 @@ try {
       c.updateProjectionMatrix(); c.updateMatrixWorld(true); return c; };
     const fog0 = X.scene.fog;
     /* The first minute (cc-rs-heaven-walk): the player steps out of the arcade cabinet, walks the landing to the step, turns and sits.
-       The walker is Heaven's (cult/cultwalk.js); the sit and the place are the gate rounds'. beats: [{name, t, shot}] with t 0..1 along the walk, 2 = seated. */
+       The walker plays the library clips (cult/clipwalk.js, clips.js, ual.glb), no hand-written stride; the sit and the place are the gate rounds'. beats: [{name, t, shot}] with t 0..1 along the walk, 2 = seated. */
     if (J.walk) {
-      const W0 = await import('./cult/cultwalk.js');
+      const W0 = await import('./cult/clipwalk.js');
       const P = (x, z, y = 0) => Pl.localToWorld(V(x, y, z));
       const seatedBits = [F.root, halo, core, gl, J0, ...X.parts.flatMap(pt => pt.copy || [])];
       const showSeated = on => seatedBits.forEach(b => { b.visible = on; });
@@ -331,7 +331,7 @@ try {
       const at = d => { let r = Math.min(d, total); for (const q of seg) { if (r <= q.L) { const u = q.L ? r / q.L : 0; return [q.a[0] + (q.b[0] - q.a[0]) * u, q.a[1] + (q.b[1] - q.a[1]) * u, Math.atan2(q.b[0] - q.a[0], q.b[1] - q.a[1])]; } r -= q.L; } const q = seg[seg.length - 1]; return [q.b[0], q.b[1], Math.atan2(q.b[0] - q.a[0], q.b[1] - q.a[1])]; };
       showSeated(false);
       const A = new THREE.Group(); X.scene.add(A); // heaven's avatar group: position the ground under the walker, rotation.y the heading
-      const walker = await W0.cultWalker(X.scene, A, { groundAt: () => 0, tread: null, stepOn: () => W0.GAIT.step });
+      const walker = await W0.clipWalker(X.scene, A);
       const setBody = d => { const [lx, lz, hd] = at(d), w = P(lx, lz), a = P(lx + Math.sin(hd), lz + Math.cos(hd)); A.position.copy(w); A.rotation.y = Math.atan2(-(a.x - w.x), -(a.z - w.z)); };
       const camFor = (c) => { const cm = new THREE.PerspectiveCamera(c.fov || 34, 1, 0.05, 300); const p = P(c.at[0], c.at[1] + frontZ), t = P(c.look[0], c.look[1] + frontZ, c.lookY ?? 1.0); cm.position.copy(p).setY(c.y ?? 1.5); cm.lookAt(t); return cm; };
       const dt = 1 / 30; let d = 0; setBody(0); walker.update(dt); walker.reset();
