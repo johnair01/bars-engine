@@ -22,11 +22,11 @@ export const EXPERIENCES = [
 export const CHANNEL_LIGHT = { anger: "#ff9a6b", sadness: "#8fb8ff", fear: "#e6edf5", joy: "#b6f08a", neutrality: "#f3d79a" };
 
 export const SATISFACTIONS = [
-  { channel: "anger", state: "triumph", means: "You push on the thing that blocked you until it gives. You can point to what changed because you pushed: the call made, the box shipped, the no said out loud." },
-  { channel: "sadness", state: "poignance", means: "You remember someone who showed up for you once. Now you do the same for someone else: a call, a meal, an hour of your time." },
-  { channel: "fear", state: "excitement", means: "You name what could go wrong: they might say no. You ask anyway. Your heart pounds while you wait for the answer." },
-  { channel: "joy", state: "bliss", means: "You laugh out loud in the middle of the work. You want to tell a friend about it the same day." },
-  { channel: "neutrality", state: "peace", means: "You cross the last item off the list. No loose end nags at you tonight. You know which part was yours." },
+  { channel: "anger", state: "triumph", means: "Triumph is how it feels to get past a problem that blocked you. Say you put off a hard phone call for weeks. You make the call today. Afterward you can point to what changed because you made it." },
+  { channel: "sadness", state: "poignance", means: "Poignance is the tender ache of doing for someone what another person once did for you. Years ago a friend drove you to the hospital. Today you drive a friend there yourself, thinking of that day the whole way." },
+  { channel: "fear", state: "excitement", means: "Excitement is what fear becomes when you want what might happen. You ask a stranger for a favour, knowing they might say no. Your heart pounds while you wait for their answer." },
+  { channel: "joy", state: "bliss", means: "Bliss is joy you want to share. You laugh out loud in the middle of a job. That evening you call a friend to tell them what made you laugh." },
+  { channel: "neutrality", state: "peace", means: "Peace is the calm of a finished job. You cross the last item off your to-do list. You know which part of the job was yours. You go to bed knowing you did that part." },
 ];
 
 export const DISSATISFACTIONS = [

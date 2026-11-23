@@ -11,6 +11,12 @@ construction ... a sign that the system doesn't know what it's talking about"):
   and joins      "X and the Y ...", "X and you ...": a bare "and" that starts a second clause with its own subject
   and chain      two or more bare "and" in one sentence (editorial-core/instruments/polysyndeton.py)
 
+  presumed "the"         "the thing that blocked you", "the week got away", "the call made": a definite article on a
+                         thing the reader has never been shown (Wendell, 2026-11-17, on sc-crops-copy-look-2: "We're
+                         still using the definate article in a terrible way ... this will lsoe trust")
+  fragment               "Two acts: play this walk", "Warm soil, running water.": a line that is not a sentence
+                         (same note: "we're not speaking in complete sentences and it sounds bad")
+
   no concrete referent   a line that gestures at meaning and names no thing: "What was stuck moves.", "It means
                          something.", "You feel settled." (Wendell, 2026-11-17, on sc-crops-copy-look-1: "What was
                          stuck? why does it moving matter? IT means something. What does it mean?")
@@ -76,6 +82,26 @@ _STOP = set("your you that this with what have from into they them will when the
             "been were being does could would should".split())
 
 
+# Presumed "the" and fragments (Wendell, 2026-11-17, on sc-crops-copy-look-2). A definite article tells the reader they
+# already know which thing is meant. On first mention write "a", name the thing in full, or point at what is on screen.
+PRESUMED = re.compile(
+    r"\bthe\s+(?:thing|one|part|step|stuff|work|week|call|box|no)\s+(?:that|you|which|got|made|shipped|said|of|on)\b", re.I)
+FRAGMENT = [
+    re.compile(r"^(?:one|two|three|four|five)\s+\w+:\s", re.I),          # "Two acts: play this walk ..."
+    re.compile(r"^[A-Z]\w*\s+\w+,\s+\w+\s+\w+[.!]$"),                   # "Warm soil, running water."
+    re.compile(r"^(?:still|not yet|already)\s+\w+\?$", re.I),             # "Still stuck?"
+]
+
+
+def presumed(s):
+    return "presumed \"the\" (the reader was never shown it)" if PRESUMED.search(s) else None
+
+
+def fragment(s):
+    t = s.strip().strip("'\"‘’“”")
+    return "fragment (not a complete sentence)" if any(f.search(t) for f in FRAGMENT) else None
+
+
 def no_referent(s):
     t = s.strip().strip("'\"‘’“”")
     if VAGUE_SUBJECT.search(t):
@@ -103,9 +129,10 @@ def shapes(text):
             out.append(("and joins two clauses", s))
         elif len(BARE_AND.findall(s)) >= 2:
             out.append(("and chain", s))
-        label = no_referent(s)
-        if label:
-            out.append((label, s))
+        for check in (no_referent, presumed, fragment):
+            label = check(s)
+            if label:
+                out.append((label, s))
     return out
 
 
@@ -230,6 +257,8 @@ def main(argv):
                 for s in sentences(text.strip()):
                     if len(s.split()) >= 4 and "http" not in s and "(" not in s:
                         print(f"  {lineno or 'jsx':>4} {s[:150]}\n       what, specifically? ___")
+                        for the in sorted(set(re.findall(r"\bthe\s+[\w’']+", s, re.I))):
+                            print(f"       {the}: has the reader been shown it? ___")
         return 0
     if argv[:1] == ["--text"]:
         hits = scan_text(" ".join(argv[1:]), allow)

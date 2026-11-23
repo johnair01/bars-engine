@@ -53,11 +53,11 @@ export type ExperienceId = (typeof EXPERIENCES)[number]['id']
 
 /** Question 2: each channel's satisfied state (alchemy-graph `satisfied.label`) and what it means. */
 export const SATISFACTIONS: ReadonlyArray<{ channel: Channel; state: string; means: string }> = [
-  { channel: 'anger', state: 'triumph', means: 'You push on the thing that blocked you until it gives. You can point to what changed because you pushed: the call made, the box shipped, the no said out loud.' },
-  { channel: 'sadness', state: 'poignance', means: 'You remember someone who showed up for you once. Now you do the same for someone else: a call, a meal, an hour of your time.' },
-  { channel: 'fear', state: 'excitement', means: 'You name what could go wrong: they might say no. You ask anyway. Your heart pounds while you wait for the answer.' },
-  { channel: 'joy', state: 'bliss', means: 'You laugh out loud in the middle of the work. You want to tell a friend about it the same day.' },
-  { channel: 'neutrality', state: 'peace', means: 'You cross the last item off the list. No loose end nags at you tonight. You know which part was yours.' },
+  { channel: 'anger', state: 'triumph', means: 'Triumph is how it feels to get past a problem that blocked you. Say you put off a hard phone call for weeks. You make the call today. Afterward you can point to what changed because you made it.' },
+  { channel: 'sadness', state: 'poignance', means: 'Poignance is the tender ache of doing for someone what another person once did for you. Years ago a friend drove you to the hospital. Today you drive a friend there yourself, thinking of that day the whole way.' },
+  { channel: 'fear', state: 'excitement', means: 'Excitement is what fear becomes when you want what might happen. You ask a stranger for a favour, knowing they might say no. Your heart pounds while you wait for their answer.' },
+  { channel: 'joy', state: 'bliss', means: 'Bliss is joy you want to share. You laugh out loud in the middle of a job. That evening you call a friend to tell them what made you laugh.' },
+  { channel: 'neutrality', state: 'peace', means: 'Peace is the calm of a finished job. You cross the last item off your to-do list. You know which part of the job was yours. You go to bed knowing you did that part.' },
 ]
 
 /**
@@ -195,7 +195,7 @@ export function recommend(walk: Walk): Offer[] {
   const selfSabotageWhy =
     held > 0
       ? `You named ${held === 1 ? 'a reservation' : `${held} reservations`}. That is the voice we work with: what it protects, and how to get it working for you.`
-      : 'We find the part of you that keeps putting this off. We ask what it guards you from. Then we give that guard a job on the experience you named at the start.'
+      : 'In a session, we look for a part of you that keeps putting off what you want. We ask that part what it is trying to protect you from. Then we give it a new job: helping you get what you said you wanted at the start of this walk.'
 
   if (exp?.allyship) {
     add('allyship-coaching', 'You want to show up for other people. This is the coaching built on my book, for exactly that.')
@@ -205,7 +205,7 @@ export function recommend(walk: Walk): Offer[] {
     add('coaching', selfSabotageWhy)
   }
   if (walk.toward.includes('joy') || feltChannels(walk).includes('joy')) {
-    add('joy-book', 'You picked delight. This book has exercises that put more of it into an ordinary week.')
+    add('joy-book', 'You picked delight. This book has exercises for finding more delight in an ordinary week.')
   }
   return order.map((id) => ({ ...OFFERS[id], why: reasons[id]! }))
 }

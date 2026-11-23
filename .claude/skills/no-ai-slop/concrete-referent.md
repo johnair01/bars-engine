@@ -14,7 +14,7 @@ The dangling "and" was a symptom. The fault is a line that gestures at meaning (
 moves", "you can see the whole") and names nothing. Splitting it into short sentences keeps the emptiness. This rule
 covers every player-facing surface: the gate walk, the sect intros, the coaching walk, cards, harvests.
 
-## The four questions, asked of each line
+## The six questions, asked of each line
 
 1. **What, specifically?** Name the object, person, act or moment. "What was stuck" becomes "the call you kept putting
    off".
@@ -22,6 +22,12 @@ covers every player-facing surface: the gate walk, the sect intros, the coaching
 3. **What can the player now do or have?** A line that ends on a feeling ends on nothing; end on the act or the thing.
 4. **Why does it matter to them?** Answer with their own goal in this walk (supporting him, their own dream), never a
    general truth.
+
+5. **Has the reader been shown it?** A definite article ("the call", "the week", "the thing you are stuck on")
+   tells the reader they already know which one you mean. On first mention write "a", name the thing in full, or point
+   at what is on the screen.
+6. **Is it a sentence?** Every line has a subject and a verb. "Two acts: play this walk" and "Warm soil, running
+   water." are notes, not sentences.
 
 Before asking, run `python3 scripts/voice-packet.py <screen>`: it lists the words the screen has shown, so the answer to
 question 1 uses a word the player already met, and it prints the lines Wendell kept. `copy-scan.py --lexicon` fails a
@@ -43,6 +49,33 @@ round it off.
 Ground a line in his source before inventing one: the feelings' jobs in `src/lib/coaching/coaching-map.ts` (anger's job
 is "to find obstacles to be overcome, or boundaries to be created or destroyed"), the six unpacking questions, his
 backstory in `src/lib/founder-gate/content.ts` STORY, and the Emotional Alchemy channel table.
+
+## Worked examples, second round (2026-11-17, `sc-crops-copy-look-2`)
+
+Wendell's note on the second rewrite:
+
+> How does a week get away from someone and why does this matter?
+>
+> We're still using the definate article in a terrible way "the ___" THE___ the ___ this will lsoe trust with the uses
+> because you're being specific about soemthing and suggesting they know what you are talking about
+>
+> "two acts play this walk blah blah blah" it's trash and we're not speaking in complete sentences and it sounds bad.
+
+The first round named things but presumed the reader already knew them, and it wrote notes instead of sentences. A
+specific "the" is still vague when the reader was never shown the thing: it reads as an inside reference, and he says
+that costs the player's trust.
+
+| Old line | What went wrong | New line |
+|---|---|---|
+| Cool soil, still water. You meant to start. Then the week got away from you. | fragment; "the week" never shown; how, and why it matters, unsaid | You meant to help weeks ago. Your job, your bills or your family took every free evening, so your first step is still waiting. A step small enough for ten minutes can fit into a week like that. |
+| Two acts: play this walk, then give money if you can. | fragment | This part asks you to do two things. First you play through this walk. Then, if you can afford it, you give money toward mailing a backer's copy. |
+| You push on the thing that blocked you until it gives. You can point to what changed because you pushed: the call made, the box shipped, the no said out loud. | "the thing", "the call", "the box", "the no": none shown | Triumph is how it feels to get past a problem that blocked you. Say you put off a hard phone call for weeks. You make the call today. Afterward you can point to what changed because you made it. |
+| This walk is one part of his campaign to ship the backers' books. | "the backers' books" presumes the reader knows the Kickstarter | Wendell is running a campaign to mail his book to about 300 people who paid for it on Kickstarter. This walk is one part of that campaign. |
+| Book a coaching session with him on the thing you are stuck on. Pay what feels right. | "the thing you are stuck on" | Book an hour of coaching with Wendell about a problem you have been stuck on. You pay what feels right to you. |
+| Warm soil, running water. You have time for this right now. | fragment; "this" | You have a few free hours this week. You already know how you would like to spend them helping. |
+
+`copy-scan.py` now flags the "presumed the" shapes it can see ("the thing that", "the week got", "the call made") and
+three fragment shapes, and `--ask` asks "has the reader been shown it?" of every "the" in a sentence.
 
 ## The tools
 
