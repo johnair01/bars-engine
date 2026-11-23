@@ -4,7 +4,7 @@
   "title": "The Heaven Sect",
   "size": [96, 80],
   "seed": 7,
-  "start": {"x": 47, "y": 77},
+  "start": {"x": 47, "y": 66},
   "rooms": [
     {"id": "altar", "label": "Altar", "kind": "shrine", "box": [41, 3, 14, 8], "doors": [{"side": "S", "x": 47, "w": 2}], "seats": 2},
     {"id": "founders-hall", "label": "Founder's Hall", "kind": "assembly", "box": [34, 14, 28, 20], "doors": [{"side": "S", "x": 46, "w": 4}, {"side": "N", "x": 47, "w": 2, "plaque": false}], "seats": 24},
