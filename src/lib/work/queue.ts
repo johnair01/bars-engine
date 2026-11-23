@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
-import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, LEASE_MS, MAX_DRY_MS, routeLane } from './lanes'
+import { DRY_MS, firstLitLane, isLane, LANES, LANE_WORKERS, CAP_LIVE_MS, LEASE_MS, MAX_DRY_MS, routeLane, ticketKind, kindBars } from './lanes'
 import type { TicketDraft } from './ticket'
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -28,7 +28,11 @@ export async function laneDepth(db: Db): Promise<Record<string, number>> {
 export async function pushTicket(db: Db, t: TicketDraft) {
   const dry = await dryLanes(db)
   const lit = new Set(LANES.filter(l => !dry.has(l)))
-  const lane = routeLane(t.lanes, lit, await laneDepth(db))?.lane ?? firstLitLane(t.lanes, dry)
+  const kind = ticketKind(t.title, t.brief)
+  // Picture builds and design questions never enter DeepAI (it timed out on 43 of 48, 2026-11-21); the stored order drops it.
+  const order = kindBars(kind).length ? (t.lanes.filter(l => !kindBars(kind).includes(l)).length ? t.lanes.filter(l => !kindBars(kind).includes(l)) : ['claude' as const]) : t.lanes
+  t = { ...t, lanes: order }
+  const lane = routeLane(t.lanes, lit, await laneDepth(db), undefined, kind)?.lane ?? firstLitLane(t.lanes, dry)
   const existing = await db.workTicket.findUnique({ where: { sourceKey: t.sourceKey } })
   if (existing) return { ticket: existing, created: false }
   const ticket = await db.workTicket.create({
@@ -55,11 +59,19 @@ export async function returnLapsed(db: Db, now = new Date()): Promise<number> {
     data: { state: 'held', claimedBy: null, leaseUntil: null,
       result: `${AUTO_HELD}: claimed ${MAX_ATTEMPTS} times and never closed. Lift the hold or steer it from the board.` },
   })
+  // A READY ticket already past the limit (released before the circuit breaker existed, found 2026-11-21: twenty
+  // tickets at 90 to 106 claims sat at the head of the oldest-first deck, so every worker took one and ended with
+  // nothing, and the 16 newer tickets never reached a lane) is held too, so it stops heading the deck.
+  const stale = await db.workTicket.updateMany({
+    where: { state: 'ready', attempts: { gte: MAX_ATTEMPTS } },
+    data: { state: 'held', claimedBy: null, leaseUntil: null,
+      result: `${AUTO_HELD}: claimed ${MAX_ATTEMPTS} or more times and never closed. Lift the hold or steer it from the board.` },
+  })
   const r = await db.workTicket.updateMany({
     where: lapsed,
     data: { state: 'ready', claimedBy: null, leaseUntil: null },
   })
-  return r.count + stalled.count
+  return r.count + stalled.count + stale.count
 }
 
 /**
@@ -70,7 +82,8 @@ export async function claimTicket(db: Db, lane: string, by: string, now = new Da
   await returnLapsed(db, now)
   // A lane holds at most LANE_WORKERS live claims; the settle pass claims only to close, so it is not counted out.
   if (by !== 'settle') {
-    const live = await db.workTicket.count({ where: { lane, state: 'claimed', leaseUntil: { gte: now } } })
+    const live = await db.workTicket.count({ where: { lane, state: 'claimed', leaseUntil: { gte: now },
+      updatedAt: { gte: new Date(now.getTime() - CAP_LIVE_MS) } } })
     if (live >= LANE_WORKERS) return null
   }
   const until = new Date(now.getTime() + LEASE_MS)
@@ -99,6 +112,25 @@ export async function unholdTicket(db: Db, id: string) {
 }
 
 /**
+ * Close a ticket the work behind it is already done for, whatever state it rests in (held, failed, ready or claimed).
+ * Found 2026-11-19: a held or failed ticket answers `release` and `done` with 409, so a ticket built by hand stayed in
+ * the queue for good. Council only. Needs a result (a pull request link, or one line saying no code was needed); a
+ * pull request link is kept as `basis.draft`, as `done` does. A ticket already done is left alone.
+ */
+export async function closeTicket(db: Db, id: string, result: string, by: string, now = new Date()) {
+  if (!result.trim()) return { ok: false as const, status: 400, error: 'close needs a result: the pull request link, or one line saying no code was needed' }
+  const t = await db.workTicket.findUnique({ where: { id } })
+  if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
+  if (t.state === 'done') return { ok: false as const, status: 409, error: 'The ticket is already done' }
+  const pr = result.match(/https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/)
+  const basis = { ...((t.basis ?? {}) as object), closed: { by, at: now.toISOString(), from: t.state },
+    ...(pr ? { draft: { url: pr[0], label: `${pr[2]} #${pr[3]}` } } : {}) }
+  const ticket = await db.workTicket.update({ where: { id }, data: {
+    state: 'done', result, doneAt: now, leaseUntil: null, basis: basis as Prisma.InputJsonValue } })
+  return { ok: true as const, ticket }
+}
+
+/**
  * Return a failed ticket to the deck, but only through a review. The move carries the name of the after-action
  * review that explains the failure (`aar`, a path or a link), and the failure it replaces is appended to the
  * basis so the retry does not erase what went wrong. A ticket that was not failed is left alone: `release`
@@ -112,7 +144,7 @@ export async function retryTicket(db: Db, id: string, aar: string, by: string, n
   const attempts = Array.isArray(basis.attempts) ? (basis.attempts as unknown[]) : []
   const past = [...attempts, { at: now.toISOString(), by, aar, failed: t.result ?? null }]
   const ticket = await db.workTicket.update({ where: { id }, data: {
-    state: 'ready', claimedBy: null, leaseUntil: null, result: null,
+    state: 'ready', claimedBy: null, leaseUntil: null, result: null, attempts: 0,
     basis: { ...basis, attempts: past } as Prisma.InputJsonValue,
   } })
   return { ok: true as const, ticket }
@@ -139,7 +171,7 @@ export async function steerTicket(db: Db, id: string, to: string, by: string, no
 
 /** A worker's move on the ticket it holds. Only the lane that holds the claim may move it. */
 export async function moveTicket(db: Db, id: string, lane: string | null, move: Move,
-                                 result: string | null, now = new Date(), look: string | null = null) {
+                                 result: string | null, now = new Date(), look: string | null = null, hold = false) {
   const t = await db.workTicket.findUnique({ where: { id } })
   if (!t) return { ok: false as const, status: 404, error: 'No such ticket' }
   if (lane && t.lane !== lane) return { ok: false as const, status: 403, error: `This ticket is in the ${t.lane} lane` }
@@ -158,6 +190,16 @@ export async function moveTicket(db: Db, id: string, lane: string | null, move: 
     move === 'heartbeat' ? { leaseUntil: new Date(now.getTime() + LEASE_MS) }
     : move === 'done' ? { state: 'done', result, doneAt: now, leaseUntil: null, ...(basis ? { basis } : {}) }
     : move === 'failed' ? { state: 'failed', result, leaseUntil: null }
+    : move === 'release' && hold && (result ?? '').trim()
+      // A hold with a reason sticks: the ticket rests (not re-claimed, not re-announced) until an unhold move.
+      ? { state: 'held', claimedBy: null, leaseUntil: null, result,
+          basis: { ...((t.basis ?? {}) as object), hold: { reason: (result ?? '').trim(), by: t.claimedBy, at: now.toISOString() } } as Prisma.InputJsonValue }
+    : move === 'release' && t.attempts >= MAX_ATTEMPTS
+      // The circuit breaker for a plain release. returnLapsed holds a ticket only when its lease lapses, so a worker
+      // that claimed and released the same ticket every hour never lapsed it: one ticket reached 106 claims
+      // (found 2026-11-20). A ticket released after MAX_ATTEMPTS claims rests held until an unhold or a steer.
+      ? { state: 'held', claimedBy: null, leaseUntil: null,
+          result: `${AUTO_HELD}: claimed ${t.attempts} times and released without a result (last: ${(result ?? '').trim().slice(0, 120) || 'no note'}). Lift the hold or steer it from the board.` }
     : { state: 'ready', claimedBy: null, leaseUntil: null, result }
   const ticket = await db.workTicket.update({ where: { id }, data })
   return { ok: true as const, ticket }
@@ -192,6 +234,18 @@ export async function setLaneDry(db: Db, lane: string, dry: boolean, note: strin
   return { lane, dry, moved, dryUntil }
 }
 
+/** A heartbeat: the note and the time on the lane's row. The lamp (dry, dryUntil) is left exactly as it is. */
+export async function beatLane(db: Db, lane: string, note: string, now = new Date()) {
+  await db.workLane.upsert({ where: { lane }, create: { lane, note, updatedAt: now }, update: { note, updatedAt: now } })
+  return { lane, note, beatAt: now.toISOString() }
+}
+
+/** The orchestrator tick's last beat (lane row `tick`): when it ran and its note. Null before the first run. */
+export async function tickBeat(db: Db) {
+  const row = await db.workLane.findUnique({ where: { lane: 'tick' }, select: { note: true, updatedAt: true } })
+  return row?.note != null ? { beatAt: row.updatedAt.toISOString(), beatNote: row.note } : null
+}
+
 /** A lane counts as live when it touched a ticket inside this window. */
 export const LIVE_MS = 24 * 60 * 60 * 1000
 
@@ -218,7 +272,9 @@ export async function laneState(db: Db, lanes: readonly string[], now = new Date
     _max: { updatedAt: true } })
   const recent = await db.workTicket.groupBy({ by: ['lane'], where: { claimedBy: { not: null }, updatedAt: { gte: since } },
     _count: { _all: true } })
+  const rows = await db.workLane.findMany({ select: { lane: true, note: true, updatedAt: true } })
   return lanes.map(lane => {
+    const beat = rows.find(r => r.lane === lane)
     const lastClaimAt = touched.find(t => t.lane === lane)?._max?.updatedAt ?? null
     const lit = !out.has(lane)
     return {
@@ -227,6 +283,9 @@ export async function laneState(db: Db, lanes: readonly string[], now = new Date
       held: counts.find(c => c.lane === lane && c.state === 'claimed')?._count._all ?? 0,
       lastClaimAt: lastClaimAt ? lastClaimAt.toISOString() : null,
       claims24h: recent.find(t => t.lane === lane)?._count._all ?? 0,
+      // The lane row's last write (a heartbeat or a lamp change) and its note: how the watchdog sees a silent worker.
+      beatAt: beat?.note != null ? beat.updatedAt.toISOString() : null,
+      beatNote: beat?.note ?? null,
       status: laneStatus(lit, lastClaimAt, now),
     }
   })

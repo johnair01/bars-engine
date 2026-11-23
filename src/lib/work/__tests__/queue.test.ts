@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
-import { routeLane } from '../lanes'
+import { MAX_ATTEMPTS, returnLapsed, laneStatus, moveTicket, pushTicket, closeTicket, retryTicket, setLaneDry, steerTicket, unholdTicket } from '../queue'
+import { routeLane, ticketKind } from '../lanes'
 
 function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: boolean; dryUntil: Date | null }[] = []) {
   return {
@@ -26,9 +26,9 @@ function fakeDb(tickets: Record<string, unknown>[], lanes: { lane: string; dry: 
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => { const t = { id: 't' + tickets.length, state: 'ready', ...data }; tickets.push(t); return t }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const t = tickets.find(x => x.id === where.id)!; Object.assign(t, data); return t }),
-      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil: { lt: Date }; attempts?: { gte: number } }; data: Record<string, unknown> }) => {
+      updateMany: vi.fn(async ({ where, data }: { where: { state: string; leaseUntil?: { lt: Date }; attempts?: { gte: number } }; data: Record<string, unknown> }) => {
         const hit = tickets.filter(t => t.state === where.state
-          && t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt
+          && (!where.leaseUntil || (t.leaseUntil instanceof Date && t.leaseUntil < where.leaseUntil.lt))
           && (!where.attempts || (t.attempts as number) >= where.attempts.gte))
         hit.forEach(t => Object.assign(t, data))
         return { count: hit.length } }),
@@ -194,10 +194,30 @@ describe('the ceiling', () => {
     const db = fakeDb(tickets)
     expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
   })
+  it('keeps picture builds and design questions out of DeepAI, even when the lanes ahead are full', () => {
+    const lit = new Set(['claude', 'freebuff', 'deepai'])
+    const full = { claude: 30, freebuff: 25, deepai: 0 }
+    expect(routeLane(['claude', 'freebuff'], lit, full, 20, 'picture')?.lane).toBe('freebuff')
+    expect(routeLane(['claude', 'freebuff'], lit, full, 20, 'build')?.lane).toBe('deepai')
+    expect(routeLane(['deepai'], lit, { claude: 0, deepai: 0 }, 20, 'design')?.lane).toBe('claude')
+  })
+  it('classifies the tickets DeepAI failed as picture or design work', () => {
+    expect(ticketKind('Tuck the robe at the shoulder')).toBe('picture')
+    expect(ticketKind('Fix the magenta band on the over-robe skirt')).toBe('picture')
+    expect(ticketKind('Run gait on the cultivation figure')).toBe('picture')
+    expect(ticketKind('Fate-clearing: which option for the clearing?')).toBe('design')
+    expect(ticketKind('Add a retry button to the harbour page')).toBe('build')
+  })
   it('never routes to zo, so the closing lever keeps its monopoly', () => {
     expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), {})).toMatchObject({ lane: 'claude' })
     expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), { claude: 40 })).toMatchObject({ lane: 'claude' })
     expect(routeLane(['zo'], new Set(['zo']), {})).toMatchObject({ lane: 'zo' })
+  })
+  it('keeps the Calrunian lane steered only: no overflow, but a ticket that names it gets it', () => {
+    const lit = new Set(['claude', 'freebuff', 'deepai', 'calrunian'])
+    expect(routeLane(['claude', 'freebuff'], lit, { claude: 30, freebuff: 30, deepai: 30 })?.lane).not.toBe('calrunian')
+    expect(routeLane(['calrunian'], lit, { calrunian: 30 })).toMatchObject({ lane: 'calrunian' })
+    expect(routeLane(['claude', 'calrunian'], lit, { claude: 30, calrunian: 3 })).toMatchObject({ lane: 'calrunian' })
   })
   it('reports no lane when every lane in the order has its lamp out', () => {
     expect(routeLane(['claude', 'freebuff'], new Set(), {})).toBeNull()
@@ -243,9 +263,61 @@ describe('the claim loop guard', () => {
     expect(tickets[0]).toMatchObject({ state: 'held', leaseUntil: null })
     expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times/)
   })
+  it('holds a ready ticket already past the limit, so it stops heading the deck', async () => {
+    const tickets: Record<string, unknown>[] = [{ id: 'a', state: 'ready', attempts: 103 }, { id: 'b', state: 'ready', attempts: 1 }]
+    await returnLapsed(fakeDb(tickets), now)
+    expect(tickets[0]).toMatchObject({ state: 'held' })
+    expect(String(tickets[0].result)).toMatch(/^auto-held:/)
+    expect(tickets[1]).toMatchObject({ state: 'ready' })
+  })
   it('lifting the hold starts the count again', async () => {
     const tickets = [{ id: 'a', state: 'held', attempts: MAX_ATTEMPTS, result: 'auto-held: x' }]
     await unholdTicket(fakeDb(tickets), 'a')
     expect(tickets[0]).toMatchObject({ state: 'ready', attempts: 0, result: null })
+  })
+})
+
+describe('closeTicket', () => {
+  it('closes a held or failed ticket with a draft link, which done refuses', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'held', basis: {} }, { id: 'f', lane: 'claude', state: 'failed', basis: {} }]
+    const db = fakeDb(tickets)
+    expect(await moveTicket(db, 'h', null, 'done', 'x')).toMatchObject({ ok: false, status: 409 })
+    const r = await closeTicket(db, 'h', 'built: https://github.com/johnair01/bars-engine/pull/872', 'council')
+    expect(r).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'done' })
+    expect((tickets[0].basis as { draft: { label: string } }).draft.label).toBe('bars-engine #872')
+    expect(await closeTicket(db, 'f', 'no code needed', 'council')).toMatchObject({ ok: true })
+  })
+
+  it('needs a result, leaves a done ticket alone and answers 404 for a missing one', async () => {
+    const db = fakeDb([{ id: 'd', lane: 'claude', state: 'done', basis: {} }, { id: 'h', lane: 'claude', state: 'held', basis: {} }])
+    expect(await closeTicket(db, 'h', ' ', 'council')).toMatchObject({ ok: false, status: 400 })
+    expect(await closeTicket(db, 'd', 'x', 'council')).toMatchObject({ ok: false, status: 409 })
+    expect(await closeTicket(db, 'nope', 'x', 'council')).toMatchObject({ ok: false, status: 404 })
+  })
+})
+
+describe('release with hold', () => {
+  it('holds a released ticket with its reason instead of returning it to the deck', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'claimed', claimedBy: 'thread', basis: { rows: [] } }]
+    const r = await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', 'needs his Mac', new Date(), null, true)
+    expect(r).toMatchObject({ ok: true })
+    expect(tickets[0]).toMatchObject({ state: 'held', result: 'needs his Mac', basis: { hold: { reason: 'needs his Mac' } } })
+  })
+  it('without hold, release still goes back to ready', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'claimed', basis: {} }]
+    await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', 'why')
+    expect(tickets[0]).toMatchObject({ state: 'ready' })
+  })
+  it('holds a ticket released after MAX_ATTEMPTS claims, so a claim-and-release loop ends', async () => {
+    const tickets: Record<string, unknown>[] = [{ id: 'h', lane: 'claude', state: 'claimed', basis: {}, attempts: MAX_ATTEMPTS }]
+    await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', "can't act on this yet")
+    expect(tickets[0]).toMatchObject({ state: 'held', claimedBy: null, leaseUntil: null })
+    expect(String(tickets[0].result)).toMatch(/^auto-held: claimed 3 times and released/)
+  })
+  it('a release below MAX_ATTEMPTS still goes back to ready', async () => {
+    const tickets = [{ id: 'h', lane: 'claude', state: 'claimed', basis: {}, attempts: MAX_ATTEMPTS - 1 }]
+    await moveTicket(fakeDb(tickets), 'h', 'claude', 'release', 'why')
+    expect(tickets[0]).toMatchObject({ state: 'ready' })
   })
 })

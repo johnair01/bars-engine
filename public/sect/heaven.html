@@ -264,6 +264,6 @@ function shot(name) {
 }
 window.heaven = { rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
-if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
+if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, stop: Q.get('stop'), hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
 </script>
 </body></html>

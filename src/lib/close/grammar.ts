@@ -1,5 +1,5 @@
 import { safeTonight } from './safe'
-import { MAX_MINUTES, MAX_TICKETS, MOVES, type CloseRecord, type Move, type RatingKey, type Safety, type Ticket } from './types'
+import { MAX_MINUTES, MAX_TICKETS, MOVES, type KeptState, type CloseRecord, type Move, type RatingKey, type Safety, type Ticket } from './types'
 
 /**
  * What a chat reply may say (FR-003). The board's taps and the chat's short replies both become one of these, and
@@ -14,6 +14,7 @@ export type Command =
   | { do: 'send'; n: number }
   | { do: 'lantern'; n: number }
   | { do: 'win'; id: string; n: number }
+  | { do: 'kept'; n: number; state: KeptState }
   | { do: 'next' }
   | { do: 'skip' }
   | { do: 'sentence'; text: string }
@@ -48,6 +49,9 @@ export function parse(input: string, move: Move): Command {
   m = /^push\s+(\d+)\s*:\s*([\s\S]+)$/i.exec(text)
   if (m) return { do: 'push', n: Number(m[1]), reason: m[2].trim() }
   if (/^push\b/i.test(text)) return { do: 'error', why: 'Say why: push <n>: <reason>.' }
+  m = /^kept\s+(\d+)\s+(done|smaller|let[\s-]?go)$/i.exec(text)
+  if (m) return { do: 'kept', n: Number(m[1]), state: m[2].toLowerCase() === 'done' ? 'done' : m[2].toLowerCase() === 'smaller' ? 'smaller' : 'let-go' }
+  if (/^kept\b/i.test(text)) return { do: 'error', why: 'Say kept <n> done, kept <n> smaller, or kept <n> let go.' }
   m = /^win\s+(\S+)\s+(\d+)$/i.exec(text)
   if (m) return rating(m[2]) ? { do: 'win', id: m[1], n: Number(m[2]) } : { do: 'error', why: 'A win lights a lantern from 1 to 5.' }
   if (move === 'glass') return { do: 'sentence', text }
@@ -90,6 +94,15 @@ export function step(prev: CloseRecord, cmd: Command): Step {
       if (!it || !it.proof) return fail(`No sealed item "${cmd.id}" in today's work.`)
       if (it.stage !== 'done') return fail(`"${cmd.id}" is not done yet, so it has no lantern to light.`)
       r.wins[cmd.id] = cmd.n
+      return { record: r }
+    }
+    case 'kept': {
+      const k = r.kept?.[cmd.n - 1]
+      if (!k) return fail(`There is no kept thing ${cmd.n}.`)
+      k.state = cmd.state
+      // Done lights a lantern that stays lit; any other seal puts it out, so changing his mind is honest.
+      if (cmd.state === 'done') r.wins[`kept-${k.id}`] = 1
+      else delete r.wins[`kept-${k.id}`]
       return { record: r }
     }
     case 'unpack': r.unpacking = cmd.lines; return { record: r }
