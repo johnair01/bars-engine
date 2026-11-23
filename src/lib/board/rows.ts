@@ -26,7 +26,11 @@ export function rowErrors(data: Record<string, unknown>): string[] {
     if (!(faces(data.faces) && text(data.pos))) errors.push('a position needs faces and pos')
   }
   if (list === 'questions') {
-    if (!(faces(data.faces) && text(data.q))) errors.push('a question needs faces and q')
+    // A lane receipt (receipt: true) carries its still and its lane instead of faces: it reports what a branch did,
+    // so asking him to judge it does not need a face named. Every other question still names its faces.
+    if (data.receipt === true) {
+      if (!text(data.q)) errors.push('a receipt needs q, the line he reads first')
+    } else if (!(faces(data.faces) && text(data.q))) errors.push('a question needs faces and q')
     const o = data.options
     if (!(Array.isArray(o) && o.length > 0 && o.every(x => x && typeof x === 'object' && !Array.isArray(x)
         && text((x as Record<string, unknown>).v) && typeof (x as Record<string, unknown>).label === 'string')))

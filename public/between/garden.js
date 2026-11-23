@@ -36,7 +36,7 @@ import { careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 import * as CE from "../calrunia/charge-engine.js";
 import { makeCultBody, useKneel } from "./cult/player-body.js";
 import { makeKneel } from "./cult/kneel.js";
-import { cultPick } from "./cult/pick.js";
+import { cultPick, cultLook, setCultLook, HAIRS } from "./cult/pick.js";
 useKneel(makeKneel);
 //   // hc-checkin-look-1 B: your figure is the cultivation figure (Average Dusk is deprecated)   // the shared charge engine: the check-in is its WAVE (spec shared-charge-engine)
 const WAVE_STEPS = CE.WAVE_STEPS;
@@ -90,18 +90,17 @@ const names = {};
 let awaySince = null, myPrivate = {}, myPouch = null, readOnly = false;
 let sheetName = null, sheetArg = null, selected = null;
 /* The homeroom (br-home-is-a-room): `list` is GET /api/between (your home and a summary of each room), `myHome` your
-   private home doc (look, goals, check-ins), `lookDraft` the Look sheet's choices before they are kept. */
-let list = null, homeId = null, myHome = {}, lookDraft = null;
+   private home doc (look, goals, check-ins). */
+let list = null, homeId = null, myHome = {};
 const isHome = g => !!(g && g.kind === "home");
 /* Part 3 (his rulings of 2026-10-23, br-home-is-a-room overruled): everyone spawns in their homeroom. A room in the link
    is a doorway beside the mirror, not where you land; an invitation's doorway stays shut until the orientation is read
    and ticked. `portalTo` is { id, invite, open, name }. */
 let portalTo = null, entering = null;
 const THROUGH = "between.through";
-const ROOM_URL = id => "/ontology-game/between" + (id ? "?g=" + encodeURIComponent(id) : "");
+const ROOM_URL = id => "/between" + (id ? "?g=" + encodeURIComponent(id) : "");
 /* Chapter 1's creator reads the same look text (br-look-is-sprouts). Sprout has no public address yet: this is the creator
    branch's preview, behind the Vercel sign-in. */
-const CHAPTER1_LOOK = t => "https://sprout-git-claude-project-thr-7fd764-wendells-projects-9c1b16dc.vercel.app/creator.html?look=" + encodeURIComponent(t);
 const outbox = [];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -724,8 +723,7 @@ function renderSatchel() {
   el.hidden = !satchelOpen;
   if (el._h !== h) { el.innerHTML = h; el._h = h; }
 }
-const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
-let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+let mirrorOn = false, mirrorK = 0, mirrorTurn = 0;
 const TEA_VIEW = { wide: [[0.69, 0.8, 0.98], [-0.12, 0.45, 0.15]], phone: [[0.8, 0.8, 1.15], [-0.1, 0.45, 0.15]] };   // camera, focus, in the seats frame (x left, z ahead)
 let seatK = 0, seatViewAt = null; // the low view of you sat on the hearth's cushion (or one you set down), eased in
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
@@ -739,6 +737,134 @@ function setMirror(on) {
   probeDirty = true; // the capture is taken where you stand: at the glass, or back in the room
 }
 let mirrorCut = false;
+
+/* The touches beside the glass (hj-mirror-look-1 B, hj-comb-look-1 A): no menu. Mirror mode puts the camera behind the glass
+   looking back at you, so what she touches stands in that view, low at the sides, at the glass's own depth. Each touch
+   writes one key of the shared look (cult/pick.js), fogs the glass with one breath, and the breath clears on the changed
+   reflection. Walking away keeps it: the look is already stored. */
+const mirrorProps = new THREE.Group(); mirrorProps.visible = false; scene.add(mirrorProps);
+const mirrorBreath = document.createElement("div"); mirrorBreath.id = "mirrorBreath"; mirrorBreath.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorBreath);
+const comb = (() => {
+  // the boxwood comb with a red bead, hung on a peg low at the glass's left (the picture is flipped, so it shows on the right); metres
+  const g = new THREE.Group(), bw = new THREE.MeshStandardMaterial({ color: 0xd9b878, roughness: 0.5 }), CW = 0.17, nT = 16;
+  const spine = new THREE.Mesh(new THREE.BoxGeometry(CW, 0.028, 0.012), bw); spine.position.y = 0.07; g.add(spine);
+  for (let i = 0; i < nT; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.0045, 0.062 - 0.006 * Math.abs(i - nT / 2) / nT, 0.008), bw); t.position.set(-CW / 2 + 0.006 + i * (CW - 0.012) / (nT - 1), 0.025, 0); g.add(t); }
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.014, 20), new THREE.MeshStandardMaterial({ color: 0x7a2630, roughness: 0.5 })); cap.rotation.x = Math.PI / 2; cap.position.set(0, 0.07, 0); g.add(cap);
+  const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.09, 8), new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 })); peg.rotation.x = Math.PI / 2; peg.position.set(0, 0.11, -0.03); g.add(peg);
+  g.rotation.z = -0.18; g.position.set(0.36, 0.78, 0);
+  // a wide invisible target so a thumb finds it: the comb is small
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.06; g.add(hit);
+  mirrorProps.add(g); return { g, hit };
+})();
+// the bowl of river stones at the glass's foot: eight stones, the skin ramp; touching one sets skin (metres)
+const SKINS = ["#e9c9ae", "#dfb595", "#cf9f7c", "#bb8763", "#a46f4e", "#8a593d", "#6d4430", "#513224"];
+const stones = (() => {
+  const g = new THREE.Group(), meshes = [];
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.07, 28, 1, true), new THREE.MeshStandardMaterial({ color: 0x5c4a3a, roughness: 0.7, side: THREE.DoubleSide })); bowl.position.y = 0.035; g.add(bowl);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(0.165, 28), new THREE.MeshStandardMaterial({ color: 0x2a3b3a, roughness: 0.1, metalness: 0.3 })); water.rotation.x = -Math.PI / 2; water.position.y = 0.06; g.add(water);
+  SKINS.forEach((c, i) => {
+    const a = i / 8 * Math.PI * 2, r = i % 2 ? 0.095 : 0.05 + 0.0;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.03, 14, 10), new THREE.MeshStandardMaterial({ color: c, roughness: 0.35 }));
+    m.scale.set(1.25, 0.55, 1); m.position.set(Math.cos(a) * (0.05 + (i % 2) * 0.05), 0.065, Math.sin(a) * (0.05 + (i % 2) * 0.05)); m.userData.skin = i; g.add(m); meshes.push(m);
+  });
+  g.position.set(-0.3, 0.3, 0.55);
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.2, 12), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.08; g.add(hit);
+  mirrorProps.add(g); return { g, meshes, hit };
+})();
+// the carved figure on the shelf, at the glass's other side; turning it (a touch) steps body and build: six carvings, no words
+// slight and broad need their morph targets (cult/ubc/teenf, ubcf, teenm, ubcm .json), which are not in the repo yet: only the average build of each body is steppable until they are
+const BODY_STEPS = [["f", "average"], ["m", "average"]]; // later: ["f","slight"],["f","broad"],["m","slight"],["m","broad"]
+const carved = (() => {
+  const g = new THREE.Group(), lw = new THREE.MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.55 }), wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.025, 0.14), wood); g.add(shelf);
+  const fig = new THREE.Group(); fig.position.y = 0.0125; g.add(fig);
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.09, 14), lw); cone.position.y = 0.045; fig.add(cone);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.025, 0.09, 6, 10), lw); body.position.y = 0.1; fig.add(body);
+  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.022, 14, 10), lw); hd.position.y = 0.185; fig.add(hd);
+  g.position.set(-0.36, 0.78, 0);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 0.1; g.add(hit);
+  mirrorProps.add(g); return { g, fig, hit };
+})();
+function syncCarved() { // the carving shows the chosen build and body: wider or slighter, taller for him
+  const L = cultLook(), b = L.build || "average", w = b === "broad" ? 1.25 : b === "slight" ? 0.8 : 1;
+  carved.fig.scale.set(w, (L.body || cultPick()) === "m" ? 1.08 : 1, w);
+}
+// the palm on the glass: a faint hand mark where her crown is; the touch's height on the glass sets her height (no marks, no numbers)
+const palm = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+  x.fillStyle = "rgba(255,255,255,0.8)"; x.beginPath(); x.ellipse(64, 78, 28, 32, 0, 0, 7); x.fill();
+  for (const [dx, dy, r] of [[-30, 30, -0.3], [-14, 20, -0.1], [4, 16, 0], [22, 22, 0.15]]) { x.save(); x.translate(64 + dx, 50 + dy - 22); x.rotate(r); x.beginPath(); x.ellipse(0, -12, 7, 18, 0, 0, 7); x.fill(); x.restore(); }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthWrite: false }));
+  m.scale.x = -1; mirrorProps.add(m); return m;
+})();
+// three robes on pegs, one per direction (sect disciple, wandering cultivator, inner-alchemy adept): touch the robe to wear
+// that direction, touch its hem to turn the cut (the robe's 1 and 2). Small, hung high on the glass's right, in the figure's view.
+const DIRS = ["A", "B", "C"], ROBE_COL = ["#3c4658", "#6b5a3f", "#d9d3c3"], HEM_COL = ["#2f3647", "#7a2630"];
+const pegs = (() => {
+  const g = new THREE.Group(), rob = [], hits = [], wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.025, 0.025), wood); rail.position.y = 0.3; g.add(rail);
+  DIRS.forEach((d, i) => {
+    const x = (i - 1) * 0.105, col = new THREE.MeshStandardMaterial({ color: ROBE_COL[i], roughness: 0.85, side: THREE.DoubleSide });
+    const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 6), wood); peg.rotation.x = Math.PI / 2; peg.position.set(x, 0.3, 0.02); g.add(peg);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.058, 0.26, 16, 1, true), col); body.position.set(x, 0.165, 0.02); g.add(body);
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(0.031, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), col); sh.position.set(x, 0.295, 0.02); g.add(sh);
+    const hem = new THREE.Mesh(new THREE.CylinderGeometry(0.0555, 0.0585, 0.04, 16, 1, true), new THREE.MeshStandardMaterial({ color: HEM_COL[0], roughness: 0.8, side: THREE.DoubleSide })); hem.position.set(x, 0.055, 0.02); g.add(hem);
+    const hitB = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.17, 0.12), new THREE.MeshBasicMaterial({ visible: false })); hitB.position.set(x, 0.2, 0.02); hitB.userData.dir = d; g.add(hitB);
+    const hitH = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.09, 0.12), new THREE.MeshBasicMaterial({ visible: false })); hitH.position.set(x, 0.05, 0.02); hitH.userData.hemOf = d; g.add(hitH);
+    rob.push({ d, hem }); hits.push(hitB, hitH);
+  });
+  g.position.set(0.25, 1.0, 0);
+  mirrorProps.add(g); return { g, rob, hits };
+})();
+function syncPegs() { // the hems show the worn cut: indigo for 1, red for 2
+  const o = cultLook().outfit || "B2";
+  pegs.rob.forEach(({ hem }) => hem.material.color.set(HEM_COL[o[1] === "1" ? 0 : 1]));
+}
+syncPegs();
+let palmFade = 0; syncCarved();
+let breathBusy = false;
+function breathe(then) {
+  if (breathBusy) return; breathBusy = true;
+  mirrorBreath.classList.add("on");
+  setTimeout(async () => {
+    try { await then(); } finally { setTimeout(() => { mirrorBreath.classList.remove("on"); breathBusy = false; }, 250); }
+  }, 520);
+}
+function touchMirror(cx, cy) {
+  if (breathBusy) return;
+  const ndc = new THREE.Vector2(-(cx / innerWidth * 2 - 1), -(cy / innerHeight) * 2 + 1); // the canvas is flipped by CSS
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects([comb.hit, carved.hit, stones.hit, ...stones.meshes, ...pegs.hits], false);
+  if (hits.length) {
+    const o = hits[0].object;
+    if (o.userData.dir || o.userData.hemOf) { // a robe on its peg: that direction; its hem: the other cut
+      const cur = cultLook().outfit || "B2";
+      setCultLook({ outfit: o.userData.dir ? o.userData.dir + (cur[0] === o.userData.dir ? cur[1] : "2") : cur[0] + (cur[1] === "1" ? "2" : "1") }); syncPegs();
+    } else if (o === comb.hit) { // the comb: each touch is the next hair, a breath between
+      const i = HAIRS.indexOf(cultLook().hair);
+      setCultLook({ hair: HAIRS[(i + 1) % HAIRS.length] });
+    } else if (o === carved.hit) { // the carved figure turns: the next body and build
+      const L = cultLook(), cur = BODY_STEPS.findIndex(([w, b]) => w === (L.body || cultPick()) && b === (L.build || "average"));
+      const [w, b] = BODY_STEPS[(cur + 1) % BODY_STEPS.length];
+      setCultLook({ body: w, build: b }); syncCarved();
+    } else { // a river stone, or the bowl's nearest stone: that skin
+      let sk = o.userData.skin;
+      if (sk === undefined) { let best = 1e9; hits[0].point && stones.meshes.forEach(m => { const d = m.getWorldPosition(new THREE.Vector3()).distanceTo(hits[0].point); if (d < best) { best = d; sk = m.userData.skin; } }); }
+      setCultLook({ skin: sk });
+    }
+    breathe(() => ensureMyBody()); return;
+  }
+  // the palm on the glass: a touch on the glass above the figure's shoulders, at its depth; the height touched is her height
+  const pz = MIRROR_STAND.z, d = (pz - ray.ray.origin.z) / (ray.ray.direction.z || 1e-6);
+  if (d > 0) {
+    const p = ray.ray.origin.clone().addScaledVector(ray.ray.direction, d), gy = groundY(MIRROR_STAND.x, MIRROR_STAND.z), h = p.y - gy;
+    if (h > 1.35 && Math.abs(p.x - MIRROR_STAND.x) < 0.45) {
+      setCultLook({ height: Math.round(Math.min(1.95, Math.max(1.5, h - 0.04)) * 100) / 100 }); // the crown sits a little under the palm
+      palm.position.set(p.x - mirrorProps.position.x, p.y - mirrorProps.position.y, pz - mirrorProps.position.z); palmFade = 1.5;
+      breathe(() => ensureMyBody());
+    }
+  }
+}
 
 /* The doorway beside the mirror is the Nook's one world-threshold. It opens after orientation and lets a player choose
    a shared room or the private Triangle Workshop without making the small Nook sprout a corridor of extra doors. */
@@ -798,9 +924,9 @@ function portalTick(t) {
     markSeen();
     $("#loadMsg").textContent = "Through the doorway"; $("#loadStep").textContent = ""; $("#loading").hidden = false;
     if (e.kind === "standin") {
-      location.href = "/ontology-game/between?room=standin";
+      location.href = "/between?room=standin";
     } else if (e.kind === "dojo") {
-      location.href = "/dojo/triangle-workshop?returnTo=" + encodeURIComponent("/ontology-game/between");
+      location.href = "/dojo/triangle-workshop?returnTo=" + encodeURIComponent("/between");
     } else {
       try { sessionStorage.setItem(THROUGH, e.id); } catch {}
       location.href = ROOM_URL(e.id) + (e.invite ? "&invite=" + encodeURIComponent(e.invite) : "");
@@ -864,6 +990,9 @@ function realms() {
       col: styleOf(portalTo.style).sky.low, el: "water", lights: [["#ffe2a8", 1], ["#ffe2a8", 0.35]], go: () => walkThrough(portalTo.id, portalTo.invite) });
   for (const r of rooms) out.push({ key: "room:" + r.id, name: r.phase === "spark" ? "A spark for " + roomName(r) : roomName(r) + " and you", line: r.phase === "spark" ? "You tend it alone until " + roomName(r) + " comes." : "The Between you share. Your two lights wait at its hearth.",
     col: styleOf(r.style).sky.low, el: "wood", lights: r.phase === "spark" ? [["#ffe2a8", 1]] : [["#ffe2a8", 1], ["#ffe2a8", 1]], go: () => walkThrough(r.id) });
+  // the moot: the third room of two, a clearing ring where the shared pick is sent (shared-pick-room-look-1, his A); only for a room of two
+  for (const r of rooms) if (r.phase !== "spark") out.push({ key: "clearing:" + r.id, name: "The moot with " + roomName(r), line: "Seven stones ring a small fire in the open. Send a card to it; the fire opens both letters at once.",
+    col: [0.34, 0.2, 0.42], el: "fire", lights: [["#ff8a3d", 1], ["#ffe2a8", 0.5], ["#ffe2a8", 0.5]], go: () => { markSeen(); location.href = "/between/clearing.html?g=" + encodeURIComponent(r.id); } });
   const ks = keepsakes();
   out.push({ key: "chamber", name: "The keeping chamber", line: ks.length ? `${ks.length} ${ks.length === 1 ? "stone keeps its" : "stones keep their"} light, where your blocks cleared.` : "Where a block clears, it leaves a stone that keeps its light.",
     col: [0.42, 0.62, 0.86], el: "water", frost: true, lights: ks.length ? ks.map(([, k]) => [KS_LIGHT[k.element] || "#ffe2a8", 1]) : [["#cfe6ff", 0.3]], go: () => act0("goChamber") });
@@ -1456,7 +1585,7 @@ function ownerSeatNow(uid) {
 }
 function standUp() {
   const wasHearth = sheetName === "hearth" && seatedAtHearth();
-  teaStop();
+  teaStop(); seatLook.yaw = 0; seatLook.pitch = 0; seatLook.zoom = 1;
   meState.seatWant = null; meState.onSeated = null; wake.on = false; if (meState.sitting) { meState.sitting = false; sendPresence(); }
   if (wasHearth) closeSheet(); // the hearth moment is had sitting; getting up ends it
   if (hm) hmEnd();
@@ -1466,25 +1595,25 @@ let myBodyHue = null, myBodyLook = null, myBodyBusy = false;
 /* Whose look: yours is the Look sheet's draft while it is open, else your homeroom's; the other person's is the one they
    copied into this room (garden.looks, br-look-is-sprouts). */
 function lookOf(uid) {
-  if (uid === me) return (sheetName === "look" && lookDraft ? lookText(lookDraft) : null) || myHome.look || (list && list.home && list.home.look) || null;
+  if (uid === me) return myHome.look || (list && list.home && list.home.look) || null;
   const g = view().g;
   return g && g.looks && typeof g.looks[uid] === "string" ? g.looks[uid] : null;
 }
 async function ensureMyBody() {
   const g = view().g;
-  const hue = hueOf(me, g), lk = lookOf(me);
+  const hue = hueOf(me, g), lk = lookOf(me) + "|" + JSON.stringify(cultLook());
   if ((meState.body && myBodyHue === hue && myBodyLook === lk) || myBodyBusy) return;
   myBodyBusy = true;
   try {
     /* Your figure is the cultivation figure (Wendell's B on hc-checkin-look-1, 2026-11-09: "have the cultivation model be
        here"). Average Dusk is deprecated (Wendell, 2026-11-17), so there is no fallback figure. */
     let b = null;
-    try { b = await makeCultBody({ who: cultPick(), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); }
+    try { b = await makeCultBody({ who: cultLook().body || cultPick(), outfit: cultLook().outfit || "B2", look: (({ body, outfit, ...r }) => r)(cultLook()), ring: hue }); } catch (e) { noteError(e, "cultivation figure"); }
     if (!b) return;
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
   } finally { myBodyBusy = false; }
-  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me)) ensureMyBody();
+  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me) + "|" + JSON.stringify(cultLook())) ensureMyBody();
 }
 function placeMe() {
   if (meState.placed) return;
@@ -1554,6 +1683,15 @@ const waves = [];
    Keys: WASD or arrows.
    =================================================================================================== */
 const lastFocus = new THREE.Vector3(0, 1, 0);
+/* Looking round while seated (Wendell, 2026-11-16: "no way to change the camera while sitting down"): the seat's own view is a
+   fixed frame, so a drag there turns the view about what it looks at, and the wheel or a pinch moves it in or out. It resets on standing. */
+const seatLook = { yaw: 0, pitch: 0, zoom: 1 };
+const seatOrbiting = () => !mirrorOn && !hm && ((brushFig && brushWrite && brushWrite.isOpen) || (meState.sitting && seatK > 0.5));
+function seatOrbit(p, f) { // p: the camera spot, f: what it looks at; both are turned about f by seatLook
+  const o = p.clone().sub(f), r = Math.hypot(o.x, o.z);
+  o.applyAxisAngle(new THREE.Vector3(0, 1, 0), seatLook.yaw); o.y += seatLook.pitch * r; o.multiplyScalar(seatLook.zoom);
+  return p.copy(f).add(o);
+}
 let camYaw = 0, camPitch = 0.5, camDist = innerWidth < innerHeight ? 4.4 : 5.2, camTogether = false, togetherK = 0;
 const pointers = new Map(); let dragMoved = 0, pinch0 = null;
 const ray = new THREE.Raycaster(); const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -1574,7 +1712,7 @@ renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointe
 renderer.domElement.addEventListener("pointermove", e => {
   const p = pointers.get(e.pointerId); if (!p) return;
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-  if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
+  if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (seatOrbiting()) { if (pinch0.zoom == null) pinch0.zoom = seatLook.zoom; seatLook.zoom = Math.max(0.6, Math.min(1.8, pinch0.zoom * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; } camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
   if (veil) { if (pointers.size === 1) { veil.dragX += dx; if (Math.abs(veil.dragX) > 48) { turnVeil(veil.dragX < 0 ? 1 : -1); veil.dragX = 0; } } return; } // a sideways drag across the veil turns it
   if (mirrorOn) { if (pointers.size === 1) mirrorTurn -= dx * 0.012; return; } // the screen is flipped: drag right turns your front to the right
@@ -1584,6 +1722,7 @@ renderer.domElement.addEventListener("pointermove", e => {
     if (h) { carry.ok = walkable(h.x, h.z, 0.3); carry.t.group.position.set(h.x, groundY(h.x, h.z), h.z); carry.at = h; }
     return;
   }
+  if (dragMoved > 6 && seatOrbiting()) { seatLook.yaw -= dx * 0.006; seatLook.pitch = Math.max(-0.5, Math.min(0.9, seatLook.pitch + dy * 0.004)); return; }
   if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.05, Math.min(1.1, camPitch + dy * 0.004)); if (directCam && directCam.key !== "gust") directCam = null; }
 });
 function endPointer(e) {
@@ -1600,7 +1739,7 @@ function endPointer(e) {
 }
 renderer.domElement.addEventListener("pointerup", endPointer);
 renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; if (carry) { carry.t.group.position.copy(carry.from); carry = null; } });
-renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
+renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } if (seatOrbiting()) { seatLook.zoom = Math.max(0.6, Math.min(1.8, seatLook.zoom * (1 + Math.sign(e.deltaY) * 0.08))); return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
 // by the fire, left and right turn the crescent; elsewhere the arrows and WASD walk
 addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (veil && (k === "arrowleft" || k === "arrowright")) { turnVeil(k === "arrowleft" ? -1 : 1); e.preventDefault(); return; } if (veil && k === "escape") { closeVeil(); return; } if (hm && (k === "arrowleft" || k === "arrowright")) { hm.turnV += k === "arrowleft" ? 0.9 : -0.9; e.preventDefault(); return; } if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
@@ -1616,7 +1755,7 @@ function placeAt() {
   moveItem(placing.id, { x: +hit.x.toFixed(2), z: +hit.z.toFixed(2) });
 }
 function tapAt(cx, cy) {
-  if (mirrorOn) return; // in the mirror a tap only chooses; the floor is behind you
+  if (mirrorOn) { touchMirror(cx, cy); return; } // in the mirror a tap only touches what stands by the glass; the floor is behind you
   if (veil) return; // at the veil a tap only chooses; Step back leaves it
   if (hmTap(cx, cy)) return; // sat by the fire, a touch is for the embers, the lantern and the hooks; the floor stands you up
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
@@ -1638,6 +1777,7 @@ function tapAt(cx, cy) {
   if (best && satchelOpen) { spotTap(best.key.slice(5)); return; }
   // your shelf: the blank scroll, a scroll that arrived sealed, a keepsake
   if (shelf.group && !satchelOpen) for (const tp of shelf.taps) consider("shelf:" + tp.key + ":" + (tp.i ?? 0), shelfTapPos(tp), 0.3);
+  if (table.group && !satchelOpen) for (const tp of table.taps) consider("shelf:" + tp.key + ":0", shelfTapPos(tp), 0.3);
   if (best && best.key.startsWith("shelf:")) { const [, k, i] = best.key.split(":"); shelfTap(k, +i); return; }
   if (!inNook() || mirrorSpot) consider("between", BETWEEN_AT.clone().setY(DAIS_Y + 0.5), 0.7);
   if (inNook()) consider("window", hollow.layout.window, 1.0);
@@ -1935,6 +2075,7 @@ function frameBody() {
       const lx = fz, lz = -fx, at = (x, y, z) => new THREE.Vector3(S.x + lx * x + fx * z, S.top + y, S.z + lz * x + fz * z);   // the seat's frame: x left, z ahead
       sp = tall ? at(-1.15, 1.45, 0.35) : at(-1.3, 1.15, 0.4); sf = at(0, 0.1, 0.62);                                           // the table is 0.62 ahead of the cushion
     }
+    if (lowView) seatOrbit(sp, sf);
     clampCamera(sp, sf);
     const k = seatK * seatK * (3 - 2 * seatK); cp.lerp(sp, k); focus.lerp(sf, k);
   }
@@ -1997,6 +2138,8 @@ function frameBody() {
   const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
   const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
   mirror.visible = mirrorShown() && me3 < 0.35; // the glass is where the camera looks from
+  if (palmFade > 0) { palmFade -= 0.016; palm.material.opacity = Math.max(0, Math.min(0.7, palmFade)); }
+  mirrorProps.visible = mirrorOn && me3 > 0.9; mirrorProps.position.set(MIRROR_STAND.x, groundY(MIRROR_STAND.x, MIRROR_STAND.z), MIRROR_STAND.z - 0.9); // at the glass's own depth
   spotRings(t);
   if (me3 > 0 || rk > 0.001 || camera.fov !== fov || (camera.view && camera.view.enabled)) {
     camera.fov = fov;
@@ -2006,7 +2149,7 @@ function frameBody() {
   if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
   camera.lookAt(focus); lastFocus.copy(focus);
   if (brushFig && brushSeat && brushWrite && brushWrite.isOpen) { // the writing: framed on the kneeling writer, beside the strip
-    brushFig.tick(dt); const [bp, bf] = brushFig.view(brushSeat, innerWidth < innerHeight); camera.position.copy(bp); camera.lookAt(bf);
+    brushFig.tick(dt); const [bp, bf] = brushFig.view(brushSeat, innerWidth < innerHeight); seatOrbit(bp, bf); camera.position.copy(bp); camera.lookAt(bf);
   }
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
   figureLightTick(t, dt, me3);
@@ -2061,7 +2204,7 @@ function drawLabels(t) {
     const sh = myShelf();
     if (sh.sealed.length) placeLabel(label("shelfS", sh.sealed.length > 1 ? sh.sealed.length + " scrolls, sealed" : "A scroll from " + (sh.sealed[0].name || "someone"), ""), shelf.at.clone().add(new THREE.Vector3(-0.3, 0.42, 0)));
     else if (sh.blank && !minuteOn()) placeLabel(label("shelfB", "A blank scroll", "dim"), shelf.at.clone().add(new THREE.Vector3(0.3, 0.4, 0)));
-    if (shelf.brush && !(brushWrite && brushWrite.isOpen)) placeLabel(label("shelfW", "Blank strips and a brush", "dim"), shelf.at.clone().add(new THREE.Vector3(0.25, 0.3, 0.1)));
+    if (table.brush && !(brushWrite && brushWrite.isOpen)) placeLabel(label("shelfW", "Blank strips and a brush", "dim"), table.at.clone().add(new THREE.Vector3(0, 0.55, 0)));
   }
   if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting && seatBy(meState.seatWant) ? seatBy(meState.seatWant).top + 0.85 : groundY(meState.pos.x, meState.pos.z) + 1.95));
   for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting && seatBy(p.seat) ? seatBy(p.seat).top + 0.85 : groundY(p.pos.x, p.pos.z) + 1.95));
@@ -2404,7 +2547,10 @@ async function lightNow() {
 }
 function lightSoon() { setTimeout(lightNow, 400); }
 /* The blank strips and the brush wait on the Nook's shelf once one ember is kept (FR-004): the BAR-making opens after the first worked charge. */
-const stripsOpen = () => keptHere() > 0 || roomLight.mine > 0;
+/* His A on nook-brush-door-look-1 (2026-11-16, "Table at the hearth from the start"): the strips and the brush rest on the
+   hearth's low table from the first visit, so no ember has to be kept first. The first touch with no ember held lifts the
+   fire's own small coal into the dip bowl (starterEmber): a real ember in the pouch, which the BAR route needs. */
+const stripsOpen = () => !!(inNook() && garden && isHome(garden));
 let brushWrite = null, brushFig = null, brushFigLoading = null, brushSeat = null;
 /* FR-005 (his A on ee2-brush-cult-look-5, "This is how she writes"): while you write, the cultivation figure kneels on the
    hearth's seat with the brush upright in her hand, in place of your dressed figure (which has no finger bones). She is
@@ -2417,26 +2563,41 @@ function brushFigureOn() {
   brushFigLoading.then(f => { if (!f || !brushWrite || !brushWrite.isOpen) return; f.place(brushSeat); f.show(true); if (meState.body) meState.body.holder.visible = false; if (brushWrite.ember) f.ember(); });
 }
 function brushFigureOff() { if (brushFig) brushFig.show(false); if (meState.body) meState.body.holder.visible = true; }
+let starting = false;
+async function starterEmber() { // the fire lifts one small coal, once: only a player whose pouch has never held an ember
+  if (starting || embers().length) return; starting = true;
+  const m = MOVES.earth_transcend, rec = { move: "earth_transcend", feel: m[1], glow: null, state: "held", at: now(), lantern: null };
+  try {
+    if (EMBER_DEMO || !gardenId || storeDown) demoPouch["demo-first"] = rec;
+    else await op(pouchPath(), "update", { embers: { ["e" + hkey()]: rec } });
+    roomLight.mine = Math.max(roomLight.mine, 1); roomLight.room = Math.max(roomLight.room, roomLight.mine); lightSoon();
+  } finally { starting = false; }
+  if (embers().length) { burst(HEARTH_AT.clone().setY(0.5), 0xf0a24a); openBrush(); }
+}
 function openBrush() {
-  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar,
+  if (!brushWrite) brushWrite = createBrushWrite({ write: writeBar, first: lentCoal,
     onDip: () => brushFig && brushFig.ember(), onStroke: e => brushFig && brushFig.stroke(e), onSet: () => brushFig && brushFig.finish(),
     onClose: done => { brushFigureOff(); if (done) toast("Your BAR is kept with your work."); syncShelf(); refreshHud(); } });
   const held = embers().filter(([, e]) => e.state === "held").sort((a, b) => (b[1].at || 0) - (a[1].at || 0))
     .map(([id, e]) => { const el = MOVES[e.move][1]; return { id, el, name: MOVES[e.move][0], light: cssHue(elHex(el)), demo: isDemoEmber(id) }; });
-  if (!held.length) { toast(stripsOpen() ? "Every ember you hold is written or lit. Keep another at the hearth." : "Keep an ember at the hearth first."); return; }
-  if (shelf.brush) shelf.brush.userData.wet(null);
+  if (!held.length) { if (!embers().length) { starterEmber(); return; } toast("Every ember you hold is written or lit. Keep another at the hearth."); return; }
+  if (table.brush) table.brush.userData.wet(null);
   brushWrite.open(held);
   brushFigureOn();
 }
 /* Saving the BAR: the route mints its vibeulon and marks the ember written. A preview's demo ember writes on this page only. */
-async function writeBar({ ember, mark, demo }) {
+/* The strip's first question names the coal the fire lent (starterEmber): the player's first strip, dipped in an Earth ember
+   with no glow, before any ember of theirs is written or lit. Embers keep no extra fields (rules.ts EMBER_KEYS), so it is
+   read from that shape; a first check-in that also left a glowless Earth ember reads the same, and the line still fits. */
+const lentCoal = e => !!e && e.el === "earth" && embers().every(([, x]) => x.state === "held") && (() => { const r = embers().find(([k]) => k === e.id); return r && r[1].move === "earth_transcend" && r[1].glow == null; })();
+async function writeBar({ ember, mark, ask, demo }) {
   const el = MOVES[(embers().find(([k]) => k === ember) || [, {}])[1].move]?.[1];
   if (demo || !gardenId || storeDown) {
     if (demoPouch[ember]) demoPouch[ember] = { ...demoPouch[ember], state: "written", bar: "local-" + hkey() };
     return { ink: el && INK[el] ? INK[el].set : null };
   }
   let j;
-  try { j = await api("/api/between/" + gardenId + "/bar", { ember, mark }); }
+  try { j = await api("/api/between/" + gardenId + "/bar", { ember, mark, ask }); }
   catch (e) { throw new Error(e && e.code === "unavailable" ? "No connection. The strip waits until you are back online." : (e && e.message) || "It did not set. Try again in a moment."); }
   const p = myPouch && myPouch.embers ? myPouch : { embers: {} };
   myPouch = { ...p, embers: { ...p.embers, [ember]: { ...(p.embers[ember] || {}), state: "written", bar: j.barId } } };
@@ -3036,13 +3197,12 @@ function openSheet(name, arg) {
   // sat by the fire, the moment is had in the room (no card); only "Something stirs" opens the pickers, in the low strip
   if (name === "hearth" && arg !== "stir") { hmBegin(); return; }
   if (name === "hearth" && sheetName !== "hearth") hd = {};
-  if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
   if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1, intensity: 5, direction: "cant_tell" };
   // in the homeroom the doorway is had at the doorway itself, never as a sheet over the room (veil-turn)
   if (name === "destinations" && g && isHome(g)) { openVeil(); return; }
   if (name === "invitations" || name === "rooms" || name === "destinations") refreshList();
   if (name === "spirit" || name === "checkin") fetchHome();
-  if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
+  if (sheetName === "look" && name !== "look") { ensureMyBody().catch(() => {}); }
   if (name === "invite" && g && !isHome(g) && isMember(g) && members(g).length >= 2 && arg !== "list") { openPaper("write", { room: gardenId }); return; } // a scroll, not a form (Still B)
   if (name === "hope") caption(MINUTE_CAPTIONS.hope);
   if (name === "style" && g && isHome(g) && inNook() && hollow && window.__between.voice) { if (sheetName) closeSheet(); windowTurn(); return; }
@@ -3053,7 +3213,7 @@ function closeSheet() {
   const wasLook = sheetName === "look" || sheetName === "hope";
   if (window.__between && window.__between.voice) window.__between.voice.quiet("sheet");
   sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud"); document.body.classList.toggle("seatedmoment", !!hm);
-  if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
+  if (wasLook) { setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
 }
 // Setup is closeable now: there is always the homeroom to stand in (br-home-is-a-room).
@@ -3224,27 +3384,11 @@ function destinationsSheet() {
     <div class="stack"><h3>Shared rooms</h3>${sharedRows}<div class="row"><button class="quiet" type="button" data-open="rooms">Manage rooms</button></div></div>
   </div>`;
 }
-/* The mirror's strip: the parts as tabs, the chosen part's choices as round swatches; every tap re-dresses you. */
-const keptLook = () => myHome.look || (list && list.home && list.home.look) || null;
-const SHAPE_SVG = { a: "M9 3h6v26H9z", b: "M4 3h16l-4 26H8z", c: "M9 3h6c0 5 5 9 5 13s-4 8-4 13H8c0-5-4-9-4-13s5-8 5-13z" };
-const BUILD_RX = { slender: 3.5, average: 5, broad: 6.5, round: 8 };
-function chipGlyph(k, id) {
-  const svg = d => `<svg viewBox="0 0 24 32" width="24" height="32" aria-hidden="true">${d}</svg>`;
-  if (k === "shape") return svg(`<path d="${SHAPE_SVG[id]}" fill="#e8dccb" opacity=".85"/>`);
-  if (k === "build") return svg(`<ellipse cx="12" cy="16" rx="${BUILD_RX[id]}" ry="13" fill="#e8dccb" opacity=".85"/>`);
-  return "";
-}
+/* The mirror's tray: the touches around the glass do the choosing (comb, stones, shelf figure, palm, pegs, hem). */
 function lookSheet() {
-  if (!lookDraft) lookDraft = parseLook(lookOf(me) || "") || { ...DEFAULT_LOOK };
-  const k = mirrorPart, t = lookText(lookDraft), unsaved = t !== keptLook();
-  const chip = o => { const on = lookDraft[k] === o.id;
-    return `<button type="button" class="mchip${on ? " on" : ""}" aria-pressed="${on}" data-act="lookPick" data-id="${k}:${o.id}"><i${o.swatch ? ` style="background:${o.swatch}"` : ""}>${o.swatch ? "" : chipGlyph(k, o.id)}</i><span>${esc(o.label)}</span></button>`; };
-  return `<div class="mpanel" aria-label="The mirror. Choose how you look; your figure changes as you choose.">
-    <div class="mtabs" role="tablist">${MIRROR_PARTS.map(([id, l]) => `<button type="button" role="tab" aria-selected="${id === k}" class="${id === k ? "on" : ""}" data-act="lookPart" data-id="${id}">${esc(l)}</button>`).join("")}</div>
-    <div class="mchips">${optionsOf(k).map(chip).join("")}</div>
-    ${k === "style" || k === "colour" ? `<p class="mnote">Hair shows in Chapter 1, not on this figure yet: <a href="${CHAPTER1_LOOK(t)}" target="_blank" rel="noopener">take this look to Chapter 1</a>.</p>` : ""}
-    <div class="mbar"><span class="mstate">${unsaved ? "Not saved yet" : "This is how your rooms see you"}</span>
-      <button type="button" data-act="lookKeep" ${unsaved ? "" : "disabled"}>Save this look</button><button class="ghost" type="button" data-act="lookRandom">Choose for me</button><button class="quiet" type="button" data-close>Leave</button></div></div>`;
+  return `<div class="mpanel" aria-label="The mirror. Touch what is around the glass; your figure changes as you touch.">
+    <p class="mnote">Touch the comb, the stones, the carved figure, the robes on their pegs, or the glass above your head. Your figure changes as you touch. It keeps this look.</p>
+    <div class="mbar"><button class="quiet" type="button" data-close>Leave</button></div></div>`;
 }
 const goalsList = () => Object.entries(myHome.goals || {}).filter(([, x]) => x && x.text).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
 function goalsSheet() {
@@ -3337,10 +3481,13 @@ function checkinSheet() {
   }
   const sp = feedable(), g = view().g, room = g && !isHome(g) && isMember(g) && g.phase !== "closed";
   const given = w.given, hearthOffer = isHome(g) && !given && careOffered(hearthCareNow(), caredThisVisit) != null;
+  const firstEmber = hearthOffer && minuteOn() && !mstate().done.ember; // the minute's ember beat: the only place for this ember is the ash
   return `<div class="stack wave" style="--c:${c}">${head}
     <div class="emberbig"><span class="ember" style="--c:${c};--s:58px"></span></div>
     <h2>${given ? esc(given) + " took your ember" : "An ember of " + esc(FEELS[w.ember || w.feel])}</h2>
     ${given ? `<p class="small muted">Your check-in is kept in your homeroom.</p><div class="row"><button type="button" data-close>Back to the room</button></div>`
+    : firstEmber ? `<p class="small muted">What you walked through left this ember. The hearth is cold under old ash. Give the ember to the ash, and the ash sweeps it.</p>
+    <div class="row"><button type="button" data-act="hearthGiveWalk">Give it to the ash</button></div>`
     : `<p class="small muted">What you walked through left this ember. Give it to one of your spirits, and it feeds them. An ember of a spirit's own element feeds it twice over.</p>
     ${sp.length ? `<div class="choice">${sp.map(x => spiritBtn(x, w.ember || w.feel)).join("")}</div>` : `<p class="small">None of your spirits is with you. ${isHome(g) ? "Call one up from the caves under Spirits, or keep the ember for later." : "Bring one in from your homeroom, or keep the ember for later."}</p>`}
     <div class="row">${hearthOffer ? `<button type="button" data-act="hearthGiveWalk">Give it to the hearth</button>` : ""}<button class="ghost" type="button" data-act="emberKeep">Keep it for later</button>${room ? `<button class="ghost" type="button" data-act="emberStone">Leave it on a stone for them</button>` : ""}</div>`}</div>`;
@@ -3841,10 +3988,35 @@ function myShelf() {
 }
 const PREVIEW_SCROLL = { room: "preview", id: "s0", name: "Ari", style: "dusk-hollow", started: true, when: null, note: "I saved you the plum cushion.", at: 1, preview: true };
 const paperDone = new Set(); // scrolls answered on this page, before the list catches up
+/* The hearth's low table: a plank on short legs beside the hearth's cushion, the blank strips, the brush and a dip bowl
+   resting on it (his A on nook-brush-door-look-1). Tapping any of them opens the writer; nothing here asks you to sit. */
+const table = { group: null, sig: "", taps: [], brush: null, at: new THREE.Vector3() };
+function syncTable() {
+  const want = stripsOpen() && hollow, s = want && (seatBy(hearthSeatId()) || seatsHere().find(st => st.hearth));
+  if (!s) { if (table.group) { scene.remove(table.group); table.group = null; table.sig = ""; table.taps = []; table.brush = null; } return; }
+  const sig = [s.x, s.z, s.yaw].map(v => (+v).toFixed(2)).join();
+  if (table.group && sig === table.sig) return;
+  if (table.group) scene.remove(table.group);
+  table.sig = sig; table.taps = [];
+  const g = new THREE.Group(), fx = Math.sin(s.yaw), fz = Math.cos(s.yaw); // fx,fz: toward the fire from the cushion
+  const px = s.x + fz * 0.85 + fx * 0.15, pz = s.z - fx * 0.85 + fz * 0.15; // to the cushion's right-hand side
+  g.position.set(px, groundY(px, pz), pz); g.rotation.y = s.yaw; scene.add(g); table.group = g; table.at.copy(g.position);
+  const wood = new THREE.MeshStandardMaterial({ color: 0x6b4a2c, roughness: 0.85 }), dark = new THREE.MeshStandardMaterial({ color: 0x4a3320, roughness: 0.9 });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.035, 0.38), wood); top.position.y = 0.26; g.add(top);
+  for (const [lx, lz] of [[-0.26, -0.14], [0.26, -0.14], [-0.26, 0.14], [0.26, 0.14]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.24, 0.04), dark); l.position.set(lx, 0.12, lz); g.add(l); }
+  const put = (m, x, y, z, ry) => { m.position.set(x, 0.2775 + y, z); m.rotation.y = ry; g.add(m); table.taps.push({ key: "strip", m }); };
+  put(stripsMesh(THREE), -0.14, 0, 0.02, 0.1);
+  const glow = new THREE.PointLight(0xffc77a, 0.25, 1.4); glow.position.set(0, 0.5, 0.1); g.add(glow);
+  const b = brushMesh(THREE); b.scale.setScalar(1.6); put(b, 0.02, 0.012, 0.13, 0.2); table.brush = b;
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.05, 0.05, 20), new THREE.MeshStandardMaterial({ color: 0x2c2420, roughness: 0.6 }));
+  const ink = new THREE.Mesh(new THREE.CircleGeometry(0.062, 20), new THREE.MeshStandardMaterial({ color: 0x15100d, emissive: 0xf0a24a, emissiveIntensity: 0.35, roughness: 0.3 })); ink.rotation.x = -Math.PI / 2; ink.position.y = 0.023; bowl.add(ink);
+  put(bowl, 0.2, 0.025, -0.04, 0);
+}
 function syncShelf() {
+  syncTable();
   const want = inNook() && hollow && garden && isHome(garden);
   if (!want) { if (shelf.group) { scene.remove(shelf.group); shelf.group = null; shelf.sig = ""; } return; }
-  const sh = myShelf(), strips = stripsOpen(), sig = JSON.stringify([strips, sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
+  const sh = myShelf(), sig = JSON.stringify([sh.blank, paperBusy === "blank", sh.sealed.map(x => x.room + x.id), sh.keepsakes.slice(0, 4).map(x => x.room + x.id + x.answer)]);
   if (sig === shelf.sig && shelf.group) return;
   // a sealed scroll that was not here a moment ago has just landed: a puff of leaves
   const ids = new Set(sh.sealed.map(x => x.room + "|" + x.id));
@@ -3853,7 +4025,7 @@ function syncShelf() {
   if (shelf.group) scene.remove(shelf.group);
   const sp = SHELLS.nook.spots.find(x => x.id === "shelf");
   const g = new THREE.Group(); g.position.set(sp.at[0], sp.at[1], sp.at[2]); g.rotation.y = sp.face || 0; scene.add(g);
-  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = []; shelf.brush = null;
+  shelf.group = g; shelf.at.set(sp.at[0], sp.at[1], sp.at[2]); shelf.face = sp.face || 0; shelf.taps = [];
   const put = (m, x, y, z, ry, tap) => { m.position.set(x, y, z); m.rotation.y = ry; g.add(m); if (tap) shelf.taps.push({ ...tap, m }); };
   // stills round 2026-11-03-council-scroll-ad1: the book stands on the shelf's left half since fb-look-01 and hid the sealed
   // scrolls at -0.27; every scroll now sits on the right half, sealed ones in front, the council's on top of them
@@ -3862,14 +4034,6 @@ function syncShelf() {
   sh.council.slice(0, 1).forEach((x, i) => put(scrollMesh("council"), sh.sealed.length > 1 ? 0.3 : 0.38, sh.sealed.length > 1 ? 0.072 : 0, 0.1, 0.03, { key: "council", i }));
   sh.keepsakes.slice(0, 4).forEach((x, i) => put(scrollMesh("keep", KEEP_HUE[x.answer] || KEEP_HUE.no), 0.48 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? 0.15 : -0.1), { key: "keep", i }));
   sh.councilKept.slice(0, 2).forEach((x, i) => put(scrollMesh("councilKeep"), 0.2 - i * 0.07, 0, -0.14, Math.PI / 2 + (i % 2 ? -0.12 : 0.08), { key: "councilKeep", i }));
-  // the blank strips and the hearth's brush, at the front edge of the shelf once one ember is kept (FR-004; stills round
-  // 2026-11-04-ember-first-1 frame 2): tapping either takes a strip to the cloth
-  if (strips) {
-    put(stripsMesh(THREE), 0.24, 0, 0.02, 0.05, { key: "strip" });
-    const b = brushMesh(THREE); b.scale.setScalar(1.4); put(b, 0.26, 0.012, 0.14, 0.15, { key: "strip" }); shelf.brush = b;
-    if (shelf.stripsSeen === false) burst(shelf.at.clone().add(new THREE.Vector3(0, 0.1, 0.15)), 0xe8cf7a);
-  }
-  shelf.stripsSeen = strips;
   if (landed) burst(shelf.at.clone().add(new THREE.Vector3(-0.25, 0.1, 0.1)), 0x8fd08a);
 }
 function shelfTapPos(tp) { const v = new THREE.Vector3(); tp.m.getWorldPosition(v); v.y += 0.03; return v; }
@@ -4025,7 +4189,7 @@ async function sparkUrl(id) {
 /* A spark's invitation link. A Friendcraft steward's carries `&game=friendcraft`, which the friend's page turns into one
    enrolment call (Six-faces-council spec .specify/specs/friendcraft-deck FR-002, FR-003). Every other link is unchanged. */
 function inviteLink(id, token) {
-  return location.origin + "/ontology-game/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token) + (list && list.steward ? "&game=friendcraft" : "");
+  return location.origin + "/between?g=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(token) + (list && list.steward ? "&game=friendcraft" : "");
 }
 async function sparkLink(to, note) {
   const link = await sparkUrl(to.id);
@@ -4141,7 +4305,14 @@ function hearthGiveSheet() {
 function minuteTap(key) {
   if (!garden || !isHome(garden) || storeDown) return false;
   const st = mstate(), beat = minuteBeat();
-  if (key === "hearth") { const c = hearthCareNow(); if (careOffered(c, caredThisVisit) != null) { openSheet("hearthgive"); return true; } return false; }
+  if (key === "hearth") {
+    const c = hearthCareNow();
+    if (careOffered(c, caredThisVisit) == null) return false;
+    // the first ember is a check-in (hw2-first-ember A): a cold hearth with no ember waiting asks you what you feel first
+    if (!st.done.ember && !embersWaiting().length) setTimeout(() => openSheet("checkin"), 350); // after the tap's own click, so it cannot land on a feeling under the finger
+    else openSheet("hearthgive");
+    return true;
+  }
   if (key === "portal" && minuteOn()) {
     if (st.step === "vine" && beat === "vine") { standUp(); burst(PORTAL_AT.clone().setY(1.0), 0x8fd08a); minuteAct("vine"); }
     else toast("The vines fall as you learn the room.");
@@ -4210,9 +4381,6 @@ document.addEventListener("click", async ev => {
   if (a === "move") { const it = view().items.get(id); const r = moveRight(it); if (!r) return; placing = { id, ask: r === "shared" }; selected = null; refreshHud(); toast(r === "shared" ? "Tap the floor where you would like it." : "Tap the floor where it should stand, or drag it."); return; }
   if (a.startsWith("pace:")) { setPace(a.slice(5)); if (gardenId && isMember(view().g)) { myPrivate.captions = getPace(); savePriv(); } renderSheet(); return; }
   if (a === "lanternCancel") { placing = null; refreshHud(); return; }
-  if (a === "lookPick") { const [k, v] = id.split(":"); lookDraft = { ...lookDraft, [k]: v }; renderSheet(); ensureMyBody().catch(() => {}); return; }
-  if (a === "lookRandom") { lookDraft = randomLook(); renderSheet(); ensureMyBody().catch(() => {}); return; }
-  if (a === "lookPart") { mirrorPart = id; renderSheet(); return; }
   if (a === "checkFeel") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; walk.feel = walk.feel === id ? null : id; } renderSheet(); return; }
   if (a === "checkDir") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; const r = $("#cInt"); if (r) walk.intensity = +r.value; walk.direction = id; } renderSheet(); return; }
   if (a === "waveBack") { if (walk && walk.step === 0) { walk.step = -1; walk.charge = null; renderSheet(); } return; }
@@ -4332,7 +4500,6 @@ document.addEventListener("click", async ev => {
       try { await navigator.clipboard.writeText(link); toast("The invitation link is on your clipboard."); }
       catch { window.prompt("Copy the invitation link:", link); }
     }
-    else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Saved. Each of your rooms shows you this way now."); }
     else if (a === "emberGive") await giveEmber(id);
     else if (a === "hearthGiveWalk") { const c = hearthCareNow(); if (walk && walk.eid && careOffered(c, caredThisVisit) != null) { const eid = walk.eid; closeSheet(); doCare(c, eid); } }
     else if (a === "hearthGive") { const c = hearthCareNow(); closeSheet(); if (careOffered(c, caredThisVisit) != null) doCare(c, id); }
@@ -4540,13 +4707,6 @@ function refreshList() {
   return listing;
 }
 setInterval(() => { if (!document.hidden) refreshList(); }, 30000);
-async function keepLook() {
-  const t = lookText(lookDraft);
-  await homeOp({ look: t });
-  // and into each room, so the other person sees you as you made yourself (a member writes only their own key)
-  const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
-  await Promise.all(rooms.map(r => r.id === gardenId ? op("garden/main", "update", { looks: { [me]: t } }) : api("/api/between/" + r.id + "/doc", { path: "garden/main", op: "update", data: { looks: { [me]: t } } }).catch(() => {})));
-}
 function goRoom(id) { if (id) { walkThrough(id); return; } markSeen(); location.href = ROOM_URL(null); }
 /* ---------- the check-in's ember, and the spirits it feeds (part 4) ---------- */
 document.addEventListener("input", e => {   // the check-in's two sliders say their value as they move
@@ -4867,14 +5027,14 @@ let booted = false;
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => r.key) }, brush: () => openBrush(), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
+window.__between = { veil: () => veil && { i: veil.i, places: realms().map(r => r.key) }, brush: () => openBrush(), seats: () => seatsHere().map(x => ({ id: x.id, x: +x.x.toFixed(2), z: +x.z.toFixed(2), yaw: +x.yaw.toFixed(2), hearth: !!x.hearth, coins: !!x.coins, wake: !!x.wake })), sitOn: id => sitOn(id), standUp: () => standUp(), sit: () => ({ blocked: sitBlocked(), care: hearthCareNow(), seat: hearthSeatId(), go: sitAtHearth() }), frame: key => { directCam = { key, t0: performance.now() }; }, roomLight: () => ({ ...roomLight, step: qiFromEmbers(roomEmbers()) }), gardenId: () => gardenId, growth: () => growthOf(view()), hollowHandles: () => hollow && hollow.handles, gameFeel, rawPeers, THREE, pollSoon, tea: () => tea, outbox, view, meState, op, api, list: () => list, ready: () => booted, toast, nameOf: uid => nameOf(uid, view().g), peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   hearthCare: () => ({ care: hearthCareNow(), stage: hollow && hollow.handles.stage ? hollow.handles.stage.care : null, offer: !!(hollow && hollow.handles.stage && hollow.handles.stage.offer), caredThisVisit, sitBlocked: sitBlocked() }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
   seats: () => seatsHere(), sitOn, sitAtHearth, standUp, sheet: () => sheetName, seatedAtHearth,
   moment: () => hm && { step: hm.step, held: hm.held && hm.held.eid, lid: hm.lid, hooks: (hm.hooks || []).map(h => h.id), lantern: !!hm.L, motes: hm.motes.map(m => ({ eid: m.eid, state: m.state, shown: m.shown, at: m.pos.toArray() })) },
   hmHold, hmPress, hmLight, hmSend: id => hm && hm.hooks && hmSend(hm.hooks.find(h => h.id === id) || null), hmTap,
   minute: () => ({ ...mstate(), beat: mclock.beat, laterReady: mclock.laterReady, started: mclock.started, hearth: hollow && hollow.handles.hearth ? { want: hollow.handles.hearth.want, k: hollow.handles.hearth.k, ember: hollow.handles.hearth.ember } : null, vines: vines.map(v => v.state), wake: wake.on }),
-  anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
+  anchors: () => ({ hearth: HEARTH_AT.toArray(), portal: PORTAL_AT.toArray(), mirror: BETWEEN_AT.toArray(), shelf: shelf.at.toArray(), shelfTaps: shelf.taps.concat(table.taps).map(tp => ({ key: tp.key, i: tp.i ?? 0, at: shelfTapPos(tp).toArray() })) }),
   shelf: () => myShelf(), paper: () => paper && { mode: paper.mode, open: paper.open, to: paper.to, chip: paper.chip, answered: paper.answered || null },
   home: () => myHome, portalTo: () => portalTo, direct: (k) => { directCam = k ? { key: k, t0: performance.now() } : null; },
   room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; },

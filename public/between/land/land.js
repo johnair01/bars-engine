@@ -50,7 +50,7 @@ import * as FF from "./friends-fire.js";
 import * as FS from "./fire-song.js";
 import * as CH from "./chamber.js";
 import { makeCultSeated } from "./cult-seat.js";
-import { cultPick } from "../cult/pick.js";
+import { cultPick, cultLook } from "../cult/pick.js";
 import { kept as keptPieces, SAMPLE as KEPT_SAMPLE } from "../kept.js";
 import { mountRoom, densityOf, STATES } from "../block-room.js";
 import { mountRoad } from "./road.js";
@@ -82,7 +82,7 @@ const step = m => { const e = $("#loadStep"); if (e) e.textContent = m; };
 const renderer = new THREE.WebGLRenderer({ antialias: !LOW, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(devicePixelRatio, LOW ? 1.5 : 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = ROAD ? 1.45 : 1.1;
 $("#stage").appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
@@ -413,13 +413,25 @@ async function makeCultFigure(M) {
 }
 /* the cultivation walker, wrapped in makeFigure's shape. The pack is an empty group on the back; the road hangs its bundle there. */
 async function makeRoadFigure() {
-  let who = Q.get("who"); if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
+  const picked = cultLook();   // the figure she made at the mirror walks the road (hj-character-creator-1 A, hj-comb-look-1 A)
+  let who = Q.get("who"); if (who !== "m" && who !== "f") who = picked.body; if (who !== "m" && who !== "f") { try { who = sessionStorage.getItem("hj-who"); } catch (e) { who = null; } }
   const { makeWalker } = await import("../cult/walker.js");   // loaded only on the road, so other places do not fetch the cult bodies
-  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2" });
+  const { body: _b, outfit: _o, ...look } = picked;           // the road keeps its travel robe; build, skin, height and hair come from the mirror
+  const W = await makeWalker({ who: who === "m" ? "m" : "f", outfit: "B2h", underwrap: true, look });
   scene.add(W.holder);
   const bag = new THREE.Group(); bag.position.set(0, 0.92, -0.16); W.holder.add(bag);
+  const { packGroup } = await import("./pack.js"); bag.add(packGroup(THREE));   // a bundle, not the toolbag's box
   const plank = new THREE.Group();
-  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, update(dt, moving) { W.update(dt, moving); } };
+  /* the kneel for the letter (his A on hj-cultivation-look-1): the same seiza the nook hearth uses (cult/kneel.js), fitted to the
+     ground (seat top 0). Loaded on the first kneel. Walking on stands her up again. */
+  let K = null, kneeling = false;
+  /* the pack rides the back: kneeling lowers the hips, so the pack drops with them (it hung at standing mid-back height and floated by her head) */
+  const hipY = () => { const v = new THREE.Vector3(); W.X.F.bones.hips.getWorldPosition(v); return W.holder.worldToLocal(v).y; }; W.holder.updateMatrixWorld(true); const hip0 = hipY();
+  const dropPack = () => { W.holder.updateMatrixWorld(true); bag.position.y = 0.92 + (kneeling ? hipY() - hip0 : 0); };
+  return { holder: W.holder, bag, plank, setBag() {}, get bagOn() { return true; }, get kneeling() { return kneeling; },
+    async kneel() { if (kneeling) return; const { makeKneel } = await import("../cult/kneel.js"); K = K || makeKneel(W); K.sit(0); kneeling = true; dropPack(); },
+    stand() { if (!kneeling) return; K.stand(); kneeling = false; dropPack(); },
+    update(dt, moving) { if (kneeling) { if (moving) this.stand(); else return; } W.update(dt, moving); } };
 }
 async function makeFigure(M) {
   if (ROAD) return makeRoadFigure();
@@ -539,7 +551,7 @@ async function build() {
     state.fog = state.ch.fog; state.flies = null; state.rain = null;
   } else {
   // the forest (the Wood land) under the week's weather; dusk, green through the canopy
-  state.fog = scene.fog = new THREE.FogExp2(0x4c5c58, 0.042); scene.background = new THREE.Color(0x4c5c58);
+  state.fog = scene.fog = new THREE.FogExp2(0x4c5c58, ROAD ? 0.022 : 0.042); scene.background = new THREE.Color(0x4c5c58);
   state.sky = duskSky(V(-0.4, 0.15, -1), 0x3a4440, 0x8a9888, 0x4a4660, 0x9ab890);
   state.hemi = new THREE.HemisphereLight(0xa8c0c8, 0x3c4030, 1.6); scene.add(state.hemi);
   const dusk = new THREE.DirectionalLight(0xc0dcc0, 1.4); dusk.position.set(-6, 10, -14); scene.add(dusk);
@@ -568,7 +580,11 @@ async function build() {
     });
   }
   if (has("sounding-stump")) stump(M, V(0, groundH(0, 0), 0));
-  if (has("music-bar")) musicBar();
+  if (has("music-bar")) {
+    const before = scene.children.length; musicBar();
+    /* the road's walk reads the road, not the song: the hanging staff and its notes crossed the caption and the view (Wendell on ep0-walk-look-2, "muddy") */
+    if (ROAD) for (const o of scene.children.slice(before)) o.visible = false;
+  }
   // the forest beyond, kept off the way in and the arch
   const away = (x, z) => (Math.abs(x) < 3.2 && z > 4 && z < 14) || Math.hypot(x - ARCH.x, z - ARCH.z) < 3.5 || (Math.abs(x + Math.max(0, -z - CLR) * 0.25) < 2.6 && z < -CLR + 2 && z > -CLR - 12);
   for (let i = 0, n = LOW ? 55 : 95; i < n; i++) { const a = r() * 6.28, d = CLR + 3.5 + Math.pow(r(), 0.8) * 30, x = Math.cos(a) * d, z = Math.sin(a) * d; if (away(x, z)) continue;
@@ -603,7 +619,7 @@ async function build() {
   mergeStatic(G);
   step("you, with the toolbag");
   state.me = await makeFigure(M);
-  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag }); state.road.show(); }
+  if (ROAD) { state.road = mountRoad(THREE, { scene }, { hang: state.me.bag, onLeave: () => state.me.stand(), onPick: () => state.me.stand() }); state.road.show(); }
 }
 
 /* ===================================================================================================
@@ -778,13 +794,21 @@ $("#card").addEventListener("submit", e => { const f = e.target.closest("form[da
 $("#card").addEventListener("focusin", e => { if (e.target.matches("input")) { me.keys.clear(); state.melting = true; } });
 $("#card").addEventListener("keydown", e => { if (e.key === "Escape" && e.target.matches("input")) { state.melting = false; e.target.blur(); } });
 $("#card").addEventListener("focusout", e => { if (e.target.matches("input")) state.melting = false; });
+/* kneel at the letter, face it, then open its tag; leaving it or taking it stands her up (road.js onLeave / onPick) */
+async function kneelToLetter() {
+  const L = state.road.LETTER, dx = L.x - me.pos.x, dz = L.z - me.pos.z, d = Math.hypot(dx, dz) || 1;
+  me.target = null; me.yaw = Math.atan2(dx, dz);
+  if (d > 0.6) { me.pos.x = L.x - dx / d * 0.6; me.pos.z = L.z - dz / d * 0.6; }
+  try { await state.me.kneel(); } catch (e) { console.warn("kneel failed; the card opens standing", e); }
+  state.road.card();
+}
 $("#card").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; audio();
   if (b.dataset.melt) { state.block.act(b.dataset.melt); state.cardKey = ""; }
   else if (b.dataset.note != null) giveNote(+b.dataset.note);
   else if (b.dataset.fnote != null && FFX) fireNote(+b.dataset.fnote);
   else if (b.dataset.block && FFX) { const fs = fireSong(); fs.song = FS.tagBlock(fs.song, b.dataset.block); state.cardKey = ""; }
-  else if (b.dataset.act === "letter" && state.road) state.road.card();
+  else if (b.dataset.act === "letter" && state.road) kneelToLetter();
   else if (b.dataset.act === "home") goHome();
   else if (b.dataset.act === "again") walkAgain();
   else if (b.dataset.act === "walkhome") { const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on")); setTimeout(() => { location.href = WALK_NOOK + "?home=1"; }, 700); }
@@ -981,7 +1005,7 @@ function goPlace(where) {
 }
 function goHome() {
   const fade = $("#fade"); fade.hidden = false; requestAnimationFrame(() => fade.classList.add("on"));
-  let back = "/ontology-game/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
+  let back = "/between"; try { back = sessionStorage.getItem("ctw-back") || back; } catch (e) { /* plain */ }
   if (WALK) back = WALK_NOOK;   // the walk's nook is the visitor's, whoever opened the walk
   setTimeout(() => { location.href = back; }, 700);
 }
@@ -1070,7 +1094,7 @@ function frame() {
   // the rain stops where a song is played to its end; the light warms a little
   const rk = Math.min(state.done ? 0 : 1, state.block ? state.block.rain() : 1); state.rainK += (rk - state.rainK) * Math.min(1, dt * 0.5);
   if (state.rain) { state.rain.mat.opacity = 0.32 * state.rainK; state.rain.lines.visible = state.rainK > 0.02; if (state.rain.lines.visible) state.rain.update(T, me.pos); }
-  if (state.fog && !SHX && !FFX) { state.fog.density = 0.03 + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
+  if (state.fog && !SHX && !FFX) { state.fog.density = (ROAD ? 0.016 : 0.03) + 0.012 * state.rainK + (state.block ? state.block.fogAdd() : 0); if (state.warm) state.warm.intensity = (0.5 + (1 - state.rainK) * 0.9) * (state.block ? state.block.lightK() : 1); }
   if (state.block) state.block.frame(dt, T);
   if (state.ch) state.ch.frame(dt, T);
   if (state.flies) state.flies.material.opacity = 0.65 + Math.sin(T * 1.7) * 0.25;
@@ -1087,6 +1111,10 @@ function frame() {
     await build();
     // previews: stand at the stump, or open with the song done
     if (Q.get("at") === "stump") { me.pos.set(0, 0, STUMP_R + 0.6); me.yaw = Math.PI; camYaw = 0.35; }
+    if (ROAD && /^r[1-4]$/.test(Q.get("at") || "")) {   // the road's four stops for the looks: the arch end, the bend, the letter, the road's far end
+      const stop = { r1: [7.6, Math.PI], r2: [6.4, Math.PI], r3: [4.6, Math.PI], r4: [1.6, Math.PI] }[Q.get("at")], rz = stop[0];
+      me.pos.set(state.road.roadX(rz), 0, rz); me.yaw = stop[1]; camYaw = 0;
+    }
     if (Q.get("at") === "out") { me.pos.set(0, 0, -CLR + 1.6); me.yaw = Math.PI; camYaw = 0; }
     if (SHX && Q.get("at") === "balance") { me.pos.set(SH.BALANCE.x + 0.35, 0, SH.BALANCE.z + 1.05); me.yaw = Math.PI; camYaw = 0.5; }
     if (SHX && Q.get("at") === "bridge") { me.pos.set(SH.BRIDGE_END.x + 0.6, 0, SH.BRIDGE_END.z + 0.2); me.yaw = -Math.PI / 2; camYaw = -1.0; }
@@ -1130,7 +1158,7 @@ function frame() {
     $("#loading").classList.add("gone"); setTimeout(() => { $("#loading").hidden = true; }, 900);
     $("#hud").hidden = false;
     if (WALK && PLACE === "clearing" && !Q.get("at")) caption("The first of four lands their charge made: this clearing, then the Scale-House, the Friends' Fire and the keeping chamber.", 7);
-    for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
+    if (!ROAD) for (const s of state.ep.start) caption(s, Math.max(5, s.split(" ").length * 0.38));
     if (WALK && CHX) caption("The arch you came in by leads home to the nook, and on to the Hollow, whenever you are done here.", 6);
     if (CHX && !state.block) caption(state.kept.length ? "The keeping chamber. What the cold left stands here, in the order it cleared." : "The keeping chamber, still bare. What the cold leaves when a block clears will stand here.", 6);
     if (FFX) { caption("The road home, at the homeroom's rim.", 5); caption("Round the fire, someone is tuning a guitar, and the others laugh at something said.", 6); }

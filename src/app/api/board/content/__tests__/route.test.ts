@@ -35,7 +35,7 @@ describe('/api/board/content', () => {
     const bad = await PUT(new NextRequest(`${URL_}?sha=${sha('a')}&type=image%2Fpng`, { method: 'PUT', headers: auth, body: gzipSync('b') }))
     expect(bad.status).toBe(400)
     const out = await POST(new NextRequest(URL_, { method: 'POST', headers: { ...auth, 'content-type': 'application/json' },
-      body: JSON.stringify({ set: { 'council/faces.yaml': { sha: sha('a'), type: 'application/json', size: 1 } } }) }))
+      body: JSON.stringify({ set: { 'README.md': { sha: sha('a'), type: 'application/json', size: 1 } } }) }))
     expect(out.status).toBe(400)
   })
   it('stores a reference where the public stills route cannot reach it by hash', async () => {

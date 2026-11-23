@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import * as FG from './figure.js';
 import * as M from './mix.js';
 import { MeshBVH } from 'three-mesh-bvh';
+import { REGALIA_CHAINS } from './chains.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const wp = b => b.getWorldPosition(V());
@@ -82,10 +83,11 @@ function pushOff(X, st, gap = 0.006) {
 // piece turns as a whole and keeps the fold carved into it
 export const CHAINS = { 'sash-tail': { n: 3, hz: 1.1, zeta: 0.22, max: 0.14 }, 'whisk-hair': { n: 3, hz: 1.3, zeta: 0.25, max: 0.1 },
   sleeve: { n: 5, hz: 1.6, zeta: 0.3, max: 0.07, from: 0.04, soft: [0.15, 0.6] } }; // soft: a sleeve's points near the elbow stay skinned (the elbow came through it)
+Object.assign(CHAINS, REGALIA_CHAINS); // elder regalia round 3: the beard, the bells and the stole hang on chains too
 function chainOf(X, pt) {
-  const F = X.F, n = pt.world.length / 3, m = /^(robe|outer)-sleeve([LR])$/.exec(pt.name), cfg = m ? CHAINS.sleeve : CHAINS[pt.name]; if (!cfg) return null;
+  const F = X.F, n = pt.world.length / 3, m = /^(robe|outer)-(sleeve|bell)([LR])$/.exec(pt.name), cfg = m && m[2] === 'sleeve' ? CHAINS.sleeve : CHAINS[pt.name]; if (!cfg) return null; // elder regalia round 3: a bell takes its own entry (make/chains.js) and runs along the forearm like a sleeve
   const u = new Float32Array(n), p = V();
-  if (m) { const el = wp(F.bones['elbow' + m[2]]), wr = wp(F.bones['wrist' + m[2]]), d = wr.clone().sub(el).normalize(); let hi = 0;
+  if (m) { const el = wp(F.bones['elbow' + m[3]]), wr = wp(F.bones['wrist' + m[3]]), d = wr.clone().sub(el).normalize(); let hi = 0;
     for (let i = 0; i < n; i++) { u[i] = p.fromArray(pt.world, i * 3).sub(el).dot(d); hi = Math.max(hi, u[i]); }
     for (let i = 0; i < n; i++) u[i] = THREE.MathUtils.clamp((u[i] - cfg.from) / (hi - cfg.from), 0, 1); }
   else { let y0 = -1e9, y1 = 1e9; for (let i = 0; i < n; i++) { const y = pt.world[i * 3 + 1]; y0 = Math.max(y0, y); y1 = Math.min(y1, y); }

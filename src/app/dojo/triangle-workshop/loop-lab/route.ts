@@ -32,7 +32,7 @@ const PAGE = `<!doctype html>
 <button id="use-station" type="button" hidden>Use this station</button>
 <button id="restart" type="button" hidden>Try again</button>
 <p id="status" role="status"></p>
-<a href="/ontology-game/between">Return to the Nook</a>
+<a href="/between">Return to the Nook</a>
 </section></main>
 <section id="wall-view" class="wall-view" aria-label="Constellation wall" aria-hidden="true" hidden>
   <div class="wall-header"><div><p class="eyebrow">CONSTELLATION WALL · SAMPLE</p><h2>Your thought, in triangles</h2></div><button id="close-wall" class="wall-close" type="button" aria-label="Close constellation wall">Close ✕</button></div>

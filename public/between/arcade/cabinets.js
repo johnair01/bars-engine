@@ -34,7 +34,7 @@ export const BODY = ["#3a2e52", "#2e3350", "#4a2f48", "#33284a"];
 export const CABINETS = [
   { id: "ask", type: "vertical", gameType: "chance", name: "The Ask", route: "/between/land.html?place=ask-desk", colour: "#e0569a", side: -1, slot: 1 },
   { id: "lantern", type: "candy", gameType: "skill", name: "Lantern Table", route: null, colour: "#f0a640", side: 1, slot: 2, round: true, tilt: 58 },
-  { id: "between", type: "cocktail", gameType: "passion", name: "The Between", route: "/ontology-game/between", colour: "#3fd6c4", side: -1, slot: 3 },
+  { id: "between", type: "cocktail", gameType: "passion", name: "The Between", route: "/between", colour: "#3fd6c4", side: -1, slot: 3 },
   { id: "chapter-1", type: "ch1", gameType: "mix", name: "Chapter 1", route: null, colour: "#f2c55c", side: -1, slot: 22 },
 ];
 

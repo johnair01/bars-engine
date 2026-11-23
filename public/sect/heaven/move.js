@@ -3,10 +3,12 @@
 import * as THREE from 'three';
 
 // m/s, m, s. Walk is round 19's pace; run is a jog (a long stride and a short stance, both feet off the ground at
-// mid-stride). Jump: v0 and g give the apex (v0^2 / 2g) and the time in the air (2 v0 / g).
+// mid-stride). Jump: v0 and the rise gravity g give the apex (v0^2 / 2g) and the rise time (v0 / g); the fall pulls
+// fallMult times harder (platformer skill: fall gravity 1.8 x rise, range 1.3-2.5), so the figure hangs at the top and
+// comes down with weight. Time in the air = (v0 / g) (1 + 1 / sqrt(fallMult)).
 export const MOVE = {
   walk: 1.3, run: 4.2, stair: 0.55, stairRun: 1.1, accel: 10, decel: 14,
-  jumpV: 4.4, gravity: 13, coyote: 0.12, buffer: 0.14, airControl: 0.35, stepDown: 0.35, landStep: 0.45,
+  jumpV: 4.0, gravity: 10.8, fallMult: 1.8, coyote: 0.12, buffer: 0.14, airControl: 0.35, stepDown: 0.35, landStep: 0.45,
 };
 // the follow camera: a spring arm from a pivot at the head. dist is what the player last zoomed to; the arm shortens
 // at once when a wall or roof comes between, and grows back slowly. After `hands` seconds without a drag, a moving
@@ -33,7 +35,7 @@ export function vertical(A, input, dt, ground) {
     m.air = true; m.vy = MOVE.jumpV; m.buf = 0; m.since = MOVE.coyote; m.apex = p.y; m.apex0 = p.y;
   }
   if (m.air) {
-    m.vy -= MOVE.gravity * dt; p.y += m.vy * dt; m.apex = Math.max(m.apex, p.y);
+    m.vy -= MOVE.gravity * (m.vy > 0 ? 1 : MOVE.fallMult) * dt; p.y += m.vy * dt; m.apex = Math.max(m.apex, p.y);
     if (p.y <= ground && m.vy <= 0) { p.y = ground; m.air = false; m.vy = 0; m.landed = 0; }
   } else m.landed += dt;
   return m;
@@ -101,4 +103,26 @@ export function cameraRig(cam, orbit, { boxes, groundAt, roofs = () => [] }) {
     cam.position.copy(rig.pivot).addScaledVector(dir, rig.arm); orbit.target.copy(rig.pivot); cam.lookAt(rig.pivot);
   };
   return rig;
+}
+
+// ---- input: the on-screen stick for touch (round 31). It writes input.stick = {x, y} (x right, y forward, each -1..1, null
+// when let go); walk.js's step() reads it beside the keys. One finger on the stick walks; a second finger can drag the view.
+export function touchStick(input, base, knob) {
+  const R = 46; let id = null, cx = 0, cy = 0;
+  const set = (e) => { let dx = e.clientX - cx, dy = e.clientY - cy; const L = Math.hypot(dx, dy);
+    if (L > R) { dx *= R / L; dy *= R / L; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    const k = Math.min(1, Math.hypot(dx, dy) / R), dead = k < 0.18 ? 0 : k;
+    input.stick = dead ? { x: dx / R, y: -dy / R } : { x: 0, y: 0 }; };
+  base.addEventListener('pointerdown', e => { if (id !== null) return; e.preventDefault(); e.stopPropagation(); id = e.pointerId; try { base.setPointerCapture(id); } catch (_) { /* a synthetic pointer has no capture */ }
+    const b = base.getBoundingClientRect(); cx = b.left + b.width / 2; cy = b.top + b.height / 2; set(e); });
+  base.addEventListener('pointermove', e => { if (e.pointerId === id) set(e); });
+  const end = e => { if (e.pointerId !== id) return; id = null; input.stick = null; knob.style.transform = ''; };
+  base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end);
+}
+
+// keys held down are forgotten when the page loses focus, or the figure would walk on with no hand on the keyboard
+export function forgetKeysOnBlur(input) {
+  const clear = () => { input.keys.clear(); input.stick = null; };
+  addEventListener('blur', clear); document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
 }

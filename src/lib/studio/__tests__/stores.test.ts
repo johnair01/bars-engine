@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FLOOR_CAP, dayOf, demoStores, placementId, purseOf, storesWorldOf, type StoresPull } from '../stores'
+import { CRATE_CAP, CRATE_RUN, FLOOR_CAP, dayOf, demoStores, placementId, purseOf, storesWorldOf, type StoresPull } from '../stores'
 import { stagesOf } from '../fleet'
 import { needsWorkStage } from '../shaman'
 
@@ -60,5 +60,20 @@ describe("the Stores' world", () => {
   it('a placement lands the close room, and its work waits there', () => {
     expect(stagesOf({ at: now.toISOString(), answers: {}, steps: [{ id: 'x', what: 'stores' }] })).toEqual(['close'])
     expect(needsWorkStage('stores/run-2026-10-29~x', 'sent up the bell line')).toBe('close')
+  })
+  it('puts at most three unplaced crates on the floor ahead of the leftovers, and keeps the floor at eight', () => {
+    const crates = ['a', 'b', 'c', 'd'].map(x => ({ id: 'crate-' + x, kind: 'crate' as const, words: 'maker', title: x, pic: '/p/' + x }))
+    const hole = { id: 'h', title: 'An object', words: 'not made yet', price: 'about 1 token' }
+    const w = storesWorldOf({ pulls, board, doneKeys: [], placed: { [placementId(CRATE_RUN, 'crate-a')]: { to: 'shelf' } }, now, crates, hole })
+    expect(w.things.filter(t => t.kind === 'crate').map(t => t.id)).toEqual(['crate-b', 'crate-c', 'crate-d'])
+    expect(w.things.filter(t => t.kind === 'crate')).toHaveLength(CRATE_CAP)
+    expect(w.things.length).toBeLessThanOrEqual(FLOOR_CAP)
+    expect(w.hole?.title).toBe('An object')
+  })
+  it('a ledger with nothing to close still shows crates, under the gallery run', () => {
+    const w = storesWorldOf({ pulls: [], board, doneKeys: [], placed: {}, now, crates: [{ id: 'crate-a', kind: 'crate', words: 'm', title: 'a', pic: '/p' }] })
+    expect(w.run).toBe('run-gallery')
+    expect(w.things).toHaveLength(1)
+    expect(w.beads).toBeGreaterThan(0)
   })
 })

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-15T20:48:57.066Z",
+  "generatedAt": "2026-11-20T19:05:58.040Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 738,
+      "lineNumber": 832,
       "params": [],
       "query": [],
       "relationships": [],
@@ -518,7 +518,7 @@
       "method": "POST",
       "pattern": "/api/mcp",
       "entity": "SYSTEM",
-      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,\nclose_read, close_say, whoami, and the pipeline door's nine (pipeline.status, pipeline.next, loop.checks,\nasset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)",
+      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,\nclose_read, close_say, whoami, and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,\nasset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake",
       "permissions": [
         "COUNCIL_MENU_TOKEN",
         "as Authorization: Bearer <key>",
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 808,
+      "lineNumber": 902,
       "params": [],
       "query": [],
       "relationships": [],

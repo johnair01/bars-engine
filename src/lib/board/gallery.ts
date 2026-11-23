@@ -35,9 +35,20 @@ export async function recent(cursor: string | null) {
   return { view: 'recent', cards: items.map(c => ({ ...c, picture: `/board/stills/sha/${c.sha}` })), shelf: shelf.map(c => ({ ...c, picture: `/board/stills/sha/${c.sha}` })), next }
 }
 
+/** One planned row by id, searched over every hole: a call takes its real price from here, never from the page. */
+export async function holeById(id: string): Promise<Hole | null> {
+  return (await rows<Hole>('council/gallery/holes.json')).find(h => h.id === id) ?? null
+}
+
 /** `holes`: the planned rows, cheapest first, so a call for the next piece starts with the least spend. */
 export async function holes(cursor: string | null) {
   const all = (await rows<Hole>('council/gallery/holes.json')).slice().sort((a, b) => (a.price?.tokens ?? 0) - (b.price?.tokens ?? 0) || (a.id < b.id ? -1 : 1))
   const { items, next } = page(all, cursor)
   return { view: 'holes', cards: items, next }
+}
+
+/** Every finished crate, newest made first, each with its picture url: the wings group them by strand. */
+export async function allCrates() {
+  const all = (await rows<Crate>('council/gallery/crates.json')).slice().sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
+  return all.map(c => ({ ...c, picture: `/board/stills/sha/${c.sha}` }))
 }
