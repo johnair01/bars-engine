@@ -21,14 +21,14 @@ export function robeFrame(w, fw, rest = null) {
   const legs = {}; for (const s of ['L', 'R']) legs[s] = { hip: wp(F.bones['hip' + s]), knee: wp(F.bones['knee' + s]), ankle: wp(F.bones['ankle' + s]) };
   const pel = legs.L.hip.clone().add(legs.R.hip).multiplyScalar(0.5);
   const lead = legs.L.ankle.clone().sub(pel).dot(fw) > legs.R.ankle.clone().sub(pel).dot(fw) ? 'L' : 'R', trail = lead === 'L' ? 'R' : 'L';
-  let inside = 0, waist = 0; const depth = rest ? null : new Float32Array(n).fill(-1), T1 = Float32Array.from(M.partWorld(pt)), rim = [];
+  let inside = 0, waist = 0; const depth = rest ? null : new Float32Array(n).fill(-1), T1 = (() => { pt.settled = null; const t = Float32Array.from(M.partWorld(pt)); pt.settled = W; return t; })(), rim = []; let free = 0; // the skinned place (partWorld returns pt.settled while it is set, so `waist` read 0 before)
   for (let i = 0; i < n; i++) { p.fromArray(W, i * 3); const y0 = R0[i * 3 + 1];
     // the leg outline (mix.js legProfile) is the farthest skin per 2 cm and 15 degrees, smoothed, so at the stand some robe points already
     // sit a little inside it. A point counts as through the robe only when it is DEEP cm deeper inside a leg than it sat at the stand.
     if (y0 < X.yHip - 0.08) { let dep = -1; for (const s of ['L', 'R']) { const q = M.legOut(X.legR[s], p); if (q) dep = Math.max(dep, q.r - q.d); }
       if (rest) { if (dep > Math.max(rest[i], 0) + DEEP) inside++; } else depth[i] = dep; }
     if (y0 < X.yHip - 0.04 && y0 > X.yHip - 0.12) waist = Math.max(waist, p.distanceTo(V().fromArray(T1, i * 3)));
-    if (E && E.getX(i) < 0.004) rim.push(p.clone()); }
+    if (E && E.getX(i) < 0.004) { rim.push(p.clone()); free += p.distanceTo(V().fromArray(T1, i * 3)); } }
   M.legFrame(X, false);
   // robe-sprint-look-4 (the hem's geometry): the longest any triangle edge has stretched past its length at the stand, and how many edges
   // are past 2x. A torn or spiked hem shows as edges that stretch; the stand is 1.
@@ -43,7 +43,15 @@ export function robeFrame(w, fw, rest = null) {
   // the front slit: the widest gap between neighbouring rim points (by angle about the pelvis) within 45 degrees of forward
   const lft = V(-fw.z, 0, fw.x), ang = rim.map(r => Math.atan2(r.clone().sub(pel).dot(lft), r.clone().sub(pel).dot(fw))).sort((a, b) => a - b);
   let slit = 0; for (let k = 1; k < ang.length; k++) { const mid = (ang[k] + ang[k - 1]) / 2; if (Math.abs(mid) < Math.PI / 4) slit = Math.max(slit, ang[k] - ang[k - 1]); }
-  return { depth, inside, waist, stretch, torn, hemLead: hL == null ? null : hL - kneeY, hemTrail: hT == null ? null : hT - calfY, slitDeg: slit * 180 / Math.PI, lead,
+  // robe-sprint-look-6 B ("it swings too stiffly"), measured against the reference photos (robe-run/refs, R1 side view): in a real sprint the
+  // back of the hem trails behind the hips and the front rides the leading thigh, so the hem opens as a bell. backDeg / frontDeg: the angle
+  // off vertical, from the hips' centre, of the hem's rearmost and foremost points (positive = behind for back, ahead for front); free:
+  // the hem's mean distance from its skinned place (a robe that only turns with the pelvis has free near 0); backOff: the rearmost point's
+  // distance behind the hips along the run (its range over the sprint is the swing).
+  let backOff = null, backDeg = null, frontDeg = null;
+  if (rim.length) { let b = null, f = null; for (const r of rim) { const a = r.clone().sub(pel).dot(fw); if (!b || a < b.a) b = { a, y: r.y }; if (!f || a > f.a) f = { a, y: r.y }; }
+    backOff = -b.a; backDeg = Math.atan2(-b.a, pel.y - b.y) * 180 / Math.PI; frontDeg = Math.atan2(f.a, pel.y - f.y) * 180 / Math.PI; }
+  return { free: rim.length ? free / rim.length : null, backOff, backDeg, frontDeg, depth, inside, waist, stretch, torn, hemLead: hL == null ? null : hL - kneeY, hemTrail: hT == null ? null : hT - calfY, slitDeg: slit * 180 / Math.PI, lead,
     hemMin: rim.length ? Math.min(...rim.map(r => r.y)) - pel.y : null, hemMax: rim.length ? Math.max(...rim.map(r => r.y)) - pel.y : null };
 }
 
@@ -65,6 +73,10 @@ export async function robeCheck({ shoot = null, plan = PLAN } = {}) {
   const S = { insideMax: mx('inside'), insideFrames: all.filter(r => r.inside > 0).length, frames: all.length, hemLeadMax: mx('hemLead'), hemTrailMax: mx('hemTrail'),
     waistMax: mx('waist'), slitMaxDeg: Math.max(...moving.map(r => r.slitDeg)), stretchMax: mx('stretch'), tornMax: mx('torn'), hemRange: [mn('hemMin'), mx('hemMax')] };
   for (const [name, rs] of Object.entries(per)) worst[name] = { inside: Math.max(0, ...rs.map(r => r.inside)), hemLead: Math.max(-9, ...rs.map(r => r.hemLead ?? -9)), hemTrail: Math.max(-9, ...rs.map(r => r.hemTrail ?? -9)), slitDeg: Math.max(0, ...rs.map(r => r.slitDeg)) };
+  // the swing, per phase (robe-sprint-look-6 B): mean free swing (cm), mean back and front angles (degrees), and the back edge's range (cm)
+  const avg = (rs, k) => { const v = rs.map(r => r[k]).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }, r1 = x => x == null ? null : Math.round(x * 10) / 10;
+  S.swing = {}; for (const [name, rs] of Object.entries(per)) { const bo = rs.map(r => r.backOff).filter(x => x != null);
+    S.swing[name] = { free: r1(100 * avg(rs, 'free')), backDeg: r1(avg(rs, 'backDeg')), frontDeg: r1(avg(rs, 'frontDeg')), backRange: bo.length ? r1(100 * (Math.max(...bo) - Math.min(...bo))) : null }; }
   const B = ROBE_BOUNDS, breaks = [];
   if (S.insideMax > B.inside) breaks.push(`inside: ${S.insideMax} robe points inside a leg (${S.insideFrames} of ${S.frames} frames)`);
   if (S.hemLeadMax > B.hemLead) breaks.push(`hem over the leading leg rises ${(S.hemLeadMax * 100).toFixed(1)} cm above the knee`);
