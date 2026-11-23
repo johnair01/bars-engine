@@ -8,7 +8,7 @@ import 'server-only'
 import { db } from '@/lib/db'
 import { ownerOfWord } from './payment-word-server'
 import { findWord } from './payment-word'
-import { isCents, isRef } from './mark-payment'
+import { isCents, isRef, readNote } from './mark-payment'
 
 export type MarkResult =
   | { kind: 'marked'; word: string; playerId: string; cents: number; ref: string; markedAt: Date }
@@ -39,4 +39,12 @@ export async function markPayment(input: { ref: string; note: string; cents: num
 /** Every mark for one player, oldest first: what a farm's gift crop reads from. */
 export async function marksFor(playerId: string) {
   return db.founderPaymentMark.findMany({ where: { playerId }, orderBy: { markedAt: 'asc' } })
+}
+
+/** What marking this note would do, written to nothing: the player it names, or why it marks nothing. */
+export async function previewNote(note: string) {
+  const reading = readNote(note, () => null)
+  if (reading.kind === 'no-word') return reading
+  const playerId = await ownerOfWord(reading.word)
+  return playerId ? ({ kind: 'marked', word: reading.word, playerId } as const) : ({ kind: 'unknown-word', word: reading.word } as const)
 }
