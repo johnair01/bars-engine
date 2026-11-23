@@ -153,6 +153,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: linear-gradient(118deg, transparent 22%, rgba(255,255,255,.08) 30%, transparent 38%, transparent 58%, rgba(255,255,255,.05) 62%, transparent 67%); }
 body.mirroring #mirrorFrame { display: block; }
 body.mirroring #stage canvas { transform: scaleX(-1); }
+/* the breath: one fog on the glass between one touch and the changed reflection (touchMirror, garden.js) */
+#mirrorBreath { display: none; position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); width: min(86vw, 46vh); height: 58vh;
+  transform: translateX(-50%); border-radius: 50%; pointer-events: none; z-index: 4; opacity: 0; transition: opacity .5s ease-in;
+  background: radial-gradient(ellipse at 50% 55%, rgba(236,242,246,.78), rgba(220,230,238,.55) 70%, rgba(220,230,238,.3)); backdrop-filter: blur(6px); }
+body.mirroring #mirrorBreath { display: block; }
+#mirrorBreath.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #mirrorBreath { transition-duration: .01s; } }
 body.mirroring #labels, body.mirroring #hud { display: none !important; }
 .sheet.dark { --panel: #1f1711; --ink: #f3ece2; --muted: #bcae9b; --line: #4a3a2c; --soft: #31251b; background: #1f1711; color: var(--ink); }
 .sheet.mirror { max-height: 40vh; padding-top: 8px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 2px solid #6a4a30; }
@@ -228,6 +235,12 @@ body.quiethud .hud .bottom { display: none; }
 .satitem svg { width: 26px; height: 26px; flex: none; }
 .hud .satitem[aria-pressed="true"] { border-color: #ffcf86; box-shadow: 0 0 0 1px #ffcf86, 0 0 14px rgba(255,207,134,.4); }
 .satnone { color: var(--glass-muted); font-size: .875rem; padding: 0 6px; }
+.satpouch { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.12); }
+.satlab { display: block; color: var(--glass-muted); font-size: .8125rem; letter-spacing: .02em; padding: 0 2px 6px; }
+.satpouch ul.satrow { list-style: none; margin: 0; padding: 0; }
+.satkeep { flex: none; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 4px 12px 4px 6px; border-radius: 12px;
+  background: rgba(255,207,134,.07); color: var(--glass-ink); border: 1px solid transparent; font-size: .88rem; white-space: nowrap; cursor: default; }
+.satkeep svg { width: 24px; height: 24px; flex: none; }
 .satrow .glassbtn { flex: none; margin-left: auto; }
 
 /* ---------- room kit, part 2: the first minute's captions and the scroll (homeroom kit, Stills B and C) ---------- */

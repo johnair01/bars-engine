@@ -78,7 +78,7 @@ preview opened at the state to test. It is never a clone line, and a look never 
 
 ## Article 9: One session, one piece of work
 
-**Rule:** A session does one piece of work, hands off before 150,000 tokens, records what is open in its callsheet,
+**Rule:** A session does one piece of work, hands off before 250,000 tokens, records what is open in its callsheet,
 and asks the coordinator to start the next thread. **Home:** `CLAUDE.md`, "Short sessions". **Guard:** regent.
 **Check:** `council/tools/context_size.py`. **Stages:** build, close.
 

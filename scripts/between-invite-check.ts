@@ -134,7 +134,7 @@ async function handle(q: IncomingMessage, r: ServerResponse) {
   const [u] = (q.url ?? '').split('?')
   const me = cookieOf(q), player = me && players[me] ? me : null
   if (process.env.BETWEEN_CHECK_LOG) console.log('  ' + (me ?? '-') + ' ' + q.method + ' ' + (q.url ?? '').slice(0, 90))
-  if (u === '/ontology-game/between') { if (!player) { r.writeHead(302, { Location: '/login' }); r.end(); return } r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(PAGE); return }
+  if (u === '/between') { if (!player) { r.writeHead(302, { Location: '/login' }); r.end(); return } r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(PAGE); return }
   if (u.startsWith('/api/between')) {
     if (!player) return send(r, 401, { error: 'Sign in', code: 'unauthenticated' })
     const raw = q.method === 'POST' ? await bodyOf(q) : ''
@@ -319,7 +319,7 @@ async function main() {
         for (const [name, q] of list) {
           // a fresh tab for each still: a page drawing in software WebGL can be slower to unload than a navigation waits
           const t = await p.context().newPage()
-          await t.goto(`${base}/ontology-game/between?${q}`, { waitUntil: 'commit' }); await ready(t)
+          await t.goto(`${base}/between?${q}`, { waitUntil: 'commit' }); await ready(t)
           await t.waitForTimeout(Number(process.env.BETWEEN_STILLS_WAIT) || 9_000)
           await t.screenshot({ path: join(stillsDir, `${name}-${size}.png`), timeout: 90_000, animations: 'disabled', caret: 'hide' })
           console.log(`still ${name}-${size}.png`)
@@ -332,12 +332,12 @@ async function main() {
   let roomId = '', link = ''
   try {
     // the planter plants a spark toward the partner and goes into it
-    await A.goto(base + '/ontology-game/between', { waitUntil: 'commit' }); await ready(A)
+    await A.goto(base + '/between', { waitUntil: 'commit' }); await ready(A)
     roomId = await A.evaluate(async () => {
       const r = await fetch('/api/between', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { setup: { who: 'Partner', kind: 'Friendship', hopes: '' } } }) })
       return (await r.json()).id as string
     })
-    await A.goto(`${base}/ontology-game/between?g=${roomId}&skipHome=1`, { waitUntil: 'commit' }); await ready(A)
+    await A.goto(`${base}/between?g=${roomId}&skipHome=1`, { waitUntil: 'commit' }); await ready(A)
 
     await step('cushion takes the tap ahead of the spark', async () => {
       // stand the camera so the spark is right between it and the teal cushion (seat 0), then tap the cushion
@@ -378,9 +378,10 @@ async function main() {
       await Bp.waitForFunction(id => { const p = (window as unknown as { __between: B }).__between.ids().portalTo; return !!p && p.id === id }, roomId, { polling: 250, timeout: 10_000 })
         .catch(async () => { throw new Error('the phone has no doorway to the room: ' + JSON.stringify(await ids(Bp))) })
       await openSheet(Bp, 'destinations')
-      const offered = await Bp.evaluate(() => !!document.querySelector('#sheetInner [data-act="through"]'))
-      if (!offered) throw new Error('the doorway sheet has no Enter for the room')
-      return 'the phone woke in its homeroom, and the doorway names the room it was invited to'
+      // the doorway is had at the doorway (veil-turn): the veil opens on the room the link names, first
+      const v = await Bp.evaluate(() => (window as unknown as { __between: { veil(): { i: number; places: string[] } | null } }).__between.veil())
+      if (!v || v.places[v.i] !== 'invite') throw new Error('the veil does not open on the room the link names: ' + JSON.stringify(v))
+      return 'the phone woke in its homeroom, and the veil opens on the room it was invited to'
     })
 
     await step('the partner walks through and asks to join at the spark', async () => {
@@ -449,7 +450,7 @@ async function main() {
       const until = (p: Page, what: string, f: string) => p.waitForFunction(new Function('return (function(){ const s = window.__between.letters.state(); return !!s && (' + f + ') })()') as () => boolean, undefined, { polling: 250, timeout: 20_000 })
         .catch(async () => { throw new Error(what + ' did not happen; the page holds ' + JSON.stringify(await state(p).catch(e => String(e))).slice(0, 400)) })
       // the planter opens the letters from the room; a garden of two opens real letters, not the rehearsal
-      A = await reopen(A, `${base}/ontology-game/between?g=${roomId}&skipHome=1&pick=a6`, watch('pl-planter')); await lt(A)
+      A = await reopen(A, `${base}/between?g=${roomId}&skipHome=1&pick=a6`, watch('pl-planter')); await lt(A)
       await until(A, 'the letters opening', "!s.local && s.enc === 'a6'")
       await A.evaluate(() => (window as unknown as { __between: { letters: LT } }).__between.letters.send('WAKE-DA-REGENT'))
       // the phone, in its nook, sees only that a letter is sealed (the server keeps the card) and sends its own from there
@@ -479,7 +480,7 @@ async function main() {
         const r = await fetch('/api/between', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { setup: { who: 'Someone else', kind: 'Friendship', hopes: '' } } }) })
         return (await r.json()).id as string
       })
-      A = await reopen(A, base + '/ontology-game/between', watch('pl-planter'))
+      A = await reopen(A, base + '/between', watch('pl-planter'))
       await openSheet(A, 'rooms')
       const again = await A.evaluate(id => !!document.querySelector(`#sheetInner [data-act="sparkAgain"][data-id="${id}"]`), second)
       if (!again) throw new Error("the homeroom's Rooms sheet has no Send the link again for a waiting spark")
@@ -492,7 +493,7 @@ async function main() {
       // the partner, invited to that spark, comes back to the homeroom later with no link in hand: the doorway still offers it
       const partnerLink = /(https?:\/\/\S+)/.exec(sent)![1].replace(/^https?:\/\/[^/]+/, base)
       Bp = await reopen(Bp, partnerLink, watch('pl-partner'))
-      Bp = await reopen(Bp, base + '/ontology-game/between', watch('pl-partner'))
+      Bp = await reopen(Bp, base + '/between', watch('pl-partner'))
       const kept = await Bp.evaluate(() => (window as unknown as { __between: B }).__between.ids().portalTo)
       if (!kept || kept.id !== second) throw new Error('back in the homeroom without the link, the doorway forgot the invitation')
       return "the planter's Rooms sheet sent the spark's link again, and the partner's doorway kept the invitation without the link"

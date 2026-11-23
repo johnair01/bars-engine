@@ -3,7 +3,7 @@
  * @entity PLAYER
  * @description A screenshot sent from a preview (the Between's More sheet), with a note and what the page knew, for the council to read
  * @permissions signed-in player (bars_player_id cookie); on a Vercel preview a mark may come unsigned
- * @example POST /api/council/preview-shots { "page": "https://…/ontology-game/between?g=…", "note": "froze here", "image": "data:image/jpeg;base64,…", "state": { … } }
+ * @example POST /api/council/preview-shots { "page": "https://…/between?g=…", "note": "froze here", "image": "data:image/jpeg;base64,…", "state": { … } }
  * @description A chalk mark (public/marks/chalk.js): a held finger's spot, his one line, the look it sits on and the errors
  *   the page caught; the picture is optional. Each mark also lands on the Council Board as a causes row, mark-<time>.
  * @example POST /api/council/preview-shots { "page": "https://…/board/council", "note": "camera's under the table edge", "mark": { "x": 120, "y": 340, "w": 375, "h": 812 }, "look": "pm-mark-look-1", "errLog": [] }

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-17T03:34:16.443Z",
+  "generatedAt": "2026-11-23T00:56:16.628Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 521,
+      "lineNumber": 902,
       "params": [],
       "query": [],
       "relationships": [],
@@ -518,7 +518,7 @@
       "method": "POST",
       "pattern": "/api/mcp",
       "entity": "SYSTEM",
-      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket, farm_world_change, farm_world_read and whoami",
+      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,\nclose_read, close_say, farm_world_change, farm_world_read, whoami, and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,\nasset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake",
       "permissions": [
         "COUNCIL_MENU_TOKEN",
         "as Authorization: Bearer <key>",
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 590,
+      "lineNumber": 972,
       "params": [],
       "query": [],
       "relationships": [],
@@ -1706,6 +1706,52 @@
       "id": "page_campaign_bb77d2b7"
     },
     {
+      "sourceFile": "/src/app/admin/chronicler/page.tsx",
+      "lineNumber": 17,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "admin",
+        "WHAT": "STORY",
+        "PERSONAL_THROUGHPUT": "show-up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/chronicler",
+      "entity": "STORY",
+      "description": "The Chronicler: six rungs of story (world to inspiration), the links between cards, and the few\nquestions it asks after an approval. Council callsheet chronicler-ladder; his answers cl-home-1 B, cl-parents-1 B,\ncl-loops-1 A, cl-admin-flags-1 A.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "page_story_22b60f54"
+    },
+    {
+      "sourceFile": "/src/app/admin/chronicler/page.tsx",
+      "lineNumber": 17,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "admin",
+        "WHAT": "STORY",
+        "PERSONAL_THROUGHPUT": "show-up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/chronicler",
+      "entity": "STORY",
+      "description": "The Chronicler: six rungs of story (world to inspiration), the links between cards, and the few\nquestions it asks after an approval. Council callsheet chronicler-ladder; his answers cl-home-1 B, cl-parents-1 B,\ncl-loops-1 A, cl-admin-flags-1 A.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "page_story_22b60f54"
+    },
+    {
       "sourceFile": "/src/app/admin/config/page.tsx",
       "lineNumber": 19,
       "params": [],
@@ -3857,7 +3903,7 @@
     },
     {
       "sourceFile": "/src/app/bars/[id]/page.tsx",
-      "lineNumber": 53,
+      "lineNumber": 54,
       "params": [],
       "query": [],
       "relationships": [],
@@ -3882,7 +3928,7 @@
     },
     {
       "sourceFile": "/src/app/bars/[id]/page.tsx",
-      "lineNumber": 53,
+      "lineNumber": 54,
       "params": [],
       "query": [],
       "relationships": [],

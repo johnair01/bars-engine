@@ -69,7 +69,7 @@ export async function noticeAfterWrite(gardenId: string, writerId: string, table
     ])
     const to = rec?.account?.email || (rec?.contactType === 'email' ? rec.contactValue : '')
     if (!to) return 'none'
-    const copy = noticeCopy(writer?.name || 'Your friend', absoluteUrl(`/ontology-game/between?g=${gardenId}`), absoluteUrl(`/api/between/notices/stop?t=${stopToken(other)}`))
+    const copy = noticeCopy(writer?.name || 'Your friend', absoluteUrl(`/between?g=${gardenId}`), absoluteUrl(`/api/between/notices/stop?t=${stopToken(other)}`))
     const r = await sendEmail({ to, subject: copy.subject, html: copy.html, text: copy.text, tags: [{ name: 'funnel', value: 'between-notice' }] })
     return r.ok ? 'sent' : 'none'
   } catch (e) {

@@ -17,7 +17,7 @@ export const UBC_MAP = {
 
 // which: 'ubcm' (Superhero Male) or 'ubcf' (Superhero Female). stature: metres (0 = native size).
 export async function loadUBC(which = 'ubcm', { stature = 0 } = {}) {
-  const g = await new GLTFLoader().loadAsync(new URL(`../ubc/${which}.json`, import.meta.url).href) /* bars-engine copy: beside this module, not the page */;
+  const g = await new GLTFLoader().loadAsync(new URL(`../ubc/${which}.json`, import.meta.url).href) /* heaven round 19: beside this module, wherever the page is */;
   const root = g.scene; root.updateMatrixWorld(true);
   const inv = Object.fromEntries(Object.entries(UBC_MAP).map(([a, b]) => [b, a]));
   const bones = {}, meshes = [];

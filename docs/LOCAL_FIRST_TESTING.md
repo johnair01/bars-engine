@@ -199,6 +199,8 @@ the number of production builds. To ship about once a day, merges are batched:
 2. Once a day, one shipping session (Sonnet) takes every open `ship-next` pull request, oldest first, and merges them
    into a branch `ship/<YYYY-MM-DD>` cut from `main`. Branch builds are off, so this costs nothing on Vercel. A pull
    request that conflicts or breaks the batch is left out, keeps its label, and its thread is told why.
+   Before including a pull request it runs `python3 board/answered.py --repo johnair01/bars-engine --pr N` in the council
+   repo (without `--repo`, the number is read as a council PR and matches unrelated board rows).
 3. The shipping session runs `scripts/local/check.sh --build` on `ship/<date>` and takes pictures of the day's
    changed pages.
 4. It merges `ship/<date>` into `main` in one merge commit: **one production build** for the day. Each included pull

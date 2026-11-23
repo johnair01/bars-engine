@@ -277,6 +277,30 @@
     "updated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "sheet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gathered",
+        "counted"
+      ],
+      "description": "Optional. Owner: vessel. The qi a finished move earns, kept apart from the ship's qi meter (ccb3-sheet-qi, answer A). Never drawn as a number.",
+      "properties": {
+        "gathered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "counted": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 500,
+          "description": "Ids of the moves already counted, so one move counts once.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "$defs": {

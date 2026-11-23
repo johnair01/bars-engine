@@ -14,12 +14,12 @@ export interface MovesGMPacketInput {
   isAuthenticated?: boolean
 }
 
-const VIBEULON_INTRO = `**Vibeulons** — the emotional energy that powers the construct. They flow through the Conclave, through the heist, through you. Complete this flow to earn your starter share. The threshold awaits.`
+const VIBEULON_INTRO = `**Vibeulons** are the sect's coin of emotional energy. You earn them by taking moves. Finish this walk to earn your starter share.`
 
 const MOVE_TEXTS: Record<string, string> = {
   wakeUp: `**Wake Up** — Notice what's true. The first move is awareness: naming what is, without judgment. What are you actually experiencing right now?`,
   cleanUp: `**Clean Up** — Release what no longer serves. Let go of stories, habits, or beliefs that block your next step.`,
-  growUp: `**Grow Up** — Expand capacity. Learn, practice, and integrate new ways of being.`,
+  growUp: `**Grow Up** — Expand capacity. Practice a new way of being until it becomes yours.`,
   showUp: `**Show Up** — Take action. Contribute to the campaign. Your participation matters.
 
 [Contribute to the campaign](/event/donate/wizard?ref=bruised-banana) — money, time, space, or hosting. [Try the public donation demo first](/demo/bruised-banana) — charge + three-part witness pass, no account required.`,

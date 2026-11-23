@@ -13,6 +13,8 @@ import { loadShaman, type StepDoc, type StoreCold } from '@/lib/studio/shaman'
 import { shamanPage } from '@/lib/studio/shaman-page'
 import { demoStores, loadStores, type Placement } from '@/lib/studio/stores'
 import { storesPage } from '@/lib/studio/stores-page'
+import { demoWings, loadWings } from '@/lib/studio/wings'
+import { wingsPage } from '@/lib/studio/wings-page'
 import { withChalk } from '@/lib/marks/chalk'
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +25,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/login?returnTo=' + encodeURIComponent('/board/studio' + req.nextUrl.search), req.url))
   if (req.nextUrl.searchParams.get('shaman') === '1') return shaman()
   if (req.nextUrl.searchParams.get('stores') === '1') return stores(req.nextUrl.searchParams.get('demo') === '1')
+  if (req.nextUrl.searchParams.get('wings') === '1') return wings(req.nextUrl.searchParams.get('demo') === '1')
   const world = await loadFleet()
   if (!world) return new NextResponse('The board ledger could not be loaded from GitHub. Try again in a minute.', { status: 503 })
   return new NextResponse(withChalk(studioPage(world)), {
@@ -62,4 +65,18 @@ async function stores(demo: boolean) {
   const world = await loadStores(placed)
   if (!world) return new NextResponse('The board ledger could not be loaded. Try again in a minute.', { status: 503 })
   return new NextResponse(withChalk(storesPage(world)), { headers: HEADERS })
+}
+
+/** The Wings: the Stores' finished crates, a room per strand. Placements are the Stores' own saves, so a crate placed
+ * on the floor or here has left both. &demo=1 plays three sample rooms and saves nothing. */
+async function wings(demo: boolean) {
+  if (demo) return new NextResponse(withChalk(wingsPage(demoWings())), { headers: HEADERS })
+  let placed: Record<string, Placement> = {}
+  try {
+    const { latestDocs } = await import('@/lib/board/store')
+    placed = ((await latestDocs('council')).stores ?? {}) as Record<string, Placement>
+  } catch { placed = {} }
+  const world = await loadWings(placed)
+  if (!world) return new NextResponse('The crates could not be loaded. Try again in a minute.', { status: 503 })
+  return new NextResponse(withChalk(wingsPage(world)), { headers: HEADERS })
 }

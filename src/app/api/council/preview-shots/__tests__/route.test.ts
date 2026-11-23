@@ -29,7 +29,7 @@ describe('/api/council/preview-shots POST', () => {
   afterEach(() => vi.unstubAllEnvs())
 
   it('takes a mark without a picture, stores only the json, and lands a causes row', async () => {
-    const res = await POST(req({ page: 'https://p.vercel.app/ontology-game/between?g=1', note: "camera's under the table edge",
+    const res = await POST(req({ page: 'https://p.vercel.app/between?g=1', note: "camera's under the table edge",
       mark, look: 'pm-mark-look-1', errLog: ['TypeError: x'] }))
     expect(res.status).toBe(200)
     expect(await res.json()).toMatchObject({ ok: true, image: null, stored: true, row: true })
@@ -41,7 +41,7 @@ describe('/api/council/preview-shots POST', () => {
     expect(saved).toMatchObject({ board: 'council', collection: 'rows', recordedAt: null })
     expect(saved.docId).toMatch(/^mark-/)
     expect(saved.data).toMatchObject({ kind: 'causes', pass: 'preview-marks', pr: '512', look: 'pm-mark-look-1',
-      desc: "camera's under the table edge (on /ontology-game/between, preview of pull request #512)" })
+      desc: "camera's under the table edge (on /between, preview of pull request #512)" })
     expect(saved.data.mark).not.toHaveProperty('image')
   })
 
