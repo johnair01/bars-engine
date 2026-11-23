@@ -4,6 +4,12 @@ usage: python3 gen_sect.py [--level levels/heaven-sect-court.json] [--seed N] [-
 sect-base.json  the shared language: sheets, fills, wall colours, named stamps, plaque style, walk rules, room grammar
 levels/*.json   one level: its rooms (kind, box, doors, seats), paved walks and labelled exits to other maps
 
+Reads, beside it, the Calrunian Dojo's art (both directories are on this branch):
+  ../calrunian-dojo/src16/     the CC0 source sheets every sect tile is drawn from
+  ../calrunian-dojo/sprites/   the walker sheets the render stands at the gate
+Room-name plaques are drawn into the tileset, so the map needs the bold sans named by
+sect-base.json > plaque > font. A machine that keeps it elsewhere can set WA_PLAQUE_FONT.
+
 Writes into DIR (default: here), named after the level:
   tiles/*.png         each source sheet drawn up to 32 px, plus <map>-signs.png (the room-name plaques)
   <map>.tmj           one orthogonal 32 px map: ground, detail, collisions, floorLayer, over1, over2, start, areas
@@ -17,6 +23,7 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
 from wa_export import apply as wa_apply, check as wa_check  # noqa: E402
+
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 BASE = json.load(open(os.path.join(HERE, 'sect-base.json')))
@@ -74,7 +81,14 @@ for name, rel in BASE['sheets'].items():
 
 # ---- plaques: every room and exit label drawn as a wooden board, one tile high ----
 PQ = BASE['plaque']
-font = ImageFont.truetype(PQ['font'], PQ['px'])
+# The plaques are drawn into the tileset, so there is no map without the font. Name it here rather than
+# failing from inside PIL; WA_PLAQUE_FONT lets a machine that keeps the same font elsewhere run this.
+FONT_PATH = os.environ.get('WA_PLAQUE_FONT') or PQ['font']
+if not os.path.exists(FONT_PATH):
+    sys.exit(f'plaque font not found: {FONT_PATH}\n'
+             '  The room-name plaques are drawn into the tileset, so the map cannot be written without one.\n'
+             '  Point WA_PLAQUE_FONT at the same bold sans, or edit sect-base.json > plaque > font.')
+font = ImageFont.truetype(FONT_PATH, PQ['px'])
 
 
 def plaque_img(text):
