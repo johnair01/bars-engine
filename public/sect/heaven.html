@@ -52,7 +52,7 @@ import { people } from './heaven/people.js';
 import { avatar, step, groundAt } from './heaven/walk.js';
 import { atmosphere, placeSun } from './heaven/atmo.js';
 import { CREST_STAIR, stairTread, TREAD } from './heaven/crag.js';
-import { cultWalker, GAIT } from './cult/cultwalk.js';
+import { cultWalker } from './cult/cultwalk.js';
 import { cameraRig, MOVE, touchStick, forgetKeysOnBlur } from './heaven/move.js';
 import { wayColliders } from './heaven/crag.js';
 import { traineeWalk } from './heaven/trainee.js';
@@ -119,7 +119,7 @@ const A = avatar(S);
 // cultivation figure walking with planted feet (cult/cultwalk.js), one step per tread on the pilgrim stair.
 let dressAll = null, walker = null;
 const ready = people(S, gl, { court: GREAT.G }).then(f => { dressAll = f; }).catch(e => console.warn('people', e));
-const walking = cultWalker(S, A, { groundAt, tread: stairTread, stepOn: (x, z) => stairTread(x, z) ? TREAD : GAIT.step })
+const walking = cultWalker(S, A, { groundAt })
   .then(w => { walker = w; return w; }).catch(e => { console.warn('cultivation figure', e); A.children.forEach(c => { c.visible = true; }); });
 const cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 3000);
 const orbit = new OrbitControls(cam, R.domElement);

@@ -30,6 +30,11 @@ export function robeFrame(w, fw, rest = null) {
     if (y0 < X.yHip - 0.04 && y0 > X.yHip - 0.12) waist = Math.max(waist, p.distanceTo(V().fromArray(T1, i * 3)));
     if (E && E.getX(i) < 0.004) rim.push(p.clone()); }
   M.legFrame(X, false);
+  // robe-sprint-look-4 (the hem's geometry): the longest any triangle edge has stretched past its length at the stand, and how many edges
+  // are past 2x. A torn or spiked hem shows as edges that stretch; the stand is 1.
+  let stretch = 1, torn = 0; { const I = pt.geo.index.array, e = (a, b) => { const d1 = Math.hypot(W[a * 3] - W[b * 3], W[a * 3 + 1] - W[b * 3 + 1], W[a * 3 + 2] - W[b * 3 + 2]), d0 = Math.hypot(R0[a * 3] - R0[b * 3], R0[a * 3 + 1] - R0[b * 3 + 1], R0[a * 3 + 2] - R0[b * 3 + 2]);
+      if (d0 < 1e-4) return; const r = d1 / d0; if (r > stretch) stretch = r; if (r > 2) torn++; };
+    for (let k = 0; k < I.length; k += 3) { e(I[k], I[k + 1]); e(I[k + 1], I[k + 2]); e(I[k + 2], I[k]); } }
   // the hem over a leg: rim points within 18 cm across the floor of the shin's middle, their median height
   const hemOver = s => { const m = legs[s].knee.clone().add(legs[s].ankle).multiplyScalar(0.5), ys = rim.filter(r => Math.hypot(r.x - m.x, r.z - m.z) < 0.18).map(r => r.y).sort((a, b) => a - b);
     return ys.length ? ys[ys.length >> 1] : null; };
@@ -38,7 +43,7 @@ export function robeFrame(w, fw, rest = null) {
   // the front slit: the widest gap between neighbouring rim points (by angle about the pelvis) within 45 degrees of forward
   const lft = V(-fw.z, 0, fw.x), ang = rim.map(r => Math.atan2(r.clone().sub(pel).dot(lft), r.clone().sub(pel).dot(fw))).sort((a, b) => a - b);
   let slit = 0; for (let k = 1; k < ang.length; k++) { const mid = (ang[k] + ang[k - 1]) / 2; if (Math.abs(mid) < Math.PI / 4) slit = Math.max(slit, ang[k] - ang[k - 1]); }
-  return { depth, inside, waist, hemLead: hL == null ? null : hL - kneeY, hemTrail: hT == null ? null : hT - calfY, slitDeg: slit * 180 / Math.PI, lead,
+  return { depth, inside, waist, stretch, torn, hemLead: hL == null ? null : hL - kneeY, hemTrail: hT == null ? null : hT - calfY, slitDeg: slit * 180 / Math.PI, lead,
     hemMin: rim.length ? Math.min(...rim.map(r => r.y)) - pel.y : null, hemMax: rim.length ? Math.max(...rim.map(r => r.y)) - pel.y : null };
 }
 
@@ -58,7 +63,7 @@ export async function robeCheck({ shoot = null, plan = PLAN } = {}) {
   const all = Object.values(per).flat(), mx = k => Math.max(...all.map(r => r[k]).filter(x => x != null)), mn = k => Math.min(...all.map(r => r[k]).filter(x => x != null));
   const moving = all.filter(r => !['stand', 'stop'].includes(r.name));
   const S = { insideMax: mx('inside'), insideFrames: all.filter(r => r.inside > 0).length, frames: all.length, hemLeadMax: mx('hemLead'), hemTrailMax: mx('hemTrail'),
-    waistMax: mx('waist'), slitMaxDeg: Math.max(...moving.map(r => r.slitDeg)), hemRange: [mn('hemMin'), mx('hemMax')] };
+    waistMax: mx('waist'), slitMaxDeg: Math.max(...moving.map(r => r.slitDeg)), stretchMax: mx('stretch'), tornMax: mx('torn'), hemRange: [mn('hemMin'), mx('hemMax')] };
   for (const [name, rs] of Object.entries(per)) worst[name] = { inside: Math.max(0, ...rs.map(r => r.inside)), hemLead: Math.max(-9, ...rs.map(r => r.hemLead ?? -9)), hemTrail: Math.max(-9, ...rs.map(r => r.hemTrail ?? -9)), slitDeg: Math.max(0, ...rs.map(r => r.slitDeg)) };
   const B = ROBE_BOUNDS, breaks = [];
   if (S.insideMax > B.inside) breaks.push(`inside: ${S.insideMax} robe points inside a leg (${S.insideFrames} of ${S.frames} frames)`);

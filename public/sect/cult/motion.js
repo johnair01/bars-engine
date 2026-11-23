@@ -15,28 +15,9 @@ const ramp = (a, b, x) => { const t = THREE.MathUtils.clamp((x - a) / (b - a), 0
 export let CHAIN_ON = true; export function chains(on) { CHAIN_ON = on; }
 export let SKIRT_ON = true; export function skirtChains(on) { SKIRT_ON = on; } // clothing-bones-look-1: the outer robe's skirt on bone chains (false = the per-vertex springs it had)
 export const SPRING = { hz: 2.2, zeta: 0.4, dt: 1 / 240 };
-export const SCRIPT = { walk: 1.6, stopBy: 2.0, turnAt: 2.5, turnBy: 3.2, end: 4.4, cycle: 1.0, speed: 0.8 };
+export const SCRIPT = { end: 4.4 };
 
-// the motion: a procedural walk whose stride dies away, then a turn on the spot
-export function poseAt(F, t) {
-  const S = SCRIPT, { f, l } = F.fr, dn = FG.UP.clone().negate();
-  const A = 1 - ramp(S.walk, S.stopBy, t), ph = 2 * Math.PI * t / S.cycle;
-  FG.resetPose(F); F.root.quaternion.identity(); F.root.updateMatrixWorld(true);
-  const arm = (sg, out, fwd) => V().copy(dn).addScaledVector(l, sg * out).addScaledVector(f, fwd);
-  for (const [s, sg, p0] of [['L', 1, 0], ['R', -1, Math.PI]]) {
-    const sw = Math.sin(ph + p0) * A, lift = Math.max(0, Math.sin(ph + p0 - 1.3)) * A; // a short robe stride: the hem limits it
-    FG.aim(F, 'shoulder' + s, 'elbow' + s, arm(sg, 0.29, 0.03 - 0.3 * sw));
-    FG.aim(F, 'elbow' + s, 'wrist' + s, arm(sg, 0.16, 0.24 - 0.36 * sw));
-    FG.aim(F, 'hip' + s, 'knee' + s, V().copy(dn).addScaledVector(l, sg * 0.045).addScaledVector(f, 0.28 * sw));
-    FG.aim(F, 'knee' + s, 'ankle' + s, V().copy(dn).addScaledVector(l, sg * 0.03).addScaledVector(f, 0.28 * sw - 0.3 * lift));
-  }
-  F.root.updateMatrixWorld(true);
-  // distance walked (the stride dies away with A) and the turn about the vertical
-  let d = 0; const n = 200; for (let i = 0; i < n; i++) { const u = (i + 0.5) / n * t; d += (1 - ramp(S.walk, S.stopBy, u)) * S.speed * t / n; }
-  const yaw = Math.PI * ramp(S.turnAt, S.turnBy, t);
-  F.root.position.copy(F.ground).addScaledVector(f, d - 0.8); F.root.quaternion.setFromAxisAngle(FG.UP, yaw); F.root.updateMatrixWorld(true);
-  F.mesh.skeleton.update(); F.poseName = 'turn';
-}
+// heaven-clips-only (anim-robe-look-5 B): the hand-written stop-and-turn walk (poseAt) is gone. run() below takes its `pose` from the caller (a library clip).
 
 // drag weight per vertex, from the fit-pose positions (pt.world)
 function dragWeights(X, pt) {
@@ -147,7 +128,7 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
   // robe-sprint-look-1 C (2026-11-21, "fix the robe on the legs first"): one leg push per frame leaves points inside a thigh or knee at the
   // sprint (the left leg's push can shove a point into the right, and the tent hands a point a neighbour's push). Each pass starts from the
   // last, so four settle it: 0 points inside a leg in 190 frames (one pass: 5 in 38).
-  passes: 4 }; // skin: the robe points' own clearance off the legs (the backstop)
+  passes: 6 }; // skin: the robe points' own clearance off the legs (the backstop)
 // anim-robe-look-4: below the hip the robe is half re-hung from the thighs to the pelvis (a robe is not a pair of trousers): a point's skin
 // weights move `hm` of the way to the hips bone, from just under the hips (u = 0) to the knee (u = 1). A front panel then goes with its
 // thigh only partway and trails. Call once after the figure is built, before the first frame.
@@ -217,7 +198,7 @@ function chainOut(ch, T1, fps, dt) { if (ch.skirt) return skirtOut(ch, T1, fps, 
 function skinnedWorld(pt) { pt.settled = null; return Float32Array.from(M.partWorld(pt)); }
 
 // run the script; drag on or off. Calls shot(t, i) after each frame is posed and the cloth is placed.
-export async function run(X, { drag = true, fps = 30, frames = null, pose = poseAt, end = null, pre = null, show = null }, shot) { /* gate round 11: pose, end, pre (a part's target before the springs) and show can be passed in */
+export async function run(X, { drag = true, fps = 30, frames = null, pose, end = null, pre = null, show = null }, shot) { /* gate round 11: pose, end, pre (a part's target before the springs) and show can be passed in */
   const F = X.F, S = SCRIPT, sp = SPRING, sub = Math.round(1 / fps / sp.dt);
   if (!F.ground) F.ground = F.root.position.clone();
   const st = X.parts.map(pt => { const ch = drag && CHAIN_ON ? chainOf(X, pt) : null; return { pt, ch, d: drag && !ch && !pt.noDrag ? dragWeights(X, pt) : null }; }); /* run-jump-cloth: a part the robe lattice drives (pt.noDrag) has no per-vertex spring */
@@ -244,6 +225,20 @@ export async function run(X, { drag = true, fps = 30, frames = null, pose = pose
 // heaven round 19: one frame of run() for a live page. The caller poses the bones; step(dt) skins each part, swings the
 // chains and drag springs over dt at SPRING.dt substeps, pushes the cloth off the legs and draws it (M.showLive keeps one
 // geometry per part). reset() drops the springs' state, for a jump to a new place.
+// robe-sprint-look-4 (his steer: "the robe bottoms' geometry won't load right"): the leg push tents a point with its neighbours' push, and the
+// chains swing columns apart, so edges of the robe's mesh stretch to 8 cm past their rest length and more (238 in one sprint frame, torn
+// hem triangles). relaxEdges pulls the two ends of an edge that has stretched past `slack` (a fraction of its rest length, plus `free` metres)
+// back together by half the excess each, a few sweeps; it runs between leg-push passes, and the last pass is the push, so no point is pulled into a leg.
+export const RELAX = { rounds: 2, sweeps: 3, slack: 1.25, free: 0.02 };
+const edgesOf = pt => { if (pt.edges) return pt.edges; const I = pt.geo.index.array, seen = new Set(), out = [], R = pt.world;
+  for (let k = 0; k < I.length; k += 3) for (let c = 0; c < 3; c++) { const a = I[k + c], b = I[k + (c + 1) % 3], lo = Math.min(a, b), hi = Math.max(a, b), key = lo * 65536 + hi; if (seen.has(key)) continue; seen.add(key);
+    out.push(lo, hi, Math.hypot(R[lo * 3] - R[hi * 3], R[lo * 3 + 1] - R[hi * 3 + 1], R[lo * 3 + 2] - R[hi * 3 + 2])); }
+  return pt.edges = Float32Array.from(out); };
+function relaxEdges(pt) {
+  const W = pt.settled; if (!W) return; const E = edgesOf(pt), { sweeps, slack, free } = RELAX;
+  for (let sw = 0; sw < sweeps; sw++) for (let k = 0; k < E.length; k += 3) { const a = E[k] * 3, b = E[k + 1] * 3, lim = E[k + 2] * slack + free;
+    const dx = W[b] - W[a], dy = W[b + 1] - W[a + 1], dz = W[b + 2] - W[a + 2], d = Math.hypot(dx, dy, dz); if (d <= lim || d < 1e-9) continue;
+    const m = (d - lim) / d * 0.5; W[a] += dx * m; W[a + 1] += dy * m; W[a + 2] += dz * m; W[b] -= dx * m; W[b + 1] -= dy * m; W[b + 2] -= dz * m; } }
 export function live(X, { drag = true } = {}) {
   const sp = SPRING; let st = null;
   const reset = () => { if (st) for (const s of st) s.pt.settled = null; st = X.parts.map(pt => { const ch = drag && CHAIN_ON ? chainOf(X, pt) : null; return { pt, ch, d: drag && !ch && !pt.noDrag ? dragWeights(X, pt) : null }; }); };
@@ -264,7 +259,7 @@ export function live(X, { drag = true } = {}) {
     // robe-run-1: the backstop. The capsules hold the chain bones off the legs; the points between two bones can still cut a corner
     // into a thigh, so with SKIRT.cap the robe's own points are pushed off the legs as well (mix.js pushLegs, outward only, tented)
     if (SKIRT.cap && SKIRT_ON) M.PUSH.robe = SKIRT.skin; else delete M.PUSH.robe;
-    M.legFrame(X); for (let k = 0; k < SKIRT.passes; k++) M.legPush(X); M.legFrame(X, false); if (drag) pushOff(X, st); M.showLive(X);
+    M.legFrame(X); for (let k = 0; k < SKIRT.passes; k++) { M.legPush(X); if (k < RELAX.rounds && RELAX.sweeps) for (const pt of X.parts) if (pt.name === 'robe') relaxEdges(pt); } M.legFrame(X, false); if (drag) pushOff(X, st); M.showLive(X);
   };
   return { step, reset };
 }
