@@ -12,6 +12,8 @@ from collections import deque
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
+from wa_export import apply as wa_apply, check as wa_check  # noqa: E402
 args = sys.argv[1:]
 SEED = int(args[args.index('--seed') + 1]) if '--seed' in args else 7
 OUT = args[args.index('--out') + 1] if '--out' in args else HERE
@@ -235,6 +237,12 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
        'properties': [{'name': 'mapName', 'type': 'string', 'value': 'Calrunian Dojo'},
                       {'name': 'mapDescription', 'type': 'string', 'value': 'Master Yun\'s dojo in the sect, first slice. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.'},
                       {'name': 'generator', 'type': 'string', 'value': f'gen_dojo.py --seed {SEED}'}]}
+# WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
+# collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
+wa_apply(tmj)
+_wa = wa_check(tmj)
+if _wa:
+    print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 json.dump(tmj, open(os.path.join(OUT, 'calrunian-dojo.tmj'), 'w'), separators=(',', ':'))
 
 # ---- walker sheets (WorkAdventure woka: 3 frames x [down, left, right, up], 32 px) ----
