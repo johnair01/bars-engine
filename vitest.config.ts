@@ -206,6 +206,10 @@ export default defineConfig({
       'src/lib/coaching/__tests__/walk-data.test.ts',
       'src/lib/founder-gate/__tests__/content.test.ts',
       'scripts/__tests__/look-row.test.mjs',
+      'src/lib/wa/__tests__/jwt.test.ts',
+      'src/lib/wa/__tests__/oidc.test.ts',
+      'src/lib/wa/__tests__/woka.test.ts',
+      'src/lib/wa/__tests__/map.test.ts',
     ],
   },
   resolve: {

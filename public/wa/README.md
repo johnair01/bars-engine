@@ -12,6 +12,33 @@ Each folder here is one map (or one world) that WorkAdventure loads over HTTP. T
 Run one with `python3 gen_<map>.py` (needs Pillow). Each generator checks itself before writing anything and exits
 non-zero rather than emit a map it cannot vouch for.
 
+## Publishing to the live box
+
+The map-storage upload runs WorkAdventure's own `MapValidator`, so publishing a
+world is the gate, not a copy:
+
+```sh
+export WA_MAP_STORAGE_TOKEN="$(ssh box 'grep -E "^MAP_STORAGE_AUTHENTICATION_TOKEN=" /opt/workadventure/.env | cut -d= -f2')"
+npm run wa:publish -- public/wa/calrunian-dojo
+npm run wa:publish -- public/wa/heaven-sect --dir heaven-sect
+```
+
+Publishing replaces the remote directory in full. `--dry-run` validates and
+builds the archive without uploading. The operator guide is
+[`docs/WA_IDENTITY_AND_ASSETS.md`](../../docs/WA_IDENTITY_AND_ASSETS.md).
+
+## Woka sheets (player characters)
+
+`public/wa/woka/` is the WorkAdventure avatar catalog. A texture is a 96x128
+sheet (3 frames x 4 facings, 32 px cells); the texture id carries the nation and
+archetype (`wa:argyra:bold-heart`) so a WorkAdventure choice becomes
+`Player.avatarConfig`. Regenerate the provisional Calrunian catalog with:
+
+```sh
+npm run wa:woka
+python3 public/wa/check_assets.py --woka public/wa/woka/sheets/argyra/bold-heart.png
+```
+
 ## Two contracts, both enforced
 
 A map has to satisfy the client (`wa_export.py`, below) **and** the art (`check_assets.py`, and

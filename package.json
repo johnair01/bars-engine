@@ -280,7 +280,9 @@
     "dev:local": "npm run switch -- local && npm run db:seed && npm run dev",
     "dev:vercel": "npm run switch -- vercel && npm run dev",
     "postinstall": "prisma generate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "wa:woka": "node scripts/wa/build-woka-catalog.mjs",
+    "wa:publish": "node scripts/wa/publish-world.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.25",
