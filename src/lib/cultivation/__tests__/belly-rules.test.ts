@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { glowStrength, layersFrom, realmFrom, shouldPulse } from '../../../../public/between/cult/belly-rules.js'
+import { formColor, formFor, glowStrength, layersFrom, realmFrom, shouldPulse } from '../../../../public/between/cult/belly-rules.js'
 import { layers, QI_PER_MOVE } from '../sheet'
 
 describe('belly glow rules (T008) match the sheet', () => {
@@ -25,5 +25,16 @@ describe('belly glow rules (T008) match the sheet', () => {
     expect(realmFrom(1)).toBe(2)
     expect(realmFrom(2)).toBe(3)
     expect(realmFrom(9)).toBe(3)
+  })
+  it('takes the form of the floor: motes, pearl, bead', () => {
+    expect([1, 2, 3].map(formFor)).toEqual(['motes', 'pearl', 'bead'])
+    expect(formFor(undefined)).toBe('motes')
+    expect(formFor(9)).toBe('bead')
+  })
+  it('stays gold until the upper floor, where the element shows', () => {
+    expect(formColor(1, '#27ae60')).toBe('#ffcf6e')
+    expect(formColor(2, '#27ae60')).toBe('#ffcf6e')
+    expect(formColor(3, '#27ae60')).toBe('#27ae60')
+    expect(formColor(3, null)).toBe('#ffcf6e')
   })
 })
