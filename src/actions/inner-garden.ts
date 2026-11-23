@@ -16,6 +16,13 @@ import {
   type InnerGardenBarCandidate,
   type InnerGardenEligibleBar,
 } from '@/lib/inner-garden/bridge'
+import {
+  buildChapterOneResultBarDraft,
+  buildChapterOneSourceBarDraft,
+  findChapterOneStarterScenario,
+  normalizeChapterOneText,
+  type ChapterOneDraft,
+} from '@/lib/inner-garden/chapter-one'
 
 type ErrorResult = { error: string }
 
@@ -41,6 +48,12 @@ const BAR_SELECT = {
 function asCandidate(bar: Awaited<ReturnType<typeof findCandidateBar>>): InnerGardenBarCandidate | null {
   if (!bar) return null
   return bar
+}
+
+function normalizeRating(value: FormDataEntryValue | null): number | null {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return null
+  return Math.min(5, Math.max(1, Math.round(parsed)))
 }
 
 async function findCandidateBar(barId: string) {
@@ -199,3 +212,94 @@ export async function completeInnerGardenShamanRun(formData: FormData): Promise<
   redirect(`/bars/${result.id}?innerGarden=shaman`)
 }
 
+export async function completeInnerGardenChapterOneRun(formData: FormData): Promise<void> {
+  const player = await getCurrentPlayer()
+  if (!player) redirect('/login')
+
+  const sourceBarId = normalizeChapterOneText(formData.get('sourceBarId'), 120)
+  const starterScenarioId = normalizeChapterOneText(formData.get('starterScenarioId'), 80)
+  const starterScenario = findChapterOneStarterScenario(starterScenarioId)
+  const draft: ChapterOneDraft = {
+    signal: normalizeChapterOneText(formData.get('signal')) || starterScenario?.signal || '',
+    resistance: normalizeChapterOneText(formData.get('resistance')) || starterScenario?.resistance || '',
+    emotionId: normalizeChapterOneText(formData.get('emotionId'), 60),
+    seedQuality: normalizeSeedQuality(formData.get('seedQuality')),
+    cultivationAction: normalizeChapterOneText(formData.get('cultivationAction'), 120),
+    harvestedInsight: normalizeChapterOneText(formData.get('harvestedInsight')),
+    firstMove: normalizeChapterOneText(formData.get('firstMove')),
+    starterScenarioId: starterScenario?.id,
+    usefulnessRating: normalizeRating(formData.get('usefulnessRating')),
+    clarityRating: normalizeRating(formData.get('clarityRating')),
+    confusingPart: normalizeChapterOneText(formData.get('confusingPart'), 600),
+  }
+
+  if (
+    draft.signal.length < 3 ||
+    draft.resistance.length < 3 ||
+    draft.emotionId.length < 2 ||
+    draft.cultivationAction.length < 3 ||
+    draft.harvestedInsight.length < 3 ||
+    draft.firstMove.length < 3
+  ) {
+    redirect('/inner-garden/chapter-1?error=missing')
+  }
+
+  let source: InnerGardenBarCandidate
+
+  if (sourceBarId) {
+    const sourceRaw = await findCandidateBar(sourceBarId)
+    if (!sourceRaw) redirect('/inner-garden/chapter-1?error=not-found')
+
+    const reason = getInnerGardenEligibilityReason(sourceRaw, player.id)
+    if (reason) redirect(`/inner-garden/chapter-1?error=${encodeURIComponent(reason)}`)
+
+    source = sourceRaw
+  } else {
+    const sourceDraft = buildChapterOneSourceBarDraft(draft)
+    const createdSource = await dbBase.customBar.create({
+      data: {
+        creatorId: player.id,
+        ...sourceDraft,
+      },
+      select: BAR_SELECT,
+    })
+    await dbBase.customBar.update({
+      where: { id: createdSource.id },
+      data: { rootId: createdSource.id },
+    })
+    source = createdSource
+  }
+
+  const resultDraft = buildChapterOneResultBarDraft({
+    sourceBarId: source.id,
+    sourceTitle: source.title,
+    sourceSeedMetabolization: source.seedMetabolization,
+    sourceNation: source.nation,
+    sourceIntensity: source.intensity,
+    draft,
+    completedAt: new Date().toISOString(),
+  })
+
+  const result = await dbBase.customBar.create({
+    data: {
+      creatorId: player.id,
+      ...resultDraft,
+    },
+    select: { id: true },
+  })
+
+  await dbBase.customBar.update({
+    where: { id: result.id },
+    data: { rootId: result.id },
+  })
+
+  revalidatePath('/inner-garden')
+  revalidatePath('/inner-garden/chapter-1')
+  revalidatePath('/mastering-allyship/hub')
+  revalidatePath('/bars/garden')
+  revalidatePath('/vault')
+  revalidatePath(`/bars/${source.id}`)
+  revalidatePath(`/bars/${result.id}`)
+
+  redirect(`/bars/${result.id}?innerGarden=chapter-1`)
+}
