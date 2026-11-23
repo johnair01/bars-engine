@@ -28,7 +28,7 @@ export async function laneDepth(db: Db): Promise<Record<string, number>> {
 export async function pushTicket(db: Db, t: TicketDraft) {
   const dry = await dryLanes(db)
   const lit = new Set(LANES.filter(l => !dry.has(l)))
-  const kind = ticketKind(t.title, t.brief)
+  const kind = ticketKind(t.title, t.brief, t.basis?.rows ?? [])
   // Picture builds and design questions never enter DeepAI (it timed out on 43 of 48, 2026-11-21); the stored order drops it.
   const order = kindBars(kind).length ? (t.lanes.filter(l => !kindBars(kind).includes(l)).length ? t.lanes.filter(l => !kindBars(kind).includes(l)) : ['claude' as const]) : t.lanes
   t = { ...t, lanes: order }
