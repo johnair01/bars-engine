@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   switch (b.act) {
     case 'enter': r = { farm: F.enter(base, now), ok: true, mint: 0 }; break
     case 'till': r = F.till(base, i, now); break
-    case 'plant': r = F.plant(base, i, str(b.barId), str(b.line), now, today); break
+    case 'plant': r = F.plant(base, i, str(b.barId), str(b.line), now, today, b.crop); break
     case 'water': r = F.water(base, i, typeof b.aligned === 'string' && b.aligned ? { aligned: b.aligned } : 'mana', today); break
     case 'ripen': r = F.ripen(base, i, str(b.line), today); break
     case 'reclear': r = F.reclear(base, i, str(b.line), today); break

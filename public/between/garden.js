@@ -11,8 +11,7 @@ import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS,
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
 import { pickTap } from "./pick.js";   // a cushion takes the tap ahead of the spark over it (pt1-cushion-first)
-import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
-import { stance, clipWeights, FADE, SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
+import { SIT, SIT_DROP, SEAT_PAD } from "./stance.js";   // the code-made sit the daemons and spirits share
 import { createAmbient } from "./ambient.js";
 import { moodOf } from "./music.js";
 import { buildTea } from "./tea.js";   // between-tea-1 slice 1: the kettle by the fire, the cup the seated figure holds
@@ -378,21 +377,15 @@ function loadModel(name) {
   return templates[name];
 }
 
-/* A look on the player figure (part 4 fix, his note of 2026-10-24: "the clothes and robes aren't rendering"): every player
-   is the creator's figure, dressed by wardrobe.js: shape and build as bone scales, the cut (jacket, wrap dress, long coat)
-   on the skinned robe, the dye, skin and hair. player.glb, a body with a tunic painted on, is no longer drawn. */
-const bodyOpts = lk => ({ look: lk ? parseLook(lk) : null });
-/* Bodies are cloned from one template each; their colour is set per owner on a copy of the robe. */
+/* The spirits' and daemons' bodies (the player is the cultivation figure, cult/player-body.js; Average Dusk is deprecated,
+   Wendell 2026-11-17). Bodies are cloned from one template each; their colour is set per owner. */
 async function makeBody(model, height, tint, tintAmt, opts) {
-  const dressed = model === "player";
-  const t = await loadModel(dressed ? "dusk/average-dusk" : model);
+  const t = await loadModel(model);
   const obj = skClone(t.scene);
   const size = t.box.getSize(new THREE.Vector3());
   const tall = model === "fox" || model === "tortoise" ? Math.max(size.x, size.z) : size.y;
   const k = height / Math.max(tall, 0.01);
   obj.scale.setScalar(k);
-  const wardrobe = dressed ? dressFigure(obj, await loadParts(loadGltf)) : null;
-  if (wardrobe) wardrobe.set(opts && opts.look);
   obj.position.y = -t.box.min.y * k;
   const t0box = t.box.min.y;
   const holder = new THREE.Group(); holder.add(obj);
@@ -414,15 +407,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const clip = n => t.anims.find(a => a.name === n);
   const acts = {};
   for (const n of ["Walk", "Idle"]) { const c = clip(n); if (c) acts[n] = mixer.clipAction(c); }
-  /* A dressed figure blends its Walk and Idle by weight each frame toward what its stance asks (stance.js); the robe is skinned,
-     so it follows whatever the clips and the code poses make. Older files without an Idle keep standing at the Walk's first frame. */
-  const managed = !!(wardrobe && acts.Walk && acts.Idle && wardrobe.hasIdle);
-  const cw = { Walk: 0, Idle: 1 }; let cur = "idle";
-  if (managed) { acts.Walk.play(); acts.Walk.setEffectiveWeight(0); acts.Idle.play(); acts.Idle.setEffectiveWeight(1); }
-  else {
-    if (acts.Idle) acts.Idle.play();
-    if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = true; }
-  }
+  if (acts.Idle) acts.Idle.play();
   let walking = false;
   /* Poses made in code over the clip (the player model has a walk and nothing else): sitting cross-legged on a cushion,
      and a wave of the right hand. Bone axes were read off player.glb: hip X lifts the thigh forward, knee X folds the
@@ -433,13 +418,10 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
   let sit = 0, waveT = -9, rest = 0, lastSeatAt = null;
   return {
-    holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: !!wardrobe,
-    stance: () => cur,
+    holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: false,
+    stance: () => (sit > 0.5 ? "sit" : walking ? "walk" : "idle"),
     setWalking(w) {
       if (w === walking) return; walking = w;
-      if (managed) return;   // pose() fades the clips toward the stance
-      // a dressed figure with no Idle stands at the Walk's first frame rather than fading to the bind pose
-      if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = !w; if (!w) acts.Walk.time = 0; return; }
       if (acts.Walk) { if (w) { acts.Walk.reset().fadeIn(0.2).play(); acts.Idle && acts.Idle.fadeOut(0.2); } else { acts.Walk.fadeOut(0.3); if (acts.Idle) acts.Idle.reset().fadeIn(0.3).play(); } }
     },
     wave(t) { waveT = t; },
@@ -448,15 +430,9 @@ async function makeBody(model, height, tint, tintAmt, opts) {
       if (seatAt != null) lastSeatAt = seatAt; else if (!wantSit && sit > 0.01) seatAt = lastSeatAt; // getting up eases off the same seat
       sit += ((wantSit ? 1 : 0) - sit) * Math.min(1, dt * 5);
       rest += ((wantRest ? 1 : 0) - rest) * Math.min(1, dt * 3);
-      if (managed) {
-        const s = stance({ moving: walking, sitting: !!wantSit });
-        if (s !== cur) { if (s === "walk" && cw.Walk < 0.05) acts.Walk.time = 0; cur = s; }
-        const want = clipWeights(cur), k = 1 - Math.exp(-3 * dt / FADE[cur]);
-        for (const n of ["Walk", "Idle"]) { cw[n] += (want[n] - cw[n]) * k; if (Math.abs(cw[n] - want[n]) < 0.002) cw[n] = want[n]; acts[n].setEffectiveWeight(cw[n]); }
-      }
       if (bones.hipL && sit > 0.01) {
         const w = sit;
-        if (acts.Walk && wantSit && !managed) acts.Walk.weight = 0;
+        if (acts.Walk && wantSit) acts.Walk.weight = 0;
         for (const [n, x, y, z] of SIT) bend(n, x, y, z, w);   // stance.js, so the robe tools pose the same sit
         // a seated breath (about one every 4.5 s): the chest lifts and settles, the head stays level, so a sitting is alive, not held
         if (bones.spine && bones.neck) { const br = Math.sin(t * 1.4) * 0.03 * w; qe.setFromEuler(eu.set(-br, 0, 0, "XYZ")); bones.spine.b.quaternion.multiply(qe); qe.setFromEuler(eu.set(br, 0, 0, "XYZ")); bones.neck.b.quaternion.multiply(qe); }
@@ -470,7 +446,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
           bones.hips.b.position.y = hipsY - (hw - (seatAt + SEAT_PAD)) / sy * w;
         } else bones.hips.b.position.y = hipsY - SIT_DROP * w;
       } else if (bones.hips) bones.hips.b.position.y = hipsY;
-      if (acts.Walk && !wantSit && acts.Walk.weight === 0 && !managed) acts.Walk.weight = 1;
+      if (acts.Walk && !wantSit && acts.Walk.weight === 0) acts.Walk.weight = 1;
       const wv = t - waveT;
       if (bones.shoulderR && wv < 1.6) {
         const w = Math.sin(Math.min(1, wv / 1.6) * Math.PI) * 1.4; const wt = Math.min(1, w);
@@ -481,7 +457,6 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         obj.position.y = -t0box * k * (1 - rest * 0.38);
         mixer.timeScale = 1 - rest * 0.85;
       }
-      if (wardrobe) wardrobe.dress(dt);   // the robe's skirt panels from the legs as posed now (after the mixer and the sit)
     },
   };
 }
@@ -607,7 +582,7 @@ const SIT_SKIP = PREVIEW_HOST ? KQ.get("sit") : null, CUSHION_SKIP = PREVIEW_HOS
 const EMBER_RISEN = PREVIEW_HOST && KQ.get("ember") === "risen";   // previews: ?ember=risen puts a risen ember in the satchel (a finished sit wakes it)
 const EMBER_DEMO = PREVIEW_HOST && KQ.get("embers") === "demo";
 // previews: ?tea=pour pours a cup as soon as you are sat by the kettle; ?tea=sip starts at the first sip, the cup already full.
-// E.g. ?nook=1&sit=hearth&tea=sip. ?drink=r4 plays round 4's drink instead of the baked one (tea.js), e.g. ?nook=1&sit=hearth&tea=sip&drink=r4
+// E.g. ?nook=1&sit=hearth&tea=sip.
 const TEA_SKIP = PREVIEW_HOST ? KQ.get("tea") : null;
 // previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
 const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;

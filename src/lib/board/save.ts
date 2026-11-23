@@ -16,6 +16,7 @@ export const COLLECTIONS = [
   'intake',   // the intake's one run at intake/latest, written by board/copy_write.py
   'constraint',  // the council's dated constraint read, one document a day
   'resolved',  // one settled answer at <kind>--<id>, written by board/resolved_write.py
+  'voice',     // one Teaching Desk event (a pencil edit on a copy look, a keep, a stone); content/voice/ is folded from these
 ] as const
 /** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
  * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
@@ -111,6 +112,16 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
       if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('a resolved entry needs savedAt, an ISO UTC time')
       else if (nonBlank(data.kind) && nonBlank(data.id) && s.docId !== `${data.kind}--${data.id}`)
         errors.push('a resolved entry lives at <kind>--<id>')
+    }
+    if (c === 'voice') { // one voice event; a pencil carries the old and new line (.specify/specs/voice-desk FR-002, FR-014)
+      if (s.board !== 'council') errors.push('the voice events are the Council Board\'s')
+      if (!nonBlank(data.kind)) errors.push('a voice event names its kind')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
+      if (data.kind === 'pencil') {
+        if (!(str(data.old) && nonBlank(data.old))) errors.push('a pencil names the old line')
+        if (!str(data.new)) errors.push('a pencil carries the new line')
+        if (!nonBlank(data.screen) || !nonBlank(data.file) || !nonBlank(data.look_row)) errors.push('a pencil names its screen, file and look_row')
+      }
     }
     if (c === 'battles') { // one battle's record, its rounds and questions (six-faces-council board/copy_write.py)
       if (s.board !== 'council') errors.push('the battles are the Council Board\'s')

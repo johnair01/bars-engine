@@ -13,7 +13,8 @@
    recipes, the hollow's bark, root and moss materials, the paint pass), with the land's tap-to-walk, drag-to-look and
    arrow keys. The traveller (round 2, his steer on cw-walk-look-1): one of the cultivation characters, her or him in
    the light travel robe, built in the page by public/between/cult/ (a copy of the shells preview) and walked by
-   cult/walker.js. If that figure cannot be built, the Between's Average Dusk walks instead (land.js makeFigure).
+   cult/walker.js. If that figure cannot be built, an error is logged and no traveller is drawn (Average Dusk is deprecated,
+   Wendell 2026-11-17).
 
    Nothing typed leaves the tab (cg-browser-only): the walk lives in sessionStorage "coaching-walk"; the copy button is
    how the visitor's words reach Calendly's notes box, by their own paste. The utm tags they arrived with ride every door.
@@ -21,12 +22,8 @@
    Previews: ?at=signpost|lanterns|pool|cairn|hollow|bramble|fire|cabin|lectern|gate stands you there; ?sample=1 opens with
    a sample walk answered. window.__walk drives it for the pictures. */
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
-import { buildHollow, mergeStatic, mergeByParent, rng } from "/between/hollow.js";
+import { buildHollow, mergeStatic, rng } from "/between/hollow.js";
 import { installPaint } from "/between/paint.js";
-import { loadParts, dressFigure } from "/between/wardrobe.js";
-import { stance, clipWeights, FADE } from "/between/stance.js";
 import * as D from "./data.js";
 installPaint();
 
@@ -327,9 +324,8 @@ function colourFlies() {
 }
 
 /* ===================================================================================================
-   The traveller (land.js makeFigure, without the toolbag)
+   The traveller (a cultivation figure, as the Between lands draw it)
    =================================================================================================== */
-const loader = new GLTFLoader();
 // who walks: asked once at the forest's edge, kept for the tab; ?who=f|m answers it for the pictures
 const WHO_KEY = "coaching-walk-who";
 function chooseWho() {
@@ -342,34 +338,11 @@ function chooseWho() {
     box.hidden = true; res(b.dataset.who); }; });
 }
 async function makeTraveller(who) {
-  const { makeWalker } = await import("/between/cult/walker.js");   // loaded here, so a failure leaves the Dusk fallback standing
+  const { makeWalker } = await import("/between/cult/walker.js");   // loaded here, so a failure is caught where it is logged
   const w = await makeWalker({ who, outfit: "B2" });
   scene.add(w.holder);
   return w;
 }
-async function makeFigure() {
-  const gl = await loader.loadAsync("/between/m/dusk/average-dusk.glb");
-  const root = gl.scene; mergeByParent(root); root.updateMatrixWorld(true);
-  const box = new THREE.Box3(); root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } else box.expandByObject(o); } });
-  const obj = skClone(root), k = 1.7 / Math.max(box.getSize(V(0, 0, 0)).y, 0.01);
-  obj.scale.setScalar(k); obj.position.y = -box.min.y * k;
-  const wardrobe = dressFigure(obj, await loadParts(u => loader.loadAsync(u)));
-  wardrobe.set(null);
-  obj.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-  const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
-  const mixer = new THREE.AnimationMixer(obj), acts = {};
-  for (const n of ["Walk", "Idle"]) { const c = gl.animations.find(a => a.name === n); if (c) { acts[n] = mixer.clipAction(c); acts[n].play(); } }
-  const w = { Walk: 0, Idle: 1 }; if (acts.Walk) acts.Walk.setEffectiveWeight(0);
-  let cur = "idle";
-  return { holder, update(dt, moving) {
-    const s = stance({ moving }); if (s !== cur) { if (s === "walk" && w.Walk < 0.05 && acts.Walk) acts.Walk.time = 0; cur = s; }
-    const want = clipWeights(cur), kk = 1 - Math.exp(-3 * dt / FADE[cur]);
-    for (const n of ["Walk", "Idle"]) if (acts[n]) { w[n] += (want[n] - w[n]) * kk; acts[n].setEffectiveWeight(w[n]); }
-    if (acts.Walk) acts.Walk.timeScale = 1.0;
-    mixer.update(dt); wardrobe.dress(dt);
-  } };
-}
-
 /* ===================================================================================================
    Build
    =================================================================================================== */
@@ -419,8 +392,7 @@ async function build() {
   mergeStatic(G);
   const who = await chooseWho();
   step("waking your traveller");
-  try { state.me = await makeTraveller(who); } catch (e) { console.warn("cultivation figure", e); }
-  if (!state.me) try { state.me = await makeFigure(); } catch (e) { console.warn("figure", e); }
+  try { state.me = await makeTraveller(who); } catch (e) { console.error("the cultivation figure did not build; nothing is drawn in its place", e); }
   applyWalk();
 }
 

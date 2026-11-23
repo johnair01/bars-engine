@@ -1,0 +1,6 @@
+# Known debt of `copy-scan.py --lexicon` on 2026-11-17, when the gate was wired (Teaching Desk step 3). file|rule|word.
+# Both lines are Tap the Vein copy Wendell has not yet kept or rewritten at the desk; step 7 (first sitting) works them
+# and deletes these lines. A new failure is never added here: rewrite the line, or say the word's plain meaning on the
+# screen first and let him stone it.
+src/app/tap-the-vein/TapTheVeinRunner.tsx|word the screen never showed|charge
+src/lib/tap-the-vein/paths.ts|word the screen never showed|sitting
