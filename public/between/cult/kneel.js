@@ -122,5 +122,8 @@ export function makeKneel(W) {
       ember.visible = u < 0.8;
     });
   }
-  return { sit, stand, give, update, get kneeling() { return kneeling; } };
+  // for the tea (tea.js): the laid robe follows the body's lap each frame the arms move; rest() puts every bone back to the kneel
+  const follow = () => { if (kneeling) inPlace(() => ST.followLap(X, { sleeves: /^$/ })); };
+  const rest = () => { if (kneeling) inPlace(() => { kneelPose(0); ST.followLap(X, { sleeves: /^$/ }); }); };
+  return { sit, stand, give, update, follow, rest, get kneeling() { return kneeling; } };
 }
