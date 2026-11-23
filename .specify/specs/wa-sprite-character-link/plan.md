@@ -178,7 +178,7 @@ curl -sI https://world.masteringallyship.com/_/global/world.masteringallyship.co
 Manual:
 1. Log in with an account that has `avatarConfig`.
 2. Enter the dojo; inspect the Phaser texture key / network request for the sheet.
-3. Confirm no `character_color21.png` / `character_eyes23.png` request.
+3. Confirm the visible avatar is the chosen sheet, not the grey ghost. WA may still preload `character_color21.png`/`character_eyes23.png`; a request alone is not a failure.
 4. Pick a different body in the creator; reload; confirm the new sheet.
 
 ---

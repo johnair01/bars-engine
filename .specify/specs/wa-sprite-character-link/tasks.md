@@ -46,7 +46,7 @@
 - [ ] **T112** If the scripted flow keeps state and completes, record the prior failure as a manual-test artifact and close this task without changing server code.
 - [ ] **T113** If the scripted flow loses the cookie, fix the cookie `SameSite`/`Path`/domain on the WA side (config only) or document the required box `.env` change.
 - [ ] **T114** Replace the dead-end callback error with a "Start signing in again" action that preserves `returnTo`.
-- [ ] **T115** Verify the signed-in admin renders the saved sheet, not `character_color21.png`/`character_eyes23.png`.
+- [ ] **T115** Verify the signed-in admin renders the saved sheet, not the ghost (WA may still preload `character_color21.png`/`character_eyes23.png`; check the visible avatar, not just the request log).
 
 **Files:** box `.env`/config, `world` login flow, possibly `src/app/api/oidc/*`; no fork.
 
@@ -54,7 +54,7 @@
 
 - [ ] **T116** `curl -s https://bars-engine.vercel.app/api/woka/list | jq '.woka.collections[0].textures | length'` → `40`.
 - [ ] **T117** Fetch the first sheet with `curl -I`; confirm `200`, `image/png`, `access-control-allow-origin: https://world.masteringallyship.com`, and `access-control-allow-credentials: true`. **Do not accept `*`** — WA's credentialed image load rejects it.
-- [ ] **T118** Enter the dojo with a player whose `avatarConfig` is set; confirm one sheet request and no fallback textures.
+- [ ] **T118** Enter the dojo with a player whose `avatarConfig` is set; confirm the chosen sheet is visible at the player's position and the socket stays open.
 
 ---
 
