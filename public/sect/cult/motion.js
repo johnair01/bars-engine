@@ -132,8 +132,10 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
   // robe-sprint-look-6 B (2026-11-23, "Better, but it swings too stiffly"): air, the still air's drag on a chain node, per second, growing from
   // 0 at the waist to this at the hem. The springs pull each node to its skinned place and damp only its speed relative to that place, so
   // at a steady sprint the hem had nothing to trail behind and hung under the pelvis like a turned tube. 0 keeps the old swing.
-  air: 0,
-  ring: null }; // [lo, hi, sweeps], e.g. [0.7, 1.1, 3]; null keeps the columns free (the old robe) // skin: the robe points' own clearance off the legs (the backstop)
+  // robe-sprint round 8 (target R1, a side-view sprint photograph; critic deepseek-flash): air 3 and ring [0.7, 1.1, 3] took the sprint's
+  // front swing from 1 to 9 degrees and the back to 41 with the tears down (1428 -> 1086). 8 nodes a column (round 3) scored no better.
+  air: 3,
+  ring: [0.7, 1.1, 3] }; // [lo, hi, sweeps]; null keeps the columns free (the old robe) // skin: the robe points' own clearance off the legs (the backstop)
 // anim-robe-look-4: below the hip the robe is half re-hung from the thighs to the pelvis (a robe is not a pair of trousers): a point's skin
 // weights move `hm` of the way to the hips bone, from just under the hips (u = 0) to the knee (u = 1). A front panel then goes with its
 // thigh only partway and trails. Call once after the figure is built, before the first frame.
@@ -147,7 +149,7 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
 // from the pelvis too and the whole skirt leaned back as one piece. `front` is the hm of the front panel (within `cone` degrees of the
 // feet's forward line, eased to the sides); the back and sides keep hm. front = hm is the old robe. The skin weights the figure was built
 // with are kept on the part (pt.skin0), so a second call re-hangs from them instead of compounding.
-export const ROBE_HANG = { hm: 1, front: 1, cone: 70 };
+export const ROBE_HANG = { hm: 1, front: 0.55, cone: 70 }; // front 0.55: round 8, the front panel keeps some thigh weight so the knee pushes it
 export function rehangRobe(X, hm = ROBE_HANG.hm, front = ROBE_HANG.front) {
   const F = X.F, yK = X.yHip - wp(F.bones.hipL).distanceTo(wp(F.bones.kneeL)); // the knee in the fit frame, as skirtOf finds it
   // the feet's forward line, read once at the build (the fit frame), and the hips' centre from the robe's own points, as skirtOf finds it
