@@ -163,7 +163,7 @@ export default defineConfig({
       'src/lib/between/__tests__/friendcraft-deck.test.ts',
       'src/lib/between/__tests__/friendcraft-join.test.ts',
       'src/lib/between/__tests__/games.test.ts',
-      'src/lib/between/__tests__/walk-hollow.test.ts', 'src/lib/between/__tests__/trainee-walk.test.ts', 'src/lib/between/__tests__/talk-words.test.ts', 'src/lib/between/__tests__/wayfarer-words.test.ts', 'src/lib/between/__tests__/doubt-words.test.ts', 'src/lib/between/__tests__/walk-own.test.ts',
+      'src/lib/between/__tests__/walk-hollow.test.ts', 'src/lib/between/__tests__/trainee-walk.test.ts', 'src/lib/between/__tests__/talk-words.test.ts', 'src/lib/between/__tests__/wayfarer-words.test.ts', 'src/lib/between/__tests__/doubt-words.test.ts', 'src/lib/between/__tests__/bar-words.test.ts', 'src/lib/between/__tests__/bar-card.test.ts', 'src/lib/between/__tests__/walk-own.test.ts',
       'src/lib/between/__tests__/growth.test.ts',
       'src/lib/between/__tests__/growth-rules.test.ts',
       'src/lib/between/__tests__/friendcraft-turn.test.ts',

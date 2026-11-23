@@ -15,7 +15,40 @@ export const SLIP = {
   take: 'Take the slip',
   hint: "Walk out of the hall's north doors and down the altar walk.",
 };
-export const SPIRIT = { caption: 'You wrote this.', walk: 'Walk on' };
+export const SPIRIT = { caption: 'You wrote this.', walk: 'Walk on', begin: 'Face it', resume: 'Go on', other: 'You are working with another voice. Walk on, or finish there first.' };
+
+// Step 3 (plan heaven-quest-demo): the 3-2-1 at the chosen spirit, one line at a time, the player writing every line.
+// The steps are Integral Life Practice's Face it, Talk to it, Be it, as block-room.js stands them; "it" is the doubt voice
+// the player wrote, quoted back on the first step. voice says whose words the line is: 'you' the player, 'it' the voice.
+export const STAND_NAMES = { face: 'Face it', talk: 'Talk to it', be: 'Be it' };
+export const STAND_ORDER = ['face', 'talk', 'be'];
+export const STEP = { say: 'Say it', enough: 'That is enough here', later: 'Not now', you: 'You', it: 'The voice' };
+export const NEED = {
+  ask: 'Does the voice have what it needs from you?',
+  gift: g => `As the voice, you said it gives you: “${g}”.`,
+  yes: 'Yes, it has what it needs', no: 'Not yet',
+  met: 'The voice has what it needs. It gathers into a person and walks up the altar walk toward the founder\'s hall. Follow it.',
+};
+/** The three stands' steps for one doubt line. Pure. */
+export function stepsFor(line) {
+  const q = clean(line);
+  return {
+    face: [
+      { voice: 'you', ask: `Say where the voice sits when it says “${q}”: in your body, or in this place.`, hint: 'It sits in…' },
+      { voice: 'you', ask: 'Say what the voice looks like. Its size, its colour, its weight.', hint: 'It looks…' },
+      { voice: 'you', ask: 'Say what the voice is doing to you.', hint: 'It is…' }],
+    talk: [
+      { voice: 'you', ask: 'Ask the voice what it wants from you.', hint: 'What do you want?' },
+      { voice: 'it', ask: 'Answer as the voice would.', hint: 'I want…' },
+      { voice: 'you', ask: 'Ask the voice what it needs from you.', hint: 'What do you need from me?' },
+      { voice: 'it', ask: 'Answer as the voice would.', hint: 'I need…' }],
+    be: [
+      { voice: 'it', ask: 'Stand where the voice stands and say what you are.', hint: 'I am…' },
+      { voice: 'it', ask: 'As the voice, say what you have been trying to do for this person.', hint: 'I have been trying to…' },
+      { voice: 'it', ask: 'As the voice, say what you give back now.', hint: 'What I give you is…' }],
+  };
+}
+
 
 /** One sentence as the player typed it: trimmed, one line, at most MAX_CHARS. Pure. */
 export const clean = t => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS);

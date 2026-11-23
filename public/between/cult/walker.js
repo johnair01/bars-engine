@@ -18,10 +18,14 @@ export const BODIES = {
   m: { gender: "m", build: "average", skin: 3, height: 1.75 },
 };
 let REG = null;
-// look: the mirror's pick (hj-comb-look-1): { build, skin, height, hair } over the body's defaults; hair is one of crop, loose, bob, lowbun, tail, twin, braid, topknot (omitted: the robe's own hair)
-export async function makeWalker({ who = "f", outfit = "B2", underwrap = false, look = {} } = {}) {
+/* who/outfit pick the figure. A page that needs its own clothes (the Arcade's street clothes) passes `outfitDef`, an outfit
+   of parts.json's shape, registered under the key `outfit`; `build` (slight|average|broad), `skin` (a ramp index) and
+   `hairColor` (a hex) set the body and hair; every other part is parts.json's. */
+// look: the mirror's pick (hj-comb-look-1): { build, skin, height, hair } over the body's defaults; hair is one of crop, loose, bob, lowbun, tail, twin, braid, topknot (omitted: the robe's own hair). An explicit `build` or `skin` wins over `look`.
+export async function makeWalker({ who = "f", outfit = "B2", outfitDef = null, build = null, skin = null, hairColor = null, underwrap = false, look = {} } = {}) {
   if (!REG) REG = await fetch(new URL("./make/parts.json", import.meta.url)).then(r => r.json());
-  const X = await M.build({ ...BODIES[who], ...look, direction: outfit[0], outfit, underwrap }, REG);
+  const reg = outfitDef || hairColor ? { ...REG, outfits: outfitDef ? { ...REG.outfits, [outfit]: outfitDef } : REG.outfits, hairColor: hairColor || REG.hairColor } : REG;
+  const X = await M.build({ ...BODIES[who], ...look, ...(build ? { build } : {}), ...(skin != null ? { skin } : {}), direction: outfit[0], outfit, underwrap }, reg);
   const F = X.F;
   // the body under the clothes is not drawn while it walks, so a thigh cannot show through the skirt (mix.js
   // legsInMotion, worked out at the preview's stride); it stays hidden at rest too, where the cloth covers it
