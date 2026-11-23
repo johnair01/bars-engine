@@ -14,15 +14,16 @@ non-zero rather than emit a map it cannot vouch for.
 
 ## The rules WorkAdventure reads that Tiled does not show
 
-`wa_export.py` holds these, applies them in `apply()`, and re-checks them in `check()`. A generator calls both just
-before it writes its `.tmj`, so no map can drift out of conformance:
+`wa_export.py` holds these, applies the first three in `apply()`, and re-checks them in `check()` and
+`check_exits()`. A generator calls all of it just before it writes its `.tmj`, so no map can drift out of
+conformance:
 
 ```python
 sys.path.insert(0, os.path.dirname(HERE))          # this folder
-from wa_export import apply as wa_apply, check as wa_check
+from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits
 ...
 wa_apply(tmj)
-errors = wa_check(tmj)
+errors = wa_check(tmj) + wa_exits(tmj, HERE)   # HERE = the folder the map will sit in
 if errors:
     print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in errors]; sys.exit(1)
 ```
@@ -38,6 +39,12 @@ if errors:
 3. **A `start` tile layer is the spawn point.** WorkAdventure marks every tile in a layer named `start` as a spawn
    position, so the tile is read, not just drawn — and a *collided* tile there spawns the player inside a wall.
    `apply()` repoints the marker at the ground tile beneath it, which keeps the spawn invisible and walkable.
+4. **An `exitUrl` is fetched when the room opens, not when someone walks into the door.** One exit to a map that does
+   not exist kills the whole room: `NETWORK_ERROR — An error occurred while loading a resource`. A door to a map that
+   is not built yet keeps its opening, paving and plaque but gets **no** `exitUrl`. `check_exits(tmj, map_dir)`
+   enforces that every `exitUrl` resolves to a `.tmj` beside the map.
+5. **Do not spawn inside an exit.** A start tile inside an area with an `exitUrl` teleports the player into the next
+   room the instant the map opens — with no error, the room simply never appears. `check()` rejects it by name.
 
 Two more things that cost an afternoon if you learn them the hard way: tilesets must be embedded in the map (an
 external `.tsj` is rejected), and the map is fetched by the *browser*, so the HTTP host must send
