@@ -130,6 +130,24 @@ Against the rules in WA 1.35:
 Blocked cells match the original mask exactly in all three, so nothing was lost and nothing was over-solidified. Tiles
 and sprites are pixel-identical after regeneration (only PNG re-encoding differs), so no art changed.
 
+### Regenerating on the box
+
+`gen_sect.py` was then run for real on the Ubuntu box (`vps-498545bd`), which is what settles whether these maps are
+reproducible:
+
+- `DejaVuSans-Bold.ttf` is present at the exact path `sect-base.json` names, so the plaques draw as authored.
+- The reconstructed `heaven-sect-court.tmj` is **byte-identical** to the committed one. The in-place `apply()` used to
+  fix the committed file therefore produced exactly what the patched generator emits — no drift to reconcile later.
+- Every tile, the plaque sheet and the 3072×2560 render are **pixel-identical**.
+
+So the Sect map is reproducible on the box, and the fix is not a hand edit dressed up as a generator. (Pillow was
+installed there with `apt-get install -y python3-pil` — 10.2.0 — because the box had no imaging library.)
+
+The one thing that does not travel is the font: `sect-base.json` names a Linux path, so a Mac stops with
+`OSError: cannot open resource` from inside PIL. `WA_PLAQUE_FONT` now overrides it, and a missing font exits 1 with a
+sentence naming the file. A *different* font would redraw every plaque, so the override is for finding the same font
+somewhere else, not for substituting one — which is why there is no automatic fallback.
+
 ---
 
 ## 4. Serving the maps to WorkAdventure
@@ -143,9 +161,10 @@ GET /api/map?playUri=https://world.masteringallyship.com/@/…&userId=…
 
 Two things to get right:
 
-1. **CORS.** The map is fetched by the *browser*, not by WA's server, so bars-engine must answer `GET /wa/**` with
-   `Access-Control-Allow-Origin: *` (Vercel `headers` in `vercel.json`). This is the most likely reason a correct map
-   "fails to load" with no useful error.
+1. **CORS is already handled.** The map is fetched by the *browser*, not by WA's server, so `/wa/**` has to answer
+   with `Access-Control-Allow-Origin`. Vercel does this for static output by default — checked on the live deployment
+   2026-11-23: `/wa/lantern-walk/lantern-walk.tmj` answers `200` with `access-control-allow-origin: *`. No
+   `vercel.json` entry is needed; if that ever changes, this is the first thing to look at.
 2. **No auth on `/wa/**`.** The map is public art. Entitlement is enforced by `/api/room/access`, not by hiding the
    map — hiding it would break `exitUrl` between worlds anyway.
 
@@ -211,12 +230,14 @@ is the bridge.
 
 ## 7. What is left
 
-1. Add `Access-Control-Allow-Origin` for `/wa/**` in `vercel.json`.
-2. Merge the two map branches and the two feature branches.
-3. **Load the Heaven Sect court in the real client** — the option chosen on `cd-dojo-look-2`
+1. Merge the two map branches and the two feature branches (`docs/WA_MAP_PIPELINE.md` §3 lists them).
+   Until a branch merges, its map is not on `bars-engine.vercel.app/wa/…` — checked 2026-11-23, where only the
+   Lantern Walk is deployed and the Dojo and Sect maps answer `404`.
+2. **Load the Heaven Sect court in the real client** — the option chosen on `cd-dojo-look-2`
    ("Yes, it reads — put the map in the real WorkAdventure client and post a walk-through look"). It will now load and
    collide; before this fix it would not have loaded at all.
-4. Then the `bars` blocks and the shared script, which need the encounter seam (step 4 of the main build order).
-5. `gen_sect.py` needs DejaVuSans-Bold at the Linux path named in `sect-base.json` and the dojo walker sheets beside
-   it, so it regenerates in the cloud containers rather than on a Mac. Worth making that dependency explicit in the
-   generator's usage line.
+3. Then the `bars` blocks and the shared script, which need the encounter seam (step 4 of the main build order).
+4. `gen_sect.py` draws the room-name plaques into the tileset from the bold sans named in `sect-base.json`, which is
+   a Linux path. `WA_PLAQUE_FONT` overrides it and a missing font exits 1 with a sentence naming it, so this runs off
+   Linux without a traceback. Nothing else is missing: the dojo art it draws from (`src16/`, `sprites/`) is on the
+   same branch — the dojo commit is an ancestor of the sect branch — so there is no cross-branch order to get right.
