@@ -13,13 +13,15 @@ import type { IChingContext } from '@/lib/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
 import { persistIChingReadingForPlayer } from '@/actions/cast-iching'
 import type { IChingCastContext } from '@/lib/iching-cast-context'
+import { settleCampaignDomain } from '@/lib/quest-grammar/campaign-domain'
+import { DOMAIN_PICK_REQUIRED } from '@/lib/quest-grammar/domain-source'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
 export async function generateQuestFromReading(
     hexagramId: number,
     castContext?: IChingCastContext | null,
-    campaignContext?: { campaignRef?: string; campaignGoal?: string }
+    campaignContext?: { campaignRef?: string; campaignGoal?: string; chosenDomain?: string }
 ) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
@@ -67,10 +69,10 @@ export async function generateGrammaticQuestFromReading(
     playerId: string,
     hexagramId: number,
     castContext?: IChingCastContext | null,
-    campaignContext?: { campaignRef?: string; campaignGoal?: string }
+    campaignContext?: { campaignRef?: string; campaignGoal?: string; chosenDomain?: string }
 ): Promise<
     | { success: true; quest: { title: string; description?: string }; adventureId?: string; questId?: string; threadId?: string }
-    | { error: string }
+    | { error: string; requiresPick?: true }
 > {
     try {
         if (process.env.QUEST_GRAMMAR_AI_ENABLED === 'false') {
@@ -124,10 +126,20 @@ export async function generateGrammaticQuestFromReading(
             archetypePrimaryWave,
         })
 
+        // Carry the campaign's domain, or the player's pick; with neither, stop and ask.
+        const domain = await settleCampaignDomain(
+            { campaignRef: campaignContext?.campaignRef },
+            campaignContext?.chosenDomain
+        )
+        if (!domain.ok) {
+            return { error: DOMAIN_PICK_REQUIRED, requiresPick: true }
+        }
+
         const compileResult = await compileQuestWithAI({
             unpackingAnswers,
             alignedAction,
             segment: 'player',
+            chosenDomain: domain.chosenDomain,
             ichingContext,
             targetArchetypeId: player.archetypeId ?? undefined,
             developmentalLens: alignmentContext.activeFace ?? undefined,

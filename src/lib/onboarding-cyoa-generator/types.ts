@@ -7,6 +7,7 @@
 
 import type { UnpackingAnswers } from '@/lib/quest-grammar'
 import type { IChingContext } from '@/lib/quest-grammar'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 
 export type OnboardingOutcome = 'donate' | 'signup'
 
@@ -16,6 +17,8 @@ export interface OnboardingCYOAInput {
   segment: 'player' | 'sponsor'
   campaignRef: string
   outcomes: OnboardingOutcome[]
+  /** The domain the player chose. Required by the compiler: nothing infers one. */
+  chosenDomain: AllyshipDomainKey
 }
 
 export interface RandomTestInput {
@@ -24,6 +27,8 @@ export interface RandomTestInput {
   ichingContext: IChingContext
   nationId: string | null
   playbookId: string | null
+  /** The domain the player chose. Required by the compiler: nothing infers one. */
+  chosenDomain: AllyshipDomainKey
 }
 
 export interface ValidationFailure {

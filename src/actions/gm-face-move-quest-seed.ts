@@ -39,7 +39,16 @@ export async function createGmFaceMoveQuestFromCampaign(
 
   const resolvedRef = resolvedCampaignRefFromRow(inst, input.campaignRef)
   const kotterStage = inst.kotterStage ?? 1
+  // The domain is carried from the instance. If it has none, stop and ask rather than inventing Gather
+  // (Wendell, 2026-11-20). persistGmFaceMoveQuestBar would refuse anyway; saying so here names the cause.
   const allyshipDomain = clampCampaignAllyshipDomain(inst.allyshipDomain)
+  if (!allyshipDomain) {
+    return {
+      error:
+        'This campaign instance has no domain set. Pick one (Gathering Resources, Direct Action, Raise ' +
+        'Awareness, Skillful Organizing) before a quest can be created.',
+    }
+  }
   const hex =
     input.hexagramId != null
       ? Math.max(1, Math.min(64, Math.round(input.hexagramId)))

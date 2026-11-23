@@ -10,6 +10,7 @@ import { deriveMovementPerNode } from './emotional-alchemy'
 import { ALL_CANONICAL_MOVES } from './move-engine'
 import { selectPrivilegedChoices } from './move-assignment'
 import { getMovesForLens } from './lens-moves'
+import { getDomainLabel, type AllyshipDomainKey } from '@/lib/allyship-domains'
 import type { ElementKey } from './elements'
 import type {
   QuestCompileInput,
@@ -180,6 +181,56 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
 
+/**
+ * What the player does at the threshold, per domain.
+ *
+ * Wendell, 2026-11-20: the sect's own need does not narrow this. A Gather Resources campaign
+ * still runs on all four, because "all domains support each other" — so every quest carries the
+ * domain the player chose, and each one ends in a different act rather than the same donation.
+ */
+const DOMAIN_ACTION_COPY: Record<AllyshipDomainKey, string> = {
+  GATHERING_RESOURCES: 'Gather what the work needs.',
+  DIRECT_ACTION: 'Act on what you have seen.',
+  RAISE_AWARENESS: 'Say it where it will be heard.',
+  SKILLFUL_ORGANIZING: 'Put the people and the pieces in order.',
+}
+
+/** The physical act behind that threshold, so the beat is a doing and not a pledge. */
+const DOMAIN_RITUAL: Record<AllyshipDomainKey, string> = {
+  GATHERING_RESOURCES: 'Carry one thing in that was not there before — an hour, a tool, a hand, a name.',
+  DIRECT_ACTION: 'Do the smallest true thing today. Put it where you will see it tomorrow.',
+  RAISE_AWARENESS: 'Tell one person who did not know. Let them tell the next one.',
+  SKILLFUL_ORGANIZING: 'Name who does which part, and who they hand it to.',
+}
+
+const DOMAIN_CONSEQUENCE: Record<AllyshipDomainKey, string> = {
+  GATHERING_RESOURCES:
+    '**Structural consequence** — Gathered. What you brought is in the common store now, and the next person starts from your count, not from nothing.\n\nThe hold is no longer empty.',
+  DIRECT_ACTION:
+    '**Structural consequence** — Done, and seen. The act is on the record, and the record is what the sect reads back to you later.\n\nYou crossed by moving.',
+  RAISE_AWARENESS:
+    '**Structural consequence** — Said, and carried. One more person knows the sect exists and what it is for.\n\nThe circle is wider than it was.',
+  SKILLFUL_ORGANIZING:
+    '**Structural consequence** — Held together. The parts have a shape now, and a shape can be handed to someone else without falling apart.\n\nThe work survives you leaving the room.',
+}
+
+function domainActionCopy(domain: AllyshipDomainKey): string {
+  // No `?? GATHERING_RESOURCES` here. These records are Record<AllyshipDomainKey, string> — total over the
+  // four domains — so the fallback could never fire, and writing one says a domain might be missing when it
+  // cannot be. Deleting it is also the proof of exhaustiveness: add a fifth domain and TypeScript fails here
+  // rather than silently filing it under Gather (Wendell, 2026-11-20: "a default here is exactly how Gather
+  // Resources silently became every quest's answer").
+  return DOMAIN_ACTION_COPY[domain]
+}
+
+function domainRitual(domain: AllyshipDomainKey): string {
+  return DOMAIN_RITUAL[domain]
+}
+
+function consequenceCopy(domain: AllyshipDomainKey): string {
+  return DOMAIN_CONSEQUENCE[domain]
+}
+
 function generateEpiphanyNodeText(
   beatType: EpiphanyBeatType,
   signature: EmotionalAlchemySignature,
@@ -187,6 +238,7 @@ function generateEpiphanyNodeText(
   alignedAction: string,
   segment: 'player' | 'sponsor',
   q3Display: string,
+  chosenDomain: AllyshipDomainKey,
   isAuthenticated?: boolean
 ): string {
   const { primaryChannel, dissatisfiedLabels, satisfiedLabels } = signature
@@ -197,17 +249,13 @@ function generateEpiphanyNodeText(
   const sponsorFraming = 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
-  const transcendenceDonationLine = isAuthenticated
-    ? `[Contribute to the campaign](/event/donate/wizard) — thank you for supporting the cause.`
-    : `[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`
-
   const templates: Record<EpiphanyBeatType, string> = {
     orientation: `**Orientation** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}`,
     rising_engagement: `**Rising engagement** — You feel ${fromState}. ${toText(answers.q4)}\n\nWhat would have to be true? ${answers.q5}`,
     tension: `**Moment of tension** — The gap between ${fromState} and ${toState} is real. ${signature.shadowVoices.join('. ')}`,
     integration: `**Integration** — ${alignedAction}\n\nYou're translating ${primaryChannel} into movement. The threshold is near.`,
-    transcendence: `**Transcendence** — Cross the threshold.\n\n**Ritual**: This is a moment of commitment — you are choosing to contribute.\n\n**Transaction**: Your contribution supports the campaign. Funds go directly to the cause.\n\n${transcendenceDonationLine}`,
-    consequence: `**Structural consequence** — Contribution logged. You are now an Early Believer — a Catalyst who crossed before the crowd.\n\nUnlock: founders thread, patron updates.`,
+    transcendence: `**Transcendence** — ${domainActionCopy(chosenDomain)}\n\n**The act**: ${domainRitual(chosenDomain)}`,
+    consequence: consequenceCopy(chosenDomain),
   }
   return templates[beatType]
 }
@@ -219,6 +267,7 @@ function generateKotterNodeText(
   alignedAction: string,
   segment: 'player' | 'sponsor',
   q3Display: string,
+  chosenDomain: AllyshipDomainKey,
   isAuthenticated?: boolean
 ): string {
   const { dissatisfiedLabels, satisfiedLabels } = signature
@@ -229,31 +278,41 @@ function generateKotterNodeText(
   const sponsorFraming = 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
-  const winsDonationLine = isAuthenticated
-    ? `[Contribute to the campaign](/event/donate/wizard) — thank you for supporting the cause.`
-    : `[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`
-
   const templates: Record<KotterBeatType, string> = {
     urgency: `**1. Urgency** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}\n\nWe need to create urgency around this need.`,
     coalition: `**2. Coalition** — Who will contribute?\n\n${signature.shadowVoices.join('. ')} — who can help bridge this gap? Build the coalition.`,
     vision: `**3. Vision** — What does success look like?\n\n${satisfiedLabels.join(', ')} — ${toState}. What would have to be true? ${answers.q5}`,
     communicate: `**4. Communicate** — Share the need.\n\n${alignedAction} — communicate the vision. Spread the message.`,
     obstacles: `**5. Obstacles** — What blocks progress?\n\nYou feel ${fromState}. ${toText(answers.q4)}. ${signature.shadowVoices.join('. ')}`,
-    wins: `**6. Wins** — First milestone reached.\n\nCelebrate progress. The threshold is approaching. Contribution supports the campaign.\n\n${winsDonationLine}`,
-    build_on: `**7. Build On** — Scale giving.\n\nBuild on the wins. Iterate and amplify. Funds go directly to the cause.`,
-    anchor: `**8. Anchor** — Sustainable funding.\n\nContribution logged. You are now an Early Believer — a Catalyst who crossed before the crowd.\n\nUnlock: founders thread, patron updates.`,
+    wins: `**6. Wins** — First milestone reached.\n\nCelebrate progress. The threshold is approaching.\n\n**The act**: ${domainRitual(chosenDomain)}`,
+    build_on: `**7. Build On** — ${domainActionCopy(chosenDomain)}\n\nBuild on the wins. Iterate and amplify.`,
+    anchor: consequenceCopy(chosenDomain),
   }
   return templates[beatType]
 }
 
-function buildAnchors(beatType: BeatType): NodeAnchors {
+/**
+ * The identity cue on the last beat is the domain the player chose, not a Kickstarter tier.
+ *
+ * Wendell, 2026-11-20: the donation ask belongs in step 7's video, not in every quest's ending.
+ * The quest records what the player did instead — and Regent's provenance requirement means it
+ * records that they chose it.
+ */
+const DOMAIN_IDENTITY_CUE: Record<AllyshipDomainKey, string> = {
+  GATHERING_RESOURCES: 'Gatherer',
+  DIRECT_ACTION: 'Actor',
+  RAISE_AWARENESS: 'Voice',
+  SKILLFUL_ORGANIZING: 'Organizer',
+}
+
+function buildAnchors(beatType: BeatType, chosenDomain: AllyshipDomainKey): NodeAnchors {
   const anchors: NodeAnchors = {}
   const isFirst = beatType === 'orientation' || beatType === 'urgency'
   const isLast = beatType === 'consequence' || beatType === 'anchor'
   if (isFirst) anchors.goal = beatType === 'orientation' ? 'orientation' : 'urgency'
   if (isLast) {
-    anchors.identityCue = 'Early Believer'
-    anchors.consequenceCue = 'contribution logged'
+    anchors.identityCue = DOMAIN_IDENTITY_CUE[chosenDomain] ?? 'Gatherer'
+    anchors.consequenceCue = `${getDomainLabel(chosenDomain).toLowerCase()} recorded`
   } else if (!isFirst) {
     anchors.goal = beatType
   }
@@ -459,6 +518,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     unpackingAnswers,
     alignedAction,
     segment,
+    chosenDomain,
     campaignId,
     questModel = 'personal',
     moveType: explicitMoveType,
@@ -509,6 +569,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
           alignedAction,
           segment,
           q3Display,
+          chosenDomain,
           isAuthenticated
         )
         : generateEpiphanyNodeText(
@@ -518,6 +579,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
           alignedAction,
           segment,
           q3Display,
+          chosenDomain,
           isAuthenticated
         )
     const depthIds =
@@ -551,7 +613,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
       },
       text,
       choices,
-      anchors: buildAnchors(beatType),
+      anchors: buildAnchors(beatType, chosenDomain),
       isActionNode,
       ...(isActionNode && { actionType }),
       branchDepth: 0,
@@ -633,6 +695,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     segmentVariant: segment,
     telemetryHooks,
     startNodeId: ichingContext ? 'lens_choice' : 'node_0',
+    chosenDomain,
     moveMap,
     ...(depthBranchOrder && { depthBranchOrder }),
   }

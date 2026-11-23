@@ -31,7 +31,7 @@ export interface MoveExpression {
 
 export const MOVE_EXPRESSIONS: Record<string, MoveExpression> = {
 
-  // ── Transcend moves (Energy +2) ─────────────────────────────────────────
+  // ── Transcend moves (one move, inside one element) ─────────────────────
 
   metal_transcend: {
     secondRegisterName: 'Walk the Cutting Edge',
@@ -83,7 +83,7 @@ export const MOVE_EXPRESSIONS: Record<string, MoveExpression> = {
       'The confusion that was circulating settles. Not because anyone solved the problem — because a reference point became available. The system finds its level the way water finds its level.',
   },
 
-  // ── Generative moves — shēng cycle (Energy +1) ──────────────────────────
+  // ── Generative moves — shēng cycle (one step of generating) ─────────────
 
   wood_fire: {
     secondRegisterName: 'Say It Out Loud',
@@ -135,8 +135,9 @@ export const MOVE_EXPRESSIONS: Record<string, MoveExpression> = {
       'The group that held space through dormancy or difficulty finds itself with energy to spend. Not because the hard thing resolved — because the meaning that came from it became root structure. Something can grow from here.',
   },
 
-  // ── Control moves — kè cycle (Energy -1, high-cost precision) ───────────
-  // NOTE: These are NOT negative moves. -1 energy = deliberate cost to prevent larger loss.
+  // ── Control moves — kè cycle (one step of controlling) ──────────────────
+  // NOTE: These are NOT negative moves. Deprecated energy costs removed 2026-11-20; what
+  // remains true is that a control move is precision — it prevents a larger loss.
   // Priority targets for cultural substrate corpus refinement.
 
   wood_earth: {

@@ -8,6 +8,8 @@
 /** Personal = Epiphany Bridge (6 beats); Communal = Kotter (8 stages). Derived from keywords. */
 export type QuestModel = 'personal' | 'communal'
 
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
+
 export type CreationIntent = {
   creationType: string
   domain?: string
@@ -23,6 +25,13 @@ export type CreationIntent = {
 export type CreationContext = {
   segment?: string
   campaignId?: string
+  /**
+   * The domain the player chose, carried through to the quest compiler.
+   *
+   * Required by compileQuest (Wendell, 2026-11-20): nothing infers a domain from an element or
+   * a move, and the sect offers all four every time even when its own need sits in one.
+   */
+  chosenDomain?: AllyshipDomainKey
   [key: string]: unknown
 }
 

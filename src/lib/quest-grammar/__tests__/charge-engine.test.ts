@@ -67,6 +67,12 @@ assert.equal(c.state, 'neutral')
 assert.equal((c as any).moveChannel, 'sadness')
 assert.deepEqual(E.emberOf(c), { feel: 'water', from: 'metal', to: 'water', by: 'metal_water' })
 assert.equal(E.toRecord(c).reading.body, 'tight behind the sternum')
+// Transcend keeps the channel and lifts one state, matching the table's families.transcend.state.
+assert.deepEqual(table.states.map((s) => (E.TRANSCEND as any)[s]), table.states.map((s) => (table.families as any).transcend.state[s]))
+c = E.move(c, 'transcend', t)
+assert.equal(c.state, 'satisfied'); assert.equal((c as any).moveChannel, 'sadness')
+assert.deepEqual(E.emberOf(c), { feel: 'water', from: 'metal', to: 'water', by: 'water_transcend' })
+assert.throws(() => E.move(c, 'transcend', t), /not offered from satisfied/)
 
 // No move: the ember stays where it began.
 let d = E.startCharge({ channel: 'fear', intensity: 4 }, 0)

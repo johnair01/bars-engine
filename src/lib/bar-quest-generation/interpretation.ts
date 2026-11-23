@@ -41,7 +41,10 @@ export interface InterpretBarInput {
  * Derives quest type from domain (with keyword hints), suggested title/prompt, and tags.
  */
 export function interpretBarForQuestGeneration(bar: InterpretBarInput): BarInterpretation {
-  const domain = (bar.allyshipDomain || '').trim().toUpperCase() || 'GATHERING_RESOURCES'
+  // A BAR with no domain has no domain. It is NOT Gathering Resources by default (Wendell, 2026-11-20 —
+  // "a default here is exactly how Gather Resources silently became every quest's answer"). The empty
+  // string is carried through so the caller can see there is nothing to inherit and ask for a pick.
+  const domain = (bar.allyshipDomain || '').trim().toUpperCase()
   const title = (bar.title || '').trim()
   const description = (bar.description || '').trim()
   const combined = `${title} ${description}`.toLowerCase()
@@ -90,7 +93,7 @@ export function interpretBarForQuestGeneration(bar: InterpretBarInput): BarInter
   confidenceScore = Math.min(confidenceScore, 1)
 
   const reviewNotes: string[] = []
-  if (!bar.allyshipDomain) reviewNotes.push('Domain inferred from defaults')
+  if (!bar.allyshipDomain) reviewNotes.push('No domain on this BAR: a person must pick one before the quest is built')
   if (description.length < 30) reviewNotes.push('Short description; consider expanding')
   if (kotterStage != null && campaignPhaseKey) {
     reviewNotes.push(`Campaign phase: ${campaignPhaseKey} (Kotter stage ${kotterStage})`)

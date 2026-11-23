@@ -16,11 +16,18 @@ import {
   baseInputClass,
 } from '@/lib/quest-grammar'
 import type { UnpackingAnswers, SegmentVariant, SerializableQuestPacket } from '@/lib/quest-grammar'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
+import { DOMAIN_PICK_REQUIRED } from '@/lib/quest-grammar/domain-source'
+import { getCampaignDomainResolution } from '@/actions/campaign-domain'
+import { DomainPicker } from '@/components/admin/DomainPicker'
 
 export type QuestModel = 'personal' | 'communal'
 
 type PlaybookItem = { id: string; name: string }
 type NationItem = { id: string; name: string }
+
+/** The single campaign quests from this form are built for. */
+export const FORM_CAMPAIGN_REF = 'bruised-banana'
 
 export function UnpackingForm() {
   const [playbooks, setPlaybooks] = useState<PlaybookItem[]>([])
@@ -47,6 +54,16 @@ export function UnpackingForm() {
   const [accepted, setAccepted] = useState(false)
   const [generationCount, setGenerationCount] = useState(0)
   const [isRegenerating, setIsRegenerating] = useState(false)
+  /** Blank only as the starting state; no quest is built until it is set. */
+  const [chosenDomain, setChosenDomain] = useState<AllyshipDomainKey | null>(null)
+  const [carriedDomain, setCarriedDomain] = useState<AllyshipDomainKey | null>(null)
+
+  useEffect(() => {
+    getCampaignDomainResolution(FORM_CAMPAIGN_REF).then((r) => {
+      setCarriedDomain(r.preselectedDomain)
+      if (r.preselectedDomain) setChosenDomain((d) => d ?? r.preselectedDomain)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     getAdminWorldData().then(([nationList, archetypes]) => {
@@ -65,13 +82,18 @@ export function UnpackingForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!chosenDomain) {
+      setError(DOMAIN_PICK_REQUIRED)
+      return
+    }
     try {
       const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
       const input = {
         unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
         alignedAction,
         segment: effectiveSegment,
-        campaignId: 'bruised-banana',
+        chosenDomain,
+        campaignId: FORM_CAMPAIGN_REF,
         questModel,
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
@@ -263,6 +285,7 @@ export function UnpackingForm() {
   return (
     <div className="space-y-8">
       <form onSubmit={handleSubmit} className="space-y-6">
+        <DomainPicker value={chosenDomain} onChange={setChosenDomain} carriedDomain={carriedDomain} />
         <div className="space-y-5 sm:space-y-6">
           {UNPACKING_QUESTIONS.map(renderQuestion)}
         </div>
@@ -485,6 +508,10 @@ export function UnpackingForm() {
             type="button"
             disabled={aiStatus === 'pending'}
             onClick={async () => {
+              if (!chosenDomain) {
+                setError(DOMAIN_PICK_REQUIRED)
+                return
+              }
               setAiStatus('pending')
               setAiError(null)
               setError(null)
@@ -495,7 +522,8 @@ export function UnpackingForm() {
                 unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                 alignedAction,
                 segment: effectiveSegment,
-                campaignId: 'bruised-banana',
+                chosenDomain,
+                campaignId: FORM_CAMPAIGN_REF,
                 questModel,
                 targetNationId: targetNationId ?? undefined,
                 targetArchetypeId: targetArchetypeIds[0],
@@ -567,7 +595,8 @@ export function UnpackingForm() {
                   unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                   alignedAction,
                   segment: effectiveSegment,
-                  campaignId: 'bruised-banana',
+                  chosenDomain: chosenDomain ?? preview.chosenDomain,
+                  campaignId: FORM_CAMPAIGN_REF,
                   questModel,
                   targetNationId: targetNationId ?? undefined,
                   targetArchetypeId: targetArchetypeIds[0],
@@ -639,7 +668,8 @@ export function UnpackingForm() {
                         unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                         alignedAction,
                         segment: seg,
-                        campaignId: 'bruised-banana',
+                        chosenDomain: chosenDomain ?? preview.chosenDomain,
+                        campaignId: FORM_CAMPAIGN_REF,
                         questModel,
                         targetNationId: targetNationId ?? undefined,
                         targetArchetypeId: targetArchetypeIds[0],

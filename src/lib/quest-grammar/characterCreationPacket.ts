@@ -6,6 +6,7 @@
 
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import type { SerializableQuestPacket, QuestNode, Choice, SegmentVariant } from './types'
+import { ORIENTATION_CAMPAIGN_DOMAIN } from './orientation-campaign'
 
 export interface NationChoice {
   id: string
@@ -206,5 +207,6 @@ export function compileCharacterCreationPacket(
     nodes,
     segmentVariant: segment,
     startNodeId: 'char_lens',
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
   }
 }

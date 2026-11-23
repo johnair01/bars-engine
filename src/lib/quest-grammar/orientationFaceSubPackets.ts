@@ -18,6 +18,7 @@
 
 import { FACE_META } from './types'
 import type { SerializableQuestPacket, QuestNode, GameMasterFace, SegmentVariant } from './types'
+import { ORIENTATION_CAMPAIGN_DOMAIN } from './orientation-campaign'
 
 // ─── Shared input type ────────────────────────────────────────────────────────
 
@@ -418,6 +419,7 @@ export function compileShamanFaceSubPacket(input: FaceSubPacketInput = {}): Seri
       shadowVoices: [],
     },
     nodes,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
     segmentVariant: segment,
     startNodeId: `${prefix}_${SHAMAN_BEATS[0]!.id}`,
   }
@@ -438,6 +440,7 @@ export function compileChallengerFaceSubPacket(input: FaceSubPacketInput = {}): 
       shadowVoices: [],
     },
     nodes,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
     segmentVariant: segment,
     startNodeId: `${prefix}_${CHALLENGER_BEATS[0]!.id}`,
   }
@@ -458,6 +461,7 @@ export function compileRegentFaceSubPacket(input: FaceSubPacketInput = {}): Seri
       shadowVoices: [],
     },
     nodes,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
     segmentVariant: segment,
     startNodeId: `${prefix}_${REGENT_BEATS[0]!.id}`,
   }
@@ -478,6 +482,7 @@ export function compileArchitectFaceSubPacket(input: FaceSubPacketInput = {}): S
       shadowVoices: [],
     },
     nodes,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
     segmentVariant: segment,
     startNodeId: `${prefix}_${ARCHITECT_BEATS[0]!.id}`,
   }
@@ -498,6 +503,7 @@ export function compileDiplomatFaceSubPacket(input: FaceSubPacketInput = {}): Se
       shadowVoices: [],
     },
     nodes,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
     segmentVariant: segment,
     startNodeId: `${prefix}_${DIPLOMAT_BEATS[0]!.id}`,
   }
@@ -518,6 +524,7 @@ export function compileSageFaceSubPacket(input: FaceSubPacketInput = {}): Serial
       shadowVoices: [],
     },
     nodes,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
     segmentVariant: segment,
     startNodeId: `${prefix}_${SAGE_BEATS[0]!.id}`,
   }

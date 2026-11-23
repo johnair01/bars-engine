@@ -23,5 +23,6 @@ export function generateOnboardingCYOA(input: OnboardingCYOAInput): QuestPacket 
     segment,
     campaignId: campaignRef,
     questModel: 'personal',
+    chosenDomain: input.chosenDomain,
   })
 }

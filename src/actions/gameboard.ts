@@ -1,6 +1,9 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { resolveCarriedDomain } from '@/lib/campaign-domain-declarations'
+import { settleCampaignDomain } from '@/lib/quest-grammar/campaign-domain'
+import { DOMAIN_PICK_REQUIRED } from '@/lib/quest-grammar/domain-source'
 import { getAppConfig } from '@/actions/config'
 import type { Prisma } from '@prisma/client'
 import { getCurrentPlayer } from '@/lib/auth'
@@ -36,10 +39,11 @@ function buildGameboardContext(
   parentQuest: { title: string; description: string | null; allyshipDomain?: string | null },
   period: number,
   instance: { targetDescription?: string | null } | null,
-  campaignRef: string
+  campaignRef: string,
+  /** The quest's settled domain (carried from its campaign or picked); never defaulted. */
+  chosenDomain: AllyshipDomain
 ) {
-  const domain = (parentQuest.allyshipDomain ?? 'GATHERING_RESOURCES') as AllyshipDomain
-  const stageAction = getStageAction(period, domain)
+  const stageAction = getStageAction(period, chosenDomain)
   const campaignGoal =
     instance?.targetDescription?.trim() || `${campaignRef} — people showing up`
   return {
@@ -122,8 +126,11 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
   if (!instance) return { error: 'No active instance' }
 
   const period = instance.kotterStage ?? 1
-  const domainRaw = instance.allyshipDomain ?? (campaignRef === 'bruised-banana' ? 'GATHERING_RESOURCES' : null)
-  const domain = domainRaw as AllyshipDomain | null
+  // The domain is the instance's, or what the campaign DECLARES for itself (campaign-domain-declarations.ts).
+  // Previously this said `instance.allyshipDomain ?? (campaignRef === 'bruised-banana' ? 'GATHERING_RESOURCES' : null)`
+  // — the same rule, spelled exactly like the silent-default bug. Naming the declaration makes the two cases
+  // visibly different: a declared domain has a campaign and a reason; anything else has nothing and asks.
+  const domain = resolveCarriedDomain(instance.allyshipDomain, campaignRef)
   const useDomainDeck = domain != null && ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'].includes(domain)
 
   let slots: SlotWithRelations[] = await db.gameboardSlot.findMany({
@@ -859,8 +866,9 @@ export async function replaceSlotWithDraw(slotId: string) {
     where: { id: slot.instanceId },
     select: { allyshipDomain: true },
   })
-  const domainRaw = instance?.allyshipDomain ?? (slot.campaignRef === 'bruised-banana' ? 'GATHERING_RESOURCES' : null)
-  const domain = domainRaw as AllyshipDomain | null
+  // Same rule as the campaign-hub read: the instance's domain, or the campaign's own declaration
+  // (campaign-domain-declarations.ts). Never a bare default.
+  const domain = resolveCarriedDomain(instance?.allyshipDomain, slot.campaignRef)
   const useDomainDeck = domain != null && ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'].includes(domain)
 
   let drawn: string[] = []
@@ -1015,8 +1023,9 @@ export async function attachQuestToSlot(
 export async function generateGameboardAlignedQuest(
   parentQuestId: string,
   slotId: string,
-  campaignRef: string
-): Promise<{ success: true; questId: string } | { error: string }> {
+  campaignRef: string,
+  pickedDomain?: string
+): Promise<{ success: true; questId: string } | { error: string; requiresPick?: true }> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
 
@@ -1038,6 +1047,10 @@ export async function generateGameboardAlignedQuest(
   })
   if (!parentQuest) return { error: 'Parent quest not found' }
 
+  // Carry the campaign's domain, or the admin's pick; with neither, stop and ask.
+  const domain = await settleCampaignDomain({ campaignRef }, pickedDomain)
+  if (!domain.ok) return { error: DOMAIN_PICK_REQUIRED, requiresPick: true }
+
   const instance = await getActiveInstance()
   const period = instance?.kotterStage ?? 1
 
@@ -1058,13 +1071,15 @@ export async function generateGameboardAlignedQuest(
     unpackingAnswers,
     alignedAction,
     segment: 'player',
+    chosenDomain: domain.chosenDomain,
     targetArchetypeId: playerWithRoles.archetypeId ?? undefined,
     moveType,
     gameboardContext: buildGameboardContext(
       parentQuest,
       period,
       instance,
-      campaignRef
+      campaignRef,
+      domain.chosenDomain
     ),
   })
 
@@ -1103,10 +1118,12 @@ export async function previewGameboardAlignedQuest(
   opts?: {
     adminFeedback?: string
     priorUnpacking?: GameboardUnpacking
+    /** The admin's domain pick; overrides the campaign's domain, required when it has none. */
+    pickedDomain?: string
   }
 ): Promise<
   | { packet: SerializableQuestPacket; unpacking: GameboardUnpacking }
-  | { error: string }
+  | { error: string; requiresPick?: true }
 > {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -1128,6 +1145,10 @@ export async function previewGameboardAlignedQuest(
     select: { id: true, title: true, description: true, allyshipDomain: true },
   })
   if (!parentQuest) return { error: 'Parent quest not found' }
+
+  // Carry the campaign's domain, or the admin's pick; with neither, stop and ask.
+  const domain = await settleCampaignDomain({ campaignRef }, opts?.pickedDomain)
+  if (!domain.ok) return { error: DOMAIN_PICK_REQUIRED, requiresPick: true }
 
   const instance = await getActiveInstance()
   const period = instance?.kotterStage ?? 1
@@ -1185,6 +1206,7 @@ export async function previewGameboardAlignedQuest(
     unpackingAnswers,
     alignedAction,
     segment: 'player',
+    chosenDomain: domain.chosenDomain,
     targetArchetypeId: playerWithRoles.archetypeId ?? undefined,
     moveType,
     adminFeedback: opts?.adminFeedback,
@@ -1193,7 +1215,8 @@ export async function previewGameboardAlignedQuest(
       parentQuest,
       period,
       instance,
-      campaignRef
+      campaignRef,
+      domain.chosenDomain
     ),
   })
 

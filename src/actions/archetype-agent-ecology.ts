@@ -167,7 +167,7 @@ export async function runAgentCycle(
             emotionalState: profile.emotionalState,
             energy: mind.energy,
           },
-          { campaignRef: opts.campaignRef, allyshipDomain: opts.allyshipDomain ?? profile.allyshipDomain }
+          { campaignRef: opts.campaignRef, allyshipDomain: opts.allyshipDomain ?? profile.allyshipDomain ?? undefined }
         )
         if ('success' in result && result.success) {
           outcome = `Proposed BAR: ${result.barId}`

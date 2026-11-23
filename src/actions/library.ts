@@ -1,6 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { declaredDomainFor, campaignRefOf } from '@/lib/campaign-domain-declarations'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getActiveInstance } from '@/actions/instance'
 import { revalidatePath } from 'next/cache'
@@ -236,10 +237,10 @@ export async function submitLibraryRequest(
         { key: 'evidenceKind', label: 'Evidence type', type: 'select', required: true, options: ['observation', 'instruction', 'canon_statement'] },
         { key: 'evidenceText', label: 'Your evidence', type: 'textarea', required: true, placeholder: 'Share what you observed, a step-by-step instruction, or a canon statement.' }
     ])
-    const isBruisedBanana =
-        input.contextJson?.campaignRef === 'bruised-banana' ||
-        instance?.campaignRef === 'bruised-banana' ||
-        instance?.domainType === 'GATHERING_RESOURCES'
+    // The campaign's DECLARED domain, if it declares one (campaign-domain-declarations.ts). Previously this was
+    // `isBruisedBanana ? 'GATHERING_RESOURCES' : undefined` — the same fact, spelled like a silent default.
+    const declaredDomain =
+        declaredDomainFor(campaignRefOf(input.contextJson)) ?? declaredDomainFor(instance?.campaignRef)
     const docQuest = await db.customBar.create({
         data: {
             creatorId,
@@ -253,7 +254,7 @@ export async function submitLibraryRequest(
             moveType: 'wakeUp',
             kotterStage: 1,
             inputs: docQuestInputs,
-            allyshipDomain: isBruisedBanana ? 'GATHERING_RESOURCES' : undefined,
+            allyshipDomain: declaredDomain ?? undefined,
             docQuestMetadata: JSON.stringify({
                 docIntent: 'answer_request',
                 targetDocNodeId: docNode.id,

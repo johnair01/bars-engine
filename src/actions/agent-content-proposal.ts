@@ -69,7 +69,10 @@ export async function proposeBarFromAgent(
       inputs: JSON.stringify([{ key: 'response', label: 'Response', type: 'text', placeholder: '' }]),
       moveType: persona.energy && persona.energy > 0.6 ? 'showUp' : 'growUp',
       campaignRef: options?.campaignRef ?? null,
-      allyshipDomain: options?.allyshipDomain ?? 'GATHERING_RESOURCES',
+      // Carried from the agent's campaign or profile. When neither has one this is null rather than a
+      // default: a proposal with no domain is visibly unset, not silently Gathering Resources
+      // (Wendell, 2026-11-20). The column is nullable, so the row stays honest.
+      allyshipDomain: options?.allyshipDomain ?? null,
       completionEffects: JSON.stringify({
         proposedByAgent: true,
         agentPersona: {

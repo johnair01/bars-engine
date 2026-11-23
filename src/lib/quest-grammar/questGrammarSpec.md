@@ -64,4 +64,4 @@ The transcendence (Epiphany) or wins (Kotter) beat is the **action node** — th
 - **campaignId** → actionType: bruised-banana/fundraiser → donation; onboarding → signup; default → donation
 - Frames as threshold/ritual crossing
 - Includes practical transaction language (what happens, what it supports)
-- Consequence node: system event, identity flag (Early Believer / Catalyst), unlock suggestion
+- Consequence node: system event, identity flag naming the DOMAIN the player chose (Gatherer / Actor / Voice / Organizer), and what that domain's work leaves behind

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { domainGemVar } from '@/lib/allyship-domains'
 import {
   CAMPAIGN_CHOOSING_QUOTE,
   CAMPAIGN_HOUSE_RULES,
@@ -65,11 +64,11 @@ export default function CampaignsIndexPage() {
             <article
               key={campaign.domain}
               className="flex flex-col rounded-2xl border border-zinc-800 bg-black/30 p-6"
-              style={{ borderTopColor: domainGemVar(campaign.domain), borderTopWidth: 3 }}
+              style={{ borderTopColor: 'var(--bars-text-secondary)', borderTopWidth: 3 }}
             >
               <p
                 className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                style={{ color: domainGemVar(campaign.domain) }}
+                style={{ color: 'var(--bars-text-secondary)' }}
               >
                 {campaign.label}
               </p>

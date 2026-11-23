@@ -38,9 +38,17 @@ const VALID_DOMAINS: readonly AllyshipDomain[] = [
   'DIRECT_ACTION',
 ]
 
-function clampDomain(d: string | null | undefined): AllyshipDomain {
-  const x = d as AllyshipDomain
-  return VALID_DOMAINS.includes(x) ? x : 'GATHERING_RESOURCES'
+/**
+ * Validate a domain carried into a quest bar.
+ *
+ * This used to fall back to GATHERING_RESOURCES for any missing or unrecognised value, which meant a caller that
+ * lost its domain still produced a Gather quest — the silent default Wendell, 2026-11-20 forbids. It now returns
+ * null, so the caller refuses instead of inventing one.
+ */
+function clampDomain(d: string | null | undefined): AllyshipDomain | null {
+  const x = d
+  if (x && VALID_DOMAINS.includes(x as AllyshipDomain)) return x as AllyshipDomain
+  return null
 }
 
 export type GmFaceMoveQuestPersistInput = {
@@ -73,6 +81,13 @@ export async function persistGmFaceMoveQuestBar(
   }
 
   const domain = clampDomain(input.allyshipDomain)
+  if (!domain) {
+    return {
+      error:
+        `No valid allyship domain to carry (got ${JSON.stringify(input.allyshipDomain)}). ` +
+        'A quest bar cannot be created without one (Wendell, 2026-11-20).',
+    }
+  }
 
   const payload = composeKotterQuestSeedBar({
     campaignRef: input.campaignRef,

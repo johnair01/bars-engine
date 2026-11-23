@@ -26,6 +26,7 @@ import { logPrePublishFeedback } from '@/actions/narrative-quality-feedback'
 import type { SerializableQuestPacket } from '@/lib/quest-grammar/types'
 import type { GameboardUnpacking } from '@/actions/gameboard'
 import type { AllyshipDomain } from '@/lib/kotter'
+import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import {
   CAMPAIGN_MAP_DOMAIN_LABEL,
   defaultAllyshipDomainForQuest,
@@ -170,6 +171,8 @@ export function GameboardClient({
   const [supportBarLoading, setSupportBarLoading] = useState(false)
   const [supportBarsAdded, setSupportBarsAdded] = useState<Record<string, number>>({})
   const [generateLoading, setGenerateLoading] = useState(false)
+  /** Admin's domain pick for generation; blank carries the campaign's domain. */
+  const [pickedDomain, setPickedDomain] = useState('')
   const [subquestParentId, setSubquestParentId] = useState<string | null>(null)
 
   const [ritualSlotId, setRitualSlotId] = useState<string | null>(null)
@@ -1147,6 +1150,21 @@ export function GameboardClient({
                   </Link>
                   {isAdmin && !generatedPacket && (
                     <div className="flex flex-col gap-2">
+                      <label className="text-xs text-zinc-400">
+                        Domain
+                        <select
+                          value={pickedDomain}
+                          onChange={(e) => setPickedDomain(e.target.value)}
+                          className="mt-1 w-full px-2 py-1 bg-zinc-800 text-zinc-200 text-xs rounded border border-zinc-700"
+                        >
+                          <option value="">Carry from the campaign</option>
+                          {ALLYSHIP_DOMAINS.map((d) => (
+                            <option key={d.key} value={d.key}>
+                              {d.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <button
                         onClick={async () => {
                           setGenerateLoading(true)
@@ -1158,6 +1176,7 @@ export function GameboardClient({
                               campaignRef,
                               slotId: addQuestSlot.id,
                               slotQuestId: addQuestSlot.quest!.id,
+                              allyshipDomain: pickedDomain || undefined,
                             })
                             if ('error' in result) {
                               alert(result.error)
@@ -1185,7 +1204,8 @@ export function GameboardClient({
                             )
                             const result = await previewGameboardAlignedQuest(
                               addQuestSlot.quest!.id,
-                              campaignRef
+                              campaignRef,
+                              { pickedDomain: pickedDomain || undefined }
                             )
                             if ('error' in result) {
                               alert(result.error)
@@ -1229,7 +1249,10 @@ export function GameboardClient({
                         const recast = await previewGameboardAlignedQuest(
                           addQuestSlot!.quest!.id,
                           campaignRef,
-                          { priorUnpacking: { ...generatedUnpacking!, hexagramId: undefined, hexagramName: undefined } }
+                          {
+                            priorUnpacking: { ...generatedUnpacking!, hexagramId: undefined, hexagramName: undefined },
+                            pickedDomain: generatedPacket!.chosenDomain,
+                          }
                         )
                         if ('error' in recast) {
                           alert(recast.error)
@@ -1285,7 +1308,11 @@ export function GameboardClient({
                         const result = await previewGameboardAlignedQuest(
                           addQuestSlot!.quest!.id,
                           campaignRef,
-                          { adminFeedback: feedback, priorUnpacking: generatedUnpacking! }
+                          {
+                            adminFeedback: feedback,
+                            priorUnpacking: generatedUnpacking!,
+                            pickedDomain: generatedPacket.chosenDomain,
+                          }
                         )
                         if ('error' in result) {
                           alert(result.error)

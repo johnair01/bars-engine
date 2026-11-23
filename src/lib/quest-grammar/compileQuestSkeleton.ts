@@ -32,6 +32,7 @@ type PacketInput = {
   signature: EmotionalAlchemySignature
   segmentVariant: SegmentVariant
   startNodeId: string
+  chosenDomain: SerializableQuestPacket['chosenDomain']
   moveMap?: SerializableQuestPacket['moveMap']
   depthBranchOrder?: SerializableQuestPacket['depthBranchOrder']
 }
@@ -61,6 +62,7 @@ export function toSkeletonPacket(packet: PacketInput): SerializableQuestPacket {
     nodes,
     segmentVariant: packet.segmentVariant,
     startNodeId: packet.startNodeId,
+    chosenDomain: packet.chosenDomain,
   }
   if (packet.moveMap) result.moveMap = packet.moveMap
   if (packet.depthBranchOrder) result.depthBranchOrder = packet.depthBranchOrder

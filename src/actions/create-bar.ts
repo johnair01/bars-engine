@@ -567,10 +567,20 @@ export async function createQuestFromWizard(data: any) {
                 dataKotterHexagramId != null && Number.isFinite(Number(dataKotterHexagramId))
                     ? Math.max(1, Math.min(64, Math.round(Number(dataKotterHexagramId))))
                     : 1
+            // Carry the instance's domain, or stop. A domainless instance must not silently become Gather
+            // (Wendell, 2026-11-20). A wizard-supplied domain still wins inside the stamp builder.
+            const instanceDomain = clampCampaignAllyshipDomain(inst.allyshipDomain)
+            if (!instanceDomain) {
+                return {
+                    error:
+                        'This campaign instance has no domain set. Pick one (Gathering Resources, Direct Action, ' +
+                        'Raise Awareness, Skillful Organizing) before a quest can be created.',
+                }
+            }
             const stamp = buildKotterStampForWizardQuest({
                 resolvedCampaignRef: resolvedRef,
                 instanceKotterStage: inst.kotterStage ?? 1,
-                instanceAllyshipDomain: clampCampaignAllyshipDomain(inst.allyshipDomain),
+                instanceAllyshipDomain: instanceDomain,
                 gmFaceMoveId: gmMoveTrim,
                 wizardAllyshipDomain: finalAllyshipDomain,
                 hexagramId: hex,

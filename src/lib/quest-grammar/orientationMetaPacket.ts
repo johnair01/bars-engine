@@ -26,6 +26,7 @@ import type {
   Choice,
   SegmentVariant,
 } from './types'
+import { ORIENTATION_CAMPAIGN_DOMAIN } from './orientation-campaign'
 
 // ===========================================================================
 // SECTION 1 — COMPILE / DISPATCH LOGIC (Sub-AC 3)
@@ -174,6 +175,7 @@ export function compileOrientationMetaPacket(
     nodes,
     segmentVariant: segment,
     startNodeId: 'orient_intro',
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
   }
 }
 

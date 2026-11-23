@@ -25,6 +25,7 @@ async function testGenerateNoDb() {
       unpackingAnswers: ANSWERS,
       alignedAction: 'Clean Up attachment to outcomes',
       segment: 'player',
+      chosenDomain: 'DIRECT_ACTION',
       primaryBranchAxis: 'horizontal',
     },
     { maxDepth: 3, tokenBudget: 50000 }

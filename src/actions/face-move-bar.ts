@@ -181,14 +181,23 @@ export async function proposeMove(input: {
     ? getMoveById(input.moveId)
     : ALL_CANONICAL_MOVES[Math.floor(Math.random() * ALL_CANONICAL_MOVES.length)]
   if (!move) return { error: 'Move not found' }
-  const energyNote = input.energyNote?.trim() || `Energy: ${move.energyDelta >= 0 ? '+' : ''}${move.energyDelta}`
+  // Energy costs were deprecated on 2026-11-20 (Wendell: "they aren't grounded in anything and
+  // are confusing"). What a move offers is the shape of its path, not a price, so the note names
+  // the family the player is choosing between.
+  const pathNote =
+    input.energyNote?.trim() ||
+    (move.category === 'Transcend'
+      ? 'Path: transcend — one move, inside this element.'
+      : move.category === 'Generative'
+        ? 'Path: generate — one step of the generating cycle.'
+        : 'Path: control — one step of the controlling cycle.')
   const title = `Challenger: ${move.name}`
-  const description = [move.narrative, energyNote].filter(Boolean).join('\n\n')
+  const description = [move.narrative, pathNote].filter(Boolean).join('\n\n')
   return createFaceMoveBar('challenger', 'propose_move', {
     title,
     description,
     barType: 'vibe',
-    metadata: { moveId: move.id, energyDelta: move.energyDelta },
+    metadata: { moveId: move.id, moveCategory: move.category },
   })
 }
 

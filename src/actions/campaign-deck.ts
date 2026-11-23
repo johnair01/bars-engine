@@ -508,8 +508,20 @@ export async function completeSpokeSession(
           'RAISE_AWARENESS',
           'DIRECT_ACTION',
         ]
-        const domain = (inst.allyshipDomain ?? 'GATHERING_RESOURCES') as AllyshipDomain
-        const allyshipDomain = validDomains.includes(domain) ? domain : 'GATHERING_RESOURCES'
+        // The domain is CARRIED from the instance, never invented. This used to fall back to
+        // GATHERING_RESOURCES — and because Instance.allyshipDomain is nullable, that fallback was reachable:
+        // an instance with no domain produced Gathering Resources quests with nobody choosing it. A quest bar is
+        // created below, so this is a creation path, not a display one (Wendell, 2026-11-20: "a default here is
+        // exactly how Gather Resources silently became every quest's answer"). With nothing to carry, stop and ask.
+        const carried = inst.allyshipDomain
+        if (!carried || !validDomains.includes(carried as AllyshipDomain)) {
+          return {
+            error:
+              'This campaign instance has no domain set. Pick one (Gathering Resources, Direct Action, Raise ' +
+              'Awareness, Skillful Organizing) before a quest can be created from this session.',
+          }
+        }
+        const allyshipDomain = carried as AllyshipDomain
         const resolvedRef = (inst.campaignRef ?? inst.slug ?? session.campaignRef).trim()
 
         const questResult = await persistGmFaceMoveQuestBar({

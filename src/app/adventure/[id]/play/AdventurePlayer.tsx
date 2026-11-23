@@ -19,6 +19,7 @@ import { SeamBarCreate } from '@/components/adventure/seams/SeamBarCreate'
 import { SeamCarryReturn } from '@/components/adventure/seams/SeamCarryReturn'
 import { buildOnboardingUrl } from '@/lib/safe-return-to'
 import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
+import { ALLYSHIP_DOMAINS, type AllyshipDomainKey } from '@/lib/allyship-domains'
 import type { CyoaArtifactLedgerEntry } from '@/lib/cyoa/types'
 import { CastIChingModal } from '@/components/CastIChingModal'
 import { CyoaBarLedgerSheet } from '@/components/cyoa/CyoaBarLedgerSheet'
@@ -102,6 +103,8 @@ export function AdventurePlayer({
   const [seamBarCreated, setSeamBarCreated] = useState<string | null>(null)
   const [generatingPortalQuest, setGeneratingPortalQuest] = useState(false)
   const [portalQuestGenerated, setPortalQuestGenerated] = useState<{ title: string; questId?: string } | null>(null)
+  /** Set when the campaign has no domain to carry: the player picks one of the four. */
+  const [portalNeedsDomainPick, setPortalNeedsDomainPick] = useState(false)
   const [spokeSeedBarId, setSpokeSeedBarId] = useState<string | null>(null)
   /** Generated spoke CYOA terminal — server records BAR + nursery kernel */
   const [gscpTerminal, setGscpTerminal] = useState<{
@@ -284,18 +287,20 @@ export function AdventurePlayer({
     }
   }, [currentNode?.id, currentNode?.metadata?.actionType, currentNode?.metadata?.barTemplate])
 
-  const handleGeneratePortalQuest = async () => {
+  const handleGeneratePortalQuest = async (chosenDomain?: AllyshipDomainKey) => {
     if (!portalHexagramId) return
     setGeneratingPortalQuest(true)
     try {
       const result = await generateQuestFromReading(
         portalHexagramId,
         null,
-        campaignRef ? { campaignRef } : undefined
+        campaignRef || chosenDomain ? { campaignRef: campaignRef ?? undefined, chosenDomain } : undefined
       )
       if ('error' in result) {
-        alert(result.error)
+        if ('requiresPick' in result && result.requiresPick) setPortalNeedsDomainPick(true)
+        else alert(result.error)
       } else {
+        setPortalNeedsDomainPick(false)
         setPortalQuestGenerated({ title: result.quest.title, questId: result.questId ?? undefined })
       }
     } finally {
@@ -764,6 +769,22 @@ export function AdventurePlayer({
                     <p className="text-green-400 text-sm text-center">
                       Quest generated: {portalQuestGenerated.title}
                     </p>
+                  ) : portalNeedsDomainPick ? (
+                    <div className="space-y-2">
+                      <p className="text-zinc-400 text-sm text-center">Pick a domain for this quest</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {ALLYSHIP_DOMAINS.map((d) => (
+                          <button
+                            key={d.key}
+                            onClick={() => void handleGeneratePortalQuest(d.key)}
+                            disabled={generatingPortalQuest}
+                            className="py-2 text-sm text-zinc-300 border border-zinc-700 rounded-lg hover:text-white disabled:opacity-50"
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ) : (
                     <button
                       onClick={() => void handleGeneratePortalQuest()}

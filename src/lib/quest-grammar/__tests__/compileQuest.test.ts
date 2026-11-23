@@ -30,6 +30,7 @@ function testSignatureExtraction() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
   }
   const result = compileQuest(input)
 
@@ -66,6 +67,7 @@ function testNodeCountAndBeats() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
   }
   const result = compileQuest(input)
 
@@ -92,6 +94,7 @@ function testConstraints() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
   }
   const result = compileQuest(input)
 
@@ -114,6 +117,7 @@ function testSegmentInvariant() {
   const baseInput = {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
+    chosenDomain: 'GATHERING_RESOURCES' as const,
   }
   const playerResult = compileQuest({ ...baseInput, segment: 'player' })
   const sponsorResult = compileQuest({ ...baseInput, segment: 'sponsor' })
@@ -159,6 +163,7 @@ function testDeterminism() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
   }
   const a = compileQuest(input)
   const b = compileQuest(input)
@@ -177,6 +182,7 @@ function testKotterCommunalModel() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
     questModel: 'communal',
   }
   const result = compileQuest(input)
@@ -201,13 +207,20 @@ function testKotterCommunalModel() {
   const winsNode = result.nodes.find((n) => n.beatType === 'wins')
   if (!winsNode) throw new Error('Should have wins node')
   assert(winsNode.isActionNode === true, 'Wins (stage 6) should be action node for Kotter')
-  assert(winsNode.actionType === 'donation', 'Wins should have actionType donation (default)')
+  assert(
+    !winsNode.text.includes('/event/donate'),
+    'Wins must not carry the donate transaction'
+  )
 
   const anchorNode = result.nodes.find((n) => n.beatType === 'anchor')
   if (!anchorNode) throw new Error('Should have anchor node')
   assert(
-    anchorNode.text.includes('Early Believer') || anchorNode.text.includes('Catalyst'),
-    'Anchor should have identity flag'
+    anchorNode.anchors.identityCue === 'Gatherer',
+    'Anchor identity cue names the chosen domain'
+  )
+  assert(
+    !anchorNode.text.includes('Early Believer'),
+    'Anchor must not use the Kickstarter tier copy'
   )
 
   console.log('✅ Kotter communal model (8 stages)')
@@ -218,34 +231,35 @@ function testDonationNode() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
   }
   const result = compileQuest(input)
 
   const transcendenceNode = result.nodes.find((n) => n.beatType === 'transcendence')
   if (!transcendenceNode) throw new Error('Should have transcendence node')
   assert(transcendenceNode.isActionNode === true, 'Transcendence should be action node')
-  assert(transcendenceNode.actionType === 'donation', 'Transcendence should have actionType donation (default)')
   assert(
-    transcendenceNode.text.includes('threshold') || transcendenceNode.text.includes('Ritual'),
-    'Action node should have ritual framing'
+    transcendenceNode.text.includes('The act'),
+    'Action node should carry the domain act'
   )
+  // Wendell, 2026-11-20: the donation ask lives in step 7's video, not in every quest.
   assert(
-    transcendenceNode.text.includes('Transaction') || transcendenceNode.text.includes('contribution'),
-    'Action node should have transaction language'
+    !transcendenceNode.text.includes('/event/donate'),
+    'Action node must not carry the donate transaction'
   )
 
   const consequenceNode = result.nodes.find((n) => n.beatType === 'consequence')
   if (!consequenceNode) throw new Error('Should have consequence node')
   assert(
-    consequenceNode.text.includes('Early Believer') || consequenceNode.text.includes('Catalyst'),
-    'Consequence should have identity flag'
+    consequenceNode.anchors.identityCue === 'Gatherer',
+    'Consequence identity cue names the chosen domain'
   )
   assert(
-    !!(consequenceNode.anchors.consequenceCue || consequenceNode.text.includes('logged')),
-    'Consequence should have system event'
+    !consequenceNode.text.includes('Early Believer'),
+    'Consequence must not use the Kickstarter tier copy'
   )
 
-  console.log('✅ action node (ritual + transaction) and consequence')
+  console.log('✅ action node (domain act) and consequence (domain identity)')
 }
 
 function testAuthenticatedCompilerGates() {
@@ -253,6 +267,7 @@ function testAuthenticatedCompilerGates() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
   }
   const authed = compileQuest({ ...input, isAuthenticated: true })
   const consequence = authed.nodes.find((n) => n.beatType === 'consequence')
@@ -270,17 +285,22 @@ function testAuthenticatedCompilerGates() {
     !transcendence.text.toLowerCase().includes('creating your account'),
     'Authed: transcendence text omits account creation'
   )
-  assert(transcendence.text.includes('thank you for supporting'), 'Authed: alternate donation line')
+  // Wendell, 2026-11-20: the donation ask lives in step 7's video, so neither segment carries it.
+  assert(
+    !transcendence.text.includes('/event/donate'),
+    'Authed: no donation ask in the action node'
+  )
+  assert(!transcendence.text.includes('thank you for supporting'), 'Authed: no donation line')
 
   const anon = compileQuest(input)
   const anonConsequence = anon.nodes.find((n) => n.beatType === 'consequence')
   assert(anonConsequence!.choices[0]!.targetId === 'signup', 'Anonymous: signup target')
   assert(
-    anon.nodes.find((n) => n.beatType === 'transcendence')!.text.includes('creating your account'),
-    'Anonymous: transcendence still mentions account path for cold start'
+    !anon.nodes.find((n) => n.beatType === 'transcendence')!.text.includes('/event/donate'),
+    'Anonymous: no donation ask in the action node either'
   )
 
-  console.log('✅ authenticated compiler gates (choices + transcendence copy)')
+  console.log('✅ authenticated compiler gates (choices + action node copy)')
 }
 
 function testOnboardingCampaignActionTypeWhenAuthenticated() {
@@ -288,6 +308,7 @@ function testOnboardingCampaignActionTypeWhenAuthenticated() {
     unpackingAnswers: BRUISED_BANANA_ANSWERS,
     alignedAction: ALIGNED_ACTION,
     segment: 'player',
+    chosenDomain: 'GATHERING_RESOURCES',
     campaignId: 'onboarding',
   }
   const t = compileQuest({ ...input, isAuthenticated: true }).nodes.find((n) => n.beatType === 'transcendence')

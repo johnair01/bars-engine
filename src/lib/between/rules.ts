@@ -158,8 +158,10 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
  * as an offered one. Its glow (the charge's intensity, or none) is private: it never reaches a shared row
  * (cc-pouch-private, cc-intensity-look). A lantern made from it is a shared item and an offer: only its maker moves, takes
  * back or composts it, and the other person can only add their own yes (cc-lantern-offer).
- * A focus sit at the hearth that runs its length raises the ember it was sat with one state, dissatisfied to satisfied
- * (`risen`, council pass integral-octalysis2, io-focus-sit-is-care); a sit left early writes nothing. */
+ * A focus sit at the hearth that runs its length raises the ember it was sat with one state (`risen`, council pass
+ * integral-octalysis2, io-focus-sit-is-care): no `risen` is dissatisfied, `risen: 1` neutral, `risen: true` satisfied. One
+ * write rises one state at most and never falls back (Wendell, 2026-11-20: "It should be 2 sits or at least 2 moves within
+ * one sit"). A sit left early writes nothing. */
 
 export const ELEMENTS = ['wood', 'fire', 'earth', 'metal', 'water'] as const
 type Element = (typeof ELEMENTS)[number]
@@ -176,6 +178,8 @@ const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern', 'r
 const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
 const LOG_KEYS = new Set(['act', 'by', 'at'])
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+/** An ember's rise: 0 dissatisfied, 1 neutral (`risen: 1`), 2 satisfied (`risen: true`, as saved before the three-state ruling too). */
+const riseOf = (e: unknown): number => (isObj(e) ? (e.risen === true ? 2 : e.risen === 1 ? 1 : 0) : 0)
 
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
@@ -211,7 +215,10 @@ export function pouchWrite(pouch: Doc, cur?: Doc | null): Verdict {
     if (e.state !== 'held' && e.state !== 'lit' && e.state !== 'written') return no(400, 'An ember is held, lit or written.')
     // Written into a BAR with the brush (ember-to-vibeulon FR-005): it names that BAR (the /bar route marks it).
     if (e.bar != null && !(typeof e.bar === 'string' && e.bar.length <= 40)) return no(400, 'An ember names one BAR.')
-    if (e.risen != null && e.risen !== true) return no(400, 'An ember rises once, or not yet.')
+    if (e.risen != null && e.risen !== true && e.risen !== 1) return no(400, 'An ember is neutral, satisfied, or not risen yet.')
+    // A new ember is kept at the state the player names; after that it rises one state at a time and never falls back.
+    if (isObj(before) && riseOf(e) > riseOf(before) + 1) return no(400, 'An ember rises one state at a time.')
+    if (isObj(before) && riseOf(e) < riseOf(before)) return no(400, 'An ember does not fall back.')
     if (e.woke != null && !(isObj(e.woke) && Object.keys(e.woke).every(k => k === 'spirit' || k === 'at') && typeof e.woke.spirit === 'string' && ID.test(e.woke.spirit) && isNum(e.woke.at) && e.risen === true))
       return no(400, 'An ember wakes once, after it has risen, as one spirit.')
     if (e.did != null && !(typeof e.did === 'string' && e.did.length <= 140)) return no(400, 'What you did is one short line.')

@@ -24,7 +24,11 @@ import type {
   SerializableQuestPacket,
   NodeChoiceOverride,
 } from '@/lib/quest-grammar'
-import type { QuestModel } from './UnpackingForm'
+import { FORM_CAMPAIGN_REF, type QuestModel } from './UnpackingForm'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
+import { DOMAIN_PICK_REQUIRED } from '@/lib/quest-grammar/domain-source'
+import { getCampaignDomainResolution } from '@/actions/campaign-domain'
+import { DomainPicker } from '@/components/admin/DomainPicker'
 import { loadPersistedFlowState, savePersistedFlowState, clearPersistedFlowState } from './useGenerationFlowState'
 
 const FACE_OPTIONS = Object.keys(FACE_SENTENCES) as (keyof typeof FACE_SENTENCES)[]
@@ -91,6 +95,16 @@ export function GenerationFlow({
   const [skeletonFeedback, setSkeletonFeedback] = useState('')
   const [isRegeneratingSkeleton, setIsRegeneratingSkeleton] = useState(false)
   const [isGeneratingFlavor, setIsGeneratingFlavor] = useState(false)
+  /** Blank only as the starting state; no quest is built until it is set. */
+  const [chosenDomain, setChosenDomain] = useState<AllyshipDomainKey | null>(null)
+  const [carriedDomain, setCarriedDomain] = useState<AllyshipDomainKey | null>(null)
+
+  useEffect(() => {
+    getCampaignDomainResolution(FORM_CAMPAIGN_REF).then((r) => {
+      setCarriedDomain(r.preselectedDomain)
+      if (r.preselectedDomain) setChosenDomain((d) => d ?? r.preselectedDomain)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     getAdminWorldData().then(([nationList, archetypes]) => {
@@ -165,6 +179,10 @@ export function GenerationFlow({
   async function handleContinue() {
     setError(null)
     if (isGenerateStep) {
+      if (!chosenDomain) {
+        setError(DOMAIN_PICK_REQUIRED)
+        return
+      }
       setOverviewResult(null)
       const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
       const result = await compileQuestWithPrivilegingAction({
@@ -172,7 +190,8 @@ export function GenerationFlow({
         alignedAction,
         segment: effectiveSegment,
         questModel: questModel,
-        campaignId: 'bruised-banana',
+        chosenDomain: chosenDomain,
+        campaignId: FORM_CAMPAIGN_REF,
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
         targetNationId: targetNationId ?? undefined,
@@ -636,7 +655,8 @@ export function GenerationFlow({
                 alignedAction,
                 segment: segment === 'both' ? 'player' : segment,
                 questModel,
-                campaignId: 'bruised-banana',
+                chosenDomain: chosenDomain ?? skeletonPreview.chosenDomain,
+                campaignId: FORM_CAMPAIGN_REF,
                 targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                 developmentalLens: developmentalLens ?? undefined,
                 targetNationId: targetNationId ?? undefined,
@@ -665,7 +685,8 @@ export function GenerationFlow({
                 unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                 alignedAction,
                 segment: effectiveSegment,
-                campaignId: 'bruised-banana',
+                chosenDomain: chosenDomain ?? skeletonPreview.chosenDomain,
+                campaignId: FORM_CAMPAIGN_REF,
                 questModel,
                 targetNationId: targetNationId ?? undefined,
                 targetArchetypeId: targetArchetypeIds[0],
@@ -793,7 +814,8 @@ export function GenerationFlow({
                   unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                   alignedAction,
                   segment: effectiveSegment,
-                  campaignId: 'bruised-banana',
+                  chosenDomain: chosenDomain ?? preview.chosenDomain,
+                  campaignId: FORM_CAMPAIGN_REF,
                   questModel,
                   targetNationId: targetNationId ?? undefined,
                   targetArchetypeId: targetArchetypeIds[0],
@@ -886,6 +908,7 @@ export function GenerationFlow({
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
+      <DomainPicker value={chosenDomain} onChange={setChosenDomain} carriedDomain={carriedDomain} />
       {appendToAdventureId && (
         <div className="rounded-lg border border-purple-500/40 bg-purple-950/30 px-4 py-2 text-sm text-purple-200">
           Appending to Adventure — generated quest will be added to the existing adventure.
@@ -946,12 +969,17 @@ export function GenerationFlow({
                 onClick={async () => {
                   setError(null)
                   setOverviewResult(null)
+                  if (!chosenDomain) {
+                    setError(DOMAIN_PICK_REQUIRED)
+                    return
+                  }
                   const result = await compileQuestSkeletonAction({
                     unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                     alignedAction,
                     segment: segment === 'both' ? 'player' : segment,
                     questModel,
-                    campaignId: 'bruised-banana',
+                    chosenDomain: chosenDomain,
+                    campaignId: FORM_CAMPAIGN_REF,
                     targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                     developmentalLens: developmentalLens ?? undefined,
                     targetNationId: targetNationId ?? undefined,
@@ -973,6 +1001,10 @@ export function GenerationFlow({
                 type="button"
                 disabled={aiStatus === 'pending'}
                 onClick={async () => {
+                  if (!chosenDomain) {
+                    setError(DOMAIN_PICK_REQUIRED)
+                    return
+                  }
                   setAiStatus('pending')
                   setAiError(null)
                   setError(null)
@@ -985,7 +1017,8 @@ export function GenerationFlow({
                     alignedAction,
                     segment: effectiveSegment,
                     questModel: questModel,
-                    campaignId: 'bruised-banana',
+                    chosenDomain: chosenDomain,
+                    campaignId: FORM_CAMPAIGN_REF,
                     targetNationId: targetNationId ?? undefined,
                     targetArchetypeId: targetArchetypeIds[0],
                     targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
@@ -1019,6 +1052,10 @@ export function GenerationFlow({
                 type="button"
                 disabled={aiStatus === 'pending'}
                 onClick={async () => {
+                  if (!chosenDomain) {
+                    setError(DOMAIN_PICK_REQUIRED)
+                    return
+                  }
                   setAiStatus('pending')
                   setAiError(null)
                   setError(null)
@@ -1031,7 +1068,8 @@ export function GenerationFlow({
                     alignedAction,
                     segment: effectiveSegment,
                     questModel: questModel,
-                    campaignId: 'bruised-banana',
+                    chosenDomain: chosenDomain,
+                    campaignId: FORM_CAMPAIGN_REF,
                     targetNationId: targetNationId ?? undefined,
                     targetArchetypeId: targetArchetypeIds[0],
                     targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,

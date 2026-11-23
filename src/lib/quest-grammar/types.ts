@@ -6,6 +6,7 @@
  */
 
 import type { AlchemyAltitude } from '@/lib/alchemy/types'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 
 /** Emotional + developmental altitude pair (BAR authoring / altitude mechanic). */
 export type DualAltitude = {
@@ -179,6 +180,19 @@ export interface QuestCompileInput {
   unpackingAnswers: UnpackingAnswers
   alignedAction: string
   segment: SegmentVariant
+  /**
+   * The domain the player chose: which of the four kinds of work this quest sends them to do.
+   *
+   * Wendell, 2026-11-20. Required, deliberately. Nothing infers it — no element owns a domain
+   * ("All 5 elements can apply to each of the 4 domains") and no move owns one ("One should be
+   * able to do all 5 basic moves at whatever element is alive in whatever domain makes sense").
+   * A default here is exactly how Gather Resources silently became every quest's answer.
+   *
+   * The sect offers all four every time, even when its own need sits in one: a Gather Resources
+   * campaign still needs direct action, skilful organising, raising awareness, and the gathering
+   * of inner as well as external resources, because all four domains support each other.
+   */
+  chosenDomain: AllyshipDomainKey
   campaignId?: string
   /** Personal = Epiphany Bridge (6 beats); Communal = Kotter (8 stages). Default: personal. */
   questModel?: QuestModel
@@ -244,8 +258,14 @@ export interface NodeEmotional {
   waveStage?: WaveStage
   /** Optional: for translate moves */
   translateCategory?: TranslateCategory
-  /** Optional: energy delta (+2 transcend, +1 generative, -1 control) */
-  energyDelta?: number
+  /**
+   * The canonical move this node asks for, if any.
+   *
+   * Replaces the deprecated `energyDelta` (+2 transcend, +1 generative, −1 control). Wendell,
+   * 2026-11-20: those costs are not grounded in anything and are confusing; the path is the
+   * player's choice, made manifest by what energy is coming up for them.
+   */
+  moveId?: string
 }
 
 export interface Choice {
@@ -338,6 +358,11 @@ export interface QuestPacket {
   segmentVariant: SegmentVariant
   telemetryHooks: TelemetryHooks
   startNodeId: string
+  /**
+   * The domain the player chose, carried out of the compiler so the persist layer records the
+   * choice instead of inventing one. Wendell, 2026-11-20: nothing infers a domain.
+   */
+  chosenDomain: AllyshipDomainKey
   /** Choice privileging: nodeId -> choiceIndex -> moveId. Present when privilegeContext used. */
   moveMap?: MoveMap
   /** Altitude Map: gapIndex -> ordered face ids. Ephemeral until publish. */

@@ -784,7 +784,7 @@ export async function publishGameboardAlignedQuestToPlayer(
         parentId: parentQuestId,
         rootId: parentQuestId,
         campaignRef,
-        allyshipDomain: 'GATHERING_RESOURCES',
+        allyshipDomain: packet.chosenDomain,
         moveType: packet.signature.moveType ?? undefined,
         isSystem: true,
         inputs: JSON.stringify([]),

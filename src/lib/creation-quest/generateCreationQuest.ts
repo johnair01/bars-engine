@@ -8,6 +8,7 @@
 
 import { compileQuest } from '@/lib/quest-grammar'
 import type { UnpackingAnswers, SegmentVariant } from '@/lib/quest-grammar'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 import type { CreationIntent, CreationContext, CreationQuestPacket, CreationQuestNode } from './types'
 
 /** Map quest-grammar QuestNode to CreationQuestNode */
@@ -38,6 +39,8 @@ export async function generateCreationQuest(
   const segment = (context.segment as SegmentVariant) ?? 'player'
   const campaignId = context.campaignId as string | undefined
   const unpackingAnswers = context.unpackingAnswers as (UnpackingAnswers & { alignedAction?: string }) | undefined
+  // The domain is the player's choice, carried on the context. Nothing here infers one.
+  const chosenDomain = context.chosenDomain as AllyshipDomainKey
 
   // Rules path: when we have unpacking answers and intent maps to onboarding/creation
   if (
@@ -53,6 +56,7 @@ export async function generateCreationQuest(
       campaignId,
       questModel,
       moveType: intent.moveType,
+      chosenDomain: chosenDomain,
     })
     const nodes = packet.nodes.map(toCreationNode)
     const result: CreationQuestPacket = {

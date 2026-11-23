@@ -4,12 +4,14 @@
  */
 import assert from 'node:assert/strict'
 import { describeMove, isValidEnactedMove, isValidAspectTarget, MOVE_ASPECT_MATRIX, FACE_HEALTHY_REGISTER, faceRegister } from '../move-aspect'
-import { resolveMoveCell, moveDomain } from '../canonical-kernel'
+import { resolveMoveCell } from '../canonical-kernel'
 import { GAME_MASTER_FACES, FACE_META } from '../types'
 import type { PersonalMoveType, AllyshipTarget } from '../types'
 
 const MOVES: PersonalMoveType[] = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp']
 const TARGETS: AllyshipTarget[] = ['individual', 'collective', 'system']
+/** The four domains. None of them belongs to a move: any move can run in any of them. */
+const DOMAINS = ['Gather Resource', 'Skillful Organizing', 'Raise Awareness', 'Direct Action']
 
 function testAllTenPhrasings() {
   // 5 inner + 5 outer = 10 distinct phrasings, all non-empty.
@@ -75,13 +77,19 @@ function testValidationInnerIsSelfDirected() {
 // --- Phase 3 ---
 
 function testResolveMoveCellBridgesAspect() {
-  // FR6: domain is invariant; aspect follows the enactment.
+  // FR6: aspect follows the enactment; the domain is supplied, because no move owns one
+  // (Wendell, 2026-11-20: all 5 moves can run in whatever domain makes sense).
   for (const move of MOVES) {
-    const domain = moveDomain(move)
-    const inner = resolveMoveCell({ move, aspect: 'inner' })
-    assert.deepEqual(inner, { domain, aspect: 'inner' }, `${move} inner cell`)
-    const outer = resolveMoveCell({ move, aspect: 'outer', target: 'collective' })
-    assert.deepEqual(outer, { domain, aspect: 'outer' }, `${move} outer cell = outer cell of same domain`)
+    for (const domain of DOMAINS) {
+      const inner = resolveMoveCell({ move, aspect: 'inner' }, domain)
+      assert.deepEqual(inner, { domain, aspect: 'inner' }, `${move} inner cell in ${domain}`)
+      const outer = resolveMoveCell({ move, aspect: 'outer', target: 'collective' }, domain)
+      assert.deepEqual(
+        outer,
+        { domain, aspect: 'outer' },
+        `${move} outer cell = same domain (${domain})`
+      )
+    }
   }
 }
 

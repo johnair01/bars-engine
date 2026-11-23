@@ -6,6 +6,7 @@
  */
 
 import type { AgentEmotionalState, CreateAgentInput } from '@/lib/agent-mind/types'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,8 +23,8 @@ export interface ArchetypeAgentProfile {
   /** Seeded narrative lock from archetype.shadowSignposts (first line) */
   narrativeLock: string
   emotionalState: AgentEmotionalState
-  /** Primary allyship domain for BAR proposals */
-  allyshipDomain: string
+  /** Primary allyship domain for BAR proposals; null when the wave stage carries none. */
+  allyshipDomain: AllyshipDomainKey | null
 }
 
 // ---------------------------------------------------------------------------
@@ -65,14 +66,20 @@ export function waveStageToFace(
 
 /**
  * Map primaryWaveStage → allyship domain for BAR proposals.
+ *
+ * Returns null when the stage is unknown, because there is genuinely nothing to carry. `primaryWaveStage` is
+ * `String?` in the database, so an unmapped value is reachable — and the previous `default: 'GATHERING_RESOURCES'`
+ * turned every one of them into Gather without anyone choosing it. That is precisely the silent default
+ * Wendell, 2026-11-20 forbids: "a default here is exactly how Gather Resources silently became every quest's
+ * answer." A null here surfaces as an unset domain, which is honest; the caller asks a person to pick.
  */
-export function waveStageToAllyshipDomain(waveStage: string | null | undefined): string {
+export function waveStageToAllyshipDomain(waveStage: string | null | undefined): AllyshipDomainKey | null {
   switch (waveStage) {
     case 'wakeUp':   return 'RAISE_AWARENESS'
     case 'cleanUp':  return 'SKILLFUL_ORGANIZING'
     case 'growUp':   return 'GATHERING_RESOURCES'
     case 'showUp':   return 'DIRECT_ACTION'
-    default:         return 'GATHERING_RESOURCES'
+    default:         return null
   }
 }
 

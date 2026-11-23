@@ -11,6 +11,7 @@
  * This is a server-only lib (imported by server actions); it does no auth/ownership
  * checks — callers are responsible for those before minting.
  */
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 import { db } from '@/lib/db'
 import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
 
@@ -30,7 +31,18 @@ export type MintQuestInput = {
   questSource?: string | null
   /** Quest shape — defaults mirror the historical `growQuestFromBar` behaviour. */
   moveType?: string
-  allyshipDomain?: string
+  /**
+   * The domain this quest serves. Required, deliberately.
+   *
+   * Wendell, 2026-11-20: "A default here is exactly how Gather Resources silently became every quest's answer."
+   * This was `allyshipDomain?: string` defaulted to 'GATHERING_RESOURCES' below, and neither caller passed one — so
+   * every quest minted through this primitive was silently Gathering Resources. A domain is carried from a real
+   * source (the quest's single campaign, or the lens it operates from) or picked by a person; never inferred.
+   *
+   * The DB column stays nullable (CustomBar.allyshipDomain String?), because a legacy row may have none. What is
+   * not allowed is NEW work inventing one.
+   */
+  allyshipDomain: AllyshipDomainKey
   reward?: number
 }
 
@@ -53,7 +65,7 @@ export async function mintQuestFromText(input: MintQuestInput): Promise<{ questI
         visibility: 'private',
         status: 'active',
         moveType: input.moveType ?? 'showUp',
-        allyshipDomain: input.allyshipDomain ?? 'GATHERING_RESOURCES',
+        allyshipDomain: input.allyshipDomain,
         sourceBarId: input.sourceBarId ?? null,
         questSource: input.questSource ?? null,
         inputs: '[]',

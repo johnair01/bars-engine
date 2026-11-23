@@ -5,6 +5,7 @@
  */
 
 import type { SerializableQuestPacket, QuestNode, SegmentVariant } from './types'
+import { ORIENTATION_CAMPAIGN_DOMAIN } from './orientation-campaign'
 
 /** Story-world intro beats. Align with content/onboarding-story-intro.md. */
 const STORY_INTRO_BEATS: { id: string; text: string }[] = [
@@ -62,5 +63,6 @@ export function compileStoryIntroPacket(input: StoryIntroPacketInput = {}): Seri
     nodes,
     segmentVariant: segment,
     startNodeId: ids[0]!,
+    chosenDomain: ORIENTATION_CAMPAIGN_DOMAIN,
   }
 }

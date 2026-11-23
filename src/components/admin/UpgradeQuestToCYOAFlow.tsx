@@ -20,7 +20,11 @@ import {
   baseInputClass,
 } from '@/lib/quest-grammar'
 import type { UnpackingAnswers, SegmentVariant, SerializableQuestPacket } from '@/lib/quest-grammar'
-import type { QuestModel } from '@/app/admin/quest-grammar/UnpackingForm'
+import { FORM_CAMPAIGN_REF, type QuestModel } from '@/app/admin/quest-grammar/UnpackingForm'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
+import { DOMAIN_PICK_REQUIRED } from '@/lib/quest-grammar/domain-source'
+import { getCampaignDomainResolution } from '@/actions/campaign-domain'
+import { DomainPicker } from '@/components/admin/DomainPicker'
 import Link from 'next/link'
 
 type QuestForUpgrade = {
@@ -76,6 +80,16 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const [publishStatus, setPublishStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [result, setResult] = useState<{ adventureId: string; threadId: string } | null>(null)
   const [adventureMoveType, setAdventureMoveType] = useState<string>('')
+  /** Blank only as the starting state; no quest is built until it is set. */
+  const [chosenDomain, setChosenDomain] = useState<AllyshipDomainKey | null>(null)
+  const [carriedDomain, setCarriedDomain] = useState<AllyshipDomainKey | null>(null)
+
+  useEffect(() => {
+    getCampaignDomainResolution(FORM_CAMPAIGN_REF).then((r) => {
+      setCarriedDomain(r.preselectedDomain)
+      if (r.preselectedDomain) setChosenDomain((d) => d ?? r.preselectedDomain)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     getAdminWorldData().then(([nationList, archetypes]) => {
@@ -105,12 +119,17 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   async function handleContinue() {
     setError(null)
     if (isGenerateStep) {
+      if (!chosenDomain) {
+        setError(DOMAIN_PICK_REQUIRED)
+        return
+      }
       const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
       const result = await compileQuestWithPrivilegingAction({
         unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
         alignedAction,
         segment: effectiveSegment,
-        campaignId: 'bruised-banana',
+        chosenDomain: chosenDomain,
+        campaignId: FORM_CAMPAIGN_REF,
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
         targetNationId: targetNationId ?? undefined,
@@ -402,7 +421,8 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
       unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
       alignedAction,
       segment: effectiveSegment,
-      campaignId: 'bruised-banana',
+      chosenDomain: chosenDomain ?? preview.chosenDomain,
+      campaignId: FORM_CAMPAIGN_REF,
       targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
       developmentalLens: developmentalLens ?? undefined,
       expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -504,6 +524,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
         </button>
       </div>
       <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-6">
+        <DomainPicker value={chosenDomain} onChange={setChosenDomain} carriedDomain={carriedDomain} />
         <div className="flex items-center justify-between">
           <span className="text-xs text-zinc-500">Step {stepIndex + 1} of {STEPS.length}</span>
           {stepIndex > 0 && (

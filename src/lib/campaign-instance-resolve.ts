@@ -27,9 +27,18 @@ const VALID_DOMAINS: readonly AllyshipDomain[] = [
   'DIRECT_ACTION',
 ]
 
-export function clampCampaignAllyshipDomain(d: string | null | undefined): AllyshipDomain {
-  const x = d as AllyshipDomain
-  return VALID_DOMAINS.includes(x) ? x : 'GATHERING_RESOURCES'
+/**
+ * Validate a campaign instance's domain, or say there isn't one.
+ *
+ * This used to return GATHERING_RESOURCES for any missing or unrecognised value — a silent default that made a
+ * domainless instance produce Gather quests with nobody choosing. Instance.allyshipDomain is nullable, so the
+ * fallback was reachable, not theoretical (Wendell, 2026-11-20: "a default here is exactly how Gather Resources
+ * silently became every quest's answer"). Returning null forces every caller to decide: carry a real domain, or
+ * stop and ask a person. There is no third option.
+ */
+export function clampCampaignAllyshipDomain(d: string | null | undefined): AllyshipDomain | null {
+  const x = d as AllyshipDomain | null | undefined
+  return x && VALID_DOMAINS.includes(x) ? x : null
 }
 
 export async function resolveCampaignInstanceForRef(

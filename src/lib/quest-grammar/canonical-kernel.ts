@@ -39,51 +39,41 @@ export const ELEMENT_CHANNEL_STATES: Record<
   },
 }
 
-/** Element → allyship domains (WHERE). Per emotional-alchemy-interfaces.md §4. */
-const ELEMENT_TO_DOMAINS: Record<ElementKey, string[]> = {
-  metal: ['Raise Awareness', 'Skillful Organizing'],
-  fire: ['Raise Awareness', 'Direct Action'],
-  water: ['Gather Resource', 'Raise Awareness'],
-  wood: ['Gather Resource', 'Skillful Organizing', 'Direct Action'],
-  earth: ['Gather Resource', 'Skillful Organizing'],
-}
+/**
+ * Element → allyship domains (WHERE).
+ *
+ * Wendell, 2026-11-20: "the domains shouldn't be mapped to an element. All 5 elements can
+ * apply to each of the 4 domains." There is therefore no element→domain table: every element
+ * carries every domain, so an element alone cannot pick one. `pickExperienceForPlayer` reads
+ * the archetype's move affinity (which is a claim about the player, not about an element) and
+ * otherwise asks, rather than guessing.
+ */
 
 /**
- * WAVE move → cell of the 8-cell board (domain × aspect). The 5 moves are the
- * INNER column (self-development). Narrative-flavor only — seeds Q1 of generated
- * quests; no progress/energy/quest-selection effect. See integral-axes/spec.md.
+ * WAVE move → its cell of the board, as "this move, carried in this domain, on this aspect".
  *
- * Note: Open Up = receptivity/intake (bars-engine's coinage, NOT Wilber's "lines"
- * meaning — see FOUNDATIONS.md divergence note); its inner cell is Gather Resource
- * ("opening to the emotional energy to do the work"). Grow Up is an ordinary inner
- * move (lines/capacity) and shares Gather Resource — altitude lives in the 6 faces.
+ * Wendell, 2026-11-20: "One should be able to do all 5 basic moves at whatever element is
+ * alive in whatever domain makes sense." There is therefore no move→domain table any more:
+ * each of the five moves can be carried in any of the four domains, in any of the five
+ * elements. The domain is something the caller knows — the player chose it, the campaign set
+ * it, the quest is about it — and a move on its own cannot tell you which one it was.
+ *
+ * `aspect` alone is still a property of the move: the five WAVE moves are the INNER column
+ * (self-development), and an outer enactment is the same move turned toward others.
  */
-const MOVE_CELL_AFFINITY: Record<PersonalMoveType, MoveCellAffinity> = {
-  wakeUp: { domain: 'Raise Awareness', aspect: 'inner' },
-  openUp: { domain: 'Gather Resource', aspect: 'inner' },
-  cleanUp: { domain: 'Skillful Organizing', aspect: 'inner' },
-  growUp: { domain: 'Gather Resource', aspect: 'inner' },
-  showUp: { domain: 'Direct Action', aspect: 'inner' },
-}
-
-/** The domain a move expresses in (back-compat seam for the former WAVE_TO_DOMAIN). */
-export function moveDomain(move: PersonalMoveType): string {
-  return MOVE_CELL_AFFINITY[move].domain
-}
 
 /**
- * FR6 — resolve an enacted move to its cell of the 8-cell board (domain × aspect).
+ * FR6 — resolve an enacted move to its cell of the board (domain × aspect).
  *
- * The bridge between the IOA grammar ({@link EnactedMove}) and the integral board:
- * a move's **domain is invariant** (authored in `MOVE_CELL_AFFINITY`), while the
- * **aspect follows the enactment** — `inner` → the move's inner cell (self-
- * development), `outer` → the *outer cell* of the same domain (allyship in others'
- * right-hand). Deterministic, no AI. Style (which *face* enacts the outer move) is a
- * separate concern — see `describeMove` (FR7); the with/for shadow reading of the
- * outer cell is a documented seam, not enacted here (spec Design Decisions).
+ * The bridge between the IOA grammar ({@link EnactedMove}) and the integral board: the
+ * **aspect follows the enactment** — `inner` → self-development, `outer` → allyship in
+ * others' right-hand. The **domain is asked for, not derived**: no move owns one (2026-11-20).
+ * Deterministic, no AI. Style (which *face* enacts the outer move) is a separate concern —
+ * see `describeMove` (FR7); the with/for shadow reading of the outer cell is a documented
+ * seam, not enacted here (spec Design Decisions).
  */
-export function resolveMoveCell(m: EnactedMove): MoveCellAffinity {
-  return { domain: MOVE_CELL_AFFINITY[m.move].domain, aspect: m.aspect }
+export function resolveMoveCell(m: EnactedMove, domain: string): MoveCellAffinity {
+  return { domain, aspect: m.aspect }
 }
 
 function pickN<T>(arr: readonly T[], n: number): T[] {
@@ -125,27 +115,24 @@ export function getLabelsForMove(move: CanonicalMove): {
 }
 
 /**
- * Pick experience (Q1) for a player based on nation element and archetype WAVE.
- * Intersects domains when both present; fallback to random from EXPERIENCE_OPTIONS.
+ * Pick experience (Q1) for a player. Q1 is the domain — which of the four kinds of work the
+ * quest sends them to do.
+ *
+ * Neither an element NOR a move picks the domain. Wendell, 2026-11-20: all five elements can
+ * carry all four domains, and "one should be able to do all 5 basic moves at whatever element
+ * is alive in whatever domain makes sense." So nothing here can infer a domain; a caller that
+ * knows it (the player chose it, the campaign set it, the quest is about it) passes it.
+ *
+ * When the domain is genuinely unknown this returns the first option, which is a placeholder
+ * and not a recommendation — callers should prefer to ask than to ship a guessed domain.
  */
 export function pickExperienceForPlayer(
-  nationElement?: ElementKey,
-  archetypeWave?: PersonalMoveType
+  _nationElement?: ElementKey,
+  _archetypeWave?: PersonalMoveType,
+  chosenDomain?: string
 ): string {
-  if (nationElement && archetypeWave) {
-    const nationDomains = ELEMENT_TO_DOMAINS[nationElement]
-    const waveDomain = moveDomain(archetypeWave)
-    const intersection = nationDomains.filter((d) => d === waveDomain)
-    if (intersection.length > 0) {
-      return intersection[0]!
-    }
+  if (chosenDomain && (EXPERIENCE_OPTIONS as readonly string[]).includes(chosenDomain)) {
+    return chosenDomain
   }
-  if (nationElement) {
-    const domains = ELEMENT_TO_DOMAINS[nationElement]
-    return domains[Math.floor(Math.random() * domains.length)]!
-  }
-  if (archetypeWave) {
-    return moveDomain(archetypeWave)
-  }
-  return EXPERIENCE_OPTIONS[Math.floor(Math.random() * EXPERIENCE_OPTIONS.length)]!
+  return EXPERIENCE_OPTIONS[0]!
 }

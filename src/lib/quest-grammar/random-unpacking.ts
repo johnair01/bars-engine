@@ -44,6 +44,8 @@ const Q5_PHRASES = [
 export interface RandomUnpackingPlayerContext {
   nationElement?: ElementKey
   archetypePrimaryWave?: PersonalMoveType
+  /** The domain, when the caller knows it. Nothing infers one: no element or move owns a domain. */
+  chosenDomain?: string
 }
 
 export interface RandomUnpackingResult {
@@ -65,7 +67,8 @@ export function generateRandomUnpacking(
 
   const q1 = pickExperienceForPlayer(
     playerContext?.nationElement,
-    playerContext?.archetypePrimaryWave
+    playerContext?.archetypePrimaryWave,
+    playerContext?.chosenDomain
   )
 
   const lifeState = pick(LIFE_STATE_OPTIONS)

@@ -32,6 +32,7 @@ import {
   type TtvTaskNoteDTO,
 } from '@/lib/tap-the-vein/types'
 import { isLensDomainKey } from '@/lib/lenses/domains'
+import { isDomainKey } from '@/lib/quest-grammar/domain-source'
 import { buildLensGoalSnapshot, resolveLensGoalTrace } from '@/lib/lenses/lineage'
 import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { ACTIVE_TTV_TASK_STATUSES, canCommitTtvTask, nextHistoricalPriorityRank } from '@/lib/tap-the-vein/commit-policy'
@@ -227,7 +228,7 @@ export type TtvTaskWorkspace = {
   shrinkChargeHref: string | null
 }
 
-export type TtvResult<T> = T | { error: string }
+export type TtvResult<T> = T | { error: string; requiresDomainPick?: true }
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length
@@ -462,12 +463,29 @@ export async function commitTask(input: {
     // its lens lineage. Aligned when it hangs on a weekly goal; otherwise it is a
     // shadow quest surfaced for fold-in. Deal it into the Hand (Vault on overflow).
     const lens = await ensureTodayLens(player.id)
+
+    // The domain this move serves. A player's own move carries the domain of the world it happens in
+    // (Instance.allyshipDomain) — a real source, never a default (Wendell, 2026-11-20). If the world has
+    // none, the move is not silently filed under Gathering Resources; it stops and asks.
+    const world = player.nation?.instanceId
+      ? await db.instance.findUnique({ where: { id: player.nation.instanceId }, select: { allyshipDomain: true } })
+      : null
+    if (!isDomainKey(world?.allyshipDomain)) {
+      return {
+        error:
+          'This world has no domain set. Pick one (Gathering Resources, Direct Action, Raise Awareness, ' +
+          'Skillful Organizing) before the move can become a quest.',
+        requiresDomainPick: true,
+      }
+    }
+
     const { questId } = await mintQuestFromText({
       playerId: player.id,
       title: text,
       description: text,
       sourceTaskId: created.id,
       questSource: 'tap_the_vein',
+      allyshipDomain: world.allyshipDomain,
       lensId: lens?.id ?? null,
       lensGoalId: lensGoal?.id ?? null,
       plantSnapshot: attachSnapshot,

@@ -7,6 +7,7 @@
  */
 
 import { compileQuest } from '@/lib/quest-grammar'
+import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { generateRandomTestInput } from './generateRandomTestInput'
 import type { ValidationReport, ValidationFailure, RandomTestInput } from './types'
 
@@ -29,6 +30,7 @@ function validatePacket(
       alignedAction: input.alignedAction,
       segment: 'player',
       campaignId: 'bruised-banana',
+      chosenDomain: input.chosenDomain,
     })
 
     if (packet.nodes.length !== 6) {
@@ -102,7 +104,10 @@ export async function validateQuestGrammar(
   const failures: ValidationFailure[] = []
 
   for (let i = 0; i < iterations; i++) {
-    const input = await generateRandomTestInput()
+    // A domain is carried, never defaulted (Wendell, 2026-11-20). This harness runs the
+    // generator across all four rather than inventing one, so every domain gets exercised.
+    const domain = ALLYSHIP_DOMAINS[i % ALLYSHIP_DOMAINS.length]!.key
+    const input = await generateRandomTestInput(domain)
     const failure = validatePacket(i + 1, input)
     if (failure) {
       failures.push(failure)

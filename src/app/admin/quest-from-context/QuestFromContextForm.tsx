@@ -72,19 +72,22 @@ export function QuestFromContextForm({
       </div>
 
       <div className="space-y-2">
-        <label className="block text-xs uppercase text-zinc-500">Allyship domain (optional)</label>
+        <label className="block text-xs uppercase text-zinc-500">Domain</label>
         <select
           value={allyshipDomain}
           onChange={(e) => setAllyshipDomain(e.target.value)}
           className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm"
         >
-          <option value="">— Default —</option>
+          <option value="">— Carry from the campaign —</option>
           {allyshipDomains.map((d) => (
             <option key={d} value={d}>
               {d.replace(/_/g, ' ')}
             </option>
           ))}
         </select>
+        <p className="text-[10px] text-zinc-500">
+          Left blank, the quest carries the campaign&apos;s domain. A campaign with no domain asks you to pick one.
+        </p>
       </div>
 
       <button

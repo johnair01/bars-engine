@@ -69,12 +69,18 @@ export type AllyshipDomain =
   | 'DIRECT_ACTION'
   | 'SKILLFUL_ORGANIZING'
 
-/** Each allyship domain carries one Wuxing element (element = color channel). */
-export const DOMAIN_ELEMENT: Record<AllyshipDomain, ElementKey> = {
-  GATHERING_RESOURCES: 'earth',
-  SKILLFUL_ORGANIZING: 'wood',
-  RAISE_AWARENESS: 'metal',
-  DIRECT_ACTION: 'fire',
+/**
+ * Each domain's element.
+ *
+ * Wendell, 2026-11-20: "the domains shouldn't be mapped to an element. All 5 elements can apply
+ * to each of the 4 domains." There is therefore no fixed pairing to export here. Use
+ * `domainElement()` for a caller that has an element in hand and wants it named back.
+ */
+export const ALL_ELEMENTS = ['metal', 'water', 'wood', 'fire', 'earth'] as const
+
+/** Any of the five elements can carry any of the four domains, so this only names the one given. */
+export function domainElement(element: ElementKey): ElementKey {
+  return element
 }
 
 const DOMAIN_LABELS: Record<AllyshipDomain, string> = {

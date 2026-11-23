@@ -17,14 +17,16 @@ import {
 import type { IChingContext, PersonalMoveType } from '@/lib/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
 import type { RandomTestInput } from './types'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
 /**
  * Generate random test input for quest grammar validation.
  * Random hexagram (1–64), random unpacking, random nation/playbook from DB.
+ * The domain is not randomised or defaulted: the caller names it.
  */
-export async function generateRandomTestInput(): Promise<RandomTestInput> {
+export async function generateRandomTestInput(chosenDomain: AllyshipDomainKey): Promise<RandomTestInput> {
   const emptyContext = {
     kotterStage: null,
     nationName: null,
@@ -85,5 +87,6 @@ export async function generateRandomTestInput(): Promise<RandomTestInput> {
     ichingContext,
     nationId,
     playbookId,
+    chosenDomain,
   }
 }

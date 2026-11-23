@@ -72,6 +72,9 @@ export function QuestLibrary({
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {q.domain && (() => {
+                    // No domain owns an element (2026-11-20), and an authored quest row carries
+                    // no element of its own, so the chip has nothing to color from: it takes the
+                    // neutral text color instead of a guessed gem color.
                     const gem = domainGemVar(q.domain) ?? 'var(--bars-text-secondary)'
                     return (
                       <span

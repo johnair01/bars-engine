@@ -16,6 +16,8 @@ import { getActiveInstance } from '@/actions/instance'
 import { getStageAction } from '@/lib/kotter'
 import type { AllyshipDomain } from '@/lib/kotter'
 import { getArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay'
+import { settleCampaignDomain } from '@/lib/quest-grammar/campaign-domain'
+import { DOMAIN_PICK_REQUIRED } from '@/lib/quest-grammar/domain-source'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
@@ -48,10 +50,11 @@ function buildGameboardContext(
   parentQuest: { title: string; description: string | null; allyshipDomain?: string | null },
   period: number,
   instance: { targetDescription?: string | null } | null,
-  campaignRef: string
+  campaignRef: string,
+  /** The quest's settled domain (carried from its campaign or picked); never defaulted. */
+  chosenDomain: AllyshipDomain
 ) {
-  const domain = (parentQuest.allyshipDomain ?? 'GATHERING_RESOURCES') as AllyshipDomain
-  const stageAction = getStageAction(period, domain)
+  const stageAction = getStageAction(period, chosenDomain)
   const campaignGoal =
     instance?.targetDescription?.trim() || `${campaignRef} — people showing up`
   return {
@@ -69,7 +72,7 @@ function buildGameboardContext(
  */
 export async function generateQuestFromContext(
   input: GenerateQuestFromContextInput
-): Promise<{ success: true; questId: string } | { error: string }> {
+): Promise<{ success: true; questId: string } | { error: string; requiresPick?: true }> {
   try {
     await checkAdmin()
   } catch (e) {
@@ -105,6 +108,10 @@ export async function generateQuestFromContext(
     archetypePrimaryWave,
   })
 
+  // Carry the campaign's domain, or the admin's pick; with neither, stop and ask.
+  const domain = await settleCampaignDomain({ campaignRef: input.campaignRef }, input.allyshipDomain)
+  if (!domain.ok) return { error: DOMAIN_PICK_REQUIRED, requiresPick: true }
+
   const instance = await getActiveInstance()
   const period = input.kotterStage ?? instance?.kotterStage ?? 1
 
@@ -129,7 +136,7 @@ export async function generateQuestFromContext(
 
   const gameboardContext =
     parentQuest && input.campaignRef
-      ? buildGameboardContext(parentQuest, period, instance, input.campaignRef)
+      ? buildGameboardContext(parentQuest, period, instance, input.campaignRef, domain.chosenDomain)
       : undefined
 
   const archetypeInfluenceProfile = playerWithRoles.archetype?.name
@@ -140,6 +147,7 @@ export async function generateQuestFromContext(
     unpackingAnswers,
     alignedAction,
     segment: 'player',
+    chosenDomain: domain.chosenDomain,
     targetArchetypeId: playerWithRoles.archetypeId ?? undefined,
     moveType: (input.moveType ?? moveType) as import('@/lib/quest-grammar/types').PersonalMoveType | undefined,
     gameboardContext,
@@ -192,7 +200,7 @@ export async function generateQuestFromContext(
       status: 'draft',
       visibility: 'public',
       campaignRef: input.campaignRef,
-      allyshipDomain: (input.allyshipDomain ?? 'GATHERING_RESOURCES') as AllyshipDomain,
+      allyshipDomain: packet.chosenDomain as AllyshipDomain,
       moveType: packet.signature?.moveType ?? input.moveType ?? undefined,
       isSystem: true,
       inputs: JSON.stringify([]),

@@ -57,7 +57,8 @@ describe('the hearth spirit (FR-011, FR-012)', () => {
   })
   it('an ember wakes once, after it has risen, as one spirit', () => {
     const ember = { move: Object.keys(MOVES)[0], state: 'lit', risen: true }
-    expect(pouchWrite({ embers: { e1: { ...ember, woke: { spirit: 's1', at: 5 } } } }).ok).toBe(true)
+    expect(pouchWrite({ embers: { e1: { ...ember, woke: { spirit: 's1', at: 5 } } } }, { embers: { e1: ember } }).ok).toBe(true)
+    expect(pouchWrite({ embers: { e1: { ...ember, risen: 1, woke: { spirit: 's1', at: 5 } } } }, { embers: { e1: { ...ember, risen: 1 } } }).ok).toBe(false) // neutral is not yet satisfied
     expect(pouchWrite({ embers: { e1: { move: ember.move, state: 'lit', woke: { spirit: 's1', at: 5 } } } }).ok).toBe(false)
     expect(pouchWrite({ embers: { e1: { ...ember, woke: { spirit: 's1', at: 5, text: 'x' } } } }).ok).toBe(false)
   })

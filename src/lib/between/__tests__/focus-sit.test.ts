@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { emberWarmth, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES, FRAGMENT_ORDER, fragmentFor, hearthRecord, CARES, HEARTH_K, stageOf, hearthStage, careOffered, spiritWord, spiritGlow, spiritFed } from '../../../../public/between/focus.js'
+import { emberWarmth, riseOf, risenNext, focusMinutes, focusOnReturn, focusProgress, FOCUS_MINUTES, FRAGMENT_ORDER, fragmentFor, hearthRecord, CARES, HEARTH_K, stageOf, hearthStage, careOffered, spiritWord, spiritGlow, spiritFed } from '../../../../public/between/focus.js'
 import { FRAGMENTS, FRAGMENT_SECONDS, pictureDots } from '../../../../public/between/fragments.js'
 
 // The focus sit at the hearth (council pass integral-octalysis2; his yes on io-focus-sit-look-1, 2026-10-25): the sticks you
@@ -18,12 +18,18 @@ describe('the focus sit', () => {
     expect(focusOnReturn(sit, 3 * 60000)).toBe('banked')
     expect(focusOnReturn(sit, 11 * 60000)).toBe('done')
   })
-  it('warms the ember toward satisfied, the last step only at the end', () => {
+  it('warms the ember one state per full sit, the last step only at the end', () => {
     const sit = { step: 'sit', sticks: 2, t0: 0 }
     expect(emberWarmth(sit, 0)).toBe(0)
-    expect(emberWarmth(sit, 24 * 60000)).toBeLessThan(0.85)
-    expect(emberWarmth(sit, 25 * 60000)).toBe(1)
+    expect(emberWarmth(sit, 24 * 60000)).toBeLessThan(0.5)
+    expect(emberWarmth(sit, 25 * 60000)).toBe(0.5) // the first sit: dissatisfied to neutral
+    expect(emberWarmth(sit, 0, 60000, 1)).toBe(0.5)
+    expect(emberWarmth(sit, 25 * 60000, 60000, 1)).toBe(1) // the second: neutral to satisfied
     expect(emberWarmth(sit, 0, 60000, true)).toBe(1)
+  })
+  it('reads the rise in three states, and an old risen ember as satisfied', () => {
+    expect([riseOf({}), riseOf({ risen: 1 }), riseOf({ risen: true })]).toEqual([0, 1, 2])
+    expect([risenNext({}), risenNext({ risen: 1 }), risenNext({ risen: true })]).toEqual([1, true, null])
   })
   it('lives in the seated hearth moment, with no counts or timer shown', () => {
     const garden = readFileSync(path.resolve(__dirname, '../../../../public/between/garden.js'), 'utf8')
@@ -102,14 +108,16 @@ describe('the first chapter (FR-003, FR-016 to FR-020)', () => {
     expect(careOffered(0, false)).toBe('sweep'); expect(careOffered(0, true)).toBe(null)
     expect(careOffered(3, false)).toBe('turn'); expect(careOffered(4, false)).toBe(null)
   })
-  it('garden.js tends the hearth one care a visit and lets no sit in below the second', () => {
+  it('garden.js tends the hearth one care a visit; below the second you may sit, and sitting shows the next care', () => {
     const garden = readFileSync(path.resolve(__dirname, '../../../../public/between/garden.js'), 'utf8')
     for (const fn of ['function doCare(', 'const hearthCareNow =', 'const sitBlocked =']) expect(garden).toContain(fn)
     expect(garden).toMatch(/careOffered\(c, caredThisVisit\)/)
     expect(garden).toMatch(/caredThisVisit = true/)
-    expect(garden).toMatch(/canSitOn = id => !seatTaken\(id\) && !\(sitBlocked\(\)/)
-    expect(garden).toMatch(/function sitAtHearth\(\) \{ if \(sitBlocked\(\)\) return;/)
-    expect(garden).toMatch(/if \(hm \|\| sitBlocked\(\)/)
+    // Wendell, 2026-11-20: "they should be able to sit down and when they sit the game would tell them the next step to take"
+    expect(garden).toMatch(/canSitOn = id => !seatTaken\(id\);/)
+    expect(garden).toMatch(/function sitAtHearth\(\) \{ sitOn\(hearthSeatId\(\)/)
+    expect(garden).toMatch(/if \(sitBlocked\(\)\) \{ openSheet\("hearthgive"\); return; \} hmBegin\(\)/) // an unlaid fire opens its care
+    expect(garden).toMatch(/if \(hm \|\| sitBlocked\(\)/) // the sit itself still waits for a laid fire
     expect(garden).toMatch(/PREVIEW_HOST && \/\^\[0-4\]\$\/\.test\(KQ\.get\("stage"\) \|\| KQ\.get\("care"\)/) // ?stage= (alias ?care=) is a preview only
     expect(garden).toMatch(/SPIRIT_SEED = PREVIEW_HOST/) // ?spirit=<days> too (FR-031)
     const doCare = garden.slice(garden.indexOf('function doCare('), garden.indexOf('/* What a tap on the nook does'))

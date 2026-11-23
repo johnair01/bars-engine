@@ -12,6 +12,7 @@ import {
     type SoilKind,
 } from '@/lib/bar-seed-metabolization'
 import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
+import { isDomainKey } from '@/lib/quest-grammar/domain-source'
 import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
 // Plain module (no 'use server') — safe to import from this server-action file.
 import { addBarToHandForPlayer } from '@/lib/hand-service'
@@ -789,7 +790,7 @@ export async function getBarDetail(barId: string) {
 // GROW QUEST FROM BAR (BUO Phase 3 — BAR as seed)
 // ---------------------------------------------------------------------------
 
-export async function growQuestFromBar(barId: string): Promise<{ questId?: string; error?: string }> {
+export async function growQuestFromBar(barId: string): Promise<{ questId?: string; error?: string; requiresDomainPick?: boolean }> {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
 
@@ -799,6 +800,8 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
             id: true, title: true, description: true, type: true, creatorId: true,
             // Lineage — carried onto the grown quest so it keeps its lens connection (QLA).
             lensId: true, lensGoalId: true, plantSnapshot: true,
+            // The domain the BAR already serves, carried onto the quest rather than defaulted.
+            allyshipDomain: true,
         },
     })
     if (!bar) return { error: 'BAR not found' }
@@ -820,7 +823,17 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
 
     const title = (bar.title || 'Quest from BAR').trim().slice(0, 200)
     const description = (bar.description || '').trim() || title
-
+    // The domain is carried from the BAR. If the BAR has none, this stops and asks rather than
+    // inventing one (Wendell, 2026-11-20 — a default is how Gather Resources became every answer).
+    if (!isDomainKey(bar.allyshipDomain)) {
+        return {
+            error:
+                'This BAR carries no domain. Pick one (Gathering Resources, Direct Action, Raise Awareness, ' +
+                'Skillful Organizing) before it can become a quest.',
+            requiresDomainPick: true,
+        }
+    }
+    const resolvedDomain = bar.allyshipDomain
     const cap = await assertCanCreateUnplacedVaultQuest(playerId)
     if (!cap.ok) return { error: cap.error }
 
@@ -835,6 +848,9 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
             lensId: bar.lensId,
             lensGoalId: bar.lensGoalId,
             plantSnapshot: (bar.plantSnapshot ?? null) as unknown as LensGoalTrace | null,
+            // Carried from the source BAR. A BAR with no domain cannot silently become Gathering
+            // Resources (Wendell, 2026-11-20): the person is asked to pick instead.
+            allyshipDomain: resolvedDomain,
         })
 
         if (bar.type === 'charge_capture') {

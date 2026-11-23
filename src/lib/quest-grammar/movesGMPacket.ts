@@ -5,6 +5,7 @@
  */
 
 import { getFaceSentence } from '@/lib/face-sentences'
+import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 import { GAME_MASTER_FACES, FACE_META } from './types'
 import type { SerializableQuestPacket, QuestNode, Choice, SegmentVariant } from './types'
 
@@ -12,6 +13,8 @@ export interface MovesGMPacketInput {
   segment?: SegmentVariant
   /** When true, omit signup node and cold-signup copy; commit step goes to Vault. */
   isAuthenticated?: boolean
+  /** The domain the player chose. Required by the compiler: nothing infers one. */
+  chosenDomain: AllyshipDomainKey
 }
 
 const VIBEULON_INTRO = `**Vibeulons** are the sect's coin of emotional energy. You earn them by taking moves. Finish this walk to earn your starter share.`
@@ -20,14 +23,10 @@ const MOVE_TEXTS: Record<string, string> = {
   wakeUp: `**Wake Up** — Notice what's true. The first move is awareness: naming what is, without judgment. What are you actually experiencing right now?`,
   cleanUp: `**Clean Up** — Release what no longer serves. Let go of stories, habits, or beliefs that block your next step.`,
   growUp: `**Grow Up** — Expand capacity. Practice a new way of being until it becomes yours.`,
-  showUp: `**Show Up** — Take action. Contribute to the campaign. Your participation matters.
-
-[Contribute to the campaign](/event/donate/wizard?ref=bruised-banana) — money, time, space, or hosting. [Try the public donation demo first](/demo/bruised-banana) — charge + three-part witness pass, no account required.`,
+  showUp: `**Show Up** — Take action. The sect stops being a story and becomes something you did. What can you move today that nothing else will move for you?`,
 }
 
-const SHOW_UP_AUTHENTICATED = `**Show Up** — Take action. Contribute to the campaign. Your participation matters.
-
-[Contribute to the campaign](/event/donate/wizard?ref=bruised-banana) — your support goes directly to the cause. [Donation demo](/demo/bruised-banana) — shareable ritual for guests.`
+const SHOW_UP_AUTHENTICATED = `**Show Up** — Take action. You have already chosen to be here; this is the move where the world can feel it. What can you move today?`
 
 /** Loop ids are lowercase `wakeup` … `showup`; align with MOVE_TEXTS keys. */
 const MOVE_TEXT_BY_LOOP_ID: Record<string, string> = {
@@ -39,12 +38,10 @@ const MOVE_TEXT_BY_LOOP_ID: Record<string, string> = {
 
 const COMMIT_TEXT = `**Commit** — You've chosen your path. This is the moment of crossing the threshold.`
 
-const SIGNUP_TEXT = `**Sign up** — Create your account. You are now an Early Believer — a Catalyst who crossed before the crowd.
+const SIGNUP_TEXT = `**Sign up** — Create your account. The sect keeps what you did here, and you can come back to it.`
 
-Unlock: founders thread, patron updates.`
-
-export function compileMovesGMPacket(input: MovesGMPacketInput = {}): SerializableQuestPacket {
-  const { segment = 'player', isAuthenticated = false } = input
+export function compileMovesGMPacket(input: MovesGMPacketInput): SerializableQuestPacket {
+  const { segment = 'player', isAuthenticated = false, chosenDomain } = input
 
   const nodes: QuestNode[] = []
 
@@ -151,7 +148,7 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
       emotional: { channel: 'Joy', movement: 'translate' },
       text: SIGNUP_TEXT,
       choices: [{ text: 'Create my account', targetId: 'signup' }],
-      anchors: { identityCue: 'Early Believer', consequenceCue: 'contribution logged' },
+      anchors: { identityCue: 'Member', consequenceCue: 'walk recorded' },
     })
   }
 
@@ -166,5 +163,6 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
     nodes,
     segmentVariant: segment,
     startNodeId: 'moves_intro',
+    chosenDomain: input.chosenDomain,
   }
 }
