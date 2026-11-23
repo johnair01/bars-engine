@@ -1,0 +1,24 @@
+{
+  "about": "Level language for the Oddboro agent office, first room: the Mote Well, where every worker starts as a spirit. Office scale from odb-ladder-look-2 (40x30 tiles on the 32 px grid; corridors 3 wide, doors 2, rooms at least 10x9, here 30% bigger). The Cloister and the Staff Hall are the next two rooms up the ladder and are named exits until they are drawn. Seat count and the ladder plate wording are working positions, his to change.",
+  "map": "oddboro-mote-well",
+  "title": "Oddboro Office: the Mote Well",
+  "size": [40, 30],
+  "seed": 11,
+  "start": {"x": 10, "y": 26},
+  "rooms": [
+    {"id": "mote-well", "label": "Mote Well", "kind": "mote_well", "box": [3, 5, 16, 15], "doors": [{"side": "S", "x": 9, "w": 3}], "seats": 6}
+  ],
+  "paths": {
+    "about": "Paved walks [x, y, w, h]. The hall runs from the Mote Well's door east to the Cloister.",
+    "entry": [8, 24, 5, 4],
+    "hall": [3, 20, 35, 4]
+  },
+  "exits": [
+    {"id": "to-cloister", "label": "Cloister Round", "box": [34, 20, 3, 4], "exitUrl": "oddboro-cloister.tmj", "built": false, "plaque_at": [30, 19]}
+  ],
+  "walk": {
+    "about": "The moving look: a visitor walks in from the south, up to the well, and one spirit rises.",
+    "points": [[10, 26], [10, 21], [8, 18], [8, 15]],
+    "crop": [0, 3, 40, 26]
+  }
+}

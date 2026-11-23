@@ -16,3 +16,12 @@ Rooms are meeting zones (`jitsiRoom`, `focusable`). Exits are `exitUrl` areas: t
 Edge and the Inner Island maps are not built yet.
 
 Art: Ninja Adventure Asset Pack by Pixel-boy and AAA, CC0 (`../calrunian-dojo/src16/LICENSE-CC0.txt`).
+
+## The Oddboro office (first room: the Mote Well)
+
+`levels/oddboro-mote-well.json` is the agent office's first level, on the same base (new room kind `mote_well`, new
+pieces `mote` and `mote_well`). 40x30 tiles, a 16x15 room (interior 14x13, 30% over the 10x9 office minimum), a 3-wide
+door and hall, six seats round the well, the ladder plate on the north wall, the Cloister Round as a named exit that is
+not built. A level with a `walk` also writes `<map>-walk.gif`: a visitor walks in and spirits rise over the well.
+The `motes` sheet is drawn by `gen_sect.py`, not taken from the pack. The well rim is a placeholder statue until the
+WizardGenie tiles land (`/mnt/project-files/calrunian-dojo/round-3/`).
