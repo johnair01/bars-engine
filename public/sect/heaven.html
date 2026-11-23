@@ -19,6 +19,10 @@
   .views select { min-height: 40px; max-width: 52vw; border-radius: 20px; border: 2px solid var(--paper); background: var(--paper); color: var(--ink); font: inherit; padding: 0 10px; }
   .hint { position: fixed; z-index: 5; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); font-size: .8rem; background: var(--glass); border-radius: 10px; padding: 6px 10px; }
   body.top .hud, body.top .hint, body.top .pads { display: none; }
+  .stick { position: fixed; z-index: 5; left: 18px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: 104px; height: 104px; border-radius: 52px; background: rgba(30,20,20,.35); border: 2px solid var(--paper); touch-action: none; display: none; }
+  .stick div { position: absolute; left: 30px; top: 30px; width: 44px; height: 44px; border-radius: 22px; background: var(--paper); opacity: .9; }
+  @media (pointer: coarse) { .stick { display: block; } .hint { display: none; } }
+  body.top .stick { display: none; }
   .pads { position: fixed; z-index: 5; right: 12px; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; }
   .pads button { min-width: 64px; min-height: 48px; border-radius: 24px; border: 2px solid var(--paper); background: var(--ink); color: var(--paper); font-weight: 700; }
   .pads button[aria-pressed="true"] { background: var(--red); }
@@ -33,6 +37,7 @@
 <div class="stops" id="stops"></div>
 <div class="views"><button id="watchBtn">Walk to the Watch</button><button id="crestBtn">Climb to the crest</button><select id="roomSel" aria-label="Walk into a room"><option value="">Rooms…</option></select><button id="topBtn">Top view</button></div>
 <div class="hint">WASD or arrows to walk, Shift to run, Space to jump; tap the ground to walk there; drag to look round.</div>
+<div class="stick" id="stickBase" aria-label="Walk stick"><div id="stickKnob"></div></div>
 <div class="pads"><button id="runBtn" aria-pressed="false">Run</button><button id="hopBtn">Jump</button></div>
 <script type="module">
 import * as THREE from 'three';
@@ -48,7 +53,7 @@ import { avatar, step, groundAt } from './heaven/walk.js';
 import { atmosphere, placeSun } from './heaven/atmo.js';
 import { CREST_STAIR, stairTread, TREAD } from './heaven/crag.js';
 import { cultWalker, GAIT } from './cult/cultwalk.js';
-import { cameraRig, MOVE } from './heaven/move.js';
+import { cameraRig, MOVE, touchStick, forgetKeysOnBlur } from './heaven/move.js';
 import { wayColliders } from './heaven/crag.js';
 import { traineeWalk } from './heaven/trainee.js';
 
@@ -179,7 +184,8 @@ function walkToCrest() {
 document.getElementById('crestBtn').onclick = walkToCrest;
 document.getElementById('topBtn').onclick = () => { topView = !topView; S.getObjectByName('farLand')?.userData.mapView?.(topView); document.body.classList.toggle('top', topView); document.getElementById('topBtn').textContent = topView ? 'Walk' : 'Top view'; };
 
-const input = { keys: new Set(), target: null, run: false, jump: false };
+const input = { keys: new Set(), target: null, run: false, jump: false, stick: null };
+touchStick(input, document.getElementById('stickBase'), document.getElementById('stickKnob')); forgetKeysOnBlur(input);
 addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === ' ') { e.preventDefault(); if (!e.repeat) input.jump = true; return; } input.keys.add(e.key.toLowerCase()); });
 document.getElementById('hopBtn').onpointerdown = e => { e.preventDefault(); input.jump = true; };
 document.getElementById('runBtn').onclick = e => { input.run = !input.run; e.currentTarget.setAttribute('aria-pressed', input.run); };
@@ -209,7 +215,7 @@ function simulate(dt) {
   step(A, input, dt, yaw);
   const d = A.position.clone().sub(prev);
   if (d.lengthSq() > 4 || rig.pending) { rig.pending = false; rig.adopt(); } // a jump to a stop or a room: keep the view it set up
-  if (!topView) { if (rig.free && (input.keys.size || input.target)) rig.free = false; rig.update(A, dt, Math.hypot(d.x, d.z) / Math.max(dt, 1e-3)); }
+  if (!topView) { if (rig.free && (input.keys.size || input.stick || input.target)) rig.free = false; rig.update(A, dt, Math.hypot(d.x, d.z) / Math.max(dt, 1e-3)); }
   if (topView || rig.free) orbit.update();
   if (dressAll) dressAll(dt);
   for (const h of frameHooks) h(dt);
@@ -258,6 +264,6 @@ function shot(name) {
 }
 window.heaven = { rig, input, MOVE, simulate, manual: false, walking, walker: () => walker, walkToWatch, walkToCrest, roadLeg: () => roadLeg, stopWalk: () => { roadLeg = -1; input.target = null; }, shot, ready, jump, enter, A, cam, orbit, models, topCam: top, setTop: v => { if (v !== topView) document.getElementById('topBtn').click(); }, sun, fog };
 requestAnimationFrame(frame);
-if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
+if (TRAINEE) traineeWalk({ S, A, cam, orbit, rig, input, ready, walking, stop: Q.get('stop'), hooks: frameHooks, people: () => dressAll, walker: () => walker }).catch(e => console.warn('trainee walk', e));
 </script>
 </body></html>

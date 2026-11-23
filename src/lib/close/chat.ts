@@ -5,7 +5,7 @@ import { renderChat } from './render'
 import { openClose, saveClose } from './store'
 import type { CloseRecord } from './types'
 
-type Db = Pick<PrismaClient, 'boardSave' | 'workTicket'>
+type Db = Pick<PrismaClient, 'boardSave' | 'workTicket' | 'tapTheVeinTask'>
 
 /** Today in Pacific time, as YYYY-MM-DD. */
 export function pacificToday(now = new Date()): string {

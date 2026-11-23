@@ -9,7 +9,7 @@
 // into bind space here and skinned in the shader, so the sheen turns with the head when he raises his arms.
 import * as THREE from 'three';
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
-const HAIR = /^hair(-cap|-long|-braid)?$/;
+const HAIR = /^(hair(-cap|-long|-braid)?|beard)$/; // elder regalia round 3: the beard locks are painted as hair too (lateral strands, down the lock)
 export function hairPaint(C, parts) {
   const k = C.k, H = new THREE.Vector3().setFromMatrixPosition(C.F.bones.head.matrixWorld);
   const top = V(H.x, C.crown, H.z).addScaledVector(C.f, -0.012 * k), mid = V(H.x, C.crown - 0.1 * k, H.z), R = 0.09 * k;
@@ -22,19 +22,19 @@ export function hairPaint(C, parts) {
     const U = new Float32Array(n), Vv = new Float32Array(n), T = new Float32Array(n * 3), p = V(), nn = V(), d = V(), M = new THREE.Matrix4();
     for (let i = 0; i < n; i++) {
       p.set(W[i * 3], W[i * 3 + 1], W[i * 3 + 2]); nn.fromBufferAttribute(WN, i);
-      d.copy(p).sub(mid); U[i] = Math.atan2(d.dot(C.l), -d.dot(C.f)) * R;
+      d.copy(p).sub(mid); U[i] = pt.name === 'beard' ? d.dot(C.l) : Math.atan2(d.dot(C.l), -d.dot(C.f)) * R; // a beard lies on the front: its U is the width across, not the arc round the head
       d.copy(p).sub(top); Vv[i] = d.length(); d.addScaledVector(nn, -d.dot(nn)); if (d.lengthSq() < 1e-10) d.set(0, -1, 0); d.normalize();
       M.set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
       for (let j = 0; j < 4; j++) { const w = SW.getComponent(i, j); if (w <= 0) continue; const e = bm[SI.getComponent(i, j)].elements; for (let q = 0; q < 16; q++) M.elements[q] += e[q] * w; }
       M.multiply(BM).invert(); d.transformDirection(M); T[i * 3] = d.x; T[i * 3 + 1] = d.y; T[i * 3 + 2] = d.z;
     }
     g.setAttribute('aHU', new THREE.BufferAttribute(U, 1)); g.setAttribute('aHV', new THREE.BufferAttribute(Vv, 1)); g.setAttribute('aHT', new THREE.BufferAttribute(T, 3));
-    pt.mesh.material = hairMaterial(k);
+    pt.mesh.material = hairMaterial(k, pt.name === 'beard');
   }
 }
-function hairMaterial(k) {
+function hairMaterial(k, beard = false) {
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0 });
-  const U = { uK: { value: k }, uSheenA: { value: 0.06 }, uSheenB: { value: 0.05 } };
+  const U = { uK: { value: k }, uBeard: { value: beard ? 1 : 0 }, uSheenA: { value: 0.06 }, uSheenB: { value: 0.05 } };
   mat.onBeforeCompile = s => {
     Object.assign(s.uniforms, U);
     s.vertexShader = 'attribute float aHU; attribute float aHV; attribute vec3 aHT;\nvarying float vHU; varying float vHV; varying vec3 vHT;\n' + s.vertexShader.replace('#include <skinnormal_vertex>', `#include <skinnormal_vertex>
@@ -43,10 +43,10 @@ function hairMaterial(k) {
   hT = (skinMatrix * vec4(hT, 0.0)).xyz;
 #endif
   vHT = normalize(normalMatrix * hT); vHU = aHU; vHV = aHV;`);
-    s.fragmentShader = 'varying float vHU; varying float vHV; varying vec3 vHT;\nuniform float uK; uniform float uSheenA; uniform float uSheenB;\nfloat hH(float x) { return fract(sin(x * 127.1) * 43758.5453); }\nfloat hN(float x) { float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(hH(i), hH(i + 1.0), f); }\nfloat gStr = 0.5;\n'
+    s.fragmentShader = 'varying float vHU; varying float vHV; varying vec3 vHT;\nuniform float uK; uniform float uBeard; uniform float uSheenA; uniform float uSheenB;\nfloat hH(float x) { return fract(sin(x * 127.1) * 43758.5453); }\nfloat hN(float x) { float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(hH(i), hH(i + 1.0), f); }\nfloat gStr = 0.5;\n'
       + s.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
 {
-  float fw = fwidth(vHU) + 1e-6, front = 1.0 - smoothstep(2.4, 2.8, abs(vHU) / (0.09 * uK)); // the arc wraps at the front: no strands across the seam
+  float fw = fwidth(vHU) + 1e-6, front = uBeard > 0.5 ? 1.0 : 1.0 - smoothstep(2.4, 2.8, abs(vHU) / (0.09 * uK)); // the arc wraps at the front: no strands across the seam
   float c1 = hN(vHU / (0.006 * uK) + 0.37 * hN(vHV / (0.04 * uK))), c2 = hN(vHU / (0.0016 * uK) + 9.1 * floor(vHV / (0.07 * uK) + hH(floor(vHU / (0.0016 * uK)))));
   float a1 = (1.0 - smoothstep(0.0015 * uK, 0.005 * uK, fw)) * front, a2 = (1.0 - smoothstep(0.0005 * uK, 0.0016 * uK, fw)) * front;
   gStr = c2; diffuseColor.rgb *= 1.0 + 0.38 * a1 * (c1 - 0.5) + 0.34 * a2 * (c2 - 0.5);
