@@ -82,13 +82,13 @@ function chainTargets(ch, W) { const N = ch.N, T = new Float32Array(N * 3), c = 
   for (let i = 0; i < ch.j0.length; i++) for (const [j, w] of [[ch.j0[i], 1 - ch.wj[i]], [ch.j0[i] + 1, ch.wj[i]]]) { if (w <= 0) continue; c[j] += w; for (let k = 0; k < 3; k++) T[j * 3 + k] += w * W[i * 3 + k]; }
   for (let j = 0; j < N; j++) for (let k = 0; k < 3; k++) T[j * 3 + k] /= c[j] || 1; return T; }
 function chainStep(ch, T1, fps, dt) {
-  const N = ch.N, { hz, zeta, max } = ch.cfg, w0 = 2 * Math.PI * hz, sub = Math.round(1 / fps / dt);
+  const N = ch.N, { hz, zeta, max } = ch.cfg, air = ch.cfg.air || 0, w0 = 2 * Math.PI * hz, sub = Math.round(1 / fps / dt);
   if (!ch.x) { ch.x = Float32Array.from(T1); ch.v = new Float32Array(N * 3); ch.T0 = T1; ch.len = []; for (let j = 1; j < N; j++) ch.len.push(Math.hypot(T1[j * 3] - T1[j * 3 - 3], T1[j * 3 + 1] - T1[j * 3 - 2], T1[j * 3 + 2] - T1[j * 3 - 1])); }
   const x = ch.x, v = ch.v, T0 = ch.T0, a = V(), b = V(), t = V();
   for (let s = 1; s <= sub; s++) { const f = s / sub;
     for (let k = 0; k < 3; k++) x[k] = T0[k] + (T1[k] - T0[k]) * f; // the root is held
     for (let j = 1; j < N; j++) for (let k = 0; k < 3; k++) { const q = j * 3 + k, T = T0[q] + (T1[q] - T0[q]) * f, vT = (T1[q] - T0[q]) * fps;
-      v[q] += (w0 * w0 * (T - x[q]) + 2 * zeta * w0 * (vT - v[q])) * dt; x[q] += v[q] * dt; }
+      v[q] += (w0 * w0 * (T - x[q]) + 2 * zeta * w0 * (vT - v[q]) - air * j / (N - 1) * v[q]) * dt; x[q] += v[q] * dt; } // air: still air drags the lower nodes
     for (let j = 1; j < N; j++) { a.fromArray(x, j * 3 - 3); b.fromArray(x, j * 3); const d = b.clone().sub(a), L = d.length() || 1; b.copy(a).addScaledVector(d, ch.len[j - 1] / L); // the bone keeps its length
       t.set(T0[j * 3] + (T1[j * 3] - T0[j * 3]) * f, T0[j * 3 + 1] + (T1[j * 3 + 1] - T0[j * 3 + 1]) * f, T0[j * 3 + 2] + (T1[j * 3 + 2] - T0[j * 3 + 2]) * f);
       const o = b.clone().sub(t), lim = max * j / (N - 1); if (o.length() > lim) b.copy(t).addScaledVector(o.normalize(), lim);
@@ -128,7 +128,12 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
   // robe-sprint-look-1 C (2026-11-21, "fix the robe on the legs first"): one leg push per frame leaves points inside a thigh or knee at the
   // sprint (the left leg's push can shove a point into the right, and the tent hands a point a neighbour's push). Each pass starts from the
   // last, so four settle it: 0 points inside a leg in 190 frames (one pass: 5 in 38).
-  passes: 6 }; // skin: the robe points' own clearance off the legs (the backstop)
+  passes: 6,
+  // robe-sprint-look-6 B (2026-11-23, "Better, but it swings too stiffly"): air, the still air's drag on a chain node, per second, growing from
+  // 0 at the waist to this at the hem. The springs pull each node to its skinned place and damp only its speed relative to that place, so
+  // at a steady sprint the hem had nothing to trail behind and hung under the pelvis like a turned tube. 0 keeps the old swing.
+  air: 0,
+  ring: null }; // [lo, hi, sweeps], e.g. [0.7, 1.1, 3]; null keeps the columns free (the old robe) // skin: the robe points' own clearance off the legs (the backstop)
 // anim-robe-look-4: below the hip the robe is half re-hung from the thighs to the pelvis (a robe is not a pair of trousers): a point's skin
 // weights move `hm` of the way to the hips bone, from just under the hips (u = 0) to the knee (u = 1). A front panel then goes with its
 // thigh only partway and trails. Call once after the figure is built, before the first frame.
@@ -137,15 +142,27 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
 // trousers, and the chains, whose targets are those skinned places, swung with it. At hm 1 the robe below the knee hangs from the pelvis
 // alone (the hem moves 1% with the shin); between hip and knee the weight still eases from the thigh, and the leg push and the chains'
 // leg capsules move the cloth where a leg actually meets it.
-export const ROBE_HANG = { hm: 1 };
-export function rehangRobe(X, hm = ROBE_HANG.hm) {
+// robe-sprint-look-6 B (2026-11-23, "it swings too stiffly"), against the reference photos (robe-run/refs, R1): in a real sprint the
+// leading knee drives the front of a robe forward while the back trails, so the hem opens as a bell. At hm 1 everywhere the front hung
+// from the pelvis too and the whole skirt leaned back as one piece. `front` is the hm of the front panel (within `cone` degrees of the
+// feet's forward line, eased to the sides); the back and sides keep hm. front = hm is the old robe. The skin weights the figure was built
+// with are kept on the part (pt.skin0), so a second call re-hangs from them instead of compounding.
+export const ROBE_HANG = { hm: 1, front: 1, cone: 70 };
+export function rehangRobe(X, hm = ROBE_HANG.hm, front = ROBE_HANG.front) {
   const F = X.F, yK = X.yHip - wp(F.bones.hipL).distanceTo(wp(F.bones.kneeL)); // the knee in the fit frame, as skirtOf finds it
+  // the feet's forward line, read once at the build (the fit frame), and the hips' centre from the robe's own points, as skirtOf finds it
+  const fw = X.robeFw || (X.robeFw = wp(F.bones.ballL).add(wp(F.bones.ballR)).sub(wp(F.bones.ankleL)).sub(wp(F.bones.ankleR)).setY(0).normalize());
+  const cone = THREE.MathUtils.degToRad(ROBE_HANG.cone), p = V();
   for (const pt of X.parts) { if (!/^robe/.test(pt.name)) continue;
     const SI = pt.mesh.geometry.attributes.skinIndex, SW = pt.mesh.geometry.attributes.skinWeight, hi = pt.mesh.skeleton.bones.findIndex(b => b.name === 'hips'); if (hi < 0) continue;
-    for (let i = 0; i < SI.count; i++) { const u = hm * THREE.MathUtils.clamp((X.yHip - 0.06 - pt.world[i * 3 + 1]) / (X.yHip - 0.06 - yK), 0, 1); if (u <= 0) continue;
+    let cx = 0, cz = 0, cn = 0; for (let i = 0; i < pt.world.length / 3; i++) if (Math.abs(pt.world[i * 3 + 1] - X.yHip) < 0.06) { cx += pt.world[i * 3]; cz += pt.world[i * 3 + 2]; cn++; }
+    const hc = V(cx / (cn || 1), 0, cz / (cn || 1)); let nf = 0;
+    if (!pt.skin0) pt.skin0 = [Float32Array.from(SI.array), Float32Array.from(SW.array)]; SI.array.set(pt.skin0[0]); SW.array.set(pt.skin0[1]);
+    for (let i = 0; i < SI.count; i++) { p.fromArray(pt.world, i * 3).sub(hc).setY(0); const a = p.lengthSq() > 1e-8 ? p.normalize().angleTo(fw) : Math.PI;
+      const h = hm + (front - hm) * (1 - ramp(cone * 0.6, cone, a)); if (h < hm - 0.01) nf++; const u = h * THREE.MathUtils.clamp((X.yHip - 0.06 - pt.world[i * 3 + 1]) / (X.yHip - 0.06 - yK), 0, 1); if (u <= 0) continue;
       const idx = [SI.getX(i), SI.getY(i), SI.getZ(i), SI.getW(i)], w = [SW.getX(i), SW.getY(i), SW.getZ(i), SW.getW(i)].map(x => x * (1 - u));
       let k = idx.indexOf(hi); if (k < 0) { k = w.indexOf(Math.min(...w)); idx[k] = hi; w[k] = 0; } w[k] += u; SI.setXYZW(i, ...idx); SW.setXYZW(i, ...w); }
-    SI.needsUpdate = SW.needsUpdate = true; } }
+    SI.needsUpdate = SW.needsUpdate = true; pt.frontPts = nf; } }
 function skirtOf(X, pt) {
   // pt.world is in the figure's fit frame, the bones are in heaven's: take the knee and the hips' centre from the fit frame itself
   const F = X.F, n = pt.world.length / 3, K = SKIRT, hip = wp(F.bones.hipL), leg = hip.distanceTo(wp(F.bones.kneeL));
@@ -180,7 +197,7 @@ function skirtOut(ch, W, fps, dt) {
   try { return skirtSwing(ch, W, fps, dt); } finally { if (ch.X && ch.X.legR) M.legFrame(ch.X, false); }
 }
 function skirtSwing(ch, W, fps, dt) {
-  ch.cfg.max = SKIRT.max * (MOOD.air ? 1.6 : 1); ch.cfg.ang = SKIRT.ang; ch.cfg.zeta = SKIRT.zeta + 0.4 * (1 - MOOD.land);
+  ch.cfg.max = SKIRT.max * (MOOD.air ? 1.6 : 1); ch.cfg.ang = SKIRT.ang; ch.cfg.zeta = SKIRT.zeta + 0.4 * (1 - MOOD.land); ch.cfg.hz = SKIRT.hz; ch.cfg.air = SKIRT.air;
   const { N, cols } = ch, C = cols.length, n = W.length / 3, T = cols.map(() => new Float32Array(N * 3)), cnt = cols.map(() => new Float32Array(N));
   for (let i = 0; i < n; i++) for (const [c, wc] of [[ch.c0[i], 1 - ch.wc[i]], [(ch.c0[i] + 1) % C, ch.wc[i]]]) for (const [j, wj] of [[ch.j0[i], 1 - ch.wj[i]], [ch.j0[i] + 1, ch.wj[i]]]) {
     const w = wc * wj; if (w <= 0) continue; cnt[c][j] += w; for (let k = 0; k < 3; k++) T[c][j * 3 + k] += w * W[i * 3 + k]; }
@@ -188,6 +205,7 @@ function skirtSwing(ch, W, fps, dt) {
     // a node nobody points at (a gap in the robe, a slit) takes the line down from the node above
     for (let j = 1; j < N; j++) if (!cnt[c][j]) for (let k = 0; k < 3; k++) T[c][j * 3 + k] = T[c][j * 3 - 3 + k] + (k === 1 ? -0.1 : 0);
     chainStep(cols[c], T[c], fps, dt); }
+  if (SKIRT.ring) ringPass(ch, fps);
   // each column's segments, turned from their target to their swung place
   const Q = cols.map(col => { const q = [new THREE.Quaternion()], a = V(), b = V(); for (let j = 1; j < N; j++) {
     a.set(col.T0[j * 3] - col.T0[j * 3 - 3], col.T0[j * 3 + 1] - col.T0[j * 3 - 2], col.T0[j * 3 + 2] - col.T0[j * 3 - 1]).normalize();
@@ -198,6 +216,21 @@ function skirtSwing(ch, W, fps, dt) {
       for (const [j, wj] of [[ch.j0[i], 1 - ch.wj[i]], [ch.j0[i] + 1, ch.wj[i]]]) { p.copy(s).sub(a.fromArray(col.T0, j * 3)).applyQuaternion(Q[c][j]).add(b.fromArray(col.x, j * 3)); o.addScaledVector(p, wc * wj); } }
     o.lerp(s, 1 - ch.r[i]); o.toArray(out, i * 3); }
   return out;
+}
+// robe-sprint-look-6 B, round 8 (the critic on the reference: "a flat, stiff board", "spiky points along the hem"): each column swung on
+// its own, so the cloth between two columns was a rigid plate and neighbouring columns drew apart into spikes. `ring` ties each node to the
+// same node of the columns either side (not across a slit), held between ring[0] and ring[1] times their distance at the first frame, a few
+// sweeps a frame, each followed by the columns' own bone lengths again. The node's speed takes the move, so the sheet swings as one cloth.
+function ringPass(ch, fps) {
+  const { cols, N } = ch, C = cols.length, [lo, hi, sweeps] = SKIRT.ring, a = V(), b = V(), d = V();
+  if (!ch.ring) ch.ring = cols.map((col, c) => { const nx = cols[(c + 1) % C], r = new Float32Array(N); for (let j = 0; j < N; j++) r[j] = a.fromArray(col.x, j * 3).distanceTo(b.fromArray(nx.x, j * 3)); return r; });
+  const before = cols.map(col => Float32Array.from(col.x));
+  for (let s = 0; s < sweeps; s++) {
+    for (let c = 0; c < C; c++) { if (SKIRT.slits.includes(c)) continue; const A = cols[c].x, B = cols[(c + 1) % C].x;
+      for (let j = 1; j < N; j++) { a.fromArray(A, j * 3); b.fromArray(B, j * 3); d.subVectors(b, a); const L = d.length() || 1e-6, r0 = ch.ring[c][j], L1 = THREE.MathUtils.clamp(L, r0 * lo, r0 * hi);
+        if (L1 === L) continue; d.multiplyScalar((L - L1) / L / 2); a.add(d); b.sub(d); a.toArray(A, j * 3); b.toArray(B, j * 3); } }
+    for (const col of cols) for (let j = 1; j < N; j++) { a.fromArray(col.x, j * 3 - 3); b.fromArray(col.x, j * 3); d.subVectors(b, a); b.copy(a).addScaledVector(d, col.len[j - 1] / (d.length() || 1)); b.toArray(col.x, j * 3); } }
+  cols.forEach((col, c) => { for (let q = 3; q < N * 3; q++) col.v[q] += (col.x[q] - before[c][q]) * fps; });
 }
 function chainOut(ch, T1, fps, dt) { if (ch.skirt) return skirtOut(ch, T1, fps, dt); chainStep(ch, chainTargets(ch, T1), fps, dt); return chainSkin(ch, T1); }
 
