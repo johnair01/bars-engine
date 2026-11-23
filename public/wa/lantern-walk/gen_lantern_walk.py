@@ -6,7 +6,7 @@ import json, os, html, sys
 from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); T = 32; W, H = 40, 24
 sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
-from wa_export import apply as wa_apply, check as wa_check  # noqa: E402
+from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits  # noqa: E402
 cols = [(70,120,60),(150,120,80),(40,90,160),(90,80,90),(100,70,40),(30,110,40),(200,80,120),(130,130,130),(240,200,40),
         (255,190,70),(120,85,50),(60,45,40)]
 N=27; import random; random.seed(7)
@@ -111,6 +111,15 @@ def area(name,x,y,w,h,url):
       "properties":[{"name":"openWebsite","type":"string","value":url},{"name":"openWebsiteWidth","type":"int","value":40},
                     {"name":"openWebsiteTrigger","type":"string","value":"onaction"},{"name":"openWebsiteTriggerMessage","type":"string","value":"Press SPACE to read"}]})
     oid+=1
+def exit_area(name,x,y,w,h,url,role):
+    """A door: WorkAdventure loads the target the moment the room opens, so it has to exist, and it must not
+    sit under the start tile or the room would throw the player out on arrival."""
+    global oid
+    objs.append({"id":oid,"name":name,"type":"area","x":x*T,"y":y*T,"width":w*T,"height":h*T,"rotation":0,"visible":True,
+      "properties":[{"name":"exitUrl","type":"string","value":url},{"name":"role","type":"string","value":role}]})
+    oid+=1
+# the office door at (4,9) is a doorway you can stand in; standing in it walks you through to the dojo
+exit_area("Office door",4,9,1,1,"../calrunian-dojo/calrunian-dojo.tmj","to-dojo")
 for n,((t,b,place,arr),(x,y),(px,py)) in enumerate(zip(NOTICES,posts,places),1):
     open(f'{HERE}/notice-{n}.html','w').write(PAGE.format(title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Agree with the friends at the door on one, then walk there together."))
     open(f'{HERE}/arrive-{n}.html','w').write(PAGE.format(title=html.escape(place),body=html.escape(arr),foot="Next time you visit, tell the table how it went."))
@@ -134,7 +143,7 @@ m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"or
 # WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
 # collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
 wa_apply(m)
-_wa = wa_check(m)
+_wa = wa_check(m) + wa_exits(m, HERE)
 if _wa:
     print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 
