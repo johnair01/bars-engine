@@ -62,7 +62,7 @@ function absolute(pathOrUrl: string, publicUrl: string): string {
 
 export function wokaListFromCatalog(catalog: WokaCatalog, publicUrl: string): WokaList {
   return {
-    body: {
+    woka: {
       required: true,
       collections: [
         {

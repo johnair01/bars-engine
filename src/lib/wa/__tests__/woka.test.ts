@@ -34,9 +34,9 @@ const catalog: WokaCatalog = {
 describe('wa woka catalog', () => {
   it('builds the shape WorkAdventure validates', () => {
     const list = wokaListFromCatalog(catalog, 'https://bars.test')
-    expect(list.body.required).toBe(true)
-    expect(list.body.collections[0].name).toBe('Calrunia')
-    expect(list.body.collections[0].textures[0].url).toBe(
+    expect(list.woka.required).toBe(true)
+    expect(list.woka.collections[0].name).toBe('Calrunia')
+    expect(list.woka.collections[0].textures[0].url).toBe(
       'https://bars.test/wa/woka/sheets/argyra/bold-heart.png',
     )
   })
