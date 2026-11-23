@@ -52,7 +52,14 @@ still walks and no unhandled rejection appears.
 secret. The real risk is an event whose name implies a reward; the rule is that no event name carries a consequence, only
 a fact.
 
-## Phase 3 — the kit
+## Phase 2.5 — identity (answer C, 2026-11-23)
+
+Not specified here: C makes identity the unlock for per-person edit rights, character creation and the friends' half of
+the kit, so it gets its own intake. What this plan records is the shape it has to fit: `OPID_CLIENT_ID`/`SECRET`/
+`ISSUER` already exist in `EnvironmentVariable.ts:58-60`, `OPID_TAGS_CLAIM` (`:82`) carries tags from the provider into
+`canEdit` (`LocalAdmin.ts:100`), and a tag is per-person, not per-map — per-world rights still need the admin API.
+
+## Phase 3 — the kit (gated on Phase 2.5)
 
 **New**: `public/wa/world-kit/` — `README.md`, `language.json`, `gen_world.py` (a generalised `gen_dojo.py`), copies of
 both checkers, `world.json`, one tiny example wing.
@@ -74,7 +81,7 @@ about five). The panel is the same `openWebsite` mechanism the notice boards use
 
 - Phase 1 has no dependency on anything, and it is what makes Phase 3 safe to accept.
 - Phase 2 does not need Phase 1 or 3; it needs the bars-engine routes to exist.
-- Phase 3 is the only phase gated on the `wa-world-kit-2` answer, because it decides whether friends publish or send.
+- Phase 3 is gated on identity (answer C), because a kit nobody but the owner can publish is a folder of instructions.
 - Phase 4 needs Phase 1's file and the door intake's lobby map.
 
 ## What this plan deliberately does not do
