@@ -1,0 +1,31 @@
+{
+  "map": "workroom",
+  "title": "The Workroom",
+  "owner": "editor",
+  "why": "Wendell's answer on wa-world-door-intake-1 (2026-11-23, C): the generated worlds stay sealed and one world is his to draw in, in WorkAdventure's own map editor.",
+  "seeded_once": true,
+  "size": {
+    "width": 30,
+    "height": 20,
+    "tile": 32
+  },
+  "pieces": {
+    "floor": "a plank floor across the whole room, so every tile can be stood on and drawn over",
+    "walls": "a stone wall one tile thick around the edge, with a doorway in the south wall",
+    "workbench": "a bench of eight table tiles along the north wall, where a piece being built is laid out",
+    "stage": "an eight by six empty square in the middle, left bare on purpose: this is the room's drawing space",
+    "door_south": "the way back to the Lantern Walk, as an exitUrl area two tiles wide"
+  },
+  "exits": [
+    {
+      "name": "to the Lantern Walk",
+      "url": "../lantern-walk/lantern-walk.tmj",
+      "wall": "south"
+    }
+  ],
+  "rules": [
+    "The generator seeds this map once. It refuses to overwrite workroom.tmj unless it is run with --seed, because the client's editor is the author after the seed.",
+    "workroom.wam is what makes the room editable: WorkAdventure's editor and its map list both need a WAM file beside the map.",
+    "Areas and entities drawn in the client live in workroom.wam, not in this file."
+  ]
+}
