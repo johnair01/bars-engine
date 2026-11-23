@@ -166,6 +166,16 @@ def stamp(name, x, y, force=False):
                 if s.get('collide', True): block(x + dx, y + dy)
 
 
+def stamp_free(name, x, y):
+    """Draw a piece inside an already-blocked square (the cloister garth): the picture goes down, collision is already set."""
+    s = BASE['stamps'][name]
+    for dy in range(s['h']):
+        for dx in range(s['w']):
+            i = I(x + dx, y + dy); g = gid(s['sheet'], s['x'] + dx, s['y'] + dy)
+            if dy < s.get('over_rows', 0): L['over1'][i] = g
+            else: L['detail'][i] = g
+
+
 def put_plaque(text, x, y):
     row, wt = PLAQUE[text]      # a plaque wt source tiles wide spans wt map tiles once drawn up
     for k in range(wt):
@@ -279,6 +289,25 @@ def furnish(r, ix, iy, iw, ih):
         must[f'{r["label"]}: before the ladder plate'] = (cx, iy + 1)
         stamp('plant_pot', ix, iy); stamp('plant_pot', ix + iw - 1, iy)
         stamp('bookshelf', ix + 2, iy); stamp('jar', ix + iw - 3, iy + 1); stamp('fern', ix + 1, iy + ih - 1); stamp('fern', ix + iw - 2, iy + ih - 1)
+    elif kind == 'cloister':
+        # a garden court at the centre (blocked, planted), the round walked about it, seats on the outer edge, the plate on the north wall
+        gw, gh = 7, 6
+        gx0, gy0 = cx - gw // 2, iy + (ih - gh) // 2
+        fill('grass', gx0, gy0, gw, gh)
+        for yy in range(gy0, gy0 + gh):
+            for xx in range(gx0, gx0 + gw): taken[I(xx, yy)] = True; block(xx, yy)
+        stamp_free('plum', gx0 + 2, gy0 + 1)
+        for (dx, dy, nm) in ((0, 0, 'fern'), (gw - 1, 0, 'bush'), (0, gh - 1, 'bush'), (gw - 1, gh - 1, 'fern'), (1, gh - 1, 'pebble_rock'), (gw - 2, 0, 'pebble_rock')):
+            stamp_free(nm, gx0 + dx, gy0 + dy)
+        stamp('notice_board', cx - 1, iy)
+        mid = iy + ih // 2
+        for (x, y) in ((ix, mid - 1), (ix, mid + 1), (ix + iw - 1, mid - 1), (ix + iw - 1, mid + 1))[:n]: seat(rid, x, y)
+        must[f'{r["label"]}: on the round, north'] = (cx, iy + 1)
+        must[f'{r["label"]}: on the round, south'] = (cx, iy + ih - 2)
+        must[f'{r["label"]}: before the plate'] = (cx, iy + 1)
+        stamp('plant_pot', ix, iy); stamp('plant_pot', ix + iw - 1, iy)
+        stamp('jar', ix + 2, iy + 1); stamp('jar', ix + iw - 3, iy + 1)
+        stamp('fern', ix, iy + ih - 1); stamp('fern', ix + iw - 1, iy + ih - 1)
     elif kind == 'court':
         pass
 
@@ -438,7 +467,8 @@ print(f'ok: {MAP} {W}x{H} tiles at {T} px, seed {SEED}; {len(LEVEL["rooms"])} ro
 
 # ---- a moving look, when the level has a "walk": a visitor walks the points, one spirit rises over the well ----
 if LEVEL.get('walk'):
-    pts = LEVEL['walk']['points']; cx0, cy0, cw, ch = LEVEL['walk']['crop']
+    WK = LEVEL['walk']
+    pts = WK.get('points', []); cx0, cy0, cw, ch = WK['crop']
     base = Image.new('RGBA', (W * T, H * T), (20, 14, 11, 255))
     for name in ('ground', 'detail', 'floorLayer'):
         for i, g in enumerate(L[name]):
@@ -448,22 +478,52 @@ if LEVEL.get('walk'):
         for i, g in enumerate(L[name]):
             if g: top.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
     msheet = sheets['motes']['img']
-    path = []                                         # one square per step, 2 frames a square
-    for (a, b) in zip(pts, pts[1:]):
-        n = max(abs(b[0] - a[0]), abs(b[1] - a[1]))
-        for k in range(n * 2): path.append((a[0] + (b[0] - a[0]) * k / (2 * n), a[1] + (b[1] - a[1]) * k / (2 * n), 1 if b[1] < a[1] else 3))
-    path += [path[-1]] * 20
-    well = next(r for r in LEVEL['rooms'] if r['kind'] == 'mote_well'); bx, by, bw, bh = well['box']
-    wx, wy = bx + 1 + (bw - 2) // 2 - 1, by + 1 + (bh - 2) // 2 - 1
+
+    def trace(points, per=2):                         # one square per step, `per` frames a square
+        out = []
+        for (a, b) in zip(points, points[1:]):
+            n = max(abs(b[0] - a[0]), abs(b[1] - a[1]))
+            face = 1 if b[1] < a[1] else 3 if b[1] > a[1] else 2 if b[0] < a[0] else 0
+            for k in range(n * per): out.append((a[0] + (b[0] - a[0]) * k / (n * per), a[1] + (b[1] - a[1]) * k / (n * per), face))
+        return out
+    path = trace(pts) if len(pts) > 1 else []
+    path += [path[-1]] * 20 if path else []
+    dloop = WK.get('daemon')                          # a daemon walks its round: the points, laps times
+    dpath = []
+    if dloop:
+        dpts = dloop['points'] * dloop.get('laps', 1)
+        dpts = dpts + [dloop['points'][0]] if dloop.get('close', True) else dpts
+        dpath = trace(dpts)
+    well = next((r for r in LEVEL['rooms'] if r['kind'] == 'mote_well'), None)
+    total = max(len(path), len(dpath))
+    if well:
+        bx, by, bw, bh = well['box']
+        wx, wy = bx + 1 + (bw - 2) // 2 - 1, by + 1 + (bh - 2) // 2 - 1
+    daemon_sheet = monk.copy(); dp = daemon_sheet.load()      # the daemon: the walker redrawn in water-teal, with a glow under it
+    for yy in range(daemon_sheet.height):
+        for xx in range(daemon_sheet.width):
+            r_, g_, b_, a_ = dp[xx, yy]
+            if a_:
+                v = (r_ + g_ + b_) // 3
+                dp[xx, yy] = (int(40 + v * 0.35), int(120 + v * 0.55), int(135 + v * 0.55), 235)
     frames = []
-    for f, (x, y, facing) in enumerate(path):
-        im = base.copy(); im.alpha_composite(monk.crop(((f // 3 % 4) * 32, facing * 32, (f // 3 % 4) * 32 + 32, facing * 32 + 32)), (int(x * T), int(y * T) - 6))
+    for f in range(total):
+        im = base.copy()
+        if path:
+            x, y, facing = path[min(f, len(path) - 1)]
+            im.alpha_composite(monk.crop(((f // 3 % 4) * 32, facing * 32, (f // 3 % 4) * 32 + 32, facing * 32 + 32)), (int(x * T), int(y * T) - 6))
+        if dpath:
+            x, y, facing = dpath[min(f, len(dpath) - 1)]
+            glow = Image.new('RGBA', (T * 2, T * 2), (0, 0, 0, 0)); ImageDraw.Draw(glow).ellipse([4, 14, T * 2 - 4, T * 2 - 2], fill=(26, 122, 138, 90))
+            im.alpha_composite(glow, (int(x * T) - T // 2, int(y * T) - 2))
+            im.alpha_composite(daemon_sheet.crop(((f // 3 % 4) * 32, facing * 32, (f // 3 % 4) * 32 + 32, facing * 32 + 32)), (int(x * T), int(y * T) - 6))
         im.alpha_composite(top)
-        for m in range(3):                            # spirits drift up from the well and fade
-            t = ((f + m * 14) % 42) / 42
-            sp = msheet.crop((m * T, 0, m * T + T, T)).copy()
-            sp.putalpha(sp.getchannel('A').point(lambda v, t=t: int(v * (1 - t))))
-            im.alpha_composite(sp, ((wx + 1 + m - 1) * T, int((wy + 0.6 - 2.6 * t) * T)))
+        if well:
+            for m in range(3):                        # spirits drift up from the well and fade
+                t = ((f + m * 14) % 42) / 42
+                sp = msheet.crop((m * T, 0, m * T + T, T)).copy()
+                sp.putalpha(sp.getchannel('A').point(lambda v, t=t: int(v * (1 - t))))
+                im.alpha_composite(sp, ((wx + 1 + m - 1) * T, int((wy + 0.6 - 2.6 * t) * T)))
         frames.append(im.crop((cx0 * T, cy0 * T, (cx0 + cw) * T, (cy0 + ch) * T)).convert('RGB').resize((cw * T // 2, ch * T // 2), Image.NEAREST))
     frames[0].save(os.path.join(OUT, f'{MAP}-walk.gif'), save_all=True, append_images=frames[1:], duration=90, loop=0, optimize=True)
     print(f'ok: {MAP}-walk.gif, {len(frames)} frames')

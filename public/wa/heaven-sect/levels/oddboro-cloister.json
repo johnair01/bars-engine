@@ -1,0 +1,26 @@
+{
+  "about": "Level language for the Oddboro agent office, second room: the Cloister, where a worker that has risen from the Mote Well walks its round before it takes a task. Same scale as the Mote Well (his answer A on odb-mote-well-look-3, 2026-11-23: rooms 30% over the office's 10x9 minimum, so a 13x12 inside). The west exit goes back to the Mote Well; the east exit, the Staff Hall, is a named exit until it is drawn. The round is the covered walk about the garden; one daemon walks it. Seat count and the plate wording are working positions, his to change.",
+  "map": "oddboro-cloister",
+  "title": "Oddboro Office: the Cloister Round",
+  "size": [40, 30],
+  "seed": 13,
+  "start": {"x": 8, "y": 22},
+  "rooms": [
+    {"id": "cloister", "label": "Cloister Round", "kind": "cloister", "box": [12, 5, 15, 14], "doors": [{"side": "S", "x": 19, "w": 3}], "seats": 4}
+  ],
+  "paths": {
+    "about": "Paved walks [x, y, w, h]. The hall runs from the Mote Well exit in the west to the Staff Hall exit in the east; the step joins it to the Cloister door.",
+    "hall": [3, 20, 35, 4],
+    "door_step": [19, 19, 3, 1]
+  },
+  "exits": [
+    {"id": "to-mote-well", "label": "Mote Well", "box": [3, 20, 3, 4], "exitUrl": "oddboro-mote-well.tmj", "built": true, "plaque_at": [3, 19]},
+    {"id": "to-staff-hall", "label": "Staff Hall", "box": [34, 20, 3, 4], "exitUrl": "oddboro-staff-hall.tmj", "built": false, "plaque_at": [32, 19]}
+  ],
+  "walk": {
+    "about": "The moving look: a visitor walks in from the Mote Well end and up to the door; one daemon walks the round once, along the middle of the covered walk.",
+    "points": [[8, 22], [20, 22], [20, 19], [20, 16]],
+    "daemon": {"points": [[14, 16], [14, 7], [24, 7], [24, 16]], "laps": 1, "close": true},
+    "crop": [0, 3, 40, 22]
+  }
+}
