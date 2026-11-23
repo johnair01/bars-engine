@@ -138,3 +138,31 @@ What A settles, and what it does not:
 The edit-rights card `wa-world-kit-2` went up with this answer, because A says nothing about who may *write* the world.
 
 `spec.md`, `plan.md` and `tasks.md` in this folder are written against A.
+
+## 6: Round two closed — answer C (2026-11-23)
+
+> **C. Identity first, per-friend rights after.** Saved on `wa-world-kit-2` at 2026-11-23T18:31:46Z, against the
+> intake's recommendation of B.
+
+What C buys, and one thing it does not:
+
+- **Buys:** trust. `WA.player.isLogged`, a verified `sub`, and — because `OPID_TAGS_CLAIM` exists in
+  `EnvironmentVariable.ts:82` — tags that come from the identity provider rather than from a browser's localStorage.
+  `LocalAdmin.ts:100` already grants `canEdit` on `tags.includes("admin" | "editor")`, so identities are the thing that
+  makes that line mean something. It also unblocks character creation (the door intake's §4.3) and the friends' half of
+  the kit.
+- **Does not buy: per-world rights.** A tag is a property of a person, not of a map. A friend tagged `editor` can edit
+  every `/~` world, exactly as `MAP_EDITOR_ALLOW_ALL_USERS` allowed. Per-world `canEdit` is decided by the admin API
+  (`MapDetailsData.editable`), which is empty on this box and is the door intake's subject. So C gives *per-person*
+  rights now and *per-world* rights only after the admin API is rebuilt — worth saying plainly, because "a friend can
+  edit their wing and not the dojo" was the card's wording.
+
+Consequences for this spec: Phases 1 and 2 are unchanged and unblocked (publish and the bridge need no identity).
+Phase 3, the kit, moves behind identity, because a kit whose output nobody but the owner can publish is a folder of
+instructions. Identity is now the critical path to three separate things and gets its own intake; this record stops at
+naming it.
+
+**Interim, until that intake lands:** `MAP_EDITOR_ALLOW_ALL_USERS=true` still means any visitor with a `/~` link can
+redraw the dojo. C does not change that tonight. The stopgap that does not conflict with C is the same mechanism B would
+have used, at one user: `MAP_EDITOR_ALLOW_ALL_USERS=false` with `MAP_EDITOR_ALLOWED_USERS` set to the owner's browser
+uuid (`localStorage.localUser` → `uuid`). Nothing about it presumes identity; it is a lock, not a rights model.

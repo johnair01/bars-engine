@@ -50,7 +50,7 @@ Ordered, each with the thing that proves it done. `spec.md` is the contract; `pl
       *Done when*: reading notice 2 in a browser appends one line to the log on the box, and the line carries uuid, room,
       tile and event and nothing else.
 
-## Phase 3 — the kit (gated on `wa-world-kit-2`)
+## Phase 3 — the kit (gated on identity, answer C)
 
 - [ ] **T10. `public/wa/world-kit/`** with `README.md`, `language.json`, `gen_world.py`, `check_assets.py`,
       `wa_export.py`, `world.json`, `example/`.
@@ -72,8 +72,13 @@ Ordered, each with the thing that proves it done. `spec.md` is the contract; `pl
       browser.
       *Done when*: clean, and noted in `docs/WA_ASSET_CONTRACT.md` §8 (friends' worlds).
 
-- [ ] **T14. Record the answer to `wa-world-kit-2`** in `request.md` §5 and adjust T10/T11 if friends publish from their
-      own side.
+- [ ] **T14. Identity intake named and opened.** `OPID_CLIENT_ID`/`SECRET`/`ISSUER` + `OPID_TAGS_CLAIM` are the
+      surface; the intake decides the provider, whether friends get accounts, and whether per-world rights are worth
+      rebuilding the admin API for.
+      *Done when*: a `spec/wa-identity` record exists with its own card, and this one links to it.
+
+- [x] **T15. Record the answer to `wa-world-kit-2`** (C, 2026-11-23) — done in `request.md` §6, including the honest
+      correction that identity buys per-person rights, not per-world rights.
 
 ## Out of scope, named so it is not assumed
 
