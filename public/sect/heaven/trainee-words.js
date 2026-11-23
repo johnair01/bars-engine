@@ -40,3 +40,7 @@ export const TEAM = 'You and two students make a team of three. Your team meets 
 
 /** The end card's line. Pure. */
 export const endLine = want => (String(want || '').trim() ? `You came wanting ${String(want).trim()}. ` : '') + 'The Heaven sect named you Initiate, its first rank. You carried the bucket to the heart stone. Your team of three meets at the spring at dawn.';
+
+/** The last card's one line and its one link (ch1-last-card-1, his A 2026-11-22). Pure. */
+export const PATREON_LINE = 'The story goes on with patrons from 9 December.';
+export const PATREON_URL = 'https://www.patreon.com/wendell_britt';
