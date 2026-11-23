@@ -80,6 +80,7 @@ export default defineConfig({
       'src/lib/open-up/__tests__/outbound.test.ts',
       'src/lib/clean-up/__tests__/check-content.test.ts',
       'src/lib/clean-up/__tests__/events.test.ts',
+      'src/lib/wa/__tests__/claims.test.ts',
       // Registered by the guard below, which fails if any vitest suite is missing here.
       'src/lib/__tests__/book-toc-to-sections.test.ts',
       'src/lib/__tests__/npc-face-resolver.test.ts',

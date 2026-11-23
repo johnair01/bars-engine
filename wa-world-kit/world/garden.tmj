@@ -1,0 +1,5 @@
+{"compressionlevel":-1,"width":10,"height":10,"tilewidth":32,"tileheight":32,"infinite":false,"orientation":"orthogonal","renderorder":"right-down","type":"map","version":"1.10","tiledversion":"1.10.2","nextlayerid":3,"nextobjectid":1,
+ "properties":[{"name":"script","type":"string","value":"https://bars-engine.vercel.app/wa/bridge.js"}],
+ "tilesets":[],
+ "layers":[{"id":1,"name":"start","type":"tilelayer","width":10,"height":10,"x":0,"y":0,"opacity":1,"visible":true,"data":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"properties":[{"name":"startLayer","type":"bool","value":true}]},
+  {"id":2,"name":"exits","type":"objectgroup","x":0,"y":0,"opacity":1,"visible":true,"draworder":"topdown","objects":[{"id":1,"name":"to-hearth","x":256,"y":256,"width":32,"height":32,"properties":[{"name":"exitUrl","type":"string","value":"hearth.tmj"}]}]}]}
