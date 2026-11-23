@@ -40,10 +40,11 @@ are not needed for any of this. Let them go.
 
 ---
 
-## 2. Two rules that were broken, and one that was misread
+## 2. Five rules, and how the three maps broke them
 
-WorkAdventure reads a Tiled map differently from how Tiled draws it. Two of those differences are invisible in a
-screenshot, and every one of the three maps broke at least one. **None of them would have loaded.**
+WorkAdventure reads a Tiled map differently from how Tiled draws it. Three of these differences are invisible in a
+screenshot, and two of them only show themselves in a running client. Every one of the three maps broke at least one,
+and **none of them would have loaded.**
 
 ### 2.1 `floorLayer` must be an Object Layer (hard error)
 
@@ -83,6 +84,35 @@ The real bug is smaller and nastier: the marker tile was the **same gid as a col
 was a wall, and the player materialised inside it. `apply()` repoints the marker at the ground tile beneath it —
 invisible, and guaranteed walkable.
 
+### 2.5 Two more rules that only the real client shows
+
+Both of these pass every static check and kill the room anyway. They were found by opening the court in the live client
+(§4.3), not by reading the validator.
+
+**An `exitUrl` is fetched the moment the room opens, not when someone walks into it.** The court advertised doors to
+`forest-edge.tmj` and `inner-island.tmj`, neither of which exists anywhere yet. Opening the court in the browser died on
+
+> `NETWORK_ERROR — An error occurred while loading a resource`
+> `Cannot load "https://world.masteringallyship.com/map-storage/lantern-walk/lantern-walk.tmj"`
+
+with the map never drawing a tile. The level file already marked both doors `"built": false`; `gen_sect.py` ignored
+it. A door without a target map now keeps its opening, its paving and its plaque but carries no `exitUrl`, so it reads
+as a door that goes nowhere yet.
+
+**An exit around the start tile teleports the player out of the room on arrival.** With the missing maps staged, the
+court opened — and immediately threw the player into the Lantern Walk, because the start tiles were at `[47,77]` and the
+Lantern Walk door is `[46,78,4,2]`. There is no error message for this: the room simply never appears. The start is now
+`[47,66]`, the middle of the Gate Court, twelve tiles inside the door it used to stand in.
+
+`wa_export` grew two checks for them:
+
+- `check_exits(tmj, map_dir)` — every `exitUrl` must resolve to a map file, relative to the map's own directory.
+  Absolute URLs are skipped (another server's map is not ours to check).
+- `check(tmj)` — no start tile may lie inside an area that has an `exitUrl`, and it names the door.
+
+The spawn rule is proven both ways: clean on the shipped court, and one sentence naming the Lantern Walk door when the
+old start is put back.
+
 ---
 
 ## 3. What was built
@@ -115,7 +145,21 @@ Branches, one per map, each with the fix, the regenerated `.tmj` and the shared 
 |---|---|---|
 | `fix/wa-map-conformance-lantern` | `main` | target `main` |
 | `fix/wa-map-conformance-dojo` | `claude/project-thread-l8llnl` | target that feature branch |
-| `fix/wa-map-conformance-sect` | `claude/project-thread-vtqphx` | target that feature branch |
+| `fix/wa-map-conformance-sect` | `claude/project-thread-vtqphx` | target that feature branch; two further commits, below |
+
+Three more commits sit on the Sect branch, all found in the real client:
+
+| Commit | What |
+|---|---|
+| `90eec1ca` | no `exitUrl` on a door whose map does not exist; `check_exits()` |
+| `e80878a4` | the start moves into the Gate Court; `check()` rejects a start inside an exit |
+| `f160354d` | `public/wa/README.md` states all five rules, not three |
+
+**`public/wa/wa_export.py` is edited on all three branches**, and the Sect branch's copy is the newest — it has
+`check_exits()` and the spawn rule. Merge the Lantern Walk first, then the Dojo, then the Sect, and keep the Sect's
+`wa_export.py` and `public/wa/README.md` when they meet. The Lantern Walk and Dojo maps do not need those two checks
+today (their only exits are to maps that exist, and their spawns are clear of them), so taking the newest copy costs
+nothing.
 
 ### Verified
 
@@ -170,6 +214,63 @@ Two things to get right:
 
 `exitUrl` values in the level files are already relative (`../lantern-walk/lantern-walk.tmj`) and resolve correctly
 under the same root. Keep them relative; it is what makes the worlds relocatable.
+
+### 4.1 Reaching a real client today, before any of the API exists
+
+The box already has a WorkAdventure that serves maps from its own volume, so a map can be played before `/api/map` is
+built. `workadventure-map-storage-1` publishes its data volume as
+
+```
+/var/lib/docker/volumes/workadventure_map-storage-data/_data
+```
+
+A directory under it is a world: `_data/heaven-sect/` answers at
+`https://world.masteringallyship.com/map-storage/heaven-sect/heaven-sect-court.tmj` (`application/json`, CORS `*`,
+tiles served beside it). Copy the branch's `public/wa/<map>/` in, drop the `.py` files, `chown -R 1000:1000`, and open
+
+```
+https://world.masteringallyship.com/_/global/world.masteringallyship.com/map-storage/heaven-sect/heaven-sect-court.tmj
+```
+
+This is a dev convenience, not the integration: it puts our art inside WA's volume, where it does not belong long term.
+It is what made the §2.5 bugs visible in ten minutes.
+
+### 4.2 Do not keep a stub admin API
+
+The box's `.env` had `ADMIN_API_URL=http://172.17.0.1:8787` pointing at a hand-written `node` stub that returned a
+fixed `MAP_URL`. It was there to force a particular map, and it caused two problems that look like WA bugs:
+
+- **The map door is answered by WA itself.** `LocalAdmin.fetchMapDetails` in v1.35 already resolves
+  `/_/global/<host>/<path>` to `https://<host>/<path>` and `/~/<path>` to a WAM URL. The stub was unnecessary, and
+  returning anything less than a full `MapDetailsData` (it wants `group`, `description`, `tags`…) makes `/map` answer
+  `MAP_VALIDATION — Invalid server response`.
+- **Its woka list broke the character picker.** A stub `wokaList` is a promise that every texture it names exists.
+  It named `/resources/customisation/character_hair/character_hair1.png`, which is a 404 on v1.35, and the front
+  answered `Failed to load Woka customization data` — the room never opened. WorkAdventure 1.35 ships its own default
+  woka (`resources/characters/pipoya/…`); with `ADMIN_API_URL` empty that is what loads, and it is complete.
+
+Both stub lines were removed (`.env.bak-stub-*` kept) and `play` restarted. `ADMIN_API_URL` stays empty until the real
+admin API exists — that API is the §5 build order in `docs/WORKADVENTURE_INTEGRATION.md`, and it will have to satisfy
+`MapDetailsData` and `WokaList` completely, not just plausibly.
+
+### 4.3 The walk-through (Heaven Sect court, live client, 2026-11-23)
+
+The map was opened at the URL in §4.1 in a real Chromium against the box, with the fixed court and the fixed Lantern
+Walk staged beside it.
+
+| Step | What happened |
+|---|---|
+| Room open | Map resolved, socket open, character drawn. No validator error. |
+| Spawn | Player in the **Gate Court**, on paving, free to move — not in a wall, not in a door. |
+| Walk north | Gate road and avenue carry the player to the Founder's Hall; the hall's south door admits them. |
+| Inside the hall | 24 seats in two blocks, banners on the wall, altar at the north end. |
+| Meeting room | Entering the hall opens its Jitsi room (`heaven-sect-court-founders-hall`) — the generated `jitsiRoom` + `focusable` areas work as authored. |
+| Doors | "Gate Court", "Lantern Walk" and "Founder's Hall" plaques sit on the walls they name; the Lantern Walk door is a real `exitUrl` and leaves the world. |
+
+That is the option chosen on `cd-dojo-look-2` — the map read as drawn, in the real client, on foot.
+
+What it does **not** show: the two unbuilt doors now do nothing when walked into, by design (§2.5). And the Lantern
+Walk, once entered, is the *fixed* map from `fix/wa-map-conformance-lantern`; on `main` it still will not load.
 
 ---
 
@@ -230,14 +331,17 @@ is the bridge.
 
 ## 7. What is left
 
-1. Merge the two map branches and the two feature branches (`docs/WA_MAP_PIPELINE.md` §3 lists them).
-   Until a branch merges, its map is not on `bars-engine.vercel.app/wa/…` — checked 2026-11-23, where only the
-   Lantern Walk is deployed and the Dojo and Sect maps answer `404`.
-2. **Load the Heaven Sect court in the real client** — the option chosen on `cd-dojo-look-2`
-   ("Yes, it reads — put the map in the real WorkAdventure client and post a walk-through look"). It will now load and
-   collide; before this fix it would not have loaded at all.
-3. Then the `bars` blocks and the shared script, which need the encounter seam (step 4 of the main build order).
-4. `gen_sect.py` draws the room-name plaques into the tileset from the bold sans named in `sect-base.json`, which is
-   a Linux path. `WA_PLAQUE_FONT` overrides it and a missing font exits 1 with a sentence naming it, so this runs off
-   Linux without a traceback. Nothing else is missing: the dojo art it draws from (`src16/`, `sprites/`) is on the
-   same branch — the dojo commit is an ancestor of the sect branch — so there is no cross-branch order to get right.
+1. **Merge.** The Sect branch is now ahead of where it was: four PRs are open and nothing is merged, so
+   `bars-engine.vercel.app/wa/…` still answers `404` for the Dojo and the Sect (checked 2026-11-23). Merge the two map
+   branches into their targets, then the docs branch.
+2. The `bars` blocks and the shared map script (§5), which need the encounter seam — step 4 of the build order in
+   `docs/WORKADVENTURE_INTEGRATION.md`.
+3. Promote the staged dev copy (§4.1) to the real path: `/api/map` on bars-engine, so the maps are served from where
+   they are built instead of copied into WA's volume by hand. That is also what makes `exitUrl` work in production
+   without staging neighbours.
+4. The box's default room is still the public starter map (`START_ROOM_URL=/_/global/workadventure.github.io/…`).
+   When `/api/map` exists, that becomes the hub world; until then, a `/map` that answers for one hard-coded map is what
+   the deleted stub was pretending to be.
+
+Nothing in the map work is blocked. The generator's rules are now the three WA requires, the two the real client
+requires, and reachability — five things `gen_sect.py` will refuse to emit a map without.
