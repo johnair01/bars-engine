@@ -85,6 +85,7 @@
 
 - [ ] **T214** Confirm a player with no `avatarConfig` entering the world still gets WA's picker, and that pick writes `avatarConfig` through `save-textures`.
 - [ ] **T215** Confirm the creator's choice wins on the next join (no double picker).
+- [ ] **T216** Decide what to do with WA's stock **Build your WOKA** button: supply layer collections, hide/redirect it via a supported WA config, or document it as a known dead end until the bars-engine Body step replaces it.
 
 ---
 

@@ -50,8 +50,9 @@ Make **one character choice** produce a playable body everywhere: bars-engine's 
 | `GET /api/room/access` | Shipped; resolves `avatarConfig` → `characterTextures`, returns `isCharacterTexturesValid`. |
 | `npm run wa:woka` | Shipped; compiles 40 provisional 96×128 sheets + `catalog.json`. |
 | Anonymous texture echo | Shipped in follow-up commit; echoes valid `characterTextureIds`, sends first-timers to the picker. |
-| bars-engine character creator writes a woka | **Missing.** `character-creator-v2` writes playbook/moves, not a sprite. |
+| bars-engine character creator writes a woka | **Partial.** `/character/create` writes `avatarConfig` on completion (nation × archetype), which the bridge resolves; `/character-creator` edits the playbook. Neither shows the body. |
 | Compiler from bars-engine parts | **Missing.** Sheets are palette variants of dojo walkers, not compiled from portrait/walkable sources. |
+| WA "Build your WOKA" button | **Dead end in this world.** It opens WA's six-layer customizer, but the catalog returns only the `woka` part. It will error/empty until we either supply layer collections or replace the surface with the bars-engine Body step. |
 | Verification quest | **Missing.** |
 
 ---
