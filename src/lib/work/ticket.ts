@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { cleanLanes, DEFAULT_LANES, type Lane } from './lanes'
+import { cleanLanes, isLane, DEFAULT_LANES, type Lane } from './lanes'
 
 /** The brief an answer runs: text, a list of steps, or a mapping keyed by answer. A mapping used to be stringified, so
  * a lane read `[object Object]` where its brief goes (council position bf-card-brief-lands-object-object, 2026-11-16). */
@@ -136,6 +136,7 @@ export function ticketFromStep(board: string, collection: string, docId: string,
 export interface LeverDoc {
   move?: string
   savedAt?: string
+  lane?: string
   hold?: { text?: string; at?: string } | null
 }
 
@@ -164,7 +165,7 @@ export function ticketFromLever(board: string, collection: string, docId: string
     title: name.length > 90 ? name.slice(0, 89) + '…' : name,
     brief,
     basis: { rows: [docId], answer: 'claude_takes_it', label: 'Claude Takes It', steer: '', savedAt: at },
-    lanes: row?.lanes ? cleanLanes(row.lanes) : ['claude'],
+    lanes: isLane(doc.lane) ? [doc.lane] : row?.lanes ? cleanLanes(row.lanes) : ['claude'],
     ...(held ? { state: 'held' as const } : {}),
   }
 }
