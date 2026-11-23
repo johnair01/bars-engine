@@ -143,7 +143,11 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
   // robe-run-1 (his A on robe-research-look-1, 2026-11-20: "Bone chains with leg capsules and a leash"). The leash is `max` above, a node's
   // reach off its skinned place growing from the waist to the hem; `ang` caps how far a segment turns off its skinned direction (radians,
   // first segment to hem); `cap` turns on the leg capsules, which push every chain node out of the thigh and shin it hangs over, `gap` clear.
-  ang: [0.3, 0.75], cap: true, gap: 0.02, skin: 0.006 }; // skin: the robe points' own clearance off the legs (the backstop)
+  ang: [0.3, 0.75], cap: true, gap: 0.02, skin: 0.02, /* robe-sprint-look-4: was 0.006, under the trousers' own thickness (up to 1.7 cm off the leg skin), so the grey cloth shook through the robe */
+  // robe-sprint-look-1 C (2026-11-21, "fix the robe on the legs first"): one leg push per frame leaves points inside a thigh or knee at the
+  // sprint (the left leg's push can shove a point into the right, and the tent hands a point a neighbour's push). Each pass starts from the
+  // last, so four settle it: 0 points inside a leg in 190 frames (one pass: 5 in 38).
+  passes: 4 }; // skin: the robe points' own clearance off the legs (the backstop)
 // anim-robe-look-4: below the hip the robe is half re-hung from the thighs to the pelvis (a robe is not a pair of trousers): a point's skin
 // weights move `hm` of the way to the hips bone, from just under the hips (u = 0) to the knee (u = 1). A front panel then goes with its
 // thigh only partway and trails. Call once after the figure is built, before the first frame.
@@ -260,7 +264,7 @@ export function live(X, { drag = true } = {}) {
     // robe-run-1: the backstop. The capsules hold the chain bones off the legs; the points between two bones can still cut a corner
     // into a thigh, so with SKIRT.cap the robe's own points are pushed off the legs as well (mix.js pushLegs, outward only, tented)
     if (SKIRT.cap && SKIRT_ON) M.PUSH.robe = SKIRT.skin; else delete M.PUSH.robe;
-    M.legFrame(X); M.legPush(X); M.legFrame(X, false); if (drag) pushOff(X, st); M.showLive(X);
+    M.legFrame(X); for (let k = 0; k < SKIRT.passes; k++) M.legPush(X); M.legFrame(X, false); if (drag) pushOff(X, st); M.showLive(X);
   };
   return { step, reset };
 }
