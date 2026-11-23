@@ -41,7 +41,7 @@ export async function cultWalker(parent, body, { groundAt }) {
   const soleH = Math.min(wp(F.bones.ankleL).y, wp(F.bones.ankleR).y) - low;
   const mid = wp(F.bones.ankleL).add(wp(F.bones.ankleR)).multiplyScalar(0.5); mid.y = 0; // root xz from the feet's midpoint
 
-  MO.rehangRobe(X, 0.5); // the slit robe hangs from the pelvis, half way (anim-robe-look-4)
+  MO.rehangRobe(X); // the slit robe hangs from the pelvis below the knee (motion.js ROBE_HANG; anim-robe-look-4 had it half way)
   const live = MO.live(X);
   const st = { yaw: null, amp: 0, last: null, moving: false, air: false, land: 1, wasWalking: false };
   // which foot is off the ground this frame, read from the clip's own pose (movecheck.js and clipcheck.js read it)

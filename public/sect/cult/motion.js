@@ -132,7 +132,13 @@ export const SKIRT = { cols: 16, n: 5, hz: 1.7, zeta: 0.32, max: 0.15, from: 0.3
 // anim-robe-look-4: below the hip the robe is half re-hung from the thighs to the pelvis (a robe is not a pair of trousers): a point's skin
 // weights move `hm` of the way to the hips bone, from just under the hips (u = 0) to the knee (u = 1). A front panel then goes with its
 // thigh only partway and trails. Call once after the figure is built, before the first frame.
-export function rehangRobe(X, hm = 0.5) {
+// robe-sprint-look-4 steer (2026-11-23, "the robe isnt moving properly or is stuck to the trousers somehow"): at hm 0.5 the hem kept 45% of
+// its skin weight on the thigh bones, so in the sprint it moved 62% as far as the shin under it did: the robe swung as a second pair of
+// trousers, and the chains, whose targets are those skinned places, swung with it. At hm 1 the robe below the knee hangs from the pelvis
+// alone (the hem moves 1% with the shin); between hip and knee the weight still eases from the thigh, and the leg push and the chains'
+// leg capsules move the cloth where a leg actually meets it.
+export const ROBE_HANG = { hm: 1 };
+export function rehangRobe(X, hm = ROBE_HANG.hm) {
   const F = X.F, yK = X.yHip - wp(F.bones.hipL).distanceTo(wp(F.bones.kneeL)); // the knee in the fit frame, as skirtOf finds it
   for (const pt of X.parts) { if (!/^robe/.test(pt.name)) continue;
     const SI = pt.mesh.geometry.attributes.skinIndex, SW = pt.mesh.geometry.attributes.skinWeight, hi = pt.mesh.skeleton.bones.findIndex(b => b.name === 'hips'); if (hi < 0) continue;
