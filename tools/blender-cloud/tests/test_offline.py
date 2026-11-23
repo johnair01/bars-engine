@@ -1,4 +1,4 @@
-"""Offline tier: G1, G2, G2b, G6, G7, D1. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
+"""Offline tier: G1, G2, G2b, G6, G7, D1, J7b. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
 
 usage: python3 tools/blender-cloud/tests/test_offline.py [G1,G2,...]
 """
@@ -157,6 +157,32 @@ def c1():
     check(not kit["must_pass"] and not kit["problems"], "the chamber is report-only")
     t = fig["total"]
     return f"figure {t['tris']} tris closed, {fig['size_m'][1]} m; kit {kit['total']['open_edges']} open edges reported"
+
+
+@test("J7b")
+def j7b():
+    """The two arm checks J7 runs (_arm_checks.py), each at three hand heights, with no Blender. Right forearm of 23.3 cm
+    (the shipped length), hand at 1.0 m (hanging straight down), 1.2 m (out and down at 45 degrees) and 1.31 m (the
+    shipped offer: 22.6 cm forward, 3.0 cm above its elbow). The general check passes all three, a hanging right arm
+    included; the honored form passes the two that reach forward and fails the hanging one. Raised hands fail the
+    general check; the left forearm must hang for the honored form."""
+    sys.path.insert(0, str(TESTS))
+    from _arm_checks import general_arm_problems as general, honored_form_problems as honored
+    L = 0.233
+    k = L * 2 ** -0.5
+    heights = {1.0: (0.0, 0.0, -L), 1.2: (0.0, -k, -k), 1.31: (0.0, -0.226, 0.030)}
+    for h, fore in heights.items():
+        check(not general("R", fore), f"general check at {h} m: {general('R', fore)}")
+    check(not honored("R", heights[1.31]), f"honored form at 1.31 m: {honored('R', heights[1.31])}")
+    check(not honored("R", heights[1.2]), f"honored form at 1.2 m: {honored('R', heights[1.2])}")
+    check(honored("R", heights[1.0]), "honored form at 1.0 m (hanging right arm) should fail")
+    check(not honored("L", heights[1.0]), "left forearm hanging should pass the honored form")
+    check(honored("L", heights[1.31]), "left forearm held out should fail the honored form")
+    check(honored("R", (0.0, -0.226, 0.06)), "offered hand 6 cm above its elbow should fail the honored form")
+    for s in "LR":
+        raised = (0.0, 0.0, 0.25 * L)
+        check(general(s, raised), f"general check: a hand raised a quarter of the forearm over {s} should fail")
+    return "general passes 1.0, 1.2 and 1.31 m; honored form fails the hanging right arm and passes the other two"
 
 
 if __name__ == "__main__":

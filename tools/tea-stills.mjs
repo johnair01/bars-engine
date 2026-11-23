@@ -17,13 +17,13 @@ const [VW, VH] = arg('--vp', '390x844').split('x').map(Number);
 const R4 = arg('--drink', 'r5') === 'r4';
 const BEATS = R4 ? { pour: 3.6, lift: 5.9, lap: 7.6, sip: 9.3, savour: 11.6 }   // seconds into the pour (tea-pose.js TEA)
   : { reach: 2.0, pour: 3.6, lift: 6.2, lap: 7.9, nose: 9.6, sip1: 12.2, sip2: 17.4, sip3: 22.6, savour: 24.6, hold: 27.5 };   // tea-drink.glb's timeline
-const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/ontology-game/between/route.ts'), 'utf8');
+const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/between/route.ts'), 'utf8');
 const PAGE = route.slice(route.indexOf('const PAGE = `') + 14, route.indexOf('`', route.indexOf('const PAGE = `') + 14));
 const TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/api/')) { res.writeHead(503, { 'content-type': 'application/json' }); return res.end('{"error":"stills: no store"}'); }
-  if (u.pathname === '/ontology-game/between') { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(PAGE); }
+  if (u.pathname === '/between') { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(PAGE); }
   const f = path.join(ROOT, path.normalize(u.pathname));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
   const b = await chromium.launch(); fs.mkdirSync(OUT, { recursive: true });
   const ctx = await b.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 }); const p = await ctx.newPage();
   p.on('pageerror', e => console.error('PAGEERR', e.message, (e.stack || '').split('\n').slice(1, 3).join(' ')));
-  await p.goto(`http://localhost:${port}/ontology-game/between?nook=1&sit=hearth&tea=pour${R4 ? '&drink=r4' : ''}`);
+  await p.goto(`http://localhost:${port}/between?nook=1&sit=hearth&tea=pour${R4 ? '&drink=r4' : ''}`);
   await p.waitForFunction(() => window.__between && window.__between.meState.body && document.getElementById('loading').hidden, null, { timeout: 180000 });
   await p.waitForFunction(() => { const t = window.__between.tea(); return t && t.holding() && t.state(); }, null, { timeout: 240000 });
   for (const [beat, sec] of Object.entries(BEATS)) {

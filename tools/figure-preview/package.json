@@ -1,0 +1,9 @@
+{
+  "name": "figure-preview",
+  "private": true,
+  "description": "Preview stills of an exported figure GLB, drawn by Crucible's script recipe. Dev-only; nothing here is imported by the app.",
+  "type": "module",
+  "devDependencies": {
+    "crucible": "npm:@codepawlhq/crucible@0.20.0"
+  }
+}

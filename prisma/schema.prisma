@@ -834,6 +834,10 @@ model TapTheVeinDailySession {
   /// Shape: { lines: { [key]: { lensGoalId } }, sealedAt, sealed: [...] }
   morningMenu               Json?            @map("morning_menu")
   committedTaskCount        Int              @default(0)
+  /// TTV-PULL (pass ttv-book2): when "Pull what's useful" first read today's page, and how many lines it offered.
+  /// A time and a count only: never a sentence (`mm-raw`).
+  pulledAt                  DateTime?        @map("pulled_at")
+  pullOfferCount            Int              @default(0) @map("pull_offer_count")
   // Session lifecycle
   status                    String           @default("open") // open|sealed|abandoned
   sealedAt                  DateTime?
@@ -5523,4 +5527,45 @@ model WorkLane {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("work_lanes")
+}
+
+/// The Chronicler's story ladder (six-faces-council callsheet chronicler-ladder, Wendell 2026-11-15). A card is a
+/// BAR placed on one of six rungs; a link joins a higher rung's card to a lower one (several parents allowed,
+/// never upward: cl-parents-1 B, cl-loops-1 A); a flag is one question the Chronicler still owes him after an approval.
+model ChroniclerNode {
+  barId     String   @id @map("bar_id")
+  rung      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([rung])
+  @@map("chronicler_nodes")
+}
+
+model ChroniclerLink {
+  id        String   @id @default(cuid())
+  parentId  String   @map("parent_id")
+  childId   String   @map("child_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([parentId, childId])
+  @@index([childId])
+  @@map("chronicler_links")
+}
+
+model ChroniclerFlag {
+  id           String    @id @default(cuid())
+  barId        String    @map("bar_id")
+  causedByBarId String   @map("caused_by_bar_id")
+  /// 'ripple' (a card above or below the approved one) or 'horizontal' (the approved card's own rung).
+  kind         String
+  ask          String
+  /// 'open' | 'answered' | 'dismissed'
+  status       String    @default("open")
+  answer       String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  answeredAt   DateTime? @map("answered_at")
+
+  @@index([status, createdAt])
+  @@index([barId])
+  @@map("chronicler_flags")
 }
