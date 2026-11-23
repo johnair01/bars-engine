@@ -35,6 +35,23 @@ describe('visibleFrom', () => {
   })
 })
 
+describe('a battle posted as a row', () => {
+  const docs = {
+    rows: {
+      'battle-new': { kind: 'battles', name: 'New', rounds: [{ n: 1, questions: ['q-in'] }] },
+      'q-in': q(),
+    },
+    battles: { 'battle-old': { id: 'battle-old', kind: 'battles', name: 'Old', rounds: [] } },
+  } as never
+
+  it('draws beside the record battles, and its questions draw inside it', () => {
+    const by = Object.fromEntries(visibleFrom(docs, ['battle-new', 'battle-old', 'q-in']).map((r) => [r.id, r]))
+    expect(by['battle-new'].visible).toBe(true)
+    expect(by['battle-old'].visible).toBe(true)
+    expect(by['q-in']).toMatchObject({ visible: true, where: 'a battle card' })
+  })
+})
+
 describe('openFrom', () => {
   it('leaves out rows the record settled', () => {
     const at = new Date()

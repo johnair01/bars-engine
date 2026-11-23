@@ -167,6 +167,8 @@ describe('retry after a review', () => {
 })
 
 describe('the ceiling', () => {
+  // A plain build has no answered board row behind it; an answered row is a question and never overflows to DeepAI.
+  const build = { ...draft, basis: { ...draft.basis, rows: [] as string[] } }
   const full = (lane: string, n: number, state = 'ready') =>
     Array.from({ length: n }, (_, i) => ({ id: `${lane}-${i}`, lane, state, sourceKey: `${lane}-${i}` }))
   it('sends the answer past a lane that is at the ceiling into the next lit lane in his order', async () => {
@@ -186,13 +188,13 @@ describe('the ceiling', () => {
   it('takes the lit lane with the shortest deck when every lane in his order is at the ceiling', async () => {
     const tickets = [...full('claude', 30), ...full('freebuff', 25)]
     const db = fakeDb(tickets, [{ lane: 'freebuff', dry: false, dryUntil: null }])
-    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+    expect((await pushTicket(db, build)).ticket).toMatchObject({ lane: 'deepai' })
   })
   it('gives DeepAI work once the lanes he named are full, without naming it in DEFAULT_LANES', async () => {
     // The shape the live board was in on 2026-11-18: claude 3 ready + 40 claimed, freebuff 75, deepai 0.
     const tickets = [...full('claude', 3), ...full('claude', 40, 'claimed'), ...full('freebuff', 75)]
     const db = fakeDb(tickets)
-    expect((await pushTicket(db, draft)).ticket).toMatchObject({ lane: 'deepai' })
+    expect((await pushTicket(db, build)).ticket).toMatchObject({ lane: 'deepai' })
   })
   it('keeps picture builds and design questions out of DeepAI, even when the lanes ahead are full', () => {
     const lit = new Set(['claude', 'freebuff', 'deepai'])
@@ -207,6 +209,19 @@ describe('the ceiling', () => {
     expect(ticketKind('Run gait on the cultivation figure')).toBe('picture')
     expect(ticketKind('Fate-clearing: which option for the clearing?')).toBe('design')
     expect(ticketKind('Add a retry button to the harbour page')).toBe('build')
+  })
+  it('classifies a board answer by its row id, since its title is the question and holds no keyword', () => {
+    const q = 'Ship the farm: seed parcels on the post, the tool box with a Seeds tab, and the satchel'
+    expect(ticketKind(q)).toBe('build')
+    expect(ticketKind(q, '', ['farm-parcel-on-post-look-2'])).toBe('picture')
+    expect(ticketKind('Which date opens chapter 1?', '', ['ch1-open-date-1'])).toBe('design')
+    expect(ticketKind('Add a retry button to the harbour page', '', [])).toBe('build')
+  })
+  it('keeps an answered look off DeepAI when Claude and Freebuff are both at the ceiling (2026-11-23)', async () => {
+    const tickets = [...full('claude', 30), ...full('freebuff', 25)]
+    const db = fakeDb(tickets)
+    const look = { ...draft, sourceKey: 'looks/farm-parcel-on-post-look-2@A', title: 'Ship the farm: seed parcels on the post', basis: { ...draft.basis, rows: ['farm-parcel-on-post-look-2'] } }
+    expect((await pushTicket(db, look)).ticket.lane).not.toBe('deepai')
   })
   it('never routes to zo, so the closing lever keeps its monopoly', () => {
     expect(routeLane(['claude', 'zo'], new Set(['claude', 'zo']), {})).toMatchObject({ lane: 'claude' })

@@ -28,3 +28,25 @@ describe('the doubt card words', () => {
     }
   })
 })
+
+/* Step 3: the 3-2-1 at the chosen spirit (plan heaven-quest-demo step 3). */
+import { STAND_NAMES, STAND_ORDER, STEP, NEED, stepsFor } from '../../../../public/sect/heaven/doubt-words.js'
+describe('the 3-2-1 at a spirit', () => {
+  const steps = stepsFor('I am not good enough')
+  it('runs Face it (3 lines), Talk to it (4), Be it (3), the player writing every line', () => {
+    expect(STAND_ORDER).toEqual(['face', 'talk', 'be'])
+    expect(STAND_ORDER.map(k => STAND_NAMES[k as 'face'])).toEqual(['Face it', 'Talk to it', 'Be it'])
+    expect(steps.face).toHaveLength(3); expect(steps.talk).toHaveLength(4); expect(steps.be).toHaveLength(3)
+    expect(steps.face[0].ask).toContain('I am not good enough')
+  })
+  it('names the voice, never a face, in every line, with no negation pairs, and every line under 30 words', () => {
+    const all = [...Object.values(steps).flat().map(s => s.ask), NEED.ask, NEED.gift('x'), NEED.met, STEP.enough]
+    for (const s of all) {
+      expect(s.split(/\s+/).length).toBeLessThanOrEqual(30)
+      expect(s).not.toMatch(/\b(Shaman|Architect|Challenger|Regent|Diplomat|Sage)\b/)
+      expect(s).not.toMatch(/\bnot [^.]*, (you're|you are|but)\b/i)
+    }
+    for (const st of Object.values(steps).flat()) expect(['you', 'it']).toContain(st.voice)
+  })
+  it('ends Be it on the gift the voice gives back', () => { expect(steps.be[2].ask).toMatch(/give back/) })
+})

@@ -10,7 +10,7 @@
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
                             "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws", "records", "constraint", "resolved",
-                            "battles", "intake", "proofs"]},
+                            "battles", "intake", "proofs", "voice"]},
     "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\u0000-\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}
@@ -32,7 +32,10 @@
     "row": {"properties": {"board": {"const": "council"}, "mode": {"const": "set"}, "data": {
       "required": ["kind"], "not": {"required": ["id"]},
       "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes", "battles"]},
-                     "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"}},
+                     "pass": {"$ref": "#/$defs/text"}, "lane": {"type": "string"},
+                     "copy": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "object",
+                       "required": ["line", "screen", "file"],
+                       "properties": {"line": {"$ref": "#/$defs/text"}, "screen": {"$ref": "#/$defs/text"}, "file": {"$ref": "#/$defs/text"}}}}},
       "allOf": [
         {"if": {"properties": {"kind": {"const": "positions"}}},
          "then": {"required": ["faces", "pos"], "properties": {"faces": {"$ref": "#/$defs/faces"}, "pos": {"$ref": "#/$defs/text"}}}},
@@ -47,6 +50,14 @@
         {"if": {"properties": {"kind": {"const": "battles"}}},
          "then": {"required": ["name", "rounds"], "properties": {"name": {"$ref": "#/$defs/text"}, "rounds": {"type": "array"}}}}
       ]}}},
+    "voice": {"properties": {"board": {"const": "council"}, "data": {
+      "required": ["kind", "savedAt"],
+      "properties": {"kind": {"$ref": "#/$defs/text"}, "savedAt": {"$ref": "#/$defs/iso"}},
+      "allOf": [{"if": {"properties": {"kind": {"const": "pencil"}}},
+                 "then": {"required": ["old", "new", "screen", "file", "look_row"],
+                          "properties": {"old": {"$ref": "#/$defs/text"}, "new": {"type": "string"},
+                                         "screen": {"$ref": "#/$defs/text"}, "file": {"$ref": "#/$defs/text"},
+                                         "look_row": {"$ref": "#/$defs/text"}}}}]}}},
     "resolved": {"properties": {"board": {"const": "council"}, "docId": {"pattern": "^(positions|questions|terms|causes)--\\S"}, "data": {
       "required": ["kind", "id", "savedAt"],
       "properties": {"kind": {"enum": ["positions", "questions", "terms", "causes"]},
@@ -65,6 +76,7 @@
     {"if": {"properties": {"collection": {"const": "battles"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/battle"}},
     {"if": {"properties": {"collection": {"const": "intake"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/intake"}},
     {"if": {"properties": {"collection": {"const": "resolved"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/resolved"}},
+    {"if": {"properties": {"collection": {"const": "voice"}}, "required": ["collection"]}, "then": {"$ref": "#/$defs/voice"}},
     {"if": {"properties": {"mode": {"const": "update"}}, "required": ["mode"]}, "then": {}, "else": {"allOf": [
       {"if": {"properties": {"collection": {"enum": ["positions", "questions", "terms", "causes", "picks", "blockers"]}}},
        "then": {"properties": {"data": {"required": ["savedAt"], "properties": {"savedAt": {"$ref": "#/$defs/iso"}}}}}},

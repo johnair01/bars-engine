@@ -42,7 +42,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, mergeStatic, mergeByParent, rng, hash } from "../hollow.js";
 import { installPaint } from "../paint.js";
-import { stance, clipWeights, FADE, CRATE_SIT, SEAT_PAD } from "../stance.js";
 import { read, sheet, locations } from "../../calrunia/episode-sheet.js";
 import { plan, strongStart, secretsHere, takeHome, friendHere } from "./place.js";
 import { withDraft, people } from "../../calrunia/episode-draft.js";
@@ -366,7 +365,7 @@ function friendOf(md, charge) {
 }
 
 /* ===================================================================================================
-   The figure: the Between's own (wardrobe.js), carrying the round's toolbag
+   The figure: the cultivation figure (cult/), carrying the round's toolbag
    =================================================================================================== */
 function toolbagGroup(M) {
   const g = new THREE.Group();
@@ -384,30 +383,7 @@ function toolbagGroup(M) {
   g.scale.setScalar(0.82);
   return g;
 }
-/* Sitting on what is under you (the Friends' Fire's crates): stance.js's CRATE_SIT bent over whatever the clips left,
-   eased in by w, and the hips brought to rest SEAT_PAD over the seat's top, measured each frame as garden.js does, so any
-   build lands on the crate. `lean` tips the chest forward a little more (a laugh, a listen). */
-function seatPoser(obj, holder) {
-  const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "shoulderL", "shoulderR", "elbowL", "elbowR", "spine", "neck"]) { const b = obj.getObjectByName(n); if (b) bones[n] = { b, q: b.quaternion.clone() }; }
-  const hipsY = bones.hips ? bones.hips.b.position.y : 0;
-  const qe = new THREE.Quaternion(), tq = new THREE.Quaternion(), eu = new THREE.Euler(), sv = V(0, 0, 0);
-  let w = 0;
-  return {
-    bones,
-    get w() { return w; },
-    apply(dt, want, seatTop, T, lean = 0, strum = 0) {
-      w += ((want ? 1 : 0) - w) * Math.min(1, dt * 5); if (!want && w < 0.01) w = 0;
-      if (!bones.hipL || w <= 0) return;
-      for (const [n, x, y, z] of CRATE_SIT) { const B = bones[n]; if (!B) continue;
-        let bx = x; if (n === "spine") bx += lean + Math.sin(T * 1.4) * 0.025; if (n === "neck") bx -= lean * 0.6; if (n === "elbowR") bx += Math.sin(T * 14) * 0.18 * strum;
-        tq.copy(B.q).multiply(qe.setFromEuler(eu.set(bx, y, z, "XYZ"))); B.b.quaternion.slerp(tq, w); }
-      const hb = bones.hips.b, cur = hb.position.y; hb.position.y = hipsY; holder.updateMatrixWorld(true);
-      const hw = hb.getWorldPosition(sv).y - holder.position.y, sy = hb.parent.getWorldScale(sv).y || 1;
-      hb.position.y = cur + (hipsY - (hw - (seatTop + SEAT_PAD)) / sy - cur) * w;
-    },
-  };
-}
-/* The friends round the fire: Average Dusk in each seat's look, sat on their crates, breathing; Oriel holds the guitar. */
+/* The friends round the fire: the cultivation figure in each seat's outfit, sat on their crates, breathing; Oriel holds the guitar. */
 async function makeFriends(ff) {
   const out = []; let i = 0;
   for (const seat of FF.SEATS) { if (seat.who === "you") continue;
