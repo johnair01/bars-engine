@@ -193,34 +193,7 @@ requester_answers:
     real gate, and it is acceptable for the CLI to report a kit as valid in the offline
     step even if the later publish is rejected, because the engine will return findings
     for the author. .specify/specs/wa-world-kit/seed.yaml:97‑98,141,198‑201,226‑227
-open_questions:
-- '(ambiguity: 0.27) On the engine side, is the single new findings route the only
-  engine change allowed in this slice, with `publish` reusing an existing gate-backed
-  ingest path and promotion beyond the dojo explicitly out of scope? Or will the engine
-  also need a new or modified publish/ingest endpoint?'
-- '(ambiguity: 0.28) The ledger has a conflict on how the engine knows who the author
-  is. One entry says `publish` must send an engine API token that the engine maps
-  to a player account, so the kit lands in that author''s dojo and is live only for
-  them. Another says authentication is a non-goal for this MVP. Which of these should
-  the Seed record as the actors and identity rule? (a) A single local author, with
-  the CLI sending an existing dev/API token that the engine already resolves to a
-  player, so no new auth work. (b) No token at all, with the engine assigning published
-  kits to a fixed dev or default player''s dojo. (c) Something else. Whichever you
-  pick, are ''other players'' explicitly not an actor in this slice?'
-- '(ambiguity: 0.30) Since authentication is a non-goal, should the Seed drop the
-  API-token entry and record this identity rule instead: `world-kit publish` sends
-  no credentials, the engine assigns every published kit to the dojo of one fixed
-  local dev player, and the only actor is that single local author, with other players
-  not acting in this slice? Answer yes, or name the different player-assignment rule
-  the engine should apply.'
-- '(ambiguity: 0.31) Authentication is out of scope, but the ledger still says publish
-  sends an API token that identifies the author. Should the Seed replace that entry
-  with this sentence, recorded verbatim? "Actor: one local author running the bars-engine
-  dev server. `world-kit publish` sends no credentials. The engine assigns every published
-  kit to the dojo of the single existing dev player it already uses locally. ''Live
-  only for its author'' means only that dev player sees it in their dojo. Other players
-  are not actors in this slice." If not, which player record should the engine use,
-  and how does it find that player without authentication?'
+open_questions: []
 sourced_scope:
   goal: 'Publish path for a locally-authored world kit into the running bars-engine
     game: a world-kit repo and CLI that validates a kit and publishes it through the
@@ -306,7 +279,7 @@ metadata:
   seed_id: seed_de59b6a802ca
   version: 1.0.0
   created_at: '2026-11-24T00:03:08.651982Z'
-  ambiguity_score: 0.3925
+  ambiguity_score: 0.15
   gate_forced: true
   interview_id: interview_541d1815f1c24066
   parent_seed_id: seed_d84dc9271bb3
@@ -314,3 +287,13 @@ metadata:
   degraded: false
   unresolved_slots: []
   recovery_reason: null
+
+rulings_2026_11_23:
+  source: answered by Wendell in thread, 2026-11-23; recorded in council/ledger/rulings.jsonl
+  1: Republish updates in place; no new records, findings never duplicated.
+  2: Token in an environment variable; never in the kit folder.
+  3: Success check: findings stored with stable ids, CLI reports new vs updated.
+  4: Non-secret metadata travels with the kit; secrets never do.
+  5: Long-lived token in the Authorization header; no session exchange.
+  6: The bridge is a package inside the world-kit repo; the engine keeps only the findings route.
+  assumptions: All five seed assumptions confirmed as written.
