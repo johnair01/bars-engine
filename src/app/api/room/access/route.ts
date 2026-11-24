@@ -1,7 +1,8 @@
 /**
  * WorkAdventure asks this before a player joins a room.
  *
- * `userIdentifier` is the OIDC `sub`, which bars-engine sets to `Player.id`.
+ * `userIdentifier` is what the WorkAdventure pusher sends: the OIDC `sub`
+ * (bars-engine `Player.id`) when it has it, or the account's email identifier.
  * Everything private is re-read here; the browser is never trusted for identity.
  *
  * @see docs/WA_IDENTITY_AND_ASSETS.md
@@ -53,6 +54,15 @@ function anonymousResponse(userIdentifier: string, playUri: string, requested: s
   }
 }
 
+const PLAYER_SELECT = {
+  id: true,
+  name: true,
+  contactType: true,
+  contactValue: true,
+  avatarConfig: true,
+  roles: { select: { role: { select: { key: true } } } },
+} as const
+
 export async function GET(request: NextRequest) {
   if (!adminApiAuthorized(request.headers.get('authorization'))) {
     return adminApiErrorResponse()
@@ -64,17 +74,18 @@ export async function GET(request: NextRequest) {
 
   if (!userIdentifier) return Response.json(anonymousResponse('', playUri, requested))
 
-  const player = await db.player.findUnique({
-    where: { id: userIdentifier },
-    select: {
-      id: true,
-      name: true,
-      contactType: true,
-      contactValue: true,
-      avatarConfig: true,
-      roles: { select: { role: { select: { key: true } } } },
-    },
-  })
+  // The pusher relays whatever identifier it minted its JWT with: the OIDC
+  // `sub` (Player.id) or the account email. Resolve both; never trust the
+  // client-supplied id beyond choosing which row to read.
+  const player =
+    (await db.player.findUnique({
+      where: { id: userIdentifier },
+      select: PLAYER_SELECT,
+    })) ??
+    (await db.player.findFirst({
+      where: { contactValue: userIdentifier, contactType: 'email' },
+      select: PLAYER_SELECT,
+    }))
 
   if (!player) return Response.json(anonymousResponse(userIdentifier, playUri, requested))
 
