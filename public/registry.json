@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-18T20:26:56.889Z",
+  "generatedAt": "2026-11-20T19:05:58.040Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -1276,7 +1276,7 @@
       "method": "PAGE",
       "pattern": "/admin/books/:id/sections",
       "entity": "WIKI",
-      "description": "Book OS v1 — section map and create (governed manuscript spine)",
+      "description": "Book OS v1 \u2014 section map and create (governed manuscript spine)",
       "permissions": [
         "admin"
       ],
@@ -1302,7 +1302,7 @@
       "method": "PAGE",
       "pattern": "/admin/books/:id/sections",
       "entity": "WIKI",
-      "description": "Book OS v1 — section map and create (governed manuscript spine)",
+      "description": "Book OS v1 \u2014 section map and create (governed manuscript spine)",
       "permissions": [
         "admin"
       ],
@@ -1477,7 +1477,7 @@
       "method": "PAGE",
       "pattern": "/admin/campaign/:ref/theme",
       "entity": "CAMPAIGN",
-      "description": "L2 visual theming editor for campaign skins — color pickers, font selectors, preview panel",
+      "description": "L2 visual theming editor for campaign skins \u2014 color pickers, font selectors, preview panel",
       "permissions": [
         "steward",
         "owner",
@@ -1504,7 +1504,7 @@
       "method": "PAGE",
       "pattern": "/admin/campaign/:ref/theme",
       "entity": "CAMPAIGN",
-      "description": "L2 visual theming editor for campaign skins — color pickers, font selectors, preview panel",
+      "description": "L2 visual theming editor for campaign skins \u2014 color pickers, font selectors, preview panel",
       "permissions": [
         "steward",
         "owner",
@@ -2744,7 +2744,7 @@
       "method": "PAGE",
       "pattern": "/admin",
       "entity": "SYSTEM",
-      "description": "Game Master control center — campaigns, content, players, system",
+      "description": "Game Master control center \u2014 campaigns, content, players, system",
       "permissions": [
         "admin"
       ],
@@ -2768,7 +2768,7 @@
       "method": "PAGE",
       "pattern": "/admin",
       "entity": "SYSTEM",
-      "description": "Game Master control center — campaigns, content, players, system",
+      "description": "Game Master control center \u2014 campaigns, content, players, system",
       "permissions": [
         "admin"
       ],
@@ -3969,7 +3969,7 @@
       "method": "PAGE",
       "pattern": "/bars/capture",
       "entity": "BAR",
-      "description": "Seed Capture Whiteboard — mobile canvas for composing a BAR as draggable stickers",
+      "description": "Seed Capture Whiteboard \u2014 mobile canvas for composing a BAR as draggable stickers",
       "permissions": [
         "authenticated"
       ],
@@ -3994,7 +3994,7 @@
       "method": "PAGE",
       "pattern": "/bars/capture",
       "entity": "BAR",
-      "description": "Seed Capture Whiteboard — mobile canvas for composing a BAR as draggable stickers",
+      "description": "Seed Capture Whiteboard \u2014 mobile canvas for composing a BAR as draggable stickers",
       "permissions": [
         "authenticated"
       ],
@@ -4014,7 +4014,7 @@
       "method": "PAGE",
       "pattern": "/bars/create",
       "entity": "BAR",
-      "description": "Screen A — simple text capture. Low-friction entry point for the\nCapture → Keep → Tune intake flow. For the full Stories canvas, use /bars/capture.",
+      "description": "Screen A \u2014 simple text capture. Low-friction entry point for the\nCapture \u2192 Keep \u2192 Tune intake flow. For the full Stories canvas, use /bars/capture.",
       "permissions": [
         "authenticated"
       ],
@@ -4033,7 +4033,7 @@
       "method": "PAGE",
       "pattern": "/bars/create",
       "entity": "BAR",
-      "description": "Screen A — simple text capture. Low-friction entry point for the\nCapture → Keep → Tune intake flow. For the full Stories canvas, use /bars/capture.",
+      "description": "Screen A \u2014 simple text capture. Low-friction entry point for the\nCapture \u2192 Keep \u2192 Tune intake flow. For the full Stories canvas, use /bars/capture.",
       "permissions": [
         "authenticated"
       ],
@@ -4056,7 +4056,7 @@
       "method": "PAGE",
       "pattern": "/bars",
       "entity": "BAR",
-      "description": "Legacy Inspirations list — folded into the canonical Vault \"All BARs\" room (QLA Phase 1). Redirects to /vault/all so there is one inventory home. Detail pages (/bars/[id]) and sub-routes (/bars/capture, /bars/feed, …) are unaffected.",
+      "description": "Legacy Inspirations list \u2014 folded into the canonical Vault \"All BARs\" room (QLA Phase 1). Redirects to /vault/all so there is one inventory home. Detail pages (/bars/[id]) and sub-routes (/bars/capture, /bars/feed, \u2026) are unaffected.",
       "permissions": [
         "authenticated"
       ],
@@ -4080,7 +4080,7 @@
       "method": "PAGE",
       "pattern": "/bars",
       "entity": "BAR",
-      "description": "Legacy Inspirations list — folded into the canonical Vault \"All BARs\" room (QLA Phase 1). Redirects to /vault/all so there is one inventory home. Detail pages (/bars/[id]) and sub-routes (/bars/capture, /bars/feed, …) are unaffected.",
+      "description": "Legacy Inspirations list \u2014 folded into the canonical Vault \"All BARs\" room (QLA Phase 1). Redirects to /vault/all so there is one inventory home. Detail pages (/bars/[id]) and sub-routes (/bars/capture, /bars/feed, \u2026) are unaffected.",
       "permissions": [
         "authenticated"
       ],
@@ -4100,7 +4100,7 @@
       "method": "PAGE",
       "pattern": "/bb",
       "entity": "CAMPAIGN",
-      "description": "Shareable invite poster for the Bruised Banana campaign — tapping enters the game",
+      "description": "Shareable invite poster for the Bruised Banana campaign \u2014 tapping enters the game",
       "permissions": [
         "public"
       ],
@@ -4119,7 +4119,7 @@
       "method": "PAGE",
       "pattern": "/bb",
       "entity": "CAMPAIGN",
-      "description": "Shareable invite poster for the Bruised Banana campaign — tapping enters the game",
+      "description": "Shareable invite poster for the Bruised Banana campaign \u2014 tapping enters the game",
       "permissions": [
         "public"
       ],
@@ -4143,7 +4143,7 @@
       "method": "PAGE",
       "pattern": "/build-log",
       "entity": "CAMPAIGN",
-      "description": "Build-in-public, the surface the handoff calls \"/workshop → Patreon\".\n**It is NOT at /workshop**: that route already belongs to the Allyship Workshop\n(consent practice, the five-beat delivery) and the Promise Forge links to it twice,\nso taking the name would have broken a live feature.\n\nThe handoff's condition — one post a week minimum or do not launch it — is enforced\nrather than promised. The page reads BUILD_LOG_POSTS, and when the cadence lapses it\nsays how long it has been and **withholds the subscribe button**. A page cannot sell\na weekly promise it is visibly not keeping.",
+      "description": "Build-in-public, the surface the handoff calls \"/workshop \u2192 Patreon\".\n**It is NOT at /workshop**: that route already belongs to the Allyship Workshop\n(consent practice, the five-beat delivery) and the Promise Forge links to it twice,\nso taking the name would have broken a live feature.\n\nThe handoff's condition \u2014 one post a week minimum or do not launch it \u2014 is enforced\nrather than promised. The page reads BUILD_LOG_POSTS, and when the cadence lapses it\nsays how long it has been and **withholds the subscribe button**. A page cannot sell\na weekly promise it is visibly not keeping.",
       "permissions": [
         "public"
       ],
@@ -4168,7 +4168,7 @@
       "method": "PAGE",
       "pattern": "/build-log",
       "entity": "CAMPAIGN",
-      "description": "Build-in-public, the surface the handoff calls \"/workshop → Patreon\".\n**It is NOT at /workshop**: that route already belongs to the Allyship Workshop\n(consent practice, the five-beat delivery) and the Promise Forge links to it twice,\nso taking the name would have broken a live feature.\n\nThe handoff's condition — one post a week minimum or do not launch it — is enforced\nrather than promised. The page reads BUILD_LOG_POSTS, and when the cadence lapses it\nsays how long it has been and **withholds the subscribe button**. A page cannot sell\na weekly promise it is visibly not keeping.",
+      "description": "Build-in-public, the surface the handoff calls \"/workshop \u2192 Patreon\".\n**It is NOT at /workshop**: that route already belongs to the Allyship Workshop\n(consent practice, the five-beat delivery) and the Promise Forge links to it twice,\nso taking the name would have broken a live feature.\n\nThe handoff's condition \u2014 one post a week minimum or do not launch it \u2014 is enforced\nrather than promised. The page reads BUILD_LOG_POSTS, and when the cadence lapses it\nsays how long it has been and **withholds the subscribe button**. A page cannot sell\na weekly promise it is visibly not keeping.",
       "permissions": [
         "public"
       ],
@@ -4193,9 +4193,9 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/begin",
       "entity": "CAMPAIGN",
-      "description": "Onboarding funnel — the vibey CYOA social-post landing. Superpower\ndiscovery → allyship myths → domain → offered quests → \"create your character\".\nCompleting it records a CampaignLead (source automated) on the owner board.",
+      "description": "Onboarding funnel \u2014 the vibey CYOA social-post landing. Superpower\ndiscovery \u2192 allyship myths \u2192 domain \u2192 offered quests \u2192 \"create your character\".\nCompleting it records a CampaignLead (source automated) on the owner board.",
       "permissions": [
-        "public (no sign-up wall — parity with the Superpower quiz)"
+        "public (no sign-up wall \u2014 parity with the Superpower quiz)"
       ],
       "id": "page_campaign_ba2caa6f"
     },
@@ -4217,9 +4217,9 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/begin",
       "entity": "CAMPAIGN",
-      "description": "Onboarding funnel — the vibey CYOA social-post landing. Superpower\ndiscovery → allyship myths → domain → offered quests → \"create your character\".\nCompleting it records a CampaignLead (source automated) on the owner board.",
+      "description": "Onboarding funnel \u2014 the vibey CYOA social-post landing. Superpower\ndiscovery \u2192 allyship myths \u2192 domain \u2192 offered quests \u2192 \"create your character\".\nCompleting it records a CampaignLead (source automated) on the owner board.",
       "permissions": [
-        "public (no sign-up wall — parity with the Superpower quiz)"
+        "public (no sign-up wall \u2014 parity with the Superpower quiz)"
       ],
       "id": "page_campaign_ba2caa6f"
     },
@@ -4241,7 +4241,7 @@
       "method": "PAGE",
       "pattern": "/campaign/:slug/home",
       "entity": "CAMPAIGN",
-      "description": "Campaign home — post-join member landing page with actionable activity items.\nAfter joining a campaign, members see at least one actionable item (welcome quest,\ncharacter creation prompt, first scene, contribution opportunity).",
+      "description": "Campaign home \u2014 post-join member landing page with actionable activity items.\nAfter joining a campaign, members see at least one actionable item (welcome quest,\ncharacter creation prompt, first scene, contribution opportunity).",
       "permissions": [
         "authenticated member of the campaign's instance"
       ],
@@ -4266,7 +4266,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/leads/[leadId]",
       "entity": "CAMPAIGN",
-      "description": "Per-lead workspace — set goals, curate matched quests, edit actions +\ninvite message, copy the warm link, and publish to the collective.",
+      "description": "Per-lead workspace \u2014 set goals, curate matched quests, edit actions +\ninvite message, copy the warm link, and publish to the collective.",
       "permissions": [
         "steward (assertCampaignSteward via the lead's campaign)"
       ],
@@ -4290,7 +4290,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/leads/[leadId]",
       "entity": "CAMPAIGN",
-      "description": "Per-lead workspace — set goals, curate matched quests, edit actions +\ninvite message, copy the warm link, and publish to the collective.",
+      "description": "Per-lead workspace \u2014 set goals, curate matched quests, edit actions +\ninvite message, copy the warm link, and publish to the collective.",
       "permissions": [
         "steward (assertCampaignSteward via the lead's campaign)"
       ],
@@ -4314,7 +4314,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/leads/collective",
       "entity": "CAMPAIGN",
-      "description": "The collective directory — published leads any steward of the campaign can adopt.",
+      "description": "The collective directory \u2014 published leads any steward of the campaign can adopt.",
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
@@ -4338,7 +4338,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/leads/collective",
       "entity": "CAMPAIGN",
-      "description": "The collective directory — published leads any steward of the campaign can adopt.",
+      "description": "The collective directory \u2014 published leads any steward of the campaign can adopt.",
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
@@ -4362,9 +4362,9 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/leads",
       "entity": "CAMPAIGN",
-      "description": "Campaign owner's lead console — hand-forge tailored leads + starter\nquests (issues an Invite), and review the follow-up board of manual +\nself-created leads with a shared status machine.",
+      "description": "Campaign owner's lead console \u2014 hand-forge tailored leads + starter\nquests (issues an Invite), and review the follow-up board of manual +\nself-created leads with a shared status machine.",
       "permissions": [
-        "steward (assertCampaignSteward — owner/steward of the campaign)"
+        "steward (assertCampaignSteward \u2014 owner/steward of the campaign)"
       ],
       "id": "page_campaign_41f6eb40"
     },
@@ -4386,9 +4386,9 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/leads",
       "entity": "CAMPAIGN",
-      "description": "Campaign owner's lead console — hand-forge tailored leads + starter\nquests (issues an Invite), and review the follow-up board of manual +\nself-created leads with a shared status machine.",
+      "description": "Campaign owner's lead console \u2014 hand-forge tailored leads + starter\nquests (issues an Invite), and review the follow-up board of manual +\nself-created leads with a shared status machine.",
       "permissions": [
-        "steward (assertCampaignSteward — owner/steward of the campaign)"
+        "steward (assertCampaignSteward \u2014 owner/steward of the campaign)"
       ],
       "id": "page_campaign_41f6eb40"
     },
@@ -4405,7 +4405,7 @@
       "method": "PAGE",
       "pattern": "/campaign/:ref/milestones",
       "entity": "CAMPAIGN",
-      "description": "Steward surface for authoring well-crafted campaign milestones\n(propose → craft → approve) + their celebration narratives. TSG Phase 3.",
+      "description": "Steward surface for authoring well-crafted campaign milestones\n(propose \u2192 craft \u2192 approve) + their celebration narratives. TSG Phase 3.",
       "permissions": [
         "steward+ (owner/steward of the backing instance",
         "or global admin)"
@@ -4425,7 +4425,7 @@
       "method": "PAGE",
       "pattern": "/campaign/:ref/milestones",
       "entity": "CAMPAIGN",
-      "description": "Steward surface for authoring well-crafted campaign milestones\n(propose → craft → approve) + their celebration narratives. TSG Phase 3.",
+      "description": "Steward surface for authoring well-crafted campaign milestones\n(propose \u2192 craft \u2192 approve) + their celebration narratives. TSG Phase 3.",
       "permissions": [
         "steward+ (owner/steward of the backing instance",
         "or global admin)"
@@ -4450,7 +4450,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/quests/new",
       "entity": "CAMPAIGN",
-      "description": "Quest Studio composer — author a quest aligned to a myth × superpower ×\nGM face; AI-draft (with a deterministic fallback), edit, and save to the campaign pool.",
+      "description": "Quest Studio composer \u2014 author a quest aligned to a myth \u00d7 superpower \u00d7\nGM face; AI-draft (with a deterministic fallback), edit, and save to the campaign pool.",
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
@@ -4474,7 +4474,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/quests/new",
       "entity": "CAMPAIGN",
-      "description": "Quest Studio composer — author a quest aligned to a myth × superpower ×\nGM face; AI-draft (with a deterministic fallback), edit, and save to the campaign pool.",
+      "description": "Quest Studio composer \u2014 author a quest aligned to a myth \u00d7 superpower \u00d7\nGM face; AI-draft (with a deterministic fallback), edit, and save to the campaign pool.",
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
@@ -4498,7 +4498,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/quests",
       "entity": "CAMPAIGN",
-      "description": "Quest Studio library — the campaign's authored quests with queryable\nalignment tags (domain, myth, superpower, GM face); archive or author new.",
+      "description": "Quest Studio library \u2014 the campaign's authored quests with queryable\nalignment tags (domain, myth, superpower, GM face); archive or author new.",
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
@@ -4522,7 +4522,7 @@
       "method": "PAGE",
       "pattern": "/campaign/[ref]/quests",
       "entity": "CAMPAIGN",
-      "description": "Quest Studio library — the campaign's authored quests with queryable\nalignment tags (domain, myth, superpower, GM face); archive or author new.",
+      "description": "Quest Studio library \u2014 the campaign's authored quests with queryable\nalignment tags (domain, myth, superpower, GM face); archive or author new.",
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
@@ -4692,7 +4692,7 @@
       "method": "PAGE",
       "pattern": "/campaign/slot/:slotId",
       "entity": "CAMPAIGN",
-      "description": "Sub-campaign slot landing page — shows branch theme, description,\navailable adventures, and child sub-slots. Players can enter any active\nadventure directly from this page via the entry redirect handler.",
+      "description": "Sub-campaign slot landing page \u2014 shows branch theme, description,\navailable adventures, and child sub-slots. Players can enter any active\nadventure directly from this page via the entry redirect handler.",
       "permissions": [
         "authenticated"
       ],
@@ -4712,7 +4712,7 @@
       "method": "PAGE",
       "pattern": "/campaign/spoke/[index]/generated",
       "entity": "CAMPAIGN",
-      "description": "GSCP wizard — opening → move+charge → face → generate → adventure play. Requires sign-in.",
+      "description": "GSCP wizard \u2014 opening \u2192 move+charge \u2192 face \u2192 generate \u2192 adventure play. Requires sign-in.",
       "permissions": [
         "authenticated"
       ],
@@ -4731,7 +4731,7 @@
       "method": "PAGE",
       "pattern": "/campaign/spoke/[index]/generated",
       "entity": "CAMPAIGN",
-      "description": "GSCP wizard — opening → move+charge → face → generate → adventure play. Requires sign-in.",
+      "description": "GSCP wizard \u2014 opening \u2192 move+charge \u2192 face \u2192 generate \u2192 adventure play. Requires sign-in.",
       "permissions": [
         "authenticated"
       ],
@@ -4755,7 +4755,7 @@
       "method": "PAGE",
       "pattern": "/campaign/the-crossing/begin",
       "entity": "CAMPAIGN",
-      "description": "The Crossing onboarding funnel (static-segment shim). Renders the\nshared [ref]/begin funnel for campaignRef 'the-crossing' — a static folder,\nso the generic dynamic route does not resolve here.",
+      "description": "The Crossing onboarding funnel (static-segment shim). Renders the\nshared [ref]/begin funnel for campaignRef 'the-crossing' \u2014 a static folder,\nso the generic dynamic route does not resolve here.",
       "permissions": [
         "public"
       ],
@@ -4779,7 +4779,7 @@
       "method": "PAGE",
       "pattern": "/campaign/the-crossing/begin",
       "entity": "CAMPAIGN",
-      "description": "The Crossing onboarding funnel (static-segment shim). Renders the\nshared [ref]/begin funnel for campaignRef 'the-crossing' — a static folder,\nso the generic dynamic route does not resolve here.",
+      "description": "The Crossing onboarding funnel (static-segment shim). Renders the\nshared [ref]/begin funnel for campaignRef 'the-crossing' \u2014 a static folder,\nso the generic dynamic route does not resolve here.",
       "permissions": [
         "public"
       ],
@@ -5093,7 +5093,7 @@
       "method": "PAGE",
       "pattern": "/campaigns",
       "entity": "CAMPAIGN",
-      "description": "The four doors — Appendix B's 21-day campaigns, one card each. There was\nno index under /campaigns (only landing/[slug]), so the four had nowhere to live.\nDirect Action's object is open by design: Week 1 names it, and its menu lists the\nnon-launch options first and in the majority, because a menu of one teaches nothing.\nBoth house rules are pinned above the cards rather than surfaced after entry.",
+      "description": "The four doors \u2014 Appendix B's 21-day campaigns, one card each. There was\nno index under /campaigns (only landing/[slug]), so the four had nowhere to live.\nDirect Action's object is open by design: Week 1 names it, and its menu lists the\nnon-launch options first and in the majority, because a menu of one teaches nothing.\nBoth house rules are pinned above the cards rather than surfaced after entry.",
       "permissions": [
         "public"
       ],
@@ -5118,7 +5118,7 @@
       "method": "PAGE",
       "pattern": "/campaigns",
       "entity": "CAMPAIGN",
-      "description": "The four doors — Appendix B's 21-day campaigns, one card each. There was\nno index under /campaigns (only landing/[slug]), so the four had nowhere to live.\nDirect Action's object is open by design: Week 1 names it, and its menu lists the\nnon-launch options first and in the majority, because a menu of one teaches nothing.\nBoth house rules are pinned above the cards rather than surfaced after entry.",
+      "description": "The four doors \u2014 Appendix B's 21-day campaigns, one card each. There was\nno index under /campaigns (only landing/[slug]), so the four had nowhere to live.\nDirect Action's object is open by design: Week 1 names it, and its menu lists the\nnon-launch options first and in the majority, because a menu of one teaches nothing.\nBoth house rules are pinned above the cards rather than surfaced after entry.",
       "permissions": [
         "public"
       ],
@@ -5665,7 +5665,7 @@
         "authenticated",
         "game_account_ready"
       ],
-      "example": "/creator-scene-deck → redirects to /creator-scene-deck/bruised-banana",
+      "example": "/creator-scene-deck \u2192 redirects to /creator-scene-deck/bruised-banana",
       "id": "page_campaign_667d30bc"
     },
     {
@@ -5692,7 +5692,7 @@
         "authenticated",
         "game_account_ready"
       ],
-      "example": "/creator-scene-deck → redirects to /creator-scene-deck/bruised-banana",
+      "example": "/creator-scene-deck \u2192 redirects to /creator-scene-deck/bruised-banana",
       "id": "page_campaign_667d30bc"
     },
     {
@@ -5859,7 +5859,7 @@
       "method": "PAGE",
       "pattern": "/deck/glossary",
       "entity": "SYSTEM",
-      "description": "Deep-linkable dictionary of every recurring deck term. Built from\nthe canonical move-library data (plus a small authored set). Ungated\nreference material — terms on cards link here via `/deck/glossary#<id>`.",
+      "description": "Deep-linkable dictionary of every recurring deck term. Built from\nthe canonical move-library data (plus a small authored set). Ungated\nreference material \u2014 terms on cards link here via `/deck/glossary#<id>`.",
       "permissions": [
         "public"
       ],
@@ -5884,7 +5884,7 @@
       "method": "PAGE",
       "pattern": "/deck/glossary",
       "entity": "SYSTEM",
-      "description": "Deep-linkable dictionary of every recurring deck term. Built from\nthe canonical move-library data (plus a small authored set). Ungated\nreference material — terms on cards link here via `/deck/glossary#<id>`.",
+      "description": "Deep-linkable dictionary of every recurring deck term. Built from\nthe canonical move-library data (plus a small authored set). Ungated\nreference material \u2014 terms on cards link here via `/deck/glossary#<id>`.",
       "permissions": [
         "public"
       ],
@@ -5909,7 +5909,7 @@
       "method": "PAGE",
       "pattern": "/deck/preview",
       "entity": "SYSTEM",
-      "description": "Unauthenticated sample gallery — a representative teaser of the Allyship\nDeck (the high-fidelity card primitive), not all 120 cards. Reads the public\n`allyship-deck.json` and samples it; the full deck unlocks with the `deck-digital`\nentitlement at /deck.",
+      "description": "Unauthenticated sample gallery \u2014 a representative teaser of the Allyship\nDeck (the high-fidelity card primitive), not all 120 cards. Reads the public\n`allyship-deck.json` and samples it; the full deck unlocks with the `deck-digital`\nentitlement at /deck.",
       "permissions": [
         "public"
       ],
@@ -5934,7 +5934,7 @@
       "method": "PAGE",
       "pattern": "/deck/preview",
       "entity": "SYSTEM",
-      "description": "Unauthenticated sample gallery — a representative teaser of the Allyship\nDeck (the high-fidelity card primitive), not all 120 cards. Reads the public\n`allyship-deck.json` and samples it; the full deck unlocks with the `deck-digital`\nentitlement at /deck.",
+      "description": "Unauthenticated sample gallery \u2014 a representative teaser of the Allyship\nDeck (the high-fidelity card primitive), not all 120 cards. Reads the public\n`allyship-deck.json` and samples it; the full deck unlocks with the `deck-digital`\nentitlement at /deck.",
       "permissions": [
         "public"
       ],
@@ -5954,7 +5954,7 @@
       "method": "PAGE",
       "pattern": "/demo/bruised-banana/donate",
       "entity": "CAMPAIGN",
-      "description": "Public **outreach** donate surface — same layout as `/event/donate?ref=bruised-banana` (no login to use payment links). Use in deep links from outbound BARs, wiki, and email without requiring app context.",
+      "description": "Public **outreach** donate surface \u2014 same layout as `/event/donate?ref=bruised-banana` (no login to use payment links). Use in deep links from outbound BARs, wiki, and email without requiring app context.",
       "permissions": [
         "public"
       ],
@@ -5973,7 +5973,7 @@
       "method": "PAGE",
       "pattern": "/demo/bruised-banana/donate",
       "entity": "CAMPAIGN",
-      "description": "Public **outreach** donate surface — same layout as `/event/donate?ref=bruised-banana` (no login to use payment links). Use in deep links from outbound BARs, wiki, and email without requiring app context.",
+      "description": "Public **outreach** donate surface \u2014 same layout as `/event/donate?ref=bruised-banana` (no login to use payment links). Use in deep links from outbound BARs, wiki, and email without requiring app context.",
       "permissions": [
         "public"
       ],
@@ -5992,7 +5992,7 @@
       "method": "PAGE",
       "pattern": "/demo/bruised-banana",
       "entity": "CAMPAIGN",
-      "description": "Public **donation demo ritual** — charge + 3→2→1 (browser session only, not server-persisted) + links to donate & wiki.",
+      "description": "Public **donation demo ritual** \u2014 charge + 3\u21922\u21921 (browser session only, not server-persisted) + links to donate & wiki.",
       "permissions": [
         "public"
       ],
@@ -6011,7 +6011,7 @@
       "method": "PAGE",
       "pattern": "/demo/bruised-banana",
       "entity": "CAMPAIGN",
-      "description": "Public **donation demo ritual** — charge + 3→2→1 (browser session only, not server-persisted) + links to donate & wiki.",
+      "description": "Public **donation demo ritual** \u2014 charge + 3\u21922\u21921 (browser session only, not server-persisted) + links to donate & wiki.",
       "permissions": [
         "public"
       ],
@@ -6295,7 +6295,7 @@
       "method": "PAGE",
       "pattern": "/event/barn",
       "entity": "SYSTEM",
-      "description": "Public \"barn raising\" centerpiece — the three-wall Milestone BAR for the\nCrossing and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
+      "description": "Public \"barn raising\" centerpiece \u2014 the three-wall Milestone BAR for the\nCrossing and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
       "permissions": [
         "public"
       ],
@@ -6320,7 +6320,7 @@
       "method": "PAGE",
       "pattern": "/event/barn",
       "entity": "SYSTEM",
-      "description": "Public \"barn raising\" centerpiece — the three-wall Milestone BAR for the\nCrossing and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
+      "description": "Public \"barn raising\" centerpiece \u2014 the three-wall Milestone BAR for the\nCrossing and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
       "permissions": [
         "public"
       ],
@@ -6346,7 +6346,7 @@
       "method": "PAGE",
       "pattern": "/event/donate",
       "entity": "EVENT",
-      "description": "Campaign donation page — payment links (public) + self-report (signed-in) mints vibeulons",
+      "description": "Campaign donation page \u2014 payment links (public) + self-report (signed-in) mints vibeulons",
       "permissions": [
         "public (donation links)",
         "authenticated (self-report + vibeulon mint)"
@@ -6373,7 +6373,7 @@
       "method": "PAGE",
       "pattern": "/event/donate",
       "entity": "EVENT",
-      "description": "Campaign donation page — payment links (public) + self-report (signed-in) mints vibeulons",
+      "description": "Campaign donation page \u2014 payment links (public) + self-report (signed-in) mints vibeulons",
       "permissions": [
         "public (donation links)",
         "authenticated (self-report + vibeulon mint)"
@@ -6557,7 +6557,7 @@
       "method": "PAGE",
       "pattern": "/go/:audience",
       "entity": "CAMPAIGN",
-      "description": "One page, one audience, one ask — the handoff's T8 format. Renders the\nskeleton in order: their problem in their words, the one thing this gives them, the\nproof that lands for them specifically, then a single button. **No navigation, no\nfooter, no second offer** — Chrome strips its chrome and the GoAudience type allows\nexactly one `ask`, so a second call to action is a type error rather than a late-night\njudgment call. Handed out one to one, so `noindex`.",
+      "description": "One page, one audience, one ask \u2014 the handoff's T8 format. Renders the\nskeleton in order: their problem in their words, the one thing this gives them, the\nproof that lands for them specifically, then a single button. **No navigation, no\nfooter, no second offer** \u2014 Chrome strips its chrome and the GoAudience type allows\nexactly one `ask`, so a second call to action is a type error rather than a late-night\njudgment call. Handed out one to one, so `noindex`.",
       "permissions": [
         "public"
       ],
@@ -6582,7 +6582,7 @@
       "method": "PAGE",
       "pattern": "/go/:audience",
       "entity": "CAMPAIGN",
-      "description": "One page, one audience, one ask — the handoff's T8 format. Renders the\nskeleton in order: their problem in their words, the one thing this gives them, the\nproof that lands for them specifically, then a single button. **No navigation, no\nfooter, no second offer** — Chrome strips its chrome and the GoAudience type allows\nexactly one `ask`, so a second call to action is a type error rather than a late-night\njudgment call. Handed out one to one, so `noindex`.",
+      "description": "One page, one audience, one ask \u2014 the handoff's T8 format. Renders the\nskeleton in order: their problem in their words, the one thing this gives them, the\nproof that lands for them specifically, then a single button. **No navigation, no\nfooter, no second offer** \u2014 Chrome strips its chrome and the GoAudience type allows\nexactly one `ask`, so a second call to action is a type error rather than a late-night\njudgment call. Handed out one to one, so `noindex`.",
       "permissions": [
         "public"
       ],
@@ -6765,7 +6765,7 @@
       "method": "PAGE",
       "pattern": "/igniting-joy",
       "entity": "CAMPAIGN",
-      "description": "The other book — *Igniting Joy: Transforming Anger's Fire into Joy Through\nHumor*, digital only. Copy is excerpted from Wendell's own blurb in the Twine source\nand re-aimed to the house style. **Says nothing about the app bundle**: the handoff\nforbids app copy on book-facing pages until that question is ruled on, and the\nbrainstorm that bundles this book with a subscription is not a ruling.",
+      "description": "The other book \u2014 *Igniting Joy: Transforming Anger's Fire into Joy Through\nHumor*, digital only. Copy is excerpted from Wendell's own blurb in the Twine source\nand re-aimed to the house style. **Says nothing about the app bundle**: the handoff\nforbids app copy on book-facing pages until that question is ruled on, and the\nbrainstorm that bundles this book with a subscription is not a ruling.",
       "permissions": [
         "public"
       ],
@@ -6790,7 +6790,7 @@
       "method": "PAGE",
       "pattern": "/igniting-joy",
       "entity": "CAMPAIGN",
-      "description": "The other book — *Igniting Joy: Transforming Anger's Fire into Joy Through\nHumor*, digital only. Copy is excerpted from Wendell's own blurb in the Twine source\nand re-aimed to the house style. **Says nothing about the app bundle**: the handoff\nforbids app copy on book-facing pages until that question is ruled on, and the\nbrainstorm that bundles this book with a subscription is not a ruling.",
+      "description": "The other book \u2014 *Igniting Joy: Transforming Anger's Fire into Joy Through\nHumor*, digital only. Copy is excerpted from Wendell's own blurb in the Twine source\nand re-aimed to the house style. **Says nothing about the app bundle**: the handoff\nforbids app copy on book-facing pages until that question is ruled on, and the\nbrainstorm that bundles this book with a subscription is not a ruling.",
       "permissions": [
         "public"
       ],
@@ -6815,7 +6815,7 @@
       "method": "PAGE",
       "pattern": "/introductions",
       "entity": "CAMPAIGN",
-      "description": "The crowdsourced lead board — Appendix B's Gather Resources campaign,\n*The Introduction*, run as a real mechanic rather than described. Readers, backers\nand the email list each name one place along the I-5 corridor, and the pile becomes\nthe Dream 100.\n\n**It asks for a place, never a person's contact details.** A submitter cannot hand\nover somebody else's address here, because that person has not agreed to be handed\nover; `canIntroduce` records the warm path instead and leaves the introduction with\nthe one person in the exchange who consented to be in it. Same rule /campaigns pins\nabove its four doors: the capture is posted, the person is not.",
+      "description": "The crowdsourced lead board \u2014 Appendix B's Gather Resources campaign,\n*The Introduction*, run as a real mechanic rather than described. Readers, backers\nand the email list each name one place along the I-5 corridor, and the pile becomes\nthe Dream 100.\n\n**It asks for a place, never a person's contact details.** A submitter cannot hand\nover somebody else's address here, because that person has not agreed to be handed\nover; `canIntroduce` records the warm path instead and leaves the introduction with\nthe one person in the exchange who consented to be in it. Same rule /campaigns pins\nabove its four doors: the capture is posted, the person is not.",
       "permissions": [
         "public"
       ],
@@ -6840,7 +6840,7 @@
       "method": "PAGE",
       "pattern": "/introductions",
       "entity": "CAMPAIGN",
-      "description": "The crowdsourced lead board — Appendix B's Gather Resources campaign,\n*The Introduction*, run as a real mechanic rather than described. Readers, backers\nand the email list each name one place along the I-5 corridor, and the pile becomes\nthe Dream 100.\n\n**It asks for a place, never a person's contact details.** A submitter cannot hand\nover somebody else's address here, because that person has not agreed to be handed\nover; `canIntroduce` records the warm path instead and leaves the introduction with\nthe one person in the exchange who consented to be in it. Same rule /campaigns pins\nabove its four doors: the capture is posted, the person is not.",
+      "description": "The crowdsourced lead board \u2014 Appendix B's Gather Resources campaign,\n*The Introduction*, run as a real mechanic rather than described. Readers, backers\nand the email list each name one place along the I-5 corridor, and the pile becomes\nthe Dream 100.\n\n**It asks for a place, never a person's contact details.** A submitter cannot hand\nover somebody else's address here, because that person has not agreed to be handed\nover; `canIntroduce` records the warm path instead and leaves the introduction with\nthe one person in the exchange who consented to be in it. Same rule /campaigns pins\nabove its four doors: the capture is posted, the person is not.",
       "permissions": [
         "public"
       ],
@@ -6896,7 +6896,7 @@
       "permissions": [
         "public"
       ],
-      "example": "/invite/claim/bar_123 → redirects to /invite/abc123xyz",
+      "example": "/invite/claim/bar_123 \u2192 redirects to /invite/abc123xyz",
       "id": "page_bar_a04ebf58"
     },
     {
@@ -6922,7 +6922,7 @@
       "permissions": [
         "public"
       ],
-      "example": "/invite/claim/bar_123 → redirects to /invite/abc123xyz",
+      "example": "/invite/claim/bar_123 \u2192 redirects to /invite/abc123xyz",
       "id": "page_bar_a04ebf58"
     },
     {
@@ -7206,7 +7206,7 @@
       "method": "PAGE",
       "pattern": "/login",
       "entity": "PLAYER",
-      "description": "Plain MGA login — email/password, no Conclave story. Claims any\npending deck-card BAR (bars_deck_pending cookie) into the account on success.",
+      "description": "Plain MGA login \u2014 email/password, no Conclave story. Claims any\npending deck-card BAR (bars_deck_pending cookie) into the account on success.",
       "permissions": [
         "public"
       ],
@@ -7232,7 +7232,7 @@
       "method": "PAGE",
       "pattern": "/login",
       "entity": "PLAYER",
-      "description": "Plain MGA login — email/password, no Conclave story. Claims any\npending deck-card BAR (bars_deck_pending cookie) into the account on success.",
+      "description": "Plain MGA login \u2014 email/password, no Conclave story. Claims any\npending deck-card BAR (bars_deck_pending cookie) into the account on success.",
       "permissions": [
         "public"
       ],
@@ -7262,7 +7262,7 @@
       "permissions": [
         "authenticated"
       ],
-      "example": "/map?type=vibeulon → redirects to /wallet",
+      "example": "/map?type=vibeulon \u2192 redirects to /wallet",
       "id": "page_system_e44d3a9e"
     },
     {
@@ -7288,7 +7288,7 @@
       "permissions": [
         "authenticated"
       ],
-      "example": "/map?type=vibeulon → redirects to /wallet",
+      "example": "/map?type=vibeulon \u2192 redirects to /wallet",
       "id": "page_system_e44d3a9e"
     },
     {
@@ -7497,7 +7497,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/one-to-one",
       "entity": "CAMPAIGN",
-      "description": "The Founder branch of Chapter 9's coaching path — the larger of the two\npaths and the most expensive offer on the site. Replaces a stub that shipped the\nimplementation backlog as customer copy. Application-based by design, so the page\nsays why there is no list price rather than hiding one; COACHING_RATE renders a\nnumber once Wendell sets it. Carries the book's own concession that none of it is\nrequired, because an offer this size is only trustworthy beside the alternative.",
+      "description": "The Founder branch of Chapter 9's coaching path \u2014 the larger of the two\npaths and the most expensive offer on the site. Replaces a stub that shipped the\nimplementation backlog as customer copy. Application-based by design, so the page\nsays why there is no list price rather than hiding one; COACHING_RATE renders a\nnumber once Wendell sets it. Carries the book's own concession that none of it is\nrequired, because an offer this size is only trustworthy beside the alternative.",
       "permissions": [
         "public"
       ],
@@ -7522,7 +7522,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/one-to-one",
       "entity": "CAMPAIGN",
-      "description": "The Founder branch of Chapter 9's coaching path — the larger of the two\npaths and the most expensive offer on the site. Replaces a stub that shipped the\nimplementation backlog as customer copy. Application-based by design, so the page\nsays why there is no list price rather than hiding one; COACHING_RATE renders a\nnumber once Wendell sets it. Carries the book's own concession that none of it is\nrequired, because an offer this size is only trustworthy beside the alternative.",
+      "description": "The Founder branch of Chapter 9's coaching path \u2014 the larger of the two\npaths and the most expensive offer on the site. Replaces a stub that shipped the\nimplementation backlog as customer copy. Application-based by design, so the page\nsays why there is no list price rather than hiding one; COACHING_RATE renders a\nnumber once Wendell sets it. Carries the book's own concession that none of it is\nrequired, because an offer this size is only trustworthy beside the alternative.",
       "permissions": [
         "public"
       ],
@@ -7547,7 +7547,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/origin",
       "entity": "CAMPAIGN",
-      "description": "The page Chapter 9's closing drill points at. Its argument, from the book:\nthe Face that answers a given moment need not match the superpower your Face came\nwith, and the Face that never came up at all is the one worth walking toward. Routes\nthe Superpower quiz (which already computes the avoided Face) into that frame and\nlands on the character sheet, where the chapter's own instruction applies — give it a\nname and a date, or it is a resolution.",
+      "description": "The page Chapter 9's closing drill points at. Its argument, from the book:\nthe Face that answers a given moment need not match the superpower your Face came\nwith, and the Face that never came up at all is the one worth walking toward. Routes\nthe Superpower quiz (which already computes the avoided Face) into that frame and\nlands on the character sheet, where the chapter's own instruction applies \u2014 give it a\nname and a date, or it is a resolution.",
       "permissions": [
         "public"
       ],
@@ -7572,7 +7572,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/origin",
       "entity": "CAMPAIGN",
-      "description": "The page Chapter 9's closing drill points at. Its argument, from the book:\nthe Face that answers a given moment need not match the superpower your Face came\nwith, and the Face that never came up at all is the one worth walking toward. Routes\nthe Superpower quiz (which already computes the avoided Face) into that frame and\nlands on the character sheet, where the chapter's own instruction applies — give it a\nname and a date, or it is a resolution.",
+      "description": "The page Chapter 9's closing drill points at. Its argument, from the book:\nthe Face that answers a given moment need not match the superpower your Face came\nwith, and the Face that never came up at all is the one worth walking toward. Routes\nthe Superpower quiz (which already computes the avoided Face) into that frame and\nlands on the character sheet, where the chapter's own instruction applies \u2014 give it a\nname and a date, or it is a resolution.",
       "permissions": [
         "public"
       ],
@@ -7597,7 +7597,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/sheet",
       "entity": "CAMPAIGN",
-      "description": "The character sheet from Appendix H — print PDF, fillable PDF, and the\ninteractive teaching version. **Ungated on purpose**: the printed book says these\nlive at masteringallyship.com, so they are a debt rather than a lead magnet, and\ncharging an email for something already promised in print is the move the book\nspends nine chapters teaching people to spot. The only ask on the page is the\noptional quarterly re-fill reminder, which is Appendix H's own instruction.",
+      "description": "The character sheet from Appendix H \u2014 print PDF, fillable PDF, and the\ninteractive teaching version. **Ungated on purpose**: the printed book says these\nlive at masteringallyship.com, so they are a debt rather than a lead magnet, and\ncharging an email for something already promised in print is the move the book\nspends nine chapters teaching people to spot. The only ask on the page is the\noptional quarterly re-fill reminder, which is Appendix H's own instruction.",
       "permissions": [
         "public"
       ],
@@ -7622,7 +7622,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/sheet",
       "entity": "CAMPAIGN",
-      "description": "The character sheet from Appendix H — print PDF, fillable PDF, and the\ninteractive teaching version. **Ungated on purpose**: the printed book says these\nlive at masteringallyship.com, so they are a debt rather than a lead magnet, and\ncharging an email for something already promised in print is the move the book\nspends nine chapters teaching people to spot. The only ask on the page is the\noptional quarterly re-fill reminder, which is Appendix H's own instruction.",
+      "description": "The character sheet from Appendix H \u2014 print PDF, fillable PDF, and the\ninteractive teaching version. **Ungated on purpose**: the printed book says these\nlive at masteringallyship.com, so they are a debt rather than a lead magnet, and\ncharging an email for something already promised in print is the move the book\nspends nine chapters teaching people to spot. The only ask on the page is the\noptional quarterly re-fill reminder, which is Appendix H's own instruction.",
       "permissions": [
         "public"
       ],
@@ -7647,7 +7647,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/what-comes-next",
       "entity": "CAMPAIGN",
-      "description": "Chapter 9's two paths, in the order and the proportion the book puts them\nin: the deck first as the smaller step, the coaching second as the more expensive one.\nThe coaching path forks the way the chapter does — a Founder move you already know has\nto be you goes to 1:1, and wanting the method itself goes to succession. Deliberately\nrecommends the cheaper path, because the book does.",
+      "description": "Chapter 9's two paths, in the order and the proportion the book puts them\nin: the deck first as the smaller step, the coaching second as the more expensive one.\nThe coaching path forks the way the chapter does \u2014 a Founder move you already know has\nto be you goes to 1:1, and wanting the method itself goes to succession. Deliberately\nrecommends the cheaper path, because the book does.",
       "permissions": [
         "public"
       ],
@@ -7672,7 +7672,7 @@
       "method": "PAGE",
       "pattern": "/mastering-allyship/what-comes-next",
       "entity": "CAMPAIGN",
-      "description": "Chapter 9's two paths, in the order and the proportion the book puts them\nin: the deck first as the smaller step, the coaching second as the more expensive one.\nThe coaching path forks the way the chapter does — a Founder move you already know has\nto be you goes to 1:1, and wanting the method itself goes to succession. Deliberately\nrecommends the cheaper path, because the book does.",
+      "description": "Chapter 9's two paths, in the order and the proportion the book puts them\nin: the deck first as the smaller step, the coaching second as the more expensive one.\nThe coaching path forks the way the chapter does \u2014 a Founder move you already know has\nto be you goes to 1:1, and wanting the method itself goes to succession. Deliberately\nrecommends the cheaper path, because the book does.",
       "permissions": [
         "public"
       ],
@@ -7754,7 +7754,7 @@
       "permissions": [
         "authenticated"
       ],
-      "example": "/nation → redirects to /nation/argyra",
+      "example": "/nation \u2192 redirects to /nation/argyra",
       "id": "page_player_c0ee217a"
     },
     {
@@ -7780,7 +7780,7 @@
       "permissions": [
         "authenticated"
       ],
-      "example": "/nation → redirects to /nation/argyra",
+      "example": "/nation \u2192 redirects to /nation/argyra",
       "id": "page_player_c0ee217a"
     },
     {
@@ -7801,7 +7801,7 @@
       "method": "PAGE",
       "pattern": "/nonprofit",
       "entity": "CAMPAIGN",
-      "description": "The organization, in formation — not incorporated, no 501(c)(3)\ndetermination, and **accepting no money**. The disclosure sits above the fold\nrather than in a footnote, because a page that reads like a charity while the\ncharity does not legally exist is the exact move this project's book spends nine\nchapters teaching people to spot. Asks for founding circle, governance, legal\nhelp and a first program site.",
+      "description": "The organization, in formation \u2014 not incorporated, no 501(c)(3)\ndetermination, and **accepting no money**. The disclosure sits above the fold\nrather than in a footnote, because a page that reads like a charity while the\ncharity does not legally exist is the exact move this project's book spends nine\nchapters teaching people to spot. Asks for founding circle, governance, legal\nhelp and a first program site.",
       "permissions": [
         "public"
       ],
@@ -7826,7 +7826,7 @@
       "method": "PAGE",
       "pattern": "/nonprofit",
       "entity": "CAMPAIGN",
-      "description": "The organization, in formation — not incorporated, no 501(c)(3)\ndetermination, and **accepting no money**. The disclosure sits above the fold\nrather than in a footnote, because a page that reads like a charity while the\ncharity does not legally exist is the exact move this project's book spends nine\nchapters teaching people to spot. Asks for founding circle, governance, legal\nhelp and a first program site.",
+      "description": "The organization, in formation \u2014 not incorporated, no 501(c)(3)\ndetermination, and **accepting no money**. The disclosure sits above the fold\nrather than in a footnote, because a page that reads like a charity while the\ncharity does not legally exist is the exact move this project's book spends nine\nchapters teaching people to spot. Asks for founding circle, governance, legal\nhelp and a first program site.",
       "permissions": [
         "public"
       ],
@@ -7942,7 +7942,7 @@
       "method": "PAGE",
       "pattern": "/play",
       "entity": "SYSTEM",
-      "description": "Short guided creative loop - Charge → Scene Atlas → I Ching (three-step creative practice)",
+      "description": "Short guided creative loop - Charge \u2192 Scene Atlas \u2192 I Ching (three-step creative practice)",
       "permissions": [
         "authenticated"
       ],
@@ -7968,7 +7968,7 @@
       "method": "PAGE",
       "pattern": "/play",
       "entity": "SYSTEM",
-      "description": "Short guided creative loop - Charge → Scene Atlas → I Ching (three-step creative practice)",
+      "description": "Short guided creative loop - Charge \u2192 Scene Atlas \u2192 I Ching (three-step creative practice)",
       "permissions": [
         "authenticated"
       ],
@@ -8094,7 +8094,7 @@
       "method": "PAGE",
       "pattern": "/practice/diagnose",
       "entity": "EMOTIONALVECTOR",
-      "description": "Charge Diagnostic — turns a live charge into a structured, composer-ready emotional vector. Pre-card raw flow; raw text never leaves the client (§1.6).",
+      "description": "Charge Diagnostic \u2014 turns a live charge into a structured, composer-ready emotional vector. Pre-card raw flow; raw text never leaves the client (\u00a71.6).",
       "permissions": [
         "public"
       ],
@@ -8120,7 +8120,7 @@
       "method": "PAGE",
       "pattern": "/practice/diagnose",
       "entity": "EMOTIONALVECTOR",
-      "description": "Charge Diagnostic — turns a live charge into a structured, composer-ready emotional vector. Pre-card raw flow; raw text never leaves the client (§1.6).",
+      "description": "Charge Diagnostic \u2014 turns a live charge into a structured, composer-ready emotional vector. Pre-card raw flow; raw text never leaves the client (\u00a71.6).",
       "permissions": [
         "public"
       ],
@@ -8145,7 +8145,7 @@
       "method": "PAGE",
       "pattern": "/pricing",
       "entity": "SYSTEM",
-      "description": "Legacy funnel front door — composted into the Gumroad-backed `/launch`\npage (the real, card-charging checkout). Kept as a permanent redirect so existing\nlinks, the book's \"unlock\" CTA, and the barn's pre-sale wall CTA still land.",
+      "description": "Legacy funnel front door \u2014 composted into the Gumroad-backed `/launch`\npage (the real, card-charging checkout). Kept as a permanent redirect so existing\nlinks, the book's \"unlock\" CTA, and the barn's pre-sale wall CTA still land.",
       "permissions": [
         "public"
       ],
@@ -8170,7 +8170,7 @@
       "method": "PAGE",
       "pattern": "/pricing",
       "entity": "SYSTEM",
-      "description": "Legacy funnel front door — composted into the Gumroad-backed `/launch`\npage (the real, card-charging checkout). Kept as a permanent redirect so existing\nlinks, the book's \"unlock\" CTA, and the barn's pre-sale wall CTA still land.",
+      "description": "Legacy funnel front door \u2014 composted into the Gumroad-backed `/launch`\npage (the real, card-charging checkout). Kept as a permanent redirect so existing\nlinks, the book's \"unlock\" CTA, and the barn's pre-sale wall CTA still land.",
       "permissions": [
         "public"
       ],
@@ -8460,7 +8460,7 @@
       "method": "PAGE",
       "pattern": "/shadow/321",
       "entity": "SYSTEM",
-      "description": "321 shadow process - 3rd person → 2nd person → 1st person integration work",
+      "description": "321 shadow process - 3rd person \u2192 2nd person \u2192 1st person integration work",
       "permissions": [
         "authenticated"
       ],
@@ -8486,7 +8486,7 @@
       "method": "PAGE",
       "pattern": "/shadow/321",
       "entity": "SYSTEM",
-      "description": "321 shadow process - 3rd person → 2nd person → 1st person integration work",
+      "description": "321 shadow process - 3rd person \u2192 2nd person \u2192 1st person integration work",
       "permissions": [
         "authenticated"
       ],
@@ -8512,7 +8512,7 @@
       "method": "PAGE",
       "pattern": "/signup",
       "entity": "PLAYER",
-      "description": "Plain MGA signup — email/password account creation, no Conclave story.\nClaims any pending deck-card BAR (bars_deck_pending cookie) into the new account.",
+      "description": "Plain MGA signup \u2014 email/password account creation, no Conclave story.\nClaims any pending deck-card BAR (bars_deck_pending cookie) into the new account.",
       "permissions": [
         "public"
       ],
@@ -8538,7 +8538,7 @@
       "method": "PAGE",
       "pattern": "/signup",
       "entity": "PLAYER",
-      "description": "Plain MGA signup — email/password account creation, no Conclave story.\nClaims any pending deck-card BAR (bars_deck_pending cookie) into the new account.",
+      "description": "Plain MGA signup \u2014 email/password account creation, no Conclave story.\nClaims any pending deck-card BAR (bars_deck_pending cookie) into the new account.",
       "permissions": [
         "public"
       ],
@@ -8563,7 +8563,7 @@
       "method": "PAGE",
       "pattern": "/speaking",
       "entity": "CAMPAIGN",
-      "description": "Speaking and workshops — the promise Chapter 9's *What Comes Next*\nmakes in print. Fees are on the page rather than behind an enquiry, because a\npage that hides the number is asking the reader to spend a conversation\nfinding out she cannot afford it. Two one-sheets attach: corporate and\nfield/outdoor.",
+      "description": "Speaking and workshops \u2014 the promise Chapter 9's *What Comes Next*\nmakes in print. Fees are on the page rather than behind an enquiry, because a\npage that hides the number is asking the reader to spend a conversation\nfinding out she cannot afford it. Two one-sheets attach: corporate and\nfield/outdoor.",
       "permissions": [
         "public"
       ],
@@ -8588,7 +8588,7 @@
       "method": "PAGE",
       "pattern": "/speaking",
       "entity": "CAMPAIGN",
-      "description": "Speaking and workshops — the promise Chapter 9's *What Comes Next*\nmakes in print. Fees are on the page rather than behind an enquiry, because a\npage that hides the number is asking the reader to spend a conversation\nfinding out she cannot afford it. Two one-sheets attach: corporate and\nfield/outdoor.",
+      "description": "Speaking and workshops \u2014 the promise Chapter 9's *What Comes Next*\nmakes in print. Fees are on the page rather than behind an enquiry, because a\npage that hides the number is asking the reader to spend a conversation\nfinding out she cannot afford it. Two one-sheets attach: corporate and\nfield/outdoor.",
       "permissions": [
         "public"
       ],
@@ -8717,7 +8717,7 @@
       "method": "PAGE",
       "pattern": "/succession",
       "entity": "CAMPAIGN",
-      "description": "Certification and succession — overdue by a printing. Chapter 9 puts\nwendell@masteringallyship.com in print next to certification with no intake behind\nit, so people wrote to an address that led nowhere. **Nothing is sold here.** The\npage states the actual current state and offers a waitlist, which enters no\nsequence (see src/lib/esp/list-contract.ts).",
+      "description": "Certification and succession \u2014 overdue by a printing. Chapter 9 puts\nwendell@masteringallyship.com in print next to certification with no intake behind\nit, so people wrote to an address that led nowhere. **Nothing is sold here.** The\npage states the actual current state and offers a waitlist, which enters no\nsequence (see src/lib/esp/list-contract.ts).",
       "permissions": [
         "public"
       ],
@@ -8742,7 +8742,7 @@
       "method": "PAGE",
       "pattern": "/succession",
       "entity": "CAMPAIGN",
-      "description": "Certification and succession — overdue by a printing. Chapter 9 puts\nwendell@masteringallyship.com in print next to certification with no intake behind\nit, so people wrote to an address that led nowhere. **Nothing is sold here.** The\npage states the actual current state and offers a waitlist, which enters no\nsequence (see src/lib/esp/list-contract.ts).",
+      "description": "Certification and succession \u2014 overdue by a printing. Chapter 9 puts\nwendell@masteringallyship.com in print next to certification with no intake behind\nit, so people wrote to an address that led nowhere. **Nothing is sold here.** The\npage states the actual current state and offers a waitlist, which enters no\nsequence (see src/lib/esp/list-contract.ts).",
       "permissions": [
         "public"
       ],
@@ -8767,7 +8767,7 @@
       "method": "PAGE",
       "pattern": "/support",
       "entity": "CAMPAIGN",
-      "description": "The personal-need ask, off the storefront and on its own page, per the site\nhandoff's rule. **Money here goes to a person and is not tax-deductible** — the\nin-formation organization takes none, and that distinction is the first block on the\npage rather than a footnote. Lists the car and the monthly runway (both read from\nbarn-raising so targets cannot drift), then the three kinds of help that cost nothing.\nDeliberately excludes the pre-sale: buying a book is commerce and lives on the\nstorefront.",
+      "description": "The personal-need ask, off the storefront and on its own page, per the site\nhandoff's rule. **Money here goes to a person and is not tax-deductible** \u2014 the\nin-formation organization takes none, and that distinction is the first block on the\npage rather than a footnote. Lists the car and the monthly runway (both read from\nbarn-raising so targets cannot drift), then the three kinds of help that cost nothing.\nDeliberately excludes the pre-sale: buying a book is commerce and lives on the\nstorefront.",
       "permissions": [
         "public"
       ],
@@ -8792,7 +8792,7 @@
       "method": "PAGE",
       "pattern": "/support",
       "entity": "CAMPAIGN",
-      "description": "The personal-need ask, off the storefront and on its own page, per the site\nhandoff's rule. **Money here goes to a person and is not tax-deductible** — the\nin-formation organization takes none, and that distinction is the first block on the\npage rather than a footnote. Lists the car and the monthly runway (both read from\nbarn-raising so targets cannot drift), then the three kinds of help that cost nothing.\nDeliberately excludes the pre-sale: buying a book is commerce and lives on the\nstorefront.",
+      "description": "The personal-need ask, off the storefront and on its own page, per the site\nhandoff's rule. **Money here goes to a person and is not tax-deductible** \u2014 the\nin-formation organization takes none, and that distinction is the first block on the\npage rather than a footnote. Lists the car and the monthly runway (both read from\nbarn-raising so targets cannot drift), then the three kinds of help that cost nothing.\nDeliberately excludes the pre-sale: buying a book is commerce and lives on the\nstorefront.",
       "permissions": [
         "public"
       ],
@@ -8872,7 +8872,7 @@
       "method": "PAGE",
       "pattern": "/threshold-encounter/:id",
       "entity": "QUEST",
-      "description": "Interactive threshold encounter — CYOA scene from emotional alchemy check-in",
+      "description": "Interactive threshold encounter \u2014 CYOA scene from emotional alchemy check-in",
       "permissions": [
         "authenticated",
         "owner_only"
@@ -8899,7 +8899,7 @@
       "method": "PAGE",
       "pattern": "/threshold-encounter/:id",
       "entity": "QUEST",
-      "description": "Interactive threshold encounter — CYOA scene from emotional alchemy check-in",
+      "description": "Interactive threshold encounter \u2014 CYOA scene from emotional alchemy check-in",
       "permissions": [
         "authenticated",
         "owner_only"
@@ -8924,7 +8924,7 @@
       "method": "PAGE",
       "pattern": "/vault/all",
       "entity": "BAR",
-      "description": "Canonical \"All BARs\" Vault room — every owned active BAR and quest in one list, plus received/sent talismans. The /bars \"Inspirations\" page folds in here (QLA Phase 1).",
+      "description": "Canonical \"All BARs\" Vault room \u2014 every owned active BAR and quest in one list, plus received/sent talismans. The /bars \"Inspirations\" page folds in here (QLA Phase 1).",
       "permissions": [
         "authenticated"
       ],
@@ -8948,7 +8948,7 @@
       "method": "PAGE",
       "pattern": "/vault/all",
       "entity": "BAR",
-      "description": "Canonical \"All BARs\" Vault room — every owned active BAR and quest in one list, plus received/sent talismans. The /bars \"Inspirations\" page folds in here (QLA Phase 1).",
+      "description": "Canonical \"All BARs\" Vault room \u2014 every owned active BAR and quest in one list, plus received/sent talismans. The /bars \"Inspirations\" page folds in here (QLA Phase 1).",
       "permissions": [
         "authenticated"
       ],
@@ -9181,7 +9181,7 @@
       "method": "PAGE",
       "pattern": "/vault/open-up",
       "entity": "BAR",
-      "description": "Vault Open Up room (Felt sense) — feel into what's alive before acting on it",
+      "description": "Vault Open Up room (Felt sense) \u2014 feel into what's alive before acting on it",
       "permissions": [
         "authenticated"
       ],
@@ -9206,7 +9206,7 @@
       "method": "PAGE",
       "pattern": "/vault/open-up",
       "entity": "BAR",
-      "description": "Vault Open Up room (Felt sense) — feel into what's alive before acting on it",
+      "description": "Vault Open Up room (Felt sense) \u2014 feel into what's alive before acting on it",
       "permissions": [
         "authenticated"
       ],
@@ -9232,7 +9232,7 @@
       "method": "PAGE",
       "pattern": "/vault",
       "entity": "SYSTEM",
-      "description": "Personal Vault lobby for the individual practitioner: the five move-rooms (Wake · Open · Clean · Grow · Show) plus a compost nudge. Campaign/scene clutter lives behind campaign contexts, not here.",
+      "description": "Personal Vault lobby for the individual practitioner: the five move-rooms (Wake \u00b7 Open \u00b7 Clean \u00b7 Grow \u00b7 Show) plus a compost nudge. Campaign/scene clutter lives behind campaign contexts, not here.",
       "permissions": [
         "authenticated"
       ],
@@ -9258,7 +9258,7 @@
       "method": "PAGE",
       "pattern": "/vault",
       "entity": "SYSTEM",
-      "description": "Personal Vault lobby for the individual practitioner: the five move-rooms (Wake · Open · Clean · Grow · Show) plus a compost nudge. Campaign/scene clutter lives behind campaign contexts, not here.",
+      "description": "Personal Vault lobby for the individual practitioner: the five move-rooms (Wake \u00b7 Open \u00b7 Clean \u00b7 Grow \u00b7 Show) plus a compost nudge. Campaign/scene clutter lives behind campaign contexts, not here.",
       "permissions": [
         "authenticated"
       ],
@@ -9432,7 +9432,7 @@
       "method": "PAGE",
       "pattern": "/wiki/321-shadow-process",
       "entity": "WIKI",
-      "description": "What the 321 (3→2→1) witness pass is — third, second, first person — with links to handbook and in-app session",
+      "description": "What the 321 (3\u21922\u21921) witness pass is \u2014 third, second, first person \u2014 with links to handbook and in-app session",
       "permissions": [
         "public"
       ],
@@ -9451,7 +9451,7 @@
       "method": "PAGE",
       "pattern": "/wiki/321-shadow-process",
       "entity": "WIKI",
-      "description": "What the 321 (3→2→1) witness pass is — third, second, first person — with links to handbook and in-app session",
+      "description": "What the 321 (3\u21922\u21921) witness pass is \u2014 third, second, first person \u2014 with links to handbook and in-app session",
       "permissions": [
         "public"
       ],
@@ -9678,7 +9678,7 @@
       "method": "PAGE",
       "pattern": "/wiki/handbook/play",
       "entity": "WIKI",
-      "description": "Interactive CYOA orientation — learn the four moves by playing them",
+      "description": "Interactive CYOA orientation \u2014 learn the four moves by playing them",
       "permissions": [
         "public"
       ],
@@ -9697,7 +9697,7 @@
       "method": "PAGE",
       "pattern": "/wiki/handbook/play",
       "entity": "WIKI",
-      "description": "Interactive CYOA orientation — learn the four moves by playing them",
+      "description": "Interactive CYOA orientation \u2014 learn the four moves by playing them",
       "permissions": [
         "public"
       ],
@@ -9912,6 +9912,58 @@
         "public"
       ],
       "id": "page_wiki_8c922caf"
+    },
+    {
+      "sourceFile": "/src/app/api/mcp/route.ts",
+      "lineNumber": 832,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "agent",
+        "WHAT": "SYSTEM",
+        "WHERE": "council board",
+        "ENERGY": "0"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "POST",
+      "pattern": "/api/mcp",
+      "entity": "SYSTEM",
+      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,\nclose_read, close_say, whoami, and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,\nasset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake",
+      "permissions": [
+        "COUNCIL_MENU_TOKEN",
+        "as Authorization: Bearer <key>",
+        "a bare header or ?token="
+      ],
+      "example": "POST /api/mcp {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}",
+      "id": "post_system_0cba9682"
+    },
+    {
+      "sourceFile": "/src/app/api/mcp/route.ts",
+      "lineNumber": 902,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "agent",
+        "WHAT": "SYSTEM",
+        "WHERE": "council board",
+        "ENERGY": "0"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "GET",
+      "pattern": "/api/mcp",
+      "entity": "SYSTEM",
+      "description": "The MCP transport's GET, answered 405: this server answers a POST with JSON and opens no SSE stream",
+      "permissions": [
+        "COUNCIL_MENU_TOKEN"
+      ],
+      "example": "GET /api/mcp",
+      "id": "get_system_8a66ec10"
     }
   ],
   "relationships": {

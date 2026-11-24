@@ -242,13 +242,40 @@ describe('the pipeline door', () => {
 
   it('lists the nine pipeline tools beside the six board ones', async () => {
     const names = ((await rpc('tools/list')).result?.tools ?? []).map((t) => t.name)
-    for (const n of ['pipeline.status', 'pipeline.next', 'loop.checks', 'asset.brief', 'asset.verify', 'canon.lookup',
-      'ontology.profile', 'mechanic.eval', 'faces.lens'])
+    for (const n of ['pipeline_status', 'pipeline_next', 'loop_checks', 'asset_brief', 'asset_verify', 'canon_lookup',
+      'ontology_profile', 'mechanic_eval', 'faces_lens'])
       expect(names).toContain(n)
   })
 
-  it('answers a standing and the next gate in text, naming the files', async () => {
+  it('keeps every tool name and input schema inside what the Anthropic API accepts', async () => {
+    type Tool = { name: string; description?: string; inputSchema?: Record<string, unknown> }
+    const tools = ((await rpc('tools/list')).result?.tools ?? []) as Tool[]
+    expect(tools.length).toBeGreaterThan(0)
+    const seen = new Set<string>()
+    for (const t of tools) {
+      expect(t.name, `tool name ${t.name}`).toMatch(/^[a-zA-Z0-9_-]{1,128}$/)
+      expect(seen.has(t.name), `duplicate ${t.name}`).toBe(false)
+      seen.add(t.name)
+      const schema = t.inputSchema ?? {}
+      expect(schema.type, `${t.name} inputSchema.type`).toBe('object')
+      for (const k of ['oneOf', 'anyOf', 'allOf', 'not', 'enum'])
+        expect(schema, `${t.name} top-level ${k}`).not.toHaveProperty(k)
+      for (const prop of Object.keys((schema.properties ?? {}) as object))
+        expect(prop, `${t.name} property ${prop}`).toMatch(/^[a-zA-Z0-9_.-]{1,64}$/)
+      for (const r of (schema.required ?? []) as string[])
+        expect(Object.keys((schema.properties ?? {}) as object), `${t.name} required ${r}`).toContain(r)
+    }
+  })
+
+  it('still answers the old dotted tool names as aliases', async () => {
     const s = await call('pipeline.status', { strand: 'hand-grip' })
+    expect(s.result?.isError).toBeFalsy()
+    const same = await call('pipeline_status', { strand: 'hand-grip' })
+    expect(s.result?.content?.[0]?.text).toBe(same.result?.content?.[0]?.text)
+  })
+
+  it('answers a standing and the next gate in text, naming the files', async () => {
+    const s = await call('pipeline_status', { strand: 'hand-grip' })
     expect(s.result?.isError).toBe(false)
     const text = s.result?.content?.[0]?.text ?? ''
     expect(text).toContain('stage: intake')
@@ -256,51 +283,64 @@ describe('the pipeline door', () => {
     expect(text).toContain('council/loops/hand-grip.json')
     expect(text).toContain('gap finger_pad_gap')
 
-    const n = await call('pipeline.next', { strand: 'hand-grip' })
+    const n = await call('pipeline_next', { strand: 'hand-grip' })
     expect(n.result?.content?.[0]?.text).toContain('run: python3 council/tools/asset_callsheet.py')
   })
 
   it('answers the loop, the brief and the six lenses', async () => {
-    const loop = payload(await call('loop.checks', { strand: 'hand-grip' }))
+    const loop = payload(await call('loop_checks', { strand: 'hand-grip' }))
     expect((loop.checks as { id: string }[]).map((c) => c.id)).toEqual(['thumb_side', 'finger_pad_gap'])
 
-    const brief = (await call('asset.brief', { strand: 'hand-grip', node: 'held prop' })).result?.content?.[0]?.text ?? ''
+    const brief = (await call('asset_brief', { strand: 'hand-grip', node: 'held prop' })).result?.content?.[0]?.text ?? ''
     expect(brief).toContain('existing:')
     expect(brief).toContain('proof: python3 council/judge/run_loop.py hand-grip')
     expect(brief).toContain('emits')
 
-    const lenses = payload(await call('faces.lens', { strand: 'hand-grip' }))
+    const lenses = payload(await call('faces_lens', { strand: 'hand-grip' }))
     expect((lenses.faces as { face: string }[])[0].face).toBe('shaman')
   })
 
+  it('lists shaman_intake and returns a reading with one next step', async () => {
+    const names = ((await rpc('tools/list')).result?.tools ?? []).map((t) => t.name)
+    expect(names).toContain('shaman_intake')
+    const r = payload(await call('shaman_intake', { doubt: 'I do not think I am capable of building the thing that I want' }))
+    expect(r.face).toBe('shaman')
+    expect(r.theme).toBe('capable')
+    expect(String(r.underneath).length).toBeGreaterThan(20)
+    expect(String(r.next_step)).toMatch(/today/)
+    expect(String(r.underneath) + String(r.next_step)).not.toContain('?')
+    expect(payload(await call('shaman_intake', { doubt: 'I feel stuck' })).theme).toBe('other')
+    expect((await call('shaman_intake', { doubt: '  ' })).result?.isError).toBe(true)
+  })
+
   it('refuses a held round with his sentence, and passes a clear one', async () => {
-    const no = await call('asset.verify', { strand: 'hand-grip', round: 'r-held' })
+    const no = await call('asset_verify', { strand: 'hand-grip', round: 'r-held' })
     expect(no.result?.isError).toBe(true)
     expect(no.result?.content?.[0]?.text).toContain('"The thumb is on the wrong side of the brush"')
 
-    const yes = await call('asset.verify', { strand: 'hand-grip', round: 'r-clear' })
+    const yes = await call('asset_verify', { strand: 'hand-grip', round: 'r-clear' })
     expect(yes.result?.isError).toBe(false)
     expect(payload(yes).judge).toContain('judge: not held')
 
-    const missing = await call('asset.verify', { strand: 'hand-grip', round: 'r-missing' })
+    const missing = await call('asset_verify', { strand: 'hand-grip', round: 'r-missing' })
     expect(missing.result?.isError).toBe(true)
     expect(missing.result?.content?.[0]?.text).toContain('no receipt at council/callsheets/stills/r-missing/judge.json')
   })
 
   it('answers a canon block, a load profile and a mechanic\'s arithmetic', async () => {
-    const block = payload(await call('canon.lookup', { name: 'lading-seal' }))
+    const block = payload(await call('canon_lookup', { name: 'lading-seal' }))
     expect(block.rule).toContain('a ship docks with a full hold')
 
-    const profile = payload(await call('ontology.profile', { kind: 'game_design' }))
+    const profile = payload(await call('ontology_profile', { kind: 'game_design' }))
     expect(profile.loads).toEqual(['ontology/v0.1/QUICKSTART.md'])
 
-    const tuned = payload(await call('mechanic.eval', { mechanic: 'lading-seal', state: { press: 0.5 } }))
+    const tuned = payload(await call('mechanic_eval', { mechanic: 'lading-seal', state: { press: 0.5 } }))
     expect((tuned.faders as { said: string }[])[0].said).toBe('0.5 s ease-out-cubic press')
     expect(tuned.ok).toBe(false)
   })
 
   it('refuses a strand it cannot read', async () => {
-    const r = await call('pipeline.status', { strand: 'no-such-strand' })
+    const r = await call('pipeline_status', { strand: 'no-such-strand' })
     expect(r.result?.isError).toBe(false)  // a standing with no loop still answers, and says so
     expect(r.result?.content?.[0]?.text).toContain('no loop at council/loops/no-such-strand.json')
   })

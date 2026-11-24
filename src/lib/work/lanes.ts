@@ -9,16 +9,36 @@ import { givenToken, tokenMatches } from '@/lib/council/token'
  * the closing ritual's lever (src/lib/close/lever.ts) puts tickets in it. COUNCIL_MENU_TOKEN (the council's own sessions) may act in any lane and push
  * tickets.
  */
-export const LANES = ['claude', 'freebuff', 'deepai', 'zo'] as const
+export const LANES = ['claude', 'freebuff', 'deepai', 'zo', 'calrunian'] as const
 export type Lane = (typeof LANES)[number]
+/**
+ * The Calrunian lane (Wendell, 2026-11-21): the always-on box's local-model workers pull from it. It has no token of
+ * its own, so the council token acts in it (laneCaller already lets COUNCIL_MENU_TOKEN act in any lane), and the same
+ * token pushes the tickets the lane generates for itself (POST /api/work/tickets with lanes ["calrunian"]). It opens
+ * steered only: a ticket reaches it when its order names it, never as overflow from the other lanes.
+ */
+export const CALRUNIAN_LANE = 'calrunian'
 /**
  * Where his answers go by themselves (`wq-who-routes`): Claude first, Freebuff when Claude runs dry. DeepAI is
  * deliberately not here. It opens as an explicit lane (a ticket naming it, or a claim from it) so its throughput and
  * quality can be measured before it carries work he did not route to it himself.
  */
 export const DEFAULT_LANES: Lane[] = ['claude', 'freebuff']
-/** A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. */
-export const LEASE_MS = 2 * 60 * 60 * 1000
+/**
+ * A claim holds a ticket this long; heartbeat extends it, and a lapsed lease returns the ticket to ready. Six hours
+ * is the time a worker really takes on a ticket: at two hours a ticket under work lapsed and was claimed and announced
+ * again (2026-11-18: 37 tickets went round 18 to 30 times).
+ */
+export const LEASE_MS = 6 * 60 * 60 * 1000
+/**
+ * A claim counts against the lane's worker cap only this long after its last touch (claim or heartbeat). The lease
+ * still holds the ticket for LEASE_MS, so nobody else takes it, but a worker that shipped its pull request and never
+ * called `done` stops filling a slot after three hours. Found 2026-11-20: four finished tickets held the Claude lane
+ * full for hours while fifteen answered looks waited.
+ */
+export const CAP_LIVE_MS = 3 * 60 * 60 * 1000
+/** Most live claims one lane holds at once. A fifth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"). */
+export const LANE_WORKERS = 4
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */
 export const DRY_MS = 5 * 60 * 60 * 1000
 /** The furthest out he can set the renewal gate by hand. Beyond this the gate is a guess, not a signal. */
@@ -66,6 +86,23 @@ export function firstLitLane(lanes: string[], dry: Set<string>): string {
  */
 export const DECK_CEILING = 20
 
+/**
+ * Work DeepAI Code cannot do. 2026-11-21: its lane failed 43 of 48 tickets, 40 of them "lane timed out after 2700s":
+ * picture builds (a robe tuck, a colour band, a skirt, a run gait) need a render and a look, and a design question
+ * needs a face's judgment, so neither belongs in a build lane that has no browser and no GPU. Both go to Claude.
+ */
+export type TicketKind = 'picture' | 'design' | 'build'
+const PICTURE = /\b(robe|skirt|hem|tuck|regalia|garment|cloth|drape|gait|rig(ging)?|retarget|animation|animate|mocap|shader|texture|render|stills?|film|look row|picture|screenshot|magenta|band|mesh|glb|blender|cultivation figure|walk cycle)\b/i
+const DESIGN = /\b(fate[- ]clearing|design question|which (option|face)|decide|ruling|ontology|mechanic|should we|six[- ]face pass|council read|intake)\b/i
+export function ticketKind(title: string, brief = ''): TicketKind {
+  const text = `${title}\n${brief}`
+  if (PICTURE.test(title) || (PICTURE.test(text) && /\b(look|render|picture|still|film|screenshot)\b/i.test(text))) return 'picture'
+  if (DESIGN.test(title)) return 'design'
+  return 'build'
+}
+/** Lanes a kind of ticket may not enter: DeepAI takes only plain builds. */
+export const kindBars = (kind: TicketKind): string[] => (kind === 'build' ? [] : ['deepai'])
+
 export type RouteReason = 'order' | 'ceiling'
 
 /** Why a lane got the ticket: the next one in his order with room, or the ceiling picked the shortest deck. */
@@ -83,15 +120,24 @@ export interface Route {
  * zo alone.
  */
 export function routeLane(
-  lanes: string[], lit: Set<string>, depth: Record<string, number>, ceiling = DECK_CEILING,
+  lanes: string[], lit: Set<string>, depth: Record<string, number>, ceiling = DECK_CEILING, kind: TicketKind = 'build',
 ): Route | null {
+  const barred = kindBars(kind)
+  if (barred.length) {
+    lanes = lanes.filter(l => !barred.includes(l))
+    // A picture or design ticket that named only DeepAI goes to Claude, the lane with a browser and a face to look.
+    if (!lanes.length) lanes = ['claude']
+    lit = new Set([...lit].filter(l => !barred.includes(l)))
+  }
   const zoOnly = lanes.length === 1 && lanes[0] === 'zo'
-  const order = zoOnly ? lanes : lanes.filter(l => l !== 'zo')
+  const calrunianOnly = lanes.length === 1 && lanes[0] === CALRUNIAN_LANE
+  const solo = zoOnly || calrunianOnly
+  const order = solo ? lanes : lanes.filter(l => l !== 'zo')
   const room = order.find(l => lit.has(l) && (depth[l] ?? 0) < ceiling)
   if (room) return { lane: room, reason: 'order' }
   // His words: when no lane in the order is under the ceiling, the lit lane with the smallest deck takes it.
   // That pool is every lane, not the order, which is how a maker outside DEFAULT_LANES receives work at all.
-  const pool = zoOnly ? order : [...new Set([...order, ...LANES])].filter(l => l !== 'zo')
+  const pool = solo ? order : [...new Set([...order, ...LANES])].filter(l => order.includes(l) || (l !== 'zo' && l !== CALRUNIAN_LANE))
   const open = pool.filter(l => lit.has(l))
   if (!open.length) return null
   const byDepth = [...open].sort((a, b) => (depth[a] ?? 0) - (depth[b] ?? 0) || pool.indexOf(a) - pool.indexOf(b))

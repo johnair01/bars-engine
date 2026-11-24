@@ -609,3 +609,33 @@
         .daemon-interview { border-left: 3px solid #ffd166; }
         .record-entry p { margin: 0.15rem 0; font-size: 0.9rem; }
         .record-switch input { vertical-align: middle; }
+
+        /* BAR naming card (spec ontology-game-bar-claim). The altitude colour is a left rule
+           only; no sentence is highlighted, pre-selected or marked as expected. */
+        .naming-card { text-align: left; }
+        .naming-title { text-align: center; font-size: 2rem; letter-spacing: 0.04em; margin-bottom: 0.4rem; }
+        .naming-sentences { display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0; }
+        .naming-sentence {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-left: 4px solid var(--naming-rule, #888);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            line-height: 1.45;
+            transition: opacity 0.4s ease;
+        }
+        .naming-sentence:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.7); outline-offset: 2px; }
+        .naming-magenta { --naming-rule: #d946ef; }
+        .naming-red { --naming-rule: #ef4444; }
+        .naming-amber { --naming-rule: #f59e0b; }
+        .naming-orange { --naming-rule: #f97316; }
+        .naming-green { --naming-rule: #22c55e; }
+        .naming-teal { --naming-rule: #14b8a6; }
+        .naming-faded { opacity: 0.25; }
+        .naming-words { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.8rem; }
+        .naming-words input { width: 100%; box-sizing: border-box; padding: 0.7rem; }
+        a[data-carry-claims] {
+            display: inline-block; padding: 0.7rem 1.2rem; border: 1px solid rgba(255, 152, 0, 0.5);
+            border-radius: 8px; background: rgba(255, 152, 0, 0.2); color: #ff9800; text-decoration: none;
+        }

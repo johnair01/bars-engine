@@ -222,7 +222,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'pipeline.status',
+    name: 'pipeline_status',
     title: 'Where a strand stands',
     description: 'Answer a strand\'s callsheet, the stage it has signed, the open gaps the loop reports and the next gate, '
       + 'in 40 lines or fewer, each fact naming the file it came from.',
@@ -248,7 +248,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'pipeline.next',
+    name: 'pipeline_next',
     title: 'The next gate',
     description: 'Answer the one stage a strand moves to next: its gate and the command that runs it.',
     inputSchema: {
@@ -259,7 +259,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'loop.checks',
+    name: 'loop_checks',
     title: 'A strand\'s checks',
     description: 'Answer council/loops/<strand>.json\'s deft block: each check\'s id, his note quoted, the look it came '
       + 'from, what it reads, its bound, and whether it holds or only reports.',
@@ -271,7 +271,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'asset.brief',
+    name: 'asset_brief',
     title: 'What one round owes',
     description: 'Answer the brief for a strand\'s round as markdown: the node type, the place\'s floors, the reference '
       + 'frames with his answers, the order the callsheet\'s NEXT steps give, the proof command and the emits list.',
@@ -301,7 +301,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'asset.verify',
+    name: 'asset_verify',
     title: 'Judge a round before it posts',
     description: 'Read the round\'s judge.json receipt and refuse a round whose receipt is missing, belongs to another '
       + 'strand, predates a check the loop runs now, or holds; a held round comes back with the failing check and his '
@@ -328,7 +328,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'canon.lookup',
+    name: 'canon_lookup',
     title: 'One canon block',
     description: 'Answer one canon/mechanics file or one rule in canon/play-canon.md: its rule, the words he is quoted '
       + 'saying, the ask that remains, and the file:line it came from.',
@@ -368,7 +368,7 @@ const TOOLS = [
     annotations: { readOnlyHint: false },
   },
   {
-    name: 'ontology.profile',
+    name: 'ontology_profile',
     title: 'What a task kind loads',
     description: 'Answer a load profile from ontology/manifest.yaml and the eleven design-ontology fields the stage owes.',
     inputSchema: {
@@ -379,7 +379,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'mechanic.eval',
+    name: 'mechanic_eval',
     title: 'A mechanic\'s arithmetic',
     description: 'Evaluate one canon/mechanics file at a state and show its arithmetic: each fader\'s value, its bounds, '
       + 'and whether the words it says appear in the feel line it names. The same two checks the tuning bench runs.',
@@ -394,7 +394,7 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
-    name: 'faces.lens',
+    name: 'faces_lens',
     title: 'The six lenses on a strand',
     description: 'Answer each face\'s lens, its standing test and the lessons whose own words bear on the strand, quoted '
       + 'from council/faces.yaml.',
@@ -402,6 +402,18 @@ const TOOLS = [
       type: 'object',
       properties: { strand: STRAND },
       required: ['strand'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'shaman_intake',
+    title: 'The Shaman reads a doubt',
+    description: 'Give the doubt in the player\'s own words. The Shaman answers what is moving underneath it and one '
+      + 'small step to take today. Deterministic, no model call.',
+    inputSchema: {
+      type: 'object',
+      properties: { doubt: { type: 'string', description: 'The doubt in his or her own words, e.g. `I do not think I am capable of building the thing that I want`.' } },
+      required: ['doubt'],
     },
     annotations: { readOnlyHint: true },
   },
@@ -644,7 +656,7 @@ async function assetVerify(args: Record<string, unknown>): Promise<ToolResult> {
   const s = strandOf(args)
   if ('error' in s) return bad(s.error)
   const round = typeof args.round === 'string' ? args.round.trim() : ''
-  if (!round) return bad('asset.verify needs round: the round folder, e.g. `2026-11-09-cc-gate-look-13`')
+  if (!round) return bad('asset_verify needs round: the round folder, e.g. `2026-11-09-cc-gate-look-13`')
   const v = await verifyRound(s.strand, round)
   if (!v.ok) return bad(refusalLines(v).join('\n'))
   return ok({ ok: true, judge: v.judge, refused: [], registry: v.registry, source: v.source })
@@ -683,7 +695,64 @@ async function facesLens(args: Record<string, unknown>): Promise<ToolResult> {
   return ok(l)
 }
 
-async function callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
+type DoubtTheme = 'capable' | 'worthy' | 'enough' | 'belong' | 'other'
+const DOUBT_THEMES: { theme: DoubtTheme; test: RegExp; moving: string; step: string }[] = [
+  {
+    theme: 'capable',
+    test: /\b(capable|capability|can'?t build|cannot build|able to build|ability|skill|know how|figure (it )?out)\b/i,
+    moving: 'Under this doubt sits a wish the size of a whole world, held next to a part of you that has not yet seen one finished piece of it. The wish is real. The doubt is a guard standing in front of it.',
+    step: 'Pick the smallest piece of the thing you want that one afternoon could finish, and make only that piece today. Then put it where you can see it.',
+  },
+  {
+    theme: 'worthy',
+    test: /\b(worthy|deserve|allowed|right to|who am i)\b/i,
+    moving: 'Under this doubt sits a question of permission: some part of you is waiting for a signature before it will begin. Nobody has been holding that pen but you.',
+    step: 'Write one sentence that begins "I am giving myself leave to" and ends with a task small enough to finish today. Do that task before you sleep.',
+  },
+  {
+    theme: 'enough',
+    test: /\b(good enough|not enough|talent|measure up|mediocre|bad at|not good)\b/i,
+    moving: 'Under this doubt sits a standard set by finished work you have only seen from the outside. Every maker you admire went through a stretch of work they were ashamed of.',
+    step: 'Make one rough version of the thing in twenty minutes and call it a first draft. Keep it, and do not fix it today.',
+  },
+  {
+    theme: 'belong',
+    test: /\b(belong|fit in|outsider|accepted|welcome|alone|nobody|no one)\b/i,
+    moving: 'Under this doubt sits a wish for company at the table where this work gets made. The ache is a sign you want to be among people, which is a different matter from lacking the ability.',
+    step: 'Tell one person you trust the single thing you are trying to build, in one sentence, and ask for nothing back.',
+  },
+]
+const DOUBT_OTHER = {
+  moving: 'Under this doubt sits something you care about enough to be afraid for. The fear is loudest around the things that matter to you.',
+  step: 'Name the thing you care about in one plain sentence, write it somewhere you will see it tomorrow, and do the first five minutes of it today.',
+}
+
+function shamanIntake(args: Record<string, unknown>): ToolResult {
+  const doubt = typeof args.doubt === 'string' ? args.doubt.trim().slice(0, 2000) : ''
+  if (!doubt) return bad('shaman_intake needs doubt: the doubt in his or her own words')
+  const hit = DOUBT_THEMES.find((t) => t.test.test(doubt))
+  const r = hit ?? { theme: 'other' as DoubtTheme, ...DOUBT_OTHER }
+  return ok({ board: 'council', face: 'shaman', theme: r.theme, doubt, underneath: r.moving, next_step: r.step })
+}
+
+/**
+ * The tools' first names had a dot (pipeline.status). The Anthropic API accepts only ^[a-zA-Z0-9_-]{1,128}$ for a
+ * tool name, so a client that forwards the list (Wizardgenie) got a 400. The dotted names still work on tools/call.
+ */
+const LEGACY_TOOL_NAMES: Record<string, string> = {
+  'pipeline.status': 'pipeline_status',
+  'pipeline.next': 'pipeline_next',
+  'loop.checks': 'loop_checks',
+  'asset.brief': 'asset_brief',
+  'asset.verify': 'asset_verify',
+  'canon.lookup': 'canon_lookup',
+  'ontology.profile': 'ontology_profile',
+  'mechanic.eval': 'mechanic_eval',
+  'faces.lens': 'faces_lens',
+}
+
+async function callTool(rawName: string, args: Record<string, unknown>): Promise<ToolResult> {
+  const name = LEGACY_TOOL_NAMES[rawName] ?? rawName
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
   if (name === 'put_picture') return putPicture(args)
@@ -722,15 +791,16 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
     if (typeof args.say !== 'string' || !args.say.trim()) return bad('close_say needs say: what he replies at this step')
     return ok(await closeSay(db, args.say, typeof args.date === 'string' ? args.date : undefined))
   }
-  if (name === 'pipeline.status') return pipelineStatusTool(args)
-  if (name === 'pipeline.next') return pipelineNextTool(args)
-  if (name === 'loop.checks') return loopChecks(args)
-  if (name === 'asset.brief') return assetBriefTool(args)
-  if (name === 'asset.verify') return assetVerify(args)
-  if (name === 'canon.lookup') return canonLookup(args)
-  if (name === 'ontology.profile') return ontologyProfileTool(args)
-  if (name === 'mechanic.eval') return mechanicEval(args)
-  if (name === 'faces.lens') return facesLens(args)
+  if (name === 'pipeline_status') return pipelineStatusTool(args)
+  if (name === 'pipeline_next') return pipelineNextTool(args)
+  if (name === 'loop_checks') return loopChecks(args)
+  if (name === 'asset_brief') return assetBriefTool(args)
+  if (name === 'asset_verify') return assetVerify(args)
+  if (name === 'canon_lookup') return canonLookup(args)
+  if (name === 'ontology_profile') return ontologyProfileTool(args)
+  if (name === 'mechanic_eval') return mechanicEval(args)
+  if (name === 'faces_lens') return facesLens(args)
+  if (name === 'shaman_intake') return shamanIntake(args)
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -750,8 +820,8 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<To
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
  *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
- *   close_read, close_say, whoami, and the pipeline door's nine (pipeline.status, pipeline.next, loop.checks,
- *   asset.brief, asset.verify, canon.lookup, ontology.profile, mechanic.eval, faces.lens)
+ *   close_read, close_say, whoami, and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,
+ *   asset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
  * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
@@ -793,7 +863,7 @@ export async function POST(req: NextRequest) {
           + 'term, cause or battle with post_rows, and see one back with read_picture. Every row carries its pass and a '
           + 'lane naming the environment that posted it. Run the reach test first (council/faces.yaml in '
           + 'six-faces-council). A question for Wendell is a row, never a line in a pull request. A round starts at '
-          + 'pipeline.status and asset.brief, and asset.verify reads the judge receipt before its look posts.',
+          + 'pipeline_status and asset_brief, and asset_verify reads the judge receipt before its look posts.',
       })
     }
     case 'notifications/initialized':

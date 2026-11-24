@@ -67,6 +67,10 @@ export function step(A, input, dt, camYaw) {
     mx = -sx * f + cz * r; mz = -cz * f - sx * r;
     if (f || r) input.target = null;
   }
+  const st = input.stick;
+  if (st && (st.x || st.y)) { // the touch stick: the same camera-relative frame as WASD, at the walk pace (Run still toggles the jog)
+    const sx = Math.sin(camYaw), cz = Math.cos(camYaw); mx += -sx * st.y + cz * st.x; mz += -cz * st.y - sx * st.x; input.target = null;
+  }
   if (!mx && !mz && input.target) {
     mx = input.target.x - p.x; mz = input.target.z - p.z;
     if (Math.hypot(mx, mz) < 0.3) { input.target = null; mx = mz = 0; }

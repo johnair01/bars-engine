@@ -10,7 +10,7 @@
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
                             "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds", "rows", "stores", "draws", "records", "constraint", "resolved",
-                            "battles", "intake"]},
+                            "battles", "intake", "proofs"]},
     "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\u0000-\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}

@@ -22,23 +22,65 @@ const MIXES = [
   { gender: 'f', build: 'average', skin: 1, height: 1.68, outfit: 'B1', kneel: true },
 ];
 
+// One cultivation figure from a mix: its group, its figure (F) and a turn() that faces it along a world direction.
+// The group stands at the origin of its own holder; the caller places the holder.
+async function make(mix, reg) {
+  const X = await M.build(mix, reg), F = X.F, h = new THREE.Group(), g = new THREE.Group();
+  for (const o of [...X.scene.children]) { if (o.isLight) continue; g.add(o); }
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+  h.add(g);
+  // the figure's front (F.fr.f) turns to face the world direction (dx, dz) once the holder itself is not turned
+  const turn = (dx, dz) => { g.rotation.y = Math.atan2(dx, dz) - Math.atan2(F.fr.f.x, F.fr.f.z); };
+  return { h, g, F, turn };
+}
+let REG = null;
+const registry = async () => (REG ||= await (await fetch(new URL('../cult/parts.json', import.meta.url))).json());
+
+/** A spirit for the altar walk (build 2026-11-17): one cultivation figure, from one of four outfits, that doubt.js makes faint. */
+export async function spirit(i) {
+  const OUT = ['A1', 'B2', 'C1', 'A2'], mix = { direction: OUT[i % 4][0], gender: i % 2 ? 'f' : 'm', build: 'average', skin: [3, 2, 5, 4][i % 4], height: [1.7, 1.62, 1.76, 1.66][i % 4], outfit: OUT[i % 4] };
+  return make(mix, await registry());
+}
+
+/** Six Elders for the trainee walk: one cultivation figure each, in the Elder regalia Wendell approved (er-regalia-look-10,
+ * 2026-11-20), one face's colour and trigram per Elder. i follows trainee.js ORDER (shaman, challenger, regent, architect,
+ * diplomat, sage). Until 2026-11-21 they wore the students' outfits A1..C2, which made an Elder read as a student and left
+ * the approved regalia unused in the sect (his note on heaven-sect-givers-look-1). Women wear the underwrap, as the
+ * regalia looks did. */
+export const ELDER_MIX = [
+  { key: 'shaman', outfit: 'R1', gender: 'f', skin: 2, height: 1.66 },
+  { key: 'challenger', outfit: 'R3', gender: 'm', skin: 5, height: 1.8 },
+  { key: 'regent', outfit: 'R4', gender: 'm', skin: 1, height: 1.76 },
+  { key: 'architect', outfit: 'R2', gender: 'f', skin: 6, height: 1.68 },
+  { key: 'diplomat', outfit: 'R5', gender: 'f', skin: 3, height: 1.64 },
+  { key: 'sage', outfit: 'R6', gender: 'm', skin: 4, height: 1.72 },
+];
+export async function elder(i) {
+  const e = ELDER_MIX[i], mix = { direction: e.outfit[0], gender: e.gender, build: 'average', skin: e.skin, height: e.height, outfit: e.outfit, underwrap: e.gender === 'f' };
+  return make(mix, await registry());
+}
+
+/** Wayfarers for the guided climb (build 2026-11-20): four students on the way up, cultivation figures in the sect's own outfits. */
+export async function wayfarer(i) {
+  const OUT = ['A2', 'B1', 'A1', 'B2'], mix = { direction: OUT[i % 4][0], gender: i % 2 ? 'm' : 'f', build: 'average', skin: [5, 2, 6, 1][i % 4], height: [1.63, 1.77, 1.66, 1.73][i % 4], outfit: OUT[i % 4] };
+  return make(mix, await registry());
+}
+
 export async function people(S, gl, { court, avatar }) {
-  const reg = await (await fetch(new URL('../cult/parts.json', import.meta.url))).json();
+  const reg = await registry(), students = [];
   // one figure at a time, so the page stays live while nine are cut
   for (let i = 0; i < STUDENTS.length; i++) {
     const [x, z, deg] = STUDENTS[i], mix = { direction: MIXES[i].outfit[0], ...MIXES[i] };
     try {
-      const X = await M.build(mix, reg), F = X.F, h = new THREE.Group(), g = new THREE.Group(); g.name = 'student' + i;
-      for (const o of [...X.scene.children]) { if (o.isLight) continue; g.add(o); }
-      g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+      const m = await make(mix, reg), { h, g, F } = m; g.name = 'student' + i;
       if (mix.kneel) kneel(F);
       F.mesh.skeleton.update();
       // the figure's front (F.fr.f) turns to the heading the old figure had: it faced +z at rotation 0, heading deg is anchor.js's
       const a = Math.PI - deg * Math.PI / 180; g.rotation.y = a - Math.atan2(F.fr.f.x, F.fr.f.z);
-      h.add(g); h.position.set(x, 0.04, z); court.add(h);
+      h.position.set(x, 0.04, z); court.add(h); students[i] = m;
     } catch (e) { console.warn('student', i, e); }
   }
-  return () => {};
+  const done = () => {}; done.students = students; return done;
 }
 
 // Round 13b: the painting's student kneels on the paving to chalk the sigil. Aimed the way the lands' seat is: thighs
