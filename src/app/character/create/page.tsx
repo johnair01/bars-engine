@@ -20,12 +20,22 @@ import { layerIdsFromAvatarConfig, loadWokaLayerCatalog } from '@/lib/wa/layer-c
  * @agentDiscoverable false
  */
 
-export default async function CharacterCreatePage() {
+export default async function CharacterCreatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>
+}) {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
   const state = await getOuroborosInterviewState(player.id)
   if ('error' in state) redirect('/')
+
+  // The completion card links back here with ?edit=sprite so a player can
+  // change their body without replaying the narrative interview.
+  const { edit } = await searchParams
+  const interviewState =
+    edit === 'sprite' ? { ...state, currentNodeId: 'OUROBOROS_SPRITE' as const } : state
 
   const [nations, archetypes] = await Promise.all([
     db.nation.findMany({
@@ -62,7 +72,7 @@ export default async function CharacterCreatePage() {
 
         <OuroborosInterviewClient
           playerId={player.id}
-          state={state}
+          state={interviewState}
           nations={nations}
           archetypes={archetypes}
           playbookMoves={playbookMoves}

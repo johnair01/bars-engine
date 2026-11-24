@@ -87,12 +87,20 @@ export function OuroborosInterviewClient({
             </div>
           )}
         </div>
-        <Link
-          href="/"
-          className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors"
-        >
-          Go to Dashboard →
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/"
+            className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors"
+          >
+            Go to Dashboard →
+          </Link>
+          <Link
+            href="/character/create?edit=sprite"
+            className="inline-block px-6 py-3 border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-medium rounded-lg transition-colors"
+          >
+            Adjust your body
+          </Link>
+        </div>
       </div>
     )
   }
