@@ -5,6 +5,7 @@ vi.mock('@/lib/db', () => ({ db: {} }))
 vi.mock('@/lib/board/store', () => ({ latestDoc: vi.fn(), latestDocs: vi.fn() }))
 
 import { visibleFrom, openFrom, why } from '../mcp-reads'
+import { merge } from '../data'
 
 const q = (extra: Record<string, unknown> = {}) => ({ kind: 'questions', q: 'Which?', options: [{ v: 'A', label: 'A' }], ...extra })
 
@@ -32,6 +33,25 @@ describe('visibleFrom', () => {
     expect(by.odd.visible).toBe(false)
     expect(by.settled.visible).toBe(false)
     expect(by.ghost.why).toMatch(/No row/)
+  })
+})
+
+describe('a battle posted as a row', () => {
+  const docs = {
+    rows: {
+      'battle-new': { kind: 'battles', name: 'New', rounds: [{ n: 1, questions: ['q-in'] }] },
+      'q-in': q(),
+    },
+    battles: { 'battle-old': { id: 'battle-old', kind: 'battles', name: 'Old', rounds: [] } },
+  } as never
+
+  it('draws beside the record battles, and its questions draw inside it', () => {
+    const by = Object.fromEntries(visibleFrom(docs, ['battle-new', 'q-in']).map((r) => [r.id, r]))
+    expect(by['battle-new'].visible).toBe(true)
+    // The record's battle is not a row, so visibleFrom has no row to check; the merged list the page draws holds both.
+    const ids = ((merge(docs).battles as { id: string }[]) ?? []).map((b) => b.id)
+    expect(ids).toEqual(expect.arrayContaining(['battle-old', 'battle-new']))
+    expect(by['q-in']).toMatchObject({ visible: true, where: 'a battle card' })
   })
 })
 

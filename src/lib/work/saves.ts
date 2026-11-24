@@ -14,6 +14,8 @@ export const SWEEP_DAYS = 7
  * spec's own risk). Neither the sweep nor the unworked read looks before this.
  */
 export const TICKETS_LIVE = new Date('2026-10-31T15:20:00Z')
+const SAVE_PAGE = 100
+const ROW_CHUNK = 20
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export interface SavedDoc { collection: string; docId: string; data: Record<string, unknown>; receivedAt: Date }
@@ -50,19 +52,37 @@ export function answersFrom(saves: SavedDoc[], rows: Map<string, RowDoc>): Saved
 /** Every council answer and every card sent in the last `days` days, newest save per document. */
 export async function recentAnswers(db: PrismaClient, now = new Date(), days = SWEEP_DAYS): Promise<SavedAnswer[]> {
   const since = new Date(Math.max(now.getTime() - days * DAY_MS, TICKETS_LIVE.getTime()))
-  const saves = await db.boardSave.findMany({
-    where: { board: 'council', collection: { in: ['questions', 'steps'] }, receivedAt: { gt: since } },
-    orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }],
-    distinct: ['collection', 'docId'],
-    select: { collection: true, docId: true, data: true, receivedAt: true },
-  })
+  // Prisma's `distinct` runs in memory after the fetch, so one findMany pulled every save of the window and passed the
+  // data proxy's 5MB response cap (P6009, /api/work/unworked 500s from 2026-11-24). Page newest-first and keep the
+  // first save seen per document: the same rows, one bounded page at a time.
+  const saves: { collection: string; docId: string; data: unknown; receivedAt: Date }[] = []
+  const seen = new Set<string>()
+  let cursor: string | undefined
+  for (;;) {
+    const page = await db.boardSave.findMany({
+      where: { board: 'council', collection: { in: ['questions', 'steps'] }, receivedAt: { gt: since } },
+      orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }],
+      take: SAVE_PAGE, ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
+      select: { id: true, collection: true, docId: true, data: true, receivedAt: true },
+    })
+    for (const s of page) {
+      const k = `${s.collection}\u0000${s.docId}`
+      if (!seen.has(k)) { seen.add(k); saves.push(s) }
+    }
+    if (page.length < SAVE_PAGE) break
+    cursor = page[page.length - 1].id
+  }
   const docs: SavedDoc[] = saves.map(s => ({ collection: s.collection, docId: s.docId, data: (s.data ?? {}) as Record<string, unknown>, receivedAt: s.receivedAt }))
   const ids = docs.filter(d => d.collection === 'questions').map(d => d.docId)
-  const rowSaves = ids.length ? await db.boardSave.findMany({
-    where: { board: 'council', collection: 'rows', docId: { in: ids } },
-    orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }], distinct: ['docId'],
-    select: { docId: true, data: true },
-  }) : []
+  // Same cap, same remedy: a few rows at a time, so no response holds every saved version of every row.
+  const rowSaves: { docId: string; data: unknown }[] = []
+  for (let i = 0; i < ids.length; i += ROW_CHUNK) {
+    rowSaves.push(...await db.boardSave.findMany({
+      where: { board: 'council', collection: 'rows', docId: { in: ids.slice(i, i + ROW_CHUNK) } },
+      orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }], distinct: ['docId'],
+      select: { docId: true, data: true },
+    }))
+  }
   const rows = new Map(rowSaves.map(r => [r.docId, r.data as RowDoc]))
   return answersFrom(docs, rows)
 }
