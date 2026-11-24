@@ -179,3 +179,19 @@ back from the six faces on a free-tier model and checked before it stood. The ea
 Ledger: `~/sfc-check/council/ledger/faces.jsonl` holds each question and its verdict — `cited` where the record or
 the repository answered it, `only_he_holds` where the answer is his. The seed's `assumptions` list names what was
 never confirmed instead of quietly choosing.
+
+---
+
+## Ruled, 2026-11-23 evening
+
+He answered the open questions in the thread. All six, plus every seed assumption, confirmed:
+
+1. **Republish** - update in place; no new records; findings never duplicated.
+2. **Token delivery** - environment variable; never in the kit folder.
+3. **The success check** - findings stored with stable ids, CLI reporting new versus updated.
+4. **Non-secret metadata** - travels with the kit.
+5. **Token use** - the long-lived token in the Authorization header; no session exchange.
+6. **The bridge** - a package inside the world-kit repo; the engine keeps only the findings route.
+
+All five seed assumptions stand as written. The seed's `open_questions` list is now empty and its fog is 0.15, under
+the 0.20 gate. Each ruling is in `council/ledger/rulings.jsonl` and binds later passes.
