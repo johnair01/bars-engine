@@ -7,7 +7,12 @@
 import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
-import { avatarConfigForTexture, loadWokaCatalog } from '@/lib/wa/woka'
+import { findLayerTexture, loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
+import {
+  avatarConfigForLayers,
+  avatarConfigForTexture,
+  loadWokaCatalog,
+} from '@/lib/wa/woka'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -31,8 +36,8 @@ export async function POST(request: NextRequest) {
   }
 
   const userIdentifier = body.userIdentifier?.trim()
-  const textureId = body.textures?.[0]?.trim()
-  if (!userIdentifier || !textureId) {
+  const textures = (body.textures ?? []).map((texture) => texture.trim()).filter(Boolean)
+  if (!userIdentifier || textures.length === 0) {
     return Response.json({ error: 'userIdentifier and textures are required' }, { status: 400 })
   }
 
@@ -43,9 +48,26 @@ export async function POST(request: NextRequest) {
   if (!player) return Response.json({ error: 'player not found' }, { status: 404 })
 
   const catalog = loadWokaCatalog()
-  const avatarConfig = avatarConfigForTexture(catalog, textureId, player.avatarConfig)
-  if (!avatarConfig) {
-    return Response.json({ error: `unknown woka texture: ${textureId}` }, { status: 400 })
+  const layers = loadWokaLayerCatalog()
+  const layerIds = textures.filter((id) => findLayerTexture(layers, id))
+
+  let avatarConfig: string | null
+  if (layerIds.length > 0) {
+    if (layerIds.length !== textures.length) {
+      return Response.json({ error: 'cannot mix a woka preset with layer parts' }, { status: 400 })
+    }
+    avatarConfig = avatarConfigForLayers(layers, textures, player.avatarConfig)
+    if (!avatarConfig) {
+      return Response.json({ error: 'unknown or incomplete woka layer selection' }, { status: 400 })
+    }
+  } else {
+    if (textures.length !== 1) {
+      return Response.json({ error: 'a woka preset must be a single texture' }, { status: 400 })
+    }
+    avatarConfig = avatarConfigForTexture(catalog, textures[0], player.avatarConfig)
+    if (!avatarConfig) {
+      return Response.json({ error: `unknown woka texture: ${textures[0]}` }, { status: 400 })
+    }
   }
 
   await db.player.update({

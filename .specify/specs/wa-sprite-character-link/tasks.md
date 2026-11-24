@@ -62,19 +62,19 @@
 
 ### Server action
 
-- [ ] **T201** Add `src/actions/character-sprite.ts` with `saveCharacterSprite({ textureId })`.
-- [ ] **T202** Auth via `getCurrentPlayer()`; return `{ success: false, error: 'unauthorized' }` when absent.
-- [ ] **T203** Resolve the texture through the catalog; reject unknown ids with `unknown_texture`.
-- [ ] **T204** Preserve existing `domainKey`/`genderKey`; write `avatarConfig.waWokaId`; revalidate `/character/create`, `/character/[shareToken]`, `/`.
+- [x] **T201** Add `src/actions/character-sprite.ts` with `saveCharacterSprite({ textureId })`.
+- [x] **T202** Auth via `getCurrentPlayer()`; return `{ success: false, error: 'unauthorized' }` when absent.
+- [x] **T203** Resolve the texture through the catalog; reject unknown ids with `unknown_texture`.
+- [x] **T204** Preserve existing `domainKey`/`genderKey`; write `avatarConfig.waWokaId`; revalidate `/character/create`, `/character/[shareToken]`, `/`.
 - [ ] **T205** Unit-test the mapper and the action's rejection paths.
 
 ### UI step
 
-- [ ] **T206** Add a **Body** step to `OuroborosInterviewClient` after nation + archetype are known.
-- [ ] **T207** List the 40 catalog bodies with name + 96×128 preview (`image-rendering: pixelated`).
-- [ ] **T208** Preselect `wa:<nationKey>:<archetypeKey>` when both are known; show "Recommended for your nation and archetype".
+- [x] **T206** Add a **Body** step to `OuroborosInterviewClient` after nation + archetype are known.
+- [x] **T207** List the six layer parts with thumbnails + a live 96×128 composed preview (`image-rendering: pixelated`).
+- [x] **T208** Preseed clothes/hat/accessory from `nationKey`/`archetypeKey` when known; otherwise use catalog defaults.
 - [ ] **T209** Keyboard navigation, visible focus, `aria-pressed`/radio semantics, text label per body.
-- [ ] **T210** "Use this body" calls `saveCharacterSprite`; show inline success/error; do not advance the narrative step on failure.
+- [x] **T210** "Save character" calls `saveCharacterSprite`; show inline success/error; do not advance the narrative step on failure.
 - [ ] **T211** If the player later changes nation/archetype and `waWokaId` no longer matches, show a reconcile prompt ("Keep current body" / "Update to match") instead of silently overwriting.
 - [ ] **T212** Render the chosen body on `/character/[shareToken]` via the catalog preview.
 - [ ] **T213** Add a link from `/character-creator` ("Choose the body you walk around in") to `/character/create`.
@@ -85,11 +85,13 @@
 
 - [ ] **T214** Confirm a player with no `avatarConfig` entering the world still gets WA's picker, and that pick writes `avatarConfig` through `save-textures`.
 - [ ] **T215** Confirm the creator's choice wins on the next join (no double picker).
-- [ ] **T216** Decide what to do with WA's stock **Build your WOKA** button: supply layer collections, hide/redirect it via a supported WA config, or document it as a known dead end until the bars-engine Body step replaces it.
+- [x] **T216** Decide what to do with WA's stock **Build your WOKA** button: supply layer collections, hide/redirect it via a supported WA config, or document it as a known dead end until the bars-engine Body step replaces it.
 
 ---
 
 ## Phase 3 — Compile from bars-engine sources
+
+> **Bridge delivered:** `scripts/wa/build-woka-layers.mjs` partitions the canonical dojo walker into six pixel-complete parts (body 4, eyes 5, hair 5, clothes 40, hat 6, accessory 9) and `npm run wa:assets` regenerates them. The compositor is `composeWokaLayers()` and the live preview is `/api/woka/compose`. The tasks below replace this bridge with full-body 12-frame compiled walkers.
 
 - [ ] **T301** Choose the full-body 12-frame walk source per nation × archetype (walkable sources or a new walker), and document it.
 - [ ] **T302** Extend `build-woka-catalog.mjs` to compose 3×4 at 32×32 from those frames.

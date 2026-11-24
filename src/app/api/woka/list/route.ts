@@ -5,6 +5,7 @@
 import type { NextRequest } from 'next/server'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
 import { WA_ADMIN_API_URL } from '@/lib/wa/config'
+import { loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
 import { loadWokaCatalog, wokaListFromCatalog } from '@/lib/wa/woka'
 
 export const runtime = 'nodejs'
@@ -16,5 +17,8 @@ export async function GET(request: NextRequest) {
   }
 
   const catalog = loadWokaCatalog()
-  return Response.json(wokaListFromCatalog(catalog, WA_ADMIN_API_URL))
+  const layers = loadWokaLayerCatalog()
+  return Response.json(wokaListFromCatalog(catalog, WA_ADMIN_API_URL, layers), {
+    headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' },
+  })
 }

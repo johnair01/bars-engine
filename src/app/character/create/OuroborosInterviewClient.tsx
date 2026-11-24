@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { advanceOuroborosInterview } from '@/actions/ouroboros-interview'
 import type { OuroborosInterviewState } from '@/lib/ouroboros-interview'
+import type { WokaLayerCatalog } from '@/lib/wa/layer-catalog'
+import { OuroborosSpriteStep } from './OuroborosSpriteStep'
 
 const LENS_OPTIONS = [
   { value: 'understanding', label: 'Understanding', desc: 'I want to see more clearly' },
@@ -19,6 +21,10 @@ type Props = {
   archetypes: { id: string; name: string; description: string }[]
   playbookMoves: { id: string; name: string; description: string }[]
   domains: readonly { key: string; label: string; short: string }[]
+  spriteCatalog: WokaLayerCatalog
+  initialLayers?: string[] | null
+  nationKey?: string | null
+  archetypeKey?: string | null
 }
 
 export function OuroborosInterviewClient({
@@ -28,6 +34,10 @@ export function OuroborosInterviewClient({
   archetypes,
   playbookMoves,
   domains,
+  spriteCatalog,
+  initialLayers,
+  nationKey,
+  archetypeKey,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -222,6 +232,20 @@ export function OuroborosInterviewClient({
           </button>
         </div>
       </div>
+    )
+  }
+
+  // OUROBOROS_SPRITE
+  if (nodeId === 'OUROBOROS_SPRITE') {
+    return (
+      <OuroborosSpriteStep
+        catalog={spriteCatalog}
+        nationKey={nationKey}
+        archetypeKey={archetypeKey}
+        initialLayers={initialLayers}
+        isPending={isPending}
+        onContinue={() => handleAdvance({})}
+      />
     )
   }
 

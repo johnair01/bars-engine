@@ -6,6 +6,8 @@ import { getOuroborosInterviewState } from '@/actions/ouroboros-interview'
 import { db } from '@/lib/db'
 import { getPlaybookForArchetype } from '@/actions/playbook'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import { slugifyName } from '@/lib/avatar-utils'
+import { layerIdsFromAvatarConfig, loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
 
 /**
  * @page /character/create
@@ -43,6 +45,11 @@ export default async function CharacterCreatePage() {
     playbookMoves = moves.map((m) => ({ id: m.id, name: m.name, description: m.description }))
   }
 
+  const selectedNation = nations.find((nation) => nation.id === state.answers.nationId)
+  const selectedArchetype = archetypes.find((archetype) => archetype.id === state.answers.archetypeId)
+  const spriteCatalog = loadWokaLayerCatalog()
+  const initialLayers = layerIdsFromAvatarConfig(player.avatarConfig)
+
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans p-6 md:p-12">
       <div className="max-w-2xl mx-auto space-y-8">
@@ -60,6 +67,10 @@ export default async function CharacterCreatePage() {
           archetypes={archetypes}
           playbookMoves={playbookMoves}
           domains={[...ALLYSHIP_DOMAINS]}
+          spriteCatalog={spriteCatalog}
+          initialLayers={initialLayers}
+          nationKey={selectedNation ? slugifyName(selectedNation.name) : null}
+          archetypeKey={selectedArchetype ? slugifyName(selectedArchetype.name) : null}
         />
       </div>
     </div>

@@ -1,0 +1,540 @@
+{
+  "version": 1,
+  "collection": "Calrunia",
+  "about": "Six WorkAdventure layer parts extracted from the CC0 dojo walker. Nation colours the robe/trim/hat; archetype colours the sash. Replace a layer PNG and re-run wa:layers.",
+  "source": "public/wa/calrunian-dojo/sprites/monk-woka.png",
+  "license": "CC0",
+  "order": [
+    "body",
+    "eyes",
+    "hair",
+    "clothes",
+    "hat",
+    "accessory"
+  ],
+  "parts": {
+    "body": [
+      {
+        "id": "wa:body:warm",
+        "name": "Warm",
+        "path": "/wa/woka/layers/body/warm.png",
+        "part": "body",
+        "tone": "warm"
+      },
+      {
+        "id": "wa:body:light",
+        "name": "Light",
+        "path": "/wa/woka/layers/body/light.png",
+        "part": "body",
+        "tone": "light"
+      },
+      {
+        "id": "wa:body:deep",
+        "name": "Deep",
+        "path": "/wa/woka/layers/body/deep.png",
+        "part": "body",
+        "tone": "deep"
+      },
+      {
+        "id": "wa:body:olive",
+        "name": "Olive",
+        "path": "/wa/woka/layers/body/olive.png",
+        "part": "body",
+        "tone": "olive"
+      }
+    ],
+    "eyes": [
+      {
+        "id": "wa:eyes:ink",
+        "name": "Ink",
+        "path": "/wa/woka/layers/eyes/ink.png",
+        "part": "eyes"
+      },
+      {
+        "id": "wa:eyes:amber",
+        "name": "Amber",
+        "path": "/wa/woka/layers/eyes/amber.png",
+        "part": "eyes"
+      },
+      {
+        "id": "wa:eyes:green",
+        "name": "Green",
+        "path": "/wa/woka/layers/eyes/green.png",
+        "part": "eyes"
+      },
+      {
+        "id": "wa:eyes:violet",
+        "name": "Violet",
+        "path": "/wa/woka/layers/eyes/violet.png",
+        "part": "eyes"
+      },
+      {
+        "id": "wa:eyes:none",
+        "name": "None",
+        "path": "/wa/woka/layers/eyes/none.png",
+        "part": "eyes"
+      }
+    ],
+    "hair": [
+      {
+        "id": "wa:hair:black",
+        "name": "Black",
+        "path": "/wa/woka/layers/hair/black.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:brown",
+        "name": "Brown",
+        "path": "/wa/woka/layers/hair/brown.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:auburn",
+        "name": "Auburn",
+        "path": "/wa/woka/layers/hair/auburn.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:silver",
+        "name": "Silver",
+        "path": "/wa/woka/layers/hair/silver.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:none",
+        "name": "None",
+        "path": "/wa/woka/layers/hair/none.png",
+        "part": "hair"
+      }
+    ],
+    "clothes": [
+      {
+        "id": "wa:clothes:argyra:bold-heart",
+        "name": "Argyra · Bold Heart",
+        "path": "/wa/woka/layers/clothes/argyra-bold-heart.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "bold-heart"
+      },
+      {
+        "id": "wa:clothes:argyra:danger-walker",
+        "name": "Argyra · Danger Walker",
+        "path": "/wa/woka/layers/clothes/argyra-danger-walker.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "danger-walker"
+      },
+      {
+        "id": "wa:clothes:argyra:decisive-storm",
+        "name": "Argyra · Decisive Storm",
+        "path": "/wa/woka/layers/clothes/argyra-decisive-storm.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "decisive-storm"
+      },
+      {
+        "id": "wa:clothes:argyra:devoted-guardian",
+        "name": "Argyra · Devoted Guardian",
+        "path": "/wa/woka/layers/clothes/argyra-devoted-guardian.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "devoted-guardian"
+      },
+      {
+        "id": "wa:clothes:argyra:joyful-connector",
+        "name": "Argyra · Joyful Connector",
+        "path": "/wa/woka/layers/clothes/argyra-joyful-connector.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "joyful-connector"
+      },
+      {
+        "id": "wa:clothes:argyra:still-point",
+        "name": "Argyra · Still Point",
+        "path": "/wa/woka/layers/clothes/argyra-still-point.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "still-point"
+      },
+      {
+        "id": "wa:clothes:argyra:subtle-influence",
+        "name": "Argyra · Subtle Influence",
+        "path": "/wa/woka/layers/clothes/argyra-subtle-influence.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "subtle-influence"
+      },
+      {
+        "id": "wa:clothes:argyra:truth-seer",
+        "name": "Argyra · Truth Seer",
+        "path": "/wa/woka/layers/clothes/argyra-truth-seer.png",
+        "part": "clothes",
+        "nationKey": "argyra",
+        "archetypeKey": "truth-seer"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:bold-heart",
+        "name": "Pyrakanth · Bold Heart",
+        "path": "/wa/woka/layers/clothes/pyrakanth-bold-heart.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "bold-heart"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:danger-walker",
+        "name": "Pyrakanth · Danger Walker",
+        "path": "/wa/woka/layers/clothes/pyrakanth-danger-walker.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "danger-walker"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:decisive-storm",
+        "name": "Pyrakanth · Decisive Storm",
+        "path": "/wa/woka/layers/clothes/pyrakanth-decisive-storm.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "decisive-storm"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:devoted-guardian",
+        "name": "Pyrakanth · Devoted Guardian",
+        "path": "/wa/woka/layers/clothes/pyrakanth-devoted-guardian.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "devoted-guardian"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:joyful-connector",
+        "name": "Pyrakanth · Joyful Connector",
+        "path": "/wa/woka/layers/clothes/pyrakanth-joyful-connector.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "joyful-connector"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:still-point",
+        "name": "Pyrakanth · Still Point",
+        "path": "/wa/woka/layers/clothes/pyrakanth-still-point.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "still-point"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:subtle-influence",
+        "name": "Pyrakanth · Subtle Influence",
+        "path": "/wa/woka/layers/clothes/pyrakanth-subtle-influence.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "subtle-influence"
+      },
+      {
+        "id": "wa:clothes:pyrakanth:truth-seer",
+        "name": "Pyrakanth · Truth Seer",
+        "path": "/wa/woka/layers/clothes/pyrakanth-truth-seer.png",
+        "part": "clothes",
+        "nationKey": "pyrakanth",
+        "archetypeKey": "truth-seer"
+      },
+      {
+        "id": "wa:clothes:lamenth:bold-heart",
+        "name": "Lamenth · Bold Heart",
+        "path": "/wa/woka/layers/clothes/lamenth-bold-heart.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "bold-heart"
+      },
+      {
+        "id": "wa:clothes:lamenth:danger-walker",
+        "name": "Lamenth · Danger Walker",
+        "path": "/wa/woka/layers/clothes/lamenth-danger-walker.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "danger-walker"
+      },
+      {
+        "id": "wa:clothes:lamenth:decisive-storm",
+        "name": "Lamenth · Decisive Storm",
+        "path": "/wa/woka/layers/clothes/lamenth-decisive-storm.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "decisive-storm"
+      },
+      {
+        "id": "wa:clothes:lamenth:devoted-guardian",
+        "name": "Lamenth · Devoted Guardian",
+        "path": "/wa/woka/layers/clothes/lamenth-devoted-guardian.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "devoted-guardian"
+      },
+      {
+        "id": "wa:clothes:lamenth:joyful-connector",
+        "name": "Lamenth · Joyful Connector",
+        "path": "/wa/woka/layers/clothes/lamenth-joyful-connector.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "joyful-connector"
+      },
+      {
+        "id": "wa:clothes:lamenth:still-point",
+        "name": "Lamenth · Still Point",
+        "path": "/wa/woka/layers/clothes/lamenth-still-point.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "still-point"
+      },
+      {
+        "id": "wa:clothes:lamenth:subtle-influence",
+        "name": "Lamenth · Subtle Influence",
+        "path": "/wa/woka/layers/clothes/lamenth-subtle-influence.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "subtle-influence"
+      },
+      {
+        "id": "wa:clothes:lamenth:truth-seer",
+        "name": "Lamenth · Truth Seer",
+        "path": "/wa/woka/layers/clothes/lamenth-truth-seer.png",
+        "part": "clothes",
+        "nationKey": "lamenth",
+        "archetypeKey": "truth-seer"
+      },
+      {
+        "id": "wa:clothes:virelune:bold-heart",
+        "name": "Virelune · Bold Heart",
+        "path": "/wa/woka/layers/clothes/virelune-bold-heart.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "bold-heart"
+      },
+      {
+        "id": "wa:clothes:virelune:danger-walker",
+        "name": "Virelune · Danger Walker",
+        "path": "/wa/woka/layers/clothes/virelune-danger-walker.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "danger-walker"
+      },
+      {
+        "id": "wa:clothes:virelune:decisive-storm",
+        "name": "Virelune · Decisive Storm",
+        "path": "/wa/woka/layers/clothes/virelune-decisive-storm.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "decisive-storm"
+      },
+      {
+        "id": "wa:clothes:virelune:devoted-guardian",
+        "name": "Virelune · Devoted Guardian",
+        "path": "/wa/woka/layers/clothes/virelune-devoted-guardian.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "devoted-guardian"
+      },
+      {
+        "id": "wa:clothes:virelune:joyful-connector",
+        "name": "Virelune · Joyful Connector",
+        "path": "/wa/woka/layers/clothes/virelune-joyful-connector.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "joyful-connector"
+      },
+      {
+        "id": "wa:clothes:virelune:still-point",
+        "name": "Virelune · Still Point",
+        "path": "/wa/woka/layers/clothes/virelune-still-point.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "still-point"
+      },
+      {
+        "id": "wa:clothes:virelune:subtle-influence",
+        "name": "Virelune · Subtle Influence",
+        "path": "/wa/woka/layers/clothes/virelune-subtle-influence.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "subtle-influence"
+      },
+      {
+        "id": "wa:clothes:virelune:truth-seer",
+        "name": "Virelune · Truth Seer",
+        "path": "/wa/woka/layers/clothes/virelune-truth-seer.png",
+        "part": "clothes",
+        "nationKey": "virelune",
+        "archetypeKey": "truth-seer"
+      },
+      {
+        "id": "wa:clothes:meridia:bold-heart",
+        "name": "Meridia · Bold Heart",
+        "path": "/wa/woka/layers/clothes/meridia-bold-heart.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "bold-heart"
+      },
+      {
+        "id": "wa:clothes:meridia:danger-walker",
+        "name": "Meridia · Danger Walker",
+        "path": "/wa/woka/layers/clothes/meridia-danger-walker.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "danger-walker"
+      },
+      {
+        "id": "wa:clothes:meridia:decisive-storm",
+        "name": "Meridia · Decisive Storm",
+        "path": "/wa/woka/layers/clothes/meridia-decisive-storm.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "decisive-storm"
+      },
+      {
+        "id": "wa:clothes:meridia:devoted-guardian",
+        "name": "Meridia · Devoted Guardian",
+        "path": "/wa/woka/layers/clothes/meridia-devoted-guardian.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "devoted-guardian"
+      },
+      {
+        "id": "wa:clothes:meridia:joyful-connector",
+        "name": "Meridia · Joyful Connector",
+        "path": "/wa/woka/layers/clothes/meridia-joyful-connector.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "joyful-connector"
+      },
+      {
+        "id": "wa:clothes:meridia:still-point",
+        "name": "Meridia · Still Point",
+        "path": "/wa/woka/layers/clothes/meridia-still-point.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "still-point"
+      },
+      {
+        "id": "wa:clothes:meridia:subtle-influence",
+        "name": "Meridia · Subtle Influence",
+        "path": "/wa/woka/layers/clothes/meridia-subtle-influence.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "subtle-influence"
+      },
+      {
+        "id": "wa:clothes:meridia:truth-seer",
+        "name": "Meridia · Truth Seer",
+        "path": "/wa/woka/layers/clothes/meridia-truth-seer.png",
+        "part": "clothes",
+        "nationKey": "meridia",
+        "archetypeKey": "truth-seer"
+      }
+    ],
+    "hat": [
+      {
+        "id": "wa:hat:argyra",
+        "name": "Argyra Band",
+        "path": "/wa/woka/layers/hat/argyra.png",
+        "part": "hat",
+        "nationKey": "argyra"
+      },
+      {
+        "id": "wa:hat:pyrakanth",
+        "name": "Pyrakanth Band",
+        "path": "/wa/woka/layers/hat/pyrakanth.png",
+        "part": "hat",
+        "nationKey": "pyrakanth"
+      },
+      {
+        "id": "wa:hat:lamenth",
+        "name": "Lamenth Band",
+        "path": "/wa/woka/layers/hat/lamenth.png",
+        "part": "hat",
+        "nationKey": "lamenth"
+      },
+      {
+        "id": "wa:hat:virelune",
+        "name": "Virelune Band",
+        "path": "/wa/woka/layers/hat/virelune.png",
+        "part": "hat",
+        "nationKey": "virelune"
+      },
+      {
+        "id": "wa:hat:meridia",
+        "name": "Meridia Band",
+        "path": "/wa/woka/layers/hat/meridia.png",
+        "part": "hat",
+        "nationKey": "meridia"
+      },
+      {
+        "id": "wa:hat:none",
+        "name": "None",
+        "path": "/wa/woka/layers/hat/none.png",
+        "part": "hat"
+      }
+    ],
+    "accessory": [
+      {
+        "id": "wa:accessory:bold-heart",
+        "name": "Bold Heart Sash",
+        "path": "/wa/woka/layers/accessory/bold-heart.png",
+        "part": "accessory",
+        "archetypeKey": "bold-heart"
+      },
+      {
+        "id": "wa:accessory:danger-walker",
+        "name": "Danger Walker Sash",
+        "path": "/wa/woka/layers/accessory/danger-walker.png",
+        "part": "accessory",
+        "archetypeKey": "danger-walker"
+      },
+      {
+        "id": "wa:accessory:decisive-storm",
+        "name": "Decisive Storm Sash",
+        "path": "/wa/woka/layers/accessory/decisive-storm.png",
+        "part": "accessory",
+        "archetypeKey": "decisive-storm"
+      },
+      {
+        "id": "wa:accessory:devoted-guardian",
+        "name": "Devoted Guardian Sash",
+        "path": "/wa/woka/layers/accessory/devoted-guardian.png",
+        "part": "accessory",
+        "archetypeKey": "devoted-guardian"
+      },
+      {
+        "id": "wa:accessory:joyful-connector",
+        "name": "Joyful Connector Sash",
+        "path": "/wa/woka/layers/accessory/joyful-connector.png",
+        "part": "accessory",
+        "archetypeKey": "joyful-connector"
+      },
+      {
+        "id": "wa:accessory:still-point",
+        "name": "Still Point Sash",
+        "path": "/wa/woka/layers/accessory/still-point.png",
+        "part": "accessory",
+        "archetypeKey": "still-point"
+      },
+      {
+        "id": "wa:accessory:subtle-influence",
+        "name": "Subtle Influence Sash",
+        "path": "/wa/woka/layers/accessory/subtle-influence.png",
+        "part": "accessory",
+        "archetypeKey": "subtle-influence"
+      },
+      {
+        "id": "wa:accessory:truth-seer",
+        "name": "Truth Seer Sash",
+        "path": "/wa/woka/layers/accessory/truth-seer.png",
+        "part": "accessory",
+        "archetypeKey": "truth-seer"
+      },
+      {
+        "id": "wa:accessory:none",
+        "name": "None",
+        "path": "/wa/woka/layers/accessory/none.png",
+        "part": "accessory"
+      }
+    ]
+  }
+}

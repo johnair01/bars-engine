@@ -209,6 +209,7 @@ export default defineConfig({
       'src/lib/wa/__tests__/jwt.test.ts',
       'src/lib/wa/__tests__/oidc.test.ts',
       'src/lib/wa/__tests__/woka.test.ts',
+      'src/lib/wa/__tests__/layers.test.ts',
       'src/lib/wa/__tests__/map.test.ts',
     ],
   },

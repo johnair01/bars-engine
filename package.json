@@ -282,6 +282,8 @@
     "postinstall": "prisma generate",
     "prepare": "husky",
     "wa:woka": "node scripts/wa/build-woka-catalog.mjs",
+    "wa:layers": "node scripts/wa/build-woka-layers.mjs",
+    "wa:assets": "npm run wa:woka && npm run wa:layers",
     "wa:publish": "node scripts/wa/publish-world.mjs"
   },
   "dependencies": {
@@ -307,6 +309,7 @@
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
     "resend": "^6.14.0",
+    "sharp": "0.34.5",
     "sonner": "^2.0.7",
     "zod": "^4.3.6"
   },
@@ -327,7 +330,6 @@
     "pdf-lib": "^1.17.1",
     "pngjs": "^7.0.0",
     "prisma": "^5.22.0",
-    "sharp": "^0.35.1",
     "tailwindcss": "^4",
     "three": "0.160.0",
     "ts-morph": "^27.0.2",

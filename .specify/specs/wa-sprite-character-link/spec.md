@@ -6,7 +6,7 @@ Make **one character choice** produce a playable body everywhere: bars-engine's 
 
 **Problem:** the two systems already carry the same identity (`Player.id` via OIDC) but keep separate sprite vocabularies. bars-engine has a layered 64×64 portrait and an 8-frame 512×64 walkable sheet. WorkAdventure needs a 96×128, twelve-frame 32×32 woka sheet. Today a player can finish the narrative character creator and still enter the dojo as WorkAdventure's fallback "ghost", because no creator surface writes a woka texture and no compiler derives one from `avatarConfig`.
 
-**This run (Phase 0):** compare and contrast the two sprite models and pull the WorkAdventure contract into bars-engine so the character creator can link to it. The comparison is [compare-workadventure-sprites.md](./compare-workadventure-sprites.md).
+**This run (Phase 0 → 2 bridge):** compare and contrast the two sprite models, pull the WorkAdventure contract into bars-engine, and ship the six-layer customizer plus the bars-engine sprite step and compositor. The comparison is [compare-workadventure-sprites.md](./compare-workadventure-sprites.md).
 
 **Practice:** Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI.
 
@@ -18,10 +18,10 @@ Make **one character choice** produce a playable body everywhere: bars-engine's 
 |---|---|
 | One identity | `sub = Player.id` stays the only identity. `Player.avatarConfig` stays the only sprite choice. No second character table. |
 | One character, three renders | Portrait (64×64 layers), walkable (512×64, 8 frames), and woka (96×128, 12 frames) are **renders of the same config**, not competing characters. |
-| WA `woka` part, not layers | The bridge uses WorkAdventure's **full-character** `woka` collection. We do **not** map bars-engine's portrait layers onto WA's `body/eyes/hair/clothes/hat/accessory` parts in v1. |
+| WA `woka` part + six layers | The bridge serves **both**: full-body `woka` presets for the picker, and `body`/`eyes`/`hair`/`clothes`/`hat`/`accessory` collections for WA's native layered customizer. Nation and archetype seed the clothes/hat/accessory choices. |
 | Deterministic compiler | `npm run wa:woka` compiles checked-in walker frames + nation palette into 96×128 sheets and `catalog.json`. No AI at request time. |
 | `waWokaId` escape hatch | Texture id is `wa:<nation>:<archetype>` by default. A non-default body stores `waWokaId` inside the existing `avatarConfig` JSON. **No Prisma migration.** |
-| Creator is bars-engine | The primary selection surface is bars-engine (the character creator), authenticated by the player's session. WA's own picker remains a fallback for players who enter the world first. |
+| Creator is bars-engine | The primary selection surface is a bars-engine **sprite builder** seeded by nation × archetype, authenticated by the player's session. WA's native layered customizer is the same experience in-world; the preset picker remains a fallback. |
 | Server-to-server Admin API | WorkAdventure calls bars-engine with `WA_ADMIN_API_TOKEN`; the player's browser never holds it. `room/access` re-reads the player by `sub` every call. |
 | Anonymous is first-class | An anonymous visitor may pick locally; the Admin API echoes catalog-valid `characterTextureIds` so the socket does not fall back to the ghost. First-time anonymous visitors get the picker, not an empty-valid room. |
 | Stock WA | No WorkAdventure fork or custom image. Box changes remain config only. |
@@ -45,14 +45,14 @@ Make **one character choice** produce a playable body everywhere: bars-engine's 
 | Piece | Status |
 |---|---|
 | OIDC provider + JWKS in bars-engine | Shipped in PR #991; live on `bars-engine.vercel.app`. |
-| `GET /api/woka/list` (WA Admin API) | Shipped; returns one `woka` collection, 40 textures. |
+| `GET /api/woka/list` (WA Admin API) | Shipped; returns the `woka` preset collection (40) **and** the six layer parts (`body` 4, `eyes` 5, `hair` 5, `clothes` 40, `hat` 6, `accessory` 9). |
 | `POST /api/save-textures` | Shipped; maps texture id → `avatarConfig`. |
 | `GET /api/room/access` | Shipped; resolves `avatarConfig` → `characterTextures`, returns `isCharacterTexturesValid`. |
 | `npm run wa:woka` | Shipped; compiles 40 provisional 96×128 sheets + `catalog.json`. |
 | Anonymous texture echo | Shipped in follow-up commit; echoes valid `characterTextureIds`, sends first-timers to the picker. |
-| bars-engine character creator writes a woka | **Partial.** `/character/create` writes `avatarConfig` on completion (nation × archetype), which the bridge resolves; `/character-creator` edits the playbook. Neither shows the body. |
-| Compiler from bars-engine parts | **Missing.** Sheets are palette variants of dojo walkers, not compiled from portrait/walkable sources. |
-| WA "Build your WOKA" button | **Dead end in this world.** It opens WA's six-layer customizer, but the catalog returns only the `woka` part. It will error/empty until we either supply layer collections or replace the surface with the bars-engine Body step. |
+| bars-engine character creator writes a woka | **Shipped for layers.** `/character/create` now has an `OUROBOROS_SPRITE` step with a six-tab layer builder, live 96×128 preview, and `saveCharacterSprite`; players with identity but no body are routed to it. |
+| Layer compiler | **Shipped (bridge).** `scripts/wa/build-woka-layers.mjs` partitions the canonical 96×128 dojo walker into exactly six parts, recolors per part, and writes `public/wa/woka/layers/` (69 sheets). Full-body 12-frame compilation from portrait/walkable sources is still Phase 3. |
+| WA "Build your WOKA" button | **Fixed.** Live in the dojo: six tabs, layer thumbnails, live preview, `Finish` saves 2–6 layer ids, and the avatar renders in-world as stacked sprites. |
 | Verification quest | **Missing.** |
 
 ---
@@ -67,21 +67,33 @@ Make **one character choice** produce a playable body everywhere: bars-engine's 
 
 ```ts
 type WokaList = {
-  woka: {
-    required: true
-    collections: Array<{
-      name: string
-      textures: Array<{ id: string; name: string; url: string }>
-    }>
-  }
+  woka: WokaPart
+  body: WokaPart
+  eyes: WokaPart
+  hair: WokaPart
+  clothes: WokaPart
+  hat: WokaPart
+  accessory: WokaPart
+}
+
+type WokaPart = {
+  required?: boolean
+  collections: Array<{
+    name: string
+    textures: Array<{ id: string; name: string; url: string }>
+  }>
 }
 ```
 
 Rules:
-- Exactly one part, named `woka`.
-- Every texture id is `wa:<nationKey>:<archetypeKey>`.
+- `woka` holds the 40 full-body presets (`wa:<nation>:<archetype>`).
+- The six layer parts hold `wa:body:<tone>`, `wa:eyes:<color>`, `wa:hair:<color>`,
+  `wa:clothes:<nation>:<archetype>`, `wa:hat:<nation>`, `wa:accessory:<archetype>`,
+  plus a `none` entry where a part is optional.
+- Every part is a 96×128 sheet with the same 3×4 / 32px frame grid.
 - Every `url` is absolute and points at the bars-engine deployment.
-- Do **not** return `body`/`eyes`/`hair`/`clothes`/`hat`/`accessory` unless the sheet actually contains those layers.
+- Do **not** advertise a part unless every texture in it exists and composites in the
+  order `body → eyes → hair → clothes → hat → accessory`.
 
 ### 2. `POST /api/save-textures` — WA Admin API
 
@@ -95,9 +107,12 @@ Rules:
 **Output:** `204 No Content`, or `400` for an unknown texture / missing fields, `404` for an unknown player.
 
 Rules:
-- Use `textures[0]` only in v1; reject arrays that contain no catalog id.
-- Resolve the texture to `nationKey` + `archetypeKey`; preserve an existing `domainKey` and `genderKey`.
-- Write `Player.avatarConfig`; never trust a client-supplied nation/archetype.
+- One id → a full-body preset; store `avatarConfig.waWokaId` and clear `waLayers`.
+- Two to six ids → native layers in WA's order
+  (`body`, `eyes`, `hair`, `clothes`, `hat`, `accessory`); validate each id against
+  its part and store `avatarConfig.waLayers` in that order.
+- Preserve an existing `domainKey` and `genderKey`; never trust a client-supplied
+  nation/archetype.
 - Idempotent.
 
 ### 3. `GET /api/room/access` — WA Admin API
@@ -121,35 +136,55 @@ Rules:
 ```
 
 Rules:
-- If `avatarConfig` resolves, return exactly one `characterTextures` entry and `isCharacterTexturesValid: true`.
-- If the player exists but has no character, return `isCharacterTexturesValid: false` and `characterTextures: []` so WA opens the picker.
-- If the player is not found (anonymous), validate `characterTextureIds` against the catalog:
-  - valid ids → echo them, `isCharacterTexturesValid: true`;
+- If `avatarConfig.waLayers` resolves, return those textures **in layer order** and
+  `isCharacterTexturesValid: true`. WA's `Character` stacks them and animates each.
+- If `avatarConfig.waWokaId` resolves, return exactly one preset texture and `true`.
+- If the player exists but has no character, return `isCharacterTexturesValid: false`
+  and `characterTextures: []` so WA opens the picker.
+- If the player is not found (anonymous), validate `characterTextureIds` against
+  presets **and** layers:
+  - valid ids → echo them in order, `isCharacterTexturesValid: true`;
   - none → `isCharacterTexturesValid: false` (picker), **never** `true` with `[]`.
 
-### 4. `saveCharacterSprite` — bars-engine Server Action (new)
+### 4. `saveCharacterSprite` — bars-engine Server Action
 
 **Auth:** player session (`getCurrentPlayer()`)
 **Input:**
 
 ```ts
-type SaveCharacterSpriteInput = { textureId: string }
+type SaveCharacterSpriteInput =
+  | { textureId: string }
+  | { textureIds: string[] }
 ```
 
 **Output:**
 
 ```ts
 type SaveCharacterSpriteResult =
-  | { success: true; avatarConfig: string; wokaId: string }
+  | { success: true; avatarConfig: string; wokaId: string; layers?: string[] }
   | { success: false; error: 'unauthorized' | 'unknown_texture' | 'no_player' }
 ```
 
 Rules:
-- Reject if the texture id is not in the catalog.
-- Write the same `avatarConfig` mapping as `save-textures`.
+- Reject if any id is not in the catalog.
+- One preset id writes `waWokaId`; a layer array writes `waLayers` in WA order.
 - This is the creator's write path; the WA endpoint remains the fallback write path.
 
-### 5. `npm run wa:woka` — compiler
+### 5. `GET /api/woka/compose` — bars-engine compositor
+
+**Auth:** public (the output is public art)
+**Input:** `body`, `eyes`, `hair`, `clothes`, `hat`, `accessory` query ids.
+**Output:** `image/png`, 96×128 RGBA, 12 frames.
+
+Rules:
+- Resolve every id through the layer registry; unknown ids → `400`.
+- Missing optional parts (`hat`, `accessory`, `eyes`, `hair`) are transparent.
+- Stack in `body → eyes → hair → clothes → hat → accessory` order.
+- Deterministic bytes for the same selection; cacheable with an `ETag`/`Cache-Control`.
+- This route powers the bars-engine preview/share card and can flatten a selection
+  to one texture. The world itself uses native WA layers when possible.
+
+### 6. `npm run wa:woka` — compiler
 
 **Input:** checked-in walker sources + palette table.
 **Output:** `public/wa/woka/sheets/<nation>/<archetype>.png`, `public/wa/woka/catalog.json`.
@@ -164,15 +199,15 @@ Rules:
 
 ## User Stories
 
-### P1: A signed-in player chooses a body and walks into the dojo with it
+### P1: A signed-in player builds a layered body and walks into the dojo with it
 
-**As a player with a bars-engine account**, I want to choose my character's body in the creator, so I appear as that character on `world.masteringallyship.com` instead of a ghost.
+**As a player with a bars-engine account**, I want to assemble a character from body, eyes, hair, clothes, hat, and accessory, so the body I build is the body I walk around in on `world.masteringallyship.com`.
 
 **Acceptance:**
-- The creator shows the 40 catalog bodies with a preview.
-- Choosing one writes `avatarConfig` (including `waWokaId` if non-default).
-- Entering the dojo loads the chosen 96×128 sheet; no fallback ghost.
-- The portrait and walkable renderers show the same nation × archetype.
+- The builder opens with nation and archetype already chosen, and seeds clothes/hat/accessory from them.
+- Every part shows a live 96×128 preview; the player can change any layer independently.
+- Saving writes `avatarConfig.waLayers` (or a composed id) and the dojo loads the same layers.
+- The portrait, walkable, and woka use the same nation × archetype identity.
 
 ### P2: An anonymous visitor can still pick a body
 
@@ -183,14 +218,14 @@ Rules:
 - After a pick, the reconnect carries the id and `room/access` echoes it.
 - No server-side player row is required.
 
-### P3: The creator links the narrative choice to the visual choice
+### P3: The creator prints a sprite builder seeded by nation and archetype
 
-**As a player**, after I choose my archetype and nation in the narrative creator, I want the sprite step to default to that nation × archetype, so I do not choose twice.
+**As a player**, after I choose my archetype and nation in the narrative creator, I want the next step to open a sprite builder already dressed in those aspects, so I customize rather than start from zero.
 
 **Acceptance:**
-- The sprite step preselects `wa:<nation>:<archetype>` when both are known.
-- Changing the sprite does not change the narrative playbook; changing the archetype/nation updates the default sprite unless the player has explicitly overridden it.
-- The shareable character card shows the selected sprite.
+- The builder preselects `wa:clothes:<nation>:<archetype>`, `wa:hat:<nation>`, and `wa:accessory:<archetype>` when both are known.
+- Changing the body/hair/eyes does not change the narrative playbook; changing nation/archetype updates the seeded parts unless the player has explicitly overridden them.
+- The shareable character card renders the same composed look.
 
 ### P4: Art can be replaced without touching the API
 
@@ -208,7 +243,7 @@ Rules:
 ### Phase 0 — Comparison and contract (this run)
 
 - **FR1**: Publish [compare-workadventure-sprites.md](./compare-workadventure-sprites.md) covering WA parts, frame layout, pickers, save loop, fallback, and bars-engine's portrait/walkable/creator model.
-- **FR2**: Record the bridge decision: WA `woka` full-body texture is the in-world render of `avatarConfig`; WA layer parts are out of scope for v1.
+- **FR2**: Record the bridge decision: serve full-body `woka` presets **and** the six WA layer parts; nation/archetype seed the layer defaults; a bars-engine compositor flattens selections for previews and shares.
 - **FR3**: Record the open questions (creator placement, art source, layer customization, anonymous behavior) with recommendations.
 
 ### Phase 1 — Bridge hardening
@@ -229,6 +264,8 @@ Rules:
 - **FR14**: If the player has no `avatarConfig` when entering the world, the WA picker remains available and writes the same field.
 
 ### Phase 3 — Compiler from bars-engine sources (replaces provisional art)
+
+> **Bridge delivered:** the six parts are currently partitioned from the canonical 96×128 dojo walker (`build-woka-layers.mjs`); they are deterministic, pixel-complete, and replaceable. FR15–FR18 describe the later full-body 12-frame compilation from bars-engine portrait/walkable sources.
 
 - **FR15**: Define the source frames for a full-body walker per nation × archetype (portrait layers are not enough; a 12-frame walk source is required).
 - **FR16**: Compile 96×128 sheets from those sources with the same palette rules as the walkable sheet.
@@ -316,11 +353,11 @@ Rules:
 
 ## Non-Goals (v1)
 
-- Exposing WA's six layer parts (`body`, `eyes`, `hair`, `clothes`, `hat`, `accessory`) as a bars-engine customization system.
 - Per-player AI sprite generation.
 - A WA fork or a second world server.
 - Changing the portrait/walkable canvas sizes.
-- Getting rid of WA's picker; it remains the fallback for players who arrive before creating a character.
+- Getting rid of WA's preset picker; it remains the fallback for players who arrive before building a character.
+- Free-form layer uploads by players; the registry is curated art.
 
 ---
 

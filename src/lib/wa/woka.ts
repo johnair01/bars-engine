@@ -13,6 +13,13 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { parseAvatarConfig, type AvatarConfig } from '@/lib/avatar-utils'
+import {
+  WOKA_LAYER_ORDER,
+  findLayerTexture,
+  layerTexturesForIds,
+  type WokaLayerCatalog,
+  type WokaLayerTexture,
+} from '@/lib/wa/layer-catalog'
 
 export type WokaTexture = {
   id: string
@@ -60,8 +67,12 @@ function absolute(pathOrUrl: string, publicUrl: string): string {
   return `${publicUrl.replace(/\/+$/, '')}/${pathOrUrl.replace(/^\/+/, '')}`
 }
 
-export function wokaListFromCatalog(catalog: WokaCatalog, publicUrl: string): WokaList {
-  return {
+export function wokaListFromCatalog(
+  catalog: WokaCatalog,
+  publicUrl: string,
+  layers?: WokaLayerCatalog,
+): WokaList {
+  const list: WokaList = {
     woka: {
       required: true,
       collections: [
@@ -76,6 +87,24 @@ export function wokaListFromCatalog(catalog: WokaCatalog, publicUrl: string): Wo
       ],
     },
   }
+  if (layers) {
+    for (const part of WOKA_LAYER_ORDER) {
+      list[part] = {
+        required: part === 'body',
+        collections: [
+          {
+            name: `${catalog.collection} · ${part}`,
+            textures: layers.parts[part].map((texture) => ({
+              id: texture.id,
+              name: texture.name,
+              url: absolute(texture.path, publicUrl),
+            })),
+          },
+        ],
+      }
+    }
+  }
+  return list
 }
 
 export function textureId(nationKey: string, archetypeKey: string): string {
@@ -117,6 +146,20 @@ export function requestedTextureIds(searchParams: {
  * `characterTextureIds`, and the Admin API echoes the valid ones so the
  * client does not fall back to the placeholder sprite.
  */
+export function resolveRequestedCharacter(
+  catalog: WokaCatalog,
+  layers: WokaLayerCatalog,
+  ids: string[],
+): { textures: Array<WokaTexture | WokaLayerTexture>; valid: boolean } {
+  const hasLayerId = ids.some((id) => Boolean(findLayerTexture(layers, id)))
+  if (hasLayerId) {
+    const textures = layerTexturesForIds(layers, ids)
+    return { textures: textures ?? [], valid: Boolean(textures) }
+  }
+  const textures = resolveRequestedWoka(catalog, ids)
+  return { textures, valid: textures.length > 0 }
+}
+
 export function resolveRequestedWoka(catalog: WokaCatalog, ids: string[]): WokaTexture[] {
   const seen = new Set<string>()
   const textures: WokaTexture[] = []
@@ -169,8 +212,41 @@ export function resolveWokaForPlayer(
   )
 }
 
-export function wokaDetail(texture: WokaTexture, publicUrl: string) {
+export function wokaDetail(texture: { id: string; path: string }, publicUrl: string) {
   return { id: texture.id, url: absolute(texture.path, publicUrl) }
+}
+
+/** Extra keys the bridge stores inside `Player.avatarConfig`. */
+export type WokaConfigExtras = {
+  waWokaId?: string
+  waLayers?: string[]
+}
+
+export function readWokaExtras(
+  avatarConfig: string | null | undefined,
+): WokaConfigExtras {
+  if (!avatarConfig?.trim()) return {}
+  try {
+    const raw = JSON.parse(avatarConfig) as Record<string, unknown>
+    return {
+      waWokaId: typeof raw.waWokaId === 'string' ? raw.waWokaId : undefined,
+      waLayers: Array.isArray(raw.waLayers)
+        ? raw.waLayers.filter((id): id is string => typeof id === 'string')
+        : undefined,
+    }
+  } catch {
+    return {}
+  }
+}
+
+/** The saved layer stack, if the player built one. */
+export function resolveWokaLayersForPlayer(
+  layers: WokaLayerCatalog,
+  avatarConfig: string | null | undefined,
+): WokaLayerTexture[] | null {
+  const ids = readWokaExtras(avatarConfig).waLayers
+  if (!ids?.length) return null
+  return layerTexturesForIds(layers, ids)
 }
 
 /**
@@ -187,6 +263,7 @@ export function avatarConfigForTexture(
   if (!texture) return null
 
   const existing = parseAvatarConfig(existingAvatarConfig ?? null)
+  const raw = readRawConfig(existingAvatarConfig)
   const next: AvatarConfig = {
     nationKey: texture.nationKey,
     archetypeKey: texture.archetypeKey,
@@ -194,5 +271,59 @@ export function avatarConfigForTexture(
     genderKey: texture.genderKey ?? existing?.genderKey ?? 'default',
   }
   if (existing?.domainKey) next.domainKey = existing.domainKey
-  return JSON.stringify(next)
+  delete raw.waLayers
+  if (texture.id === textureId(texture.nationKey, texture.archetypeKey)) {
+    delete raw.waWokaId
+  } else {
+    raw.waWokaId = texture.id
+  }
+  return JSON.stringify({ ...raw, ...next })
+}
+
+/**
+ * Turn a native WA layer selection into `avatarConfig`. The clothes layer
+ * carries the nation x archetype pair when the player has no identity yet;
+ * an existing narrative identity is preserved.
+ */
+export function avatarConfigForLayers(
+  layers: WokaLayerCatalog,
+  ids: string[],
+  existingAvatarConfig?: string | null,
+): string | null {
+  const textures = layerTexturesForIds(layers, ids)
+  if (!textures) return null
+
+  const existing = parseAvatarConfig(existingAvatarConfig ?? null)
+  const raw = readRawConfig(existingAvatarConfig)
+  const clothes = textures.find((texture) => texture.part === 'clothes')
+  const nationKey = existing?.nationKey || clothes?.nationKey || ''
+  const archetypeKey = existing?.archetypeKey || clothes?.archetypeKey || ''
+  if (!nationKey || !archetypeKey) return null
+
+  const next: AvatarConfig = {
+    nationKey,
+    archetypeKey,
+    variant: 'default',
+    genderKey: existing?.genderKey ?? 'default',
+  }
+  if (existing?.domainKey) next.domainKey = existing.domainKey
+
+  delete raw.waWokaId
+  return JSON.stringify({
+    ...raw,
+    ...next,
+    waLayers: textures.map((texture) => texture.id),
+  })
+}
+
+function readRawConfig(avatarConfig?: string | null): Record<string, unknown> {
+  if (!avatarConfig?.trim()) return {}
+  try {
+    const parsed = JSON.parse(avatarConfig) as unknown
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {}
+  } catch {
+    return {}
+  }
 }

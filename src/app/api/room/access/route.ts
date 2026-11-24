@@ -11,11 +11,13 @@ import { db } from '@/lib/db'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
 import { WA_ADMIN_API_URL } from '@/lib/wa/config'
 import { canEditForPlayer, emailForPlayer, tagsForPlayer } from '@/lib/wa/player'
+import { loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
 import {
   loadWokaCatalog,
   requestedTextureIds,
-  resolveRequestedWoka,
+  resolveRequestedCharacter,
   resolveWokaForPlayer,
+  resolveWokaLayersForPlayer,
   wokaDetail,
 } from '@/lib/wa/woka'
 
@@ -24,7 +26,8 @@ export const dynamic = 'force-dynamic'
 
 function anonymousResponse(userIdentifier: string, playUri: string, requested: string[]) {
   const catalog = loadWokaCatalog()
-  const textures = resolveRequestedWoka(catalog, requested)
+  const layers = loadWokaLayerCatalog()
+  const { textures, valid } = resolveRequestedCharacter(catalog, layers, requested)
   return {
     status: 'ok' as const,
     email: null,
@@ -35,7 +38,7 @@ function anonymousResponse(userIdentifier: string, playUri: string, requested: s
     // Anonymous players choose locally; echo a valid saved choice so the
     // socket carries it into the room. With no choice yet, send them to the
     // picker instead of letting WorkAdventure draw its placeholder sprite.
-    isCharacterTexturesValid: textures.length > 0,
+    isCharacterTexturesValid: valid,
     characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL)),
     isCompanionTextureValid: true,
     companionTexture: undefined,
@@ -76,7 +79,10 @@ export async function GET(request: NextRequest) {
   if (!player) return Response.json(anonymousResponse(userIdentifier, playUri, requested))
 
   const catalog = loadWokaCatalog()
-  const look = resolveWokaForPlayer(catalog, player.avatarConfig)
+  const layers = loadWokaLayerCatalog()
+  const layerLook = resolveWokaLayersForPlayer(layers, player.avatarConfig)
+  const look = layerLook ? null : resolveWokaForPlayer(catalog, player.avatarConfig)
+  const textures = layerLook ?? (look ? [look] : [])
   const tags = tagsForPlayer(player)
   const canEdit = canEditForPlayer(player)
 
@@ -90,8 +96,8 @@ export async function GET(request: NextRequest) {
     // A player who has never chosen a look is sent to WorkAdventure's own
     // customize screen. The choice comes back through /api/save-textures and
     // becomes Player.avatarConfig.
-    isCharacterTexturesValid: Boolean(look),
-    characterTextures: look ? [wokaDetail(look, WA_ADMIN_API_URL)] : [],
+    isCharacterTexturesValid: textures.length > 0,
+    characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL)),
     isCompanionTextureValid: true,
     companionTexture: undefined,
     userRoomToken: undefined,
