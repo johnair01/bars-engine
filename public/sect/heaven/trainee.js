@@ -18,8 +18,8 @@ import { doubtQuest } from './doubt.js';
 import { barQuest } from './bar.js';
 import { own } from '../../between/walk-own.js';
 
-import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, climbIntro } from './trainee-words.js';
-export { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, climbIntro };
+import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, NEXT_LINE, PATREON_LINE, PATREON_URL, CLIMB, climbIntro } from './trainee-words.js';
+export { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, NEXT_LINE, PATREON_LINE, PATREON_URL, CLIMB, climbIntro };
 const ORDER = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']; // layout.js COURTS order
 
 const CSS = `
@@ -169,13 +169,17 @@ export async function traineeWalk(ctx) {
     else if (k === 'sense') { const p = b.getAttribute('aria-pressed') === 'true'; b.setAttribute('aria-pressed', String(!p)); }
     else if (k === 'scan') { scanN = card.querySelectorAll('[data-tw="sense"][aria-pressed="true"]').length; state = 'stone'; glow.intensity = 30; pulse = now(); speak('stone', stoneLine(scanN), 5000, () => { state = 'team'; show(`<p>${esc(TEAM)}</p><div class="tw-row"><button type="button" class="go" data-tw="onward">Go on</button></div>`, 'Your team'); }); }
     else if (k === 'onward') endCard();
+    else if (k === 'next') patreonCard();
     else if (k === 'again') location.href = '/between/walk';
     else if (k === 'stay') { card.hidden = true; state = 'free'; setHint(''); if (ELD.shaman && !api.talk) { api.doubt = doubtQuest({ S, A, cam, hooks, at, wrist }); api.bar = barQuest(); api.talk = talk({ S, A, cam, hooks, people: [{ key: 'shaman', m: ELD.shaman, height: ELDER_MIX[0].height }], onGo: () => api.doubt.start(), onBar: () => api.bar.open(), busy: () => api.doubt.busy() || api.bar.busy() }); api.doubt.restore(); api.bar.sync(); } }
   });
   let pulse = 0;
   function endCard() {
     state = 'end'; setHint('');
-    show(`<b>You are an Initiate</b><p>${esc(endLine(want))}</p><div class="tw-row"><button type="button" class="go" data-tw="again">Walk it again</button><button type="button" data-tw="stay">Stay a while</button></div>`, 'The end of the walk');
+    show(`<b>You are an Initiate</b><p>${esc(endLine(want))}</p><p>${esc(NEXT_LINE)}</p><div class="tw-row"><button type="button" class="go" data-tw="next">Go on</button></div>`, 'The end of the walk');
+  }
+  function patreonCard() {
+    show(`<b>The next chapter</b><p>${esc(PATREON_LINE)}</p><div class="tw-row"><a class="go" href="${PATREON_URL}" target="_blank" rel="noopener noreferrer">Join on Patreon</a><button type="button" data-tw="again">Walk it again</button><button type="button" data-tw="stay">Stay a while</button></div>`, 'The next chapter');
   }
   function scanCard() {
     show(`<b>The heart stone</b><p>Stand with your team and notice your body. Tap each one you feel right now.</p><div class="tw-row">${SENSATIONS.map(s => `<button type="button" data-tw="sense" aria-pressed="false">${s}</button>`).join('')}</div><div class="tw-row"><button type="button" class="go" data-tw="scan">Touch the stone</button></div>`, 'The four-sensation scan');

@@ -38,5 +38,9 @@ export function stoneLine(n) {
 }
 export const TEAM = 'You and two students make a team of three. Your team meets at the spring at dawn. Bring the bucket.';
 
-/** The end card's line. Pure. */
+/** The end of the walk is a short run of three cards (his A on ch1-last-card-oix-1, 2026-11-23): the team (TEAM above),
+ *  the rank and what comes next, then the Patreon line. Pure. */
 export const endLine = want => (String(want || '').trim() ? `You came wanting ${String(want).trim()}. ` : '') + 'The Heaven sect named you Initiate, its first rank. You carried the bucket to the heart stone. Your team of three meets at the spring at dawn.';
+export const NEXT_LINE = 'The story of the Heaven sect goes on in the next chapter. It opens to patrons on 9 December.';
+export const PATREON_LINE = 'The next chapter lives on Patreon. Join there if you want to walk it.';
+export const PATREON_URL = 'https://www.patreon.com/wendell_britt';
