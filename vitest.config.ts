@@ -154,6 +154,7 @@ export default defineConfig({
     'src/lib/between/__tests__/pick.test.ts',
       'src/lib/between/__tests__/iching-cast.test.ts',
       'src/lib/between/__tests__/farm.test.ts',
+      'src/lib/between/__tests__/farm-store.test.ts',
       'src/lib/between/__tests__/crops.test.ts',
       'src/lib/between/__tests__/coin-connection.test.ts',
       'src/lib/__tests__/iching-struct.test.ts',
