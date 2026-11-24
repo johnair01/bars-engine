@@ -11,6 +11,7 @@ import type { NextRequest } from 'next/server'
 import {
   composeWokaLayers,
   loadWokaLayerCatalog,
+  WOKA_FRAME_HEIGHTS,
   WOKA_LAYER_ORDER,
 } from '@/lib/wa/layers'
 
@@ -38,9 +39,12 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: 'body is required' }, { status: 400, headers: CORS_HEADERS })
   }
 
+  const fhParam = Number(request.nextUrl.searchParams.get('fh') ?? 32)
+  const frameHeight = (WOKA_FRAME_HEIGHTS as readonly number[]).includes(fhParam) ? fhParam : 32
+
   let png: Buffer | null
   try {
-    png = await composeWokaLayers(layers, ids)
+    png = await composeWokaLayers(layers, ids, frameHeight)
   } catch (error) {
     console.error('woka compose failed', error)
     return Response.json({ error: 'could not compose woka' }, { status: 500, headers: CORS_HEADERS })

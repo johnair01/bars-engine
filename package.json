@@ -284,7 +284,8 @@
     "wa:woka": "node scripts/wa/build-woka-catalog.mjs",
     "wa:layers": "node scripts/wa/build-woka-layers.mjs",
     "wa:assets": "npm run wa:woka && npm run wa:layers",
-    "wa:publish": "node scripts/wa/publish-world.mjs"
+    "wa:publish": "node scripts/wa/publish-world.mjs",
+    "wa:import-sorceress": "node scripts/wa/import-sorceress.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.25",

@@ -22,6 +22,7 @@ type Props = {
   playbookMoves: { id: string; name: string; description: string }[]
   domains: readonly { key: string; label: string; short: string }[]
   spriteCatalog: WokaLayerCatalog
+  spriteFrameHeight?: number
   initialLayers?: string[] | null
   nationKey?: string | null
   archetypeKey?: string | null
@@ -35,6 +36,7 @@ export function OuroborosInterviewClient({
   playbookMoves,
   domains,
   spriteCatalog,
+  spriteFrameHeight = 32,
   initialLayers,
   nationKey,
   archetypeKey,
@@ -248,6 +250,7 @@ export function OuroborosInterviewClient({
     return (
       <OuroborosSpriteStep
         catalog={spriteCatalog}
+        frameHeight={spriteFrameHeight}
         nationKey={nationKey}
         archetypeKey={archetypeKey}
         initialLayers={initialLayers}

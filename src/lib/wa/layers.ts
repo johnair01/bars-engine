@@ -38,9 +38,26 @@ const PUBLIC_ROOT = path.join(process.cwd(), 'public')
  * `WOKA_LAYER_ORDER` reproduces the character. Unknown ids are rejected
  * before this function is called.
  */
+export const WOKA_FRAME_HEIGHTS = [32, 64] as const
+
+/**
+ * Stretch each 32x32 cell vertically to `frameHeight` (nearest neighbor),
+ * 96x128 -> 96x256 for 64. Same-frame art only: the pixels do not change,
+ * so a tall render of a stock sheet is a proportional upscale — the honest
+ * pipeline test for the wa-tall fork, not a substitute for real tall art.
+ */
+export function stretchWokaTall(png: Buffer, frameHeight: number): Promise<Buffer> {
+  const scale = frameHeight / 32
+  return sharp(png)
+    .resize(96, Math.round(128 * scale), { kernel: 'nearest' })
+    .png({ compressionLevel: 9 })
+    .toBuffer()
+}
+
 export async function composeWokaLayers(
   catalog: WokaLayerCatalog,
   ids: string[],
+  frameHeight: number = 32,
 ): Promise<Buffer | null> {
   const textures = layerTexturesForIds(catalog, ids)
   if (!textures) return null
@@ -50,7 +67,7 @@ export async function composeWokaLayers(
     blend: 'over' as const,
   }))
 
-  return sharp({
+  const base = await sharp({
     create: {
       width: 96,
       height: 128,
@@ -61,4 +78,7 @@ export async function composeWokaLayers(
     .composite(composites)
     .png({ compressionLevel: 9 })
     .toBuffer()
+
+  if (frameHeight === 32) return base
+  return stretchWokaTall(base, frameHeight)
 }

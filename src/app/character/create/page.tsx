@@ -58,6 +58,7 @@ export default async function CharacterCreatePage({
   const selectedNation = nations.find((nation) => nation.id === state.answers.nationId)
   const selectedArchetype = archetypes.find((archetype) => archetype.id === state.answers.archetypeId)
   const spriteCatalog = loadWokaLayerCatalog()
+  const spriteFrameHeight = Number(process.env.WA_WOKA_FRAME_HEIGHT ?? 32) === 64 ? 64 : 32
   const initialLayers = layerIdsFromAvatarConfig(player.avatarConfig)
 
   return (
@@ -78,6 +79,7 @@ export default async function CharacterCreatePage({
           playbookMoves={playbookMoves}
           domains={[...ALLYSHIP_DOMAINS]}
           spriteCatalog={spriteCatalog}
+          spriteFrameHeight={spriteFrameHeight}
           initialLayers={initialLayers}
           nationKey={selectedNation ? slugifyName(selectedNation.name) : null}
           archetypeKey={selectedArchetype ? slugifyName(selectedArchetype.name) : null}

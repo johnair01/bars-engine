@@ -28,6 +28,7 @@ type Props = {
   initialLayers?: string[] | null
   isPending: boolean
   onContinue: () => void
+  frameHeight?: number
 }
 
 const PART_SEEDS: Partial<Record<WokaLayerPart, string>> = {
@@ -73,23 +74,26 @@ function initialSelection(
   return selection
 }
 
-function composeUrl(selection: Partial<Record<WokaLayerPart, string>>): string {
+function composeUrl(
+  selection: Partial<Record<WokaLayerPart, string>>,
+  frameHeight: number = 32,
+): string {
   const params = new URLSearchParams()
   for (const part of PARTS) {
     const id = selection[part]
     if (id) params.set(part, id)
   }
-  return `/api/woka/compose?${params.toString()}`
+  return `/api/woka/compose?${params.toString()}${frameHeight === 64 ? '&fh=64' : ''}`
 }
 
-function LayerThumb({ path }: { path: string }) {
+function LayerThumb({ path, frameHeight }: { path: string; frameHeight: number }) {
   return (
     <div
       aria-hidden
       className="h-14 w-14 shrink-0 rounded-md border border-zinc-700 bg-zinc-950"
       style={{
         backgroundImage: `url(${path})`,
-        backgroundSize: '168px 224px',
+        backgroundSize: `168px ${224 * (frameHeight / 32)}px`,
         backgroundPosition: '-56px 0',
         imageRendering: 'pixelated',
       }}
@@ -104,6 +108,7 @@ export function OuroborosSpriteStep({
   initialLayers,
   isPending,
   onContinue,
+  frameHeight = 32,
 }: Props) {
   const [selection, setSelection] = useState(() =>
     initialSelection(catalog, initialLayers, nationKey, archetypeKey),
@@ -112,7 +117,7 @@ export function OuroborosSpriteStep({
   const [error, setError] = useState<string | null>(null)
   const [isSaving, startSave] = useTransition()
 
-  const preview = useMemo(() => composeUrl(selection), [selection])
+  const preview = useMemo(() => composeUrl(selection, frameHeight), [selection, frameHeight])
   const busy = isPending || isSaving
 
   const choose = (part: WokaLayerPart, id: string) => {
@@ -207,7 +212,7 @@ export function OuroborosSpriteStep({
                       : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-600'
                   }`}
                 >
-                  <LayerThumb path={texture.path} />
+                  <LayerThumb path={texture.path} frameHeight={frameHeight} />
                   <span className="min-w-0 text-xs text-zinc-300">{texture.name}</span>
                 </button>
               )
