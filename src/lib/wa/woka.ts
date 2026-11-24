@@ -217,8 +217,14 @@ export function resolveWokaForPlayer(
   )
 }
 
-export function wokaDetail(texture: { id: string; path: string }, publicUrl: string) {
-  return { id: texture.id, url: absolute(texture.path, publicUrl) }
+export function wokaDetail(
+  texture: { id: string; path: string },
+  publicUrl: string,
+  frameHeight: number = 32,
+) {
+  // The wa-tall fork sizes its cells from this ?fh tag; stock WA ignores it.
+  const fh = frameHeight === 32 ? '' : `?fh=${frameHeight}`
+  return { id: texture.id, url: absolute(texture.path, publicUrl) + fh }
 }
 
 /** Extra keys the bridge stores inside `Player.avatarConfig`. */

@@ -23,6 +23,9 @@ import {
 } from '@/lib/wa/woka'
 
 export const runtime = 'nodejs'
+
+/** Env switch for the tall-character race: WA_WOKA_FRAME_HEIGHT=64 + wa-tall play fork. */
+const FRAME_HEIGHT = Number(process.env.WA_WOKA_FRAME_HEIGHT ?? 32) === 64 ? 64 : 32
 export const dynamic = 'force-dynamic'
 
 function anonymousResponse(userIdentifier: string, playUri: string, requested: string[]) {
@@ -40,7 +43,7 @@ function anonymousResponse(userIdentifier: string, playUri: string, requested: s
     // socket carries it into the room. With no choice yet, send them to the
     // picker instead of letting WorkAdventure draw its placeholder sprite.
     isCharacterTexturesValid: valid,
-    characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL)),
+    characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL, FRAME_HEIGHT)),
     isCompanionTextureValid: true,
     companionTexture: undefined,
     userRoomToken: undefined,
@@ -108,7 +111,7 @@ export async function GET(request: NextRequest) {
     // customize screen. The choice comes back through /api/save-textures and
     // becomes Player.avatarConfig.
     isCharacterTexturesValid: textures.length > 0,
-    characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL)),
+    characterTextures: textures.map((texture) => wokaDetail(texture, WA_ADMIN_API_URL, FRAME_HEIGHT)),
     isCompanionTextureValid: true,
     companionTexture: undefined,
     userRoomToken: undefined,
