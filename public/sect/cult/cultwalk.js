@@ -57,6 +57,7 @@ export async function cultWalker(parent, body, { groundAt, tread, stepOn = () =>
     K[s] = { hip: h, leg: h.distanceTo(k) + k.distanceTo(a), lat: a.dot(l), ball: b.clone().sub(a).normalize() }; }
   const mid = wp(F.bones.ankleL).add(wp(F.bones.ankleR)).multiplyScalar(0.5); mid.y = 0; // root xz from the feet's midpoint
 
+  MO.rehangRobe(X, 0.5); // the slit robe hangs from the pelvis, half way (anim-robe-look-4)
   const live = MO.live(X);
   const st = { yaw: null, ph: 0, amp: 0, Y: null, last: null, moving: false, idle: 0, pace: 0, air: false, land: 1 };
   const feet = Object.fromEntries(legs.map(([s]) => [s, { P: V(), from: V(), to: V(), swing: false, heel: 0 }]));
