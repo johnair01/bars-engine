@@ -290,10 +290,16 @@ metadata:
 
 rulings_2026_11_23:
   source: answered by Wendell in thread, 2026-11-23; recorded in council/ledger/rulings.jsonl
-  1: Republish updates in place; no new records, findings never duplicated.
-  2: Token in an environment variable; never in the kit folder.
-  3: Success check: findings stored with stable ids, CLI reports new vs updated.
-  4: Non-secret metadata travels with the kit; secrets never do.
-  5: Long-lived token in the Authorization header; no session exchange.
-  6: The bridge is a package inside the world-kit repo; the engine keeps only the findings route.
+  ruling_1: >-
+    Republish updates in place; no new records, findings never duplicated.
+  ruling_2: >-
+    Token in an environment variable; never in the kit folder.
+  ruling_3: >-
+    Success check: findings stored with stable ids, CLI reports new vs updated.
+  ruling_4: >-
+    Non-secret metadata travels with the kit; secrets never do.
+  ruling_5: >-
+    Long-lived token in the Authorization header; no session exchange.
+  ruling_6: >-
+    The bridge is a package inside the world-kit repo; the engine keeps only the findings route.
   assumptions: All five seed assumptions confirmed as written.
