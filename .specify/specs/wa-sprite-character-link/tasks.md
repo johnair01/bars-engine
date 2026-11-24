@@ -83,17 +83,17 @@
 
 ### Fallback behavior
 
-- [ ] **T214** Confirm a player with no `avatarConfig` entering the world still gets WA's picker, and that pick writes `avatarConfig` through `save-textures`.
-- [ ] **T215** Confirm the creator's choice wins on the next join (no double picker).
+- [x] **T214** Confirmed live: an anonymous player with no `avatarConfig` gets WA's picker; the pick is echoed by `room/access` and rendered. Signed-in round-trip: created a fresh account, ran the interview, saved six layers, joined via OIDC — the creator's layers rendered in-world with no picker (`08-signedin-layers-inworld.png`).
+- [x] **T215** Confirmed: `room/access` resolves the player by `Player.id` **or the account email identifier** (the WA pusher mints its JWT with the email, not `sub` — this was the last ghost-class bug). Server-verified `valid: true` + six layer ids for the signed-in player.
 - [x] **T216** Decide what to do with WA's stock **Build your WOKA** button: supply layer collections, hide/redirect it via a supported WA config, or document it as a known dead end until the bars-engine Body step replaces it.
 
 ---
 
 ## Phase 3 — Compile from bars-engine sources
 
-> **Bridge delivered:** `scripts/wa/build-woka-layers.mjs` partitions the canonical dojo walker into six pixel-complete parts (body 4, eyes 5, hair 5, clothes 40, hat 6, accessory 9) and `npm run wa:assets` regenerates them. The compositor is `composeWokaLayers()` and the live preview is `/api/woka/compose`. The tasks below replace this bridge with full-body 12-frame compiled walkers.
+> **Bridge delivered:** `scripts/wa/build-woka-layers.mjs` partitions the canonical dojo walker into six pixel-complete parts (body 4, eyes 5, hair 5, clothes 40, hat 6, accessory 9) and `npm run wa:assets` regenerates them. The compositor is `composeWokaLayers()` and the live preview is `/api/woka/compose`. Per T301, bars-engine's own portrait/walkable art is placeholder two-tone, so this partition **is** the source until real 12-frame walker art exists. T302–T305 apply to a future art upgrade, not to the bridge.
 
-- [ ] **T301** Choose the full-body 12-frame walk source per nation × archetype (walkable sources or a new walker), and document it.
+- [x] **T301** Documented: bars-engine's 64×64 portrait and 512×64 walkable renders are placeholder two-tone art today — compiling woka sheets from them would downgrade quality. The canonical source is the CC0 96×128 dojo walker partition (`build-woka-layers.mjs`). A real full-body 12-frame art source is still needed for Phase 3 proper.
 - [ ] **T302** Extend `build-woka-catalog.mjs` to compose 3×4 at 32×32 from those frames.
 - [ ] **T303** Apply the nation palette with the same rules as the provisional sheets; keep skin/hair/shading.
 - [ ] **T304** Add `source: 'compiled' | 'provisional'` to each catalog entry; keep provisional as fallback.

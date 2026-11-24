@@ -185,6 +185,11 @@ and send `Access-Control-Allow-Credentials: true` (see `next.config.ts`).
 Without this, WA logs "One of your Woka textures is invalid for this world" and
 bounces back to the picker even though the PNG returns 200.
 
+**User identifier:** the WorkAdventure pusher mints its JWT with the account's
+**email identifier**, not the OIDC `sub`. `room/access` resolves the player by
+`Player.id` first, then by contact email — both server-side reads; the browser
+is never trusted.
+
 **Query shape:** WA's axios client sends `characterTextureIds[]=...`, not the
 bare repeated key. `room/access` reads both (plus comma-separated values) via
 `requestedTextureIds` in `src/lib/wa/woka.ts`; otherwise an anonymous pick looks
