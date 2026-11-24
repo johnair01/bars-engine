@@ -21,7 +21,7 @@ args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 BASE = json.load(open(os.path.join(HERE, 'sect-base.json')))
 LEVEL = json.load(open(os.path.join(HERE, opt('--level', 'levels/heaven-sect-court.json'))))
-for key in ('fills', 'stamps', 'walls', 'rules', 'room_kinds'):      # a level may override any base piece
+for key in ('sheets', 'fills', 'stamps', 'walls', 'rules', 'room_kinds'):      # a level may override any base piece
     BASE[key].update(LEVEL.get(key, {}))
 SEED = int(opt('--seed', LEVEL.get('seed', 7)))
 OUT = opt('--out', HERE)
@@ -63,8 +63,19 @@ def motes_sheet():
     return im
 
 
+def desks_sheet():
+    """One desk, two 16 px tiles wide: a wooden top with a sheet of paper and a lamp. The name plate is a plaque drawn beside it."""
+    im = Image.new('RGBA', (SP * 2, SP), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    d.rectangle([1, 3, SP * 2 - 2, SP - 2], fill=(138, 92, 58, 255), outline=(80, 50, 30, 255))
+    d.rectangle([3, 5, SP * 2 - 4, SP - 5], fill=(168, 118, 76, 255))
+    d.rectangle([6, 6, 14, 10], fill=(240, 230, 205, 255), outline=(120, 100, 80, 255))
+    d.ellipse([SP * 2 - 10, 5, SP * 2 - 5, 10], fill=(250, 214, 120, 255))
+    return im
+
+
+SHEET_DRAWN = {'@motes': motes_sheet, '@desks': desks_sheet}
 for name, rel in BASE['sheets'].items():
-    im = motes_sheet() if rel == '@motes' else Image.open(os.path.join(HERE, rel)).convert('RGBA')
+    im = SHEET_DRAWN[rel]() if rel in SHEET_DRAWN else Image.open(os.path.join(HERE, rel)).convert('RGBA')
     im = im.crop((0, 0, im.width // SP * SP, im.height // SP * SP))
     big = im.resize((im.width * K, im.height * K), Image.NEAREST)
     for rc in BASE['recolor'].values():
@@ -99,6 +110,7 @@ def plaque_img(text):
 
 
 labels = [r['label'] for r in LEVEL['rooms']] + [e['label'] for e in LEVEL['exits']]
+labels += [d['name'] for r in LEVEL['rooms'] for d in r.get('desks', [])]
 pimgs = [plaque_img(t) for t in labels]
 cols = max(wt for _, wt in pimgs)
 sign_sheet = Image.new('RGBA', (cols * SP, len(pimgs) * SP), (0, 0, 0, 0))
@@ -125,6 +137,9 @@ problems = []
 
 
 def block(x, y): L['collisions'][I(x, y)] = COLL
+
+
+def blocked_sq(x, y): return L['collisions'][I(x, y)] != 0
 
 
 def keep(x0, y0, w, h):
@@ -204,6 +219,7 @@ for name, (x, y, w, h) in ((k, v) for k, v in LEVEL['paths'].items() if k != 'ab
 must = {}        # name -> square that must be reachable from the start
 seats_at = {}    # room id -> list of seat squares
 zones = []       # (name, x, y, w, h, props)
+people = []      # (x, y, tint) staff standing at their desks, drawn in the render and the walk
 
 
 def seat(rid, x, y):
@@ -308,6 +324,35 @@ def furnish(r, ix, iy, iw, ih):
         stamp('plant_pot', ix, iy); stamp('plant_pot', ix + iw - 1, iy)
         stamp('jar', ix + 2, iy + 1); stamp('jar', ix + iw - 3, iy + 1)
         stamp('fern', ix, iy + ih - 1); stamp('fern', ix + iw - 1, iy + ih - 1)
+    elif kind == 'staff_hall':
+        # named desks: each desk 2 wide with its name plate on the square below it, the person standing behind (north of) it.
+        # A desk with "present": false has its chair pushed back and nobody there. Desk and person squares are blocked;
+        # the aisle between the rows stays open, and every person keeps 2 squares clear round them (rules.clear_round_npc).
+        x0, y0 = r['box'][0], r['box'][1]
+        own = {}
+        for dk in r['desks']:
+            dx, dy = x0 + dk['at'][0], y0 + dk['at'][1]
+            stamp('desk', dx, dy)
+            _, wt = PLAQUE[dk['name']]
+            put_plaque(dk['name'], dx - (wt - 2) // 2, dy + 1)
+            px, py = dx, dy - 1
+            if dk.get('present', True):
+                keep(px, py, 1, 1); block(px, py); people.append((px, py, len(people) % 4))
+            else:
+                stamp('chair', px, py)
+            own[dk['name']] = ({(dx, dy), (dx + 1, dy)}, (px, py))
+            must[f'{r["label"]}: before {dk["name"]}\'s desk'] = (dx, dy + 2)
+            zones.append((f'Desk: {dk["name"]}', px, py, 2, 2, {'role': f'desk-{dk["name"].lower()}'}))
+        clear = RULE['clear_round_npc']
+        for dk in r['desks']:
+            if not dk.get('present', True): continue
+            mine, (px, py) = own[dk['name']]
+            for ax in range(-clear, clear + 1):
+                for ay in range(-clear, clear + 1):
+                    m = (px + ax, py + ay)
+                    if (ax or ay) and blocked_sq(*m) and m not in mine:
+                        problems.append(f'{dk["name"]} has {m} blocked inside the {clear}-square clear space')
+        stamp('plant_pot', ix, iy + ih - 2); stamp('plant_pot', ix + iw - 1, iy + ih - 2)
     elif kind == 'court':
         pass
 
@@ -447,6 +492,13 @@ def tile_img(g):
             return s['img'].crop((x * T, y * T, x * T + T, y * T + T))
 
 
+def tinted(sheet, k):
+    """The walker with its colours swapped, so staff at their desks are told apart (the look Wendell answered A on)."""
+    r, g, b, a = sheet.split()
+    ch = [(r, g, b), (b, g, r), (g, r, b), (r, b, g)][k % 4]
+    return Image.merge('RGBA', (*ch, a))
+
+
 canvas = Image.new('RGBA', (W * T, H * T), (20, 14, 11, 255))
 for name in ('ground', 'detail', 'floorLayer'):
     for i, g in enumerate(L[name]):
@@ -457,6 +509,8 @@ for rid, pts in seats_at.items():           # a few students sitting, so a seat 
     for (x, y) in pts[: (3 if rid == 'founders-hall' else 2)]: walkers.append((x, y, 3))
 for (x, y, facing) in walkers:
     canvas.alpha_composite(monk.crop((32, facing * 32, 64, facing * 32 + 32)), (x * T, y * T - 6))
+for (x, y, tint) in people:                 # staff at their desks
+    canvas.alpha_composite(tinted(monk, tint).crop((0, 3 * 32, 32, 4 * 32)), (x * T, y * T - 6))
 for name in ('over1', 'over2'):
     for i, g in enumerate(L[name]):
         if g: canvas.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
@@ -477,6 +531,8 @@ if LEVEL.get('walk'):
     for name in ('over1', 'over2'):
         for i, g in enumerate(L[name]):
             if g: top.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
+    for (x, y, tint) in people:                          # staff at their desks, under the roof tiles like the walkers
+        base.alpha_composite(tinted(monk, tint).crop((0, 3 * 32, 32, 4 * 32)), (x * T, y * T - 6))
     msheet = sheets['motes']['img']
 
     def trace(points, per=2):                         # one square per step, `per` frames a square
@@ -494,6 +550,10 @@ if LEVEL.get('walk'):
         dpts = dloop['points'] * dloop.get('laps', 1)
         dpts = dpts + [dloop['points'][0]] if dloop.get('close', True) else dpts
         dpath = trace(dpts)
+        when = dloop.get('starts_when_visitor_at')      # the daemon sets off when the visitor first reaches this square
+        if when and path:
+            first = next((k for k, (px_, py_, _) in enumerate(path) if abs(px_ - when[0]) < 0.5 and abs(py_ - when[1]) < 0.5), 0)
+            dpath = [dpath[0]] * first + dpath
     well = next((r for r in LEVEL['rooms'] if r['kind'] == 'mote_well'), None)
     total = max(len(path), len(dpath))
     if well:

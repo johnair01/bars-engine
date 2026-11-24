@@ -1,0 +1,32 @@
+{
+  "about": "Level language for the whole Oddboro agent office: the three ladder rooms joined into one map, walked in order. The Mote Well (spirits) at the west, the Cloister Round (daemons) in the middle, the Staff Hall (persons with named desks) at the east, all on one 3-wide hall, so a worker's climb is a walk from west to east. Each room keeps the size and plan Wendell answered on (odb-mote-well-look-3, odb-cloister-look-1, odb-staffhall-look-1, answered A on 2026-11-23). Names, seat counts and plate wording are working positions, his to change.",
+  "map": "oddboro-office",
+  "title": "Oddboro Office",
+  "size": [58, 30],
+  "seed": 15,
+  "start": {"x": 10, "y": 26},
+  "sheets": {"desks": "@desks"},
+  "rooms": [
+    {"id": "mote-well", "label": "Mote Well", "kind": "mote_well", "box": [3, 5, 16, 15], "doors": [{"side": "S", "x": 9, "w": 3}], "seats": 6},
+    {"id": "cloister", "label": "Cloister Round", "kind": "cloister", "box": [22, 5, 15, 14], "doors": [{"side": "S", "x": 29, "w": 3}], "seats": 4},
+    {"id": "staff-hall", "label": "Staff Hall", "kind": "staff_hall", "box": [40, 5, 15, 14], "doors": [{"side": "S", "x": 46, "w": 2}], "seats": 0,
+     "desks": [
+       {"name": "Wren", "at": [3, 4]}, {"name": "Marl", "at": [7, 4]}, {"name": "Linden", "at": [11, 4]},
+       {"name": "Ash", "at": [3, 9]}, {"name": "Teal", "at": [7, 9]}, {"name": "Sorrel", "at": [11, 9], "present": false}
+     ]}
+  ],
+  "paths": {
+    "about": "Paved walks [x, y, w, h]. One hall, 4 wide, runs from the Mote Well's door to the Staff Hall's; the entry joins it from the south; each door has a step.",
+    "entry": [8, 24, 5, 4],
+    "hall": [3, 20, 52, 4],
+    "cloister_step": [29, 19, 3, 1],
+    "staff_step": [46, 19, 2, 1]
+  },
+  "exits": [],
+  "walk": {
+    "about": "The moving look: a visitor walks in from the south, up to the well while spirits rise, back out along the hall, into the Cloister while the daemon walks its round, on east to the Staff Hall and up its aisle.",
+    "points": [[10, 26], [10, 21], [8, 18], [8, 15], [8, 18], [10, 21], [30, 21], [30, 16], [30, 21], [47, 21], [47, 11]],
+    "daemon": {"points": [[24, 16], [24, 7], [34, 7], [34, 16]], "laps": 1, "close": true, "starts_when_visitor_at": [30, 21]},
+    "crop": [0, 3, 58, 26]
+  }
+}

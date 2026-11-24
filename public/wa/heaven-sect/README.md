@@ -33,3 +33,15 @@ seats on the outer edge, the round's plate on the north wall). Interior 13x12, s
 answered on odb-mote-well-look-3. The west exit goes back to the Mote Well; the Staff Hall exit is named, not built.
 Its `walk` block has a `daemon` loop: one daemon (the walker redrawn in water-teal, with a glow under it) walks the
 round once in `oddboro-cloister-walk.gif`. The walk code now works with or without a well.
+
+### The whole office on one map (the Staff Hall, and the three rooms joined)
+
+`levels/oddboro-office.json` puts the Mote Well, the Cloister Round and the Staff Hall on one 58x30 map along one 4-wide
+hall, west to east in the order a worker climbs. Each room keeps the box and plan Wendell answered on (Mote Well
+16x15, Cloister 15x14, Staff Hall 15x14 with a 13x12 inside). New room kind `staff_hall`: six named desks in two rows of
+three, each person standing behind a desk, an empty desk with its chair pushed back, name plates drawn through the plaque
+system, a 3-row aisle. New pieces `desk` (drawn by `gen_sect.py`, added by a level with `"sheets": {"desks": "@desks"}`
+so the other maps' output does not change) and `chair`. The generator now checks that each person has
+`rules.clear_round_npc` (2) squares clear round them and that every desk can be reached from the hall. The walk GIF can
+start the daemon when the visitor reaches a named square (`daemon.starts_when_visitor_at`).
+The standalone Staff Hall sketch (`/mnt/project-files/oddboro-office/staff-hall-1/gen_staffhall.py`) is replaced by this.
