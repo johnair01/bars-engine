@@ -6,21 +6,21 @@ task_type: code
 brownfield_context:
   project_type: brownfield
   context_references:
-  - path: /private/tmp/wk-intake
+  - path: /private/tmp/wa-kit
     role: primary
     summary: The bars-engine codebase (Next.js 14+, TypeScript, Prisma/PostgreSQL),
       which gains the thin findings route and holds the gate and the dojo
-  - path: /private/tmp/wk-intake/CLAUDE.md
+  - path: /private/tmp/wa-kit/CLAUDE.md
     role: reference
     summary: 'Project rules: Council Board for questions, local-first testing, ship-next
       labeling, no db push'
-  - path: /private/tmp/wk-intake/docs/LOCAL_FIRST_TESTING.md
+  - path: /private/tmp/wa-kit/docs/LOCAL_FIRST_TESTING.md
     role: reference
     summary: How to run the dev server, run the build check and show work locally
-  - path: /private/tmp/wk-intake/docs/PRISMA_MIGRATE_STRATEGY.md
+  - path: /private/tmp/wa-kit/docs/PRISMA_MIGRATE_STRATEGY.md
     role: reference
     summary: The migrations-only database workflow
-  - path: /private/tmp/wk-intake/ARCHITECTURE.md
+  - path: /private/tmp/wa-kit/ARCHITECTURE.md
     role: reference
     summary: Engine architecture
   existing_patterns:
