@@ -73,10 +73,13 @@ export function wokaListFromCatalog(
   layers?: WokaLayerCatalog,
   frameHeight: number = 32,
 ): WokaList {
-  // Frame height travels ONLY in texture URLs (?fh=64). A top-level field
-  // would fail WA's pusher zod schema (wokaList = z.record(wokaPartType)).
-  // The wa-tall fork parses fh back out of the URLs.
-  const fhParam = frameHeight === 32 ? '' : `?fh=${frameHeight}`
+  // Frame height travels in two parts: static preset sheets come from the
+  // prebuilt tall directory (a ?fh query cannot change a CDN PNG), and layer
+  // compose URLs carry ?fh=64 which /api/woka/compose honors. The wa-tall
+  // fork parses fh back out of the URLs; a top-level field would fail the
+  // pusher zod schema (wokaList = z.record(wokaPartType)).
+  const tall = frameHeight !== 32
+  const withFh = (p: string) => (tall ? p.replace('/woka/sheets/', '/woka/sheets-tall/') : p) + (tall ? `?fh=${frameHeight}` : '')
   const list: WokaList = {
     woka: {
       required: true,
@@ -86,7 +89,7 @@ export function wokaListFromCatalog(
           textures: catalog.textures.map((texture) => ({
             id: texture.id,
             name: texture.name,
-            url: absolute(texture.path, publicUrl) + fhParam,
+            url: withFh(absolute(texture.path, publicUrl)),
           })),
         },
       ],
@@ -102,7 +105,7 @@ export function wokaListFromCatalog(
             textures: layers.parts[part].map((texture) => ({
               id: texture.id,
               name: texture.name,
-              url: absolute(texture.path, publicUrl) + fhParam,
+              url: withFh(absolute(texture.path, publicUrl)),
             })),
           },
         ],
@@ -224,7 +227,8 @@ export function wokaDetail(
 ) {
   // The wa-tall fork sizes its cells from this ?fh tag; stock WA ignores it.
   const fh = frameHeight === 32 ? '' : `?fh=${frameHeight}`
-  return { id: texture.id, url: absolute(texture.path, publicUrl) + fh }
+  const p = fh ? texture.path.replace('/woka/sheets/', '/woka/sheets-tall/') : texture.path
+  return { id: texture.id, url: absolute(p, publicUrl) + fh }
 }
 
 /** Extra keys the bridge stores inside `Player.avatarConfig`. */
