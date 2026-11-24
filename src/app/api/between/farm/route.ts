@@ -13,11 +13,11 @@
  * @example POST /api/between/farm { "act": "till", "i": 17, "today": "2026-11-09" }
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { currentPlayer, ensureHome } from '@/lib/between/store'
 import { mintVibulon } from '@/actions/economy'
 import * as F from '@/lib/between/farm'
+import { loadFarm, saveFarm } from '@/lib/between/farm-store'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,19 +26,10 @@ const localDay = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/
 async function load(playerId: string) {
   const { home } = await ensureHome(playerId)
   if (!home) return null
-  const row = await db.betweenPrivate.findUnique({ where: { gardenId_playerId_key: { gardenId: home.id, playerId, key: 'farm' } } })
-  const raw = row?.data as Partial<F.Farm> | undefined
-  const farm: F.Farm = raw && typeof raw === 'object' ? { ...F.newFarm(), ...raw } : F.newFarm()
-  return { gardenId: home.id, farm }
+  return { gardenId: home.id, farm: await loadFarm(db, home.id, playerId) }
 }
 
-const save = (gardenId: string, playerId: string, farm: F.Farm) => {
-  const data = farm as unknown as Prisma.InputJsonValue
-  return db.betweenPrivate.upsert({
-    where: { gardenId_playerId_key: { gardenId, playerId, key: 'farm' } },
-    create: { gardenId, playerId, key: 'farm', data }, update: { data },
-  })
-}
+const save = (gardenId: string, playerId: string, farm: F.Farm) => saveFarm(db, gardenId, playerId, farm)
 
 export async function GET(req: NextRequest) {
   const player = await currentPlayer()

@@ -172,7 +172,9 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
 
     /* 4. A crop of the player's family, in the grain form, on that player's farm (real farm.ts). */
     const farm0 = world.farms.get(owner) ?? newFarm()
-    if (!world.farms.get(owner)) hole('H-farm-store', 4, 'No server-side store of one player\'s farm that a game master mark can write; the Farm doc is pure', 'src/lib/between/store.ts keeps the shared garden only')
+    /* H-farm-store is closed: farm-store.ts (loadFarm, saveFarm, updatePlayerFarm) holds one player's farm on the server, and the
+       FarmStore stand-in below has the same get and put. What a mark may do to that farm (till without the player's mana,
+       marks on a crop) stays open as H-till-mana and H-marks. */
     const t = till(farm0, 0, 'run')
     if (!t.ok) throw new MissingPiece(4, `farm.till refused: ${t.why}`)
     hole('H-till-mana', 4, 'farm.till spends the PLAYER\'s mana, so a mark that plants for them costs them 5 mana with no say', 'src/lib/between/farm.ts till')
