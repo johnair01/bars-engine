@@ -253,7 +253,7 @@ export function visibleFrom(docs: Parameters<typeof merge>[0], ids: string[]): V
   const openLooks = cards('questions').filter((q) => q.look === true && statusOf('questions', q) === 'open')
   const superseded = new Set(openLooks.flatMap((q) => (Array.isArray(q.supersedes) ? (q.supersedes as string[]) : [])))
   return ids.map((id): VisibleRead => {
-    const raw = docs.rows?.[id]
+    const raw = docs.rows?.[id] ?? docs.battles?.[id] // the record's own battles draw too (#971)
     if (!raw) return { id, visible: false, where: 'nowhere', why: 'No row with this id in the store, so the page has nothing to draw.' }
     const kind = typeof raw.kind === 'string' ? raw.kind : ''
     if (!(LISTS as readonly string[]).includes(kind))
