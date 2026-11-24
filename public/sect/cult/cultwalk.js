@@ -95,7 +95,10 @@ export async function cultWalker(parent, body, { groundAt }) {
     clipFrame(dt, sp, air, rootXZ, p.y, mv);
     F.mesh.skeleton.update(); F.poseName = 'clip';
     for (const [s] of legs) { const a = wp(F.bones['ankle' + s]); feet[s].swing = a.y - groundAt(a.x, a.z) > soleH + 0.012; }
-    const moving = st.amp > 0.05; if (moving !== st.moving) { st.moving = moving; M.legsInMotion(X, moving); }
+    // anim-robe-look-6 C: at a walk the trouser knee pokes between the robe's mesh points, so trousers are hidden above the hem line there;
+    // at a sprint or in the air that hides the lower leg too (dead air above the boot), so they are drawn.
+    const moving = st.amp > 0.05, hide = moving && !air && sp < M.TROUSERS.walkHide;
+    if (moving !== st.moving || hide !== st.hide) { st.moving = moving; st.hide = hide; M.TROUSERS.shown = !hide; M.legsInMotion(X, moving); }
     MO.skirtMood(air, st.land);
     live.step(dt);
   }
