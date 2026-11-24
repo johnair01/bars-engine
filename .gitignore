@@ -126,3 +126,4 @@ council/dist/
 
 # local-first testing state (scripts/local/dev.sh)
 .local-dev/
+world-kit/node_modules/
