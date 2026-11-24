@@ -24,6 +24,7 @@ import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
 import { closeRead, closeSay } from '@/lib/close/chat'
+import { isText, listLiveFiles, livePathError, liveUrl, putLiveFile, readLiveFile, removeLiveFile, revertLiveFile, type PutResult } from '@/lib/live/store'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
 import {
@@ -35,7 +36,8 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.5.0'
+const SERVER_VERSION = '1.6.0'
+const MAX_LIVE_FILES = 50
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
@@ -418,6 +420,82 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: 'put_live_files',
+    title: 'Publish live game files',
+    description: 'Publish a game prototype\'s files so they are live at once at https://bars-engine.vercel.app/live/<game>/<file>, '
+      + 'with no pull request, no lint and no build. Each file is text or base64. Each answer names the earlier version, '
+      + 'which revert_live_file brings back. The page runs sandboxed: it cannot use a player\'s sign-in.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          minItems: 1,
+          maxItems: MAX_LIVE_FILES,
+          items: {
+            type: 'object',
+            properties: {
+              path: { type: 'string', description: '`<game>/<file>`, e.g. `lantern-walk/index.html` or `lantern-walk/js/walk.js`.' },
+              text: { type: 'string', description: 'The file as text (html, js, css, json, tmj, md, svg).' },
+              base64: { type: 'string', description: 'The file as base64, for pictures, models, sound and wasm.' },
+            },
+            required: ['path'],
+          },
+        },
+        by: { type: 'string', description: 'Who published it, e.g. `box:deepseek` or a thread name. Kept with the version.' },
+      },
+      required: ['files'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'read_live_file',
+    title: 'Read a live game file',
+    description: 'Read one live game file as it is served now: text for text files, base64 otherwise, with its sha.',
+    inputSchema: {
+      type: 'object',
+      properties: { path: { type: 'string', description: '`<game>/<file>`, e.g. `lantern-walk/index.html`.' } },
+      required: ['path'],
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
+  {
+    name: 'list_live_files',
+    title: 'List live game files',
+    description: 'List the live games, or one game\'s files with each sha, size and time, and the earlier versions of each.',
+    inputSchema: {
+      type: 'object',
+      properties: { game: { type: 'string', description: 'A game slug, e.g. `lantern-walk`. Leave out for every game.' } },
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
+  {
+    name: 'revert_live_file',
+    title: 'Revert a live game file',
+    description: 'Point a live file back at one of its earlier versions (a sha list_live_files shows under history).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: '`<game>/<file>`.' },
+        sha: { type: 'string', description: 'The earlier version\'s sha256.' },
+        by: { type: 'string', description: 'Who reverted it.' },
+      },
+      required: ['path', 'sha'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'remove_live_file',
+    title: 'Remove a live game file',
+    description: 'Stop serving a live file. Its versions stay, so revert_live_file brings it back.',
+    inputSchema: {
+      type: 'object',
+      properties: { path: { type: 'string', description: '`<game>/<file>`.' } },
+      required: ['path'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
     name: 'whoami',
     title: 'Which board this key reaches',
     description: 'Name the board, the server, the deployment and the tools, so a client can prove its key works.',
@@ -735,6 +813,54 @@ function shamanIntake(args: Record<string, unknown>): ToolResult {
   return ok({ board: 'council', face: 'shaman', theme: r.theme, doubt, underneath: r.moving, next_step: r.step })
 }
 
+const byOf = (args: Record<string, unknown>) => typeof args.by === 'string' && args.by.trim() ? args.by.trim().slice(0, 80) : undefined
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 400)
+
+async function putLiveFiles(args: Record<string, unknown>): Promise<ToolResult> {
+  const files = Array.isArray(args.files) ? args.files.slice(0, MAX_LIVE_FILES) : []
+  if (files.length === 0) return bad('put_live_files needs files: [{path, text} or {path, base64}]')
+  const by = byOf(args)
+  const published: PutResult[] = [], refused: string[] = []
+  for (const raw of files) {
+    const f = (raw ?? {}) as Record<string, unknown>
+    const path = typeof f.path === 'string' ? f.path.trim() : ''
+    const why = livePathError(path)
+    if (why) { refused.push(why); continue }
+    let bytes: Uint8Array
+    if (typeof f.text === 'string') bytes = new TextEncoder().encode(f.text)
+    else if (typeof f.base64 === 'string') bytes = new Uint8Array(Buffer.from(f.base64, 'base64'))
+    else { refused.push(`${path}: send text or base64`); continue }
+    try { published.push(await putLiveFile(path, bytes, by)) } catch (e) { refused.push(errText(e)) }
+  }
+  const out = { published, refused }
+  return published.length ? ok(out) : { content: [text(out)], isError: true }
+}
+
+async function readLiveFileTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const path = typeof args.path === 'string' ? args.path.trim() : ''
+  const why = livePathError(path)
+  if (why) return bad(why)
+  const got = await readLiveFile(path)
+  if (!got) return bad(`${path}: not live (list_live_files shows what is)`)
+  const bytes = new Uint8Array(await new Response(got.body).arrayBuffer())
+  return ok({ path, sha: got.entry.sha, type: got.entry.type, at: got.entry.at, url: liveUrl(path),
+    ...(isText(path) ? { text: new TextDecoder().decode(bytes) } : { base64: Buffer.from(bytes).toString('base64') }) })
+}
+
+async function revertLiveFileTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const path = typeof args.path === 'string' ? args.path.trim() : ''
+  const sha = typeof args.sha === 'string' ? args.sha.trim() : ''
+  if (!/^[0-9a-f]{64}$/.test(sha)) return bad('revert_live_file needs sha: a 64-character sha256 from list_live_files')
+  try { return ok(await revertLiveFile(path, sha, byOf(args))) } catch (e) { return bad(errText(e)) }
+}
+
+async function removeLiveFileTool(args: Record<string, unknown>): Promise<ToolResult> {
+  const path = typeof args.path === 'string' ? args.path.trim() : ''
+  const why = livePathError(path)
+  if (why) return bad(why)
+  try { return ok(await removeLiveFile(path)) } catch (e) { return bad(errText(e)) }
+}
+
 /**
  * The tools' first names had a dot (pipeline.status). The Anthropic API accepts only ^[a-zA-Z0-9_-]{1,128}$ for a
  * tool name, so a client that forwards the list (Wizardgenie) got a 400. The dotted names still work on tools/call.
@@ -801,6 +927,14 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
   if (name === 'mechanic_eval') return mechanicEval(args)
   if (name === 'faces_lens') return facesLens(args)
   if (name === 'shaman_intake') return shamanIntake(args)
+  if (name === 'put_live_files') return putLiveFiles(args)
+  if (name === 'read_live_file') return readLiveFileTool(args)
+  if (name === 'list_live_files') {
+    const game = typeof args.game === 'string' && args.game.trim() ? args.game.trim() : undefined
+    try { return ok(await listLiveFiles(game)) } catch (e) { return bad(errText(e)) }
+  }
+  if (name === 'revert_live_file') return revertLiveFileTool(args)
+  if (name === 'remove_live_file') return removeLiveFileTool(args)
   if (name === 'whoami') {
     return ok({
       board: 'council',
@@ -820,7 +954,8 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
  *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
- *   close_read, close_say, whoami, and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,
+ *   close_read, close_say, whoami, the live game files (put_live_files, read_live_file,
+ *   list_live_files, revert_live_file, remove_live_file), and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,
  *   asset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
  * @energyCost 0 (the board's store, no model call)
