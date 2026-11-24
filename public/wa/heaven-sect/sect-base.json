@@ -64,7 +64,9 @@
     "banner_6": {"sheet": "house", "x": 27, "y": 20, "w": 1, "h": 2, "over_rows": 0, "recolor": "house_banner_violet"},
     "mote": {"sheet": "motes", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 1, "about": "a spirit, a small water-teal light drawn by gen_sect.py, not from the pack"},
     "mote_well": {"sheet": "house", "x": 3, "y": 15, "w": 2, "h": 2, "over_rows": 1, "about": "placeholder rim, replaced by a drawn well when the WizardGenie tiles land"},
-    "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0}
+    "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0},
+    "desk": {"sheet": "desks", "x": 0, "y": 0, "w": 2, "h": 1, "over_rows": 0, "about": "a person's desk, two squares wide; the level adds the 'desks' sheet (drawn by gen_sect.py) to use it"},
+    "chair": {"sheet": "element", "x": 0, "y": 9, "w": 1, "h": 1, "over_rows": 0, "collide": false, "about": "a chair pushed back from an empty desk"}
   },
   "plaque": {
     "about": "Room names are drawn into a signs tileset as wooden plaques, so a player reads the name in the world itself. Plaques sit on the wall beside the door.",
@@ -89,6 +91,7 @@
     "shrine":   {"wall": "brown", "floor": "stone_dark", "plan": "a seated figure, an altar table, two seats", "meeting": false},
     "mote_well": {"wall": "green", "floor": "boards_green", "plan": "a well at the centre on dark stone, motes above it, six seats round it, the ladder plate on the north wall", "meeting": true},
     "cloister": {"wall": "brown", "floor": "brick_pale", "plan": "a walled garden at the centre, a round walked all the way about it, four seats on the outer edge, the round's plate on the north wall", "meeting": true},
+    "staff_hall": {"wall": "orange", "floor": "boards_green", "plan": "six named desks in two rows of three, each person standing behind a desk, a three-row aisle between the rows, a pot at each south corner", "meeting": true},
     "court":    {"wall": null, "floor": "paving", "plan": "open paving, standing room, gate and notice board", "meeting": false}
   }
 }
