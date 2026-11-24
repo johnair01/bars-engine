@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentPlayer } from '@/lib/between/store'
 import { validatePassport } from '@/lib/passport/passport'
-import { claim, passportOf } from '@/lib/passport/store'
+import { claim, countEarlierMovesFor, passportOf } from '@/lib/passport/store'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +19,8 @@ export async function GET() {
   const player = await currentPlayer()
   if (!player) return NextResponse.json({ error: 'Sign in to keep a passport' }, { status: 401 })
   try {
+    // A player's first read counts the moves they completed before the glow existed, once (cc-rs-qi-earlier-moves).
+    await countEarlierMovesFor(player).catch(() => undefined)
     return NextResponse.json({ player, passport: await passportOf(player.id) })
   } catch {
     return notReady()
