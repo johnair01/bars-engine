@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { describe, expect, it } from 'vitest'
-import { claimGuest, FIELD_OWNERS, OPTIONAL_KEYS, PASSPORT_KEYS, PLACES, recordMove, validatePassport, writeFromPlace, type Passport } from '@/lib/passport/passport'
+import { claimGuest, FIELD_OWNERS, OPTIONAL_KEYS, PASSPORT_KEYS, PLACES, countEarlierMoves, EARLIER_MOVES_MARK, recordMove, validatePassport, writeFromPlace, type Passport } from '@/lib/passport/passport'
 
 // The passport contract (six-faces-council pass calrunia-world1): schema/passport.schema.json, its fixtures, the guest fold the
 // browser runs (public/passport/guest.js) and the claim at sign-in, with tests W1 and W2 of the pass at the desk.
@@ -191,5 +191,28 @@ describe('the sheet count beside the ship meter', () => {
     const p = recordMove(base(), 'a', AT).passport
     expect(writeFromPlace(p, 'cave', { sheet: p.sheet }).ok).toBe(false)
     expect(writeFromPlace(p, 'vessel', { sheet: p.sheet }).ok).toBe(true)
+  })
+})
+
+// cc-rs-qi-earlier-moves (Wendell, 2026-11-21, answer A): every move done before the glow existed counts, once.
+describe('earlier moves', () => {
+  const base = () => ok(guest.fold(null, null, 'guest-1', AT)) as Passport
+  it('adds 10 qi a move through the one door, and only once', () => {
+    const first = countEarlierMoves(base(), 4, AT)
+    expect(first.counted).toBe(4)
+    expect(first.passport.sheet).toEqual({ gathered: 40, counted: [EARLIER_MOVES_MARK] })
+    const again = countEarlierMoves(first.passport, 4, AT)
+    expect(again.counted).toBe(0)
+    expect(again.passport).toBe(first.passport)
+  })
+  it('a player with no earlier moves is marked and stays at zero; new moves still add', () => {
+    const none = countEarlierMoves(base(), 0, AT).passport
+    expect(none.sheet).toEqual({ gathered: 0, counted: [EARLIER_MOVES_MARK] })
+    expect(recordMove(none, 'a1', AT).passport.sheet?.gathered).toBe(10)
+  })
+  it('keeps the ship meter alone and passes the contract', () => {
+    const p = countEarlierMoves({ ...base(), qi: 7 }, 3, AT).passport
+    expect(p.qi).toBe(7)
+    expect(validatePassport(p).ok).toBe(true)
   })
 })
