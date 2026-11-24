@@ -35,8 +35,7 @@ describe('woka layer catalog', () => {
 
   it('advertises all six parts plus the preset picker', () => {
     const list = wokaListFromCatalog(presets, 'https://bars.test', layers)
-    // Object key order: parts, then the wa-tall frameHeight extension
-    expect(Object.keys(list)).toEqual(['woka', ...WOKA_LAYER_ORDER, 'frameHeight'])
+    expect(Object.keys(list)).toEqual(['woka', ...WOKA_LAYER_ORDER])
     expect(list.woka.collections[0].textures).toHaveLength(40)
     expect(list.body.collections[0].textures).toHaveLength(4)
     expect(list.clothes.collections[0].textures).toHaveLength(40)

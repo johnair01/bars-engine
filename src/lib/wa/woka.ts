@@ -73,11 +73,10 @@ export function wokaListFromCatalog(
   layers?: WokaLayerCatalog,
   frameHeight: number = 32,
 ): WokaList {
-  // The wa-tall fork reads `frameHeight` to size spritesheet cells; stock WA
-  // ignores the extra field. Texture URLs carry the same ?fh so sheets match.
+  // Frame height travels ONLY in texture URLs (?fh=64). A top-level field
+  // would fail WA's pusher zod schema (wokaList = z.record(wokaPartType)).
+  // The wa-tall fork parses fh back out of the URLs.
   const fhParam = frameHeight === 32 ? '' : `?fh=${frameHeight}`
-  // WokaList has an index signature over its parts, so frameHeight is attached
-  // at the end and the cast documents the wa-tall extension.
   const list: WokaList = {
     woka: {
       required: true,
@@ -110,7 +109,7 @@ export function wokaListFromCatalog(
       }
     }
   }
-  return Object.assign(list, { frameHeight }) as WokaList
+  return list
 }
 
 export function textureId(nationKey: string, archetypeKey: string): string {
