@@ -141,7 +141,13 @@ async function main() {
   const bases = new Map() // gender-skin -> bounds per cell, for overlay alignment
   const accepted = []
 
-  for (const file of files) {
+  // Bases first: overlays align against the base silhouette.
+  const ordered = [
+    ...files.filter((f) => /^base-/.test(f)),
+    ...files.filter((f) => !/^base-/.test(f)),
+  ]
+
+  for (const file of ordered) {
     const match = NAME_RE.exec(path.basename(file))
     if (!match) {
       fail(file, 'name must be base-<gender>-<skin>.png | hair-<gender>-<style>.png | robe-<nation>-<cut>.png | accessory-<archetype>.png')
@@ -161,10 +167,14 @@ async function main() {
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 3; col++) {
         const px = cell(sheet.data, sheet.width, col, row)
-        const coverage = lowerBodyCoverage(px)
-        if (coverage < 0.08) {
-          fail(file, `cell r${row}c${col} lower body missing (coverage ${(coverage * 100).toFixed(1)}%)`)
-          ok = false
+        // Hair/accessory overlays legitimately leave the lower body empty;
+        // bases and robes must cover it (feet/hem visible below the waist).
+        if (kind === 'base' || kind === 'robe') {
+          const coverage = lowerBodyCoverage(px)
+          if (coverage < 0.08) {
+            fail(file, `cell r${row}c${col} lower body missing (coverage ${(coverage * 100).toFixed(1)}%)`)
+            ok = false
+          }
         }
         if (kind === 'base' && antiAliasedCount(px) > 24) {
           fail(file, `cell r${row}c${col} looks anti-aliased (${antiAliasedCount(px)} semi-transparent px) — run True Pixel/Pixel Snap`)
