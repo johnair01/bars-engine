@@ -41,6 +41,13 @@
         "path": "/wa/woka/layers/body/olive.png",
         "part": "body",
         "tone": "olive"
+      },
+      {
+        "id": "wa:body:masculine-tan",
+        "name": "Tan · Sorceress",
+        "path": "/wa/woka/sorceress/base-masculine-tan.png",
+        "part": "body",
+        "tone": "tan"
       }
     ],
     "eyes": [
@@ -104,6 +111,30 @@
         "id": "wa:hair:none",
         "name": "None",
         "path": "/wa/woka/layers/hair/none.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:topknot-black",
+        "name": "Topknot · Black",
+        "path": "/wa/woka/sorceress/hair-topknot-black.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:topknot-brown",
+        "name": "Topknot · Brown",
+        "path": "/wa/woka/sorceress/hair-topknot-brown.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:topknot-auburn",
+        "name": "Topknot · Auburn",
+        "path": "/wa/woka/sorceress/hair-topknot-auburn.png",
+        "part": "hair"
+      },
+      {
+        "id": "wa:hair:topknot-silver",
+        "name": "Topknot · Silver",
+        "path": "/wa/woka/sorceress/hair-topknot-silver.png",
         "part": "hair"
       }
     ],
@@ -427,6 +458,13 @@
         "part": "clothes",
         "nationKey": "meridia",
         "archetypeKey": "truth-seer"
+      },
+      {
+        "id": "wa:clothes:argyra:ceremonial",
+        "name": "Argyra · Ceremonial Robe",
+        "path": "/wa/woka/sorceress/robe-argyra-ceremonial.png",
+        "part": "clothes",
+        "nationKey": "argyra"
       }
     ],
     "hat": [
@@ -534,7 +572,15 @@
         "name": "None",
         "path": "/wa/woka/layers/accessory/none.png",
         "part": "accessory"
+      },
+      {
+        "id": "wa:accessory:bold-heart-sorceress",
+        "name": "Bold Heart Sash (pilot art)",
+        "path": "/wa/woka/sorceress/accessory-bold-heart.png",
+        "part": "accessory",
+        "archetypeKey": "bold-heart"
       }
     ]
-  }
+  },
+  "frameHeight": 64
 }

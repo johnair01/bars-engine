@@ -188,7 +188,10 @@ async function main() {
       }
     }
 
-    // Overlays must sit inside the base silhouette (±2px) in every cell.
+    // Overlays must track the base silhouette in every cell: they may overhang
+    // it (hoods, flaring skirts) by up to ESCAPE px, but their bbox must
+    // substantially intersect the base bbox — that is what a misaligned
+    // (floating/shifted) overlay fails.
     if (kind !== 'base') {
       const gender = kind === 'hair' ? a : null
       const baseKey = kind === 'hair'
@@ -199,15 +202,25 @@ async function main() {
         fail(file, `no base sheet seen yet for alignment check (${kind}) — put base-*.png first / run again`)
         ok = false
       } else {
+        const ESCAPE = 6
+        const MIN_OVERLAP = 0.4
         cells.forEach((bounds, i) => {
           const base = baseBounds[i]
           if (!bounds) { fail(file, `cell ${i} overlay is empty`); ok = false; return }
-          const slack = 2
           if (
-            bounds.minX < base.minX - slack || bounds.maxX > base.maxX + slack ||
-            bounds.minY < base.minY - slack || bounds.maxY > base.maxY + slack
+            bounds.minX < base.minX - ESCAPE || bounds.maxX > base.maxX + ESCAPE ||
+            bounds.minY < base.minY - ESCAPE || bounds.maxY > base.maxY + ESCAPE
           ) {
-            fail(file, `cell ${i} overlay escapes base silhouette by more than ${slack}px`)
+            fail(file, `cell ${i} overlay escapes base silhouette by more than ${ESCAPE}px`)
+            ok = false
+            return
+          }
+          const ix = Math.min(bounds.maxX, base.maxX) - Math.max(bounds.minX, base.minX)
+          const iy = Math.min(bounds.maxY, base.maxY) - Math.max(bounds.minY, base.minY)
+          const inter = (ix > 0 && iy > 0) ? ix * iy : 0
+          const area = (bounds.maxX - bounds.minX + 1) * (bounds.maxY - bounds.minY + 1)
+          if (inter / area < MIN_OVERLAP) {
+            fail(file, `cell ${i} overlay is misaligned — only ${Math.round((inter / area) * 100)}% of it overlaps the base silhouette`)
             ok = false
           }
         })

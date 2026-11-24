@@ -20,15 +20,16 @@ const layers = loadWokaLayerCatalog()
 const presets = loadWokaCatalog()
 
 describe('woka layer catalog', () => {
-  it('ships every part with 96x128 sheets', async () => {
+  it('ships every part with 96-wide sheets', async () => {
     expect(layers.order).toEqual([...WOKA_LAYER_ORDER])
-    expect(layers.parts.clothes).toHaveLength(40)
+    expect(layers.parts.clothes.length).toBeGreaterThanOrEqual(40)
     for (const part of WOKA_LAYER_ORDER) {
       expect(layers.parts[part].length).toBeGreaterThan(0)
       for (const texture of layers.parts[part]) {
         const meta = await sharp(`public${texture.path}`).metadata()
         expect(meta.width, texture.id).toBe(96)
-        expect(meta.height, texture.id).toBe(128)
+        // stock sheets are 96x128 (fh=32); sorceress pilot art is 96x256 (fh=64)
+        expect([128, 256], texture.id).toContain(meta.height)
       }
     }
   })
@@ -36,9 +37,9 @@ describe('woka layer catalog', () => {
   it('advertises all six parts plus the preset picker', () => {
     const list = wokaListFromCatalog(presets, 'https://bars.test', layers)
     expect(Object.keys(list)).toEqual(['woka', ...WOKA_LAYER_ORDER])
-    expect(list.woka.collections[0].textures).toHaveLength(40)
-    expect(list.body.collections[0].textures).toHaveLength(4)
-    expect(list.clothes.collections[0].textures).toHaveLength(40)
+    expect(list.woka.collections[0].textures.length).toBeGreaterThanOrEqual(40)
+    expect(list.body.collections[0].textures.length).toBeGreaterThanOrEqual(4)
+    expect(list.clothes.collections[0].textures.length).toBeGreaterThanOrEqual(40)
     expect(list.clothes.collections[0].textures[0].url).toBe(
       'https://bars.test/wa/woka/layers/clothes/argyra-bold-heart.png',
     )
@@ -117,3 +118,4 @@ describe('layer persistence', () => {
     expect(parsed.archetypeKey).toBe('bold-heart')
   })
 })
+

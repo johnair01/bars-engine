@@ -62,15 +62,30 @@ export async function composeWokaLayers(
   const textures = layerTexturesForIds(catalog, ids)
   if (!textures) return null
 
-  const composites = textures.map((texture) => ({
-    input: path.join(PUBLIC_ROOT, texture.path.replace(/^\/+/, '')),
-    blend: 'over' as const,
-  }))
+  const targetHeight = frameHeight * 4
+  // Layer sheets come in two geometries: 96x128 (partitioned from the monk
+  // walker, 32px cells) and 96x256 (sorceress-generated, 64px cells). Each is
+  // brought to the target height with nearest-neighbor resampling before the
+  // stack is flattened, so a mixed selection stays in register per cell.
+  const composites: { input: Buffer; blend: 'over' }[] = []
+  for (const texture of textures) {
+    const file = path.join(PUBLIC_ROOT, texture.path.replace(/^\/+/, ''))
+    const meta = await sharp(file).metadata()
+    if (meta.height === targetHeight) {
+      composites.push({ input: await sharp(file).png().toBuffer(), blend: 'over' })
+    } else {
+      const stretched = await sharp(file)
+        .resize(96, targetHeight, { kernel: 'nearest' })
+        .png()
+        .toBuffer()
+      composites.push({ input: stretched, blend: 'over' })
+    }
+  }
 
   const base = await sharp({
     create: {
       width: 96,
-      height: 128,
+      height: targetHeight,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
@@ -79,6 +94,5 @@ export async function composeWokaLayers(
     .png({ compressionLevel: 9 })
     .toBuffer()
 
-  if (frameHeight === 32) return base
-  return stretchWokaTall(base, frameHeight)
+  return base
 }

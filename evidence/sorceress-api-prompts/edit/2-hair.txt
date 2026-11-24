@@ -1,0 +1,5 @@
+Edit the attached sprite sheet. Change ONLY the hair: replace the current hairstyle with a short cropped cut with a tied topknot, in near-black (#151318). Keep the topknot visible in the rows facing the viewer and in both profile rows, and drawn covering the back of the head in the bottom row (the character seen from behind).
+
+Keep EVERYTHING else pixel-identical to the input sheet: same 3x4 grid layout, same character body, same face, same charcoal tunic and trousers, same poses in every cell, same head size and head position in every frame, same background color.
+
+Do not zoom, crop, shift, rescale, or re-draw the character. Do not change the framing of any cell. Output the full sheet, same layout, same background.

@@ -1,0 +1,5 @@
+Edit the attached sprite sheet. Change ONLY one item: add a narrow sash worn diagonally from the left shoulder to the right hip, painted entirely in one single flat solid magenta color (#FF00FF) — every sash pixel becomes exactly #FF00FF, including the small round medallion at the hip end. The sash is narrow (about 2 pixels wide at this sprite scale), follows the torso contour, and is visible in all four facings including the back view.
+
+Keep EVERYTHING else pixel-identical to the input sheet: same 3x4 grid layout, same character body, face, hair, charcoal tunic and trousers, same poses in every cell, same head size and position in every frame, same background.
+
+Do not zoom, crop, shift, rescale, or re-draw the character. Do not change the framing of any cell. Output the full sheet, same layout, same background.
