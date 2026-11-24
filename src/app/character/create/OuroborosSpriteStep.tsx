@@ -30,21 +30,30 @@ type Props = {
   onContinue: () => void
 }
 
+const PART_SEEDS: Partial<Record<WokaLayerPart, string>> = {
+  body: 'wa:body:warm',
+  eyes: 'wa:eyes:ink',
+  hair: 'wa:hair:black',
+}
+
 function defaultId(
   catalog: WokaLayerCatalog,
   part: WokaLayerPart,
   nationKey?: string | null,
   archetypeKey?: string | null,
 ): string | undefined {
-  if (part === 'body') return 'wa:body:warm'
-  if (part === 'eyes') return 'wa:eyes:ink'
-  if (part === 'hair') return 'wa:hair:black'
-  if (part === 'clothes' && nationKey && archetypeKey) {
-    return `wa:clothes:${nationKey}:${archetypeKey}`
-  }
-  if (part === 'hat' && nationKey) return `wa:hat:${nationKey}`
-  if (part === 'accessory' && archetypeKey) return `wa:accessory:${archetypeKey}`
-  return catalog.parts[part][0]?.id
+  const options = catalog.parts[part]
+  // Seeded ids are suggestions only: a slug that misses the catalog (e.g. a
+  // trigram-named playbook) must fall back to the part's first texture,
+  // never save an id the server would reject.
+  const seededId =
+    PART_SEEDS[part] ??
+    (part === 'clothes' && nationKey && archetypeKey
+      ? `wa:clothes:${nationKey}:${archetypeKey}`
+      : undefined) ??
+    (part === 'hat' && nationKey ? `wa:hat:${nationKey}` : undefined) ??
+    (part === 'accessory' && archetypeKey ? `wa:accessory:${archetypeKey}` : undefined)
+  return options.find((texture) => texture.id === seededId)?.id ?? options[0]?.id
 }
 
 function initialSelection(
