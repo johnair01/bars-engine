@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, CLIMB, CLIMB_KEYS, climbIntro } from '../../../../public/sect/heaven/trainee-words.js'
+import { LINES, SENSATIONS, readBack, entryLine, stoneLine, TEAM, endLine, NEXT_LINE, PATREON_LINE, PATREON_URL, CLIMB, CLIMB_KEYS, climbIntro } from '../../../../public/sect/heaven/trainee-words.js'
 
 /* The trainee walk in the Heaven sect (council pass trainee-walk-three-beats_2026-11-17; his C on tw-readback-look-1). */
-const all = [...Object.values(LINES), readBack('to call my brother'), readBack(''), entryLine('to call my brother'), entryLine(''), stoneLine(0), stoneLine(1), stoneLine(3), TEAM, climbIntro('to call my brother'), climbIntro(''), ...CLIMB.map(c => c.hint + ' ' + c.said), endLine('to call my brother'), endLine('')]
+const all = [...Object.values(LINES), readBack('to call my brother'), readBack(''), entryLine('to call my brother'), entryLine(''), stoneLine(0), stoneLine(1), stoneLine(3), TEAM, climbIntro('to call my brother'), climbIntro(''), ...CLIMB.map(c => c.hint + ' ' + c.said), endLine('to call my brother'), endLine(''), NEXT_LINE, PATREON_LINE]
 describe('the guided climb', () => {
   it('runs seven stops from the bell to the crown, with unique keys for the ?stop= hook', () => {
     expect(CLIMB_KEYS).toEqual(['bell', 'stair', 'landing', 'gate', 'bridge', 'road', 'crown'])
@@ -32,5 +32,13 @@ describe('the trainee walk words', () => {
       expect(s).not.toMatch(/\bnot [^.]*, (you're|you are|but)\b/i)
       for (const sentence of s.split(/(?<=[.!?])\s+/)) expect(sentence).not.toMatch(/, and [^.]*\.$/)
     }
+  })
+})
+describe('the end of the walk (his A on ch1-last-card-oix-1)', () => {
+  it('splits into the team, the rank and next chapter, then one Patreon line with the link', () => {
+    expect(NEXT_LINE).toContain('9 December')
+    expect(PATREON_LINE).toContain('Patreon')
+    expect(PATREON_URL).toBe('https://www.patreon.com/wendell_britt')
+    expect(endLine('')).not.toContain('Patreon')
   })
 })
