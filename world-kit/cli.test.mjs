@@ -22,3 +22,26 @@ test('validates kit paths and YAML syntax, reporting broken input', async () => 
     assert.deepEqual(JSON.parse(bad.stdout).findings.map(({ id, file }) => [id, file]), [['missing-file', 'world.md'], ['invalid-yaml', 'npcs.yaml']].sort((a,b) => ['world.yaml','conditions.yaml','obstacles.yaml','npcs.yaml','world.md'].indexOf(a[1]) - ['world.yaml','conditions.yaml','obstacles.yaml','npcs.yaml','world.md'].indexOf(b[1])))
   } finally { await rm(dir, { recursive: true, force: true }) }
 })
+
+test('publish sends the kit with the token header and exits non-zero on a rejection', async () => {
+  const { main } = await import('./cli.mjs')
+  const dir = await mkdtemp(join(tmpdir(), 'world-kit-'))
+  try {
+    await mkdir(join(dir, 'portraits'))
+    await writeFile(join(dir, 'world.yaml'), 'id: x\n')
+    const seen = []
+    const realFetch = globalThis.fetch
+    globalThis.fetch = async (url, init) => {
+      seen.push({ url: String(url), auth: init.headers.authorization, body: JSON.parse(init.body) })
+      return new Response(JSON.stringify({ ok: false, findings: [{ id: 'missing-file', kind: 'error', file: 'world.md', message: 'x' }] }), { status: 422 })
+    }
+    try {
+      const code = await main(['publish', dir, '--engine', 'http://engine.test', '--dry'], { WORLD_KIT_TOKEN: 'tok' })
+      assert.equal(code, 1)
+      assert.equal(seen[0].url, 'http://engine.test/api/world-kit/publish?dryRun=1')
+      assert.equal(seen[0].auth, 'Bearer tok')
+      assert.deepEqual(Object.keys(seen[0].body.files), ['world.yaml'])
+      assert.equal(await main(['publish', dir], {}), 2)
+    } finally { globalThis.fetch = realFetch }
+  } finally { await rm(dir, { recursive: true, force: true }) }
+})
