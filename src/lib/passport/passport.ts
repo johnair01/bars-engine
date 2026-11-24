@@ -216,3 +216,22 @@ export function recordMove(p: Passport, attemptId: string, at = new Date().toISO
     counted: true,
   }
 }
+
+/** The one id that marks a sheet as having counted the moves completed before the glow existed (cc-rs-qi-earlier-moves). */
+export const EARLIER_MOVES_MARK = 'earlier-moves-v1'
+
+/**
+ * Wendell, 2026-11-21 (cc-rs-qi-earlier-moves, answer A): every move completed before the glow existed adds its qi, so a
+ * figure opens already lit. It goes through gainQi like any move, and the mark keeps it to one time per player, so later
+ * calls change nothing. `moves` is how many earlier moves the record holds for this player.
+ */
+export function countEarlierMoves(p: Passport, moves: number, at = new Date().toISOString()): { passport: Passport; counted: number } {
+  const sheet = p.sheet ?? { gathered: 0, counted: [] }
+  if (sheet.counted.includes(EARLIER_MOVES_MARK)) return { passport: p, counted: 0 }
+  const n = Math.max(0, Math.floor(moves))
+  const gathered = gainQi({ qi: sheet.gathered, breakthroughs: 0 as const }, n).sheet.qi
+  return {
+    passport: { ...p, sheet: { gathered, counted: [...sheet.counted, EARLIER_MOVES_MARK].slice(-MAX_COUNTED) }, updated_at: at },
+    counted: n,
+  }
+}
