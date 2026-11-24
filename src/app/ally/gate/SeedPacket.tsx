@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BELIEFS, DISSATISFACTIONS } from '@/lib/coaching/unpacking-walk'
 import { CHANNELS, CROP_FAMILY } from '@/lib/between/crops'
 import { OWN_SEED, SEEDS, SOIL, WEATHER_HELPER } from '@/lib/founder-gate/content'
@@ -13,6 +13,24 @@ const FRAME_IMG: Record<PacketKey, { img: string; pos: string }> = {
   q1: { img: 'farm-1', pos: '50% 50%' }, q2: { img: 'farm-2', pos: '30% 50%' }, q3: { img: 'farm-3', pos: '50% 50%' },
   q4: { img: 'farm-4', pos: '30% 50%' }, q5: { img: 'farm-2', pos: '75% 50%' }, q6: { img: 'farm-3', pos: '20% 50%' },
 }
+/** What the player just did, shown over the bare frame while the card is down. */
+const BEAT: Record<PacketKey, string> = {
+  q1: 'The seed goes into your hand.', q2: 'The crop takes its place in the bed.', q3: 'The soil settles around it.',
+  q4: 'The weather rolls in over the field.', q5: 'Water falls on the bed.', q6: 'The stone settles at the bed’s edge.',
+}
+const BEAT_MS = 1500
+const ENTER_MS = 900
+const CSS = `
+@keyframes sp-push{from{transform:scale(1)}to{transform:scale(1.12)}}
+@keyframes sp-in{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
+@keyframes sp-cap{0%{opacity:0;transform:translateY(8px)}25%,80%{opacity:1;transform:none}100%{opacity:0}}
+.sp-push{animation:sp-push ${BEAT_MS}ms ease-out forwards}
+.sp-in{animation:sp-in ${ENTER_MS}ms ease-out both}
+.sp-cap{animation:sp-cap ${BEAT_MS}ms ease both}
+.sp-sheet{transition:transform .5s ease,opacity .4s ease}
+.sp-sheet[data-hide="1"]{transform:translateY(100%);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion: reduce){.sp-push,.sp-in,.sp-cap{animation:none!important}.sp-sheet{transition:none}}
+`
 const PENCIL = 'Georgia, "Times New Roman", serif'
 
 const paperBtn = (on: boolean): React.CSSProperties => ({
@@ -40,15 +58,34 @@ export function SeedPacket({ done }: { done: (p: Packet) => void }) {
   const labels = packetLabels()
   const key = KEYS[at]
   const set = (patch: Partial<Packet>) => setP((v) => ({ ...v, ...patch }))
-  const go = (i: number) => { setAt(i); setFlip(false); setOthers(false) }
-  const next = () => { if (at >= KEYS.length - 1) done(p); else go(at + 1) }
+  /** 'card' = question showing; 'beat' = card down, the action plays; 'enter' = next frame arrives bare before the card rises. */
+  const [phase, setPhase] = useState<'card' | 'beat' | 'enter'>('card')
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(timer.current), [])
+  const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const go = (i: number, enter = false) => {
+    clearTimeout(timer.current); setAt(i); setFlip(false); setOthers(false)
+    if (enter && !still) { setPhase('enter'); timer.current = setTimeout(() => setPhase('card'), ENTER_MS) } else setPhase('card')
+  }
+  /** After an answer: the card drops away, the picture plays the action, then the next frame arrives before its card. */
+  const advance = (final?: Packet) => {
+    if (still) { if (final || at >= KEYS.length - 1) done(final ?? p); else go(at + 1); return }
+    setPhase('beat')
+    timer.current = setTimeout(() => { if (final || at >= KEYS.length - 1) done(final ?? p); else go(at + 1, true) }, BEAT_MS)
+  }
+  const next = () => advance()
+  const skip = () => { if (at >= KEYS.length - 1) done(p); else go(at + 1, true) }
   const picked = answerText(p, key) !== ''
   const belief = p.stone?.belief ?? firstBelief(p)
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 3, background: '#17121c' }} onClick={(e) => e.stopPropagation()}>
-      <img key={key} src={`/ally-gate/scenes/${FRAME_IMG[key].img}.jpg`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: FRAME_IMG[key].pos }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '62%', overflowY: 'auto', padding: '40px 16px 20px', display: 'grid', gap: 12, background: 'linear-gradient(rgba(15,11,19,0),rgba(15,11,19,.9) 28px)' }}>
+      <style>{CSS}</style>
+      <img key={`${key}-${phase === 'enter' ? 'e' : ''}`} className={phase === 'beat' ? 'sp-push' : phase === 'enter' ? 'sp-in' : undefined} src={`/ally-gate/scenes/${FRAME_IMG[key].img}.jpg`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: FRAME_IMG[key].pos }} />
+      {phase === 'beat' && (
+        <div className="sp-cap" role="status" style={{ position: 'absolute', left: 16, right: 16, bottom: 28, textAlign: 'center', color: INK, fontFamily: 'Marcellus, Georgia, serif', fontSize: '1.3rem', textShadow: '0 2px 12px #000' }}>{BEAT[key]}</div>
+      )}
+      <div className="sp-sheet" data-hide={phase === 'card' ? undefined : '1'} aria-hidden={phase !== 'card'} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '52%', overflowY: 'auto', padding: '40px 16px 20px', display: 'grid', gap: 12, background: 'linear-gradient(rgba(15,11,19,0),rgba(15,11,19,.9) 28px)' }}>
         <div style={{ color: GOLD, fontSize: '.72rem', letterSpacing: '.12em', textTransform: 'uppercase' }}>Your seed · scene {at + 1} of 6</div>
         <section style={{ color: INK, display: 'grid', gap: 12 }} aria-label={labels[key]}>
           <h2 style={{ margin: 0, position: 'sticky', top: 0, zIndex: 1, padding: '6px 0', background: '#0f0b13', fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: '1.25rem', lineHeight: 1.3 }}>{labels[key]}</h2>
@@ -157,8 +194,8 @@ export function SeedPacket({ done }: { done: (p: Packet) => void }) {
                   </button>
                   {flip && (
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button type="button" style={{ ...primary, flex: 1 }} onClick={() => done({ ...p, stone: { belief, set: true } })}>Set it at the bed’s edge</button>
-                      <button type="button" style={{ ...btn, flex: 1, textAlign: 'center', background: 'transparent', color: INK, borderColor: '#a88f6a' }} onClick={() => done({ ...p, stone: { belief, set: false } })}>Leave it</button>
+                      <button type="button" style={{ ...primary, flex: 1 }} onClick={() => advance({ ...p, stone: { belief, set: true } })}>Set it at the bed’s edge</button>
+                      <button type="button" style={{ ...btn, flex: 1, textAlign: 'center', background: 'transparent', color: INK, borderColor: '#a88f6a' }} onClick={() => advance({ ...p, stone: { belief, set: false } })}>Leave it</button>
                     </div>
                   )}
                   <button type="button" style={{ ...btn, background: 'transparent', color: MUTED, borderColor: LINE, minHeight: 40 }} onClick={() => setOthers(true)}>Show the others</button>
@@ -175,10 +212,10 @@ export function SeedPacket({ done }: { done: (p: Packet) => void }) {
         </section>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" style={{ ...btn, flex: '0 0 auto', textAlign: 'center' }} onClick={next}>Skip this one</button>
+          <button type="button" style={{ ...btn, flex: '0 0 auto', textAlign: 'center' }} onClick={skip}>Skip this one</button>
           {at > 0 && <button type="button" style={{ ...btn, flex: '0 0 auto', textAlign: 'center' }} onClick={() => go(at - 1)}>Back</button>}
           {key !== 'q6' && <button type="button" style={{ ...primary, flex: 1, opacity: picked ? 1 : 0.55 }} disabled={!picked} onClick={next}>{key === 'q1' && p.seed && p.seed !== 'own' && !flip ? 'Plant this seed' : 'On to the next side'}</button>}
-          {key === 'q6' && <button type="button" style={{ ...primary, flex: 1 }} onClick={() => done(p)}>Plant it</button>}
+          {key === 'q6' && <button type="button" style={{ ...primary, flex: 1 }} onClick={() => advance()}>Plant it</button>}
         </div>
 
         {KEYS.some((k, i) => i !== at && answerText(p, k)) && (
