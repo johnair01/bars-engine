@@ -169,7 +169,13 @@ uuid (`localStorage.localUser` → `uuid`). Nothing about it presumes identity; 
 
 ---
 
-The seed for this work is `seed.yaml` in this folder: Ouroboros auto session `auto_6c234f5ec5c2`, grade A, IntentGuard pass,
-ambiguity 0.337 (the gate wants <=0.20, so the assumptions it records are still his to flip). Its interview was answered
-from this record by a wired requester, so its `requester_answers` quote his words where they exist and say `assumption:`
-where they do not.
+## The seed, third pass (2026-11-23 late)
+
+`seed.yaml` here is Ouroboros `auto_deeb4d33813f`, 14 interview rounds, **grade A**, ambiguity **0.3925**. Its
+requester was the council: `ooo auto --requester-command council/tools/faces_requester.sh`, with every answer coming
+back from the six faces on a free-tier model and checked before it stood. The earlier pass (single model, ambiguity
+0.337) is superseded, not because it was foggier, but because this one's open questions are marked as questions.
+
+Ledger: `~/sfc-check/council/ledger/faces.jsonl` holds each question and its verdict — `cited` where the record or
+the repository answered it, `only_he_holds` where the answer is his. The seed's `assumptions` list names what was
+never confirmed instead of quietly choosing.
