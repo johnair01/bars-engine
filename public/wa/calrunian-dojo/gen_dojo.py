@@ -12,10 +12,22 @@ from collections import deque
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
+from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits  # noqa: E402
+from check_assets import check_language as assets_language, check_map as assets_map, check_woka as assets_woka, fatal as assets_fatal  # noqa: E402
 args = sys.argv[1:]
 SEED = int(args[args.index('--seed') + 1]) if '--seed' in args else 7
 OUT = args[args.index('--out') + 1] if '--out' in args else HERE
 LANG = json.load(open(os.path.join(HERE, 'dojo-language.json')))
+# The dojo is owned by the map editor (dojo-language.json says "owner": "editor"), so this generator is a
+# seeder: the map in map-storage is the truth, and rewriting calrunian-dojo.tmj here would silently throw
+# away every room someone drew in the client. Re-seed deliberately, into a scratch directory, or pass --force.
+if LANG.get('owner') == 'editor' and '--force' not in args and os.path.abspath(OUT) == os.path.abspath(HERE):
+    print(f"{HERE}/calrunian-dojo.tmj is owned by the map editor (see dojo-language.json).")
+    print("This generator would overwrite it. Seed into a scratch directory instead:")
+    print(f"  python3 gen_dojo.py --seed {SEED} --out /tmp/dojo-seed")
+    print("or pass --force to overwrite the editor's map on purpose.")
+    sys.exit(2)
 SP, K = LANG['src_px'], LANG['scale']
 T = SP * K
 W, H = 44, 36
@@ -276,9 +288,18 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
        'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 9,
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [{'name': 'mapName', 'type': 'string', 'value': 'Calrunian Dojo'},
-                      {'name': 'script', 'type': 'string', 'value': 'dojo.js'},   # the menu's way back (dojo.js)
+                      {'name': 'script', 'type': 'string', 'value': 'dojo.js'},
                       {'name': 'mapDescription', 'type': 'string', 'value': 'Master Yun\'s dojo in the sect, first slice. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.'},
                       {'name': 'generator', 'type': 'string', 'value': f'gen_dojo.py --seed {SEED}'}]}
+# WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
+# collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
+wa_apply(tmj)
+# The map half of the contract (five WorkAdventure rules) and the art half (docs/WA_ASSET_CONTRACT.md):
+# both fail the build, so a map that WorkAdventure would reject, or whose tiles no longer fit the world,
+# is never written in the first place.
+_wa = wa_check(tmj) + wa_exits(tmj, OUT) + assets_fatal(assets_language(LANG, HERE)) + assets_map(tmj, OUT)
+if _wa:
+    print('RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 json.dump(tmj, open(os.path.join(OUT, 'calrunian-dojo.tmj'), 'w'), separators=(',', ':'))
 
 # ---- walker sheets (WorkAdventure woka: 3 frames x [down, left, right, up], 32 px) ----
@@ -293,8 +314,11 @@ def woka(src, out):
     return sheet
 
 
-woka('src16/MasterSheet.png', 'sprites/yun-woka.png')
+yun = woka('src16/MasterSheet.png', 'sprites/yun-woka.png')
 monk = woka('src16/MonkSheet.png', 'sprites/monk-woka.png')
+_wa = assets_woka([os.path.join(OUT, 'sprites/yun-woka.png'), os.path.join(OUT, 'sprites/monk-woka.png')])
+if _wa:
+    print('RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 
 # ---- render ----
 def tile_img(g):

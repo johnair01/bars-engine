@@ -17,6 +17,7 @@ export async function getOuroborosInterviewState(
       nationId: true,
       archetypeId: true,
       campaignDomainPreference: true,
+      avatarConfig: true,
     },
   })
 
@@ -35,10 +36,27 @@ export async function getOuroborosInterviewState(
   const currentNodeId = (ouroboros.currentNodeId ?? 'OUROBOROS_START') as OuroborosNodeId
   const answers = ouroboros.answers ?? {}
 
-  // If player already has nation/archetype and we're at start, we might be "re-doing" or first visit
+  // If player already has nation/archetype and we're at start, finish the
+  // interview unless they still need a body. A saved waLayers/waWokaId counts
+  // as a body; otherwise send them to the sprite step rather than "complete".
   const hasIdentity = !!(player.nationId && player.archetypeId)
+  let hasSprite = false
+  if (player.avatarConfig) {
+    try {
+      const parsed = JSON.parse(player.avatarConfig) as Record<string, unknown>
+      hasSprite =
+        (Array.isArray(parsed.waLayers) && parsed.waLayers.length > 0) ||
+        typeof parsed.waWokaId === 'string'
+    } catch {
+      // ignore
+    }
+  }
   const effectiveNode =
-    hasIdentity && currentNodeId === 'OUROBOROS_START' ? 'OUROBOROS_COMPLETE' : currentNodeId
+    hasIdentity && currentNodeId === 'OUROBOROS_START'
+      ? hasSprite
+        ? 'OUROBOROS_COMPLETE'
+        : 'OUROBOROS_SPRITE'
+      : currentNodeId
 
   let domainPreference: string[] = []
   if (player.campaignDomainPreference) {
@@ -74,7 +92,7 @@ export async function advanceOuroborosInterview(
 
   const player = await db.player.findUnique({
     where: { id: playerId },
-    select: { id: true, storyProgress: true },
+    select: { id: true, storyProgress: true, avatarConfig: true },
   })
   if (!player) return { success: false, error: 'Player not found' }
 
@@ -128,12 +146,27 @@ export async function advanceOuroborosInterview(
       ? await db.archetype.findUnique({ where: { id: updates.archetypeId }, select: { name: true } })
       : null
 
-    const avatarConfig = deriveAvatarConfig(
+    const derivedConfig = deriveAvatarConfig(
       updates.nationId,
       updates.archetypeId,
       updates.domainPreference?.length ? JSON.stringify(updates.domainPreference) : null,
       { nationName: nation?.name, archetypeName: archetype?.name }
     )
+
+    // The sprite step saves waLayers / waWokaId before this final node. Merge
+    // those extras into the derived identity instead of wiping the body.
+    let avatarConfig = derivedConfig
+    if (derivedConfig && player.avatarConfig) {
+      try {
+        const existing = JSON.parse(player.avatarConfig) as Record<string, unknown>
+        const extras: Record<string, unknown> = {}
+        if (Array.isArray(existing.waLayers)) extras.waLayers = existing.waLayers
+        if (typeof existing.waWokaId === 'string') extras.waWokaId = existing.waWokaId
+        avatarConfig = JSON.stringify({ ...JSON.parse(derivedConfig), ...extras })
+      } catch {
+        // Keep the derived config when the existing JSON is unreadable.
+      }
+    }
 
     await db.player.update({
       where: { id: playerId },

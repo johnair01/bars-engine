@@ -1,0 +1,5 @@
+Edit the attached sprite sheet. Change ONLY the clothing: replace the charcoal tunic and trousers with a long ceremonial hooded robe. Paint the robe's main cloth in one single flat solid magenta color (#FF00FF) — all robe cloth pixels become exactly #FF00FF. Paint the decorative trim (collar edge, hem, cuffs) in light silver-gray (#C8C8C8). Design of the robe: high standing collar, long open robe with layered skirt panels splitting at the feet, silver trim along the hem and cuffs, and a hood drawn up over the head (in the row facing the viewer the hood frames the face; in the bottom row the hood is seen from behind). Feet stay visible below the hem in every frame.
+
+Keep EVERYTHING else pixel-identical to the input sheet: same 3x4 grid layout, same character face, skin tone, hair, same poses in every cell, same head size and position in every frame, same feet position, same background.
+
+Do not zoom, crop, shift, rescale, or re-draw the character. Do not change the framing of any cell. Output the full sheet, same layout, same background.

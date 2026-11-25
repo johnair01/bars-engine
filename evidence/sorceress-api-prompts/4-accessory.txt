@@ -1,0 +1,7 @@
+Using the attached sprite sheet as an exact template, produce an overlay sheet with the identical 3x4 grid filling the entire canvas edge to edge: 12 cells, identical poses in every cell, matching the template row for row (row 1 down, row 2 left, row 3 right, row 4 up; middle pose of each row is the standing idle).
+
+Draw ONLY the archetype item: a crimson heart-sigil sash of the Bold Heart archetype — a narrow red sash worn diagonally from the left shoulder to the right hip, with a small embroidered heart-sigil medallion at the hip end. It must read clearly at cell width and stay visible in all four facings: front, both profiles, and back (the back view shows the sash crossing the back with the medallion visible at the hip).
+
+Everything else must be the same solid flat chroma-green (#00b140): no body, no clothes, no hair, no background detail, no shadow. The sash must sit exactly on the template silhouette — it wraps the torso in the same position in all 12 frames, following each frame's facing and pose.
+
+Style: crisp retro pixel art, hard pixel edges, no anti-aliasing, one small palette of about 6 colors, solid flat chroma-green (#00b140) background, no text, no grid lines, no watermarks.

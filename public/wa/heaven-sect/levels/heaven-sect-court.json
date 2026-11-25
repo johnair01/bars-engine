@@ -42,7 +42,7 @@
     "from-dojo-east": "elder-architect"
   },
   "exits": [
-    {"id": "to-calrunian-dojo", "label": "Calrunian Dojo", "box": [46, 78, 4, 2], "exitUrl": "/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam", "plaque_at": [39, 75]},
+    {"id": "to-calrunian-dojo", "label": "Calrunian Dojo", "box": [46, 78, 4, 2], "exitUrl": "https://world.masteringallyship.com/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam", "plaque_at": [39, 75]},
     {"id": "to-forest-edge", "label": "Forest Edge", "box": [17, 0, 3, 2], "exitUrl": "forest-edge.tmj", "built": false, "plaque_at": [20, 2]},
     {"id": "to-inner-island", "label": "Inner Island", "box": [76, 0, 3, 2], "exitUrl": "inner-island.tmj", "built": false, "plaque_at": [70, 2]}
   ]

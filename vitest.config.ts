@@ -212,6 +212,12 @@ export default defineConfig({
       'src/lib/founder-gate/__tests__/content.test.ts',
       'src/lib/founder-gate/__tests__/seed-packet.test.ts',
       'scripts/__tests__/look-row.test.mjs',
+      'src/lib/wa/__tests__/jwt.test.ts',
+      'src/lib/wa/__tests__/oidc.test.ts',
+      'src/lib/wa/__tests__/woka.test.ts',
+      'src/lib/wa/__tests__/layers.test.ts',
+      'src/lib/wa/__tests__/map.test.ts',
+      'src/lib/wa/__tests__/player-lookup.test.ts',
     ],
   },
   resolve: {
