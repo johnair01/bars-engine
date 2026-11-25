@@ -123,6 +123,7 @@ export default defineConfig({
       'src/lib/board/__tests__/picture-store.test.ts',
       'src/lib/board/__tests__/pipeline.test.ts',
       'src/app/api/mcp/__tests__/route.test.ts',
+      'src/app/api/mcp/__tests__/modern.test.ts',
       'src/app/api/mcp/__tests__/reads.test.ts',
       'src/lib/board/look-app/__tests__/look.test.ts',
       'src/lib/board/__tests__/visible.test.ts',

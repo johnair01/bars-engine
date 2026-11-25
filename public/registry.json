@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-25T14:50:42.178Z",
+  "generatedAt": "2026-11-25T14:58:10.272Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 984,
+      "lineNumber": 1047,
       "params": [],
       "query": [],
       "relationships": [],
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 1065,
+      "lineNumber": 1145,
       "params": [],
       "query": [],
       "relationships": [],
@@ -551,6 +551,31 @@
       ],
       "example": "GET /api/mcp",
       "id": "get_system_8a66ec10"
+    },
+    {
+      "sourceFile": "/src/app/api/mcp/route.ts",
+      "lineNumber": 1163,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "agent",
+        "WHAT": "SYSTEM",
+        "WHERE": "council board",
+        "ENERGY": "0"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "DELETE",
+      "pattern": "/api/mcp",
+      "entity": "SYSTEM",
+      "description": "Answered 405: the server keeps no session to end (MCP 2026-07-28 removed sessions)",
+      "permissions": [
+        "COUNCIL_MENU_TOKEN"
+      ],
+      "example": "DELETE /api/mcp",
+      "id": "delete_system_97bba182"
     },
     {
       "sourceFile": "/src/app/api/quests/[questId]/apply-move/route.ts",

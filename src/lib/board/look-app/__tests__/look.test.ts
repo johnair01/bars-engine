@@ -150,7 +150,7 @@ describe('the look card (MCP Apps)', () => {
       inputResponses: { answer: { action: 'accept', content: { answer: 'A' } } } }))
     expect(forged.isError).toBe(true)
     const plain = await result(await rpc('tools/call', { name: 'ask_look', arguments: {} }))
-    expect(plain.resultType).toBeUndefined()
+    expect(plain.resultType).toBe('complete')
     expect(plain.content[0].text).toContain('cannot ask him in a form')
     expect(saves.rows).toHaveLength(0)
   })
