@@ -305,5 +305,19 @@
   "corridor_min": 3,
   "door_min": 2,
   "clear_round_npc": 2
+ },
+ "first_hour": {
+  "about": "First-hour slice (pass wa-first-hour-1_2026-11-25). A derived sheet \"lit\" is drawn by gen_dojo.py: the paper lantern at the gate (flame flicker, a 3x3 glow that breathes), and per stance banner a lit banner with a pulsing gold halo and a pulsing pool. Light is animation (Tiled tile animation, 4 frames), not a recolour (Wendell, wfh-first-slice-look-1). One hidden layer per panel (lit1..lit6) holds that panel lit; dojo.js shows the layer for a player when they stand in the matching Stance area, and keeps it in their persisted state. Gold is the lantern gold of the Lantern Walk notices.",
+  "gold": "#ffbe46",
+  "panel_xs": [
+   13,
+   16,
+   19,
+   24,
+   27,
+   30
+  ],
+  "stand_y": 6,
+  "frame_ms": 180
  }
 }
