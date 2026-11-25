@@ -276,6 +276,7 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
        'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 9,
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [{'name': 'mapName', 'type': 'string', 'value': 'Calrunian Dojo'},
+                      {'name': 'script', 'type': 'string', 'value': 'dojo.js'},   # the menu's way back (dojo.js)
                       {'name': 'mapDescription', 'type': 'string', 'value': 'Master Yun\'s dojo in the sect, first slice. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.'},
                       {'name': 'generator', 'type': 'string', 'value': f'gen_dojo.py --seed {SEED}'}]}
 json.dump(tmj, open(os.path.join(OUT, 'calrunian-dojo.tmj'), 'w'), separators=(',', ':'))
