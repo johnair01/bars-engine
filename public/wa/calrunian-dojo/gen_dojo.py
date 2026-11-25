@@ -67,6 +67,40 @@ for name, rel in LANG['sheets'].items():
     firstgid += cols * rows
 
 
+# ---- derived sheet "lit": the six banners lit, plus a gold pool for the floor beneath each ----
+FH = LANG['first_hour']
+GOLD = hex_rgb(FH['gold'])
+def lit_banner(tile):
+    px = tile.load(); out = Image.new('RGBA', tile.size, (0, 0, 0, 0)); o = out.load()
+    for y in range(tile.height):
+        for x in range(tile.width):
+            if px[x, y][3]: continue
+            near = [(x + dx, y + dy) for dx in (-2, -1, 0, 1, 2) for dy in (-2, -1, 0, 1, 2) if 0 <= x + dx < tile.width and 0 <= y + dy < tile.height]
+            if any(px[a, b][3] for a, b in near): o[x, y] = GOLD + (90,)
+    for y in range(tile.height):
+        for x in range(tile.width):
+            r, g, b, a = px[x, y]
+            if a: o[x, y] = (min(255, int(r * 1.3 + 40)), min(255, int(g * 1.25 + 30)), min(255, int(b * 1.1 + 10)), a)
+    return out
+LITCOLS = 7
+lit_im = Image.new('RGBA', (LITCOLS * T, 2 * T), (0, 0, 0, 0))
+for k in range(6):
+    for r in range(2):
+        src = sheets['house']['img'].crop(((21 + k + 1) * T, (20 + r) * T, (21 + k + 2) * T, (20 + r + 1) * T))
+        lit_im.alpha_composite(lit_banner(src), (k * T, r * T))
+pool = Image.new('RGBA', (T, T), (0, 0, 0, 0)); pp = pool.load()
+for y in range(T):
+    for x in range(T):
+        dd = ((x - T / 2) ** 2 + ((y - T / 2) * 1.5) ** 2) ** 0.5
+        if dd < T * 0.47: pp[x, y] = GOLD + (int(120 * (1 - dd / (T * 0.47))) + 30,)
+lit_im.alpha_composite(pool, (6 * T, 0))
+lit_im.save(os.path.join(OUT, 'tiles/lit.png'))
+tilesets.append({'firstgid': firstgid, 'name': 'lit', 'image': 'tiles/lit.png', 'imagewidth': LITCOLS * T, 'imageheight': 2 * T,
+                 'tilewidth': T, 'tileheight': T, 'tilecount': LITCOLS * 2, 'columns': LITCOLS, 'margin': 0, 'spacing': 0})
+sheets['lit'] = {'gid0': firstgid, 'cols': LITCOLS, 'img': lit_im}
+firstgid += LITCOLS * 2
+
+
 def gid(sheet, x, y):
     s = sheets[sheet]; return s['gid0'] + y * s['cols'] + x
 
@@ -154,6 +188,9 @@ nine('wall', *DOJO, gaps=set(DOOR))
 # six stance panels along the north wall, one per master (beat a5-stance-on-empty)
 for k, x in enumerate((13, 16, 19, 24, 27, 30)):
     stamp(f'stance_panel_{k + 1}', x, 4)
+# the lantern post beside the gate path: lit, in view of the spawn, the first thing a newcomer can walk to
+assert can_stamp('lantern_post', 25, 30), 'lantern square taken'
+stamp('lantern_post', 25, 30)
 stamp('master_yun', 21, 8)
 stamp('weapon_rack', 12, 14)
 stamp('bench', 29, 15)
@@ -188,6 +225,13 @@ for nm, count in (('plum', 5), ('big_tree', 2), ('scholar_rock', 4), ('bamboo_ta
 for nm in ('bush', 'fern') * 14:
     x, y = rnd.randrange(2, W - 2), rnd.randrange(2, H - 2)
     if can_stamp(nm, x, y): stamp(nm, x, y)
+# six hidden layers, one per stance panel: the banner lit and a gold pool on the standing square (dojo.js shows
+# the layer for a player when they stand there). Walk-on is allowed: nothing here blocks the way past.
+LIT = {}
+for k, x in enumerate(FH['panel_xs']):
+    lay = [0] * N
+    lay[I(x, 4)] = gid('lit', k, 0); lay[I(x, 5)] = gid('lit', k, 1); lay[I(x, FH['stand_y'])] = gid('lit', 6, 0)
+    LIT[k + 1] = lay
 # the player starts at the gate
 for x in range(21, 23): L['start'][I(x, H - 2)] = gid('wall', 2, 2)
 
@@ -208,7 +252,8 @@ def reach(src):
 R = reach((21, H - 2))
 must = {'dojo door': (21, 17), 'before Master Yun': (21, 10), 'medallion': (22, 11),
         'thatched hall door': (4, 27), 'timber hall door': (38, 27)}
-must.update({f'stance panel {k + 1}': (x, 6) for k, x in enumerate((13, 16, 19, 24, 27, 30))})
+must.update({f'stance panel {k + 1}': (x, 6) for k, x in enumerate(FH['panel_xs'])})
+must['lantern post'] = (24, 31)
 problems = [f'{k} {v} not reachable from the gate' for k, v in must.items() if v not in R]
 rule = LANG['rules']
 if len(DOOR) < rule['door_min']: problems.append('dojo door narrower than door_min')
@@ -235,14 +280,17 @@ def area(i, name, x, y, w, h, role):
 areas = [area(1, 'Dojo floor', 11, 4, 22, 13, 'practice-floor'), area(2, 'Stance wall', 12, 4, 20, 3, 'stance-wall'),
          area(3, 'Master Yun', 19, 7, 5, 5, 'npc-yun'), area(4, 'Dojo gate', 20, 16, 4, 3, 'dojo-gate'),
          area(5, 'Courtyard', COURT[0], COURT[1], COURT[2] - COURT[0], COURT[3] - COURT[1], 'courtyard'),
-         area(6, 'Compound gate', GATE_X[0], H - 3, GATE_X[1] - GATE_X[0], 3, 'arrival')]
+         area(6, 'Compound gate', GATE_X[0], H - 3, GATE_X[1] - GATE_X[0], 3, 'arrival'),
+         area(7, 'Waymark', 12, 7, 20, 1, 'stance-waymark')]
+areas += [area(8 + k, f'Stance {k + 1}', x, FH['stand_y'], 1, 2, f'stance-{k + 1}') for k, x in enumerate(FH['panel_xs'])]
 layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail']),
           tl(3, 'collisions', L['collisions'], [{'name': 'collides', 'type': 'bool', 'value': True}], visible=False),
           {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
           tl(7, 'start', L['start'], visible=False),
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
+layers[4:4] = [tl(20 + k, f'lit{k}', LIT[k], visible=False) for k in LIT]   # after floorLayer, before over1
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
-       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 9,
+       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 30,
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [{'name': 'mapName', 'type': 'string', 'value': 'Calrunian Dojo'},
                       {'name': 'script', 'type': 'string', 'value': 'dojo.js'},
