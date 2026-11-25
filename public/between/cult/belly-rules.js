@@ -27,3 +27,15 @@ export function glowStrength(layers) {
 export function shouldPulse(seen, layers) {
   return seen !== null && seen !== undefined && layers > seen;
 }
+
+/** The form qi takes on each floor (Wendell, qi-levels-forms-look-1, A): gathering, condensing, distilling. */
+export const FORMS = ["motes", "pearl", "bead"];
+export function formFor(realm) {
+  const r = Math.max(1, Math.min(REALMS, Math.floor(Number(realm)) || 1));
+  return FORMS[r - 1];
+}
+
+/** Colour rule (qi-levels-colour-look-1, B): gold on the lower and middle floors, the player's element on the upper. */
+export function formColor(realm, elementColor, gold = "#ffcf6e") {
+  return Math.floor(Number(realm)) >= REALMS && elementColor ? elementColor : gold;
+}

@@ -98,7 +98,27 @@ export interface StepDoc {
   name?: string
   grow?: { kind?: string; face?: string; text?: string; at?: string } | null
   grown?: { at?: string }[]
+  /** A look on Your eyes: his tap (`charge`), his note and when he gave them. */
+  look?: boolean
+  list?: string
+  charge?: string
+  note?: string
+  noteAt?: string
+  doneAt?: string
+  sealed?: string
 }
+
+/** The five taps of a "not yet" (council board/charge.py): what he felt, and the move the next round takes. */
+export const CHARGE_MOVES: Record<string, { felt: string; move: string; how: string }> = {
+  fire: { felt: 'still wrong', move: 'proof', how: 'come back only with a hosted preview at the exact state, before and after, or a walkthrough; the report lists what is not evidence' },
+  metal: { felt: "can't tell why", move: 'four theories', how: 'write four theories, check all four, report which held, then build' },
+  wood: { felt: 'close, let me play', move: 'spread', how: 'many variations on one combine page, not one more round' },
+  water: { felt: 'we lost something', move: 'chronicle', how: 'recover the keep list from earlier rounds, threads and git, and build from it' },
+  earth: { felt: "doesn't move me", move: 'compost', how: 'the line stops and its parts go to compost; no new round' },
+}
+
+/** A "not yet" older than this when it is saved is a resave of old work, not a fresh answer, so it makes no ticket. */
+export const NOT_YET_FRESH_MS = 24 * 60 * 60 * 1000
 
 const stepTitle = (d: StepDoc, id: string) => (d.do || d.title || d.text || d.name || id).replace(/\s+/g, ' ').trim()
 
@@ -107,9 +127,11 @@ const stepTitle = (d: StepDoc, id: string) => (d.do || d.title || d.text || d.na
  * is a card the face has not read yet. The key holds the step id and `grow.at`, so a resave never makes two and a
  * second hand-off of the same card (a later `at`) makes a new one. Null when the card holds nothing to read.
  */
-export function ticketFromStep(board: string, collection: string, docId: string, doc: StepDoc): TicketDraft | null {
+export function ticketFromStep(board: string, collection: string, docId: string, doc: StepDoc,
+                               now = new Date()): TicketDraft | null {
   const g = doc.grow
-  if (board !== 'council' || collection !== 'steps' || !g || typeof g !== 'object') return null
+  if (board !== 'council' || collection !== 'steps') return null
+  if (!g || typeof g !== 'object') return ticketFromNotYet(docId, doc, now)
   const at = String(g.at ?? '')
   if (at && (doc.grown ?? []).some(r => r?.at && r.at >= at)) return null
   const face = (g.face ?? '').trim()
@@ -166,5 +188,38 @@ export function ticketFromLever(board: string, collection: string, docId: string
     basis: { rows: [docId], answer: 'claude_takes_it', label: 'Claude Takes It', steer: '', savedAt: at },
     lanes: row?.lanes ? cleanLanes(row.lanes) : ['claude'],
     ...(held ? { state: 'held' as const } : {}),
+  }
+}
+
+/**
+ * The ticket a "not yet" on a look makes (self-restock map M3, 2026-11-25). A look on Your eyes saved with a charge
+ * tap and no seal is his redirect: the next round of that look, built from his words. Before this, a "not yet" on a
+ * step card made no ticket, so his note waited for a board read to find it. His note travels unaltered and is a
+ * fail-only check the next round must pass. Only a fresh save counts (NOT_YET_FRESH_MS), so a resave of old steps
+ * never refills the queue; the key holds the note's time, so a resave of the same note never makes two.
+ */
+export function ticketFromNotYet(docId: string, doc: StepDoc, now = new Date()): TicketDraft | null {
+  const charge = (doc.charge ?? '').trim()
+  const move = CHARGE_MOVES[charge]
+  if (!doc.look || !move || doc.sealed || charge === 'earth') return null
+  const at = String(doc.noteAt ?? doc.doneAt ?? '')
+  const t = Date.parse(at)
+  if (!at || Number.isNaN(t) || now.getTime() - t > NOT_YET_FRESH_MS) return null
+  const note = (doc.note ?? '').trim()
+  const card = stepTitle(doc, docId)
+  const title = `Next round after your not yet: ${card}`
+  const brief = `Wendell answered the look "${card}" (steps/${docId}${doc.list ? `, strand ${doc.list}` : ''}) with "not yet, ${charge} (${move.felt})"`
+    + (note ? `, and the note, in his words: "${note}"` : '') + `.\n\nThe next round's move is ${move.move}: ${move.how}. `
+    + `His note is a check that can only fail the round: the next look does not post until it answers every point in it. `
+    + `In ${COUNCIL}, read the card live with GET /api/board/session-writes?ids=steps/${docId}, write the read receipt, `
+    + `run python3 council/tools/preflight.py --draw "<subject>", build, run python3 council/tools/critic.py <earlier still> <new still>`
+    + `${doc.list ? ` --strand ${doc.list}` : ''}, and post the next look with supersedes naming ${docId}. `
+    + `If a newer look on this strand already answers the note, close this ticket as superseded and name that look.`
+  return {
+    sourceKey: `council/steps/${docId}@notyet:${at}`,
+    title: title.length > 90 ? title.slice(0, 89) + '…' : title,
+    brief,
+    basis: { rows: [docId], answer: `notyet:${charge}`, label: title, steer: note, savedAt: at },
+    lanes: ['claude'],
   }
 }
