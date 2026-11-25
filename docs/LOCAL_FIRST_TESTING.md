@@ -151,6 +151,15 @@ delete `.local-dev/` or `tsconfig.tsbuildinfo` between runs. The build step drop
 because cloud containers set it and next's build workers reject it. The gate is unchanged: the same commands run, and
 `next build` still does its own type pass. Per-step numbers: council `/mnt/project-files/build-check-timing/timings.md`.
 
+Docs-only changes skip all of this (Wendell, 2026-11-25: "docs only commits should skip it"). `scripts/local/skip-class.sh` names the
+class: `docs/`, `.specify/`, `specs/`, `issues/`, `reports/`, `strand-results/`, `FEATURE_REQUESTS/`, `art/`, `.claude/`, `.agents/`
+and notes at the repo root (`*.md`, `*.txt`). When every changed file is in it, the pre-commit hook skips `npm run precommit:check`,
+`check.sh` runs only the copy and voice scans, and `scripts/vercel-ignore.sh` (set as `ignoreCommand` in `vercel.json`) skips the
+production build for a merge that changed nothing else. Any file outside the class runs everything; `FORCE_CHECK=1` runs the checks
+anyway. `public/` is deliberately outside the class: a file there reaches production only through a build, so skipping would drop it.
+Assets that arrive through the API or the content store need no build and no commit; the Blob and Hugging Face route in the council repo
+already does that.
+
 The look frame check (`npm run check:look:frame`, board row `bld-gate-home-2`, answered "a headless browser shot
 compared against the dataset") renders one still of the Between's hearth in headless chromium, then compares the ramp
 the shader carries and every point light in the scene to `public/between/look-data.js`, failing on drift past the
