@@ -6,6 +6,8 @@ import { getOuroborosInterviewState } from '@/actions/ouroboros-interview'
 import { db } from '@/lib/db'
 import { getPlaybookForArchetype } from '@/actions/playbook'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import { slugifyName } from '@/lib/avatar-utils'
+import { layerIdsFromAvatarConfig, loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
 
 /**
  * @page /character/create
@@ -18,12 +20,22 @@ import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
  * @agentDiscoverable false
  */
 
-export default async function CharacterCreatePage() {
+export default async function CharacterCreatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>
+}) {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
   const state = await getOuroborosInterviewState(player.id)
   if ('error' in state) redirect('/')
+
+  // The completion card links back here with ?edit=sprite so a player can
+  // change their body without replaying the narrative interview.
+  const { edit } = await searchParams
+  const interviewState =
+    edit === 'sprite' ? { ...state, currentNodeId: 'OUROBOROS_SPRITE' as const } : state
 
   const [nations, archetypes] = await Promise.all([
     db.nation.findMany({
@@ -43,6 +55,12 @@ export default async function CharacterCreatePage() {
     playbookMoves = moves.map((m) => ({ id: m.id, name: m.name, description: m.description }))
   }
 
+  const selectedNation = nations.find((nation) => nation.id === state.answers.nationId)
+  const selectedArchetype = archetypes.find((archetype) => archetype.id === state.answers.archetypeId)
+  const spriteCatalog = loadWokaLayerCatalog()
+  const spriteFrameHeight = Number(process.env.WA_WOKA_FRAME_HEIGHT ?? 32) === 64 ? 64 : 32
+  const initialLayers = layerIdsFromAvatarConfig(player.avatarConfig)
+
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans p-6 md:p-12">
       <div className="max-w-2xl mx-auto space-y-8">
@@ -55,11 +73,16 @@ export default async function CharacterCreatePage() {
 
         <OuroborosInterviewClient
           playerId={player.id}
-          state={state}
+          state={interviewState}
           nations={nations}
           archetypes={archetypes}
           playbookMoves={playbookMoves}
           domains={[...ALLYSHIP_DOMAINS]}
+          spriteCatalog={spriteCatalog}
+          spriteFrameHeight={spriteFrameHeight}
+          initialLayers={initialLayers}
+          nationKey={selectedNation ? slugifyName(selectedNation.name) : null}
+          archetypeKey={selectedArchetype ? slugifyName(selectedArchetype.name) : null}
         />
       </div>
     </div>

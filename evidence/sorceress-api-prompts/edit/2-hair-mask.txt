@@ -1,0 +1,5 @@
+Edit the attached sprite sheet. Change ONLY the hair: repaint the character's hair entirely in one single flat solid magenta color (#FF00FF) — every hair pixel becomes exactly #FF00FF, including the topknot and all hair in every row (in the bottom row the hair on the back of the head becomes #FF00FF). Keep the hair's current shape, size and strands: do not grow, shrink, restyle or move the hair.
+
+Keep EVERYTHING else pixel-identical to the input sheet: same 3x4 grid layout, same character body, face, skin, charcoal tunic and trousers, same poses in every cell, same head size and position in every frame, same background.
+
+Do not zoom, crop, shift, rescale, or re-draw the character. Do not change the framing of any cell. Output the full sheet, same layout, same background.

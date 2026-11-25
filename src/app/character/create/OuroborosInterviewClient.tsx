@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { advanceOuroborosInterview } from '@/actions/ouroboros-interview'
 import type { OuroborosInterviewState } from '@/lib/ouroboros-interview'
+import type { WokaLayerCatalog } from '@/lib/wa/layer-catalog'
+import { OuroborosSpriteStep } from './OuroborosSpriteStep'
 
 const LENS_OPTIONS = [
   { value: 'understanding', label: 'Understanding', desc: 'I want to see more clearly' },
@@ -19,6 +21,11 @@ type Props = {
   archetypes: { id: string; name: string; description: string }[]
   playbookMoves: { id: string; name: string; description: string }[]
   domains: readonly { key: string; label: string; short: string }[]
+  spriteCatalog: WokaLayerCatalog
+  spriteFrameHeight?: number
+  initialLayers?: string[] | null
+  nationKey?: string | null
+  archetypeKey?: string | null
 }
 
 export function OuroborosInterviewClient({
@@ -28,6 +35,11 @@ export function OuroborosInterviewClient({
   archetypes,
   playbookMoves,
   domains,
+  spriteCatalog,
+  spriteFrameHeight = 32,
+  initialLayers,
+  nationKey,
+  archetypeKey,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -77,12 +89,20 @@ export function OuroborosInterviewClient({
             </div>
           )}
         </div>
-        <Link
-          href="/"
-          className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors"
-        >
-          Go to Dashboard →
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/"
+            className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors"
+          >
+            Go to Dashboard →
+          </Link>
+          <Link
+            href="/character/create?edit=sprite"
+            className="inline-block px-6 py-3 border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-medium rounded-lg transition-colors"
+          >
+            Adjust your body
+          </Link>
+        </div>
       </div>
     )
   }
@@ -222,6 +242,21 @@ export function OuroborosInterviewClient({
           </button>
         </div>
       </div>
+    )
+  }
+
+  // OUROBOROS_SPRITE
+  if (nodeId === 'OUROBOROS_SPRITE') {
+    return (
+      <OuroborosSpriteStep
+        catalog={spriteCatalog}
+        frameHeight={spriteFrameHeight}
+        nationKey={nationKey}
+        archetypeKey={archetypeKey}
+        initialLayers={initialLayers}
+        isPending={isPending}
+        onContinue={() => handleAdvance({})}
+      />
     )
   }
 

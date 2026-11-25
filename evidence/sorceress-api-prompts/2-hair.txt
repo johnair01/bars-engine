@@ -1,0 +1,7 @@
+Using the attached sprite sheet as an exact template, produce an overlay sheet with the identical 3x4 grid filling the entire canvas edge to edge: 12 cells, identical poses in every cell, matching the template row for row (row 1 down, row 2 left, row 3 right, row 4 up; middle pose of each row is the standing idle).
+
+Draw ONLY the hairstyle: a short cropped cut with a tied topknot, in near-black — covering exactly the head pixels the template character's hair occupies, in all 12 frames, matching each frame's facing and pose exactly. In the back-facing row (row 4) draw the hair covering the back of the head. Keep the topknot visible in the down and both profile rows, and behind the head in the up row.
+
+Everything else must be the same solid flat chroma-green (#00b140): no body, no face, no clothes, no background detail, no shadow. The hair must align with the template's head position in every frame — do not shift, resize, or re-pose the character, do not draw the head or face.
+
+Style: crisp retro pixel art, hard pixel edges, no anti-aliasing, one small palette of about 8 colors, solid flat chroma-green (#00b140) background, no text, no grid lines, no watermarks.
