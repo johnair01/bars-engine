@@ -37,8 +37,8 @@ export const LEASE_MS = 6 * 60 * 60 * 1000
  * full for hours while fifteen answered looks waited.
  */
 export const CAP_LIVE_MS = 3 * 60 * 60 * 1000
-/** Most live claims one lane holds at once. A fifth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"). */
-export const LANE_WORKERS = 4
+/** Most live claims one lane holds at once. A ninth claim waits for a worker to finish (Wendell, 2026-11-19: "4 workers at a time per lane"; raised to 8 on 2026-11-22 when he said yes to more parallel workers). */
+export const LANE_WORKERS = 8
 /** A dry lane's lamp comes back on by itself after this long, unless a worker or he lights it sooner. */
 export const DRY_MS = 5 * 60 * 60 * 1000
 /** The furthest out he can set the renewal gate by hand. Beyond this the gate is a guess, not a signal. */
@@ -94,10 +94,19 @@ export const DECK_CEILING = 20
 export type TicketKind = 'picture' | 'design' | 'build'
 const PICTURE = /\b(robe|skirt|hem|tuck|regalia|garment|cloth|drape|gait|rig(ging)?|retarget|animation|animate|mocap|shader|texture|render|stills?|film|look row|picture|screenshot|magenta|band|mesh|glb|blender|cultivation figure|walk cycle)\b/i
 const DESIGN = /\b(fate[- ]clearing|design question|which (option|face)|decide|ruling|ontology|mechanic|should we|six[- ]face pass|council read|intake)\b/i
-export function ticketKind(title: string, brief = ''): TicketKind {
+/**
+ * A board answer's ticket is titled with the question Wendell answered ("Ship the farm: seed parcels on the post...",
+ * "Is this the pearl and rings you meant?"), so the keyword tests above never fire on it. Found 2026-11-23: six such
+ * tickets (farm-parcel-on-post-look-2, cd-intake-art-1, bar-two-sides-sheet-look-2, ch1-open-date-1...) read as
+ * 'build', and once Claude and Freebuff were at the ceiling the overflow pool sent them to DeepAI. The row ids are the
+ * reliable signal: a `-look-N` row is a look, so a picture; any other answered row is a question for a face or for him.
+ */
+const LOOK_ROW = /-look-\d+$/i
+export function ticketKind(title: string, brief = '', rows: string[] = []): TicketKind {
+  if (rows.some(r => LOOK_ROW.test(r))) return 'picture'
   const text = `${title}\n${brief}`
   if (PICTURE.test(title) || (PICTURE.test(text) && /\b(look|render|picture|still|film|screenshot)\b/i.test(text))) return 'picture'
-  if (DESIGN.test(title)) return 'design'
+  if (DESIGN.test(title) || rows.length) return 'design'
   return 'build'
 }
 /** Lanes a kind of ticket may not enter: DeepAI takes only plain builds. */

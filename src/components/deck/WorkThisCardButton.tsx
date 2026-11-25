@@ -14,6 +14,7 @@ import {
   MOVE_LABELS,
 } from '@/lib/allyship-deck/card-visuals'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
+import { recordCompletedMove } from '@/actions/cultivation-sheet'
 import {
   abandonMoveAttempt,
   chooseMoveAttempt,
@@ -270,6 +271,8 @@ function DeckWorkThisCardPanel({
   const [orientation, setOrientation] = useState<OrientationChoice>('internal')
   const [recommendation, setRecommendation] = useState<MoveRecommendationServiceResult | null>(null)
   const [attempt, setAttempt] = useState<MoveAttemptDraft | null>(null)
+  /** Made when an attempt is chosen, so finishing it counts once on the sheet (cultivated character T006). */
+  const [attemptId, setAttemptId] = useState<string | null>(null)
   const [artifactText, setArtifactText] = useState('')
   const [reflectionText, setReflectionText] = useState('')
   const [outcomeText, setOutcomeText] = useState('')
@@ -331,6 +334,7 @@ function DeckWorkThisCardPanel({
       return
     }
     setAttempt(result.attempt)
+    setAttemptId(crypto.randomUUID())
     setStep('chosen')
     setError(null)
   }
@@ -399,6 +403,8 @@ function DeckWorkThisCardPanel({
     setAttempt(result.attempt)
     setStep('completed')
     setError(null)
+    // The sheet's count rises once per attempt; a signed-out player or a failed write leaves the card flow as it was.
+    if (attemptId) void recordCompletedMove(attemptId).catch(() => undefined)
   }
 
   const abandon = () => {

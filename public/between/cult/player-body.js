@@ -11,7 +11,7 @@
 // standing rest, 1 the top of the in-breath. hold(on) puts a small ember of light between the hands.
 //
 // Sitting and the give belong to the nook's kneel (kneel.js, from the hearth-give round). It plugs in with useKneel(fn),
-// fn(walker) -> { sit(seatAt), stand(), give(), update(t, dt), kneeling }; without it a sit request leaves her standing.
+// fn(walker) -> { sit(seatAt), stand(), give(), update(t, dt), follow(), rest(), kneeling }; without it a sit request leaves her standing.
 import * as THREE from "three";
 import * as FG from "./make/figure.js";
 import { makeWalker } from "./walker.js";
@@ -22,8 +22,8 @@ export function useKneel(fn) { KNEEL = fn; }
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const ease = x => x * x * (3 - 2 * x);
 
-export async function makeCultBody({ who = "f", outfit = "B2", look = {}, ring = null, ringR = 0.42, ringW = 0.09, ringA = 0.85 } = {}) {
-  const W = await makeWalker({ who, outfit, look });
+export async function makeCultBody({ who = "f", outfit = "B2", look = {}, ring = null, ringR = 0.42, ringW = 0.09, ringA = 0.85, ...dress } = {}) {
+  const W = await makeWalker({ who, outfit, look, ...dress });   // dress: outfitDef, build, skin, hairColor (walker.js)
   const F = W.X.F, holder = W.holder;
   /* garden.js turns a body by holder.rotation.y = yaw + FACE with FACE = 0: the figure must face +z in the holder. The
      figure faces F.fr.f; turn the figure's root to +z and turn its body frame with it, so every aim stays in holder space. */
@@ -64,7 +64,9 @@ export async function makeCultBody({ who = "f", outfit = "B2", look = {}, ring =
   const kneel = KNEEL ? KNEEL(W) : null;
   let walking = false, breath = 0, breathWant = 0, held = 0, holdWant = false, waveT = -9, posedArms = false;
   return {
-    holder, mixer: { update() {} }, isPlayer: true, scale: 1, dressed: true, cult: W,
+    holder, mixer: { update() {} }, isPlayer: true, scale: 1, dressed: true, cult: W, who,
+    follow() { if (kneel && kneel.follow) kneel.follow(); },   // the tea: the laid robe follows the lap while the arms move
+    restore() { if (kneel && kneel.rest) kneel.rest(); },     // and the kneel's own pose again when the tea ends
     stance: () => (kneel && kneel.kneeling ? "sit" : walking ? "walk" : "idle"),
     setWalking(w) { walking = !!w; },
     wave(t) { waveT = t; },

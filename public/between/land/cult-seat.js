@@ -10,8 +10,8 @@ import { makeCultBody } from "../cult/player-body.js";
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const HIP_PAD = 0.09;   // the hips rest this far over the crate's top
 
-export async function makeCultSeated({ who = "f", outfit = "B2" } = {}) {
-  const body = await makeCultBody({ who, outfit });
+export async function makeCultSeated({ who = "f", outfit = "B2", ...dress } = {}) {
+  const body = await makeCultBody({ who, outfit, ...dress });
   const W = body.cult, F = W.X.F, holder = W.holder, { f, l } = F.fr, dn = V(0, -1, 0), up = V(0, 1, 0), q = new THREE.Quaternion();
   const rootY = F.root.position.y;
   let seated = false;
