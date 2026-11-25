@@ -5,6 +5,8 @@
   "size": [96, 80],
   "seed": 7,
   "start": {"x": 47, "y": 77},
+  "guide": {"id": "gate-steward", "label": "Gate Steward", "sheet": "../woka/sheets/pyrakanth/still-point.png", "frame": [1, 0], "at": [47, 66],
+            "talk": [45, 64, 5, 5], "hint": "First time here?", "about": "A Woka walker standing in the Gate Court as a map tile. Her lines are guide.ink; stepping into the talk area and pressing space opens guide.html."},
   "rooms": [
     {"id": "altar", "label": "Altar", "kind": "shrine", "box": [41, 3, 14, 8], "doors": [{"side": "S", "x": 47, "w": 2}], "seats": 2},
     {"id": "founders-hall", "label": "Founder's Hall", "kind": "assembly", "box": [34, 14, 28, 20], "doors": [{"side": "S", "x": 46, "w": 4}, {"side": "N", "x": 47, "w": 2, "plaque": false}], "seats": 24},

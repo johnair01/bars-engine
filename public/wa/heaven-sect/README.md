@@ -15,4 +15,19 @@ cannot be reached from the start.
 Rooms are meeting zones (`jitsiRoom`, `focusable`). Exits are `exitUrl` areas: the Lantern Walk exists; the Forest
 Edge and the Inner Island maps are not built yet.
 
+## The Gate Steward (ink dialogue)
+
+A guide stands in the Gate Court for new players. `guide.ink` holds her lines (all Claude drafts, Wendell's to edit):
+a greeting, "Where am I?", "Show me the halls", "Who are the Elders?" and one knot per hall in the level file. The
+generator checks that every room has a `hall_<id>` knot carrying a `# path: <id>` tag, then runs `compile_ink.mjs`,
+which compiles the ink with inkjs 2.4.0 (MIT, a devDependency) to `guide.json` and copies the `ink.js` runtime beside
+it. It also writes `guide-halls.json` (each hall's path layer and the pixel square its door opens on) and one hidden
+tile layer per hall, `path-<id>`, a line of lanterns from the Steward to that door.
+
+Standing in the Steward's area and pressing space opens `guide.html` as a sheet over the bottom of the game screen (`WA.ui.website.open` in `guide.js`, 46vh tall, full width); leaving her area or pressing the close button shuts it. On a 390 px phone the four choices stack and fit above the fold. Picking a hall shows its
+`path-<id>` layer and, if the box's WorkAdventure has `WA.player.moveTo`, walks the player there. `guide_visits` and
+`guide_last_hall` are saved with `WA.player.state`, so a returning player is greeted by name of the last hall. Her
+figure is the `pyrakanth/still-point` Woka frame drawn as a tile. `python3 gen_sect.py --lit <hall id>` draws one
+path into the render for a picture.
+
 Art: Ninja Adventure Asset Pack by Pixel-boy and AAA, CC0 (`../calrunian-dojo/src16/LICENSE-CC0.txt`).
