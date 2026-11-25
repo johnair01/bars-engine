@@ -34,8 +34,15 @@
     "tea step": [59, 53, 3, 5],
     "gate road": [46, 72, 4, 8]
   },
+  "arrivals": {
+    "about": "Named landing spots for doors in other maps (WorkAdventure start layers, reached as heaven-sect-court.wam#<id>). Each lands outside the named room's first door. The Calrunian Dojo's four doors lead here (Wendell, 2026-11-25: doors off the existing dojo to the new rooms).",
+    "from-dojo-founders": "founders-hall",
+    "from-dojo-tea": "tea-library",
+    "from-dojo-west": "elder-shaman",
+    "from-dojo-east": "elder-architect"
+  },
   "exits": [
-    {"id": "to-lantern-walk", "label": "Lantern Walk", "box": [46, 78, 4, 2], "exitUrl": "../lantern-walk/lantern-walk.tmj", "plaque_at": [40, 75]},
+    {"id": "to-calrunian-dojo", "label": "Calrunian Dojo", "box": [46, 78, 4, 2], "exitUrl": "/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam", "plaque_at": [39, 75]},
     {"id": "to-forest-edge", "label": "Forest Edge", "box": [17, 0, 3, 2], "exitUrl": "forest-edge.tmj", "built": false, "plaque_at": [20, 2]},
     {"id": "to-inner-island", "label": "Inner Island", "box": [76, 0, 3, 2], "exitUrl": "inner-island.tmj", "built": false, "plaque_at": [70, 2]}
   ]

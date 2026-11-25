@@ -44,7 +44,18 @@
     "weapon_rack": {"sheet": "element", "x": 11, "y": 2, "w": 3, "h": 2, "over_rows": 0},
     "dummy": {"sheet": "element", "x": 15, "y": 0, "w": 1, "h": 1, "over_rows": 0},
     "bench": {"sheet": "element", "x": 11, "y": 1, "w": 3, "h": 1, "over_rows": 0},
-    "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0, "about": "Master Yun, standing, facing the floor"}
+    "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0, "about": "Master Yun, standing, facing the floor"},
+    "torii": {"sheet": "house", "x": 0, "y": 5, "w": 3, "h": 2, "over_rows": 2, "collide": false, "about": "a sect gate; walkers pass under it (same piece as ../heaven-sect/sect-base.json)"}
+  },
+  "doors": {
+    "about": "Doors out of the dojo to rooms of the Heaven Sect court (Wendell, 2026-11-25: doors off the existing dojo to the new rooms). Each door is an exit area with a wooden plaque in the sect's plaque style (../heaven-sect/sect-base.json); the court lands the walker outside the named room (its arrivals list). A torii door is a gate in the lawn at [x, y]; a hall door is the step in front of an existing hall, w squares wide.",
+    "court": "/_/global/world.masteringallyship.com/~/heaven-sect/heaven-sect-court.wam",
+    "list": [
+      {"id": "to-founders-hall", "label": "Founder's Hall", "kind": "torii", "at": [7, 15], "arrive": "from-dojo-founders"},
+      {"id": "to-tea-library", "label": "Tea Library", "kind": "torii", "at": [34, 15], "arrive": "from-dojo-tea"},
+      {"id": "to-west-elders", "label": "West Elders", "kind": "hall", "at": [3, 27], "w": 4, "arrive": "from-dojo-west"},
+      {"id": "to-east-elders", "label": "East Elders", "kind": "hall", "at": [37, 27], "w": 4, "arrive": "from-dojo-east"}
+    ]
   },
   "rules": {
     "about": "Walkable-scale rules proven on the Oddboro office round (odb-ladder-look-2): WorkAdventure v1.35 walker feet are 16x16.",
