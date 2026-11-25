@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { givenToken, tokenMatches } from '@/lib/council/token'
 import { markPayment, previewNote } from '@/lib/founder-gate/mark-payment-server'
+import { growGiftCrop } from '@/lib/founder-gate/gift-crop-server'
 import { isCents, isRef } from '@/lib/founder-gate/mark-payment'
 
 export const dynamic = 'force-dynamic'
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
   if (!isCents(body.cents)) return NextResponse.json({ error: 'cents: whole cents, 1 to 10000000' }, { status: 400 })
   if (!isRef(body.ref)) return NextResponse.json({ error: 'ref: the payer and the day, 1 to 80 characters' }, { status: 400 })
   const result = await markPayment({ ref: body.ref, note: body.note, cents: body.cents })
+  const crop = result.kind === 'marked' || result.kind === 'already' ? await growGiftCrop({ playerId: result.playerId, word: result.word, ref: result.ref }) : null
   const status = result.kind === 'marked' ? 201 : result.kind === 'already' ? 200 : 422
-  return NextResponse.json({ result }, { status, headers: NO_STORE })
+  return NextResponse.json({ result, crop }, { status, headers: NO_STORE })
 }
