@@ -12,11 +12,14 @@
  * checkout list what the server stored; council/callsheets/stills/ART.jsonl on main stays the record.
  *
  * Auth is COUNCIL_MENU_TOKEN, as `Authorization: Bearer <key>`, a bare header or `?token=`, the same three shapes
- * src/lib/council/token.ts reads for every other council call.
+ * src/lib/council/token.ts reads for every other council call. A claude.ai connector signs in with OAuth instead
+ * (src/lib/mcp-oauth, /api/mcp/oauth/*): its access token is a Bearer token naming this endpoint as its audience, and
+ * a 401 carries the WWW-Authenticate header that points the client at the sign-in (RFC 9728).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
+import { oauthConfigured, resourceMetadataUrl, verifyAccessToken } from '@/lib/mcp-oauth'
 import { createHash } from 'node:crypto'
 import { sessionWrite, type SessionDoc } from '@/lib/board/session-write'
 import { steerTicket } from '@/lib/work/queue'
@@ -426,11 +429,26 @@ const TOOLS = [
   },
 ]
 
-function refused(req: NextRequest): NextResponse | null {
+type Principal = { via: 'council-token' } | { via: 'oauth'; playerId: string; clientId: string }
+
+function unauthorized(): NextResponse {
+  return NextResponse.json({ error: 'Unauthorized' }, {
+    status: 401,
+    headers: { ...NO_STORE, 'WWW-Authenticate': `Bearer resource_metadata="${resourceMetadataUrl()}"` },
+  })
+}
+
+/** Who is calling: the council token (agents) or an OAuth access token (a claude.ai connector); otherwise a refusal. */
+function authenticate(req: NextRequest): Principal | NextResponse {
   const secret = process.env.COUNCIL_MENU_TOKEN
+  const given = givenToken(req)
+  if (secret && tokenMatches(given, secret)) return { via: 'council-token' }
+  if (given && oauthConfigured()) {
+    const who = verifyAccessToken(given)
+    if (who) return { via: 'oauth', ...who }
+  }
   if (!secret) return NextResponse.json({ error: 'COUNCIL_MENU_TOKEN not configured' }, { status: 503, headers: NO_STORE })
-  if (!tokenMatches(givenToken(req), secret)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE })
-  return null
+  return unauthorized()
 }
 
 function rpcResult(id: RpcId, result: unknown) {
@@ -751,7 +769,7 @@ const LEGACY_TOOL_NAMES: Record<string, string> = {
   'faces.lens': 'faces_lens',
 }
 
-async function callTool(rawName: string, args: Record<string, unknown>): Promise<ToolResult> {
+async function callTool(rawName: string, args: Record<string, unknown>, who: Principal): Promise<ToolResult> {
   const name = LEGACY_TOOL_NAMES[rawName] ?? rawName
   if (name === 'post_rows') return postRows(args)
   if (name === 'read_rows') return readRows(args)
@@ -808,6 +826,8 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
       version: SERVER_VERSION,
       endpoint: '/api/mcp',
       store: 'bars-engine',
+      signedInVia: who.via,
+      ...(who.via === 'oauth' ? { player: who.playerId, client: who.clientId } : {}),
       deployment: process.env.VERCEL_DEPLOYMENT_ID ?? null,
       tools: TOOLS.map((t) => t.name),
     })
@@ -830,8 +850,8 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
  * @agentDiscoverable false
  */
 export async function POST(req: NextRequest) {
-  const no = refused(req)
-  if (no) return no
+  const who = authenticate(req)
+  if (who instanceof NextResponse) return who
 
   let body: unknown
   try {
@@ -880,7 +900,7 @@ export async function POST(req: NextRequest) {
         ? (params.arguments as Record<string, unknown>)
         : {}
       if (!name) return rpcError(id, -32602, 'tools/call needs the tool name')
-      const result = await callTool(name, args)
+      const result = await callTool(name, args, who)
       return rpcResult(id, { content: result.content, isError: result.isError })
     }
     default:
