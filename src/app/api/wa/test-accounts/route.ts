@@ -2,7 +2,8 @@
  * Create and delete throwaway accounts for automated WorkAdventure tests.
  *
  * Auth is the same Admin API token WorkAdventure already uses (`Authorization: <token>` or `Bearer <token>`).
- * POST   -> { email, password, playerId }  (the password is shown once)
+ * POST   -> { email, password, playerId, signInUrl }  (the password is shown once; signInUrl signs the account in,
+ *            works once, and lasts five minutes. Using it replaces the password.)
  * DELETE -> body { email } deletes one test account; body { olderThanHours: n } sweeps every test account that old.
  * Only emails shaped `wa-test-<hex>@test.invalid` are ever touched (src/lib/wa/test-accounts.ts).
  */
@@ -10,7 +11,9 @@ import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth-utils'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
+import { WA_ADMIN_API_TOKEN } from '@/lib/wa/config'
 import { isTestAccountEmail, newTestAccount, TEST_EMAIL_DOMAIN, TEST_EMAIL_PREFIX } from '@/lib/wa/test-accounts'
+import { makeSignInToken } from '@/lib/wa/test-signin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,7 +44,12 @@ export async function POST(request: NextRequest) {
     return p
   })
 
-  return Response.json({ email: account.email, password: account.password, playerId: player.id }, { status: 201 })
+  const token = makeSignInToken(account.email, passwordHash, WA_ADMIN_API_TOKEN)
+  const signInUrl = `${request.nextUrl.origin}/api/wa/test-accounts/sign-in?token=${encodeURIComponent(token)}`
+  return Response.json(
+    { email: account.email, password: account.password, playerId: player.id, signInUrl },
+    { status: 201 },
+  )
 }
 
 async function deleteTestAccount(email: string): Promise<'deleted' | 'not found'> {

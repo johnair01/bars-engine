@@ -219,6 +219,7 @@ export default defineConfig({
       'src/lib/wa/__tests__/map.test.ts',
       'src/lib/wa/__tests__/player-lookup.test.ts',
       'src/lib/wa/__tests__/test-accounts.test.ts',
+      'src/lib/wa/__tests__/test-signin.test.ts',
     ],
   },
   resolve: {
