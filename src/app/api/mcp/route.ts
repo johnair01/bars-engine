@@ -39,7 +39,7 @@ export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
 const SERVER_VERSION = '1.5.0'
-const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
+const PROTOCOL_VERSIONS = ['2026-07-28', '2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
 const MAX_IDS = 50
