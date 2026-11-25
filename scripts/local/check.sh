@@ -19,6 +19,10 @@ cd "$ROOT"
 DEV="bash scripts/local/dev.sh"
 # tsc over this repo needs more than the default 2 GB heap.
 case " ${NODE_OPTIONS:-} " in *max-old-space-size*) ;; *) export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=6144" ;; esac
+# Cloud containers set NODE_OPTIONS to include --use-openssl-ca, which next build's worker processes reject
+# ("Initiated Worker with invalid NODE_OPTIONS env variable"), so the build step fails in 23s with no code fault.
+# The build step runs without that flag (measured 2026-11-25: build passes, 157s).
+BUILD_NODE_OPTIONS="$(printf '%s' "${NODE_OPTIONS:-}" | sed -E 's/(^| )--use-openssl-ca( |$)/ /g')"
 mkdir -p .local-dev/check
 failed=()
 # The lockfile is the only tree this report speaks for; a stale one produces failures the code does not have.
@@ -52,12 +56,32 @@ look_touched() {
 }
 
 $DEV up || { echo "local database could not start"; exit 1; }
-step check $DEV run -- npm run check
+# The first four parts of `npm run check`, in order, then lint, tsc and vitest at the same time (they are
+# independent; measured 2026-11-25 on 4 cores: 158s together against 194s one after another). Same commands, same
+# gate; eslint keeps a cache in .local-dev (113s cold, 1s with nothing changed) and tsc is incremental through
+# tsconfig.tsbuildinfo (66s cold, 8s warm), so a workspace that keeps its files gets faster each run.
+step check-prep $DEV run -- bash -c 'npm run db:generate && npm run verify:build-reliability && npm run check:look && npm run check:registry'
+pstep() { # name, command...: start in the background; the loop below reports it
+  local name="$1"; shift
+  ( "$@" >".local-dev/check/$name.log" 2>&1; echo $? >".local-dev/check/$name.code" ) &
+  pnames+=("$name")
+}
+pnames=()
+rm -f .local-dev/check/lint.code .local-dev/check/tsc.code .local-dev/check/vitest.code
+pstep lint $DEV run -- npx eslint --cache --cache-location .local-dev/eslintcache
+pstep tsc $DEV run -- npx tsc --noEmit
+pstep vitest $DEV run -- npm run test:vitest
+wait
+for n in "${pnames[@]}"; do
+  printf '\n── %s ──\n' "$n"
+  if [ "$(cat ".local-dev/check/$n.code" 2>/dev/null)" = "0" ]; then echo "ok"; else
+    echo "FAILED (log: .local-dev/check/$n.log)"; tail -25 ".local-dev/check/$n.log"; failed+=("$n")
+  fi
+done
 # The frame half of the look gate (board row bld-gate-home-2, answered a): one hearth still, then the ramp and the
 # lights read off it compared to the look dataset. It can lack a browser or a copy of three, which are skips (exit 2,
 # reported as skipped here) and not faults; only a real drift stops the push.
 step --skip-2 look-frame $DEV run -- npm run check:look:frame -- --post
-step vitest $DEV run -- npm run test:vitest
 # The editorial check for player-facing copy (scripts/copy-scan.py): lines with no concrete referent, trailing and,
 # and-joins, and-chains, negation pairs, over every file in scripts/copy-scan.files, whole file. It FAILS the run on any
 # hit (Wendell, 2026-11-17, board row copy-scan-gate-1: "C, Fail it, and rewrite the 19 older lines too"). A hit is
@@ -71,7 +95,7 @@ python3 scripts/copy-scan.py --lexicon || { echo "FAILED: say what the word name
 python3 -m unittest tests/test_voice_gate.py || failed+=("voice-gate-tests")
 if look_touched; then step look node scripts/local/look-check.mjs; else echo; echo "── look ── (skipped: no change under public/between or public/calrunia; LOOK_CHECK=1 forces it)"; fi
 if [ "${1:-}" = "--build" ]; then
-  step build $DEV run -- npm run build
+  step build env NODE_OPTIONS="$BUILD_NODE_OPTIONS" $DEV run -- npm run build
 fi
 
 echo
