@@ -1,0 +1,12 @@
+Using the attached sprite sheet as an exact template, produce an overlay sheet with the identical 3x4 grid filling the entire canvas edge to edge: 12 cells, identical poses in every cell, matching the template row for row (row 1 down, row 2 left, row 3 right, row 4 up; middle pose of each row is the standing idle).
+
+Draw ONLY the clothing: replacing the template's under-tunic and trousers in all 12 frames, matching each frame's facing and pose exactly.
+
+DESIGN — nation-neutral traveling robe (casual cut): a hard-worn layered wrap robe in muted charcoal-gray, wide sleeves pushed up to the forearm, a plain rope belt cinched at the waist, the skirt falling in loose A-line folds to just above the ankles so the feet and lower legs stay fully visible in every frame. No hood on the head: the robe's folded hood rests on the upper back and shoulders in the down and up rows, and drapes at the back of the neck in the profiles. The cut is plain and unornamented — no sigils, no embroidery, no metal hardware — so any nation color can be applied to it later.
+
+
+SILHOUETTE INTEGRITY (strict): in every one of the 12 cells the robe is ONE single connected cloth shape that follows the body outline — no gaps, no holes, no notches cut into the fabric, no detached fragments, no stray debris pixels anywhere: not below the feet, not beside the skirt, not above the head, not floating off the sleeves. Where the design has a front split or layered panels, the fabric edges stay connected to the rest of the robe at the sides. Draw NOTHING but cloth: no skin, no feet, no hands, no face, no hair, no body parts of any kind — the template character's own pixels already provide those. Every robe pixel must sit on or immediately adjacent to the template silhouette, following its pose exactly.
+
+Everything else must be the same solid flat chroma-green (#00b140): no skin, no face, no hair, no bare body below the neck, no background detail, no shadow. The robe must sit exactly on the template silhouette — same head position, same feet position, no shifting, resizing, or re-posing. Feet stay visible below the hem in every frame.
+
+Style: crisp retro pixel art, hard pixel edges, no anti-aliasing, one small palette of about 12 colors anchored to muted gray tones, solid flat chroma-green (#00b140) background, no text, no grid lines, no watermarks.

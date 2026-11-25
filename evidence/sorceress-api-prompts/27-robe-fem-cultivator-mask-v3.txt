@@ -1,0 +1,15 @@
+Using the attached sprite sheet as an exact template, produce an overlay sheet with the identical 3x4 grid filling the entire canvas edge to edge: 12 cells, identical poses in every cell, matching the template row for row (row 1 down, row 2 left, row 3 right, row 4 up; middle pose of each row is the standing idle).
+
+Draw ONLY the clothing: replacing the template's under-tunic and trousers in all 12 frames, matching each frame's facing and pose exactly.
+
+DESIGN — nation-neutral cultivator's daily robe: a practical everyday wrap robe in muted gray-blue, cut close to the body's shape — it follows the character's cinched waist and wide hip flare exactly, so the hourglass silhouette stays obvious in every frame (do NOT straighten the drape into a column). Wide sleeves that end at the wrist, a wide soft cloth sash cinched tight at the waist that visually connects the bodice to the skirt with no gap between them, and a skirt hem that reaches the ankles with a small front split so the feet stay visible in every frame. No hood. The cut is plain — no sigils, no embroidery — so any nation color can be applied to it later.
+
+
+
+GARMENT CONTINUITY (strict): the robe is ONE continuous garment — a single floor-length wrap dress. The fabric runs UNBROKEN from the collar down over the chest, the cinched waist, and the hips to the hem: there is NO gap, NO exposed skin, NO bare midriff, NO deep neckline opening at any point below the collar. The chest and torso are fully covered by fabric in every one of the 12 frames. The cinched waist is shown by the fabric drawing IN, not by skin showing. No skin is visible anywhere below the neck.
+
+SILHOUETTE INTEGRITY (strict): in every one of the 12 cells the robe is ONE single connected cloth shape that follows the body outline — no gaps, no holes, no notches cut into the fabric, no detached fragments, no stray debris pixels anywhere: not below the feet, not beside the skirt, not above the head, not floating off the sleeves. Where the design has a front split or layered panels, the fabric edges stay connected to the rest of the robe at the sides. Draw NOTHING but cloth: no skin, no feet, no hands, no face, no hair, no body parts of any kind — the template character's own pixels already provide those. Every robe pixel must sit on or immediately adjacent to the template silhouette, following its pose exactly.
+
+Everything else must be the same solid flat chroma-green (#00b140): no skin, no face, no hair, no bare body below the neck, no background detail, no shadow. The robe must sit exactly on the template silhouette — same head position, same feet position, no shifting, resizing, or re-posing. Feet stay visible below the hem in every frame.
+
+Style: crisp retro pixel art, hard pixel edges, no anti-aliasing, one small palette of about 12 colors anchored to muted gray-blue tones, solid flat chroma-green (#00b140) background, no text, no grid lines, no watermarks.
