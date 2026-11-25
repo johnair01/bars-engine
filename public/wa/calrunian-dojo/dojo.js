@@ -19,10 +19,25 @@ WA.onInit().then(async () => {
 
   const say = (id, text, ms) => WA.ui.banner.openBanner({ id, text, bgColor: WATER, textColor: GOLD, closable: true, timeToClose: ms });
 
+  // Master Yun. Fixed lines, written by hand (Wendell, 2026-11-25: scripted for now, fresh lines later; no sign says so,
+  // board row wfh-guide-author-1, answer C). He speaks only when a player steps into his circle, never moves them,
+  // and the banner closes by itself or by the player: closing it is "leave me be". A returning player (a banner
+  // already lit) hears a different line, so the place does not repeat itself word for word.
+  const YUN = {
+    first: 'Master Yun: Six banners hang behind me. Light one if you like. Or leave me be; the door stays open either way.',
+    back: 'Master Yun: You were here before. Your light is still on the wall. The Lantern Walk begins past the gate, if you want a walk.',
+  };
+  let inYun = false;
+  WA.room.area.onEnter('Master Yun').subscribe(() => {
+    inYun = true;
+    say('fh-yun', lit.size ? YUN.back : YUN.first, 10000);
+  });
+  WA.room.area.onLeave('Master Yun').subscribe(() => { inYun = false; WA.ui.banner.closeBanner().catch(() => {}); });
+
   // The waymark: one plain line as the newcomer reaches the stance wall, answered by acting or by walking on.
   let told = false;
   WA.room.area.onEnter('Waymark').subscribe(() => {
-    if (told || lit.size) return;               // once a banner is lit the question has been answered
+    if (told || lit.size || inYun) return;               // once a banner is lit the question has been answered
     told = true;
     say('fh-waymark', 'Six banners hang on this wall. Stand beneath one and it lights. Or walk on: nothing is lost.', 12000);
   });
