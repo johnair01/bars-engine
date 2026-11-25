@@ -9,7 +9,7 @@
  * Two ledgers stay apart: the player's farm (their word writes it) and the shared count (only the game master's mark).
  */
 import { CROP_FAMILY, cropName, bedLabel, type Crop } from '@/lib/between/crops'
-import { newFarm, till, plant, ripen, pick, SLOTS, type Farm } from '@/lib/between/farm'
+import { newFarm, till, plant, plantByMark, ripen, pick, SLOTS, type Farm } from '@/lib/between/farm'
 import { EMPTY_PACKET, cropOf, seedOf, type Packet } from '@/lib/founder-gate/seed-packet'
 import { readNote } from '@/lib/founder-gate/mark-payment'
 import { parsePacket, isPlayerId } from '@/lib/founder-gate/packet-record'
@@ -173,21 +173,18 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
     /* 4. A crop of the player's family, in the grain form, on that player's farm (real farm.ts). */
     const farm0 = world.farms.get(owner) ?? newFarm()
     /* H-farm-store is closed: farm-store.ts (loadFarm, saveFarm, updatePlayerFarm) holds one player's farm on the server, and the
-       FarmStore stand-in below has the same get and put. What a mark may do to that farm (till without the player's mana,
-       marks on a crop) stays open as H-till-mana and H-marks. */
-    const t = till(farm0, 0, 'run')
-    if (!t.ok) throw new MissingPiece(4, `farm.till refused: ${t.why}`)
-    hole('H-till-mana', 4, 'farm.till spends the PLAYER\'s mana, so a mark that plants for them costs them 5 mana with no say', 'src/lib/between/farm.ts till')
+       FarmStore stand-in below has the same get and put. */
     const barId = `gift-${owner}`
-    const p = plant(t.farm, 0, barId, word, 'run', today, crop)
-    if (!p.ok) throw new MissingPiece(4, `farm.plant refused: ${p.why}`)
+    const p = plantByMark(farm0, { ref: `run-${owner}`, barId, line: word, crop, now: 'run', today })
+    if (!p.ok) throw new MissingPiece(4, `farm.plantByMark refused: ${p.why}`)
     let farm = p.farm
+    if (farm.mana !== farm0.mana) throw new MissingPiece(4, 'the mark spent the player\'s mana')
     world.farms.put(owner, farm)
     world.marks.add(owner, barId, 'seen')
-    hole('H-marks', 4, 'A crop has no marks field: the gift mark and the later shipped mark (A3) have nowhere to sit on the Plant', 'none (marks are a stand-in book)')
+    /* H-till-mana and H-marks are closed: plantByMark (farm.ts) tills at no mana cost and leaves the gift mark on the crop. */
     const planted = farm.slots['0'].plant
     if (!planted?.crop) throw new MissingPiece(4, 'the planted crop did not carry its family and form')
-    log(4, `crop on ${owner}'s farm: ${cropName(planted.crop as Crop)} in the ${bedLabel(planted.crop as Crop)}`, ['crops.ts CROP_FAMILY, CROP_FORM', 'farm.plant'], [`farm slot 0 (crop ${planted.crop.family}/${planted.crop.form})`, 'MarkBook seen (stand-in)'])
+    log(4, `crop on ${owner}'s farm: ${cropName(planted.crop as Crop)} in the ${bedLabel(planted.crop as Crop)}`, ['crops.ts CROP_FAMILY, CROP_FORM', 'farm.plantByMark'], [`farm slot 0 (crop ${planted.crop.family}/${planted.crop.form}, gift mark)`, 'MarkBook seen (stand-in)'])
 
     /* 5. The Diplomat Elder offers the first quest. Quest state: none, offered, held, met. */
     if (world.quests.get(owner) !== 'none') throw new MissingPiece(5, 'quest state was not none before the offer')

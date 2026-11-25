@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { newFarm, till, plant, water, ripen, reclear, pick, settle, enter, TILL_COST, STARTING_MANA, type Farm } from '../farm'
+import { newFarm, till, plant, water, ripen, reclear, pick, settle, enter, plantByMark, markShipped, TILL_COST, STARTING_MANA, type Farm } from '../farm'
 
 const day = (n: number) => new Date(Date.UTC(2026, 10, 1 + n)).toISOString().slice(0, 10)
 const ok = (r: { ok: boolean; why?: string; farm: Farm }) => { expect(r.why).toBeUndefined(); return r.farm }
@@ -60,5 +60,38 @@ describe('farm rules on a test clock', () => {
     expect(r.harvest).toMatchObject({ fromBarId: 'bar1', line: 'steady', notes: [{ on: day(1), line: 'sent it' }] })
     expect(r.farm.slots['5'].state).toBe('tilled')
     expect(pick(planted(), 5, day(1)).ok).toBe(false)
+  })
+})
+
+describe('the game master\'s mark on the farm (H-till-mana, H-marks)', () => {
+  const gift = { ref: 'venmo-1', barId: 'gift-1', line: 'ship a book', crop: { family: 'joy', form: 'own' }, now: 'n', today: day(0) }
+  it('plants on the first bare slot without spending the player\'s mana, and records the gift mark', () => {
+    const r = plantByMark(newFarm(), gift)
+    expect(r.why).toBeUndefined()
+    expect(r.farm.mana).toBe(STARTING_MANA)
+    expect(r.slot).toBe(0)
+    expect(r.farm.slots['0'].plant!.marks).toEqual([{ kind: 'gift', ref: 'venmo-1', on: day(0) }])
+    expect(r.farm.slots['0'].plant!.crop).toEqual({ family: 'joy', form: 'own' })
+  })
+  it('skips slots the player already tilled', () => {
+    const f = ok(till(newFarm(), 0, 'n'))
+    expect(plantByMark(f, gift).slot).toBe(1)
+  })
+  it('the same ref twice plants once', () => {
+    const a = plantByMark(newFarm(), gift)
+    const b = plantByMark(a.farm, { ...gift, barId: 'gift-2' })
+    expect(b.ok).toBe(true)
+    expect(Object.keys(b.farm.slots)).toHaveLength(1)
+  })
+  it('the shipped mark lands on the same crop once', () => {
+    const a = plantByMark(newFarm(), gift)
+    const s = markShipped(a.farm, { barId: 'gift-1', ref: 'ship-1', today: day(3) })
+    expect(s.farm.slots['0'].plant!.marks!.map(m => m.kind)).toEqual(['gift', 'shipped'])
+    expect(markShipped(s.farm, { barId: 'gift-1', ref: 'ship-1', today: day(4) }).farm.slots['0'].plant!.marks).toHaveLength(2)
+    expect(markShipped(a.farm, { barId: 'nope', ref: 'ship-2', today: day(3) }).ok).toBe(false)
+  })
+  it('refuses a mark with no reference, no line or a full field', () => {
+    expect(plantByMark(newFarm(), { ...gift, ref: '' }).ok).toBe(false)
+    expect(plantByMark(newFarm(), { ...gift, line: ' ' }).ok).toBe(false)
   })
 })

@@ -4,6 +4,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { markPayment, previewNote, type MarkResult } from '@/lib/founder-gate/mark-payment-server'
+import { growGiftCrop } from '@/lib/founder-gate/gift-crop-server'
 import { isCents, isRef } from '@/lib/founder-gate/mark-payment'
 
 async function requireAdmin() {
@@ -31,5 +32,8 @@ export async function submitMark(input: { ref: string; note: string; dollars: nu
   const cents = Math.round(input.dollars * 100)
   if (!isRef(input.ref)) throw new Error('Give the payment a reference: the payer and the day.')
   if (!isCents(cents)) throw new Error('Give the amount in dollars, like 11 or 11.50.')
-  return markPayment({ ref: input.ref, note: input.note, cents })
+  const result = await markPayment({ ref: input.ref, note: input.note, cents })
+  // A first mark and a repeat both plant: the farm refuses a second crop for the same ref, so a mark that failed to plant retries safely.
+  if (result.kind === 'marked' || result.kind === 'already') await growGiftCrop({ playerId: result.playerId, word: result.word, ref: result.ref })
+  return result
 }

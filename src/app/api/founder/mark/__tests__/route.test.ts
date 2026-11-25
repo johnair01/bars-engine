@@ -4,6 +4,8 @@ vi.mock('server-only', () => ({}))
 const eng = vi.hoisted(() => ({ markPayment: vi.fn(), previewNote: vi.fn() }))
 vi.mock('@/lib/founder-gate/mark-payment-server', () => eng)
 
+vi.mock('@/lib/founder-gate/gift-crop-server', () => ({ growGiftCrop: vi.fn(async () => ({ planted: true })) }))
+
 import { GET, POST } from '../route'
 
 const get = (authorization: string | null, query: string) => ({

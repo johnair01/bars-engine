@@ -18,12 +18,17 @@ export const WATER_COST = 1
 export const STARTING_MANA = 50
 
 export type Note = { on: string; line: string }
+/** A mark the game master set on a crop: the gift seen, then the book shipped (A3). `ref` is his own reference, so a mark lands once. */
+export type MarkKind = 'gift' | 'shipped'
+export type Mark = { kind: MarkKind; ref: string; on: string }
 export type Plant = {
   barId: string; line: string; plantedAt: string; plantedOn: string
   tendedDays: number; lastTendedOn: string | null; untendedSince: string | null
   notes: Note[]; ripe: boolean
   /** The satisfaction crop (family x form). Absent means the generic pod. */
   crop?: Crop
+  /** The game master's marks (H-marks): a gift mark when the crop is planted for the player, a shipped mark when the book goes out. */
+  marks?: Mark[]
 }
 export type Slot = { state: 'tilled' | 'planted' | 'weeded'; clearedAt: string; plant: Plant | null }
 export type Harvest = { fromBarId: string; line: string; notes: Note[]; pickedOn: string; vibeulon: 1; quests: string[] }
@@ -154,4 +159,50 @@ export function pick(farm: Farm, i: number, today: string): Result {
   f.slots[String(i)] = { ...f.slots[String(i)], state: 'tilled', plant: null }
   f.harvests.push(harvest)
   return { farm: f, ok: true, mint: 1, harvest }
+}
+
+const isRefStr = (r: unknown): r is string => typeof r === 'string' && r.length > 0 && r.length <= 120
+
+/** The game master's gift mark planted a crop for this ref already. */
+const hasMark = (farm: Farm, kind: MarkKind, ref: string) =>
+  Object.values(farm.slots).some(s => s.plant?.marks?.some(m => m.kind === kind && m.ref === ref))
+
+/**
+ * The game master's mark plants a crop for a player who sent a gift (H-till-mana, H-marks). The mark tills the first
+ * bare slot at no mana cost, since the player did not choose to spend it, plants the crop with the gift mark on it, and
+ * leaves the player's mana as it was. Marking the same ref again changes nothing and still answers ok.
+ */
+export function plantByMark(farm: Farm, a: { ref: string; barId: string; line: string; crop?: unknown; now: string; today: string }): Result & { slot?: number } {
+  if (!isRefStr(a.ref)) return fail(farm, 'A reference')
+  const l = words(a.line)
+  if (!a.barId || !l) return fail(farm, 'A BAR and one line')
+  if (!okDate(a.today)) return fail(farm, 'No date')
+  if (hasMark(farm, 'gift', a.ref)) return { farm, ok: true, mint: 0 }
+  if (Object.values(farm.slots).some(x => x.plant?.barId === a.barId)) return fail(farm, 'That BAR is already planted')
+  let slot = -1
+  for (let i = 0; i < SLOTS; i++) if (!farm.slots[String(i)]) { slot = i; break }
+  if (slot < 0) return fail(farm, 'No bare slot on the farm')
+  const f = clone(farm)
+  const crop = isCrop(a.crop) ? { crop: { family: a.crop.family, form: a.crop.form } } : {}
+  f.slots[String(slot)] = {
+    state: 'planted', clearedAt: a.now,
+    plant: { barId: a.barId, line: l, plantedAt: a.now, plantedOn: a.today, tendedDays: 0, lastTendedOn: null, untendedSince: null, notes: [], ripe: false, ...crop, marks: [{ kind: 'gift', ref: a.ref, on: a.today }] },
+  }
+  return { farm: f, ok: true, mint: 0, slot }
+}
+
+/**
+ * The shipped mark: the book went out, and the same crop gets its second mark (A3). `barId` names the crop; the same ref
+ * twice changes nothing. A crop already picked is gone from the bed, so that is refused for the picker to handle.
+ */
+export function markShipped(farm: Farm, a: { barId: string; ref: string; today: string }): Result {
+  if (!isRefStr(a.ref)) return fail(farm, 'A reference')
+  if (!okDate(a.today)) return fail(farm, 'No date')
+  if (hasMark(farm, 'shipped', a.ref)) return { farm, ok: true, mint: 0 }
+  const k = Object.keys(farm.slots).find(key => farm.slots[key].plant?.barId === a.barId)
+  if (!k) return fail(farm, 'No crop with that BAR')
+  const f = clone(farm)
+  const p = f.slots[k].plant!
+  p.marks = [...(p.marks ?? []), { kind: 'shipped', ref: a.ref, on: a.today }]
+  return { farm: f, ok: true, mint: 0 }
 }

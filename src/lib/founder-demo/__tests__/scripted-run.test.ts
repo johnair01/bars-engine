@@ -48,6 +48,11 @@ describe('founder support scripted run', () => {
     expect(new MissingPiece(3, 'x').message).toContain('nothing to read or nowhere to write')
   })
   it('records holes and never a quiet pass', () => {
-    for (const i of [0, 1, 2]) expect(run(i).holes.length).toBeGreaterThan(8)
+    for (const i of [0, 1, 2]) {
+      const ids = run(i).holes.map((h) => h.id)
+      expect(ids.length).toBeGreaterThan(5)
+      expect(ids).not.toContain('H-till-mana')
+      expect(ids).not.toContain('H-marks')
+    }
   })
 })
