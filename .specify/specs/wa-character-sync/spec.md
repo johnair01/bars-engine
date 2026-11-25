@@ -26,7 +26,7 @@ questions are in "Open questions" and go to the Council Board).
 
 | Topic | Decision |
 |-------|----------|
-| Entry | A visitor is always offered bars-engine login first. "Continue as guest" is a choice on that screen, not a silent default. A guest keeps a default look and cannot save a character. Whether the box needs `DISABLE_ANONYMOUS` changed, or WorkAdventure's own login screen already offers both, is unproven (on 2026-11-24 a guest reached the world with no screen in my browser). |
+| Entry | A visitor is always offered bars-engine login first. "Continue as guest" is a choice on that screen, not a silent default. Every guest wears the same fixed guest look (set by Wendell 2026-11-25), so guests are recognisable in the workspace; a guest cannot choose or save a look. Whether the box needs `DISABLE_ANONYMOUS` changed, or WorkAdventure's own login screen already offers both, is unproven (on 2026-11-24 a guest reached the world with no screen in my browser). |
 | Source of truth | `Player` in bars-engine. The character sheet there (nation, archetype, layers) changes only through bars-engine moves. |
 | Look in the world | Temporary cosmetic adjustment is allowed. It is stored apart from the sheet (a `lookOverride`), never written into the sheet fields, and can be cleared back to the sheet's own look. |
 | Creator | One. The bars-engine creator is the only place to make a character; the WorkAdventure picker only edits the cosmetic override (or is hidden). |
@@ -50,7 +50,7 @@ and `/api/woka/list`.
 ### P1: Enter as myself
 
 As a visitor, I am offered sign-in before the world loads, with "Continue as guest" as one option, so I never walk in as a guest without having been asked.
-**Acceptance**: a private window opening the world URL shows the login offer and a guest button; guest enters with a default look; login enters as my character.
+**Acceptance**: a private window opening the world URL shows the login offer and a guest button; guest enters in the one shared guest look; login enters as my character.
 
 ### P1: Walk as my character
 
@@ -100,7 +100,7 @@ Adds a nullable field for `lookOverride` on the player. Needs a committed migrat
 3. How long is "temporary": until the next bars-engine move, a day, or until cleared?
 4. What does an admin with no character see on first entry?
 5. Where does a person without an account go: sign-up in the same flow?
-6. What can a guest do (look at a default woka only, or a temporary cosmetic look too)?
+6. Which woka is the shared guest look, and does a guest keep it in every room?
 
 ## Verification Quest
 
