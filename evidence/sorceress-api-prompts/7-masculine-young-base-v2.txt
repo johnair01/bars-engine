@@ -1,0 +1,26 @@
+A game-ready character sprite sheet on a 3x4 grid filling the ENTIRE canvas edge to edge. Each of the 12 cells contains one identical character.
+
+LAYOUT (strict):
+- Row 1: character facing DOWN, toward the viewer.
+- Row 2: facing LEFT (full profile).
+- Row 3: facing RIGHT (full profile, mirrored pose of row 2).
+- Row 4: facing UP (back of head visible, no face).
+- Within each row, 3 poses left to right: left foot stepping forward, idle standing in place, right foot stepping forward. The middle pose of every row is the same standing idle. Walk poses are small leg shifts only.
+- The grid has NO borders, NO cell outlines, NO gaps between cells: the sheet reads as one uniform checkerboard of 12 character frames.
+
+CHARACTER: young masculine figure, tan skin, late-teens/early-twenties, wearing a plain charcoal under-tunic and simple dark trousers, bare feet. Calm dojo-traveler posture, arms at rest.
+PROPORTIONS: slightly heroic, not chibi in the body — head is about one quarter of the body height, and a slightly large chibi-proportioned head is fine. Compared to a mature build: narrower shoulders, slimmer arms, slimmer waist, slightly shorter legs. All build differences live only below the neck.
+
+HEAD (strict): The head is COMPLETELY BALD — no hair, no topknot, no bun, no stubble, no shadow shape suggesting hair. Smooth bare scalp in every frame including the back-facing row. The face has NO eyes and NO eyebrows: the eye area is blank smooth skin (eyes will be layered on top later). Clean-shaven: no mustache, no beard, no facial hair of any kind.
+
+FRAMING (strict):
+- In every cell the character nearly fills the cell height: head starts just below the cell top, feet touch the bottom edge of the cell.
+- Body width about 50% of the cell width.
+- The head stays the same size in all four facings; no perspective shrink.
+- Feet are planted at the same height in every frame; no bouncing, no vertical bob between poses.
+
+BACKGROUND: one single solid flat chroma-green color (#00b140) everywhere outside the character silhouettes — completely flat, no gradient, no vignette, no shadow, no floor line.
+
+STYLE: crisp retro pixel art, hard pixel edges, no anti-aliasing, no gradients, no outline glow, one small fixed palette of about 16 colors total, no drop shadows, no text, no grid lines, no watermarks.
+
+Use the attached reference sheet ONLY for art style, palette mood, and rendering quality. IGNORE the reference character's hair, topknot, eyes, and eyebrows — your character is bald with a blank eye area and a slimmer, younger body.
