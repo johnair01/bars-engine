@@ -156,7 +156,7 @@ export function savedLine(view: LookView, body: Record<string, unknown>): string
   const label = view.options.find((o) => o.v === choice)?.label ?? ''
   const steer = s(body.steer)
   if (steer.startsWith('Compost.')) return `Wendell composted ${view.id}. ${steer}`
-  return `Wendell answered ${view.id}: ${label || 'Steer only'}${steer ? `, with the note: "${steer}"` : ''}.`
+  return `Wendell answered: ${label || 'Steer only'}${steer ? `, with the note: "${steer}"` : ''}.`
 }
 
 // ── Elicitation (MCP 2026-07-28, multi round-trip requests) ─────────────────────────────────────────────────────────

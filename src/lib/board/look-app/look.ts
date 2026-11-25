@@ -191,7 +191,7 @@ export async function askLook(args: Record<string, unknown>, params: Record<stri
     const open = replies.open
     if (open) {
       const now = await answeredOf(v.id)
-      return done(now ? `He answered ${v.id} on the board: ${now.label || now.choice || 'a note'}.`
+      return done(now ? `He answered on the board: ${now.label || now.choice || 'a note'}.`
         : `${v.id} is still open; he did not answer it on the board.`)
     }
     const reply = replies.answer

@@ -117,7 +117,7 @@ describe('the look card (MCP Apps)', () => {
     expect(saves.rows[0].data).toMatchObject({ choice: 'A', steer: '', via: 'claude-look-card' })
     expect(ticket).toHaveBeenCalledOnce()
     expect(wake).toHaveBeenCalledWith('answer to cd-dojo-doors-look-1')
-    expect(r.structuredContent.line).toBe('Wendell answered cd-dojo-doors-look-1: Yes, the doors work.')
+    expect(r.structuredContent.line).toBe('Wendell answered: Yes, the doors work.')
   })
 
   it('answer_look never replaces an answer he already gave', async () => {
