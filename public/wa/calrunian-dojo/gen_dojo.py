@@ -1,5 +1,5 @@
 """Generate the Calrunian Dojo map for the WorkAdventure world from the design language.
-usage: python3 gen_dojo.py [--seed N] [--out DIR] [--lit 1,3]   (--lit only changes render.png)
+usage: python3 gen_dojo.py [--seed N] [--out DIR] [--lit 1,3] [--frame 0-3]   (--lit and --frame only change render.png)
 Reads dojo-language.json (named pieces, fills and walkable-scale rules) and writes, into DIR (default: here):
   tiles/*.png        each source sheet drawn up to 32 px tiles (nearest neighbour)
   calrunian-dojo.tmj one orthogonal 32 px map: ground, detail, collisions, floorLayer, over1, over2, start, areas
@@ -67,38 +67,117 @@ for name, rel in LANG['sheets'].items():
     firstgid += cols * rows
 
 
-# ---- derived sheet "lit": the six banners lit, plus a gold pool for the floor beneath each ----
+# ---- derived sheet "lit": light drawn as animation, 4 frames each (Tiled tile animation, which WorkAdventure plays) ----
+# the paper lantern at the gate (flame flickers, glow breathes over 3x3 tiles), and for each stance banner a lit
+# version whose gold halo pulses, with a pulsing pool on the standing square. Lantern gold, as the notices carry.
 FH = LANG['first_hour']
 GOLD = hex_rgb(FH['gold'])
-def lit_banner(tile):
+NF, DUR = 4, FH['frame_ms']
+tiles_lit, anim_lit = [], {}          # tile images in sheet order; first-frame index -> frame indices
+
+
+def add_frames(frames):
+    first = len(tiles_lit); tiles_lit.extend(frames); anim_lit[first] = list(range(first, first + len(frames))); return first
+
+
+def px16(rows):
+    """16x16 art from {(x,y): colour}, drawn up 2x with nearest neighbour as the contract asks."""
+    im = Image.new('RGBA', (SP, SP), (0, 0, 0, 0)); p = im.load()
+    for (x, y), c in rows.items(): p[x, y] = c + (255,)
+    return im.resize((T, T), Image.NEAREST)
+
+
+OUTL, CAP, WOOD, RED = (70, 36, 18), (150, 60, 30), (110, 60, 30), (190, 50, 40)
+BODY_ROWS = {4: (5, 10), 5: (4, 11), 6: (3, 12), 7: (3, 12), 8: (3, 12), 9: (3, 12), 10: (4, 11), 11: (5, 10)}
+CORES = [(6, 9, 6, 9), (6, 9, 6, 8), (6, 9, 7, 9), (7, 9, 6, 9)]       # core x0,x1,y0,y1 per frame: the flame moves
+FILLS = [((255, 190, 70), (255, 238, 170)), ((250, 175, 60), (255, 228, 150)), ((255, 196, 80), (255, 244, 185)), ((246, 170, 56), (255, 232, 160))]
+
+
+def lantern_head(f):
+    d = {}
+    for x, y in ((7, 0), (8, 0), (7, 1), (8, 1)): d[(x, y)] = OUTL
+    for y in (2, 3):
+        for x in range(4, 12): d[(x, y)] = OUTL if (y == 2 or x in (4, 11)) else CAP
+    mid, core = FILLS[f]
+    for y, (x0, x1) in BODY_ROWS.items():
+        for x in range(x0, x1 + 1):
+            edge = x in (x0, x1) or y in (4, 11)
+            d[(x, y)] = OUTL if edge else mid
+    cx0, cx1, cy0, cy1 = CORES[f]
+    for y in range(cy0, cy1 + 1):
+        for x in range(cx0, cx1 + 1): d[(x, y)] = core
+    for y in (12, 13):
+        for x in range(4, 12): d[(x, y)] = OUTL if (y == 13 or x in (4, 11)) else CAP
+    for y in (14, 15): d[(7, y)] = RED; d[(8, y)] = RED
+    return px16(d)
+
+
+def lantern_post():
+    d = {}
+    for y in range(0, 14):
+        d[(7, y)] = OUTL; d[(8, y)] = WOOD
+    for y in (13, 14, 15):
+        for x in range(4, 12): d[(x, y)] = OUTL if (y == 15 or x in (4, 11)) else WOOD
+    return px16(d)
+
+
+def pulse(f, lo, hi):
+    return int(lo + (hi - lo) * (0.5 + 0.5 * __import__('math').sin(2 * 3.14159 * f / NF)))
+
+
+def lit_banner(tile, k):
     px = tile.load(); out = Image.new('RGBA', tile.size, (0, 0, 0, 0)); o = out.load()
     for y in range(tile.height):
         for x in range(tile.width):
             if px[x, y][3]: continue
-            near = [(x + dx, y + dy) for dx in (-2, -1, 0, 1, 2) for dy in (-2, -1, 0, 1, 2) if 0 <= x + dx < tile.width and 0 <= y + dy < tile.height]
-            if any(px[a, b][3] for a, b in near): o[x, y] = GOLD + (190,)
+            if any(0 <= x + dx < tile.width and 0 <= y + dy < tile.height and px[x + dx, y + dy][3]
+                   for dx in (-2, -1, 0, 1, 2) for dy in (-2, -1, 0, 1, 2)): o[x, y] = GOLD + (k,)
     for y in range(tile.height):
         for x in range(tile.width):
             r, g, b, a = px[x, y]
-            if a: o[x, y] = (min(255, int(r * 1.3 + 40)), min(255, int(g * 1.25 + 30)), min(255, int(b * 1.1 + 10)), a)
+            if a: o[x, y] = (min(255, int(r * 1.15 + 25)), min(255, int(g * 1.1 + 15)), min(255, int(b * 0.9)), a)
     return out
-LITCOLS = 7
-lit_im = Image.new('RGBA', (LITCOLS * T, 2 * T), (0, 0, 0, 0))
+
+
+def pool(k):
+    im = Image.new('RGBA', (T, T), (0, 0, 0, 0)); pp = im.load()
+    for y in range(T):
+        for x in range(T):
+            dd = ((x - T / 2) ** 2 + ((y - T / 2) * 1.5) ** 2) ** 0.5
+            if dd < T * 0.47: pp[x, y] = GOLD + (int(k * (1 - dd / (T * 0.47))) + 40,)
+    return im
+
+
+def glow_tiles(f):
+    amp = (215, 255, 175, 240)[f]; R = 1.5 * T
+    big = Image.new('RGBA', (3 * T, 3 * T), (0, 0, 0, 0)); gp = big.load()
+    for y in range(3 * T):
+        for x in range(3 * T):
+            dd = ((x - 1.5 * T) ** 2 + (y - 1.5 * T) ** 2) ** 0.5
+            if dd < R: gp[x, y] = GOLD + (int(amp * (1 - dd / R) ** 1.1),)
+    return [big.crop((cx * T, cy * T, cx * T + T, cy * T + T)) for cy in range(3) for cx in range(3)]
+
+
+FIRST = {}
+FIRST['lantern_head'] = add_frames([lantern_head(f) for f in range(NF)])
+FIRST['lantern_post'] = len(tiles_lit); tiles_lit.append(lantern_post())
+gl = [glow_tiles(f) for f in range(NF)]
+FIRST['glow'] = [add_frames([gl[f][i] for f in range(NF)]) for i in range(9)]
 for k in range(6):
     for r in range(2):
-        src = sheets['house']['img'].crop(((21 + k + 1) * T, (20 + r) * T, (21 + k + 2) * T, (20 + r + 1) * T))
-        lit_im.alpha_composite(lit_banner(src), (k * T, r * T))
-pool = Image.new('RGBA', (T, T), (0, 0, 0, 0)); pp = pool.load()
-for y in range(T):
-    for x in range(T):
-        dd = ((x - T / 2) ** 2 + ((y - T / 2) * 1.5) ** 2) ** 0.5
-        if dd < T * 0.47: pp[x, y] = GOLD + (int(170 * (1 - dd / (T * 0.47))) + 70,)
-lit_im.alpha_composite(pool, (6 * T, 0))
+        src = sheets['house']['img'].crop(((22 + k) * T, (20 + r) * T, (23 + k) * T, (21 + r) * T))
+        FIRST[('banner', k, r)] = add_frames([lit_banner(src, (210, 140, 80, 140)[f]) for f in range(NF)])
+FIRST['pool'] = add_frames([pool((170, 120, 70, 120)[f]) for f in range(NF)])
+LITCOLS = 12
+lit_im = Image.new('RGBA', (LITCOLS * T, -(-len(tiles_lit) // LITCOLS) * T), (0, 0, 0, 0))
+for i, t in enumerate(tiles_lit): lit_im.alpha_composite(t, ((i % LITCOLS) * T, (i // LITCOLS) * T))
 lit_im.save(os.path.join(OUT, 'tiles/lit.png'))
-tilesets.append({'firstgid': firstgid, 'name': 'lit', 'image': 'tiles/lit.png', 'imagewidth': LITCOLS * T, 'imageheight': 2 * T,
-                 'tilewidth': T, 'tileheight': T, 'tilecount': LITCOLS * 2, 'columns': LITCOLS, 'margin': 0, 'spacing': 0})
+tilesets.append({'firstgid': firstgid, 'name': 'lit', 'image': 'tiles/lit.png', 'imagewidth': lit_im.width, 'imageheight': lit_im.height,
+                 'tilewidth': T, 'tileheight': T, 'tilecount': LITCOLS * (lit_im.height // T), 'columns': LITCOLS, 'margin': 0, 'spacing': 0,
+                 'tiles': [{'id': i, 'animation': [{'tileid': j, 'duration': DUR} for j in js]} for i, js in anim_lit.items()]})
 sheets['lit'] = {'gid0': firstgid, 'cols': LITCOLS, 'img': lit_im}
-firstgid += LITCOLS * 2
+firstgid += LITCOLS * (lit_im.height // T)
+LG = lambda i: sheets['lit']['gid0'] + i
 
 
 def gid(sheet, x, y):
@@ -107,7 +186,7 @@ def gid(sheet, x, y):
 
 # ---- layers ----
 N = W * H
-L = {n: [0] * N for n in ('ground', 'detail', 'collisions', 'floorLayer', 'over1', 'over2', 'start')}
+L = {n: [0] * N for n in ('ground', 'detail', 'collisions', 'floorLayer', 'glow', 'over1', 'over2', 'start')}
 taken = [False] * N
 I = lambda x, y: y * W + x
 COLL = gid('wall', 2, 2)  # any non-zero tile marks a blocked square; the layer is hidden in play
@@ -189,8 +268,12 @@ nine('wall', *DOJO, gaps=set(DOOR))
 for k, x in enumerate((13, 16, 19, 24, 27, 30)):
     stamp(f'stance_panel_{k + 1}', x, 4)
 # the lantern post beside the gate path: lit, in view of the spawn, the first thing a newcomer can walk to
-assert can_stamp('lantern_post', 25, 30), 'lantern square taken'
-stamp('lantern_post', 25, 30)
+assert all(not taken[I(25, y)] for y in (29, 30, 31)), 'lantern square taken'
+LANT = (25, 30)                               # head tile; the post stands under it and is the one blocked square
+L['over1'][I(*LANT)] = LG(FIRST['lantern_head']); L['detail'][I(25, 31)] = LG(FIRST['lantern_post']); block(25, 31)
+for dy in range(-1, 2):
+    for dx in range(-1, 2): L['glow'][I(LANT[0] + dx, LANT[1] + dy)] = LG(FIRST['glow'][(dy + 1) * 3 + dx + 1])
+for y in range(29, 32): taken[I(25, y)] = True
 stamp('master_yun', 21, 8)
 stamp('weapon_rack', 12, 14)
 stamp('bench', 29, 15)
@@ -230,7 +313,7 @@ for nm in ('bush', 'fern') * 14:
 LIT = {}
 for k, x in enumerate(FH['panel_xs']):
     lay = [0] * N
-    lay[I(x, 4)] = gid('lit', k, 0); lay[I(x, 5)] = gid('lit', k, 1); lay[I(x, FH['stand_y'])] = gid('lit', 6, 0)
+    lay[I(x, 4)] = LG(FIRST[('banner', k, 0)]); lay[I(x, 5)] = LG(FIRST[('banner', k, 1)]); lay[I(x, FH['stand_y'])] = LG(FIRST['pool'])
     LIT[k + 1] = lay
 # the player starts at the gate
 for x in range(21, 23): L['start'][I(x, H - 2)] = gid('wall', 2, 2)
@@ -288,7 +371,7 @@ layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail']),
           {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
           tl(7, 'start', L['start'], visible=False),
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
-layers[4:4] = [tl(20 + k, f'lit{k}', LIT[k], visible=False) for k in LIT]   # after floorLayer, before over1
+layers[4:4] = [tl(19, 'glow', L['glow'])] + [tl(20 + k, f'lit{k}', LIT[k], visible=False) for k in LIT]   # after floorLayer, before over1
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
        'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 30,
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
@@ -326,7 +409,12 @@ if _wa:
     print('RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
 
 # ---- render ----
+FRAME = int(args[args.index('--frame') + 1]) if '--frame' in args else 0   # picture only: which animation frame to draw
+
+
 def tile_img(g):
+    lg = sheets['lit']['gid0']
+    if g >= lg and (g - lg) in anim_lit: g = lg + anim_lit[g - lg][FRAME % NF]
     for name, s in sorted(sheets.items(), key=lambda kv: -kv[1]['gid0']):
         if g >= s['gid0']:
             k = g - s['gid0']; x, y = k % s['cols'], k // s['cols']
@@ -334,7 +422,7 @@ def tile_img(g):
 
 
 canvas = Image.new('RGBA', (W * T, H * T), (20, 14, 11, 255))
-for name in ('ground', 'detail'):
+for name in ('ground', 'detail', 'glow'):
     for i, g in enumerate(L[name]):
         if g: t = tile_img(g); canvas.alpha_composite(t, ((i % W) * T, (i // W) * T))
 if '--lit' in args:   # picture only: show these banners lit, as a player who stood under them would see them
