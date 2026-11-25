@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Gate Steward</title><style>
+body{margin:0;min-height:100vh;background:#1c1612;color:#f2e6cf;font:18px/1.55 Georgia,serif}
+main{max-width:30rem;margin:0 auto;padding:2rem 1.5rem}h1{font-size:1.5rem;margin:0 0 1rem;color:#ffbe46}p{margin:0 0 1rem}
+small{display:block;margin-top:1rem;color:#b9a98c}
+button{display:block;width:100%;margin:.5rem 0;padding:.6rem .9rem;background:#2a211b;color:#ffbe46;border:1px solid #6b5436;border-radius:6px;font:inherit;text-align:left;cursor:pointer}
+button:hover,button:focus-visible{border-color:#ffbe46;outline:none}
+#x{display:none}
+.choices{display:grid;gap:.5rem}
+/* overlay mode: a dialogue sheet that rises from the bottom of the game screen, over the map (WA.ui.website.open, see guide.js) */
+.ov,.ov body{background:transparent;min-height:0;height:100%}
+.ov main{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);max-width:none;box-sizing:border-box;max-height:100%;overflow-y:auto;margin:0;
+ background:#1c1612;border:2px solid #6b5436;border-bottom:none;border-radius:12px 12px 0 0;padding:1rem 1.25rem 1.1rem;font-size:17px;box-shadow:0 -6px 24px rgba(0,0,0,.45)}
+.ov h1{font-size:1.15rem;margin:0 2.5rem .5rem 0}.ov p{margin:0 0 .6rem}
+.ov .choices{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.ov button{margin:0;min-height:46px}
+.ov #x{display:block;position:absolute;top:.5rem;right:.6rem;width:44px;min-height:44px;margin:0;padding:0;text-align:center;font-size:1.4rem;border:none;background:none;color:#b9a98c}
+.ov small{margin-top:.6rem}
+</style><main id="m"></main>
+<!-- Inside WorkAdventure this page is opened from the Gate Steward's area (openWebsiteAllowApi) and loads the iframe
+     API from the world's own host; opened on its own, a query string stands in (?visits=1&last=the+Dojo&pick=1,0). -->
+<script>
+if (new URLSearchParams(location.search).get('overlay')) document.documentElement.className = 'ov';
+(function () {
+  var q = new URLSearchParams(location.search);
+  if (!q.get('standalone')) { var s = document.createElement('script'); s.src = 'https://world.masteringallyship.com/iframe_api.js'; s.onerror = boot; s.onload = boot; document.head.appendChild(s); }
+  else boot();
+  var booted = false;
+  function boot() { if (booted) return; booted = true; var r = document.createElement('script'); r.src = 'ink.js'; r.onload = start; document.head.appendChild(r); }
+})();
+function start() {
+  var q = new URLSearchParams(location.search), inWA = typeof WA !== 'undefined' && WA.onInit;
+  Promise.all([fetch('guide.json').then(function (r) { return r.text(); }), fetch('guide-halls.json').then(function (r) { return r.json(); }),
+               inWA ? WA.onInit() : Promise.resolve()]).then(function (v) {
+    var story = new inkjs.Story(v[0].replace(/^﻿/, '')), halls = v[1].halls, state = inWA ? WA.player.state : {};
+    story.variablesState['visits'] = +(inWA ? state.guide_visits : q.get('visits')) || 0;
+    story.variablesState['last_hall'] = (inWA ? state.guide_last_hall : q.get('last')) || '';
+    var lit = null;
+    function save() {
+      if (!inWA) return;
+      var o = { persist: true, public: false, scope: 'world' };
+      state.saveVariable('guide_visits', story.variablesState['visits'], o); state.saveVariable('guide_last_hall', story.variablesState['last_hall'], o);
+    }
+    function go(id) {
+      var h = halls[id]; if (!h || !inWA) return;
+      if (lit) WA.room.hideLayer(lit); lit = h.layer; WA.room.showLayer(lit);
+      if (WA.player.moveTo) WA.player.moveTo(h.to[0], h.to[1], 6).catch(function () {});   // walks them if this WA version can
+    }
+    function render() {
+      var m = document.getElementById('m'), title = '', text = '', done = false;
+      while (story.canContinue) {
+        text += '<p>' + story.Continue() + '</p>';
+        (story.currentTags || []).forEach(function (t) {
+          if (t.indexOf('title:') === 0) title = t.slice(6).trim();
+          if (t.indexOf('path:') === 0) go(t.slice(5).trim());
+          if (t.indexOf('done:') === 0) done = true;
+        });
+      }
+      m.innerHTML = '<button id="x" aria-label="Close">&times;</button><h1>' + title + '</h1>' + text;
+      var box = document.createElement('div'); box.className = 'choices'; m.appendChild(box);
+      story.currentChoices.forEach(function (c, i) {
+        var b = document.createElement('button'); b.textContent = c.text;
+        b.onclick = function () { story.ChooseChoiceIndex(i); render(); }; box.appendChild(b);
+      });
+      var s = document.createElement('small'); s.textContent = 'Draft lines. Driven by inkjs 2.4.0 from guide.ink'; m.appendChild(s);
+      document.getElementById('x').onclick = closeIt;
+      save(); if (done) setTimeout(closeIt, 1800);
+    }
+    function closeIt() {
+      if (!inWA) return;
+      try { WA.ui.website.getAll().then(function (all) { all.forEach(function (w) { if (String(w.url).indexOf('guide.html') >= 0) w.close(); }); }); } catch (e) {}
+      try { WA.nav.closeCoWebSite(); } catch (e) {}
+    }
+    render();
+    (q.get('pick') || '').split(',').filter(Boolean).forEach(function (n) { story.ChooseChoiceIndex(+n); render(); });
+  });
+}
+</script></html>
