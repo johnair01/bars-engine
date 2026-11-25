@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'src/lib/world-kit/__tests__/gate.test.ts',
       'src/lib/cultivation/__tests__/sheet.test.ts',
       'src/lib/cultivation/__tests__/belly-rules.test.ts',
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',

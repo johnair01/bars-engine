@@ -1,0 +1,9 @@
+{
+  "name": "world-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": { "world-kit": "./cli.mjs" },
+  "scripts": { "test": "node --test" },
+  "dependencies": { "js-yaml": "^4.1.1" }
+}
