@@ -55,6 +55,18 @@ look_touched() {
     | grep -qE '^(public/between/|public/calrunia/|scripts/local/look)'
 }
 
+# A branch whose changes are all docs, spec kits or notes (scripts/local/skip-class.sh) changes nothing lint, tsc, vitest
+# or the build read, so only the copy and voice scans run. FORCE_CHECK=1 runs everything.
+if [ "${FORCE_CHECK:-0}" != "1" ]; then
+  base="$(git merge-base HEAD origin/main 2>/dev/null || true)"
+  changed="$({ [ -n "$base" ] && git diff --name-only "$base"; git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null | sort -u)"
+  if [ -n "$base" ] && printf '%s\n' "$changed" | bash scripts/local/skip-class.sh; then
+    echo "docs-only change: lint, tsc, vitest and the build do not read it. Running the copy and voice scans only (FORCE_CHECK=1 runs everything)."
+    python3 scripts/copy-scan.py --strict && python3 scripts/copy-scan.py --lexicon >/dev/null && python3 -m unittest tests/test_voice_gate.py && { echo "All local checks passed (docs-only)."; exit 0; }
+    echo "FAILED: copy or voice scan"; exit 1
+  fi
+fi
+
 $DEV up || { echo "local database could not start"; exit 1; }
 # The first four parts of `npm run check`, in order, then lint, tsc and vitest at the same time (they are
 # independent; measured 2026-11-25 on 4 cores: 158s together against 194s one after another). Same commands, same

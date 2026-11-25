@@ -2,4 +2,10 @@
 # tsc over this repo needs more than Node's default ~2 GB heap; without this the hook dies with "heap out of memory"
 # in cloud sessions (docs/LOCAL_FIRST_TESTING.md).
 case " ${NODE_OPTIONS:-} " in *max-old-space-size*) ;; *) export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=6144" ;; esac
+# A commit whose staged files are all docs, spec kits or notes changes nothing the checks read (scripts/local/skip-class.sh).
+# FORCE_CHECK=1 runs them anyway.
+if [ "${FORCE_CHECK:-0}" != "1" ] && git diff --cached --name-only | bash scripts/local/skip-class.sh; then
+  echo "pre-commit: docs-only commit, skipping npm run precommit:check (FORCE_CHECK=1 runs it)"
+  exit 0
+fi
 npm run precommit:check
