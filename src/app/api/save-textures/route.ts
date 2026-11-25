@@ -10,6 +10,8 @@ import { findPlayerByIdentifier, playerNotFoundResponse } from '@/lib/wa/player-
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
 import { findLayerTexture, loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
 import {
+  ARGYRAN_DEFAULT_LOOK,
+  isArgyranDefaultLook,
   avatarConfigForLayers,
   avatarConfigForTexture,
   loadWokaCatalog,
@@ -37,7 +39,9 @@ export async function POST(request: NextRequest) {
   }
 
   const userIdentifier = body.userIdentifier?.trim()
-  const textures = (body.textures ?? []).map((texture) => texture.trim()).filter(Boolean)
+  const asked = (body.textures ?? []).map((texture) => texture.trim()).filter(Boolean)
+  // The picker's one whole look is the tan Argyran body in the ceremonial robe, saved as its parts.
+  const textures = asked.length === 1 && isArgyranDefaultLook(asked[0]) ? [...ARGYRAN_DEFAULT_LOOK.layerIds] : asked
   if (!userIdentifier || textures.length === 0) {
     return Response.json({ error: 'userIdentifier and textures are required' }, { status: 400 })
   }

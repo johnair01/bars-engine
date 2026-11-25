@@ -14,6 +14,8 @@ import {
   loadWokaCatalog,
   resolveWokaLayersForPlayer,
   wokaListFromCatalog,
+  ARGYRAN_DEFAULT_LOOK,
+  resolveRequestedCharacter,
 } from '../woka'
 
 const layers = loadWokaLayerCatalog()
@@ -44,6 +46,21 @@ describe('woka layer catalog', () => {
       for (const texture of textures) expect(texture.url, texture.id).toContain('/wa/woka/sorceress/')
     }
     expect(list.body.required).toBe(true)
+  })
+
+  it('offers one whole look, the Argyran sorceress, instead of the 40 preset sheets', () => {
+    const list = wokaListFromCatalog(presets, 'https://bars.test', layers, 64)
+    const textures = list.woka.collections[0].textures
+    expect(textures).toHaveLength(1)
+    expect(textures[0].id).toBe(ARGYRAN_DEFAULT_LOOK.id)
+    expect(textures[0].url).toContain('/api/woka/compose?body=wa%3Abody%3Amasculine-tan')
+    expect(textures[0].url).toContain('&fh=64')
+  })
+
+  it('reads a guest pick of that look back as its two parts', () => {
+    const r = resolveRequestedCharacter(presets, layers, [ARGYRAN_DEFAULT_LOOK.id])
+    expect(r.valid).toBe(true)
+    expect(r.textures.map((t) => t.id)).toEqual([...ARGYRAN_DEFAULT_LOOK.layerIds])
   })
 
   it('seeds clothes, hat, and sash from nation x archetype', () => {
