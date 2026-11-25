@@ -96,7 +96,7 @@ async function main() {
     const meta0 = await sharp(srcPath).metadata()
     if (meta0.width !== bmeta.width || meta0.height !== bmeta.height) {
       const resized = '/tmp/sorceress-resized-' + Math.random().toString(36).slice(2) + '.png'
-      await sharp(srcPath).resize(bmeta.width, bmeta.height).png().toFile(resized)
+      await sharp(srcPath).resize(bmeta.width, bmeta.height, { kernel: 'nearest' }).png().toFile(resized)
       srcPath = resized
     }
   }
