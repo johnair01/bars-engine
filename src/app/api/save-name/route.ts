@@ -4,6 +4,7 @@
  */
 import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
+import { findPlayerByIdentifier, playerNotFoundResponse } from '@/lib/wa/player-lookup'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
 
 export const runtime = 'nodejs'
@@ -36,8 +37,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'name is longer than 50 characters' }, { status: 400 })
   }
 
-  const player = await db.player.findUnique({ where: { id: userIdentifier }, select: { id: true } })
-  if (!player) return Response.json({ error: 'player not found' }, { status: 404 })
+  const player = await findPlayerByIdentifier(userIdentifier, { id: true }, 'save-name')
+  if (!player) return playerNotFoundResponse(userIdentifier)
 
   await db.player.update({ where: { id: player.id }, data: { name } })
   return new Response(null, { status: 204 })
