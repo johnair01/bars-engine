@@ -1,0 +1,369 @@
+{
+  "version": 1,
+  "collection": "Calrunia",
+  "about": "Provisional palette variants of the CC0 dojo walkers, one per nation x archetype. Replace a sheet in public/wa/woka/sheets and re-run the catalog validation when real ARDS walkers land.",
+  "source": "public/wa/calrunian-dojo/sprites/{monk,yun}-woka.png",
+  "license": "CC0",
+  "textures": [
+    {
+      "id": "wa:argyra:bold-heart",
+      "name": "Argyra · Bold Heart",
+      "path": "/wa/woka/sheets/argyra/bold-heart.png",
+      "nationKey": "argyra",
+      "archetypeKey": "bold-heart",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:danger-walker",
+      "name": "Argyra · Danger Walker",
+      "path": "/wa/woka/sheets/argyra/danger-walker.png",
+      "nationKey": "argyra",
+      "archetypeKey": "danger-walker",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:decisive-storm",
+      "name": "Argyra · Decisive Storm",
+      "path": "/wa/woka/sheets/argyra/decisive-storm.png",
+      "nationKey": "argyra",
+      "archetypeKey": "decisive-storm",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:devoted-guardian",
+      "name": "Argyra · Devoted Guardian",
+      "path": "/wa/woka/sheets/argyra/devoted-guardian.png",
+      "nationKey": "argyra",
+      "archetypeKey": "devoted-guardian",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:joyful-connector",
+      "name": "Argyra · Joyful Connector",
+      "path": "/wa/woka/sheets/argyra/joyful-connector.png",
+      "nationKey": "argyra",
+      "archetypeKey": "joyful-connector",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:still-point",
+      "name": "Argyra · Still Point",
+      "path": "/wa/woka/sheets/argyra/still-point.png",
+      "nationKey": "argyra",
+      "archetypeKey": "still-point",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:subtle-influence",
+      "name": "Argyra · Subtle Influence",
+      "path": "/wa/woka/sheets/argyra/subtle-influence.png",
+      "nationKey": "argyra",
+      "archetypeKey": "subtle-influence",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:argyra:truth-seer",
+      "name": "Argyra · Truth Seer",
+      "path": "/wa/woka/sheets/argyra/truth-seer.png",
+      "nationKey": "argyra",
+      "archetypeKey": "truth-seer",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:bold-heart",
+      "name": "Pyrakanth · Bold Heart",
+      "path": "/wa/woka/sheets/pyrakanth/bold-heart.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "bold-heart",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:danger-walker",
+      "name": "Pyrakanth · Danger Walker",
+      "path": "/wa/woka/sheets/pyrakanth/danger-walker.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "danger-walker",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:decisive-storm",
+      "name": "Pyrakanth · Decisive Storm",
+      "path": "/wa/woka/sheets/pyrakanth/decisive-storm.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "decisive-storm",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:devoted-guardian",
+      "name": "Pyrakanth · Devoted Guardian",
+      "path": "/wa/woka/sheets/pyrakanth/devoted-guardian.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "devoted-guardian",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:joyful-connector",
+      "name": "Pyrakanth · Joyful Connector",
+      "path": "/wa/woka/sheets/pyrakanth/joyful-connector.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "joyful-connector",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:still-point",
+      "name": "Pyrakanth · Still Point",
+      "path": "/wa/woka/sheets/pyrakanth/still-point.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "still-point",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:subtle-influence",
+      "name": "Pyrakanth · Subtle Influence",
+      "path": "/wa/woka/sheets/pyrakanth/subtle-influence.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "subtle-influence",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:pyrakanth:truth-seer",
+      "name": "Pyrakanth · Truth Seer",
+      "path": "/wa/woka/sheets/pyrakanth/truth-seer.png",
+      "nationKey": "pyrakanth",
+      "archetypeKey": "truth-seer",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:bold-heart",
+      "name": "Lamenth · Bold Heart",
+      "path": "/wa/woka/sheets/lamenth/bold-heart.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "bold-heart",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:danger-walker",
+      "name": "Lamenth · Danger Walker",
+      "path": "/wa/woka/sheets/lamenth/danger-walker.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "danger-walker",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:decisive-storm",
+      "name": "Lamenth · Decisive Storm",
+      "path": "/wa/woka/sheets/lamenth/decisive-storm.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "decisive-storm",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:devoted-guardian",
+      "name": "Lamenth · Devoted Guardian",
+      "path": "/wa/woka/sheets/lamenth/devoted-guardian.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "devoted-guardian",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:joyful-connector",
+      "name": "Lamenth · Joyful Connector",
+      "path": "/wa/woka/sheets/lamenth/joyful-connector.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "joyful-connector",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:still-point",
+      "name": "Lamenth · Still Point",
+      "path": "/wa/woka/sheets/lamenth/still-point.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "still-point",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:subtle-influence",
+      "name": "Lamenth · Subtle Influence",
+      "path": "/wa/woka/sheets/lamenth/subtle-influence.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "subtle-influence",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:lamenth:truth-seer",
+      "name": "Lamenth · Truth Seer",
+      "path": "/wa/woka/sheets/lamenth/truth-seer.png",
+      "nationKey": "lamenth",
+      "archetypeKey": "truth-seer",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:bold-heart",
+      "name": "Virelune · Bold Heart",
+      "path": "/wa/woka/sheets/virelune/bold-heart.png",
+      "nationKey": "virelune",
+      "archetypeKey": "bold-heart",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:danger-walker",
+      "name": "Virelune · Danger Walker",
+      "path": "/wa/woka/sheets/virelune/danger-walker.png",
+      "nationKey": "virelune",
+      "archetypeKey": "danger-walker",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:decisive-storm",
+      "name": "Virelune · Decisive Storm",
+      "path": "/wa/woka/sheets/virelune/decisive-storm.png",
+      "nationKey": "virelune",
+      "archetypeKey": "decisive-storm",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:devoted-guardian",
+      "name": "Virelune · Devoted Guardian",
+      "path": "/wa/woka/sheets/virelune/devoted-guardian.png",
+      "nationKey": "virelune",
+      "archetypeKey": "devoted-guardian",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:joyful-connector",
+      "name": "Virelune · Joyful Connector",
+      "path": "/wa/woka/sheets/virelune/joyful-connector.png",
+      "nationKey": "virelune",
+      "archetypeKey": "joyful-connector",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:still-point",
+      "name": "Virelune · Still Point",
+      "path": "/wa/woka/sheets/virelune/still-point.png",
+      "nationKey": "virelune",
+      "archetypeKey": "still-point",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:subtle-influence",
+      "name": "Virelune · Subtle Influence",
+      "path": "/wa/woka/sheets/virelune/subtle-influence.png",
+      "nationKey": "virelune",
+      "archetypeKey": "subtle-influence",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:virelune:truth-seer",
+      "name": "Virelune · Truth Seer",
+      "path": "/wa/woka/sheets/virelune/truth-seer.png",
+      "nationKey": "virelune",
+      "archetypeKey": "truth-seer",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:bold-heart",
+      "name": "Meridia · Bold Heart",
+      "path": "/wa/woka/sheets/meridia/bold-heart.png",
+      "nationKey": "meridia",
+      "archetypeKey": "bold-heart",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:danger-walker",
+      "name": "Meridia · Danger Walker",
+      "path": "/wa/woka/sheets/meridia/danger-walker.png",
+      "nationKey": "meridia",
+      "archetypeKey": "danger-walker",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:decisive-storm",
+      "name": "Meridia · Decisive Storm",
+      "path": "/wa/woka/sheets/meridia/decisive-storm.png",
+      "nationKey": "meridia",
+      "archetypeKey": "decisive-storm",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:devoted-guardian",
+      "name": "Meridia · Devoted Guardian",
+      "path": "/wa/woka/sheets/meridia/devoted-guardian.png",
+      "nationKey": "meridia",
+      "archetypeKey": "devoted-guardian",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:joyful-connector",
+      "name": "Meridia · Joyful Connector",
+      "path": "/wa/woka/sheets/meridia/joyful-connector.png",
+      "nationKey": "meridia",
+      "archetypeKey": "joyful-connector",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:still-point",
+      "name": "Meridia · Still Point",
+      "path": "/wa/woka/sheets/meridia/still-point.png",
+      "nationKey": "meridia",
+      "archetypeKey": "still-point",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:subtle-influence",
+      "name": "Meridia · Subtle Influence",
+      "path": "/wa/woka/sheets/meridia/subtle-influence.png",
+      "nationKey": "meridia",
+      "archetypeKey": "subtle-influence",
+      "genderKey": "default",
+      "provisional": true
+    },
+    {
+      "id": "wa:meridia:truth-seer",
+      "name": "Meridia · Truth Seer",
+      "path": "/wa/woka/sheets/meridia/truth-seer.png",
+      "nationKey": "meridia",
+      "archetypeKey": "truth-seer",
+      "genderKey": "default",
+      "provisional": true
+    }
+  ]
+}

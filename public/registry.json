@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-24T18:29:04.662Z",
+  "generatedAt": "2026-11-25T14:25:38.069Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -5279,7 +5279,7 @@
     },
     {
       "sourceFile": "/src/app/character/create/page.tsx",
-      "lineNumber": 21,
+      "lineNumber": 23,
       "params": [],
       "query": [],
       "relationships": [],
@@ -5305,7 +5305,7 @@
     },
     {
       "sourceFile": "/src/app/character/create/page.tsx",
-      "lineNumber": 21,
+      "lineNumber": 23,
       "params": [],
       "query": [],
       "relationships": [],

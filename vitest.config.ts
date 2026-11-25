@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'src/lib/world-kit/__tests__/gate.test.ts',
       'src/lib/cultivation/__tests__/sheet.test.ts',
       'src/lib/cultivation/__tests__/belly-rules.test.ts',
       'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
@@ -213,6 +214,14 @@ export default defineConfig({
       'src/lib/founder-gate/__tests__/content.test.ts',
       'src/lib/founder-gate/__tests__/seed-packet.test.ts',
       'scripts/__tests__/look-row.test.mjs',
+      'src/lib/wa/__tests__/jwt.test.ts',
+      'src/lib/wa/__tests__/oidc.test.ts',
+      'src/lib/wa/__tests__/woka.test.ts',
+      'src/lib/wa/__tests__/layers.test.ts',
+      'src/lib/wa/__tests__/map.test.ts',
+      'src/lib/wa/__tests__/player-lookup.test.ts',
+      'src/lib/wa/__tests__/test-accounts.test.ts',
+      'src/lib/wa/__tests__/test-signin.test.ts',
     ],
   },
   resolve: {

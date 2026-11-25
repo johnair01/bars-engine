@@ -78,15 +78,15 @@ type Sleep = (ms: number) => Promise<void>
 const realSleep: Sleep = ms => new Promise(r => setTimeout(r, ms))
 
 /** Open a window if none is open. True when this caller opened it and owns the fire. Atomic across instances. */
-export async function openWakeWindow(db: PrismaClient, now = new Date(), windowMs = WAKE_WINDOW_MS): Promise<boolean> {
+export async function openWakeWindow(db: PrismaClient, now = new Date(), windowMs = WAKE_WINDOW_MS, lane = WAKE_LOCK_LANE): Promise<boolean> {
   const until = new Date(now.getTime() + windowMs)
   const taken = await db.workLane.updateMany({
-    where: { lane: WAKE_LOCK_LANE, OR: [{ dryUntil: null }, { dryUntil: { lte: now } }] },
+    where: { lane, OR: [{ dryUntil: null }, { dryUntil: { lte: now } }] },
     data: { dryUntil: until },
   })
   if (taken.count > 0) return true
   try {
-    await db.workLane.create({ data: { lane: WAKE_LOCK_LANE, dry: false, dryUntil: until, note: 'pickup wake window' } })
+    await db.workLane.create({ data: { lane, dry: false, dryUntil: until, note: 'pickup wake window' } })
     return true
   } catch { return false } // the row exists and its window is open (or another instance created it first)
 }

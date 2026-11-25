@@ -1,0 +1,5 @@
+Edit the attached sprite sheet. Change ONLY the clothing: replace the charcoal tunic and trousers with an Argyra ceremonial robe — a mirror-polished slate robe in silver-blue (base tone around #7d8ea6), high standing collar, silver geometric trim along the hem and cuffs, layered skirt panels that split at the feet, and the hood drawn up over the head in every row (in the row facing the viewer the hood frames the face; in the bottom row you see the hood's back and draped cowl). Feet stay visible below the hem in every frame.
+
+Keep EVERYTHING else pixel-identical to the input sheet: same 3x4 grid layout, same character face, skin tone and hair, same poses in every cell, same head size and head position in every frame, same feet position, same background color.
+
+Do not zoom, crop, shift, rescale, or re-draw the character. Do not change the framing of any cell. Output the full sheet, same layout, same background.

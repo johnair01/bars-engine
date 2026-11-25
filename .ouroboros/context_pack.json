@@ -1,0 +1,19 @@
+{
+  "head": "1ebd448c39fb2796b4ffbc4b2c36422c32580828",
+  "stack": [
+    "package.json: name web, version 0.1.0"
+  ],
+  "verify_commands": [],
+  "fingerprint": {
+    "pyproject.toml": "absent",
+    "setup.cfg": "absent",
+    "setup.py": "absent",
+    "package.json": [
+      1795486616456008887,
+      25264
+    ],
+    "go.mod": "absent",
+    "Cargo.toml": "absent",
+    ".ouroboros/mechanical.toml": "absent"
+  }
+}
