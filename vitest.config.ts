@@ -92,6 +92,8 @@ export default defineConfig({
       'src/app/api/board/saves/__tests__/route-voice.test.ts',
       'src/lib/board/__tests__/rows.test.ts',
       'src/lib/__tests__/local-db-guard.test.ts',
+      'src/lib/__tests__/book-claims.test.ts',
+      'src/actions/__tests__/book-claims.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
       'src/lib/board/__tests__/records.test.ts',
       'src/lib/board/__tests__/resolved-fold.test.ts',

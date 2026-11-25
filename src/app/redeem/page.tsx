@@ -62,6 +62,13 @@ export default async function RedeemPage({ searchParams }: Props) {
           </div>
         )}
 
+        <p className="text-center text-sm text-[#a09e98]">
+          Bought the book on Amazon or at a bookstore?{' '}
+          <Link href="/redeem/proof" className="font-semibold text-purple-400 underline-offset-2 hover:underline">
+            Send a picture of your receipt instead
+          </Link>
+        </p>
+
         <footer className="text-center text-sm text-[#6b6965]">
           <Link href="/launch" className="text-purple-400 underline-offset-2 hover:underline">
             ← Back to the launch
