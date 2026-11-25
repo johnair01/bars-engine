@@ -87,7 +87,7 @@ def plaque_img(text):
 
 GUIDE = LEVEL.get('guide')
 PATHS, pathlayers = {}, []
-labels = [r['label'] for r in LEVEL['rooms']] + [e['label'] for e in LEVEL['exits']] + ([GUIDE['label']] if GUIDE else [])
+labels = [r['label'] for r in LEVEL['rooms']] + [e['label'] for e in LEVEL['exits']]
 pimgs = [plaque_img(t) for t in labels]
 cols = max(wt for _, wt in pimgs)
 sign_sheet = Image.new('RGBA', (cols * SP, len(pimgs) * SP), (0, 0, 0, 0))
@@ -109,6 +109,14 @@ if GUIDE:
     gd.ellipse([8, 8, 23, 23], fill=(42, 26, 16, 255)); gd.ellipse([10, 10, 21, 21], fill=(255, 190, 70, 255))
     gd.ellipse([13, 13, 18, 18], fill=(255, 240, 200, 255))
     glow.save(os.path.join(OUT, 'tiles/glow.png')); add_sheet('glow', glow, 'tiles/glow.png')
+    # the "first time here?" bubble over her head: a small cream speech bubble, shown only to a player who has not talked to her
+    himg, HINT_WT = plaque_img(GUIDE['hint'])
+    hs = Image.new('RGBA', (max(HINT_WT, 1) * SP, 2 * SP), (0, 0, 0, 0)); hd = ImageDraw.Draw(hs)
+    hd.rectangle([0, 1, HINT_WT * SP - 1, SP - 1], fill=hex_rgb('#f3e2c0') + (255,), outline=hex_rgb('#2a1a10') + (255,))
+    hd.text(((HINT_WT * SP - int(font.getlength(GUIDE['hint']))) // 2, 2), GUIDE['hint'], font=font, fill=hex_rgb('#2a1a10') + (255,))
+    hd.polygon([(5, SP), (11, SP), (8, SP + 5)], fill=hex_rgb('#f3e2c0') + (255,), outline=hex_rgb('#2a1a10') + (255,))
+    hbig = hs.resize((hs.width * K, hs.height * K), Image.NEAREST)
+    hbig.save(os.path.join(OUT, 'tiles/hint.png')); add_sheet('hint', hbig, 'tiles/hint.png')
 
 
 def gid(sheet, x, y):
@@ -117,6 +125,7 @@ def gid(sheet, x, y):
 
 # ---- layers ----
 N = W * H
+HINT = [0] * N
 L = {n: [0] * N for n in ('ground', 'detail', 'collisions', 'floorLayer', 'over1', 'over2', 'start')}
 taken = [False] * N
 I = lambda x, y: y * W + x
@@ -322,7 +331,10 @@ for e in LEVEL['exits']:
 if GUIDE:
     gx0, gy0 = GUIDE['at']
     L['detail'][I(gx0, gy0)] = gid('guide', 0, 0); block(gx0, gy0); taken[I(gx0, gy0)] = True
-    put_plaque(GUIDE['label'], gx0 - 3, gy0 + 1)
+    HINT_AT = (gx0 - HINT_WT // 2, gy0 - 2)
+    for k in range(HINT_WT):
+        HINT[I(HINT_AT[0] + k, HINT_AT[1])] = gid('hint', k, 0)
+        if k == HINT_WT // 2: HINT[I(HINT_AT[0] + k, HINT_AT[1] + 1)] = gid('hint', 0, 1)
     tx, ty, tw, th = GUIDE['talk']
     zones.append((GUIDE['label'], tx, ty, tw, th, {'role': GUIDE['id'], 'openWebsite': 'guide.html', 'openWebsiteAllowApi': True,
                   'openWebsiteWidth': 40, 'openWebsiteTrigger': 'onaction',
@@ -438,11 +450,13 @@ layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail'])] + [tl(10 +
           tl(3, 'collisions', L['collisions'], [prop('collides', True)], visible=False),
           {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
           tl(7, 'start', L['start'], visible=False),
+          *([tl(30, 'hint-new', HINT, visible=False)] if GUIDE else []),
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
-       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 10 + len(PATHS),
+       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 31,
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [prop('mapName', LEVEL['title']),
+                      *([prop('script', 'guide.js')] if GUIDE else []),
                       prop('mapDescription', 'The Heaven Sect, first 2D map: labelled meeting rooms and doors to other maps. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.'),
                       prop('generator', f'gen_sect.py --level levels/{MAP}.json --seed {SEED}')]}
 json.dump(tmj, open(os.path.join(OUT, f'{MAP}.tmj'), 'w'), separators=(',', ':'))
@@ -473,6 +487,9 @@ for rid, pts in seats_at.items():           # a few students sitting, so a seat 
     for (x, y) in pts[: (3 if rid == 'founders-hall' else 2)]: walkers.append((x, y, 3))
 for (x, y, facing) in walkers:
     canvas.alpha_composite(monk.crop((32, facing * 32, 64, facing * 32 + 32)), (x * T, y * T - 6))
+if GUIDE and '--hint' in args:
+    for i, g in enumerate(HINT):
+        if g: canvas.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
 LIT = opt('--lit', None)
 if LIT and LIT in PATHS:
     for (x, y) in PATHS[LIT]: canvas.alpha_composite(tile_img(gid('glow', 0, 0)), (x * T, y * T))
