@@ -24,6 +24,8 @@ import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
 import { closeRead, closeSay } from '@/lib/close/chat'
+import { LOOK_RESOURCE, LOOK_TOOLS, answerLook, askLook, confirmRemove, readLookResource, showLook, type AppResult }
+  from '@/lib/board/look-app/look'
 import { isText, listLiveFiles, livePathError, liveUrl, putLiveFile, readLiveFile, removeLiveFile, revertLiveFile, type PutResult } from '@/lib/live/store'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
@@ -36,7 +38,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.6.0'
+const SERVER_VERSION = '1.7.0'
 const MAX_LIVE_FILES = 50
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -502,6 +504,7 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true },
   },
+  ...LOOK_TOOLS,
 ]
 
 function refused(req: NextRequest): NextResponse | null {
@@ -950,11 +953,25 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
 }
 
 /**
+ * The look card's tools and the confirm before remove_live_file (src/lib/board/look-app/look.ts). They answer whole
+ * results: structuredContent and _meta for the card, or a 2026-07-28 input_required result for an elicitation.
+ * The request state is signed with the council key, which refused() has already checked is set.
+ */
+async function lookTool(name: string, args: Record<string, unknown>, params: Record<string, unknown>): Promise<AppResult | null> {
+  const secret = process.env.COUNCIL_MENU_TOKEN ?? ''
+  if (name === 'show_look') return showLook(args)
+  if (name === 'answer_look') return answerLook(args)
+  if (name === 'ask_look') return askLook(args, params, secret)
+  if (name === 'remove_live_file') return confirmRemove(args, params, secret)
+  return null
+}
+
+/**
  * @route POST /api/mcp
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
  *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
- *   close_read, close_say, whoami, the live game files (put_live_files, read_live_file,
+ *   close_read, close_say, whoami, the look card (show_look, answer_look, ask_look; resources/read draws it), the live game files (put_live_files, read_live_file,
  *   list_live_files, revert_live_file, remove_live_file), and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,
  *   asset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
@@ -992,7 +1009,7 @@ export async function POST(req: NextRequest) {
       const protocolVersion = PROTOCOL_VERSIONS.includes(asked) ? asked : PROTOCOL_VERSIONS[0]
       return rpcResult(id, {
         protocolVersion,
-        capabilities: { tools: { listChanged: false } },
+        capabilities: { tools: { listChanged: false }, resources: { listChanged: false } },
         serverInfo: { name: SERVER_NAME, title: 'Council Board', version: SERVER_VERSION },
         instructions: 'The Council Board on bars-engine. Store a picture with put_picture, post a question, position, '
           + 'term, cause or battle with post_rows, and see one back with read_picture. Every row carries its pass and a '
@@ -1008,6 +1025,15 @@ export async function POST(req: NextRequest) {
       return rpcResult(id, {})
     case 'tools/list':
       return rpcResult(id, { tools: TOOLS })
+    // The look card's page (MCP Apps): one ui:// resource, drawn by claude.ai beside show_look's answer.
+    case 'resources/list':
+      return rpcResult(id, { resources: [LOOK_RESOURCE] })
+    case 'resources/templates/list':
+      return rpcResult(id, { resourceTemplates: [] })
+    case 'resources/read': {
+      const read = readLookResource(typeof params.uri === 'string' ? params.uri : '')
+      return read ? rpcResult(id, read) : rpcError(id, -32602, `Resource not found: ${String(params.uri ?? '(none)')}`)
+    }
     case 'tools/call': {
       const rawName = params.name
       const name = typeof rawName === 'string' ? rawName : ''
@@ -1015,6 +1041,8 @@ export async function POST(req: NextRequest) {
         ? (params.arguments as Record<string, unknown>)
         : {}
       if (!name) return rpcError(id, -32602, 'tools/call needs the tool name')
+      const look = await lookTool(name, args, params)
+      if (look) return rpcResult(id, look)
       const result = await callTool(name, args)
       return rpcResult(id, { content: result.content, isError: result.isError })
     }
