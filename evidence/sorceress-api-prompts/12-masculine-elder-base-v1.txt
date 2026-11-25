@@ -1,0 +1,30 @@
+A game-ready character sprite sheet on a 3x4 grid filling the ENTIRE canvas edge to edge. Each of the 12 cells contains one identical character.
+
+LAYOUT (strict):
+- Row 1: character facing DOWN, toward the viewer.
+- Row 2: facing LEFT (full profile).
+- Row 3: facing RIGHT (full profile, mirrored pose of row 2).
+- Row 4: facing UP (back of head visible, no face).
+- Within each row, 3 poses left to right: left foot stepping forward, idle standing in place, right foot stepping forward. The middle pose of every row is the same standing idle. Walk poses are small leg shifts only.
+- The grid has NO borders, NO cell outlines, NO gaps between cells: the sheet reads as one uniform checkerboard of 12 character frames.
+
+CHARACTER: elder masculine figure, tan skin, visibly aged, wearing a plain charcoal under-tunic and simple dark trousers, bare feet.
+POSTURE (strict): slightly STOOPED — shoulders rounded forward, upper back gently curved, the head carried a little forward and lower than an upright build. In every cell the top of the head sits noticeably lower in the frame than in the reference sheet, with more empty space above the head. The stoop must read in all four facings: in the front row the shoulders slope upward toward the neck; in the profiles the upper back curves and the head leans forward; in the back view the shoulders hunch. NOT deeply bent — a gentle dignified stoop.
+
+PROPORTIONS (strict): reduced mass compared to the middle-aged reference build — narrower shoulders, thinner arms, thinner legs, a slightly shrunken chest. Head is about one quarter of the body height. All build differences live only below the neck: the head itself is unchanged.
+
+HEAD (strict): The head is COMPLETELY BALD — no hair, no topknot, no bun, no stubble, no shadow shape suggesting hair. Smooth bare scalp in every frame including the back-facing row. The face has NO eyes and NO eyebrows: the eye area is blank smooth skin (eyes will be layered on top later). Clean-shaven: no mustache, no beard, no facial hair of any kind. Age shows ONLY in the body and posture, not in the face.
+
+SKIN TONE (strict): the tan skin is the same MUTED tan as the reference sheet — a dusty ochre around RGB (201,133,53). NOT bright orange, NOT saturated, NOT golden-yellow. Match the reference's exact skin palette for the head, arms, and feet.
+
+FRAMING (strict):
+- The head starts a few pixels lower than the reference (because of the stoop) but the feet still touch the bottom edge of the cell in every frame.
+- Body width about 55% of the cell width at the chest.
+- The head stays the same size in all four facings; no perspective shrink.
+- Feet are planted at the same height in every frame; no bouncing, no vertical bob between poses.
+
+BACKGROUND: one single solid flat chroma-green color (#00b140) everywhere outside the character silhouettes — completely flat, no gradient, no vignette, no shadow, no floor line.
+
+STYLE: crisp retro pixel art, hard pixel edges, no anti-aliasing, no gradients, no outline glow, one small fixed palette of about 16 colors total, no drop shadows, no text, no grid lines, no watermarks.
+
+Use the attached reference sheet ONLY for art style, palette mood, skin tone, and rendering quality. IGNORE the reference character's upright posture and heavyset build — your character is a stooped, reduced-mass elder.
