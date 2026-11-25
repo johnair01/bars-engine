@@ -226,7 +226,7 @@ areas = [area(1, 'Dojo floor', 11, 4, 22, 13, 'practice-floor'), area(2, 'Stance
          area(6, 'Compound gate', GATE_X[0], H - 3, GATE_X[1] - GATE_X[0], 3, 'arrival')]
 layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail']),
           tl(3, 'collisions', L['collisions'], [{'name': 'collides', 'type': 'bool', 'value': True}], visible=False),
-          tl(4, 'floorLayer', L['floorLayer']), tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
+          {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
           tl(7, 'start', L['start'], visible=False),
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
