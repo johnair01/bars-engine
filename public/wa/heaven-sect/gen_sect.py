@@ -336,9 +336,7 @@ if GUIDE:
         HINT[I(HINT_AT[0] + k, HINT_AT[1])] = gid('hint', k, 0)
         if k == HINT_WT // 2: HINT[I(HINT_AT[0] + k, HINT_AT[1] + 1)] = gid('hint', 0, 1)
     tx, ty, tw, th = GUIDE['talk']
-    zones.append((GUIDE['label'], tx, ty, tw, th, {'role': GUIDE['id'], 'openWebsite': 'guide.html', 'openWebsiteAllowApi': True,
-                  'openWebsiteWidth': 40, 'openWebsiteTrigger': 'onaction',
-                  'openWebsiteTriggerMessage': 'Press SPACE to talk with the Gate Steward'}))
+    zones.append((GUIDE['label'], tx, ty, tw, th, {'role': GUIDE['id']}))
     must[GUIDE['label'] + ' (stand-at)'] = (gx0, gy0 + 1)
 
 # ---- the grove: a border of pine, bamboo and broad trees, open at the exits; garden pieces in the gaps ----
