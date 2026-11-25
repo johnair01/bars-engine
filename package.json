@@ -331,6 +331,7 @@
     "eslint-config-next": "16.1.5",
     "googleapis": "^171.4.0",
     "husky": "^9.1.7",
+    "inkjs": "^2.4.0",
     "pdf-lib": "^1.17.1",
     "pngjs": "^7.0.0",
     "prisma": "^5.22.0",

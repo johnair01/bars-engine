@@ -85,7 +85,9 @@ def plaque_img(text):
     return im, wt
 
 
-labels = [r['label'] for r in LEVEL['rooms']] + [e['label'] for e in LEVEL['exits']]
+GUIDE = LEVEL.get('guide')
+PATHS, pathlayers = {}, []
+labels = [r['label'] for r in LEVEL['rooms']] + [e['label'] for e in LEVEL['exits']] + ([GUIDE['label']] if GUIDE else [])
 pimgs = [plaque_img(t) for t in labels]
 cols = max(wt for _, wt in pimgs)
 sign_sheet = Image.new('RGBA', (cols * SP, len(pimgs) * SP), (0, 0, 0, 0))
@@ -96,6 +98,17 @@ sign_big = sign_sheet.resize((sign_sheet.width * K, sign_sheet.height * K), Imag
 sign_fn = f'tiles/{MAP}-signs.png'
 sign_big.save(os.path.join(OUT, sign_fn))
 add_sheet('signs', sign_big, sign_fn)
+
+# ---- the guide as a tile, and the lantern that lights a path to a hall ----
+if GUIDE:
+    wk = Image.open(os.path.join(HERE, GUIDE['sheet'])).convert('RGBA')
+    fx, fy = GUIDE['frame']
+    gt = wk.crop((fx * T, fy * T, fx * T + T, fy * T + T))
+    gt.save(os.path.join(OUT, 'tiles/guide.png')); add_sheet('guide', gt, 'tiles/guide.png')
+    glow = Image.new('RGBA', (T, T), (0, 0, 0, 0)); gd = ImageDraw.Draw(glow)
+    gd.ellipse([8, 8, 23, 23], fill=(42, 26, 16, 255)); gd.ellipse([10, 10, 21, 21], fill=(255, 190, 70, 255))
+    gd.ellipse([13, 13, 18, 18], fill=(255, 240, 200, 255))
+    glow.save(os.path.join(OUT, 'tiles/glow.png')); add_sheet('glow', glow, 'tiles/glow.png')
 
 
 def gid(sheet, x, y):
@@ -306,6 +319,16 @@ for e in LEVEL['exits']:
     must[f'exit to {e["label"]}'] = (x + w // 2, y + h // 2)
     zones.append((e['label'], x, y, w, h, {'exitUrl': e['exitUrl'], 'role': e['id']}))
 
+if GUIDE:
+    gx0, gy0 = GUIDE['at']
+    L['detail'][I(gx0, gy0)] = gid('guide', 0, 0); block(gx0, gy0); taken[I(gx0, gy0)] = True
+    put_plaque(GUIDE['label'], gx0 - 3, gy0 + 1)
+    tx, ty, tw, th = GUIDE['talk']
+    zones.append((GUIDE['label'], tx, ty, tw, th, {'role': GUIDE['id'], 'openWebsite': 'guide.html', 'openWebsiteAllowApi': True,
+                  'openWebsiteWidth': 40, 'openWebsiteTrigger': 'onaction',
+                  'openWebsiteTriggerMessage': 'Press SPACE to talk with the Gate Steward'}))
+    must[GUIDE['label'] + ' (stand-at)'] = (gx0, gy0 + 1)
+
 # ---- the grove: a border of pine, bamboo and broad trees, open at the exits; garden pieces in the gaps ----
 ring = []
 for x in range(0, W, 2): ring += [(x, 0), (x, H - 2)]
@@ -347,6 +370,56 @@ problems += [f'{k} {v} not reachable from the start' for k, v in must.items() if
 if problems:
     print('CHECK FAILED:'); [print(' -', p) for p in problems]; sys.exit(1)
 
+# ---- the guide's paths: one hidden layer per hall, a line of lanterns from the Steward to that hall's door ----
+import heapq
+PATHS = {}      # hall id -> [(x, y), ...]
+HALLS = {}      # hall id -> {label, layer, to: [px, py]}
+
+
+def lantern_route(src, dst):
+    """Cheapest walk src -> dst on free squares, charging for each turn so lanterns run in straight lines."""
+    best = {}; pq = [(0, src[0], src[1], -1, None)]; prev = {}
+    while pq:
+        c, x, y, d, pr = heapq.heappop(pq)
+        if (x, y, d) in best: continue
+        best[(x, y, d)] = c; prev[(x, y, d)] = pr
+        if (x, y) == dst:
+            out, k = [], (x, y, d)
+            while k: out.append(k[:2]); k = prev[k]
+            return out[::-1]
+        for nd, (dx, dy) in enumerate(((1, 0), (-1, 0), (0, 1), (0, -1))):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < W and 0 <= ny < H and not blocked(nx, ny):
+                heapq.heappush(pq, (c + 1 + (3 if d not in (-1, nd) else 0), nx, ny, nd, (x, y, d)))
+    return None
+
+
+if GUIDE:
+    here_sq = (GUIDE['at'][0], GUIDE['at'][1] + 1)
+    for r in LEVEL['rooms']:
+        door = must.get(f'{r["label"]} door (S)')
+        HALLS[r['id']] = {'label': r['label'], 'layer': f'path-{r["id"]}', 'to': None}
+        if r['kind'] == 'court':
+            HALLS[r['id']]['to'] = [here_sq[0] * T + T // 2, here_sq[1] * T + T // 2]
+            continue
+        if not door: problems.append(f'{r["label"]} has no south door for the guide to walk to'); continue
+        route = lantern_route(here_sq, door)
+        if not route: problems.append(f'no walk from the Gate Steward to {r["label"]}'); continue
+        PATHS[r['id']] = route[1:]
+        HALLS[r['id']]['to'] = [door[0] * T + T // 2, door[1] * T + T // 2]
+    ink = open(os.path.join(HERE, 'guide.ink')).read()
+    for r in LEVEL['rooms']:
+        knot = 'hall_' + r['id'].replace('-', '_')
+        if f'=== {knot} ===' not in ink: problems.append(f'guide.ink has no knot {knot} for {r["label"]}')
+        if r['kind'] != 'court' and f'# path: {r["id"]}' not in ink: problems.append(f'guide.ink knot {knot} lacks "# path: {r["id"]}"')
+    if problems:
+        print('CHECK FAILED:'); [print(' -', p) for p in problems]; sys.exit(1)
+    pathlayers = []
+    for k, (hid, route) in enumerate(PATHS.items()):
+        data = [0] * N
+        for (x, y) in route: data[I(x, y)] = gid('glow', 0, 0)
+        pathlayers.append(data)
+
 # ---- write the map ----
 def tl(i, name, data, props=None, visible=True):
     l = {'id': i, 'name': name, 'type': 'tilelayer', 'x': 0, 'y': 0, 'width': W, 'height': H, 'opacity': 1, 'visible': visible, 'data': data}
@@ -361,18 +434,25 @@ def prop(k, v):
 
 areas = [{'id': i + 1, 'name': name, 'type': 'area', 'x': x * T, 'y': y * T, 'width': w * T, 'height': h * T, 'rotation': 0,
           'visible': True, 'properties': [prop(k, v) for k, v in p.items()]} for i, (name, x, y, w, h, p) in enumerate(zones)]
-layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail']),
+layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail'])] + [tl(10 + k, f'path-{hid}', pathlayers[k], visible=False) for k, hid in enumerate(PATHS)] + [
           tl(3, 'collisions', L['collisions'], [prop('collides', True)], visible=False),
           {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
           tl(7, 'start', L['start'], visible=False),
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
-       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 9,
+       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 10 + len(PATHS),
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [prop('mapName', LEVEL['title']),
                       prop('mapDescription', 'The Heaven Sect, first 2D map: labelled meeting rooms and doors to other maps. Art: Ninja Adventure Asset Pack (Pixel-boy and AAA), CC0.'),
                       prop('generator', f'gen_sect.py --level levels/{MAP}.json --seed {SEED}')]}
 json.dump(tmj, open(os.path.join(OUT, f'{MAP}.tmj'), 'w'), separators=(',', ':'))
+if GUIDE:
+    json.dump({'guide': GUIDE['label'], 'halls': HALLS}, open(os.path.join(OUT, 'guide-halls.json'), 'w'), indent=1)
+    import subprocess, shutil
+    if OUT != HERE: shutil.copy(os.path.join(HERE, 'guide.html'), os.path.join(OUT, 'guide.html'))
+    r = subprocess.run(['node', os.path.join(HERE, 'compile_ink.mjs'), OUT], capture_output=True, text=True)
+    print(r.stdout.strip() or r.stderr.strip())
+    if r.returncode: sys.exit('CHECK FAILED: guide.ink did not compile (run npm install at the repo root for inkjs)')
 
 
 # ---- render ----
@@ -393,6 +473,9 @@ for rid, pts in seats_at.items():           # a few students sitting, so a seat 
     for (x, y) in pts[: (3 if rid == 'founders-hall' else 2)]: walkers.append((x, y, 3))
 for (x, y, facing) in walkers:
     canvas.alpha_composite(monk.crop((32, facing * 32, 64, facing * 32 + 32)), (x * T, y * T - 6))
+LIT = opt('--lit', None)
+if LIT and LIT in PATHS:
+    for (x, y) in PATHS[LIT]: canvas.alpha_composite(tile_img(gid('glow', 0, 0)), (x * T, y * T))
 for name in ('over1', 'over2'):
     for i, g in enumerate(L[name]):
         if g: canvas.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
