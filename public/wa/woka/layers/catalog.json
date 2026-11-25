@@ -43,11 +43,58 @@
         "tone": "olive"
       },
       {
+        "id": "wa:body:feminine-tan",
+        "name": "Feminine · Hero · Tan (Sorceress)",
+        "path": "/wa/woka/sorceress/base-feminine-hero-tan.png",
+        "part": "body",
+        "tone": "tan",
+        "presentation": "feminine",
+        "ageBuild": "hero"
+      },
+      {
+        "id": "wa:body:feminine-young-tan",
+        "name": "Feminine · Young · Tan (Sorceress)",
+        "path": "/wa/woka/sorceress/base-feminine-young-tan.png",
+        "part": "body",
+        "tone": "tan",
+        "presentation": "feminine",
+        "ageBuild": "young"
+      },
+      {
+        "id": "wa:body:masculine-elder-tan",
+        "name": "Masculine · Elder · Tan (Sorceress)",
+        "path": "/wa/woka/sorceress/base-masculine-elder-tan.png",
+        "part": "body",
+        "tone": "tan",
+        "presentation": "masculine",
+        "ageBuild": "elder"
+      },
+      {
+        "id": "wa:body:masculine-older-tan",
+        "name": "Masculine · Older · Tan (Sorceress)",
+        "path": "/wa/woka/sorceress/base-masculine-older-tan.png",
+        "part": "body",
+        "tone": "tan",
+        "presentation": "masculine",
+        "ageBuild": "older"
+      },
+      {
         "id": "wa:body:masculine-tan",
-        "name": "Tan · Sorceress",
+        "name": "Masculine · Hero · Tan (Sorceress)",
         "path": "/wa/woka/sorceress/base-masculine-tan.png",
         "part": "body",
-        "tone": "tan"
+        "tone": "tan",
+        "presentation": "masculine",
+        "ageBuild": "hero"
+      },
+      {
+        "id": "wa:body:masculine-young-tan",
+        "name": "Masculine · Young · Tan (Sorceress)",
+        "path": "/wa/woka/sorceress/base-masculine-young-tan.png",
+        "part": "body",
+        "tone": "tan",
+        "presentation": "masculine",
+        "ageBuild": "young"
       }
     ],
     "eyes": [

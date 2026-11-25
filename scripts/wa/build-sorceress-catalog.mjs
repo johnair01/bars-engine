@@ -65,8 +65,36 @@ async function main() {
     id, name, path: `/wa/woka/sorceress/${file}`, part, ...extra,
   })
 
+  // Bodies: sweep every gated base sheet. Filename discipline (mission 7):
+  //   base-<presentation>-<ageBuild>-<skin>.png; the pilot's base-masculine-tan
+  //   is the hero build (age token omitted) and keeps its original id.
+  const AGES = ['young', 'hero', 'older', 'elder']
+  const PRESENTATIONS = ['masculine', 'feminine', 'androgynous']
+  const capitalise = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+  const baseEntries = fs.readdirSync(SORC)
+    .filter((f) => /^base-.*\.png$/.test(f))
+    .map((file) => {
+      const m = /^base-([a-z0-9-]+?)-([a-z0-9-]+?)(?:-([a-z0-9-]+))?\.png$/.exec(file)
+      if (!m) return null
+      let presentation, ageBuild, skin
+      if (PRESENTATIONS.includes(m[1]) && AGES.includes(m[2]) && m[3]) {
+        ;[presentation, ageBuild, skin] = [m[1], m[2], m[3]]
+      } else if (PRESENTATIONS.includes(m[1]) && AGES.includes(m[2]) && !m[3]) {
+        ;[presentation, ageBuild, skin] = [m[1], m[2], 'tan'] // unskinned hero
+      } else {
+        ;[presentation, ageBuild, skin] = [m[1], 'hero', m[2]] // pilot naming
+      }
+      const id = ageBuild === 'hero'
+        ? `wa:body:${presentation}-${skin}`
+        : `wa:body:${presentation}-${ageBuild}-${skin}`
+      return entry(id, `${capitalise(presentation)} · ${capitalise(ageBuild)} · ${capitalise(skin)} (Sorceress)`, 'body', file, {
+        tone: skin, presentation, ageBuild,
+      })
+    })
+    .filter(Boolean)
+
   const additions = [
-    entry('wa:body:masculine-tan', 'Tan · Sorceress', 'body', 'base-masculine-tan.png', { tone: 'tan' }),
+    ...baseEntries,
     ...HAIR_COLORS.map(([slug, name]) =>
       entry(`wa:hair:topknot-${slug}`, name, 'hair', `hair-topknot-${slug}.png`)),
     entry('wa:clothes:argyra:ceremonial', 'Argyra · Ceremonial Robe', 'clothes', 'robe-argyra-ceremonial.png', { nationKey: 'argyra' }),
