@@ -67,6 +67,21 @@ function absolute(pathOrUrl: string, publicUrl: string): string {
   return `${publicUrl.replace(/\/+$/, '')}/${pathOrUrl.replace(/^\/+/, '')}`
 }
 
+/**
+ * The one whole-character choice the picker offers (Wendell, 2026-11-25: "the artifacts from the other WOKA need to
+ * go so we're only building from parts that actually work"). It is not a sheet of its own: it stands for the tan
+ * Argyran body in the ceremonial robe, so choosing it is the same as building that look from the parts.
+ */
+export const ARGYRAN_DEFAULT_LOOK = {
+  id: 'wa:look:argyran-sorceress',
+  name: 'Argyran Sorceress',
+  layerIds: ['wa:body:masculine-tan', 'wa:clothes:argyra:ceremonial'],
+} as const
+
+export function isArgyranDefaultLook(id: string): boolean {
+  return id === ARGYRAN_DEFAULT_LOOK.id
+}
+
 export function wokaListFromCatalog(
   catalog: WokaCatalog,
   publicUrl: string,
@@ -80,17 +95,25 @@ export function wokaListFromCatalog(
   // pusher zod schema (wokaList = z.record(wokaPartType)).
   const tall = frameHeight !== 32
   const withFh = (p: string) => (tall ? p.replace('/woka/sheets/', '/woka/sheets-tall/') : p) + (tall ? `?fh=${frameHeight}` : '')
+  const [bodyId, clothesId] = ARGYRAN_DEFAULT_LOOK.layerIds
+  const defaultLookUrl =
+    `${absolute('/api/woka/compose', publicUrl)}?body=${encodeURIComponent(bodyId)}` +
+    `&clothes=${encodeURIComponent(clothesId)}${tall ? `&fh=${frameHeight}` : ''}`
   const list: WokaList = {
     woka: {
       required: true,
       collections: [
         {
-          name: catalog.collection,
-          textures: catalog.textures.map((texture) => ({
-            id: texture.id,
-            name: texture.name,
-            url: withFh(absolute(texture.path, publicUrl)),
-          })),
+          name: layers ? 'Argyra' : catalog.collection,
+          // With the layer catalog present the picker offers one whole look, the Argyran sorceress, and the parts.
+          // Without it (older callers and tests) the preset sheets are still listed.
+          textures: layers
+            ? [{ id: ARGYRAN_DEFAULT_LOOK.id, name: ARGYRAN_DEFAULT_LOOK.name, url: defaultLookUrl }]
+            : catalog.textures.map((texture) => ({
+                id: texture.id,
+                name: texture.name,
+                url: withFh(absolute(texture.path, publicUrl)),
+              })),
         },
       ],
     },
@@ -168,6 +191,10 @@ export function resolveRequestedCharacter(
   layers: WokaLayerCatalog,
   ids: string[],
 ): { textures: Array<WokaTexture | WokaLayerTexture>; valid: boolean } {
+  if (ids.some(isArgyranDefaultLook)) {
+    const textures = layerTexturesForIds(layers, [...ARGYRAN_DEFAULT_LOOK.layerIds])
+    return { textures: textures ?? [], valid: Boolean(textures) }
+  }
   const hasLayerId = ids.some((id) => Boolean(findLayerTexture(layers, id)))
   if (hasLayerId) {
     const textures = layerTexturesForIds(layers, ids)
