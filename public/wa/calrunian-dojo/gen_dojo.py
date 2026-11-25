@@ -1,5 +1,5 @@
 """Generate the Calrunian Dojo map for the WorkAdventure world from the design language.
-usage: python3 gen_dojo.py [--seed N] [--out DIR]
+usage: python3 gen_dojo.py [--seed N] [--out DIR] [--lit 1,3]   (--lit only changes render.png)
 Reads dojo-language.json (named pieces, fills and walkable-scale rules) and writes, into DIR (default: here):
   tiles/*.png        each source sheet drawn up to 32 px tiles (nearest neighbour)
   calrunian-dojo.tmj one orthogonal 32 px map: ground, detail, collisions, floorLayer, over1, over2, start, areas
@@ -76,7 +76,7 @@ def lit_banner(tile):
         for x in range(tile.width):
             if px[x, y][3]: continue
             near = [(x + dx, y + dy) for dx in (-2, -1, 0, 1, 2) for dy in (-2, -1, 0, 1, 2) if 0 <= x + dx < tile.width and 0 <= y + dy < tile.height]
-            if any(px[a, b][3] for a, b in near): o[x, y] = GOLD + (90,)
+            if any(px[a, b][3] for a, b in near): o[x, y] = GOLD + (190,)
     for y in range(tile.height):
         for x in range(tile.width):
             r, g, b, a = px[x, y]
@@ -92,7 +92,7 @@ pool = Image.new('RGBA', (T, T), (0, 0, 0, 0)); pp = pool.load()
 for y in range(T):
     for x in range(T):
         dd = ((x - T / 2) ** 2 + ((y - T / 2) * 1.5) ** 2) ** 0.5
-        if dd < T * 0.47: pp[x, y] = GOLD + (int(120 * (1 - dd / (T * 0.47))) + 30,)
+        if dd < T * 0.47: pp[x, y] = GOLD + (int(170 * (1 - dd / (T * 0.47))) + 70,)
 lit_im.alpha_composite(pool, (6 * T, 0))
 lit_im.save(os.path.join(OUT, 'tiles/lit.png'))
 tilesets.append({'firstgid': firstgid, 'name': 'lit', 'image': 'tiles/lit.png', 'imagewidth': LITCOLS * T, 'imageheight': 2 * T,
@@ -337,6 +337,10 @@ canvas = Image.new('RGBA', (W * T, H * T), (20, 14, 11, 255))
 for name in ('ground', 'detail'):
     for i, g in enumerate(L[name]):
         if g: t = tile_img(g); canvas.alpha_composite(t, ((i % W) * T, (i // W) * T))
+if '--lit' in args:   # picture only: show these banners lit, as a player who stood under them would see them
+    for k in args[args.index('--lit') + 1].split(','):
+        for i, g in enumerate(LIT[int(k)]):
+            if g: canvas.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
 walker = monk.crop((32, 96, 64, 128))       # the monk student, facing north into the compound
 canvas.alpha_composite(walker, (21 * T + 16, (H - 4) * T))
 for name in ('over1', 'over2'):
