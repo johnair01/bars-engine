@@ -24,7 +24,7 @@ which compiles the ink with inkjs 2.4.0 (MIT, a devDependency) to `guide.json` a
 it. It also writes `guide-halls.json` (each hall's path layer and the pixel square its door opens on) and one hidden
 tile layer per hall, `path-<id>`, a line of lanterns from the Steward to that door.
 
-Standing in the Steward's area and pressing space opens `guide.html` beside the map. Picking a hall shows its
+Standing in the Steward's area and pressing space opens `guide.html` as a sheet over the bottom of the game screen (`WA.ui.website.open` in `guide.js`, 46vh tall, full width); leaving her area or pressing the close button shuts it. On a 390 px phone the four choices stack and fit above the fold. Picking a hall shows its
 `path-<id>` layer and, if the box's WorkAdventure has `WA.player.moveTo`, walks the player there. `guide_visits` and
 `guide_last_hall` are saved with `WA.player.state`, so a returning player is greeted by name of the last hall. Her
 figure is the `pyrakanth/still-point` Woka frame drawn as a tile. `python3 gen_sect.py --lit <hall id>` draws one
