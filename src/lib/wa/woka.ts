@@ -97,12 +97,16 @@ export function wokaListFromCatalog(
   }
   if (layers) {
     for (const part of WOKA_LAYER_ORDER) {
+      // Wendell, 2026-11-25: "show just the argyran parts". Only the sorceress parts are built to work with the
+      // tall cell, so the picker offers those and leaves out a part type that has none (eyes, hat).
+      const textures = layers.parts[part].filter(isArgyranPart)
+      if (textures.length === 0) continue
       list[part] = {
         required: part === 'body',
         collections: [
           {
             name: `${catalog.collection} · ${part}`,
-            textures: layers.parts[part].map((texture) => ({
+            textures: textures.map((texture) => ({
               id: texture.id,
               name: texture.name,
               url: withFh(absolute(texture.path, publicUrl)),
@@ -113,6 +117,11 @@ export function wokaListFromCatalog(
     }
   }
   return list
+}
+
+/** A layer part drawn for the tall Argyran sorceress. The files live in public/wa/woka/sorceress/. */
+export function isArgyranPart(texture: { path: string }): boolean {
+  return texture.path.includes('/woka/sorceress/')
 }
 
 export function textureId(nationKey: string, archetypeKey: string): string {

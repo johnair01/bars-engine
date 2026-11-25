@@ -34,15 +34,16 @@ describe('woka layer catalog', () => {
     }
   })
 
-  it('advertises all six parts plus the preset picker', () => {
+  it('offers only the Argyran sorceress parts in the picker', () => {
     const list = wokaListFromCatalog(presets, 'https://bars.test', layers)
-    expect(Object.keys(list)).toEqual(['woka', ...WOKA_LAYER_ORDER])
-    expect(list.woka.collections[0].textures.length).toBeGreaterThanOrEqual(40)
-    expect(list.body.collections[0].textures.length).toBeGreaterThanOrEqual(4)
-    expect(list.clothes.collections[0].textures.length).toBeGreaterThanOrEqual(40)
-    expect(list.clothes.collections[0].textures[0].url).toBe(
-      'https://bars.test/wa/woka/layers/clothes/argyra-bold-heart.png',
-    )
+    // Wendell, 2026-11-25: "show just the argyran parts". Eyes and hat have no sorceress art, so they are left out.
+    expect(Object.keys(list)).toEqual(['woka', 'body', 'hair', 'clothes', 'accessory'])
+    for (const part of ['body', 'hair', 'clothes', 'accessory'] as const) {
+      const textures = list[part]!.collections[0].textures
+      expect(textures.length, part).toBeGreaterThan(0)
+      for (const texture of textures) expect(texture.url, texture.id).toContain('/wa/woka/sorceress/')
+    }
+    expect(list.body.required).toBe(true)
   })
 
   it('seeds clothes, hat, and sash from nation x archetype', () => {
