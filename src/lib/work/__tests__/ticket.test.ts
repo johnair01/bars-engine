@@ -121,3 +121,29 @@ describe('ticketFromLever', () => {
     expect(t.brief).toContain("never gates the main card's merge")
   })
 })
+
+describe('ticketFromNotYet (a not yet on a look)', () => {
+  const now = new Date('2026-11-25T02:00:00Z')
+  const look = { do: 'Look at the seven givers', look: true, list: 'heaven-sect-givers', charge: 'fire',
+    note: 'We built these off the deprecated dusk figure', noteAt: '2026-11-25T01:00:00Z', done: true }
+  it('makes a Claude ticket that carries his note unaltered and the move his tap names', () => {
+    const t = ticketFromStep('council', 'steps', 'hsg-look-1', look, now)!
+    expect(t.lanes).toEqual(['claude'])
+    expect(t.sourceKey).toBe('council/steps/hsg-look-1@notyet:2026-11-25T01:00:00Z')
+    expect(t.brief).toContain('"We built these off the deprecated dusk figure"')
+    expect(t.brief).toContain('move is proof')
+    expect(t.brief).toContain('--strand heaven-sect-givers')
+    expect(t.basis).toMatchObject({ rows: ['hsg-look-1'], answer: 'notyet:fire' })
+  })
+  it('makes nothing for a stale note, a sealed yes, an earth tap, a step that is not a look, or no tap', () => {
+    expect(ticketFromStep('council', 'steps', 's', { ...look, noteAt: '2026-11-13T19:24:40Z' }, now)).toBeNull()
+    expect(ticketFromStep('council', 'steps', 's', { ...look, sealed: '2026-11-25T01:00:00Z' }, now)).toBeNull()
+    expect(ticketFromStep('council', 'steps', 's', { ...look, charge: 'earth' }, now)).toBeNull()
+    expect(ticketFromStep('council', 'steps', 's', { ...look, look: false }, now)).toBeNull()
+    expect(ticketFromStep('council', 'steps', 's', { ...look, charge: undefined }, now)).toBeNull()
+  })
+  it('still sends a card handed to a face as a grow ticket', () => {
+    const t = ticketFromStep('council', 'steps', 's', { ...look, grow: { face: 'Shaman', at: 'a' } }, now)!
+    expect(t.sourceKey).toBe('council/steps/s@grow:a')
+  })
+})
