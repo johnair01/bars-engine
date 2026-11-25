@@ -7,6 +7,7 @@
 import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
+import { logWaMiss, resolveWaPlayer } from '@/lib/wa/lookup'
 import { findLayerTexture, loadWokaLayerCatalog } from '@/lib/wa/layer-catalog'
 import {
   avatarConfigForLayers,
@@ -41,11 +42,15 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'userIdentifier and textures are required' }, { status: 400 })
   }
 
-  const player = await db.player.findUnique({
-    where: { id: userIdentifier },
-    select: { id: true, avatarConfig: true },
+  const select = { id: true, avatarConfig: true } as const
+  const { player } = await resolveWaPlayer(userIdentifier, {
+    byId: (id) => db.player.findUnique({ where: { id }, select }),
+    byEmail: (email) => db.player.findFirst({ where: { contactValue: email, contactType: 'email' }, select }),
   })
-  if (!player) return Response.json({ error: 'player not found' }, { status: 404 })
+  if (!player) {
+    logWaMiss('save-textures', userIdentifier)
+    return Response.json({ error: 'player not found' }, { status: 404 })
+  }
 
   const catalog = loadWokaCatalog()
   const layers = loadWokaLayerCatalog()

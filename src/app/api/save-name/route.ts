@@ -5,6 +5,7 @@
 import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { adminApiAuthorized, adminApiErrorResponse } from '@/lib/wa/admin-auth'
+import { logWaMiss, resolveWaPlayer } from '@/lib/wa/lookup'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -36,8 +37,15 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'name is longer than 50 characters' }, { status: 400 })
   }
 
-  const player = await db.player.findUnique({ where: { id: userIdentifier }, select: { id: true } })
-  if (!player) return Response.json({ error: 'player not found' }, { status: 404 })
+  const select = { id: true } as const
+  const { player } = await resolveWaPlayer(userIdentifier, {
+    byId: (id) => db.player.findUnique({ where: { id }, select }),
+    byEmail: (email) => db.player.findFirst({ where: { contactValue: email, contactType: 'email' }, select }),
+  })
+  if (!player) {
+    logWaMiss('save-name', userIdentifier)
+    return Response.json({ error: 'player not found' }, { status: 404 })
+  }
 
   await db.player.update({ where: { id: player.id }, data: { name } })
   return new Response(null, { status: 204 })
