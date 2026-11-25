@@ -2,7 +2,7 @@
 
 - [ ] Log `userIdentifier` + lookup result on a `save-textures` miss; add the email fallback (FR1)
 - [ ] Capture the identifier WorkAdventure sends for the admin login (settles the 404)
-- [ ] Set `DISABLE_ANONYMOUS=true` on the box; verify login-first in a private window (FR2)
+- [ ] Find what the entry screen offers today (read-only); make it offer login plus "Continue as guest"; verify in a private window (FR2)
 - [ ] Post the five open questions to the Council Board
 - [ ] `lookOverride` field, migration, `room/access` read (FR3)
 - [ ] `save-textures` writes `lookOverride` only (FR4)

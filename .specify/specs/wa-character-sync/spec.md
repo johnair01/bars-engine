@@ -16,7 +16,7 @@ questions are in "Open questions" and go to the Council Board).
 
 | Fact | Evidence |
 |------|----------|
-| Anonymous entry is on | play container env `DISABLE_ANONYMOUS=false`; a guest reached the dojo with no login. `docs/WA_IDENTITY_AND_ASSETS.md` (PR 991) says it should be `true`. |
+| Anonymous entry is on | play container env `DISABLE_ANONYMOUS=false`; a guest reached the dojo with no login or guest-choice screen shown. `docs/WA_IDENTITY_AND_ASSETS.md` (PR 991) says it should be `true`; Wendell (2026-11-25) wants a guest option kept, behind a login offer. |
 | Tall woka works for a guest | `argyra/bold-heart.png?fh=64` is 96x256 (3x4 cells of 32x64); the figure walks in the live world. |
 | Admin look fails to save | box log: three `404` from `https://bars-engine.vercel.app/api/save-textures`. In PR 991 the route's only 404 is `player not found` (lookup by `Player.id` only). |
 | Join resolves id or email, save does not | `/api/room/access` falls back to email; `/api/save-textures` does not. |
@@ -26,7 +26,7 @@ questions are in "Open questions" and go to the Council Board).
 
 | Topic | Decision |
 |-------|----------|
-| Entry | Login first. `DISABLE_ANONYMOUS=true` on the box; the world is reached only through bars-engine OIDC. |
+| Entry | A visitor is always offered bars-engine login first. "Continue as guest" is a choice on that screen, not a silent default. A guest keeps a default look and cannot save a character. Whether the box needs `DISABLE_ANONYMOUS` changed, or WorkAdventure's own login screen already offers both, is unproven (on 2026-11-24 a guest reached the world with no screen in my browser). |
 | Source of truth | `Player` in bars-engine. The character sheet there (nation, archetype, layers) changes only through bars-engine moves. |
 | Look in the world | Temporary cosmetic adjustment is allowed. It is stored apart from the sheet (a `lookOverride`), never written into the sheet fields, and can be cleared back to the sheet's own look. |
 | Creator | One. The bars-engine creator is the only place to make a character; the WorkAdventure picker only edits the cosmetic override (or is hidden). |
@@ -49,8 +49,8 @@ and `/api/woka/list`.
 
 ### P1: Enter as myself
 
-As a visitor, I am sent to sign in before the world loads, so I never walk in as a guest.
-**Acceptance**: a private window opening the world URL lands on the bars-engine login; no anonymous join.
+As a visitor, I am offered sign-in before the world loads, with "Continue as guest" as one option, so I never walk in as a guest without having been asked.
+**Acceptance**: a private window opening the world URL shows the login offer and a guest button; guest enters with a default look; login enters as my character.
 
 ### P1: Walk as my character
 
@@ -67,7 +67,7 @@ fields are unchanged.
 
 ### Phase 1: Make the failure visible
 - FR1: `save-textures` and `save-name` log identifier and lookup result; add the email fallback.
-- FR2: Set `DISABLE_ANONYMOUS=true` on the box (a box change; needs Wendell's go-ahead).
+- FR2: Make the entry screen offer login with a guest button. First find out what WorkAdventure's login screen already does with the current env (read-only), then change the box only if needed (needs Wendell's go-ahead).
 
 ### Phase 2: Adjustable look
 - FR3: Add `lookOverride` to the player data and read it in `room/access`.
@@ -100,6 +100,7 @@ Adds a nullable field for `lookOverride` on the player. Needs a committed migrat
 3. How long is "temporary": until the next bars-engine move, a day, or until cleared?
 4. What does an admin with no character see on first entry?
 5. Where does a person without an account go: sign-up in the same flow?
+6. What can a guest do (look at a default woka only, or a temporary cosmetic look too)?
 
 ## Verification Quest
 
