@@ -1,6 +1,6 @@
 /**
  * The Challenger's polarity deck: 4 quadrant pairs x 2 poles x 4 moves = 32 cards (BIPD FR-006, FR-007).
- * Only the Shielding pole is live for a new player; its four cards and Sparring Wake Up have wording. The Sparring pole opens beside it for a player whose kept acts
+ * Only the Shielding pole is live for a new player; all eight It cards (Shielding and Sparring) have wording. The Sparring pole opens beside it for a player whose kept acts
  * turn them (see standing.ts). A card is data; nothing here counts or deals.
  */
 
@@ -63,18 +63,30 @@ const SHIELDING_WORDING: Record<Move, CardWording> = {
   },
 }
 
-/** Only Sparring Wake Up is written so far; the other Sparring moves have a design thread of their own. */
-const SPARRING_WORDING: Partial<Record<Move, CardWording>> = {
+/** The partner set (Wendell, 2026-11-16, bar-decks-sparring-moves-1 = A). */
+const SPARRING_WORDING: Record<Move, CardWording> = {
   wakeUp: {
     prompt: 'Choose one skill you want to get better at. This week, find someone who does it well and ask them to push you on it.',
     redeem: 'Redeemed when you bring back a BAR of what they pushed on.',
+  },
+  cleanUp: {
+    prompt: 'The next time someone pushes back on you, wait one breath before you answer, and ask them to say more.',
+    redeem: 'Redeemed when you bring back a BAR of what they said once you let them finish.',
+  },
+  growUp: {
+    prompt: 'Pick the skill you are working on and set yourself a test you could fail this week. Tell one person, so they can hold you to it.',
+    redeem: 'Redeemed when you bring back a BAR of the result, pass or fail.',
+  },
+  showUp: {
+    prompt: 'Offer to push someone else on a skill they want to get better at, and do it fairly.',
+    redeem: 'Redeemed when you bring back a BAR of what you pushed on.',
   },
 }
 
 function wordingFor(quadrant: Quadrant, pole: string, move: Move): CardWording | null {
   if (quadrant !== 'It') return null
   if (pole === 'Shielding') return SHIELDING_WORDING[move]
-  if (pole === 'Sparring') return SPARRING_WORDING[move] ?? null
+  if (pole === 'Sparring') return SPARRING_WORDING[move]
   return null
 }
 
