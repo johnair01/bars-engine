@@ -322,7 +322,13 @@ export function avatarConfigForLayers(
   const clothes = textures.find((texture) => texture.part === 'clothes')
   const nationKey = existing?.nationKey || clothes?.nationKey || ''
   const archetypeKey = existing?.archetypeKey || clothes?.archetypeKey || ''
-  if (!nationKey || !archetypeKey) return null
+  if (!nationKey || !archetypeKey) {
+    // A player with no nation and archetype yet (a new account) still gets to dress the figure. The look is saved
+    // on its own as `waLayers`; the character sheet fields are left for bars-engine moves to set. Found on
+    // 2026-11-25: the Argyran robe has a nation but no archetype, so this used to answer 400.
+    delete raw.waWokaId
+    return JSON.stringify({ ...raw, waLayers: textures.map((texture) => texture.id) })
+  }
 
   const next: AvatarConfig = {
     nationKey,

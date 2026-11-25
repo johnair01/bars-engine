@@ -105,6 +105,17 @@ describe('layer persistence', () => {
     expect(resolveWokaLayersForPlayer(layers, config)?.map((texture) => texture.id)).toEqual(ids)
   })
 
+  it('saves a look for a player with no nation or archetype, without inventing a sheet', () => {
+    const ids = ['wa:body:masculine-tan', 'wa:clothes:argyra:ceremonial']
+    const config = avatarConfigForLayers(layers, ids, null)
+    expect(config).toBeTruthy()
+    const parsed = JSON.parse(config!)
+    expect(parsed.waLayers).toEqual(ids)
+    expect(parsed.nationKey).toBeUndefined()
+    expect(parsed.archetypeKey).toBeUndefined()
+    expect(resolveWokaLayersForPlayer(layers, config)?.map((texture) => texture.id)).toEqual(ids)
+  })
+
   it('a preset clears waLayers and keeps the default identity clean', () => {
     const config = avatarConfigForTexture(
       presets,
