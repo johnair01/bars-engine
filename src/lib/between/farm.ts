@@ -19,7 +19,7 @@ export const STARTING_MANA = 50
 
 export type Note = { on: string; line: string }
 /** A mark the game master set on a crop: the gift seen, then the book shipped (A3). `ref` is his own reference, so a mark lands once. */
-export type MarkKind = 'gift' | 'shipped'
+export type MarkKind = 'gift' | 'ripe' | 'shipped'
 export type Mark = { kind: MarkKind; ref: string; on: string }
 export type Plant = {
   barId: string; line: string; plantedAt: string; plantedOn: string
@@ -31,7 +31,8 @@ export type Plant = {
   marks?: Mark[]
 }
 export type Slot = { state: 'tilled' | 'planted' | 'weeded'; clearedAt: string; plant: Plant | null }
-export type Harvest = { fromBarId: string; line: string; notes: Note[]; pickedOn: string; vibeulon: 1; quests: string[] }
+/** `crop` and `marks` travel with a picked crop (H-harvest-crop), so its family and form survive and a later mark can still land on it. */
+export type Harvest = { fromBarId: string; line: string; notes: Note[]; pickedOn: string; vibeulon: 1; quests: string[]; crop?: Crop; marks?: Mark[] }
 export type Farm = { firstEntryAt: string | null; mana: number; slots: Record<string, Slot>; harvests: Harvest[] }
 export type Result = { farm: Farm; ok: boolean; why?: string; mint: number; harvest?: Harvest }
 
@@ -155,7 +156,7 @@ export function pick(farm: Farm, i: number, today: string): Result {
   if (!s0?.plant?.ripe) return fail(farm, 'Not full yet')
   const f = clone(farm)
   const p = s0.plant
-  const harvest: Harvest = { fromBarId: p.barId, line: p.line, notes: p.notes, pickedOn: today, vibeulon: 1, quests: [] }
+  const harvest: Harvest = { fromBarId: p.barId, line: p.line, notes: p.notes, pickedOn: today, vibeulon: 1, quests: [], ...(p.crop ? { crop: p.crop } : {}), ...(p.marks?.length ? { marks: p.marks } : {}) }
   f.slots[String(i)] = { ...f.slots[String(i)], state: 'tilled', plant: null }
   f.harvests.push(harvest)
   return { farm: f, ok: true, mint: 1, harvest }
@@ -165,7 +166,8 @@ const isRefStr = (r: unknown): r is string => typeof r === 'string' && r.length 
 
 /** The game master's gift mark planted a crop for this ref already. */
 const hasMark = (farm: Farm, kind: MarkKind, ref: string) =>
-  Object.values(farm.slots).some(s => s.plant?.marks?.some(m => m.kind === kind && m.ref === ref))
+  Object.values(farm.slots).some(s => s.plant?.marks?.some(m => m.kind === kind && m.ref === ref)) ||
+  farm.harvests.some(h => h.marks?.some(m => m.kind === kind && m.ref === ref))
 
 /**
  * The game master's mark plants a crop for a player who sent a gift (H-till-mana, H-marks). The mark tills the first
@@ -199,10 +201,43 @@ export function markShipped(farm: Farm, a: { barId: string; ref: string; today: 
   if (!isRefStr(a.ref)) return fail(farm, 'A reference')
   if (!okDate(a.today)) return fail(farm, 'No date')
   if (hasMark(farm, 'shipped', a.ref)) return { farm, ok: true, mint: 0 }
+  const mark: Mark = { kind: 'shipped', ref: a.ref, on: a.today }
+  const k = Object.keys(farm.slots).find(key => farm.slots[key].plant?.barId === a.barId)
+  if (k) {
+    const f = clone(farm)
+    const p = f.slots[k].plant!
+    p.marks = [...(p.marks ?? []), mark]
+    return { farm: f, ok: true, mint: 0 }
+  }
+  /* The crop was picked already (H-harvest-crop): its harvest keeps the marks, so the second mark lands there. */
+  const h = farm.harvests.findIndex(x => x.fromBarId === a.barId)
+  if (h < 0) return fail(farm, 'No crop with that BAR')
+  const f = clone(farm)
+  f.harvests[h].marks = [...(f.harvests[h].marks ?? []), mark]
+  return { farm: f, ok: true, mint: 0 }
+}
+
+/**
+ * The game master's mark ripens the crop (H-ripen-by-mark). The player says nothing: his mark is the sign that the gift
+ * is real, so the crop is full at once, with a note naming it and a ripe mark on it. The same ref twice changes nothing;
+ * a crop that is already full takes the mark and stays as it was.
+ */
+export function ripenByMark(farm: Farm, a: { barId: string; ref: string; today: string }): Result {
+  if (!isRefStr(a.ref)) return fail(farm, 'A reference')
+  if (!okDate(a.today)) return fail(farm, 'No date')
+  if (hasMark(farm, 'ripe', a.ref)) return { farm, ok: true, mint: 0 }
   const k = Object.keys(farm.slots).find(key => farm.slots[key].plant?.barId === a.barId)
   if (!k) return fail(farm, 'No crop with that BAR')
   const f = clone(farm)
   const p = f.slots[k].plant!
-  p.marks = [...(p.marks ?? []), { kind: 'shipped', ref: a.ref, on: a.today }]
+  if (f.slots[k].state === 'weeded') f.slots[k].state = 'planted'
+  if (!p.ripe) {
+    p.notes.push({ on: a.today, line: 'Marked by the game master' })
+    p.tendedDays = GROW_DAYS
+    p.ripe = true
+    p.lastTendedOn = a.today
+    p.untendedSince = null
+  }
+  p.marks = [...(p.marks ?? []), { kind: 'ripe', ref: a.ref, on: a.today }]
   return { farm: f, ok: true, mint: 0 }
 }
