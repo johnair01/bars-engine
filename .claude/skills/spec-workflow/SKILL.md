@@ -5,6 +5,11 @@ description: Spec-driven work in bars-engine. Use when writing or expanding a sp
 
 # Spec workflow in bars-engine
 
+> **Retiring (Wendell, 2026-11-25):** `npm run backlog:seed` and `BACKLOG.md` pre-date the API and MCP store. New
+> questions, positions and tickets go to the store (`board/post_rows.py` and the deck tickets in the council repo),
+> not to `BACKLOG.md`. Spec kits stay in `.specify/specs/`. Nothing is deleted yet; this note marks the route as
+> retiring until an owner removes it.
+
 Moved out of `CLAUDE.md` on 2026-11-05 (steer-slim change 4, Wendell's answer A on `sr-rules-to-principles`) so every
 session that attaches this repo opens smaller. The text below is as it stood in `CLAUDE.md`.
 
