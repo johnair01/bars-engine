@@ -28,7 +28,7 @@ import { parseTzOffset, ttvSessionDate, TTV_TZ_COOKIE } from '@/lib/tap-the-vein
 import { withTzOffset } from '@/lib/tap-the-vein/day-server'
 import { pullAllowedFor, pullOffers, reRankLocal } from '@/lib/tap-the-vein/pull'
 import { writePathTake } from '@/lib/tap-the-vein/path-take'
-import { TTV_FEELINGS, TTV_PATHS, TTV_PATH_SOURCES, pathLitBy } from '@/lib/tap-the-vein/paths'
+import { TTV_FEELINGS, TTV_PATHS, TTV_PATH_SOURCES, TTV_RELIED_SHOWN, pathLitBy, reliedLine } from '@/lib/tap-the-vein/paths'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
 /** The book keeps up to three lines (pass ttv-book1: "Keep up to three"). */
@@ -45,6 +45,14 @@ async function view(allowPull = false) {
     select: { id: true, status: true },
   })
   const status = new Map(rows.map((r) => [r.id, r.status]))
+  // The record he keeps (gp-voice-rules-1): his latest "Relied on" lines, any day, newest first, shown on the Regent's card.
+  const owner = await db.tapTheVeinDailySession.findUnique({ where: { id: today.sessionId }, select: { playerId: true } })
+  const relied = !owner ? [] : await db.tapTheVeinTask.findMany({
+    where: { playerId: owner.playerId, source: 'path-regent' },
+    orderBy: { createdAt: 'desc' },
+    take: TTV_RELIED_SHOWN,
+    select: { originalText: true },
+  })
   return {
     date: today.sessionDate,
     pulled: !!today.pulledAt,
@@ -58,6 +66,7 @@ async function view(allowPull = false) {
     triad: { experience: EXPERIENCE_OPTIONS, now: DISSATISFACTION_OPTIONS, want: SATISFACTION_OPTIONS },
     feelings: TTV_FEELINGS,
     paths: TTV_PATHS.map((p) => ({ face: p.face, lights: p.lights, move: p.move, prompt: p.prompt })),
+    relied: relied.map((r) => reliedLine(r.originalText)),
   }
 }
 
