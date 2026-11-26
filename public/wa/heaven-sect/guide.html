@@ -16,6 +16,8 @@ button:hover,button:focus-visible{border-color:#ffbe46;outline:none}
 .ov button{margin:0;min-height:46px}
 .ov #x{display:block;position:absolute;top:.5rem;right:.6rem;width:44px;min-height:44px;margin:0;padding:0;text-align:center;font-size:1.4rem;border:none;background:none;color:#b9a98c}
 .ov small{margin-top:.6rem}
+/* a phone held upright: two columns of 44px choices and no footer, so every choice shows without scrolling */
+@media (max-width:520px){.ov main{padding:.8rem 1rem .9rem;font-size:16px}.ov p{margin:0 0 .4rem;line-height:1.35;font-size:15.5px}.ov .choices{grid-template-columns:1fr 1fr;gap:.4rem}.ov button{min-height:44px;padding:.45rem .6rem;line-height:1.25}.ov small{display:none}}
 </style><main id="m"></main>
 <!-- Inside WorkAdventure this page is opened from the Gate Steward's area (openWebsiteAllowApi) and loads the iframe
      API from the world's own host; opened on its own, a query string stands in (?visits=1&last=the+Dojo&pick=1,0). -->

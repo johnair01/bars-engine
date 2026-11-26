@@ -8,7 +8,7 @@ VAR last_hall = ""
 === start ===
 # title: The Gate Steward
 { visits == 0:
-  Welcome to the Heaven Sect. I am the Steward of this gate. Most people who come in through the torii want to know where to put their feet first.
+  Welcome to the Heaven Sect. I keep this gate. Ask me anything, or walk on; every hall is open to you either way.
 - else:
   You are back.{ last_hall != "": Last time I sent you to {last_hall}.} Do you want the halls again, or are you walking on your own?
 }
@@ -28,26 +28,32 @@ This is the Gate Court, the paved square inside the torii. The two lanes run nor
 
 === halls ===
 # title: The Gate Steward
-Eleven places. Choose one and I will light the way, and walk you there if your window lets me.
+Choose a place and I will light the way, and walk you there if your window lets me.
 + [The Altar] -> hall_altar
 + [Founder's Hall] -> hall_founders_hall
++ [The six Elders' halls] -> elder_halls
++ [The Dojo] -> hall_dojo
++ [The Tea Library] -> hall_tea_library
++ [The Gate Court] -> hall_gate_court
++ [Back] -> menu
+
+=== elder_halls ===
+# title: The Gate Steward
+Each Elder keeps a hall along the two lanes. Choose one and I will light the way.
 + [The Shaman Elder] -> hall_elder_shaman
 + [The Architect Elder] -> hall_elder_architect
 + [The Challenger Elder] -> hall_elder_challenger
 + [The Regent Elder] -> hall_elder_regent
 + [The Diplomat Elder] -> hall_elder_diplomat
 + [The Sage Elder] -> hall_elder_sage
-+ [The Dojo] -> hall_dojo
-+ [The Tea Library] -> hall_tea_library
-+ [The Gate Court] -> hall_gate_court
-+ [Back] -> menu
++ [Back] -> halls
 
 === elders ===
 # title: The Gate Steward
-Six Elders, one for each face of the Game Master. Each keeps a hall with six seats around a table, and each asks one question of whatever you bring.
+Six Elders, one for each face of the Game Master. Each asks one question of whatever you bring.
 The Shaman Elder asks what is moving underneath. The Architect Elder asks what must be true in the machine. The Challenger Elder asks what breaks, and what you broke yourself.
 The Regent Elder asks what you owe, and what ships when. The Diplomat Elder asks who is left out, and what the community will accept. The Sage Elder asks what the smallest whole is.
-+ [Show me the halls] -> halls
++ [Show me their halls] -> elder_halls
 + [Back] -> menu
 
 === hall_altar ===
