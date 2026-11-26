@@ -1,0 +1,9 @@
+Using the attached sprite sheet as an exact template, produce an overlay sheet with the identical 3x4 grid filling the entire canvas edge to edge: 12 cells, identical poses in every cell, matching the template row for row (row 1 down, row 2 left, row 3 right, row 4 up; middle pose of each row is the standing idle).
+
+Draw ONLY the clothing: replacing the template's under-tunic and trousers in all 12 frames, matching each frame's facing and pose exactly.
+
+DESIGN — nation-neutral traveling robe (feminine cut): a road-worthy layered wrap robe in muted charcoal-gray, cut to follow the character's shape — a cloth sash cinched at the waist over a skirt that flares over the wide hips and falls in practical folds to just above the ankles, so the feet and lower legs stay fully visible in every frame. Wide sleeves pushed up to the forearm. NO HOOD anywhere: a plain standing collar ends at the neck, the upper back and shoulders show plain fabric, and the entire head area stays the same solid flat chroma-green (#00b140) in every frame so the character's own bare head shows. The waist stays cinched and the hip flare stays obvious in every frame (do NOT straighten the drape into a column). The cut is plain — no sigils, no embroidery — so any nation color can be applied to it later.
+
+Everything else must be the same solid flat chroma-green (#00b140): no skin, no face, no hair, no bare body below the neck, no background detail, no shadow. The robe must sit exactly on the template silhouette — same head position, same feet position, no shifting, resizing, or re-posing. Feet stay visible below the hem in every frame.
+
+Style: crisp retro pixel art, hard pixel edges, no anti-aliasing, one small palette of about 12 colors anchored to muted gray tones, solid flat chroma-green (#00b140) background, no text, no grid lines, no watermarks.

@@ -11,7 +11,7 @@
  *   node scripts/wa/sorceress-api.mjs poll <jobId>          # 0 credits
  *   node scripts/wa/sorceress-api.mjs download <url> <out>  # 0 credits
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 
 const args = process.argv.slice(2)
@@ -23,11 +23,20 @@ function loadKey() {
   if (process.env.SORCERESS_API_KEY) return process.env.SORCERESS_API_KEY
   const userFile = `${homedir()}/.sorceress-api-key`
   if (existsSync(userFile)) return readFileSync(userFile, 'utf8').trim()
-  const secretBin = `${homedir()}/.deepai-code/userdata/secrets/secret-request-422cee99c4d7b9d90770da580f23dee5.bin`
-  if (existsSync(secretBin)) {
-    try {
-      return String(JSON.parse(readFileSync(secretBin, 'utf8')).value)
-    } catch { /* fall through */ }
+  const secretDir = `${homedir()}/.deepai-code/userdata/secrets`
+  if (existsSync(secretDir)) {
+    // any secret-request-*.bin (JSON {value}) — the entry id rotates per request
+    const cands = readdirSync(secretDir)
+      .filter((f) => /^secret-request-[a-f0-9]+\.bin$/.test(f))
+      .map((f) => `${secretDir}/${f}`)
+      .filter((f) => statSync(f).size > 32)
+      .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)
+    for (const f of cands) {
+      try {
+        const v = String(JSON.parse(readFileSync(f, 'utf8')).value)
+        if (v) return v
+      } catch { /* skip unreadable */ }
+    }
   }
   console.error('no sorceress API key found (env SORCERESS_API_KEY, ~/.sorceress-api-key, or app secret store)')
   process.exit(2)

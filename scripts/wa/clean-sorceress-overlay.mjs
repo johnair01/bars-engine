@@ -21,6 +21,10 @@
  *     --drop-skin base.png    remove overlay pixels colored like the base's skin
  *                            entirely (for hood-up robes: floating face/hand
  *                            fragments; the base already provides those pixels).
+ *     --cap-head base.png     for hood-up robes: extend the hood fabric upward
+ *                            over base-head pixels that peek above the drawn
+ *                            hood (the head is locked per rule 5; the model's
+ *                            hood often sits 1-3px low, leaving a scalp sliver).
  *
  * Green test: G > max(R, B) + LEVEL (default 10). Catches the keyer's spill
  * suppression residue, which leaves G raised up to +40 over the other channels
@@ -42,9 +46,10 @@ const pruneBase = idx('prune-orphans')
 const clampBase = idx('clamp-to-base')
 const fillSkinBase = idx('fill-skin')
 const dropSkinBase = idx('drop-skin')
+const capHeadBase = idx('cap-head')
 
-if (!inp || !outp || (!degreen && !harden && !aboveNeckBase && !pruneBase && !clampBase && !fillSkinBase && !dropSkinBase)) {
-  console.error('usage: clean-sorceress-overlay.mjs <in.png> <out.png> [--degreen] [--harden] [--above-neck base.png] [--prune-orphans base.png] [--clamp-to-base base.png] [--fill-skin base.png] [--drop-skin base.png]')
+if (!inp || !outp || (!degreen && !harden && !aboveNeckBase && !pruneBase && !clampBase && !fillSkinBase && !dropSkinBase && !capHeadBase)) {
+  console.error('usage: clean-sorceress-overlay.mjs <in.png> <out.png> [--degreen] [--harden] [--above-neck base.png] [--prune-orphans base.png] [--clamp-to-base base.png] [--fill-skin base.png] [--drop-skin base.png] [--cap-head base.png]')
   process.exit(2)
 }
 
@@ -80,8 +85,8 @@ function neckRows(baseData, baseW) {
 
 let necks = null
 let baseOpaque = null
-if (aboveNeckBase || pruneBase || clampBase || fillSkinBase || dropSkinBase) {
-  const b = await sharp(aboveNeckBase ?? pruneBase ?? clampBase ?? fillSkinBase ?? dropSkinBase).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+if (aboveNeckBase || pruneBase || clampBase || fillSkinBase || dropSkinBase || capHeadBase) {
+  const b = await sharp(aboveNeckBase ?? pruneBase ?? clampBase ?? fillSkinBase ?? dropSkinBase ?? capHeadBase).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   baseOpaque = b
   if (aboveNeckBase) necks = neckRows(b.data, b.info.width)
 }
@@ -249,6 +254,44 @@ function dropSkin(data, W, baseData) {
   return dropped
 }
 
+function capHead(data, W, baseData, baseW) {
+  // per cell, per column: fill transparent overlay px with fabric color where
+  // the base's head is opaque and the overlay's first opaque pixel in that
+  // column is more than 2px lower — capped at 4px of fill per column
+  let filled = 0
+  const A = (x, y) => baseData[((y * baseW) + x) * 4 + 3]
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) {
+    // base head top for this cell
+    let bTop = CH
+    for (let y = 0; y < CH; y++) { let any = false; for (let x = 0; x < CW; x++) if (A(c * CW + x, r * CH + y) > 40) { any = true; break } if (any) { bTop = y; break } }
+    for (let x = 0; x < CW; x++) {
+      let oTop = CH
+      for (let y = 0; y < CH; y++) {
+        const i = (((r * CH + y) * W) + c * CW + x) * 4
+        if (data[i + 3] > 40) { oTop = y; break }
+      }
+      const gap = oTop - bTop
+      if (gap <= 2 || gap > 8) continue
+      // fabric color = first overlay px below oTop in this column
+      let pick = null
+      for (let y = oTop; y < Math.min(CH, oTop + 12); y++) {
+        const i = (((r * CH + y) * W) + c * CW + x) * 4
+        if (data[i + 3] > 40) { pick = [data[i], data[i + 1], data[i + 2]]; break }
+      }
+      if (!pick) continue
+      for (let y = oTop - Math.min(gap, 4); y < oTop; y++) {
+        const bi = (((r * CH + y) * W) + c * CW + x) * 4
+        if (A(c * CW + x, r * CH + y) > 40) {
+          const i = (((r * CH + y) * W) + c * CW + x) * 4
+          data[i] = pick[0]; data[i + 1] = pick[1]; data[i + 2] = pick[2]; data[i + 3] = 255
+          filled++
+        }
+      }
+    }
+  }
+  return filled
+}
+
 if (pruneBase && baseOpaque) {
   const dropped = pruneOrphans(data, W, baseOpaque.data, baseOpaque.info.width)
   console.log(`  prune-orphans: dropped ${dropped} px`)
@@ -267,6 +310,11 @@ if (fillSkinBase && baseOpaque) {
 if (dropSkinBase && baseOpaque) {
   const dropped = dropSkin(data, W, baseOpaque.data)
   console.log(`  drop-skin: dropped ${dropped} px`)
+}
+
+if (capHeadBase && baseOpaque) {
+  const filled = capHead(data, W, baseOpaque.data, baseOpaque.info.width)
+  console.log(`  cap-head: filled ${filled} px`)
 }
 
 await sharp(data, { raw: { width: W, height: info.height, channels: 4 } }).png().toFile(outp)
