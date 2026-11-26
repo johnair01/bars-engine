@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'src/lib/mcp-oauth/__tests__/oauth.test.ts',
       'src/lib/world-kit/__tests__/gate.test.ts',
       'src/lib/cultivation/__tests__/sheet.test.ts',
       'src/lib/cultivation/__tests__/belly-rules.test.ts',
@@ -115,6 +116,7 @@ export default defineConfig({
       'src/app/board/__tests__/serve.test.ts',
       'src/app/board/__tests__/part.test.ts',
       'src/app/board/__tests__/art.test.ts',
+      'src/app/live/__tests__/live.test.ts',
       'src/app/board/data.js/__tests__/route.test.ts',
       'src/lib/board/__tests__/content-store.test.ts',
       'src/lib/board/__tests__/store.test.ts',
@@ -122,7 +124,9 @@ export default defineConfig({
       'src/lib/board/__tests__/picture-store.test.ts',
       'src/lib/board/__tests__/pipeline.test.ts',
       'src/app/api/mcp/__tests__/route.test.ts',
+      'src/app/api/mcp/__tests__/modern.test.ts',
       'src/app/api/mcp/__tests__/reads.test.ts',
+      'src/lib/board/look-app/__tests__/look.test.ts',
       'src/lib/board/__tests__/visible.test.ts',
       'src/app/api/board/picture/__tests__/route.test.ts',
       'src/app/api/board/changes/__tests__/route.test.ts',

@@ -372,6 +372,15 @@ for nm in ('bush', 'fern') * 40:
     if can_stamp(nm, x, y): stamp(nm, x, y)
 sx, sy = LEVEL['start']['x'], LEVEL['start']['y']
 for x in range(sx, sx + 2): L['start'][I(x, sy)] = COLL
+# arrivals: named start layers that doors in other maps land on (outside the room's first door)
+arrivals = {}
+for aid, rid in LEVEL.get('arrivals', {}).items():
+    if aid == 'about': continue
+    r = next(r for r in LEVEL['rooms'] if r['id'] == rid); d = r['doors'][0]
+    ax, ay = must[f'{r["label"]} door ({d["side"]})']
+    arrivals[aid] = [0] * N
+    for x in range(ax, ax + min(2, d['w'])): arrivals[aid][I(x, ay)] = COLL
+    must[f'arrival {aid}'] = (ax, ay)
 
 # ---- checks ----
 blocked = lambda x, y: L['collisions'][I(x, y)] != 0
@@ -477,9 +486,10 @@ layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail'])] + [tl(10 +
           *([tl(30, 'hint-new', HINT, visible=False)] if GUIDE else []),
           *[tl(40 + 2 * k, f'rail-{hid}-dark', v['dark']) for k, (hid, v) in enumerate(RAILL.items())],
           *[tl(41 + 2 * k, f'rail-{hid}-lit', v['lit'], visible=False) for k, (hid, v) in enumerate(RAILL.items())],
+          *[tl(9 + k, aid, data, [prop('startLayer', True)], visible=False) for k, (aid, data) in enumerate(arrivals.items())],
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
-       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 40 + 2 * len(RAILL) + 1,
+       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': max(9 + len(arrivals), 40 + 2 * len(RAILL) + 1, 31),
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [prop('mapName', LEVEL['title']),
                       *([prop('script', 'guide.js')] if GUIDE else []),
