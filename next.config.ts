@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
     ],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
+  // The board's MCP server reads the council skill it publishes (src/lib/mcp/skills.ts) by a computed path, which the
+  // build cannot trace on its own.
+  outputFileTracingIncludes: {
+    "/api/mcp": ["./.claude/skills/six-faces/**"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "20mb",
