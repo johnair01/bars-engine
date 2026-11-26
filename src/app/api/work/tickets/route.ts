@@ -35,8 +35,12 @@ export async function POST(req: NextRequest) {
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const str = (k: string, max: number) => (typeof b?.[k] === 'string' ? (b[k] as string).trim().slice(0, max) : '')
   const sourceKey = str('sourceKey', 300), title = str('title', 200), brief = str('brief', 20000)
-  if (!sourceKey || !title || !brief) return NextResponse.json({ error: 'Expected {sourceKey, title, brief, basis?, lanes?, state?}' }, { status: 400 })
-  const basis = b?.basis && typeof b.basis === 'object' ? b.basis : {}
+  if (!sourceKey || !title || !brief) return NextResponse.json({ error: 'Expected {sourceKey, title, brief, goal?, costUsd?, basis?, lanes?, state?}' }, { status: 400 })
+  // A held "Next look:" names the LensGoal it serves (`goal`) and may say what it costs (`costUsd`); both ride in basis,
+  // where the tick reads them (src/lib/work/tick.ts), so no migration is needed.
+  const goal = str('goal', 120)
+  const costUsd = typeof b?.costUsd === 'number' && b.costUsd >= 0 ? b.costUsd : undefined
+  const basis = { ...(b?.basis && typeof b.basis === 'object' ? b.basis : {}), ...(goal ? { goal } : {}), ...(costUsd !== undefined ? { costUsd } : {}) }
   // A council thread files a held ticket (a "Next look:" that waits for the tick, docs/loops.md); before 2026-11-25
   // the route dropped `state`, so every held filing arrived ready and skipped the tick's caps.
   const state = b?.state === 'held' ? 'held' as const : undefined
