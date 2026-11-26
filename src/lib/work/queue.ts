@@ -97,7 +97,24 @@ export async function claimTicket(db: Db, lane: string, by: string, now = new Da
       ORDER BY "created_at" ASC LIMIT 1 FOR UPDATE SKIP LOCKED)
     RETURNING "id", "title", "brief", "basis", "lanes", "lane", "claimed_by" AS "claimedBy",
       "lease_until" AS "leaseUntil", "attempts"`
-  return rows[0] ?? null
+  const got = rows[0] ?? null
+  if (got?.title?.startsWith('Stage:') && await stageSuperseded(db, got.id, now)) return claimTicket(db, lane, by, now, id)
+  return got
+}
+
+/**
+ * Level-triggered recheck at claim time (restock road, 2026-11-26): a stage ticket `stage:<strand>:...` whose strand has had
+ * another stage ticket finished since this one was filed is closed as superseded, so a worker never walks a stage that moved.
+ */
+async function stageSuperseded(db: Db, ticketId: string, now: Date): Promise<boolean> {
+  const t = await db.workTicket.findUnique({ where: { id: ticketId }, select: { sourceKey: true, createdAt: true } })
+  const m = t && /^stage:([^:]+):/.exec(t.sourceKey)
+  if (!t || !m) return false
+  const moved = await db.workTicket.count({ where: { state: 'done', sourceKey: { startsWith: `stage:${m[1]}:` }, doneAt: { gt: t.createdAt } } })
+  if (!moved) return false
+  await db.workTicket.update({ where: { id: ticketId }, data: { state: 'done', result: 'superseded: the strand moved a stage since this was filed',
+    doneAt: now, leaseUntil: null } })
+  return true
 }
 
 type Move = 'heartbeat' | 'done' | 'release' | 'failed'
