@@ -36,7 +36,7 @@ export const TTV_PATHS: readonly TtvPath[] = [
   { face: 'challenger', lights: 'anger', move: 'Write a plain yes or no, with its cost', prompt: 'Yes or no, and what it costs', take: { kind: 'task', source: 'path-challenger', day: 'today' }, stamp: 'Plain answer: ' },
   // The Regent keeps the record (his words, 2026-11-26: "I keep a record of which game masters I rely on when I'm
   // feeling stuck"). This line pairs the thing in the way with a face; his last few come back on the Regent's card.
-  { face: 'regent', lights: 'flat', move: 'Write what is in the way, and the face you rely on for it', prompt: 'What is in the way, and which face', take: { kind: 'task', source: 'path-regent', day: 'today' }, stamp: 'Relied on: ' },
+  { face: 'regent', lights: 'flat', move: 'Name the face you rely on for what is in the way', prompt: 'What is in the way, then the face', take: { kind: 'task', source: 'path-regent', day: 'today' }, stamp: 'Relied on: ' },
   { face: 'diplomat', lights: 'joy', move: 'Name one person who should hear it, and send the line', prompt: 'Who, and the line', take: { kind: 'task', source: 'path-diplomat', day: 'today' }, stamp: 'Tell: ' },
   { face: 'sage', lights: 'unsure', move: 'Name the role you want out of, and step outside it', prompt: 'The role', take: { kind: 'task', source: 'path-sage', day: 'today' }, stamp: 'Step outside: ' },
 ]
