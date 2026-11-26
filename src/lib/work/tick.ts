@@ -3,6 +3,7 @@ import type { PrismaClient } from '@prisma/client'
 import { dryLanes, beatLane, returnLapsed, unholdTicket } from './queue'
 import { LANE_WORKERS } from './lanes'
 import { openWakeWindow, wakePickup } from './wake'
+import { fileNextStage, STAGE_PREFIX } from './stage-step'
 
 /**
  * The orchestrator's tick (Wendell, 2026-11-19). It reads the Claude lane (ready tickets, live claims, the cooldown) and
@@ -105,18 +106,23 @@ async function todaysMoves(db: PrismaClient, now: Date): Promise<PassMove[]> {
 async function unholdNextLook(db: PrismaClient, now: Date): Promise<string | null> {
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000)
   const where = { lane: TICK_LANE, title: { startsWith: NEXT_LOOK_PREFIX } }
+  const selfStarted = { lane: TICK_LANE, OR: [{ title: { startsWith: NEXT_LOOK_PREFIX } }, { title: { startsWith: STAGE_PREFIX } }] }
   const [held, active, today, moves] = await Promise.all([
     db.workTicket.findMany({ where: { ...where, state: 'held', attempts: 0 }, orderBy: { createdAt: 'asc' }, take: 50 }),
     db.workTicket.findMany({ where: { ...where, state: { in: ['ready', 'claimed'] } }, select: { sourceKey: true } }),
-    db.workTicket.findMany({ where: { ...where, state: { in: ['ready', 'claimed', 'done', 'failed'] }, updatedAt: { gt: since } }, select: { basis: true } }),
+    db.workTicket.findMany({ where: { ...selfStarted, state: { in: ['ready', 'claimed', 'done', 'failed'] }, updatedAt: { gt: since } }, select: { basis: true } }),
     todaysMoves(db, now),
   ])
   const open = new Set(active.map(t => strandOf(t.sourceKey)).filter((s): s is string => !!s))
   const spentUsd = today.reduce((n, t) => n + costOf(t), 0)
   const pick = pickNextLook({ held, open, unheldToday: today.length, idle: true, moves, spentUsd })
-  if (!pick) return null
-  const r = await unholdTicket(db, pick.id)
-  return r.ok ? pick.title : null
+  if (pick) {
+    const r = await unholdTicket(db, pick.id)
+    return r.ok ? pick.title : null
+  }
+  // No held look to lift: walk the next pipeline stage of a strand that serves a goal in today's pass, under the same cap.
+  if (today.length >= NEXT_LOOK_DAILY_CAP) return null
+  return fileNextStage(db, moves, spentUsd, SELF_START_DAILY_CAP_USD)
 }
 
 export type TickResult = { fired: number; ready: number; live: number; reason: string; woke?: string; unheld?: string }

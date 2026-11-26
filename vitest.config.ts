@@ -209,6 +209,7 @@ export default defineConfig({
       'src/lib/work/__tests__/seals.test.ts',
       'src/lib/work/__tests__/wake.test.ts',
       'src/lib/work/__tests__/tick.test.ts',
+      'src/lib/work/__tests__/stage-step.test.ts',
       'src/lib/close/__tests__/close.test.ts',
       'src/lib/close/__tests__/grammar.test.ts',
       'src/lib/close/__tests__/rail.test.ts',
