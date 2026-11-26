@@ -15,11 +15,72 @@ player experience or Emotional Alchemy mechanic, also load the `design-ontology`
 Give every face the same ontology context. The ontology constrains the council's design claims; the
 faces remain bounded lenses from `council/faces.yaml` and do not silently rewrite it.
 
+## This is a recipe, and its steps block
+
+Wendell, 2026-11-14, after a battle design pass ran its faces without the design ontology, the mechanics check, the
+Sage, the Player and Skeptic daemons or game_frame_check.py: *"These are recipes to follow, not guidelines."* For a
+pass that designs, builds, reviews or translates a game, every step below is blocking, in this order: read
+`ontology/manifest.yaml` and `ontology/v0.1/QUICKSTART.md` (profile `game_design`); start from a mechanic in
+`canon/mechanics/` and check it against `canon/play-canon.md`; cast for all six faces; run the Player and Skeptic
+daemons and record their token count; run the five faces, then the Sage; write the `Ontology: profile game_design` line,
+the `## Ontology record`, the `Mechanics:` line and the `contract:` line.
+
+The Regent runs the first steps, not the faces. Wendell, 2026-11-14 (board row drg-owner-look-1, answer A): *"The
+regent's job is to make sure the laws are upheld."* Before any face speaks, the Regent runs
+`python3 council/tools/convene.py "<question>" --mechanics <names> --out council/passes/<id>.md`. It loads the ontology
+(`manifest.yaml`, `QUICKSTART.md`, the `game_design` profile), the mechanics atlas against `canon/play-canon.md` and the
+studio; casts for the six faces and the two daemons; writes one shared context file that every face reads; and writes the
+pass skeleton with the required lines. Each face fills its marked `GAP:` lines, and the pass is checked with
+`convene.py --check <pass>`. A pass the Regent did not convene is not a recipe-following pass. The skeleton's `job:` and
+`scout:` lines name the tool we hold that the design builds with, or `no build (why)`; `scout.py --check` fails a pass
+that skips a held tool in silence. The whole process, start to ship, is `docs/recipe-book.md`.
+
+`python3 council/tools/pass_check.py <pass> --seal` checks all of it and fails on any gap, an unmarked design pass
+included (an unmarked pass is refused, never skipped). Sealing stores the pass and a pass-check record. The board's MCP
+`post_rows` then refuses any look row that names design faces unless its `pass` field names a sealed pass whose text
+still matches the sealed hash. A skipped step cannot be posted around: run the step, or the look does not reach him.
+A pass that is not a game design pass says `Ontology: not game design (why)` and posts no design look.
+
+## Game frame first
+
+Wendell, 2026-10-26: *"The player is going to do an intake and create a character. They will have access to a homeroom
+where they will be able to process charge. They will be able to walk through a gameworld with their created character to
+encounter these things."* Pass game-frame-1 (`council/passes/game-frame-1_2026-10-26.md`) adopted this step.
+
+When the subject is a game, or a game's episode, level, boss, quest, player, character or world, the pass writes a
+`## Game frame` section after the Anchor and before the first face speaks. The faces argue from it and may change it.
+It has six parts, each a bold-led paragraph written in the character's terms:
+
+1. **Player fantasy.** It says who the player is in the world and what they want there.
+2. **Intake and character.** It says what the intake asks, as character creation, and what the character sheet holds.
+   The sheet holds what the player chose and what they have learned, never a score of the person.
+3. **Homeroom.** It says what the character does in their home base. The practices (3-2-1, WAVE, the Interview) live
+   here as acts in the homeroom, and rest happens here.
+4. **World.** It names the regions, the threshold out of the homeroom and the far place, and says how the world grows
+   as inner work is done.
+5. **Core loop.** It lists the verbs the character does, in order (for example: walk out, meet, carry back, work it,
+   rest).
+6. **Encounters.** It says where in the world each encounter happens and how it can end (befriended, not yet, rest).
+
+The real-world container (weeks, sessions, the coach, and what a person does at home) comes after the frame, in its
+own `## Real-world container` section. The Anchor's first sentence names the player or the character before any program
+noun (week, homework, worksheet, tracker, log, module, lesson, dashboard, course, program, curriculum, checklist), and it
+answers one question: where is the character standing, and what can they do here? A brief's requested format is an
+input, not a constraint: when a brief asks a game pass for a program shape, such as a per-week table, the faces reshape
+the deliverable and say so in the pass.
+
+The pass record carries the line ``Ontology: profile `game_design` `` and the design-ontology output contract in an
+`## Ontology record` section, and `python3 ontology/tools/game_frame_check.py <pass>` passes before the pass ships. The
+pass's author and every face read `ontology/manifest.yaml` and `ontology/v0.1/QUICKSTART.md` themselves; a worker's
+digest never stands in for them. The Architect's tool for the frame is the game-designer role of Claude-Code-Game-Studios
+(`ccgs-roles` in `council/toolbox.yaml`).
+
 ## The shape of a pass
 
 1. **Header.** Date, who called it, the question in his words, and what pass this is on the subject.
 2. **Scorecard.** Grade the tests the previous pass set. Set new ones, dated, at the end.
-3. **Anchor.** The design intent in one or two sentences. Unchanged unless Wendell changed it.
+3. **Anchor.** The design intent in one or two sentences. Unchanged unless Wendell changed it. For a game, the
+   `## Game frame` section follows the Anchor (see "Game frame first" above).
 4. **Every agent casts the I Ching first.** Wendell, 2026-10-03: *"all agents should be casting the I Ching
    and using its wisdom to inform their decisions (not unlike flirtcraft)"*. Run `python3 council/iching/cast.py
    shaman architect challenger regent diplomat sage`, one cast each by the three-coin method (Wendell on the
@@ -70,7 +131,8 @@ faces remain bounded lenses from `council/faces.yaml` and do not silently rewrit
 
 ## The reach test, before any question leaves the pass
 
-Send the question back to its owning face with the record: the decision log, the working rules,
+Run `python3 council/tools/positions.py --scope <strand>` first: his standing positions and the misses on that strand
+(`council/positions.yaml`, `council/position-misses.yaml`). Then send the question back to its owning face with the record: the decision log, the working rules,
 prior passes, the ledger. The face answers with a citation or says what is missing. The question
 reaches Wendell only when what is missing is his preference or a fact only he holds, and only if his
 answer changes what gets built. An answer with no citation is not an answer; the question goes to
@@ -80,13 +142,15 @@ the board.
 
 - The pass is a file: `6FACE_PASS<n>_<date>.md` beside the subject it concerns (a spec folder, or
   `preproduction/` in friendcraft).
-- Positions, questions and terms go to the board, so Wendell flips, answers and steers there. The
+- Questions and terms go to the board, so Wendell answers and steers there. Positions go to the council log, not the board (Wendell, 2026-11-11): `council/position-log.jsonl`, each with `changed` and `reverse`; `docs/position-log.md`. The
   board's top page holds only unresolved work; everything decided moves to its Resolved view (Wendell,
-  2026-10-02). Add rows with `python3 board/sync_board.py --live <saved live page> --rows <rows.json> --push` in the home
-  repo (it brings the live page's rows onto main first, then builds and pushes; docs/merging.md), or edit `board/board_data.json` on main, run `python3 board/build_board.py`,
-  and publish `board/council-board.html` to the same URL the ledger records carry.
+  2026-10-02). The board is https://bars-engine.vercel.app/board/council (pb-which-board). Post a pass's rows with one
+  call, `python3 board/post_rows.py council/callsheets/rows/<pass>.json` (docs/worklist-api.md): they show on
+  `/board/council` at its next load and the board-pull Action lands them on main. No ArtifactData write and no republish.
+  Rulings from chat (`resolved` entries) still reach main in a rows file through a pull request (docs/merging.md).
 - When a board read is recorded in the ledger, add each decided item to `resolved` in
-  `board_data.json` with its decision and the ledger file, rebuild, and republish. A saved but
+  `board_data.json` with its decision and the ledger file, rebuild, and push to main (the page reaches
+  /board/council from main; there is nothing to republish). A saved but
   unrecorded item already shows as resolved and waiting to be recorded.
 - A record goes in this repo's `council/ledger/` as JSON, in the shape of the home repo's
   `council/ledger/*.json`. `python3 council/stats.py --remote` in the home repo counts every
@@ -95,11 +159,9 @@ the board.
 
 ## After Wendell answers on the board
 
-Save the store with `ArtifactData` (collections `positions`, `questions`, `terms`, `causes` and
-`steer`, `out_dir` one folder) and run `python3 board/pull.py <dir> --push` in the home repo. It records
-every save main lacks, not only the rows of the battle you came for, writes the ledger record, and pushes
-to main; running it twice changes nothing (Wendell, `pickup-pull-model`, 2026-10-07). Then republish
-the board without passing capabilities, and act on the `needs work` list it prints. An overrule or a steer on a face's row becomes a lesson in
+In the home repo, `git pull`, then `python3 board/read.py --main-only`. His saves reach main through the
+board-pull Action (bars-engine Postgres is the record; the claude.ai artifact store is stale, so do not list it).
+Then act on the needs-work list (`python3 board/needs_work.py`). Republishing the artifact is not part of a read. An overrule or a steer on a face's row becomes a lesson in
 that face's entry in `faces.yaml`, quoted, with the source. A ruling that changes a term, a
 structure or a date goes in the repo's decision log where one exists.
 
@@ -142,16 +204,29 @@ do not run it; `scope` in the file says which is which.
 1. **Spec kit first.** Scaffold `.specify/specs/<feature>/` from `council/spec-kit/`. In a repo with its own
    template, use that one and add the three council sections: the ask, whose decision, and how we will know
    it failed. The repo's own rules win on conventions.
-2. **Each stage has owning faces and a gate** (intake, spec, falsify, plan, build, verify, ship, close). A
+2. **Check for a tool before the plan.** The Architect climbs the tool ladder (`docs/tool-scout.md`) for each thing the
+   feature builds and names the rung and tool in a `scout:` line; a build at rung 5 says why no tool held.
+3. **Each stage has owning faces and a gate** (intake, spec, clarify, falsify, plan, analyze, build, verify, ship,
+   close). The stage contract in `pipeline.yaml` adds what each stage owes: the faces that sign it in `## Signed`,
+   the design-ontology fields it fills, the skills it loads, and the articles of `council/constitution.md` it checks.
+   The plan opens with a constitution check, and `python3 council/tools/contract_check.py <folder>` must exit 0
+   before the build (pass spec-contract-1, 2026-10-28). A
    stage's output passes its gate before the next stage starts. The clarifying questions of a spec kit
    interview go through the reach test like any other question.
-3. **Three outputs, kept apart.** Questions go to the board. Steps only Wendell can take go to the board's Your steps tab.
+4. **Three outputs, kept apart.** Questions go to the board. Steps only Wendell can take go to the board's Your steps tab.
    Product goes to a pull request.
-4. **Steps.** Every `[wendell]` task passes the step test (only he can take it) and carries the full step
+5. **Steps.** Every `[wendell]` task passes the step test (only he can take it) and carries the full step
    shape: do, where, enter, check, device, and whether it is safe to stop after. Publish the feature's steps
-   as one list with `ArtifactData` to the board's store, named as `steps_page` in `pipeline.yaml`: a `lists/<feature>` document
+   as one list to bars-engine's Council Board with `python3 board/store_write.py push` (the ArtifactData write to the
+   artifact's store stopped, wl-one-write-for-steps), named as `steps_page` in `pipeline.yaml`: a `lists/<feature>` document
    (title, repo, why, source, order, created) and `steps/<feature>-<nn>` documents (list, n, do, where, href,
-   enter, generate, check, device, stopSafe, optional, due, done, files). A step that asks him to review a draft, image or
+   enter, generate, check, device, stopSafe, optional, blocking, due, done, files, plus the six's read: `inway` (what stands between him and the step, one plain line), `move` (wake, open, clean, grow or show), `element` (metal, water, wood, fire or earth), `face` and `project`; the pass that creates the step writes them, so the worked card is full the first time it opens, and a step with none says "Not read yet" rather than a default; Wendell, 2026-11-02, ps-six-read-source A). `blocking: true` holds his whole board on
+   those steps until each is done or sent to Claude (docs/pickup.md, "Blocking steps"); use it only when he asks for it. A step that asks him to look at, try or play something built is a look: give it `look: true`, a short `lookTitle`, a `still` (an https image URL, or a data:image JPEG of about 640px, under 50 KB) and the hosted preview as `href`, and the Your eyes tab shows it as a card with Open it and a yes or note (Wendell, 2026-10-24). A new look names what it replaces with `supersedes` (the earlier look ids); leave it off only when it replaces every earlier look on its list, and write `supersedes: []` for a parallel look (look lineage, docs/pickup.md). On a charged list (the clothing kit's, or any list with `charge: true`) a yes seals the look: a new look that replaces a sealed one carries `reopens`, the new fact behind asking again, or it is not asked; a "not yet" carries his tap as `charge`, and the next round takes the move it names (board/charge.py: fire proof, metal four theories, wood spread, water chronicle, earth compost) on its `primitives:` line (ap-first-mechanic, 2026-10-26). Write the same documents to bars-engine's Council
+   Board too, `python3 board/store_write.py push <docs.json> --store <export>` (the export lets the seal check run), and the same for any contact or show (board-home step 5:
+   both boards are live until the artifact retires; `store_write.py diff <export dir>` shows any drift). **Run `python3 board/publish_ready.py` before the round makes any art**: a session whose egress proxy or environment
+   carries no `COUNCIL_MENU_TOKEN` cannot write a look at all, and four rounds have found that out after the work was
+   done and lost the card. When the road is closed, the look document is committed under `council/looks/pending/` with
+   the command that lands it (docs/pickup-here.md). A step that asks him to review a draft, image or
    link carries it in `files` (`[{id, title, kind: text|image|link, text, src, href, caption}]`), so the card shows it in
    full with a notes box, and never points him at a project file (Wendell, 2026-10-14: "If I Can click the file see whats
    going on and update the notes that would get me unblocked"). His notes land in `fileNotes` and pull.py lists them. Every step carries `due`, a YYYY-MM-DD
@@ -164,9 +239,9 @@ do not run it; `scope` in the file says which is which.
    account it needs and where it lives. If an input cannot be found, publish a find-it step instead: what is missing,
    why it matters, where it was last seen, and the remediation the game masters will run if he cannot find it
    (`step_missing_input` in `pipeline.yaml`).
-5. **Read his ticks.** The page records `done`, `doneAt` and `note` on each step. Read the list before any
+6. **Read his ticks.** The page records `done`, `doneAt` and `note` on each step. Read the list before any
    work that waits on a step. A note is a report from him; answer it in the next reply or in the pass.
-6. **Ship.** A feature whose gates pass goes on the board as a position that merges on the next board read
+7. **Ship.** A feature whose gates pass goes on the board as a position that merges on the next board read
    unless he flips it. A feature that touches a reserved item ships only on a board question he answers.
 
 ## The feature request move
@@ -277,3 +352,11 @@ bars-engine's `.specify/specs/six-faces-council-agents/`, argues it.
 
 Run `python3 council/tools/voice_lint.py <pass file>` before the pass ships. Every council repo has it. Every hard finding is a
 defect. A quotation of Wendell's is never altered to satisfy the linter.
+
+## Look questions carry their examples
+
+A board question that asks him to judge something built carries `examples` ([{title, src, href, note}], src an https or data:image URL, href a hosted link), so the pictures sit on the question itself (Wendell, lt-mirror-look-03, 2026-10-24: "For a question like this we need the examples where the question is for me to assess").
+
+## A held next look
+
+When your work finishes what his yes started, file that strand's following look as a held `Next look: <step>` ticket (sourceKey `next-look:<strand>:<n>`), never as a ready one; the tick lifts it when the Claude lane is idle. Check the look with `council/tools/critic.py` before it posts. Rule in full: `docs/loops.md`, "A held next look".

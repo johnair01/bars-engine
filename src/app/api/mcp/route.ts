@@ -11,6 +11,10 @@
  * `/board/stills/sha/<sha256>.<ext>`, the link the seal reads. The art index beside the manifest lets a client with no
  * checkout list what the server stored; council/callsheets/stills/ART.jsonl on main stays the record.
  *
+ * It serves MCP 2026-07-28 (stateless: server/discover, a version in each request's _meta) and the older
+ * versions that open with initialize, on the same endpoint. It publishes the council skill over the skills extension
+ * (src/lib/mcp/skills.ts): skills/list, skills/get and resources/read on skill:// URIs.
+ *
  * Auth is COUNCIL_MENU_TOKEN, as `Authorization: Bearer <key>`, a bare header or `?token=`, the same three shapes
  * src/lib/council/token.ts reads for every other council call.
  */
@@ -24,9 +28,12 @@ import { latestDoc } from '@/lib/board/store'
 import { decodePicture, valueAt } from '@/lib/board/pictures'
 import { checkVisible, listOpen, readAnswers } from '@/lib/board/mcp-reads'
 import { closeRead, closeSay } from '@/lib/close/chat'
+import { LOOK_RESOURCE, LOOK_TOOLS, answerLook, askLook, confirmRemove, readLookResource, showLook, type AppResult }
+  from '@/lib/board/look-app/look'
 import { isText, listLiveFiles, livePathError, liveUrl, putLiveFile, readLiveFile, removeLiveFile, revertLiveFile, type PutResult } from '@/lib/live/store'
 import { listPictures, liftInlinePictures, readPictureBytes, shaFromUrl, storePicture, type StoredPicture }
   from '@/lib/board/picture-store'
+import { listSkills, readSkillFile, skillEntry, parseSkillUri, SERVED } from '@/lib/mcp/skills'
 import {
   assetBrief, canonBlock, evaluateMechanic, faceLens, nextLines, ontologyProfile, pipelineNext, pipelineStatus,
   readLoop, refusalLines, statusLines, verifyRound,
@@ -36,9 +43,15 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const SERVER_NAME = 'council-board'
-const SERVER_VERSION = '1.6.0'
+const SERVER_VERSION = '1.7.0'
 const MAX_LIVE_FILES = 50
+/** 2026-07-28 is stateless: each request names its version in `_meta`. The older three still open with `initialize`. */
+const MODERN_VERSIONS = ['2026-07-28']
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
+const META_VERSION = 'io.modelcontextprotocol/protocolVersion'
+const SKILLS_EXT = 'io.modelcontextprotocol/skills'
+/** How long a client may cache the tool list, the skills and their files: one deploy changes them, so ten minutes. */
+const CACHE = { ttlMs: 600_000, cacheScope: 'public' as const }
 const NO_STORE = { 'Cache-Control': 'no-store' }
 const MAX_ROWS = 100
 const MAX_IDS = 50
@@ -502,6 +515,7 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true },
   },
+  ...LOOK_TOOLS,
 ]
 
 function refused(req: NextRequest): NextResponse | null {
@@ -511,12 +525,62 @@ function refused(req: NextRequest): NextResponse | null {
   return null
 }
 
-function rpcResult(id: RpcId, result: unknown) {
-  return NextResponse.json({ jsonrpc: '2.0', id, result }, { headers: NO_STORE })
+function rpcResult(id: RpcId, result: Record<string, unknown>) {
+  // Every 2026-07-28 result says whether it is complete; an older client ignores the field.
+  return NextResponse.json({ jsonrpc: '2.0', id, result: { resultType: 'complete', ...result } }, { headers: NO_STORE })
 }
 
-function rpcError(id: RpcId, code: number, message: string) {
-  return NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } }, { headers: NO_STORE })
+function rpcError(id: RpcId, code: number, message: string, status = 200, data?: unknown) {
+  const error = data === undefined ? { code, message } : { code, message, data }
+  return NextResponse.json({ jsonrpc: '2.0', id, error }, { status, headers: NO_STORE })
+}
+
+const INSTRUCTIONS = 'The Council Board on bars-engine. Store a picture with put_picture, post a question, position, '
+  + 'term, cause or battle with post_rows, and see one back with read_picture. Every row carries its pass and a '
+  + 'lane naming the environment that posted it. Run the reach test first (council/faces.yaml in '
+  + 'six-faces-council, or the six-faces skill this server publishes). A question for Wendell is a row, never a line '
+  + 'in a pull request. A round starts at pipeline_status and asset_brief, and asset_verify reads the judge receipt '
+  + 'before its look posts.'
+
+const CAPABILITIES = {
+  tools: { listChanged: false },
+  resources: {},
+  extensions: { [SKILLS_EXT]: {} },
+}
+
+/** The skills extension's methods and the resource reads behind them; null when the method is not one of them. */
+async function skillsMethod(id: RpcId, method: string, params: Record<string, unknown>, missing: number) {
+  const uri = typeof params.uri === 'string' ? params.uri : ''
+  switch (method) {
+    case 'skills/list':
+      return rpcResult(id, { skills: await listSkills(), ...CACHE })
+    case 'skills/get': {
+      const parsed = parseSkillUri(uri)
+      const skill = parsed && parsed.rel === 'SKILL.md' ? await skillEntry(parsed.name) : null
+      if (!skill) return rpcError(id, -32602, `No skill at ${uri || '(no uri)'}`, missing)
+      return rpcResult(id, { skill, ...CACHE })
+    }
+    case 'resources/list': {
+      const skills = await listSkills()
+      const resources = skills.flatMap((s) => s.resources.map((r) => ({
+        uri: r.uri, name: r.uri.replace('skill://', ''), size: r.size,
+        mimeType: r.uri.endsWith('.md') ? 'text/markdown' : 'text/plain',
+      })))
+      return rpcResult(id, { resources: [LOOK_RESOURCE, ...resources], ...CACHE })
+    }
+    case 'resources/templates/list':
+      return rpcResult(id, { resourceTemplates: [], ...CACHE })
+    case 'resources/read': {
+      // The look card's page (MCP Apps): one ui:// resource, drawn beside show_look's answer.
+      const card = readLookResource(uri)
+      if (card) return rpcResult(id, { ...card, ...CACHE })
+      const file = await readSkillFile(uri)
+      if (!file) return rpcError(id, -32602, `Resource not found: ${uri || '(no uri)'}`, missing)
+      return rpcResult(id, { contents: [file], ...CACHE })
+    }
+    default:
+      return null
+  }
 }
 
 /** A look is a design look when it carries `look` (or kind look) and names a face. */
@@ -944,9 +1008,25 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
       store: 'bars-engine',
       deployment: process.env.VERCEL_DEPLOYMENT_ID ?? null,
       tools: TOOLS.map((t) => t.name),
+      protocols: [...MODERN_VERSIONS, ...PROTOCOL_VERSIONS],
+      skills: [...SERVED],
     })
   }
   return bad(`unknown tool: ${name}`)
+}
+
+/**
+ * The look card's tools and the confirm before remove_live_file (src/lib/board/look-app/look.ts). They answer whole
+ * results: structuredContent and _meta for the card, or a 2026-07-28 input_required result for an elicitation.
+ * The request state is signed with the council key, which refused() has already checked is set.
+ */
+async function lookTool(name: string, args: Record<string, unknown>, params: Record<string, unknown>): Promise<AppResult | null> {
+  const secret = process.env.COUNCIL_MENU_TOKEN ?? ''
+  if (name === 'show_look') return showLook(args)
+  if (name === 'answer_look') return answerLook(args)
+  if (name === 'ask_look') return askLook(args, params, secret)
+  if (name === 'remove_live_file') return confirmRemove(args, params, secret)
+  return null
 }
 
 /**
@@ -954,7 +1034,7 @@ async function callTool(rawName: string, args: Record<string, unknown>): Promise
  * @entity SYSTEM
  * @description The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,
  *   read_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,
- *   close_read, close_say, whoami, the live game files (put_live_files, read_live_file,
+ *   close_read, close_say, whoami, the look card (show_look, answer_look, ask_look; resources/read draws it), the live game files (put_live_files, read_live_file,
  *   list_live_files, revert_live_file, remove_live_file), and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,
  *   asset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake
  * @permissions COUNCIL_MENU_TOKEN, as Authorization: Bearer <key>, a bare header or ?token=
@@ -986,40 +1066,68 @@ export async function POST(req: NextRequest) {
     ? (message.params as Record<string, unknown>)
     : {}
 
+  // A 2026-07-28 request names its version in params._meta and the MCP-Protocol-Version header; an older client
+  // opened with `initialize` and sends neither in the body. One endpoint serves both eras.
+  const meta = params._meta && typeof params._meta === 'object' ? (params._meta as Record<string, unknown>) : {}
+  const bodyVersion = typeof meta[META_VERSION] === 'string' ? (meta[META_VERSION] as string) : ''
+  const headerVersion = req.headers.get('mcp-protocol-version') ?? ''
+  const modern = bodyVersion !== ''
+  if (modern) {
+    if (headerVersion && headerVersion !== bodyVersion)
+      return rpcError(id, -32020, 'MCP-Protocol-Version header does not match _meta protocolVersion', 400)
+    if (!MODERN_VERSIONS.includes(bodyVersion))
+      return rpcError(id, -32022, 'Unsupported protocol version', 400,
+        { supported: [...MODERN_VERSIONS, ...PROTOCOL_VERSIONS], requested: bodyVersion })
+    const headerMethod = req.headers.get('mcp-method')
+    if (headerMethod && headerMethod !== method)
+      return rpcError(id, -32020, 'Mcp-Method header does not match the method', 400)
+  }
+  // 2026-07-28 answers a lookup miss and an unknown method with an HTTP status too; older clients read only the body.
+  const missing = modern ? 400 : 200
+
+  const skills = await skillsMethod(id, method, params, missing)
+  if (skills) return skills
+
   switch (method) {
+    case 'server/discover':
+      return rpcResult(id, {
+        supportedVersions: [...MODERN_VERSIONS, ...PROTOCOL_VERSIONS],
+        capabilities: CAPABILITIES,
+        _meta: { 'io.modelcontextprotocol/serverInfo': { name: SERVER_NAME, title: 'Council Board', version: SERVER_VERSION } },
+        instructions: INSTRUCTIONS,
+        ...CACHE,
+      })
     case 'initialize': {
       const asked = typeof params.protocolVersion === 'string' ? params.protocolVersion : ''
       const protocolVersion = PROTOCOL_VERSIONS.includes(asked) ? asked : PROTOCOL_VERSIONS[0]
       return rpcResult(id, {
         protocolVersion,
-        capabilities: { tools: { listChanged: false } },
+        capabilities: CAPABILITIES,
         serverInfo: { name: SERVER_NAME, title: 'Council Board', version: SERVER_VERSION },
-        instructions: 'The Council Board on bars-engine. Store a picture with put_picture, post a question, position, '
-          + 'term, cause or battle with post_rows, and see one back with read_picture. Every row carries its pass and a '
-          + 'lane naming the environment that posted it. Run the reach test first (council/faces.yaml in '
-          + 'six-faces-council). A question for Wendell is a row, never a line in a pull request. A round starts at '
-          + 'pipeline_status and asset_brief, and asset_verify reads the judge receipt before its look posts.',
+        instructions: INSTRUCTIONS,
       })
     }
     case 'notifications/initialized':
     case 'notifications/cancelled':
       return new NextResponse(null, { status: 202, headers: NO_STORE })
-    case 'ping':
+    case 'ping': // removed in 2026-07-28; kept for older clients
       return rpcResult(id, {})
     case 'tools/list':
-      return rpcResult(id, { tools: TOOLS })
+      return rpcResult(id, { tools: TOOLS, ...CACHE })
     case 'tools/call': {
       const rawName = params.name
       const name = typeof rawName === 'string' ? rawName : ''
       const args = params.arguments && typeof params.arguments === 'object' && !Array.isArray(params.arguments)
         ? (params.arguments as Record<string, unknown>)
         : {}
-      if (!name) return rpcError(id, -32602, 'tools/call needs the tool name')
+      if (!name) return rpcError(id, -32602, 'tools/call needs the tool name', missing)
+      const look = await lookTool(name, args, params)
+      if (look) return rpcResult(id, look)
       const result = await callTool(name, args)
       return rpcResult(id, { content: result.content, isError: result.isError })
     }
     default:
-      return rpcError(id, -32601, `Method not found: ${method || '(none)'}`)
+      return rpcError(id, -32601, `Method not found: ${method || '(none)'}`, modern ? 404 : 200)
   }
 }
 
@@ -1037,6 +1145,24 @@ export async function POST(req: NextRequest) {
 export function GET() {
   return NextResponse.json(
     { error: 'POST only: this MCP server answers a POST with JSON and serves no SSE stream' },
+    { status: 405, headers: { ...NO_STORE, Allow: 'POST' } },
+  )
+}
+
+/**
+ * @route DELETE /api/mcp
+ * @entity SYSTEM
+ * @description Answered 405: the server keeps no session to end (MCP 2026-07-28 removed sessions)
+ * @permissions COUNCIL_MENU_TOKEN
+ * @energyCost 0
+ * @dimensions WHO:agent, WHAT:SYSTEM, WHERE:council board, ENERGY:0
+ * @relationships SYSTEM (board store)
+ * @example DELETE /api/mcp
+ * @agentDiscoverable false
+ */
+export function DELETE() {
+  return NextResponse.json(
+    { error: 'POST only: this MCP server keeps no session' },
     { status: 405, headers: { ...NO_STORE, Allow: 'POST' } },
   )
 }
