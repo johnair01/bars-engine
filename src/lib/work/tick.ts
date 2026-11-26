@@ -2,6 +2,7 @@ import 'server-only'
 import type { PrismaClient } from '@prisma/client'
 import { dryLanes, beatLane, returnLapsed, unholdTicket } from './queue'
 import { LANE_WORKERS } from './lanes'
+import { openWakeWindow, wakePickup } from './wake'
 
 /**
  * The orchestrator's tick (Wendell, 2026-11-19). It reads the Claude lane (ready tickets, live claims, the cooldown) and
@@ -13,6 +14,17 @@ export const TICK_LANE = 'claude'
 export const TICK_MAX_FIRES = 4
 export const TICK_COOLDOWN_MS = 15 * 60 * 1000
 export const TICK_LOCK_LANE = 'tick:claude'
+/** A ready Claude ticket that has waited this long means the save wake missed it (2026-11-24, st-answers-wake-3). */
+export const TICK_WAKE_AFTER_MS = 20 * 60 * 1000
+/** After a backstop wake the tick stays quiet this long, so a box curl every hour cannot fire a session every hour. */
+export const TICK_WAKE_QUIET_MS = 60 * 60 * 1000
+export const TICK_WAKE_LANE = 'tick:wake'
+
+/** Pure: should the tick fire the save wake? True when the oldest ready ticket has waited past the limit. */
+export function shouldWake(i: { oldestReadyAt: Date | null; now: Date; dry: boolean; afterMs?: number }): boolean {
+  if (i.dry || !i.oldestReadyAt) return false
+  return i.now.getTime() - i.oldestReadyAt.getTime() > (i.afterMs ?? TICK_WAKE_AFTER_MS)
+}
 
 /** Pure: how many workers to start now. */
 export function decideFires(i: { ready: number; live: number; dry: boolean; cooldownOpen: boolean; max?: number }): number {
@@ -62,7 +74,7 @@ async function unholdNextLook(db: PrismaClient, now: Date): Promise<string | nul
   return r.ok ? pick.title : null
 }
 
-export type TickResult = { fired: number; ready: number; live: number; reason: string; unheld?: string }
+export type TickResult = { fired: number; ready: number; live: number; reason: string; woke?: string; unheld?: string }
 
 export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean } = {}): Promise<TickResult> {
   const now = opts.now ?? new Date()
@@ -74,8 +86,16 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
     db.workLane.findUnique({ where: { lane: TICK_LOCK_LANE } }),
   ])
   const cooldownOpen = !!lock?.dryUntil && lock.dryUntil > now
+  // Backstop for the save wake: the box curls this tick, and a Claude ticket that has waited 20 minutes starts one session.
+  let woke: string | undefined
+  if (ready > 0 && !opts.dry) {
+    const oldest = await db.workTicket.findFirst({ where: { lane: TICK_LANE, state: 'ready' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+    if (shouldWake({ oldestReadyAt: oldest?.createdAt ?? null, now, dry: !!opts.dry }) && await openWakeWindow(db, now, TICK_WAKE_QUIET_MS, TICK_WAKE_LANE)) {
+      woke = await wakePickup(`${ready} Claude ticket(s) ready more than 20 minutes (tick backstop)`)
+    }
+  }
   const n = decideFires({ ready, live, dry: out.has(TICK_LANE), cooldownOpen })
-  const base = { ready, live }
+  const base = { ready, live, ...(woke ? { woke } : {}) }
   if (n === 0) {
     if (ready === 0 && live === 0 && !out.has(TICK_LANE) && !opts.dry) {
       const unheld = await unholdNextLook(db, now)

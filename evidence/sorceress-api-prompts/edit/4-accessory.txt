@@ -1,0 +1,5 @@
+Edit the attached sprite sheet. Change ONLY one item: add a crimson heart-sigil sash of the Bold Heart archetype — a narrow red sash worn diagonally from the left shoulder to the right hip with a small embroidered heart-sigil medallion at the hip end. The sash must be narrow (about 2-3 pixels wide at this sprite scale), must follow the torso contour, and must be visible in all four facings including the back view.
+
+Keep EVERYTHING else pixel-identical to the input sheet: same 3x4 grid layout, same character body, face, hair, charcoal tunic and trousers, same poses in every cell, same head size and head position in every frame, same background color.
+
+Do not zoom, crop, shift, rescale, or re-draw the character. Do not change the framing of any cell. Output the full sheet, same layout, same background.

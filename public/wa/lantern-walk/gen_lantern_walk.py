@@ -2,9 +2,12 @@
 usage: python3 gen_lantern_walk.py   (writes tiles.png, lantern-walk.tmj, notice-N.html, arrive-N.html here)
 One 40x24 orthogonal map, 32 px tiles: the office door at the left, three notice posts beside it, and three
 places to walk to. Each notice post and each place is a rectangle area carrying an openWebsite property."""
-import json, os, html
+import json, os, html, sys
 from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); T = 32; W, H = 40, 24
+sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
+from wa_export import apply as wa_apply, check as wa_check, check_exits as wa_exits  # noqa: E402
+from check_assets import check_map as assets_map  # noqa: E402
 cols = [(70,120,60),(150,120,80),(40,90,160),(90,80,90),(100,70,40),(30,110,40),(200,80,120),(130,130,130),(240,200,40),
         (255,190,70),(120,85,50),(60,45,40)]
 N=27; import random; random.seed(7)
@@ -102,17 +105,59 @@ PAGE="""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewpor
 body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#1c1612;color:#f2e6cf;font:18px/1.55 Georgia,serif}}
 main{{max-width:30rem;padding:2rem 1.5rem}}h1{{font-size:1.5rem;margin:0 0 1rem;color:#ffbe46}}p{{margin:0 0 1rem}}small{{color:#b9a98c}}
 </style><main><h1>{title}</h1><p>{body}</p><small>{foot}</small></main></html>"""
+# Notice pages are ink stories (notices.ink, compiled by compile_notices.mjs to notices.json beside ink.js). The static
+# text inside <main> is what a reader sees if the story cannot load. The page needs the WorkAdventure iframe API to keep
+# the traveller's visit count in WA.player.state, so notice areas open with openWebsiteAllowApi.
+NOTICE_PAGE="""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title><style>
+body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#1c1612;color:#f2e6cf;font:18px/1.55 Georgia,serif}}
+main{{max-width:30rem;padding:2rem 1.5rem}}h1{{font-size:1.5rem;margin:0 0 1rem;color:#ffbe46}}p{{margin:0 0 1rem}}small{{display:block;color:#b9a98c}}
+button{{display:block;width:100%;margin:.5rem 0;padding:.6rem .9rem;min-height:44px;background:#2a211b;color:#ffbe46;border:1px solid #6b5436;border-radius:6px;font:inherit;text-align:left;cursor:pointer}}
+button:hover,button:focus-visible{{border-color:#ffbe46;outline:none}}
+</style><main id="m"><h1>{title}</h1><p>{body}</p><small>{foot}</small></main>
+<!-- Inside WorkAdventure the page loads the world's iframe API; on its own, ?visits=1&pick=0 stands in for the saved state and the choices. -->
+<script>
+var N={n},KEY="notice_visits_"+N,q=new URLSearchParams(location.search);
+function boot(){{if(boot.d)return;boot.d=1;var r=document.createElement("script");r.src="ink.js";r.onload=start;document.head.appendChild(r)}}
+if(q.get("standalone"))boot();else{{var s=document.createElement("script");s.src="https://world.masteringallyship.com/iframe_api.js";s.onload=s.onerror=boot;document.head.appendChild(s)}}
+function start(){{var inWA=typeof WA!=="undefined"&&WA.onInit;
+ Promise.all([fetch("notices.json").then(function(r){{return r.text()}}),inWA?WA.onInit():Promise.resolve()]).then(function(v){{
+  var story=new inkjs.Story(v[0].replace(/^\uFEFF/,"")),m=document.getElementById("m");
+  story.variablesState["visits_"+N]=+(inWA?WA.player.state[KEY]:q.get("visits"))||0;story.ChoosePathString("notice_"+N);
+  function save(){{if(inWA)WA.player.state.saveVariable(KEY,story.variablesState["visits_"+N],{{persist:true,public:false,scope:"world"}})}}
+  function render(){{var title="",text="";
+   while(story.canContinue){{text+="<p>"+story.Continue().replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>";story.currentTags.forEach(function(t){{if(t.indexOf("title:")===0)title=t.slice(6).trim()}})}}
+   m.innerHTML="<h1>"+title+"</h1>"+text;
+   story.currentChoices.forEach(function(c,i){{var b=document.createElement("button");b.textContent=c.text;b.onclick=function(){{story.ChooseChoiceIndex(i);render()}};m.appendChild(b)}});
+   var f=document.createElement("small");f.textContent="Notice "+N+" of 3. Agree with the friends at the door on one, then walk there together.";m.appendChild(f);save()}}
+  render();(q.get("pick")||"").split(",").filter(Boolean).forEach(function(i){{story.ChooseChoiceIndex(+i);render()}});
+ }}).catch(function(e){{console.error("notice story failed",e)}})}}
+</script></html>"""
 objs=[]; oid=1
-def area(name,x,y,w,h,url):
+def area(name,x,y,w,h,url,api=False):
     global oid
     objs.append({"id":oid,"name":name,"type":"area","x":x*T,"y":y*T,"width":w*T,"height":h*T,"rotation":0,"visible":True,
       "properties":[{"name":"openWebsite","type":"string","value":url},{"name":"openWebsiteWidth","type":"int","value":40},
-                    {"name":"openWebsiteTrigger","type":"string","value":"onaction"},{"name":"openWebsiteTriggerMessage","type":"string","value":"Press SPACE to read"}]})
+                    {"name":"openWebsiteTrigger","type":"string","value":"onaction"},{"name":"openWebsiteTriggerMessage","type":"string","value":"Press SPACE to read"}]
+      +([{"name":"openWebsiteAllowApi","type":"bool","value":True}] if api else [])})
     oid+=1
+def exit_area(name,x,y,w,h,url,role):
+    """A door: WorkAdventure loads the target the moment the room opens, so it has to exist, and it must not
+    sit under the start tile or the room would throw the player out on arrival."""
+    global oid
+    objs.append({"id":oid,"name":name,"type":"area","x":x*T,"y":y*T,"width":w*T,"height":h*T,"rotation":0,"visible":True,
+      "properties":[{"name":"exitUrl","type":"string","value":url},{"name":"role","type":"string","value":role}]})
+    oid+=1
+# The office door at (4,9) is a doorway you can stand in. It points at the dojo's editable address: the
+# `/~` segment is what makes the back end answer `editable: true`, so arriving through this door puts you
+# in the room with the map editor, not a read-only copy of the same files. Absolute because a room URL is
+# what exitUrl has to be, and the editable form is a different path shape than this map's own.
+DOJO_ROOM = "https://world.masteringallyship.com/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam"
+exit_area("Office door",4,9,1,1,DOJO_ROOM,"to-dojo")
 for n,((t,b,place,arr),(x,y),(px,py)) in enumerate(zip(NOTICES,posts,places),1):
-    open(f'{HERE}/notice-{n}.html','w').write(PAGE.format(title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Agree with the friends at the door on one, then walk there together."))
+    open(f'{HERE}/notice-{n}.html','w').write(NOTICE_PAGE.format(n=n,title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Agree with the friends at the door on one, then walk there together."))
     open(f'{HERE}/arrive-{n}.html','w').write(PAGE.format(title=html.escape(place),body=html.escape(arr),foot="Next time you visit, tell the table how it went."))
-    area(f"notice-{n}",x-1,(y+1 if y<12 else y-1),3,1,f"notice-{n}.html")
+    area(f"notice-{n}",x-1,(y+1 if y<12 else y-1),3,1,f"notice-{n}.html",api=True)
     area(place,px-1,py-1,3,3,f"arrive-{n}.html")
 def tl(i,name,data,props=None):
     l={"id":i,"name":name,"type":"tilelayer","x":0,"y":0,"width":W,"height":H,"opacity":1,"visible":True,"data":data}
@@ -129,5 +174,12 @@ m={"compressionlevel":-1,"height":H,"width":W,"infinite":False,"orientation":"or
    "tileheight":T,"tilewidth":T,"type":"map","version":"1.10","nextobjectid":oid,"layers":layers,
    "nextlayerid":60,"tilesets":[{"firstgid":1,"name":"tiles","image":"tiles.png","imagewidth":T*N,"imageheight":T,"tilewidth":T,"tileheight":T,"tilecount":N,"columns":N,"margin":0,"spacing":0,"tiles":[{"id":14,"animation":[{"tileid":14,"duration":400},{"tileid":15,"duration":400},{"tileid":16,"duration":200},{"tileid":15,"duration":400}]},{"id":17,"animation":[{"tileid":17,"duration":300},{"tileid":18,"duration":300},{"tileid":19,"duration":300},{"tileid":20,"duration":300}]},{"id":21,"animation":[{"tileid":19,"duration":300},{"tileid":20,"duration":300},{"tileid":17,"duration":300},{"tileid":18,"duration":300}]}]}],
    "properties":[{"name":"mapName","type":"string","value":"The Lantern Walk"},{"name":"script","type":"string","value":"lantern-walk.js"}]}
+# WorkAdventure reads this map differently from how Tiled draws it: floorLayer must be an Object Layer,
+# collision is a tile property rather than a layer, and a collided start tile would spawn a player in a wall.
+wa_apply(m)
+_wa = wa_check(m) + wa_exits(m, HERE) + assets_map(m, HERE)
+if _wa:
+    print('WORKADVENTURE RULES FAILED:'); [print(' -', e) for e in _wa]; sys.exit(1)
+
 json.dump(m,open(f'{HERE}/lantern-walk.tmj','w'),separators=(',',':'))
 print(sorted(os.listdir(HERE)))

@@ -5,7 +5,7 @@
  *   through the board save first. A second push with the same sourceKey is a no-op. His board answers push their own
  *   tickets as they are saved (src/app/api/board/saves).
  * @permissions COUNCIL_MENU_TOKEN
- * @example POST /api/work/tickets {"sourceKey":"council/gates/wq-look-3@A","title":"...","brief":"...","basis":{"rows":["wq-look-3"]},"lanes":["claude","freebuff"]}
+ * @example POST /api/work/tickets {"sourceKey":"council/gates/wq-look-3@A","title":"...","brief":"...","basis":{"rows":["wq-look-3"]},"lanes":["claude","freebuff"],"state":"held"}
  *
  * @route GET /api/work/tickets
  * @description The tickets of one lane or all, newest first (up to 50), for a session checking what is queued.
@@ -35,9 +35,12 @@ export async function POST(req: NextRequest) {
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const str = (k: string, max: number) => (typeof b?.[k] === 'string' ? (b[k] as string).trim().slice(0, max) : '')
   const sourceKey = str('sourceKey', 300), title = str('title', 200), brief = str('brief', 20000)
-  if (!sourceKey || !title || !brief) return NextResponse.json({ error: 'Expected {sourceKey, title, brief, basis?, lanes?}' }, { status: 400 })
+  if (!sourceKey || !title || !brief) return NextResponse.json({ error: 'Expected {sourceKey, title, brief, basis?, lanes?, state?}' }, { status: 400 })
   const basis = b?.basis && typeof b.basis === 'object' ? b.basis : {}
-  const r = await pushTicket(db, { sourceKey, title, brief, basis: basis as never, lanes: cleanLanes(b?.lanes) })
+  // A council thread files a held ticket (a "Next look:" that waits for the tick, docs/loops.md); before 2026-11-25
+  // the route dropped `state`, so every held filing arrived ready and skipped the tick's caps.
+  const state = b?.state === 'held' ? 'held' as const : undefined
+  const r = await pushTicket(db, { sourceKey, title, brief, basis: basis as never, lanes: cleanLanes(b?.lanes), state })
   return NextResponse.json({ created: r.created, ticket: { id: r.ticket.id, lane: r.ticket.lane, state: r.ticket.state } },
     { status: r.created ? 201 : 200, headers: NO_STORE })
 }

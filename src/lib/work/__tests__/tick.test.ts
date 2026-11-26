@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/db', () => ({ db: {} }))
-import { decideFires, pickNextLook, strandOf } from '../tick'
+import { decideFires, pickNextLook, shouldWake, strandOf } from '../tick'
 
 describe('orchestrator tick: how many workers to start', () => {
   const base = { ready: 8, live: 0, dry: false, cooldownOpen: false }
@@ -31,4 +31,17 @@ describe('self-started looks: which held "Next look:" ticket the idle tick lifts
   it('lifts nothing past four a day', () => expect(pickNextLook({ ...base, unheldToday: 4 })).toBeNull())
   it('skips a strand that already has one open', () => expect(pickNextLook({ ...base, open: new Set(['dojo']) })?.sourceKey).toBe('next-look:robe:1'))
   it('ignores tickets not titled Next look:', () => expect(pickNextLook({ ...base, held: [mk('robe', 1, 1, 'Fix it')] })).toBeNull())
+})
+
+describe('orchestrator tick: the wake backstop', () => {
+  const now = new Date('2026-11-24T20:00:00Z')
+  const ago = (m: number) => new Date(now.getTime() - m * 60_000)
+  it('wakes when the oldest ready ticket has waited over 20 minutes', () =>
+    expect(shouldWake({ oldestReadyAt: ago(21), now, dry: false })).toBe(true))
+  it('waits while the ticket is younger than 20 minutes', () =>
+    expect(shouldWake({ oldestReadyAt: ago(19), now, dry: false })).toBe(false))
+  it('does nothing when no ticket is ready or on a dry run', () => {
+    expect(shouldWake({ oldestReadyAt: null, now, dry: false })).toBe(false)
+    expect(shouldWake({ oldestReadyAt: ago(90), now, dry: true })).toBe(false)
+  })
 })

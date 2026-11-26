@@ -1,0 +1,49 @@
+{
+  "about": "Level language for the Heaven Sect's court: the sect's first 2D map. Rooms, seats and exits come from Wendell's note on cd-dojo-look-1 (several labelled meeting rooms, doors to other maps) and the game frame in council/callsheets/calrunian-sect.md. Seat counts are a working position from the Ouroboros run (turn 3), his to change.",
+  "map": "heaven-sect-court",
+  "title": "The Heaven Sect",
+  "size": [96, 80],
+  "seed": 7,
+  "start": {"x": 47, "y": 77},
+  "rooms": [
+    {"id": "altar", "label": "Altar", "kind": "shrine", "box": [41, 3, 14, 8], "doors": [{"side": "S", "x": 47, "w": 2}], "seats": 2},
+    {"id": "founders-hall", "label": "Founder's Hall", "kind": "assembly", "box": [34, 14, 28, 20], "doors": [{"side": "S", "x": 46, "w": 4}, {"side": "N", "x": 47, "w": 2, "plaque": false}], "seats": 24},
+    {"id": "elder-shaman", "label": "Shaman Elder", "kind": "circle", "box": [3, 14, 14, 12], "doors": [{"side": "S", "x": 13, "w": 3}], "seats": 6, "banner": "banner_5"},
+    {"id": "elder-challenger", "label": "Challenger Elder", "kind": "circle", "box": [3, 29, 14, 12], "doors": [{"side": "S", "x": 13, "w": 3}], "seats": 6, "banner": "banner_2"},
+    {"id": "elder-regent", "label": "Regent Elder", "kind": "circle", "box": [3, 44, 14, 12], "doors": [{"side": "S", "x": 13, "w": 3}], "seats": 6, "banner": "banner_1"},
+    {"id": "elder-architect", "label": "Architect Elder", "kind": "circle", "box": [79, 14, 14, 12], "doors": [{"side": "S", "x": 80, "w": 3}], "seats": 6, "banner": "banner_3"},
+    {"id": "elder-diplomat", "label": "Diplomat Elder", "kind": "circle", "box": [79, 29, 14, 12], "doors": [{"side": "S", "x": 80, "w": 3}], "seats": 6, "banner": "banner_4"},
+    {"id": "elder-sage", "label": "Sage Elder", "kind": "circle", "box": [79, 44, 14, 12], "doors": [{"side": "S", "x": 80, "w": 3}], "seats": 6, "banner": "banner_6"},
+    {"id": "dojo", "label": "Dojo", "kind": "dojo", "box": [21, 37, 22, 18], "doors": [{"side": "S", "x": 30, "w": 4}], "seats": 8},
+    {"id": "tea-library", "label": "Tea Library", "kind": "tea", "box": [57, 40, 16, 13], "doors": [{"side": "S", "x": 59, "w": 3}], "seats": 4},
+    {"id": "gate-court", "label": "Gate Court", "kind": "court", "box": [20, 58, 56, 14], "doors": [], "seats": 10}
+  ],
+  "paths": {
+    "about": "Paved walks [x, y, w, h]. The two lanes join the Elders' halls to the gate court and run north to the exits.",
+    "west lane": [17, 0, 3, 72],
+    "east lane": [76, 0, 3, 72],
+    "altar walk": [17, 11, 62, 3],
+    "west walk 1": [3, 26, 14, 3],
+    "west walk 2": [3, 41, 14, 3],
+    "west walk 3": [3, 56, 14, 3],
+    "east walk 1": [79, 26, 14, 3],
+    "east walk 2": [79, 41, 14, 3],
+    "east walk 3": [79, 56, 14, 3],
+    "avenue": [44, 34, 8, 24],
+    "dojo step": [30, 55, 4, 3],
+    "tea step": [59, 53, 3, 5],
+    "gate road": [46, 72, 4, 8]
+  },
+  "arrivals": {
+    "about": "Named landing spots for doors in other maps (WorkAdventure start layers, reached as heaven-sect-court.wam#<id>). Each lands outside the named room's first door. The Calrunian Dojo's four doors lead here (Wendell, 2026-11-25: doors off the existing dojo to the new rooms).",
+    "from-dojo-founders": "founders-hall",
+    "from-dojo-tea": "tea-library",
+    "from-dojo-west": "elder-shaman",
+    "from-dojo-east": "elder-architect"
+  },
+  "exits": [
+    {"id": "to-calrunian-dojo", "label": "Calrunian Dojo", "box": [46, 78, 4, 2], "exitUrl": "https://world.masteringallyship.com/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam", "plaque_at": [39, 75]},
+    {"id": "to-forest-edge", "label": "Forest Edge", "box": [17, 0, 3, 2], "exitUrl": "forest-edge.tmj", "built": false, "plaque_at": [20, 2]},
+    {"id": "to-inner-island", "label": "Inner Island", "box": [76, 0, 3, 2], "exitUrl": "inner-island.tmj", "built": false, "plaque_at": [70, 2]}
+  ]
+}

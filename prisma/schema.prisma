@@ -5569,3 +5569,36 @@ model ChroniclerFlag {
   @@index([barId])
   @@map("chronicler_flags")
 }
+
+/// A locally authored world kit as it sits in its author's dojo (spec wa-world-kit). One row per (author, kit id):
+/// republish updates it in place. Visible to its author only until a later step promotes it.
+model WorldKit {
+  id         String   @id @default(cuid())
+  playerId   String   @map("player_id")
+  kitId      String   @map("kit_id")
+  name       String
+  version    String
+  files      Json
+  portraits  Json     @default("[]")
+  findings   Json     @default("[]")
+  visibility String   @default("author")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([playerId, kitId])
+  @@map("world_kits")
+}
+
+/// Diagnostics for every non-dry publish call, kept so a rejected kit leaves its findings and no WorldKit row.
+model WorldKitAttempt {
+  id        String   @id @default(cuid())
+  playerId  String   @map("player_id")
+  kitId     String?  @map("kit_id")
+  verdict   String
+  outcome   String
+  findings  Json     @default("[]")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([playerId, createdAt])
+  @@map("world_kit_attempts")
+}

@@ -1,0 +1,89 @@
+{
+  "about": "Shared design language for every 2D Heaven Sect map. A level file (levels/*.json) names its rooms, seats and exits and may override any piece here; changing a level file redraws only that level. Source art: Ninja Adventure Asset Pack by Pixel-boy and AAA, CC0 (../calrunian-dojo/src16/LICENSE-CC0.txt), 16 px tiles drawn up 2x to WorkAdventure's 32 px.",
+  "src_px": 16,
+  "scale": 2,
+  "sheets": {
+    "house": "../calrunian-dojo/src16/TilesetHouse.png",
+    "nature": "../calrunian-dojo/src16/TilesetNature.png",
+    "floor": "../calrunian-dojo/src16/TilesetFloor.png",
+    "element": "../calrunian-dojo/src16/TilesetElement.png",
+    "ifloor": "../calrunian-dojo/src16/TilesetInteriorFloor.png",
+    "wall": "../calrunian-dojo/src16/TilesetWallSimple.png",
+    "yun": "../calrunian-dojo/src16/MasterSheet.png"
+  },
+  "recolor": {
+    "about": "The one banner drawn in purple is redrawn in the water element's colours from public/ui/tokens.css (--ui-water-glow #1a7a8a); the aesthetic contract allows no invented purples.",
+    "house_banner_violet": {"sheet": "house", "x": 27, "y": 20, "w": 1, "h": 2, "hue_to": "#1a7a8a"}
+  },
+  "fills": {
+    "grass": {"sheet": "floor", "tiles": [[0, 12], [0, 12], [0, 12], [1, 12], [2, 12], [3, 12]]},
+    "paving": {"sheet": "ifloor", "grid4": [0, 12], "about": "cobbled panels, the outdoor ground of courts, lanes and walks"},
+    "boards_tan": {"sheet": "ifloor", "grid4": [11, 0], "about": "framed boards: the dojo and the founder's hall"},
+    "boards_green": {"sheet": "ifloor", "grid4": [11, 6], "about": "jade boards: the tea library"},
+    "brick_pale": {"sheet": "ifloor", "grid4": [0, 0], "about": "pale tile: the Elders' halls"},
+    "stone_dark": {"sheet": "ifloor", "grid4": [11, 12], "about": "dark stone: the altar"},
+    "medallion": {"sheet": "ifloor", "x": 15, "y": 0, "w": 4, "h": 4}
+  },
+  "walls": {
+    "about": "Nine-slice wall rings; each room kind picks one so a room's colour says what it is.",
+    "tan":    {"sheet": "wall", "ox": 0, "oy": 0},
+    "orange": {"sheet": "wall", "ox": 5, "oy": 0},
+    "brown":  {"sheet": "wall", "ox": 0, "oy": 6},
+    "green":  {"sheet": "wall", "ox": 5, "oy": 6},
+    "nine": {"tl": [0, 0], "t": [3, 0], "tr": [4, 0], "l": [0, 1], "r": [4, 1], "bl": [0, 4], "b": [3, 4], "br": [4, 4]}
+  },
+  "stamps": {
+    "plum": {"sheet": "nature", "x": 0, "y": 18, "w": 3, "h": 3, "over_rows": 2},
+    "pine": {"sheet": "nature", "x": 0, "y": 0, "w": 2, "h": 2, "over_rows": 1},
+    "round_tree": {"sheet": "nature", "x": 16, "y": 0, "w": 2, "h": 2, "over_rows": 1},
+    "big_tree": {"sheet": "nature", "x": 4, "y": 2, "w": 4, "h": 3, "over_rows": 2},
+    "bamboo_tall": {"sheet": "nature", "x": 11, "y": 8, "w": 1, "h": 3, "over_rows": 2},
+    "bamboo_short": {"sheet": "nature", "x": 12, "y": 9, "w": 1, "h": 2, "over_rows": 1},
+    "scholar_rock": {"sheet": "nature", "x": 19, "y": 8, "w": 2, "h": 2, "over_rows": 0},
+    "pebble_rock": {"sheet": "nature", "x": 21, "y": 9, "w": 1, "h": 1, "over_rows": 0},
+    "bush": {"sheet": "nature", "x": 1, "y": 10, "w": 1, "h": 1, "over_rows": 0, "collide": false},
+    "fern": {"sheet": "nature", "x": 9, "y": 10, "w": 1, "h": 1, "over_rows": 0, "collide": false},
+    "cushion": {"sheet": "element", "x": 2, "y": 1, "w": 1, "h": 1, "over_rows": 0, "collide": false, "about": "a seat: walkers stand on it to sit"},
+    "low_table": {"sheet": "element", "x": 2, "y": 10, "w": 3, "h": 1, "over_rows": 0},
+    "tea_table": {"sheet": "element", "x": 3, "y": 9, "w": 1, "h": 1, "over_rows": 0},
+    "altar_table": {"sheet": "element", "x": 9, "y": 9, "w": 2, "h": 1, "over_rows": 0},
+    "bookshelf": {"sheet": "element", "x": 8, "y": 7, "w": 2, "h": 2, "over_rows": 1},
+    "plant_pot": {"sheet": "element", "x": 0, "y": 7, "w": 1, "h": 2, "over_rows": 1},
+    "jar": {"sheet": "element", "x": 2, "y": 9, "w": 1, "h": 1, "over_rows": 0},
+    "notice_board": {"sheet": "element", "x": 11, "y": 1, "w": 3, "h": 1, "over_rows": 0},
+    "weapon_rack": {"sheet": "element", "x": 11, "y": 2, "w": 3, "h": 2, "over_rows": 0},
+    "dummy": {"sheet": "element", "x": 15, "y": 0, "w": 1, "h": 1, "over_rows": 0},
+    "sage_statue": {"sheet": "house", "x": 3, "y": 15, "w": 2, "h": 2, "over_rows": 1, "about": "a seated figure holding the water-blue pearl"},
+    "torii": {"sheet": "house", "x": 0, "y": 5, "w": 3, "h": 2, "over_rows": 2, "collide": false, "about": "the sect gate; walkers pass under it"},
+    "banner_1": {"sheet": "house", "x": 22, "y": 20, "w": 1, "h": 2, "over_rows": 0},
+    "banner_2": {"sheet": "house", "x": 23, "y": 20, "w": 1, "h": 2, "over_rows": 0},
+    "banner_3": {"sheet": "house", "x": 24, "y": 20, "w": 1, "h": 2, "over_rows": 0},
+    "banner_4": {"sheet": "house", "x": 25, "y": 20, "w": 1, "h": 2, "over_rows": 0},
+    "banner_5": {"sheet": "house", "x": 26, "y": 20, "w": 1, "h": 2, "over_rows": 0},
+    "banner_6": {"sheet": "house", "x": 27, "y": 20, "w": 1, "h": 2, "over_rows": 0, "recolor": "house_banner_violet"},
+    "master_yun": {"sheet": "yun", "x": 0, "y": 0, "w": 1, "h": 1, "over_rows": 0}
+  },
+  "plaque": {
+    "about": "Room names are drawn into a signs tileset as wooden plaques, so a player reads the name in the world itself. Plaques sit on the wall beside the door.",
+    "font": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "px": 9,
+    "wood": "#6b3e26", "edge": "#2a1a10", "ink": "#f3e2c0"
+  },
+  "rules": {
+    "about": "Walkable-scale rules proven on the Oddboro office round (odb-ladder-look-2): WorkAdventure v1.35 walker feet are 16x16. Meeting rooms are 30% above that round's 10x9 minimum (his note on odb-ladder-look-2).",
+    "corridor_min": 3,
+    "door_min": 2,
+    "clear_round_npc": 2,
+    "room_min_interior": [12, 10],
+    "doors_on": "north or south walls only, so every plaque has a wall row to sit on"
+  },
+  "room_kinds": {
+    "about": "The room grammar. Each kind names its wall, floor and furniture plan; the level gives the seat count.",
+    "assembly": {"wall": "orange", "floor": "boards_tan", "plan": "rows facing a dais", "meeting": true},
+    "circle":   {"wall": "tan", "floor": "brick_pale", "plan": "one low table, seats round it, the School's banner on the north wall", "meeting": true},
+    "dojo":     {"wall": "tan", "floor": "boards_tan", "plan": "sparring medallion, six stance panels, seats round the floor", "meeting": true},
+    "tea":      {"wall": "green", "floor": "boards_green", "plan": "tea tables with a seat each side, shelves on the north wall", "meeting": true},
+    "shrine":   {"wall": "brown", "floor": "stone_dark", "plan": "a seated figure, an altar table, two seats", "meeting": false},
+    "court":    {"wall": null, "floor": "paving", "plan": "open paving, standing room, gate and notice board", "meeting": false}
+  }
+}
