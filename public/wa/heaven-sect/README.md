@@ -15,6 +15,17 @@ cannot be reached from the start.
 Rooms are meeting zones (`jitsiRoom`, `focusable`). Exits are `exitUrl` areas: the Lantern Walk exists; the Forest
 Edge and the Inner Island maps are not built yet.
 
+## The Elders and the lantern rail
+
+No line a player reads lists the six Elders or uses any other word for them. The Steward hands a new player one lantern
+from the Elder of the north-west hall (`elder-shaman`'s room); walking into that hall opens her sheet and gives the
+first chore (`elder_meet` in `guide.ink`). The player's state is two `WA.player.state` keys, `elders_met` (hall ids)
+and `elder_waiting` (`{hall, line}`). The level file's `rail` block draws six lanterns by the gate (`rail-<id>-dark` and
+`rail-<id>-lit` layers, one `Rail <id>` area each); `guide.js` lights the ones that wait or have been met and shows a
+line on standing at one. Only the first Elder's order and chore are held by the record (council `sect-elders-meet-1`);
+the five dark lanterns' "lights when" lines are drafts, and nothing lights them yet. The map's hall labels still carry
+role names (`Shaman Elder` ...), a second change.
+
 ## The Gate Steward (ink dialogue)
 
 A guide stands in the Gate Court for new players. `guide.ink` holds her lines (all Claude drafts, Wendell's to edit):

@@ -86,6 +86,7 @@ def plaque_img(text):
 
 
 GUIDE = LEVEL.get('guide')
+RAIL = LEVEL.get('rail') if GUIDE else None
 PATHS, pathlayers = {}, []
 labels = [r['label'] for r in LEVEL['rooms']] + [e['label'] for e in LEVEL['exits']]
 pimgs = [plaque_img(t) for t in labels]
@@ -109,6 +110,17 @@ if GUIDE:
     gd.ellipse([8, 8, 23, 23], fill=(42, 26, 16, 255)); gd.ellipse([10, 10, 21, 21], fill=(255, 190, 70, 255))
     gd.ellipse([13, 13, 18, 18], fill=(255, 240, 200, 255))
     glow.save(os.path.join(OUT, 'tiles/glow.png')); add_sheet('glow', glow, 'tiles/glow.png')
+    if RAIL:   # the rail's lantern: frame 0 dark, frame 1 lit
+        ls = Image.new('RGBA', (2 * T, T), (0, 0, 0, 0)); ld = ImageDraw.Draw(ls)
+        for f, (body, rim) in enumerate(((hex_rgb('#4a3b2e'), hex_rgb('#2a1a10')), (hex_rgb('#ffbe46'), hex_rgb('#6b3a10')))):
+            ox = f * T
+            if f: ld.ellipse([ox + 1, 1, ox + 30, 30], fill=(255, 190, 70, 70))                                # glow halo
+            ld.rectangle([ox + 14, 24, ox + 17, 31], fill=hex_rgb('#5a3b22') + (255,))                      # post
+            ld.rectangle([ox + 6, 5, ox + 25, 8], fill=rim + (255,))                                          # cap
+            ld.rectangle([ox + 8, 9, ox + 23, 23], fill=body + (255,), outline=rim + (255,))                  # paper
+            ld.rectangle([ox + 7, 24, ox + 24, 25], fill=rim + (255,))                                        # foot
+            if f: ld.rectangle([ox + 11, 12, ox + 20, 20], fill=(255, 240, 200, 255))                         # flame glow
+        ls.save(os.path.join(OUT, 'tiles/rail-lantern.png')); add_sheet('railLantern', ls, 'tiles/rail-lantern.png')
     # the "first time here?" bubble over her head: a small cream speech bubble, shown only to a player who has not talked to her
     himg, HINT_WT = plaque_img(GUIDE['hint'])
     hs = Image.new('RGBA', (max(HINT_WT, 1) * SP, 2 * SP), (0, 0, 0, 0)); hd = ImageDraw.Draw(hs)
@@ -430,6 +442,20 @@ if GUIDE:
         for (x, y) in route: data[I(x, y)] = gid('glow', 0, 0)
         pathlayers.append(data)
 
+RAILL = {}     # hall id -> {'dark': [...], 'lit': [...]} tile layers, and the area name its popup uses
+if RAIL:
+    ry, rx0 = RAIL['y'], RAIL['x0']
+    for k, h in enumerate(RAIL['halls']):
+        x = rx0 + 2 * k
+        for dx in (0, 1):
+            if blocked(x + dx, ry): problems.append(f'lantern rail square {x + dx},{ry} is not free')
+        dark, lit = [0] * N, [0] * N
+        dark[I(x, ry)] = gid('railLantern', 0, 0); lit[I(x, ry)] = gid('railLantern', 1, 0)
+        RAILL[h['id']] = {'dark': dark, 'lit': lit, 'area': f'Rail {h["id"]}'}
+        zones.append((f'Rail {h["id"]}', x, ry, 2, 2, {'role': 'lantern-rail', 'hall': h['id']}))
+    if problems:
+        print('CHECK FAILED:'); [print(' -', p) for p in problems]; sys.exit(1)
+
 # ---- write the map ----
 def tl(i, name, data, props=None, visible=True):
     l = {'id': i, 'name': name, 'type': 'tilelayer', 'x': 0, 'y': 0, 'width': W, 'height': H, 'opacity': 1, 'visible': visible, 'data': data}
@@ -449,9 +475,11 @@ layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail'])] + [tl(10 +
           {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
           tl(7, 'start', L['start'], visible=False),
           *([tl(30, 'hint-new', HINT, visible=False)] if GUIDE else []),
+          *[tl(40 + 2 * k, f'rail-{hid}-dark', v['dark']) for k, (hid, v) in enumerate(RAILL.items())],
+          *[tl(41 + 2 * k, f'rail-{hid}-lit', v['lit'], visible=False) for k, (hid, v) in enumerate(RAILL.items())],
           {'id': 8, 'name': 'areas', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': areas}]
 tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
-       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 31,
+       'tiledversion': '1.10.2', 'tileheight': T, 'tilewidth': T, 'type': 'map', 'version': '1.10', 'nextlayerid': 40 + 2 * len(RAILL) + 1,
        'nextobjectid': len(areas) + 1, 'layers': layers, 'tilesets': tilesets,
        'properties': [prop('mapName', LEVEL['title']),
                       *([prop('script', 'guide.js')] if GUIDE else []),
@@ -459,7 +487,8 @@ tmj = {'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orie
                       prop('generator', f'gen_sect.py --level levels/{MAP}.json --seed {SEED}')]}
 json.dump(tmj, open(os.path.join(OUT, f'{MAP}.tmj'), 'w'), separators=(',', ':'))
 if GUIDE:
-    json.dump({'guide': GUIDE['label'], 'halls': HALLS}, open(os.path.join(OUT, 'guide-halls.json'), 'w'), indent=1)
+    rail = [{'id': h['id'], 'place': h['place'], 'lights': h['lights'], 'waiting': h.get('waiting'), 'dark': f'rail-{h["id"]}-dark', 'lit': f'rail-{h["id"]}-lit', 'area': RAILL[h['id']]['area']} for h in RAIL['halls']] if RAIL else []
+    json.dump({'guide': GUIDE['label'], 'halls': HALLS, 'rail': rail}, open(os.path.join(OUT, 'guide-halls.json'), 'w'), indent=1)
     import subprocess, shutil
     if OUT != HERE: shutil.copy(os.path.join(HERE, 'guide.html'), os.path.join(OUT, 'guide.html'))
     r = subprocess.run(['node', os.path.join(HERE, 'compile_ink.mjs'), OUT], capture_output=True, text=True)
@@ -487,6 +516,10 @@ for (x, y, facing) in walkers:
     canvas.alpha_composite(monk.crop((32, facing * 32, 64, facing * 32 + 32)), (x * T, y * T - 6))
 if GUIDE and '--hint' in args:
     for i, g in enumerate(HINT):
+        if g: canvas.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
+LIT_RAIL = (opt('--lit-rail', '') or '').split(',')    # hall ids whose rail lantern is drawn lit, for a picture
+for hid, v in RAILL.items():
+    for i, g in enumerate(v['lit'] if hid in LIT_RAIL else v['dark']):
         if g: canvas.alpha_composite(tile_img(g), ((i % W) * T, (i // W) * T))
 LIT = opt('--lit', None)
 if LIT and LIT in PATHS:

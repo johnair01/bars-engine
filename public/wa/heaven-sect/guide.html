@@ -37,11 +37,18 @@ function start() {
     var story = new inkjs.Story(v[0].replace(/^﻿/, '')), halls = v[1].halls, state = inWA ? WA.player.state : {};
     story.variablesState['visits'] = +(inWA ? state.guide_visits : q.get('visits')) || 0;
     story.variablesState['last_hall'] = (inWA ? state.guide_last_hall : q.get('last')) || '';
+    // the Elders the player has met (elders_met, a list of hall ids) and the one who waits for them (elder_waiting, {hall, line}); the lantern rail reads both
+    var metList = inWA ? state.elders_met : (q.get('met') || '').split(',').filter(Boolean), wait = (inWA ? state.elder_waiting : null) || {};
+    story.variablesState['met'] = (metList || []).length ? ',' + metList.join(',') : '';
+    story.variablesState['waiting_hall'] = wait.hall || q.get('waiting') || '';
+    story.variablesState['waiting_line'] = wait.line || '';
     var lit = null;
     function save() {
       if (!inWA) return;
       var o = { persist: true, public: false, scope: 'world' };
       state.saveVariable('guide_visits', story.variablesState['visits'], o); state.saveVariable('guide_last_hall', story.variablesState['last_hall'], o);
+      state.saveVariable('elders_met', String(story.variablesState['met']).split(',').filter(Boolean), o);
+      state.saveVariable('elder_waiting', { hall: story.variablesState['waiting_hall'] || '', line: story.variablesState['waiting_line'] || '' }, o);
     }
     function go(id) {
       var h = halls[id]; if (!h || !inWA) return;
@@ -73,6 +80,7 @@ function start() {
       try { WA.ui.website.getAll().then(function (all) { all.forEach(function (w) { if (String(w.url).indexOf('guide.html') >= 0) w.close(); }); }); } catch (e) {}
       try { WA.nav.closeCoWebSite(); } catch (e) {}
     }
+    if (q.get('at') === 'elder-shaman') { story.ChoosePathString('elder_meet'); }   // the first Elder's own sheet, opened by guide.js in her hall
     render();
     (q.get('pick') || '').split(',').filter(Boolean).forEach(function (n) { story.ChooseChoiceIndex(+n); render(); });
   });

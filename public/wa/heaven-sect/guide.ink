@@ -1,29 +1,67 @@
 // The Gate Steward: a new player's guide to the Heaven Sect court. Every line here is a Claude draft for Wendell's edit.
+// The sect calls the six keepers of the halls Elders; no line here uses any other word for them.
 // Tags drive the page: "# title:" names the speaker line, "# path: <hall id>" lights that hall's path and walks the player.
-// The page seeds `visits` and `last_hall` from WA.player.state and saves them back, so a returning player is greeted differently.
+// The page seeds these from WA.player.state and saves them back (guide.html): visits and last_hall as before;
+// met is the Elders the player has met (hall ids, comma-separated); waiting_hall and waiting_line are the one Elder who waits for them.
+// The lantern rail by the gate (guide.js) reads the same state. The Elder order after the first is not canon; only the first is.
 VAR visits = 0
 VAR last_hall = ""
+VAR met = ""
+VAR waiting_hall = ""
+VAR waiting_line = ""
 -> start
 
 === start ===
 # title: The Gate Steward
-{ visits == 0:
-  Welcome to the Heaven Sect. I keep this gate. Ask me anything, or walk on; every hall is open to you either way.
-- else:
-  You are back.{ last_hall != "": Last time I sent you to {last_hall}.} Do you want the halls again, or are you walking on your own?
-}
+{ visits == 0: -> first_visit | -> welcome_back }
+
+=== first_visit ===
 ~ visits = visits + 1
+You climbed all the steps. Good. The Elder of the north-west hall left a lantern here for whoever came today. That is you.
+Carry it to her. She will tell you what it is for.
++ [Take the lantern] -> take_lantern
++ [Walk on for now] -> bye
+
+=== take_lantern ===
+# title: The Gate Steward
+~ waiting_hall = "elder-shaman"
+~ waiting_line = "She left a lantern here for you and is waiting at her hall."
+# path: elder-shaman
+Her hall is the north one on the west lane. I have lit the way. Walk there, or walk on and come back when you like.
+-> menu
+
+=== welcome_back ===
+~ visits = visits + 1
+{ waiting_hall != "":
+  You are back. The Elder of the north-west hall is still waiting for you.
+- else:
+  You are back. Ask me anything, or walk on.
+}{ last_hall != "": Last time I sent you to {last_hall}.}
 -> menu
 
 === menu ===
++ [Who is waiting for me?] -> waiting
 + [Where am I?] -> where
 + [Show me the halls] -> halls
-+ [Who are the Elders?] -> elders
 + [I'll explore on my own] -> bye
+
+=== waiting ===
+# title: The Gate Steward
+{ waiting_hall == "": -> waiting_nobody | -> waiting_someone }
+
+=== waiting_nobody ===
+Nobody yet. The Elder of the north-west hall left a lantern here for whoever came today. Do you want it?
++ [Take the lantern] -> take_lantern
++ [Not now] -> menu
+
+=== waiting_someone ===
+The Elder of the north-west hall. {waiting_line != "": {waiting_line}|She left a lantern here for you and is waiting at her hall.}
++ [Show me the way] -> hall_elder_shaman
++ [Back] -> menu
 
 === where ===
 # title: The Gate Steward
-This is the Gate Court, the paved square inside the torii. The two lanes run north from here along the edges of the sect. Founder's Hall stands in the middle, with the Altar behind it. The six Elders each keep a hall on the west and east sides.
+This is the Gate Court, the paved square inside the torii. The two lanes run north from here along the edges of the sect. Founder's Hall stands in the middle, with the Altar behind it. Each Elder keeps a hall on the west or east side, and the lanterns by the gate say who is waiting for you.
 -> menu
 
 === halls ===
@@ -31,7 +69,7 @@ This is the Gate Court, the paved square inside the torii. The two lanes run nor
 Choose a place and I will light the way, and walk you there if your window lets me.
 + [The Altar] -> hall_altar
 + [Founder's Hall] -> hall_founders_hall
-+ [The six Elders' halls] -> elder_halls
++ { waiting_hall != "" } [An Elder's hall] -> elder_halls
 + [The Dojo] -> hall_dojo
 + [The Tea Library] -> hall_tea_library
 + [The Gate Court] -> hall_gate_court
@@ -39,22 +77,39 @@ Choose a place and I will light the way, and walk you there if your window lets 
 
 === elder_halls ===
 # title: The Gate Steward
-Each Elder keeps a hall along the two lanes. Choose one and I will light the way.
-+ [The Shaman Elder] -> hall_elder_shaman
-+ [The Architect Elder] -> hall_elder_architect
-+ [The Challenger Elder] -> hall_elder_challenger
-+ [The Regent Elder] -> hall_elder_regent
-+ [The Diplomat Elder] -> hall_elder_diplomat
-+ [The Sage Elder] -> hall_elder_sage
+Only the halls of Elders you have a lantern for or have met. The rest will light on your road.
++ { (waiting_hall == "elder-shaman") or (met ? "elder-shaman") } [The north-west hall] -> hall_elder_shaman
++ { met ? "elder-challenger" } [The west hall, middle] -> hall_elder_challenger
++ { met ? "elder-regent" } [The south-west hall] -> hall_elder_regent
++ { met ? "elder-architect" } [The north-east hall] -> hall_elder_architect
++ { met ? "elder-diplomat" } [The east hall, middle] -> hall_elder_diplomat
++ { met ? "elder-sage" } [The south-east hall] -> hall_elder_sage
 + [Back] -> halls
 
-=== elders ===
-# title: The Gate Steward
-Six Elders, one for each face of the Game Master. Each asks one question of whatever you bring.
-The Shaman Elder asks what is moving underneath. The Architect Elder asks what must be true in the machine. The Challenger Elder asks what breaks, and what you broke yourself.
-The Regent Elder asks what you owe, and what ships when. The Diplomat Elder asks who is left out, and what the community will accept. The Sage Elder asks what the smallest whole is.
-+ [Show me their halls] -> elder_halls
-+ [Back] -> menu
+// The first Elder, met when the player walks into her hall (guide.js opens the sheet there with the page's "at" entry).
+=== elder_meet ===
+# title: The Elder of the north-west hall
+{ not (met ? "elder-shaman"):
+  ~ met = met + ",elder-shaman"
+}
+~ waiting_hall = "elder-shaman"
+~ waiting_line = "She is waiting to hear what you saw at the forest edge."
+Something has been following you since the settlements. Take this lantern to the forest edge and look at what it lights.
+Come back and tell me what you saw. Then I will know what you came here for.
++ [Go to the forest edge] -> go_forest_edge
++ [Not today] -> elder_not_today
+
+=== go_forest_edge ===
+# title: The Elder of the north-west hall
+Follow the west lane to its north end. The lantern will show you.
+# done: true
+-> END
+
+=== elder_not_today ===
+# title: The Elder of the north-west hall
+Then keep the lantern. I will be here.
+# done: true
+-> END
 
 === hall_altar ===
 ~ last_hall = "the Altar"
@@ -69,40 +124,40 @@ The Altar sits at the far north, inside a dark stone room with two cushions. Go 
 Founder's Hall is the big room straight up the avenue, with six School banners on its north wall. Twenty-four people can sit there at once.
 -> after_hall
 === hall_elder_shaman ===
-~ last_hall = "the Shaman Elder's hall"
-# title: The Shaman Elder
+~ last_hall = "the north-west hall"
+# title: The Gate Steward
 # path: elder-shaman
-The Shaman Elder keeps the north hall on the west lane. Bring a feeling you cannot name yet.
+That is the north hall on the west lane.
 -> after_hall
 === hall_elder_architect ===
-~ last_hall = "the Architect Elder's hall"
-# title: The Architect Elder
+~ last_hall = "the north-east hall"
+# title: The Gate Steward
 # path: elder-architect
-The Architect Elder keeps the north hall on the east lane. Bring something that has to hold weight.
+That is the north hall on the east lane.
 -> after_hall
 === hall_elder_challenger ===
-~ last_hall = "the Challenger Elder's hall"
-# title: The Challenger Elder
+~ last_hall = "the west hall, middle"
+# title: The Gate Steward
 # path: elder-challenger
-The Challenger Elder keeps the middle hall on the west lane. Bring the plan you most want to survive.
+That is the middle hall on the west lane.
 -> after_hall
 === hall_elder_regent ===
-~ last_hall = "the Regent Elder's hall"
-# title: The Regent Elder
+~ last_hall = "the south-west hall"
+# title: The Gate Steward
 # path: elder-regent
-The Regent Elder keeps the south hall on the west lane. Bring a promise with a date on it.
+That is the south hall on the west lane.
 -> after_hall
 === hall_elder_diplomat ===
-~ last_hall = "the Diplomat Elder's hall"
-# title: The Diplomat Elder
+~ last_hall = "the east hall, middle"
+# title: The Gate Steward
 # path: elder-diplomat
-The Diplomat Elder keeps the middle hall on the east lane. Bring a person you have not spoken to yet.
+That is the middle hall on the east lane.
 -> after_hall
 === hall_elder_sage ===
-~ last_hall = "the Sage Elder's hall"
-# title: The Sage Elder
+~ last_hall = "the south-east hall"
+# title: The Gate Steward
 # path: elder-sage
-The Sage Elder keeps the south hall on the east lane. Bring everything the other five said.
+That is the south hall on the east lane.
 -> after_hall
 === hall_dojo ===
 ~ last_hall = "the Dojo"
