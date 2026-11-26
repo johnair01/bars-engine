@@ -33,6 +33,8 @@ const eslintConfig = defineConfig([
     "prisma/generated/**",
     // Bundles that `npm run build` writes into public/ (gitignored; minified, not project source):
     "public/ontology-game/**",
+    // The inkjs runtime copied beside the Lantern Walk notices (minified vendor file):
+    "public/wa/lantern-walk/ink.js",
     // Vendor / third-party dirs:
     "LibreSprite/**",
     "backend/.venv/**",
