@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { newFarm, till, plant, water, ripen, reclear, pick, settle, enter, plantByMark, markShipped, TILL_COST, STARTING_MANA, type Farm } from '../farm'
+import { newFarm, till, plant, water, ripen, reclear, pick, settle, enter, plantByMark, markShipped, ripenByMark, TILL_COST, STARTING_MANA, type Farm } from '../farm'
 
 const day = (n: number) => new Date(Date.UTC(2026, 10, 1 + n)).toISOString().slice(0, 10)
 const ok = (r: { ok: boolean; why?: string; farm: Farm }) => { expect(r.why).toBeUndefined(); return r.farm }
@@ -93,5 +93,39 @@ describe('the game master\'s mark on the farm (H-till-mana, H-marks)', () => {
   it('refuses a mark with no reference, no line or a full field', () => {
     expect(plantByMark(newFarm(), { ...gift, ref: '' }).ok).toBe(false)
     expect(plantByMark(newFarm(), { ...gift, line: ' ' }).ok).toBe(false)
+  })
+  it('his mark ripens the crop at once, without a line from the player, and lands once (H-ripen-by-mark)', () => {
+    const a = plantByMark(newFarm(), gift)
+    const r = ripenByMark(a.farm, { barId: 'gift-1', ref: 'ripe-1', today: day(1) })
+    const p = r.farm.slots['0'].plant!
+    expect(r.ok).toBe(true)
+    expect(p.ripe).toBe(true)
+    expect(p.notes).toEqual([{ on: day(1), line: 'Marked by the game master' }])
+    expect(p.marks!.map(m => m.kind)).toEqual(['gift', 'ripe'])
+    expect(ripenByMark(r.farm, { barId: 'gift-1', ref: 'ripe-1', today: day(2) }).farm).toEqual(r.farm)
+    expect(ripenByMark(a.farm, { barId: 'nope', ref: 'ripe-2', today: day(1) }).ok).toBe(false)
+    expect(ripenByMark(a.farm, { barId: 'gift-1', ref: '', today: day(1) }).ok).toBe(false)
+  })
+  it('clears weeds when it ripens a crop the weeds had covered', () => {
+    const a = plantByMark(newFarm(), gift)
+    const weeded = settle(a.farm, day(5))
+    expect(weeded.slots['0'].state).toBe('weeded')
+    expect(ripenByMark(weeded, { barId: 'gift-1', ref: 'ripe-1', today: day(5) }).farm.slots['0'].state).toBe('planted')
+  })
+  it('a picked crop keeps its family, form and marks, and still takes the shipped mark (H-harvest-crop)', () => {
+    const a = plantByMark(newFarm(), gift)
+    const r = ripenByMark(a.farm, { barId: 'gift-1', ref: 'ripe-1', today: day(1) })
+    const h = pick(r.farm, 0, day(2))
+    expect(h.harvest!.crop).toEqual({ family: 'joy', form: 'own' })
+    expect(h.harvest!.marks!.map(m => m.kind)).toEqual(['gift', 'ripe'])
+    const s = markShipped(h.farm, { barId: 'gift-1', ref: 'ship-1', today: day(3) })
+    expect(s.ok).toBe(true)
+    expect(s.farm.harvests[0].marks!.map(m => m.kind)).toEqual(['gift', 'ripe', 'shipped'])
+    expect(markShipped(s.farm, { barId: 'gift-1', ref: 'ship-1', today: day(4) }).farm.harvests[0].marks).toHaveLength(3)
+  })
+  it('a plain pick has no crop or marks to carry', () => {
+    const h = pick(ok(ripen(planted(), 5, 'sent it', day(1))), 5, day(1))
+    expect(h.harvest!.crop).toBeUndefined()
+    expect(h.harvest!.marks).toBeUndefined()
   })
 })

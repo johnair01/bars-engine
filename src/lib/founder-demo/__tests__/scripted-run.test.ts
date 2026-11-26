@@ -53,6 +53,8 @@ describe('founder support scripted run', () => {
       expect(ids.length).toBeGreaterThan(5)
       expect(ids).not.toContain('H-till-mana')
       expect(ids).not.toContain('H-marks')
+      expect(ids).not.toContain('H-ripen-by-mark')
+      expect(ids).not.toContain('H-harvest-crop')
     }
   })
 })

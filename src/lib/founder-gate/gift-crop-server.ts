@@ -6,7 +6,7 @@ import 'server-only'
  * player's saved seed packet when there is one; a player with no packet gets the generic pod.
  */
 import { updatePlayerFarm } from '@/lib/between/farm-store'
-import { plantByMark, markShipped } from '@/lib/between/farm'
+import { plantByMark, markShipped, ripenByMark } from '@/lib/between/farm'
 import { cropOf } from './seed-packet'
 import { getPacket } from './packet-server'
 
@@ -35,4 +35,15 @@ export async function markGiftShipped(m: { playerId: string; giftRef: string; re
     return r.ok ? r.farm : null
   })
   return farm && !why ? { marked: true } : { marked: false, why: why ?? 'No farm for that player' }
+}
+
+/** His mark ripens the gift's crop at once. `giftRef` is the gift's reference; `ref` is this mark's. */
+export async function ripenGiftCrop(m: { playerId: string; giftRef: string; ref: string }): Promise<{ ripened: boolean; why?: string }> {
+  let why: string | undefined
+  const farm = await updatePlayerFarm(m.playerId, f => {
+    const r = ripenByMark(f, { barId: giftBar(m.giftRef), ref: m.ref, today: today() })
+    why = r.why
+    return r.ok ? r.farm : null
+  })
+  return farm && !why ? { ripened: true } : { ripened: false, why: why ?? 'No farm for that player' }
 }

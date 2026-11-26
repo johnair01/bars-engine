@@ -9,7 +9,7 @@
  * Two ledgers stay apart: the player's farm (their word writes it) and the shared count (only the game master's mark).
  */
 import { CROP_FAMILY, cropName, bedLabel, type Crop } from '@/lib/between/crops'
-import { newFarm, till, plant, plantByMark, ripen, pick, SLOTS, type Farm } from '@/lib/between/farm'
+import { newFarm, till, plant, plantByMark, ripenByMark, pick, SLOTS, type Farm } from '@/lib/between/farm'
 import { EMPTY_PACKET, cropOf, seedOf, type Packet } from '@/lib/founder-gate/seed-packet'
 import { readNote } from '@/lib/founder-gate/mark-payment'
 import { parsePacket, isPlayerId } from '@/lib/founder-gate/packet-record'
@@ -191,11 +191,11 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
     world.quests.set(owner, 'offered')
     log(5, 'the Diplomat Elder offers "the first harvest" (state offered)', ['QuestBook (stand-in)'], ['QuestBook offered (stand-in)'])
     hole('H-quest-state', 5, 'No record of a quest\'s state (none, offered, held, met) and no Diplomat Elder line that offers it', 'none (spec draft: pass founder-first-quest-1_2026-11-18, not in git)')
-    const ripened = ripen(farm, 0, `marked: ${word}`, today)
-    if (!ripened.ok) throw new MissingPiece(5, `farm.ripen refused: ${ripened.why}`)
+    const ripened = ripenByMark(farm, { barId, ref: `run-ripe-${owner}`, today })
+    if (!ripened.ok) throw new MissingPiece(5, `farm.ripenByMark refused: ${ripened.why}`)
     farm = ripened.farm
     world.farms.put(owner, farm)
-    hole('H-ripen-by-mark', 5, 'farm.ripen takes the PLAYER\'s line about what they did; "his mark ripens the crop" has no route of its own', 'src/lib/between/farm.ts ripen')
+    /* H-ripen-by-mark is closed: ripenByMark (farm.ts) ripens the crop from his mark alone and sets a ripe mark. */
     world.quests.set(owner, 'held')
     log(5, 'the player takes the basket (state held); the crop is full', ['QuestBook'], ['QuestBook held', 'farm slot 0 ripe'])
 
@@ -204,7 +204,8 @@ export function runChain(name: string, seed: number, choice: Choice, world: Worl
     if (!hv.ok || !hv.harvest) throw new MissingPiece(6, `farm.pick refused: ${hv.why}`)
     farm = hv.farm
     world.farms.put(owner, farm)
-    hole('H-harvest-crop', 6, 'farm.pick returns a Harvest with no crop: the family and form are lost, and the slot goes back to soil, so the first crop cannot carry its second mark', 'src/lib/between/farm.ts pick, Harvest type')
+    /* H-harvest-crop is closed: pick keeps the crop and its marks on the Harvest, and markShipped lands on a picked crop. */
+    if (!hv.harvest.crop || !hv.harvest.marks?.length) throw new MissingPiece(6, 'the picked crop lost its family, form or marks')
     hole('H-places', 6, 'The three places (introduce, show, work) have no content a player can reach, and no picture', 'SEEDS[].back and .nextStep name the acts; nothing places them on the path')
     const visits = choice.place === 'leave-at-second' ? PLACES.slice(0, 2) : choice.place === 'none' ? PLACES : PLACES
     let taken: (typeof PLACES)[number] | null = null
