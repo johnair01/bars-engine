@@ -43,9 +43,32 @@ WA.onInit().then(async () => {
   });
   WA.room.area.onLeave('Waymark').subscribe(() => WA.ui.banner.closeBanner().catch(() => {}));
 
+  // The first lit banner finishes Yun's first quest, 'first-light' (src/lib/wa/quest-table.ts). The finish is kept in
+  // this browser (localStorage), so a guest who signs in later on the same browser is still paid (board look
+  // npc-bounty-1, answer A). A signed-in player's room token goes to bars-engine, which pays once and answers
+  // whether it did. No amount is shown or promised in-world; the amount is set on bars-engine, not here.
+  const QUEST = 'first-light', DONE = 'bars_fh_quest_done', PAID = 'bars_fh_quest_paid';
+  const mem = (k, v) => { try { if (v !== undefined) localStorage.setItem(k, v); return localStorage.getItem(k); } catch { return null; } };
+  const PAYOUT = 'https://bars-engine.vercel.app/api/wa/quest-payout';
+  let paying = false;
+  const settle = async () => {
+    if (paying || mem(DONE) !== QUEST || mem(PAID) === QUEST) return;
+    const token = WA.player.userRoomToken;
+    if (!token) return;                                   // a guest: keep the finish for the day they sign in
+    paying = true;
+    try {
+      const r = await fetch(PAYOUT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questId: QUEST, userRoomToken: token }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && (j.paid || j.already)) mem(PAID, QUEST);   // paid, or paid earlier; amount-unset and 404 stay unpaid and retry next visit
+    } catch { /* offline: try again next visit */ }
+    paying = false;
+  };
+  settle();
+
   for (let k = 1; k <= STANCES; k++) {
     WA.room.area.onEnter('Stance ' + k).subscribe(async () => {
       WA.room.showLayer('lit' + k);
+      if (!mem(DONE)) { mem(DONE, QUEST); settle(); }
       if (lit.has(String(k))) return;
       lit.add(String(k));
       // persist keeps the key across a reload; it was read back after a reload in the cloud bot test (callsheet)
