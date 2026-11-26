@@ -1,6 +1,6 @@
 import 'server-only'
 import type { PrismaClient } from '@prisma/client'
-import { dryLanes, beatLane, returnLapsed } from './queue'
+import { dryLanes, beatLane, returnLapsed, unholdTicket } from './queue'
 import { LANE_WORKERS } from './lanes'
 import { openWakeWindow, wakePickup } from './wake'
 
@@ -33,7 +33,48 @@ export function decideFires(i: { ready: number; live: number; dry: boolean; cool
   return Math.max(0, Math.min(i.ready, slots, i.max ?? TICK_MAX_FIRES))
 }
 
-export type TickResult = { fired: number; ready: number; live: number; reason: string; woke?: string }
+/**
+ * Self-started looks (Wendell, 2026-11-24, board row looks-self-start-1, answer A). A thread that finishes the work his yes
+ * started files the strand's following look as a held ticket titled "Next look: <step>", with sourceKey
+ * `next-look:<strand>:<n>`. When the Claude lane is idle the tick lifts one. It never writes a brief.
+ */
+export const NEXT_LOOK_PREFIX = 'Next look:'
+export const NEXT_LOOK_DAILY_CAP = 4
+
+export function strandOf(sourceKey: string): string | null {
+  const m = /^next-look:([^:]+):/.exec(sourceKey)
+  return m ? m[1] : null
+}
+
+/** Pure: the held "Next look:" ticket to lift, or null. `open` holds the strands that already have a self-started look ready or claimed. */
+export function pickNextLook<T extends { sourceKey: string; title: string; createdAt: Date }>(i: {
+  held: T[]; open: Set<string>; unheldToday: number; idle: boolean; cap?: number
+}): T | null {
+  if (!i.idle || i.unheldToday >= (i.cap ?? NEXT_LOOK_DAILY_CAP)) return null
+  return [...i.held]
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .find(t => {
+      const strand = strandOf(t.sourceKey)
+      return t.title.startsWith(NEXT_LOOK_PREFIX) && strand !== null && !i.open.has(strand)
+    }) ?? null
+}
+
+async function unholdNextLook(db: PrismaClient, now: Date): Promise<string | null> {
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+  const where = { lane: TICK_LANE, title: { startsWith: NEXT_LOOK_PREFIX } }
+  const [held, active, today] = await Promise.all([
+    db.workTicket.findMany({ where: { ...where, state: 'held', attempts: 0 }, orderBy: { createdAt: 'asc' }, take: 50 }),
+    db.workTicket.findMany({ where: { ...where, state: { in: ['ready', 'claimed'] } }, select: { sourceKey: true } }),
+    db.workTicket.count({ where: { ...where, state: { in: ['ready', 'claimed', 'done', 'failed'] }, updatedAt: { gt: since } } }),
+  ])
+  const open = new Set(active.map(t => strandOf(t.sourceKey)).filter((s): s is string => !!s))
+  const pick = pickNextLook({ held, open, unheldToday: today, idle: true })
+  if (!pick) return null
+  const r = await unholdTicket(db, pick.id)
+  return r.ok ? pick.title : null
+}
+
+export type TickResult = { fired: number; ready: number; live: number; reason: string; woke?: string; unheld?: string }
 
 export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean } = {}): Promise<TickResult> {
   const now = opts.now ?? new Date()
@@ -56,6 +97,13 @@ export async function tick(db: PrismaClient, opts: { now?: Date; dry?: boolean }
   const n = decideFires({ ready, live, dry: out.has(TICK_LANE), cooldownOpen })
   const base = { ready, live, ...(woke ? { woke } : {}) }
   if (n === 0) {
+    if (ready === 0 && live === 0 && !out.has(TICK_LANE) && !opts.dry) {
+      const unheld = await unholdNextLook(db, now)
+      if (unheld) {
+        await beatLane(db, 'tick', `idle: lifted "${unheld}"`, now)
+        return { ...base, fired: 0, reason: 'lifted-next-look', unheld }
+      }
+    }
     const reason = ready === 0 ? 'nothing-ready' : out.has(TICK_LANE) ? 'lane-dry' : cooldownOpen ? 'cooldown' : 'no-free-slot'
     await beatLane(db, 'tick', `${reason}: ${ready} ready, ${live} live`, now)
     return { ...base, fired: 0, reason }
