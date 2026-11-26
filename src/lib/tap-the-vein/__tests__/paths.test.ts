@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TTV_FACES, TTV_FEELINGS, TTV_PATHS, takeSignature, pathLitBy } from '../paths'
+import { TTV_FACES, TTV_FEELINGS, TTV_PATHS, takeSignature, pathLitBy, reliedLine } from '../paths'
 import { takeText } from '../path-take'
 
 describe('the six paths', () => {
@@ -21,6 +21,13 @@ describe('the six paths', () => {
   })
   it('names its path on the stored line', () => {
     const regent = TTV_PATHS.find((p) => p.face === 'regent')!
-    expect(takeText(regent, '  the lease, Friday ')).toBe('Carry: the lease, Friday')
+    expect(takeText(regent, '  the lease, Diplomat ')).toBe('Relied on: the lease, Diplomat')
+  })
+  it('reads a Regent line back without its stamp', () => {
+    expect(reliedLine('Relied on: the lease, Diplomat')).toBe('the lease, Diplomat')
+    expect(reliedLine('an old line')).toBe('an old line')
+  })
+  it('names no rule the sitting does not keep (gp-voice-rules-1)', () => {
+    expect(TTV_PATHS.some((p) => /\brule\b/i.test(p.move))).toBe(false)
   })
 })
