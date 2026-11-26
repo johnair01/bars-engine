@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-25T14:46:05.640Z",
+  "generatedAt": "2026-11-26T14:40:27.562Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 852,
+      "lineNumber": 1067,
       "params": [],
       "query": [],
       "relationships": [],
@@ -518,7 +518,7 @@
       "method": "POST",
       "pattern": "/api/mcp",
       "entity": "SYSTEM",
-      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,\nclose_read, close_say, whoami, and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,\nasset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake",
+      "description": "The Council Board's MCP server, Streamable HTTP with JSON answers: post_rows, read_rows, put_picture,\nread_picture, list_pictures, post_board_docs, read_answers, list_open, check_visible, list_tickets, steer_ticket,\nclose_read, close_say, whoami, the look card (show_look, answer_look, ask_look; resources/read draws it), the live game files (put_live_files, read_live_file,\nlist_live_files, revert_live_file, remove_live_file), and the pipeline door's nine (pipeline_status, pipeline_next, loop_checks,\nasset_brief, asset_verify, canon_lookup, ontology_profile, mechanic_eval, faces_lens) and shaman_intake",
       "permissions": [
         "COUNCIL_MENU_TOKEN",
         "as Authorization: Bearer <key>",
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 922,
+      "lineNumber": 1165,
       "params": [],
       "query": [],
       "relationships": [],
@@ -551,6 +551,31 @@
       ],
       "example": "GET /api/mcp",
       "id": "get_system_8a66ec10"
+    },
+    {
+      "sourceFile": "/src/app/api/mcp/route.ts",
+      "lineNumber": 1183,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "agent",
+        "WHAT": "SYSTEM",
+        "WHERE": "council board",
+        "ENERGY": "0"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "DELETE",
+      "pattern": "/api/mcp",
+      "entity": "SYSTEM",
+      "description": "Answered 405: the server keeps no session to end (MCP 2026-07-28 removed sessions)",
+      "permissions": [
+        "COUNCIL_MENU_TOKEN"
+      ],
+      "example": "DELETE /api/mcp",
+      "id": "delete_system_97bba182"
     },
     {
       "sourceFile": "/src/app/api/quests/[questId]/apply-move/route.ts",
