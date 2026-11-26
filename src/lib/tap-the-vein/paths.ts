@@ -30,13 +30,14 @@ export type TtvPath = {
 
 export const TTV_PATHS: readonly TtvPath[] = [
   { face: 'shaman', lights: 'sadness', move: 'Write one more line under the one that burns', prompt: 'The next line', take: { kind: 'free-write' }, stamp: '' },
-  // Line 5 (gp-voice-rules-1, his steer 2026-11-26): the old move named "one rule of the sitting", and no rule list exists.
-  // The new move names two things every sitting has: an hour and a place.
-  { face: 'architect', lights: 'fear', move: 'Move tomorrow’s sitting to a new hour or a new place', prompt: 'The hour or the place, and what it changes', take: { kind: 'task', source: 'path-architect', day: 'tomorrow' }, stamp: 'Tomorrow’s sitting: ' },
+  // Line 5. His note on ttv-voice-rely-look-1 (B, 2026-11-26): "The architect is the integral Orange world centric values
+  // stage. if someone is having an architectual problem it means they aren't aligned with their values. They haven't made
+  // them an object of study." The move asks for one value, written down where he can study it, beside today.
+  { face: 'architect', lights: 'fear', move: 'Write down one value you hold, then where today went against it', prompt: 'The value, then where today missed it', take: { kind: 'task', source: 'path-architect', day: 'today' }, stamp: 'Value: ' },
   { face: 'challenger', lights: 'anger', move: 'Write a plain yes or no, with its cost', prompt: 'Yes or no, and what it costs', take: { kind: 'task', source: 'path-challenger', day: 'today' }, stamp: 'Plain answer: ' },
   // The Regent keeps the record (his words, 2026-11-26: "I keep a record of which game masters I rely on when I'm
-  // feeling stuck"). This line pairs the thing in the way with a face; his last few come back on the Regent's card.
-  { face: 'regent', lights: 'flat', move: 'Name the face you rely on for what is in the way', prompt: 'What is in the way, then the face', take: { kind: 'task', source: 'path-regent', day: 'today' }, stamp: 'Relied on: ' },
+  // feeling stuck"). This line pairs the thing in the way with the face he turns to; his last few come back on the Regent's card.
+  { face: 'regent', lights: 'flat', move: 'Name who you rely on for what is in the way', prompt: 'What is in the way, then who', take: { kind: 'task', source: 'path-regent', day: 'today' }, stamp: 'Relied on: ' },
   { face: 'diplomat', lights: 'joy', move: 'Name one person who should hear it, and send the line', prompt: 'Who, and the line', take: { kind: 'task', source: 'path-diplomat', day: 'today' }, stamp: 'Tell: ' },
   { face: 'sage', lights: 'unsure', move: 'Name the role you want out of, and step outside it', prompt: 'The role', take: { kind: 'task', source: 'path-sage', day: 'today' }, stamp: 'Step outside: ' },
 ]
