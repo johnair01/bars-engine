@@ -9,7 +9,7 @@ The layout code places names from the language, never raw tile numbers, and chec
 every place a player must reach is reachable from the gate, and doors and corridors keep the rule widths."""
 import json, os, sys, random, colorsys
 from collections import deque
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))          # public/wa: the rules every map here must keep
@@ -63,6 +63,30 @@ for name, rel in LANG['sheets'].items():
     cols, rows = big.width // T, big.height // T
     sheets[name] = {'gid0': firstgid, 'cols': cols, 'img': big}
     tilesets.append({'firstgid': firstgid, 'name': name, 'image': fn, 'imagewidth': big.width, 'imageheight': big.height,
+                     'tilewidth': T, 'tileheight': T, 'tilecount': cols * rows, 'columns': cols, 'margin': 0, 'spacing': 0})
+    firstgid += cols * rows
+
+
+# ---- door plaques: each door label drawn as a wooden board in the sect's plaque style ----
+DOORS = LANG.get('doors', {}).get('list', [])
+PQ = json.load(open(os.path.join(HERE, '../heaven-sect/sect-base.json')))['plaque']
+font = ImageFont.truetype(PQ['font'], PQ['px'])
+PLAQUE = {}
+if DOORS:
+    pimgs = []
+    for d in DOORS:
+        tw = int(font.getlength(d['label'])) + 8; wt = -(-tw // SP)
+        im = Image.new('RGBA', (wt * SP, SP), (0, 0, 0, 0)); dr = ImageDraw.Draw(im); dr.fontmode = '1'
+        dr.rectangle([0, 2, wt * SP - 1, SP - 3], fill=hex_rgb(PQ['wood']) + (255,), outline=hex_rgb(PQ['edge']) + (255,))
+        dr.text(((wt * SP - tw) // 2 + 4, 3), d['label'], font=font, fill=hex_rgb(PQ['ink']) + (255,))
+        pimgs.append((im, wt))
+    sheet = Image.new('RGBA', (max(wt for _, wt in pimgs) * SP, len(pimgs) * SP), (0, 0, 0, 0))
+    for row, (d, (im, wt)) in enumerate(zip(DOORS, pimgs)): sheet.paste(im, (0, row * SP)); PLAQUE[d['label']] = (row, wt)
+    big = sheet.resize((sheet.width * K, sheet.height * K), Image.NEAREST)
+    fn = 'tiles/calrunian-dojo-signs.png'; big.save(os.path.join(OUT, fn))
+    cols, rows = big.width // T, big.height // T
+    sheets['signs'] = {'gid0': firstgid, 'cols': cols, 'img': big}
+    tilesets.append({'firstgid': firstgid, 'name': 'signs', 'image': fn, 'imagewidth': big.width, 'imageheight': big.height,
                      'tilewidth': T, 'tileheight': T, 'tilecount': cols * rows, 'columns': cols, 'margin': 0, 'spacing': 0})
     firstgid += cols * rows
 
@@ -163,6 +187,20 @@ stamp('hall_thatch', 3, 20)
 stamp('hall_timber', 37, 22)
 for x in range(3, 7): taken[I(x, 27)] = True          # keep each hall's door step clear
 for x in range(37, 41): taken[I(x, 27)] = True
+# doors to the Heaven Sect court: a torii in the lawn, or the step of an existing hall, each with a plaque
+door_areas = []
+for d in DOORS:
+    x, y = d['at']; row, wt = PLAQUE[d['label']]
+    if d['kind'] == 'torii':
+        for yy in range(y - 1, y + 4):
+            for xx in range(x, x + 3): taken[I(xx, yy)] = True
+        stamp('torii', x, y)
+        fill_grid4('paving', x, y + 2, x + 3, COURT[1])
+        box = (x, y, 3, 2); py = y - 1; px = x + 3 - wt if x < W // 2 else x       # the plaque hangs above the gate
+    else:
+        box = (x, y, d['w'], 1); py = y + 1; px = x
+    for k in range(wt): L['over2'][I(px + k, py)] = gid('signs', k, row); taken[I(px + k, py)] = True
+    door_areas.append((d, box))
 # the grove: a ring of pine, bamboo and broad trees round the compound, open at the gate
 ring = []
 for x in range(0, W, 2): ring += [(x, 0), (x, H - 3)]
@@ -208,6 +246,7 @@ def reach(src):
 R = reach((21, H - 2))
 must = {'dojo door': (21, 17), 'before Master Yun': (21, 10), 'medallion': (22, 11),
         'thatched hall door': (4, 27), 'timber hall door': (38, 27)}
+must.update({f'door to {d["label"]}': (b[0] + 1, b[1]) for d, b in door_areas})
 must.update({f'stance panel {k + 1}': (x, 6) for k, x in enumerate((13, 16, 19, 24, 27, 30))})
 problems = [f'{k} {v} not reachable from the gate' for k, v in must.items() if v not in R]
 rule = LANG['rules']
@@ -236,6 +275,10 @@ areas = [area(1, 'Dojo floor', 11, 4, 22, 13, 'practice-floor'), area(2, 'Stance
          area(3, 'Master Yun', 19, 7, 5, 5, 'npc-yun'), area(4, 'Dojo gate', 20, 16, 4, 3, 'dojo-gate'),
          area(5, 'Courtyard', COURT[0], COURT[1], COURT[2] - COURT[0], COURT[3] - COURT[1], 'courtyard'),
          area(6, 'Compound gate', GATE_X[0], H - 3, GATE_X[1] - GATE_X[0], 3, 'arrival')]
+for k, (d, (x, y, w, h)) in enumerate(door_areas):
+    a = area(7 + k, d['label'], x, y, w, h, d['id'])
+    a['properties'].append({'name': 'exitUrl', 'type': 'string', 'value': f"{LANG['doors']['court']}#{d['arrive']}"})
+    areas.append(a)
 layers = [tl(1, 'ground', L['ground']), tl(2, 'detail', L['detail']),
           tl(3, 'collisions', L['collisions'], [{'name': 'collides', 'type': 'bool', 'value': True}], visible=False),
           {'id': 4, 'name': 'floorLayer', 'type': 'objectgroup', 'x': 0, 'y': 0, 'opacity': 1, 'visible': True, 'draworder': 'topdown', 'objects': []}, tl(5, 'over1', L['over1']), tl(6, 'over2', L['over2']),
