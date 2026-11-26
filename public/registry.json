@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-26T14:40:27.562Z",
+  "generatedAt": "2026-11-26T16:32:11.711Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -71,6 +71,25 @@
     }
   },
   "routes": [
+    {
+      "sourceFile": "/src/app/api/admin/book-claims/[id]/image/route.ts",
+      "lineNumber": 12,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "GET",
+      "pattern": "/api/admin/book-claims/[id]/image",
+      "entity": "SYSTEM",
+      "description": "The receipt or book photo a reader sent with a proof-of-purchase claim. Admin only, never cached.\nThe picture is erased when the claim is decided, so a decided claim answers 410.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "get_system_a573ac38"
+    },
     {
       "sourceFile": "/src/app/api/admin/forge/[id]/complete/route.ts",
       "lineNumber": 17,
@@ -1135,6 +1154,44 @@
       ],
       "example": "/admin/bar-candidates",
       "id": "page_bar_96ffdd5d"
+    },
+    {
+      "sourceFile": "/src/app/admin/book-claims/page.tsx",
+      "lineNumber": 16,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/book-claims",
+      "entity": "SYSTEM",
+      "description": "Proof-of-purchase queue: readers who bought the book outside Gumroad send a receipt or a photo of the\nbook; approving grants book-digital (30 days of app access) and emails the reader. Pictures are erased on decision.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "page_system_9ec02851"
+    },
+    {
+      "sourceFile": "/src/app/admin/book-claims/page.tsx",
+      "lineNumber": 16,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/book-claims",
+      "entity": "SYSTEM",
+      "description": "Proof-of-purchase queue: readers who bought the book outside Gumroad send a receipt or a photo of the\nbook; approving grants book-digital (30 days of app access) and emails the reader. Pictures are erased on decision.",
+      "permissions": [
+        "admin"
+      ],
+      "id": "page_system_9ec02851"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/moves/page.tsx",
@@ -8413,6 +8470,44 @@
       ],
       "example": "/quest",
       "id": "page_quest_b8f10b81"
+    },
+    {
+      "sourceFile": "/src/app/redeem/proof/page.tsx",
+      "lineNumber": 22,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/redeem/proof",
+      "entity": "PLAYER",
+      "description": "Proof of purchase for readers who bought the book outside Gumroad (Amazon, a bookstore). The reader\nsends a receipt or a photo of the book; Wendell approves it at /admin/book-claims and the reader gets the same 30\ndays of app access a Gumroad buyer gets.",
+      "permissions": [
+        "public (signed-in to submit)"
+      ],
+      "id": "page_player_584f409a"
+    },
+    {
+      "sourceFile": "/src/app/redeem/proof/page.tsx",
+      "lineNumber": 22,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {},
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/redeem/proof",
+      "entity": "PLAYER",
+      "description": "Proof of purchase for readers who bought the book outside Gumroad (Amazon, a bookstore). The reader\nsends a receipt or a photo of the book; Wendell approves it at /admin/book-claims and the reader gets the same 30\ndays of app access a Gumroad buyer gets.",
+      "permissions": [
+        "public (signed-in to submit)"
+      ],
+      "id": "page_player_584f409a"
     },
     {
       "sourceFile": "/src/app/reliquary/page.tsx",
