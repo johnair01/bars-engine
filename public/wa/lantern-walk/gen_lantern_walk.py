@@ -93,12 +93,12 @@ for (x,y) in [(14,3),(17,3),(15,7),(26,8),(27,16),(15,17),(18,21),(34,8),(35,16)
 for (x,y) in [(24,10),(25,14),(24,3),(26,20),(33,10),(33,14),(20,8),(20,16)]:
     detail[idx(x,y)]=7
 NOTICES=[
- ("Someone who writes","A friend has three lines that will not sit together and needs a second pair of eyes. They are waiting at the Reading Bench.",
-  "Reading Bench","Read the three lines aloud, one at a time. Say which line you would keep. Then say who else here you would ask for help."),
- ("Someone who builds","A friend has half a table and no one to hold the other end. They are waiting at the Workbench.",
-  "Workbench","Hold the other end of the table. Say what you would build next and who here would enjoy building it with you."),
- ("Someone who listens","A friend has a decision they keep circling and wants to say it out loud to one person. They are waiting at the Listening Stone.",
-  "Listening Stone","Sit beside them and listen without fixing. When they stop, say back the one thing you heard."),
+ ("Someone who writes","Master Yun, who keeps the dojo gate, has three lines for his lantern that will not sit together and wants a second pair of eyes. He is waiting at the Reading Bench.",
+  "Reading Bench","Master Yun reads his three lines aloud, one at a time. Say which line you would keep. Then say who else here you would ask for help."),
+ ("Someone who builds","Master Yun, who keeps the dojo gate, has half a table and no one to hold the other end. He is waiting at the Workbench.",
+  "Workbench","Hold the other end of the table with Master Yun. Say what you would build next and who here would enjoy building it with you."),
+ ("Someone who listens","Master Yun, who keeps the dojo gate, has a decision he keeps circling and wants to say it out loud to one person. He is waiting at the Listening Stone.",
+  "Listening Stone","Sit beside Master Yun and listen without fixing. When he stops, say back the one thing you heard."),
 ]
 PAGE="""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title><style>
@@ -129,7 +129,7 @@ function start(){{var inWA=typeof WA!=="undefined"&&WA.onInit;
    while(story.canContinue){{text+="<p>"+story.Continue().replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>";story.currentTags.forEach(function(t){{if(t.indexOf("title:")===0)title=t.slice(6).trim()}})}}
    m.innerHTML="<h1>"+title+"</h1>"+text;
    story.currentChoices.forEach(function(c,i){{var b=document.createElement("button");b.textContent=c.text;b.onclick=function(){{story.ChooseChoiceIndex(i);render()}};m.appendChild(b)}});
-   var f=document.createElement("small");f.textContent="Notice "+N+" of 3. Agree with the friends at the door on one, then walk there together.";m.appendChild(f);save()}}
+   var f=document.createElement("small");f.textContent="Notice "+N+" of 3. Master Yun left three notices. Pick one, then walk there together.";m.appendChild(f);save()}}
   render();(q.get("pick")||"").split(",").filter(Boolean).forEach(function(i){{story.ChooseChoiceIndex(+i);render()}});
  }}).catch(function(e){{console.error("notice story failed",e)}})}}
 </script></html>"""
@@ -155,7 +155,7 @@ def exit_area(name,x,y,w,h,url,role):
 DOJO_ROOM = "https://world.masteringallyship.com/_/global/world.masteringallyship.com/~/calrunian-dojo/calrunian-dojo.wam"
 exit_area("Office door",4,9,1,1,DOJO_ROOM,"to-dojo")
 for n,((t,b,place,arr),(x,y),(px,py)) in enumerate(zip(NOTICES,posts,places),1):
-    open(f'{HERE}/notice-{n}.html','w').write(NOTICE_PAGE.format(n=n,title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Agree with the friends at the door on one, then walk there together."))
+    open(f'{HERE}/notice-{n}.html','w').write(NOTICE_PAGE.format(n=n,title=html.escape(t),body=html.escape(b),foot="Notice "+str(n)+" of 3. Master Yun left three notices. Pick one, then walk there together."))
     open(f'{HERE}/arrive-{n}.html','w').write(PAGE.format(title=html.escape(place),body=html.escape(arr),foot="Next time you visit, tell the table how it went."))
     area(f"notice-{n}",x-1,(y+1 if y<12 else y-1),3,1,f"notice-{n}.html",api=True)
     area(place,px-1,py-1,3,3,f"arrive-{n}.html")

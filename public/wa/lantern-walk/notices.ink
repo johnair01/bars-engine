@@ -8,7 +8,7 @@ VAR visits_3 = 0
 
 === notice_1 ===
 # title: Someone who writes
-A friend has three lines that will not sit together and needs a second pair of eyes. They are waiting at the Reading Bench.
+Master Yun, who keeps the dojo gate, has three lines for his lantern that will not sit together and wants a second pair of eyes. He is waiting at the Reading Bench.
 + [Walk to the Reading Bench together] -> bench
 + [Walk on for now] -> later_1
 
@@ -21,15 +21,15 @@ The notice stays lit. It will be here when you pass again.
 ~ visits_1 = visits_1 + 1
 # title: Reading Bench
 { visits_1 > 1:
-  You came back. Tell the table how it went.
+  Master Yun is glad you came back. Tell the table how it went.
 - else:
-  Read the three lines aloud, one at a time. Say which line you would keep. Then say who else here you would ask for help.
+  Master Yun reads his three lines aloud, one at a time. Say which line you would keep. Then say who else here you would ask for help.
 }
 + [Done for today] -> END
 
 === notice_2 ===
 # title: Someone who builds
-A friend has half a table and no one to hold the other end. They are waiting at the Workbench.
+Master Yun, who keeps the dojo gate, has half a table and no one to hold the other end. He is waiting at the Workbench.
 + [Walk to the Workbench together] -> workbench
 + [Walk on for now] -> later_2
 
@@ -42,15 +42,15 @@ The notice stays lit. It will be here when you pass again.
 ~ visits_2 = visits_2 + 1
 # title: Workbench
 { visits_2 > 1:
-  You came back. Tell the table how it went.
+  Master Yun is glad you came back. Tell the table how it went.
 - else:
-  Hold the other end of the table. Say what you would build next and who here would enjoy building it with you.
+  Hold the other end of the table with Master Yun. Say what you would build next and who here would enjoy building it with you.
 }
 + [Done for today] -> END
 
 === notice_3 ===
 # title: Someone who listens
-A friend has a decision they keep circling and wants to say it out loud to one person. They are waiting at the Listening Stone.
+Master Yun, who keeps the dojo gate, has a decision he keeps circling and wants to say it out loud to one person. He is waiting at the Listening Stone.
 + [Walk to the Listening Stone together] -> stone
 + [Walk on for now] -> later_3
 
@@ -63,8 +63,8 @@ The notice stays lit. It will be here when you pass again.
 ~ visits_3 = visits_3 + 1
 # title: Listening Stone
 { visits_3 > 1:
-  You came back. Tell the table how it went.
+  Master Yun is glad you came back. Tell the table how it went.
 - else:
-  Sit beside them and listen without fixing. When they stop, say back the one thing you heard.
+  Sit beside Master Yun and listen without fixing. When he stops, say back the one thing you heard.
 }
 + [Done for today] -> END
