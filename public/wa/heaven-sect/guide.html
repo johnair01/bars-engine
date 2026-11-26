@@ -41,7 +41,7 @@ function start() {
     var metList = inWA ? state.elders_met : (q.get('met') || '').split(',').filter(Boolean), wait = (inWA ? state.elder_waiting : null) || {};
     story.variablesState['met'] = (metList || []).length ? ',' + metList.join(',') : '';
     story.variablesState['waiting_hall'] = wait.hall || q.get('waiting') || '';
-    story.variablesState['waiting_line'] = wait.line || '';
+    story.variablesState['waiting_line'] = wait.line || q.get('wline') || '';
     var lit = null;
     function save() {
       if (!inWA) return;
