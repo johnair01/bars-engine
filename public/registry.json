@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-11-25T14:58:10.272Z",
+  "generatedAt": "2026-11-26T14:40:27.562Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -502,7 +502,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 1047,
+      "lineNumber": 1067,
       "params": [],
       "query": [],
       "relationships": [],
@@ -529,7 +529,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 1145,
+      "lineNumber": 1165,
       "params": [],
       "query": [],
       "relationships": [],
@@ -554,7 +554,7 @@
     },
     {
       "sourceFile": "/src/app/api/mcp/route.ts",
-      "lineNumber": 1163,
+      "lineNumber": 1183,
       "params": [],
       "query": [],
       "relationships": [],
