@@ -41,7 +41,7 @@ received BAR attribution in Vault.
 
 **Semantic purpose:** Recognition at conversation scale. Between the 1024px cosmic illustration
 and the 16×24px walk sprite — the character at panel/dialog size.
-**Format:** 64×96px cropped square. Derived from Cosmic art — CSS crop at `object-position: center 15%`
+**Format (as built, checked 2026-10-20):** the portrait is the layered avatar parts (`Avatar.tsx`) in a round 64×64 frame, cropped with `object-position: center 15%` (`src/lib/ui/register-portrait.ts`). It is not cropped from the Cosmic art, and no 64×96 size is set. The earlier text read: 64×96px cropped square, derived from Cosmic art — CSS crop at `object-position: center 15%`
 with element-colored vignette overlay. No new generation required for initial pass.
 **Used in:** IntentAgentPanel (lobby encounter), TradePanel (offering player face), BAR attribution
 on received BARs, LibrarianPanel NPC face.
@@ -112,7 +112,7 @@ One `AvatarConfig { nationKey, archetypeKey, genderKey }` drives all four render
 ```
 getAvatarPartSpecs(config)       → portrait CSS layers    (Avatar.tsx)
 resolveWalkableSprite(config)    → Pixi walk layers       (pixi-room.ts)
-resolveProvenanceStamp(config)   → sigil + mark chip      (BAR card corner)
+resolveProvenanceStamp(config)   → sigil + mark chip      (BAR card corner)   [PLANNED: not implemented as of 2026-10-20; the only mention in code is a comment in src/lib/avatar-utils.ts]
 ```
 
 ## Forkability Architecture
