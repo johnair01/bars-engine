@@ -1,0 +1,149 @@
+{
+ "guide": "Gate Steward",
+ "halls": {
+  "altar": {
+   "label": "Altar",
+   "layer": "path-altar",
+   "to": [
+    1520,
+    368
+   ]
+  },
+  "founders-hall": {
+   "label": "Founder's Hall",
+   "layer": "path-founders-hall",
+   "to": [
+    1488,
+    1104
+   ]
+  },
+  "elder-shaman": {
+   "label": "Shaman Elder",
+   "layer": "path-elder-shaman",
+   "to": [
+    432,
+    848
+   ]
+  },
+  "elder-challenger": {
+   "label": "Challenger Elder",
+   "layer": "path-elder-challenger",
+   "to": [
+    432,
+    1328
+   ]
+  },
+  "elder-regent": {
+   "label": "Regent Elder",
+   "layer": "path-elder-regent",
+   "to": [
+    432,
+    1808
+   ]
+  },
+  "elder-architect": {
+   "label": "Architect Elder",
+   "layer": "path-elder-architect",
+   "to": [
+    2576,
+    848
+   ]
+  },
+  "elder-diplomat": {
+   "label": "Diplomat Elder",
+   "layer": "path-elder-diplomat",
+   "to": [
+    2576,
+    1328
+   ]
+  },
+  "elder-sage": {
+   "label": "Sage Elder",
+   "layer": "path-elder-sage",
+   "to": [
+    2576,
+    1808
+   ]
+  },
+  "dojo": {
+   "label": "Dojo",
+   "layer": "path-dojo",
+   "to": [
+    976,
+    1776
+   ]
+  },
+  "tea-library": {
+   "label": "Tea Library",
+   "layer": "path-tea-library",
+   "to": [
+    1904,
+    1712
+   ]
+  },
+  "gate-court": {
+   "label": "Gate Court",
+   "layer": "path-gate-court",
+   "to": [
+    1520,
+    2160
+   ]
+  }
+ },
+ "rail": [
+  {
+   "id": "elder-shaman",
+   "place": "North-west hall",
+   "lights": "She left a lantern here for you and is waiting at her hall.",
+   "waiting": "She is waiting to hear what you saw at the forest edge.",
+   "dark": "rail-elder-shaman-dark",
+   "lit": "rail-elder-shaman-lit",
+   "area": "Rail elder-shaman"
+  },
+  {
+   "id": "elder-challenger",
+   "place": "West hall, middle",
+   "lights": "Lights after your first fight with a spirit.",
+   "waiting": null,
+   "dark": "rail-elder-challenger-dark",
+   "lit": "rail-elder-challenger-lit",
+   "area": "Rail elder-challenger"
+  },
+  {
+   "id": "elder-regent",
+   "place": "South-west hall",
+   "lights": "Lights when you give yourself a date to do something.",
+   "waiting": null,
+   "dark": "rail-elder-regent-dark",
+   "lit": "rail-elder-regent-lit",
+   "area": "Rail elder-regent"
+  },
+  {
+   "id": "elder-architect",
+   "place": "North-east hall",
+   "lights": "Lights when your plan has to hold weight.",
+   "waiting": null,
+   "dark": "rail-elder-architect-dark",
+   "lit": "rail-elder-architect-lit",
+   "area": "Rail elder-architect"
+  },
+  {
+   "id": "elder-diplomat",
+   "place": "East hall, middle",
+   "lights": "Lights when you bring another person in.",
+   "waiting": null,
+   "dark": "rail-elder-diplomat-dark",
+   "lit": "rail-elder-diplomat-lit",
+   "area": "Rail elder-diplomat"
+  },
+  {
+   "id": "elder-sage",
+   "place": "South-east hall",
+   "lights": "Lights when the other five are lit.",
+   "waiting": null,
+   "dark": "rail-elder-sage-dark",
+   "lit": "rail-elder-sage-lit",
+   "area": "Rail elder-sage"
+  }
+ ]
+}
