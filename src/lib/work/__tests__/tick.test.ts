@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/db', () => ({ db: {} }))
-import { decideFires, pickNextLook, shouldWake, strandOf } from '../tick'
+import { costOf, decideFires, passRank, pickNextLook, shouldWake, strandOf } from '../tick'
 
 describe('orchestrator tick: how many workers to start', () => {
   const base = { ready: 8, live: 0, dry: false, cooldownOpen: false }
@@ -30,6 +30,35 @@ describe('self-started looks: which held "Next look:" ticket the idle tick lifts
   it('lifts nothing when the lane is busy', () => expect(pickNextLook({ ...base, idle: false })).toBeNull())
   it('lifts nothing past four a day', () => expect(pickNextLook({ ...base, unheldToday: 4 })).toBeNull())
   it('skips a strand that already has one open', () => expect(pickNextLook({ ...base, open: new Set(['dojo']) })?.sourceKey).toBe('next-look:robe:1'))
+  const withGoal = (strand: string, day: number, goal?: string, costUsd?: number) =>
+    ({ ...mk(strand, 1, day), id: `t-${strand}`, basis: { ...(goal ? { goal } : {}), ...(costUsd !== undefined ? { costUsd } : {}) } })
+  it('lifts in the order of today\'s pass moves, not age', () => {
+    const held = [withGoal('robe', 1, 'money-w1'), withGoal('dojo', 2, 'allyship-w1')]
+    const moves = [{ goal: 'allyship-w1', ref: 'x' }, { goal: 'money-w1', ref: 'y' }]
+    expect(pickNextLook({ ...base, held, moves })?.sourceKey).toBe('next-look:dojo:1')
+  })
+  it('lifts oldest first when no pass ran', () => {
+    const held = [withGoal('dojo', 2, 'allyship-w1'), withGoal('robe', 1, 'money-w1')]
+    expect(pickNextLook({ ...base, held, moves: [] })?.sourceKey).toBe('next-look:robe:1')
+  })
+  it('puts a goal-less look after the ranked ones', () => {
+    const held = [withGoal('robe', 1), withGoal('dojo', 2, 'allyship-w1')]
+    expect(pickNextLook({ ...base, held, moves: [{ goal: 'allyship-w1', ref: 'x' }] })?.sourceKey).toBe('next-look:dojo:1')
+  })
+  it('ranks a ticket named in a move ref', () => {
+    expect(passRank({ id: 'abc' }, [{ goal: 'g', ref: 'held ticket abc' }])).toBe(0)
+    expect(passRank({ id: 'abc' }, [])).toBe(Number.MAX_SAFE_INTEGER)
+  })
+  it('holds a look that would pass the $5 day cap', () => {
+    const held = [withGoal('robe', 1)]
+    expect(pickNextLook({ ...base, held, spentUsd: 3.76 })).toBeNull()
+    expect(pickNextLook({ ...base, held, spentUsd: 3.75 })?.sourceKey).toBe('next-look:robe:1')
+  })
+  it('uses the ticket\'s own cost, else the estimate', () => {
+    expect(costOf({ basis: { costUsd: 2 } })).toBe(2)
+    expect(costOf({ basis: {} })).toBe(1.25)
+    expect(pickNextLook({ ...base, held: [withGoal('robe', 1, undefined, 4)], spentUsd: 2 })).toBeNull()
+  })
   it('ignores tickets not titled Next look:', () => expect(pickNextLook({ ...base, held: [mk('robe', 1, 1, 'Fix it')] })).toBeNull())
 })
 

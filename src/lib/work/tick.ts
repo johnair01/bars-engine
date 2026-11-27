@@ -40,35 +40,80 @@ export function decideFires(i: { ready: number; live: number; dry: boolean; cool
  */
 export const NEXT_LOOK_PREFIX = 'Next look:'
 export const NEXT_LOOK_DAILY_CAP = 4
+/**
+ * Money cap (Wendell, 2026-11-25, board row sr-daily-cap-1: "It should be more more than $10 a day, and honestly that's a
+ * bit much. Let's start at $5"; store position self-start-daily-cap-5usd). A ticket's cost is `basis.costUsd`, else the
+ * estimate below, so the old four-a-day count and the $5 cap agree until a ticket says what it costs.
+ */
+export const SELF_START_DAILY_CAP_USD = 5
+export const NEXT_LOOK_COST_USD = 1.25
 
 export function strandOf(sourceKey: string): string | null {
   const m = /^next-look:([^:]+):/.exec(sourceKey)
   return m ? m[1] : null
 }
 
-/** Pure: the held "Next look:" ticket to lift, or null. `open` holds the strands that already have a self-started look ready or claimed. */
-export function pickNextLook<T extends { sourceKey: string; title: string; createdAt: Date }>(i: {
+type HeldLook = { id?: string; sourceKey: string; title: string; createdAt: Date; basis?: unknown }
+/** One goal-pass move, as the morning pass files it in the store record `goal-pass-<date>`. */
+export type PassMove = { goal?: string; ref?: string }
+
+function basisOf(t: { basis?: unknown }): { goal?: string; costUsd?: number } {
+  return t.basis && typeof t.basis === 'object' ? (t.basis as { goal?: string; costUsd?: number }) : {}
+}
+export function costOf(t: { basis?: unknown }): number {
+  const c = basisOf(t).costUsd
+  return typeof c === 'number' && c >= 0 ? c : NEXT_LOOK_COST_USD
+}
+
+/** Pure: where a held look stands in today's pass. The first move naming its goal (or its ticket id in `ref`) wins; no pass or no match ranks last. */
+export function passRank(t: { id?: string; basis?: unknown }, moves: PassMove[]): number {
+  const goal = basisOf(t).goal
+  const i = moves.findIndex(m => (goal && m.goal === goal) || (t.id && typeof m.ref === 'string' && m.ref.includes(t.id)))
+  return i < 0 ? Number.MAX_SAFE_INTEGER : i
+}
+
+/** Pure: the held "Next look:" ticket to lift, or null. `open` holds the strands that already have a self-started look ready or claimed. Order: today's pass moves, then oldest first. */
+export function pickNextLook<T extends HeldLook>(i: {
   held: T[]; open: Set<string>; unheldToday: number; idle: boolean; cap?: number
+  moves?: PassMove[]; spentUsd?: number; capUsd?: number
 }): T | null {
   if (!i.idle || i.unheldToday >= (i.cap ?? NEXT_LOOK_DAILY_CAP)) return null
+  const moves = i.moves ?? []
   return [...i.held]
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .sort((a, b) => passRank(a, moves) - passRank(b, moves) || a.createdAt.getTime() - b.createdAt.getTime())
     .find(t => {
       const strand = strandOf(t.sourceKey)
       return t.title.startsWith(NEXT_LOOK_PREFIX) && strand !== null && !i.open.has(strand)
+        && (i.spentUsd ?? 0) + costOf(t) <= (i.capUsd ?? SELF_START_DAILY_CAP_USD)
     }) ?? null
+}
+
+/** Today's pass moves from the store, by Pacific date (the pass fires 7:23 Pacific). No record, or one that does not parse, means no pass ran. */
+async function todaysMoves(db: PrismaClient, now: Date): Promise<PassMove[]> {
+  const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(now)
+  try {
+    const doc = await db.boardSave.findFirst({
+      where: { board: 'council', collection: 'records', docId: `goal-pass-${date}` },
+      orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }], select: { data: true },
+    })
+    const body = (doc?.data as { body?: string } | null)?.body
+    const moves = body ? (JSON.parse(body) as { moves?: unknown }).moves : null
+    return Array.isArray(moves) ? (moves as PassMove[]) : []
+  } catch { return [] }
 }
 
 async function unholdNextLook(db: PrismaClient, now: Date): Promise<string | null> {
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000)
   const where = { lane: TICK_LANE, title: { startsWith: NEXT_LOOK_PREFIX } }
-  const [held, active, today] = await Promise.all([
+  const [held, active, today, moves] = await Promise.all([
     db.workTicket.findMany({ where: { ...where, state: 'held', attempts: 0 }, orderBy: { createdAt: 'asc' }, take: 50 }),
     db.workTicket.findMany({ where: { ...where, state: { in: ['ready', 'claimed'] } }, select: { sourceKey: true } }),
-    db.workTicket.count({ where: { ...where, state: { in: ['ready', 'claimed', 'done', 'failed'] }, updatedAt: { gt: since } } }),
+    db.workTicket.findMany({ where: { ...where, state: { in: ['ready', 'claimed', 'done', 'failed'] }, updatedAt: { gt: since } }, select: { basis: true } }),
+    todaysMoves(db, now),
   ])
   const open = new Set(active.map(t => strandOf(t.sourceKey)).filter((s): s is string => !!s))
-  const pick = pickNextLook({ held, open, unheldToday: today, idle: true })
+  const spentUsd = today.reduce((n, t) => n + costOf(t), 0)
+  const pick = pickNextLook({ held, open, unheldToday: today.length, idle: true, moves, spentUsd })
   if (!pick) return null
   const r = await unholdTicket(db, pick.id)
   return r.ok ? pick.title : null
