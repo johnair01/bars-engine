@@ -4,7 +4,7 @@ body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1c161
 main{max-width:30rem;padding:2rem 1.5rem}h1{font-size:1.5rem;margin:0 0 1rem;color:#ffbe46}p{margin:0 0 1rem}small{display:block;color:#b9a98c}
 button{display:block;width:100%;margin:.5rem 0;padding:.6rem .9rem;min-height:44px;background:#2a211b;color:#ffbe46;border:1px solid #6b5436;border-radius:6px;font:inherit;text-align:left;cursor:pointer}
 button:hover,button:focus-visible{border-color:#ffbe46;outline:none}
-</style><main id="m"><h1>Someone who writes</h1><p>A friend has three lines that will not sit together and needs a second pair of eyes. They are waiting at the Reading Bench.</p><small>Notice 1 of 3. Agree with the friends at the door on one, then walk there together.</small></main>
+</style><main id="m"><h1>Someone who writes</h1><p>Master Yun, who keeps the dojo gate, has three lines for his lantern that will not sit together and wants a second pair of eyes. He is waiting at the Reading Bench.</p><small>Notice 1 of 3. Master Yun left three notices. Pick one, then walk there together.</small></main>
 <!-- Inside WorkAdventure the page loads the world's iframe API; on its own, ?visits=1&pick=0 stands in for the saved state and the choices. -->
 <script>
 var N=1,KEY="notice_visits_"+N,q=new URLSearchParams(location.search);
@@ -19,7 +19,7 @@ function start(){var inWA=typeof WA!=="undefined"&&WA.onInit;
    while(story.canContinue){text+="<p>"+story.Continue().replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>";story.currentTags.forEach(function(t){if(t.indexOf("title:")===0)title=t.slice(6).trim()})}
    m.innerHTML="<h1>"+title+"</h1>"+text;
    story.currentChoices.forEach(function(c,i){var b=document.createElement("button");b.textContent=c.text;b.onclick=function(){story.ChooseChoiceIndex(i);render()};m.appendChild(b)});
-   var f=document.createElement("small");f.textContent="Notice "+N+" of 3. Agree with the friends at the door on one, then walk there together.";m.appendChild(f);save()}
+   var f=document.createElement("small");f.textContent="Notice "+N+" of 3. Master Yun left three notices. Pick one, then walk there together.";m.appendChild(f);save()}
   render();(q.get("pick")||"").split(",").filter(Boolean).forEach(function(i){story.ChooseChoiceIndex(+i);render()});
  }).catch(function(e){console.error("notice story failed",e)})}
 </script></html>
