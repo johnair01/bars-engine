@@ -182,6 +182,7 @@
     "seed:cert:friendcraft-deck": "tsx scripts/seed-cert-friendcraft-deck.ts",
     "seed:cert:friendship-growth": "tsx scripts/seed-cert-friendship-growth.ts",
     "seed:cert:friendcraft-deck-2": "tsx scripts/seed-cert-friendcraft-deck-2.ts",
+    "seed:cert:friendcraft-deck-3": "tsx scripts/seed-cert-friendcraft-deck-3.ts",
     "seed:cert:ctw-friends-fire": "tsx scripts/seed-cert-ctw-friends-fire.ts",
     "seed:cert:the-crossing": "tsx scripts/seed-cyoa-cert-the-crossing.ts",
     "seed:cert:emotional-alchemy-diagnostic": "tsx scripts/seed-cert-emotional-alchemy-diagnostic.ts",
