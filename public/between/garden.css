@@ -204,6 +204,8 @@ body.seatedmoment .mcap { top: auto; bottom: calc(22vh + env(safe-area-inset-bot
 .sheet.walk label > input, .sheet.walk label > span:last-child:not(.cw) { margin-top: 6px; }
 .sheet.walk label > input { display: block; width: 100%; }
 body.quiethud .hud .bottom { display: none; }
+/* The brush writer owns the screen's lower half: nothing of the room's own buttons shows through behind the strip (phone framing round). */
+body.brushwriting .hud .bottom, body.brushwriting #labels, body.brushwriting .mcap { display: none; }
 .sheet .feels { display: flex; flex-wrap: wrap; gap: 8px; }
 .sheet .feels button { background: var(--soft); color: var(--ink); border-color: var(--line); font-weight: 400; display: inline-flex; align-items: center; gap: 2px; min-height: 48px; }
 .sheet .feels button.on { border-color: #e2a85c; box-shadow: inset 0 0 0 2px #e2a85c; }
